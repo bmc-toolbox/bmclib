@@ -18,7 +18,6 @@ import (
 	"github.com/ncode/bmc/dell"
 	"github.com/ncode/bmc/devices"
 	"github.com/ncode/bmc/httpclient"
-	"github.com/ncode/dora/model"
 )
 
 // Reader holds the status and properties of a connection to an iDrac device
@@ -436,7 +435,7 @@ func (i *Reader) IsBlade() (isBlade bool, err error) {
 }
 
 // Psus returns a list of psus installed on the device
-func (i *Reader) Psus() (psus []*model.Psu, err error) {
+func (i *Reader) Psus() (psus []*devices.Psu, err error) {
 	url := "data?get=powerSupplies"
 	payload, err := i.get(url, nil)
 	if err != nil {
@@ -454,7 +453,7 @@ func (i *Reader) Psus() (psus []*model.Psu, err error) {
 
 	for _, psu := range iDracRoot.PsSensorList {
 		if psus == nil {
-			psus = make([]*model.Psu, 0)
+			psus = make([]*devices.Psu, 0)
 		}
 		var status string
 		if psu.SensorHealth == 2 {
@@ -463,14 +462,10 @@ func (i *Reader) Psus() (psus []*model.Psu, err error) {
 			status = "BROKEN"
 		}
 
-		// TODO(jumartinez): We also need to parse the power consumption data and expose it here
-		//                   I am not sure we need it at all.
-		p := &model.Psu{
-			Serial:         fmt.Sprintf("%s_%s", serial, strings.Split(psu.Name, " ")[0]),
-			Status:         status,
-			PowerKw:        0.00,
-			CapacityKw:     float64(psu.MaxWattage) / 1000.00,
-			DiscreteSerial: serial,
+		p := &devices.Psu{
+			Serial:     fmt.Sprintf("%s_%s", serial, strings.Split(psu.Name, " ")[0]),
+			Status:     status,
+			CapacityKw: float64(psu.MaxWattage) / 1000.00,
 		}
 
 		psus = append(psus, p)

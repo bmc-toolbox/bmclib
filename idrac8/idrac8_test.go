@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
-	"github.com/ncode/dora/model"
+	"github.com/ncode/bmc/devices"
 )
 
 var (
@@ -5490,16 +5490,16 @@ func TestIDracTempC(t *testing.T) {
 }
 
 func TestIDracNics(t *testing.T) {
-	expectedAnswer := []*model.Nic{
-		&model.Nic{
+	expectedAnswer := []*devices.Nic{
+		&devices.Nic{
 			MacAddress: "24:8a:07:5a:9e:8c",
 			Name:       "Mellanox ConnectX-4 LX 25GbE SFP Rack NDC",
 		},
-		&model.Nic{
+		&devices.Nic{
 			MacAddress: "24:8a:07:5a:9e:8d",
 			Name:       "Mellanox ConnectX-4 LX 25GbE SFP Rack NDC",
 		},
-		&model.Nic{
+		&devices.Nic{
 			MacAddress: "84:7b:eb:f7:82:5a",
 			Name:       "bmc",
 		},
@@ -5554,20 +5554,18 @@ func TestIDracLicense(t *testing.T) {
 }
 
 func TestIDracPsu(t *testing.T) {
-	expectedAnswer := []*model.Psu{
-		&model.Psu{
-			Serial:         "65kt7j2_PS1",
-			CapacityKw:     0.75,
-			Status:         "OK",
-			PowerKw:        0.0,
-			DiscreteSerial: "65kt7j2",
+	expectedAnswer := []*devices.Psu{
+		&devices.Psu{
+			Serial:     "65kt7j2_PS1",
+			CapacityKw: 0.75,
+			Status:     "OK",
+			PowerKw:    0.0,
 		},
-		&model.Psu{
-			Serial:         "65kt7j2_PS2",
-			CapacityKw:     0.75,
-			Status:         "OK",
-			PowerKw:        0.0,
-			DiscreteSerial: "65kt7j2",
+		&devices.Psu{
+			Serial:     "65kt7j2_PS2",
+			CapacityKw: 0.75,
+			Status:     "OK",
+			PowerKw:    0.0,
 		},
 	}
 
@@ -5586,7 +5584,7 @@ func TestIDracPsu(t *testing.T) {
 	}
 
 	for pos, psu := range psus {
-		if psu.Serial != expectedAnswer[pos].Serial || psu.CapacityKw != expectedAnswer[pos].CapacityKw || psu.PowerKw != expectedAnswer[pos].PowerKw || psu.Status != expectedAnswer[pos].Status || psu.DiscreteSerial != expectedAnswer[pos].DiscreteSerial {
+		if psu.Serial != expectedAnswer[pos].Serial || psu.CapacityKw != expectedAnswer[pos].CapacityKw || psu.PowerKw != expectedAnswer[pos].PowerKw || psu.Status != expectedAnswer[pos].Status {
 			t.Errorf("Expected answer %v: found %v", expectedAnswer[pos], psu)
 		}
 	}
