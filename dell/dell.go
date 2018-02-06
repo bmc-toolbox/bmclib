@@ -197,7 +197,7 @@ type BladeHyperThreading struct {
 // IDracAuth is the struct used to verify the iDrac authentication
 type IDracAuth struct {
 	Status     string `xml:"status"`
-	AuthResult int    `xml:"authResult"`
+	AuthResult int    `xml:"authResult" json:"authResult"`
 	ForwardURL string `xml:"forwardUrl"`
 	ErrorMsg   string `xml:"errorMsg"`
 }
