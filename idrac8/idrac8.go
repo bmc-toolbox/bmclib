@@ -22,9 +22,9 @@ import (
 
 // Reader holds the status and properties of a connection to an iDrac device
 type Reader struct {
-	ip             *string
-	username       *string
-	password       *string
+	ip             string
+	username       string
+	password       string
 	client         *http.Client
 	st1            string
 	st2            string
@@ -32,7 +32,7 @@ type Reader struct {
 }
 
 // NewReader returns a new IloReader ready to be used
-func NewReader(ip *string, username *string, password *string) (iDrac *Reader, err error) {
+func NewReader(ip string, username string, password string) (iDrac *Reader, err error) {
 	client, err := httpclient.Build()
 	if err != nil {
 		return iDrac, err
@@ -465,6 +465,7 @@ func (i *Reader) Psus() (psus []*devices.Psu, err error) {
 		p := &devices.Psu{
 			Serial:     fmt.Sprintf("%s_%s", serial, strings.Split(psu.Name, " ")[0]),
 			Status:     status,
+			PowerKw:    0.00,
 			CapacityKw: float64(psu.MaxWattage) / 1000.00,
 		}
 
