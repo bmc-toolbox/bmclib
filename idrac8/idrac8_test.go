@@ -5237,7 +5237,7 @@ func setup() (bmc *Reader, err error) {
 		})
 	}
 
-	bmc, err = NewReader(&ip, &username, &password)
+	bmc, err = NewReader(ip, username, password)
 	if err != nil {
 		return bmc, err
 	}
