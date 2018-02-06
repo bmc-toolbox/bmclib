@@ -16,6 +16,7 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
+// Build builds a client session with our default parameters
 func Build() (client *http.Client, err error) {
 	tr := &http.Transport{
 		TLSClientConfig:   &tls.Config{InsecureSkipVerify: true},
