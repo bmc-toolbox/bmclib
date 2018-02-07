@@ -20,7 +20,7 @@ import (
 
 const (
 	// BMCModel defines the bmc model that is supported by this package
-	BMCModel = "iDrac9"
+	BMCModel = "iDRAC9"
 )
 
 // IDrac9 holds the status and properties of a connection to an iDrac device

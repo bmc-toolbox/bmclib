@@ -10,7 +10,7 @@ import (
 
 const (
 	// VendorID represents the id of the vendor across all packages
-	VendorID = "dell"
+	VendorID = "Dell"
 )
 
 // CMC is the entry of the json exposed by dell
