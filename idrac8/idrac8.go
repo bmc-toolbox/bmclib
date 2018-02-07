@@ -20,6 +20,11 @@ import (
 	"github.com/ncode/bmc/httpclient"
 )
 
+const (
+	// BMCModel defines the bmc model that is supported by this package
+	BMCModel = "iDrac8"
+)
+
 // IDrac8 holds the status and properties of a connection to an iDrac device
 type IDrac8 struct {
 	ip             string
@@ -306,7 +311,7 @@ func (i *IDrac8) Model() (model string, err error) {
 
 // BmcType returns the type of bmc we are talking to
 func (i *IDrac8) BmcType() (bmcType string, err error) {
-	return "iDrac8", err
+	return BMCModel, err
 }
 
 // License returns the bmc license information
