@@ -5222,7 +5222,7 @@ var (
 	}
 )
 
-func setup() (bmc *Reader, err error) {
+func setup() (bmc *IDrac8, err error) {
 	viper.SetDefault("debug", true)
 	mux = http.NewServeMux()
 	server = httptest.NewTLSServer(mux)
@@ -5237,7 +5237,7 @@ func setup() (bmc *Reader, err error) {
 		})
 	}
 
-	bmc, err = NewReader(ip, username, password)
+	bmc, err = New(ip, username, password)
 	if err != nil {
 		return bmc, err
 	}
