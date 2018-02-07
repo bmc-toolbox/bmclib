@@ -18,6 +18,11 @@ import (
 	"github.com/ncode/bmc/httpclient"
 )
 
+const (
+	// BMCModel defines the bmc model that is supported by this package
+	BMCModel = "iDrac9"
+)
+
 // IDrac9 holds the status and properties of a connection to an iDrac device
 type IDrac9 struct {
 	ip             string
