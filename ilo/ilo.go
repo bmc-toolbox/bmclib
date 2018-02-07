@@ -53,8 +53,8 @@ func New(ip string, username string, password string) (ilo *Ilo, err error) {
 		return ilo, err
 	}
 
-	xmlUrl := fmt.Sprintf("https://%s/xmldata?item=all", ip)
-	resp, err := client.Get(xmlUrl)
+	xmlURL := fmt.Sprintf("https://%s/xmldata?item=all", ip)
+	resp, err := client.Get(xmlURL)
 	if err != nil {
 		return ilo, err
 	}
@@ -68,7 +68,7 @@ func New(ip string, username string, password string) (ilo *Ilo, err error) {
 	rimpBlade := &hp.RimpBlade{}
 	err = xml.Unmarshal(payload, rimpBlade)
 	if err != nil {
-		httpclient.DumpInvalidPayload(xmlUrl, ip, payload)
+		httpclient.DumpInvalidPayload(xmlURL, ip, payload)
 		return ilo, err
 	}
 
