@@ -28,7 +28,7 @@ type IDrac9 struct {
 	iDracInventory *dell.IDracInventory
 }
 
-// New returns a new IloIDrac9 ready to be used
+// New returns a new IDrac9 ready to be used
 func New(ip string, username string, password string) (iDrac *IDrac9, err error) {
 	client, err := httpclient.Build()
 	if err != nil {
@@ -202,34 +202,49 @@ func (i *IDrac9) Serial() (serial string, err error) {
 }
 
 // Status returns health string status from the bmc
-func (i *IDrac9) Status() (serial string, err error) {
-	return "NotSupported", err
+func (i *IDrac9) Status() (status string, err error) {
+	extraHeaders := &map[string]string{
+		"X-SYSMGMT-OPTIMIZE": "true",
+	}
+
+	url := "sysmgmt/2016/server/extended_health"
+	payload, err := i.get(url, extraHeaders)
+	if err != nil {
+		return status, err
+	}
+
+	iDracHealthStatus := &dell.IDracHealthStatus{}
+	err = json.Unmarshal(payload, iDracHealthStatus)
+	if err != nil {
+		httpclient.DumpInvalidPayload(url, i.ip, payload)
+		return status, err
+	}
+
+	for _, entry := range iDracHealthStatus.HealthStatus {
+		if entry != 0 && entry != 2 {
+			return "Degraded", err
+		}
+	}
+
+	return "OK", err
 }
 
 // PowerKw returns the current power usage in Kw
 func (i *IDrac9) PowerKw() (power float64, err error) {
-	url := "data?get=powermonitordata"
+	url := "sysmgmt/2015/server/sensor/power"
 	payload, err := i.get(url, nil)
 	if err != nil {
 		return power, err
 	}
 
-	iDracRoot := &dell.IDracRoot{}
-	err = xml.Unmarshal(payload, iDracRoot)
+	iDracPowerData := &dell.IDracPowerData{}
+	err = json.Unmarshal(payload, iDracPowerData)
 	if err != nil {
 		httpclient.DumpInvalidPayload(url, i.ip, payload)
 		return power, err
 	}
 
-	if iDracRoot.Powermonitordata != nil && iDracRoot.Powermonitordata.PresentReading != nil && iDracRoot.Powermonitordata.PresentReading.Reading != nil {
-		value, err := strconv.Atoi(iDracRoot.Powermonitordata.PresentReading.Reading.Reading)
-		if err != nil {
-			return power, err
-		}
-		return float64(value) / 1000.00, err
-	}
-
-	return power, err
+	return iDracPowerData.Root.Powermonitordata.PresentReading.Reading.Reading / 1000.00, err
 }
 
 // BiosVersion returns the current version of the bios
@@ -391,7 +406,7 @@ func (i *IDrac9) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCoun
 func (i *IDrac9) Logout() (err error) {
 	log.WithFields(log.Fields{"step": "bmc connection", "vendor": dell.VendorID, "ip": i.ip}).Debug("logout from bmc")
 
-	resp, err := i.client.Get(fmt.Sprintf("https://%s/session/logout", i.ip))
+	resp, err := i.client.Get(fmt.Sprintf("https://%s/sysmgmt/2015/bmc/session/logout", i.ip))
 	if err != nil {
 		return err
 	}
