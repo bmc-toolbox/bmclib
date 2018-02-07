@@ -314,6 +314,24 @@ type IDracTemp struct {
 	IsFreshAirCompliant int `json:"is_fresh_air_compliant"`
 }
 
+// IDracHealthStatus contains the list of component status rendered from iDrac http://$ip/sysmgmt/2016/server/extended_health
+type IDracHealthStatus struct {
+	HealthStatus []int `json:"healthStatus"`
+}
+
+// IDracPowerData contains the power usage data from iDrac http://$ip/sysmgmt/2015/server/sensor/power
+type IDracPowerData struct {
+	Root struct {
+		Powermonitordata struct {
+			PresentReading struct {
+				Reading struct {
+					Reading float64 `json:"reading,string"`
+				} `json:"reading"`
+			} `json:"presentReading"`
+		} `json:"powermonitordata"`
+	} `json:"root"`
+}
+
 // CMCWWN is the structure used to render the data when querying /json?method=blades-wwn-info
 type CMCWWN struct {
 	SlotMacWwn CMCSlotMacWwn `json:"slot_mac_wwn"`
