@@ -1,15 +1,16 @@
 package discover
 
 import (
-	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"strings"
 
+	"github.com/ncode/bmc/idrac8"
+	"github.com/ncode/bmc/idrac9"
+
 	log "github.com/sirupsen/logrus"
-	"github.com/ncode/bmc/dell"
 	"github.com/ncode/bmc/devices"
 	"github.com/ncode/bmc/hp"
 	"github.com/ncode/bmc/httpclient"
@@ -20,14 +21,13 @@ import (
 // ScanAndConnect will scan the bmc trying to learn the device type and return a working connection
 func ScanAndConnect(host string, username string, password string) (bmcConnection interface{}, err error) {
 	log.WithFields(log.Fields{"step": "ScanAndConnect", "host": host}).Debug("detecting vendor")
-	var vendor string
 
 	client, err := httpclient.Build()
 	if err != nil {
 		return bmcConnection, err
 	}
 
-	resp, err := client.Get(fmt.Sprintf("http://%s/res/ok.png", host))
+	resp, err := client.Get(fmt.Sprintf("https://%s/res/ok.png", host))
 	if err != nil {
 		return bmcConnection, err
 	}
@@ -69,7 +69,6 @@ func ScanAndConnect(host string, username string, password string) (bmcConnectio
 		}
 
 		if iloXML.HSI != nil {
-			var isKnow bool
 			if strings.HasPrefix(iloXML.MP.Pn, "Integrated Lights-Out") {
 				return ilo.New(host, username, password)
 			}
@@ -87,17 +86,29 @@ func ScanAndConnect(host string, username string, password string) (bmcConnectio
 	if err != nil {
 		return bmcConnection, err
 	}
+	io.Copy(ioutil.Discard, resp.Body)
 	defer resp.Body.Close()
 
 	if resp.StatusCode == 200 {
-		dellJSON := &dell.HwDetection{}
-		err = json.Unmarshal(payload, dellJSON)
-		if err != nil {
-			return bmcConnection, err
-		}
+		return idrac8.New(host, username, password)
+	}
 
+	resp, err = client.Get(fmt.Sprintf("https://%s/sysmgmt/2015/bmc/info", host))
+	if err != nil {
 		return bmcConnection, err
 	}
+
+	payload, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return bmcConnection, err
+	}
+	io.Copy(ioutil.Discard, resp.Body)
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 200 {
+		return idrac9.New(host, username, password)
+	}
+
 	resp, err = client.Get(fmt.Sprintf("https://%s/cgi-bin/webcgi/login", host))
 	if err != nil {
 		return bmcConnection, err
