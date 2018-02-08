@@ -21,7 +21,7 @@ type Blade struct {
 	Spn             string `xml:" SPN,omitempty"`
 	Temp            *Temp  `xml:" TEMPS>TEMP,omitempty"`
 	BladeRomVer     string `xml:" BLADEROMVER,omitempty"`
-	AssociatedBlade string `xml:" ASSOCIATEDBLADE,omitempty"`
+	AssociatedBlade int    `xml:" ASSOCIATEDBLADE,omitempty"`
 }
 
 // Bay contains the position of the blade within the chassis
