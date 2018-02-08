@@ -18,7 +18,7 @@ var (
 	mux     *http.ServeMux
 	server  *httptest.Server
 	answers = map[string]map[string][]byte{
-		"BladeIlo": map[string][]byte{
+		"Ilo": map[string][]byte{
 			"/xmldata": []byte(`<RIMP>
 			<HSI>
 			<SBSN>CZ3629FY8B</SBSN>
@@ -107,8 +107,8 @@ var (
 			</HEALTH>
 			</RIMP>`),
 		},
-		"BladeIDrac8": map[string][]byte{"/session": []byte(`{"aimGetProp" : {"hostname" :"incubatordb-2011","gui_str_title_bar" :"","OEMHostName" :"machine.example.com","fwVersion" :"2.50.33","sysDesc" :"PowerEdge M630","status" : "OK"}}`)},
-		"BladeIDrac9": map[string][]byte{"/sysmgmt/2015/bmc/info": []byte(`{"Attributes":{"ADEnabled":"Disabled","BuildVersion":"37","FwVer":"3.15.15.15","GUITitleBar":"spare-H16Z4M2","IsOEMBranded":"0","License":"Enterprise","SSOEnabled":"Disabled","SecurityPolicyMessage":"By accessing this computer, you confirm that such access complies with your organization's security policy.","ServerGen":"14G","SrvPrcName":"NULL","SystemLockdown":"Disabled","SystemModelName":"PowerEdge M640","TFAEnabled":"Disabled","iDRACName":"spare-H16Z4M2"}}`)},
+		"IDrac8": map[string][]byte{"/session": []byte(`{"aimGetProp" : {"hostname" :"incubatordb-2011","gui_str_title_bar" :"","OEMHostName" :"machine.example.com","fwVersion" :"2.50.33","sysDesc" :"PowerEdge M630","status" : "OK"}}`)},
+		"IDrac9": map[string][]byte{"/sysmgmt/2015/bmc/info": []byte(`{"Attributes":{"ADEnabled":"Disabled","BuildVersion":"37","FwVer":"3.15.15.15","GUITitleBar":"spare-H16Z4M2","IsOEMBranded":"0","License":"Enterprise","SSOEnabled":"Disabled","SecurityPolicyMessage":"By accessing this computer, you confirm that such access complies with your organization's security policy.","ServerGen":"14G","SrvPrcName":"NULL","SystemLockdown":"Disabled","SystemModelName":"PowerEdge M640","TFAEnabled":"Disabled","iDRACName":"spare-H16Z4M2"}}`)},
 	}
 )
 
@@ -140,7 +140,7 @@ func tearDown() {
 }
 
 func TestFindBladedIlo(t *testing.T) {
-	bmc, err := setup(answers["BladeIlo"])
+	bmc, err := setup(answers["Ilo"])
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
@@ -154,7 +154,7 @@ func TestFindBladedIlo(t *testing.T) {
 }
 
 func TestFindBladeIDrac8(t *testing.T) {
-	bmc, err := setup(answers["BladeIDrac8"])
+	bmc, err := setup(answers["IDrac8"])
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
@@ -167,7 +167,7 @@ func TestFindBladeIDrac8(t *testing.T) {
 }
 
 func TestFindBladeIDrac9(t *testing.T) {
-	bmc, err := setup(answers["BladeIDrac9"])
+	bmc, err := setup(answers["IDrac9"])
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
