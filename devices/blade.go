@@ -8,12 +8,8 @@ type Blade struct {
 	BmcType              string
 	BmcAddress           string
 	BmcVersion           string
-	BmcSSHReachable      bool
-	BmcWEBReachable      bool
-	BmcIpmiReachable     bool
 	BmcLicenceType       string
 	BmcLicenceStatus     string
-	BmcAuth              bool
 	Nics                 []*Nic
 	BladePosition        int
 	Model                string
