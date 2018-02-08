@@ -17,6 +17,11 @@ import (
 	"github.com/ncode/dora/model"
 )
 
+const (
+	// BMCModel defines the bmc model that is supported by this package
+	BMCModel = "m1000e"
+)
+
 var (
 	macFinder = regexp.MustCompile("([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})")
 	findBmcIP = regexp.MustCompile("bladeIpAddress\">((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3})")

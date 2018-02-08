@@ -13,6 +13,11 @@ import (
 	"github.com/ncode/dora/model"
 )
 
+const (
+	// BMCModel defines the bmc model that is supported by this package
+	BMCModel = "c7000"
+)
+
 // C7000 holds the status and properties of a connection to a BladeSystem device
 type C7000 struct {
 	ip       string
