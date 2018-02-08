@@ -10,6 +10,7 @@ import (
 	"github.com/ncode/bmc/idrac8"
 	"github.com/ncode/bmc/idrac9"
 	"github.com/ncode/bmc/ilo"
+	"github.com/ncode/bmc/supermicrox10"
 
 	"github.com/spf13/viper"
 )
@@ -107,8 +108,9 @@ var (
 			</HEALTH>
 			</RIMP>`),
 		},
-		"IDrac8": map[string][]byte{"/session": []byte(`{"aimGetProp" : {"hostname" :"incubatordb-2011","gui_str_title_bar" :"","OEMHostName" :"machine.example.com","fwVersion" :"2.50.33","sysDesc" :"PowerEdge M630","status" : "OK"}}`)},
-		"IDrac9": map[string][]byte{"/sysmgmt/2015/bmc/info": []byte(`{"Attributes":{"ADEnabled":"Disabled","BuildVersion":"37","FwVer":"3.15.15.15","GUITitleBar":"spare-H16Z4M2","IsOEMBranded":"0","License":"Enterprise","SSOEnabled":"Disabled","SecurityPolicyMessage":"By accessing this computer, you confirm that such access complies with your organization's security policy.","ServerGen":"14G","SrvPrcName":"NULL","SystemLockdown":"Disabled","SystemModelName":"PowerEdge M640","TFAEnabled":"Disabled","iDRACName":"spare-H16Z4M2"}}`)},
+		"IDrac8":        map[string][]byte{"/session": []byte(`{"aimGetProp" : {"hostname" :"incubatordb-2011","gui_str_title_bar" :"","OEMHostName" :"machine.example.com","fwVersion" :"2.50.33","sysDesc" :"PowerEdge M630","status" : "OK"}}`)},
+		"IDrac9":        map[string][]byte{"/sysmgmt/2015/bmc/info": []byte(`{"Attributes":{"ADEnabled":"Disabled","BuildVersion":"37","FwVer":"3.15.15.15","GUITitleBar":"spare-H16Z4M2","IsOEMBranded":"0","License":"Enterprise","SSOEnabled":"Disabled","SecurityPolicyMessage":"By accessing this computer, you confirm that such access complies with your organization's security policy.","ServerGen":"14G","SrvPrcName":"NULL","SystemLockdown":"Disabled","SystemModelName":"PowerEdge M640","TFAEnabled":"Disabled","iDRACName":"spare-H16Z4M2"}}`)},
+		"SupermicroX10": map[string][]byte{"/cgi/login.cgi": []byte(`ok`)},
 	}
 )
 
@@ -139,7 +141,7 @@ func tearDown() {
 	server.Close()
 }
 
-func TestFindBladedIlo(t *testing.T) {
+func TestFindIlo(t *testing.T) {
 	bmc, err := setup(answers["Ilo"])
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
@@ -153,7 +155,7 @@ func TestFindBladedIlo(t *testing.T) {
 	tearDown()
 }
 
-func TestFindBladeIDrac8(t *testing.T) {
+func TestFindIDrac8(t *testing.T) {
 	bmc, err := setup(answers["IDrac8"])
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
@@ -166,7 +168,7 @@ func TestFindBladeIDrac8(t *testing.T) {
 	tearDown()
 }
 
-func TestFindBladeIDrac9(t *testing.T) {
+func TestFindIDrac9(t *testing.T) {
 	bmc, err := setup(answers["IDrac9"])
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
@@ -174,6 +176,19 @@ func TestFindBladeIDrac9(t *testing.T) {
 
 	if answer, ok := bmc.(*idrac9.IDrac9); !ok {
 		t.Errorf("Expected answer %T: found %T", &idrac9.IDrac9{}, answer)
+	}
+
+	tearDown()
+}
+
+func TestFindISupermicroX10(t *testing.T) {
+	bmc, err := setup(answers["SupermicroX10"])
+	if err != nil {
+		t.Fatalf("Found errors during the test setup %v", err)
+	}
+
+	if answer, ok := bmc.(*supermicrox10.SupermicroX10); !ok {
+		t.Errorf("Expected answer %T: found %T", &supermicrox10.SupermicroX10{}, answer)
 	}
 
 	tearDown()
