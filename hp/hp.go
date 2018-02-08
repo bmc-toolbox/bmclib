@@ -1,8 +1,10 @@
 package hp
 
+import "github.com/ncode/bmc/devices"
+
 const (
 	// VendorID represents the id of the vendor across all packages
-	VendorID = "HP"
+	VendorID = devices.HP
 )
 
 // Blade contains the unmarshalled data from the hp chassis
