@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/ncode/bmc/errors"
 	"github.com/ncode/bmc/idrac8"
 	"github.com/ncode/bmc/idrac9"
 
@@ -19,7 +20,7 @@ import (
 )
 
 // ScanAndConnect will scan the bmc trying to learn the device type and return a working connection
-func ScanAndConnect(host string, username string, password string) (bmcConnection interface{}, err error) {
+func ScanAndConnect(host string, username string, password string) (bmcConnection devices.Bmc, err error) {
 	log.WithFields(log.Fields{"step": "ScanAndConnect", "host": host}).Debug("detecting vendor")
 
 	client, err := httpclient.Build()
@@ -36,7 +37,7 @@ func ScanAndConnect(host string, username string, password string) (bmcConnectio
 
 	if resp.StatusCode == 200 {
 		log.WithFields(log.Fields{"step": "ScanAndConnect", "host": host, "vendor": devices.Cloudline}).Debug("it's a discrete")
-		return bmcConnection, httpclient.ErrVendorNotSupported
+		return bmcConnection, errors.ErrVendorNotSupported
 	}
 
 	resp, err = client.Get(fmt.Sprintf("https://%s/xmldata?item=all", host))
@@ -133,5 +134,5 @@ func ScanAndConnect(host string, username string, password string) (bmcConnectio
 		return supermicrox10.New(host, username, password)
 	}
 
-	return bmcConnection, httpclient.ErrVendorUnknown
+	return bmcConnection, errors.ErrVendorUnknown
 }

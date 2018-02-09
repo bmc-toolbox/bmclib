@@ -12,6 +12,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/ncode/bmc/devices"
+	"github.com/ncode/bmc/errors"
 	"github.com/ncode/bmc/httpclient"
 	"github.com/ncode/bmc/supermicro"
 )
@@ -55,7 +56,7 @@ func (s *SupermicroX10) Login() (err error) {
 	}
 
 	if resp.StatusCode == 404 {
-		return httpclient.ErrPageNotFound
+		return errors.ErrPageNotFound
 	}
 
 	payload, err := ioutil.ReadAll(resp.Body)
@@ -65,7 +66,7 @@ func (s *SupermicroX10) Login() (err error) {
 	defer resp.Body.Close()
 
 	if !strings.Contains(string(payload), "../cgi/url_redirect.cgi?url_name=mainmenu") {
-		return httpclient.ErrLoginFailed
+		return errors.ErrLoginFailed
 	}
 
 	return err
@@ -149,7 +150,7 @@ func (s *SupermicroX10) Serial() (serial string, err error) {
 	}
 
 	if ipmi.FruInfo == nil || ipmi.FruInfo.Chassis == nil {
-		return serial, httpclient.ErrInvalidSerial
+		return serial, errors.ErrInvalidSerial
 	}
 
 	if strings.HasPrefix(ipmi.FruInfo.Chassis.SerialNum, "S") {
@@ -386,4 +387,51 @@ func (s *SupermicroX10) License() (name string, licType string, err error) {
 	}
 
 	return name, licType, err
+}
+
+// Vendor returns bmc's vendor
+func (s *SupermicroX10) Vendor() (vendor string) {
+	return supermicro.VendorID
+}
+
+// ServerSnapshot do best effort to populate the server data and returns a blade or discrete
+func (s *SupermicroX10) ServerSnapshot() (server interface{}, err error) {
+	if isBlade, _ := s.IsBlade(); isBlade {
+		blade := &devices.Blade{}
+		blade.Serial, _ = s.Serial()
+		blade.BmcType, _ = s.BmcType()
+		blade.BmcVersion, _ = s.BmcVersion()
+		blade.Model, _ = s.Model()
+		blade.Vendor = s.Vendor()
+		blade.Nics, _ = s.Nics()
+		blade.BiosVersion, _ = s.BiosVersion()
+		blade.Processor, blade.ProcessorCount, blade.ProcessorCoreCount, blade.ProcessorThreadCount, _ = s.CPU()
+		blade.Memory, _ = s.Memory()
+		blade.Status, _ = s.Status()
+		blade.Name, _ = s.Name()
+		blade.TempC, _ = s.TempC()
+		blade.PowerKw, _ = s.PowerKw()
+		blade.BmcLicenceType, blade.BmcLicenceStatus, _ = s.License()
+		server = blade
+	} else {
+		discrete := &devices.Discrete{}
+		discrete.Serial, _ = s.Serial()
+		discrete.BmcType, _ = s.BmcType()
+		discrete.BmcVersion, _ = s.BmcVersion()
+		discrete.Model, _ = s.Model()
+		discrete.Vendor = s.Vendor()
+		discrete.Nics, _ = s.Nics()
+		discrete.BiosVersion, _ = s.BiosVersion()
+		discrete.Processor, discrete.ProcessorCount, discrete.ProcessorCoreCount, discrete.ProcessorThreadCount, _ = s.CPU()
+		discrete.Memory, _ = s.Memory()
+		discrete.Status, _ = s.Status()
+		discrete.Name, _ = s.Name()
+		discrete.TempC, _ = s.TempC()
+		discrete.PowerKw, _ = s.PowerKw()
+		discrete.BmcLicenceType, discrete.BmcLicenceStatus, _ = s.License()
+		// discrete.Psus, _ = s.Psus()
+		server = discrete
+	}
+
+	return server, err
 }

@@ -13,6 +13,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/ncode/bmc/devices"
+	"github.com/ncode/bmc/errors"
 	"github.com/ncode/bmc/hp"
 	"github.com/ncode/bmc/httpclient"
 )
@@ -93,7 +94,7 @@ func (i *Ilo) Login() (err error) {
 	}
 
 	if resp.StatusCode == 404 {
-		return httpclient.ErrPageNotFound
+		return errors.ErrPageNotFound
 	}
 
 	payload, err := ioutil.ReadAll(resp.Body)
@@ -103,7 +104,7 @@ func (i *Ilo) Login() (err error) {
 	defer resp.Body.Close()
 
 	if strings.Contains(string(payload), "Invalid login attempt") {
-		return httpclient.ErrLoginFailed
+		return errors.ErrLoginFailed
 	}
 
 	return err
@@ -125,7 +126,7 @@ func (i *Ilo) get(endpoint string) (payload []byte, err error) {
 	}
 
 	if resp.StatusCode == 404 {
-		return payload, httpclient.ErrPageNotFound
+		return payload, errors.ErrPageNotFound
 	}
 
 	return payload, err
@@ -269,7 +270,7 @@ func (i *Ilo) BiosVersion() (version string, err error) {
 		return overview.SystemRom, err
 	}
 
-	return version, httpclient.ErrBiosNotFound
+	return version, errors.ErrBiosNotFound
 }
 
 // PowerKw returns the current power usage in Kw
@@ -427,4 +428,49 @@ func (i *Ilo) IsBlade() (isBlade bool, err error) {
 	}
 
 	return isBlade, err
+}
+
+// Vendor returns bmc's vendor
+func (i *Ilo) Vendor() (vendor string) {
+	return hp.VendorID
+}
+
+// ServerSnapshot do best effort to populate the server data and returns a blade or discrete
+func (i *Ilo) ServerSnapshot() (server interface{}, err error) {
+	if isBlade, _ := i.IsBlade(); isBlade {
+		blade := &devices.Blade{}
+		blade.Serial, _ = i.Serial()
+		blade.BmcType, _ = i.BmcType()
+		blade.BmcVersion, _ = i.BmcVersion()
+		blade.Model, _ = i.Model()
+		blade.Nics, _ = i.Nics()
+		blade.BiosVersion, _ = i.BiosVersion()
+		blade.Processor, blade.ProcessorCount, blade.ProcessorCoreCount, blade.ProcessorThreadCount, _ = i.CPU()
+		blade.Memory, _ = i.Memory()
+		blade.Status, _ = i.Status()
+		blade.Name, _ = i.Name()
+		blade.TempC, _ = i.TempC()
+		blade.PowerKw, _ = i.PowerKw()
+		blade.BmcLicenceType, blade.BmcLicenceStatus, _ = i.License()
+		server = blade
+	} else {
+		discrete := &devices.Discrete{}
+		discrete.Serial, _ = i.Serial()
+		discrete.BmcType, _ = i.BmcType()
+		discrete.BmcVersion, _ = i.BmcVersion()
+		discrete.Model, _ = i.Model()
+		discrete.Nics, _ = i.Nics()
+		discrete.BiosVersion, _ = i.BiosVersion()
+		discrete.Processor, discrete.ProcessorCount, discrete.ProcessorCoreCount, discrete.ProcessorThreadCount, _ = i.CPU()
+		discrete.Memory, _ = i.Memory()
+		discrete.Status, _ = i.Status()
+		discrete.Name, _ = i.Name()
+		discrete.TempC, _ = i.TempC()
+		discrete.PowerKw, _ = i.PowerKw()
+		discrete.BmcLicenceType, discrete.BmcLicenceStatus, _ = i.License()
+		discrete.Psus, _ = i.Psus()
+		server = discrete
+	}
+
+	return server, err
 }

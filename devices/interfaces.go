@@ -18,6 +18,8 @@ type Bmc interface {
 	Serial() (string, error)
 	Status() (string, error)
 	TempC() (int, error)
+	Vendor() string
+	ServerSnapshot() (interface{}, error)
 }
 
 // BmcChassis represents the requirement of items to be collected from a chassis

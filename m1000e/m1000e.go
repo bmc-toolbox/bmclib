@@ -13,6 +13,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/ncode/bmc/dell"
+	"github.com/ncode/bmc/errors"
 	"github.com/ncode/bmc/httpclient"
 	"github.com/ncode/dora/model"
 )
@@ -79,11 +80,11 @@ func (m *M1000e) Login() (err error) {
 	}
 
 	if strings.Contains(string(auth), "Try Again") {
-		return httpclient.ErrLoginFailed
+		return errors.ErrLoginFailed
 	}
 
 	if resp.StatusCode == 404 {
-		return httpclient.ErrPageNotFound
+		return errors.ErrPageNotFound
 	}
 
 	err = m.loadHwData()
@@ -109,7 +110,7 @@ func (m *M1000e) loadHwData() (err error) {
 	}
 
 	if m.cmcJSON.Chassis == nil {
-		return httpclient.ErrUnableToReadData
+		return errors.ErrUnableToReadData
 	}
 
 	url = "json?method=blades-wwn-info"
@@ -149,7 +150,7 @@ func (m *M1000e) get(endpoint string) (payload []byte, err error) {
 	}
 
 	if resp.StatusCode == 404 {
-		return payload, httpclient.ErrPageNotFound
+		return payload, errors.ErrPageNotFound
 	}
 
 	// Dell has a really shitty consistency of the data type returned, here we fix what's possible
@@ -399,4 +400,9 @@ func (m *M1000e) Blades() (blades []*model.Blade, err error) {
 		}
 	}
 	return blades, err
+}
+
+// Vendor returns bmc's vendor
+func (m *M1000e) Vendor() (vendor string) {
+	return dell.VendorID
 }
