@@ -399,6 +399,7 @@ func (s *SupermicroX10) ServerSnapshot() (server interface{}, err error) {
 	if isBlade, _ := s.IsBlade(); isBlade {
 		blade := &devices.Blade{}
 		blade.Serial, _ = s.Serial()
+		blade.BmcAddress = s.ip
 		blade.BmcType, _ = s.BmcType()
 		blade.BmcVersion, _ = s.BmcVersion()
 		blade.Model, _ = s.Model()
@@ -416,6 +417,7 @@ func (s *SupermicroX10) ServerSnapshot() (server interface{}, err error) {
 	} else {
 		discrete := &devices.Discrete{}
 		discrete.Serial, _ = s.Serial()
+		discrete.BmcAddress = s.ip
 		discrete.BmcType, _ = s.BmcType()
 		discrete.BmcVersion, _ = s.BmcVersion()
 		discrete.Model, _ = s.Model()

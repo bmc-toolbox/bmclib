@@ -514,6 +514,7 @@ func (i *IDrac8) ServerSnapshot() (server interface{}, err error) {
 	if isBlade, _ := i.IsBlade(); isBlade {
 		blade := &devices.Blade{}
 		blade.Serial, _ = i.Serial()
+		blade.BmcAddress = i.ip
 		blade.BmcType, _ = i.BmcType()
 		blade.BmcVersion, _ = i.BmcVersion()
 		blade.Model, _ = i.Model()
@@ -531,6 +532,7 @@ func (i *IDrac8) ServerSnapshot() (server interface{}, err error) {
 	} else {
 		discrete := &devices.Discrete{}
 		discrete.Serial, _ = i.Serial()
+		discrete.BmcAddress = i.ip
 		discrete.BmcType, _ = i.BmcType()
 		discrete.BmcVersion, _ = i.BmcVersion()
 		discrete.Model, _ = i.Model()
