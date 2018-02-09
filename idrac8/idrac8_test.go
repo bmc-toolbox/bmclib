@@ -5295,7 +5295,7 @@ func TestIDracModel(t *testing.T) {
 }
 
 func TestIDracBmcType(t *testing.T) {
-	expectedAnswer := "iDrac8"
+	expectedAnswer := "iDRAC8"
 
 	bmc, err := setup()
 	if err != nil {

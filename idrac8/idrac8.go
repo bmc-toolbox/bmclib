@@ -17,6 +17,7 @@ import (
 
 	"github.com/ncode/bmc/dell"
 	"github.com/ncode/bmc/devices"
+	"github.com/ncode/bmc/errors"
 	"github.com/ncode/bmc/httpclient"
 )
 
@@ -64,7 +65,7 @@ func (i *IDrac8) Login() (err error) {
 	}
 
 	if resp.StatusCode == 404 {
-		return httpclient.ErrPageNotFound
+		return errors.ErrPageNotFound
 	}
 
 	payload, err := ioutil.ReadAll(resp.Body)
@@ -82,7 +83,7 @@ func (i *IDrac8) Login() (err error) {
 
 	stTemp := strings.Split(iDracAuth.ForwardURL, ",")
 	if len(stTemp) != 2 {
-		return httpclient.ErrLoginFailed
+		return errors.ErrLoginFailed
 	}
 
 	i.st1 = strings.TrimLeft(stTemp[0], "index.html?ST1=")
@@ -112,7 +113,7 @@ func (i *IDrac8) loadHwData() (err error) {
 	}
 
 	if iDracInventory == nil || iDracInventory.Component == nil {
-		return httpclient.ErrUnableToReadData
+		return errors.ErrUnableToReadData
 	}
 
 	i.iDracInventory = iDracInventory
@@ -159,7 +160,7 @@ func (i *IDrac8) get(endpoint string, extraHeaders *map[string]string) (payload 
 	}
 
 	if resp.StatusCode == 404 {
-		return payload, httpclient.ErrPageNotFound
+		return payload, errors.ErrPageNotFound
 	}
 
 	return payload, err
@@ -221,8 +222,31 @@ func (i *IDrac8) Serial() (serial string, err error) {
 }
 
 // Status returns health string status from the bmc
-func (i *IDrac8) Status() (serial string, err error) {
-	return "NotSupported", err
+func (i *IDrac8) Status() (status string, err error) {
+	extraHeaders := &map[string]string{
+		"X-SYSMGMT-OPTIMIZE": "true",
+	}
+
+	url := "sysmgmt/2016/server/extended_health"
+	payload, err := i.get(url, extraHeaders)
+	if err != nil {
+		return status, err
+	}
+
+	iDracHealthStatus := &dell.IDracHealthStatus{}
+	err = json.Unmarshal(payload, iDracHealthStatus)
+	if err != nil {
+		httpclient.DumpInvalidPayload(url, i.ip, payload)
+		return status, err
+	}
+
+	for _, entry := range iDracHealthStatus.HealthStatus {
+		if entry != 0 && entry != 2 {
+			return "Degraded", err
+		}
+	}
+
+	return "OK", err
 }
 
 // PowerKw returns the current power usage in Kw
@@ -478,4 +502,51 @@ func (i *IDrac8) Psus() (psus []*devices.Psu, err error) {
 	}
 
 	return psus, err
+}
+
+// Vendor returns bmc's vendor
+func (i *IDrac8) Vendor() (vendor string) {
+	return dell.VendorID
+}
+
+// ServerSnapshot do best effort to populate the server data and returns a blade or discrete
+func (i *IDrac8) ServerSnapshot() (server interface{}, err error) {
+	if isBlade, _ := i.IsBlade(); isBlade {
+		blade := &devices.Blade{}
+		blade.Serial, _ = i.Serial()
+		blade.BmcType, _ = i.BmcType()
+		blade.BmcVersion, _ = i.BmcVersion()
+		blade.Model, _ = i.Model()
+		blade.Vendor = i.Vendor()
+		blade.Nics, _ = i.Nics()
+		blade.BiosVersion, _ = i.BiosVersion()
+		blade.Processor, blade.ProcessorCount, blade.ProcessorCoreCount, blade.ProcessorThreadCount, _ = i.CPU()
+		blade.Memory, _ = i.Memory()
+		blade.Status, _ = i.Status()
+		blade.Name, _ = i.Name()
+		blade.TempC, _ = i.TempC()
+		blade.PowerKw, _ = i.PowerKw()
+		blade.BmcLicenceType, blade.BmcLicenceStatus, _ = i.License()
+		server = blade
+	} else {
+		discrete := &devices.Discrete{}
+		discrete.Serial, _ = i.Serial()
+		discrete.BmcType, _ = i.BmcType()
+		discrete.BmcVersion, _ = i.BmcVersion()
+		discrete.Model, _ = i.Model()
+		discrete.Vendor = i.Vendor()
+		discrete.Nics, _ = i.Nics()
+		discrete.BiosVersion, _ = i.BiosVersion()
+		discrete.Processor, discrete.ProcessorCount, discrete.ProcessorCoreCount, discrete.ProcessorThreadCount, _ = i.CPU()
+		discrete.Memory, _ = i.Memory()
+		discrete.Status, _ = i.Status()
+		discrete.Name, _ = i.Name()
+		discrete.TempC, _ = i.TempC()
+		discrete.PowerKw, _ = i.PowerKw()
+		discrete.BmcLicenceType, discrete.BmcLicenceStatus, _ = i.License()
+		discrete.Psus, _ = i.Psus()
+		server = discrete
+	}
+
+	return server, err
 }
