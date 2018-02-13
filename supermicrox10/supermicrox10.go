@@ -437,3 +437,9 @@ func (s *SupermicroX10) ServerSnapshot() (server interface{}, err error) {
 
 	return server, err
 }
+
+// UpdateCredentials updates login credentials
+func (s SupermicroX10) UpdateCredentials(username string, password string) {
+	s.username = username
+	s.password = password
+}

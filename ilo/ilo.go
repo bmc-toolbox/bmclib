@@ -476,3 +476,9 @@ func (i *Ilo) ServerSnapshot() (server interface{}, err error) {
 
 	return server, err
 }
+
+// UpdateCredentials updates login credentials
+func (i *Ilo) UpdateCredentials(username string, password string) {
+	i.username = username
+	i.password = password
+}

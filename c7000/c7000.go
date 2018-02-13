@@ -1,4 +1,4 @@
-package connectors
+package c7000
 
 import (
 	"encoding/xml"
@@ -11,7 +11,6 @@ import (
 	"github.com/ncode/bmc/errors"
 	"github.com/ncode/bmc/hp"
 	"github.com/ncode/bmc/httpclient"
-	"github.com/ncode/dora/model"
 )
 
 const (
@@ -164,12 +163,12 @@ func (c *C7000) PassThru() (passthru string, err error) {
 }
 
 // StorageBlades returns all StorageBlades found in this chassis
-func (c *C7000) StorageBlades() (storageBlades []*model.StorageBlade, err error) {
+func (c *C7000) StorageBlades() (storageBlades []*devices.StorageBlade, err error) {
 	if c.Rimp.Infra2.Blades != nil {
 		chassisSerial, _ := c.Serial()
 		for _, hpStorageBlade := range c.Rimp.Infra2.Blades {
 			if hpStorageBlade.Type == "STORAGE" {
-				storageBlade := model.StorageBlade{}
+				storageBlade := devices.StorageBlade{}
 				storageBlade.Serial = strings.ToLower(strings.TrimSpace(hpStorageBlade.Bsn))
 				storageBlade.BladePosition = hpStorageBlade.Bay.Connection
 				storageBlade.Status = hpStorageBlade.Status
@@ -221,4 +220,24 @@ func (c *C7000) Blades() (blades []*devices.Blade, err error) {
 // Vendor returns bmc's vendor
 func (c *C7000) Vendor() (vendor string) {
 	return hp.VendorID
+}
+
+// ChassisSnapshot do best effort to populate the server data and returns a blade or discrete
+func (c *C7000) ChassisSnapshot() (chassis *devices.Chassis, err error) {
+	chassis = &devices.Chassis{}
+	chassis.Vendor = c.Vendor()
+	chassis.BmcAddress = c.ip
+	chassis.Name, _ = c.Name()
+	chassis.Serial, _ = c.Serial()
+	chassis.Model, _ = c.Model()
+	chassis.PowerKw, _ = c.PowerKw()
+	chassis.TempC, _ = c.TempC()
+	chassis.Status, _ = c.Status()
+	chassis.FwVersion, _ = c.FwVersion()
+	chassis.PassThru, _ = c.PassThru()
+	chassis.Blades, _ = c.Blades()
+	chassis.StorageBlades, _ = c.StorageBlades()
+	chassis.Nics, _ = c.Nics()
+	chassis.Psus, _ = c.Psus()
+	return chassis, err
 }

@@ -7,9 +7,11 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/ncode/bmc/c7000"
 	"github.com/ncode/bmc/errors"
 	"github.com/ncode/bmc/idrac8"
 	"github.com/ncode/bmc/idrac9"
+	"github.com/ncode/bmc/m1000e"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/ncode/bmc/devices"
@@ -20,7 +22,7 @@ import (
 )
 
 // ScanAndConnect will scan the bmc trying to learn the device type and return a working connection
-func ScanAndConnect(host string, username string, password string) (bmcConnection devices.Bmc, err error) {
+func ScanAndConnect(host string, username string, password string) (bmcConnection interface{}, err error) {
 	log.WithFields(log.Fields{"step": "ScanAndConnect", "host": host}).Debug("detecting vendor")
 
 	client, err := httpclient.Build()
@@ -59,8 +61,7 @@ func ScanAndConnect(host string, username string, password string) (bmcConnectio
 
 		if iloXMLC.Infra2 != nil {
 			log.WithFields(log.Fields{"step": "ScanAndConnect", "host": host, "vendor": devices.HP}).Debug("it's a chassis")
-			// TODO: Return chassis here
-			return bmcConnection, err
+			return c7000.New(host, username, password)
 		}
 
 		iloXML := &hp.RimpBlade{}
@@ -119,8 +120,7 @@ func ScanAndConnect(host string, username string, password string) (bmcConnectio
 
 	if resp.StatusCode == 200 {
 		log.WithFields(log.Fields{"step": "connection", "host": host, "vendor": devices.Dell}).Debug("it's a chassis")
-		// TODO: Return a chassis here
-		return bmcConnection, err
+		return m1000e.New(host, username, password)
 	}
 
 	resp, err = client.Get(fmt.Sprintf("https://%s/cgi/login.cgi", host))

@@ -1,4 +1,4 @@
-package connectors
+package c7000
 
 import (
 	"net/http"

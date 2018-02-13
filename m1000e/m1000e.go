@@ -13,9 +13,9 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/ncode/bmc/dell"
+	"github.com/ncode/bmc/devices"
 	"github.com/ncode/bmc/errors"
 	"github.com/ncode/bmc/httpclient"
-	"github.com/ncode/dora/model"
 )
 
 const (
@@ -223,21 +223,18 @@ func (m *M1000e) FwVersion() (version string, err error) {
 }
 
 // Nics returns all found Nics in the device
-func (m *M1000e) Nics() (nics []*model.Nic, err error) {
+func (m *M1000e) Nics() (nics []*devices.Nic, err error) {
 	payload, err := m.get("cmc_status?cat=C01&tab=T11&id=P31")
 	if err != nil {
 		return nics, err
 	}
 
-	serial, _ := m.Serial()
-
 	mac := macFinder.FindString(string(payload))
 	if mac != "" {
-		nics = make([]*model.Nic, 0)
-		n := &model.Nic{
-			Name:          "OA1",
-			MacAddress:    strings.ToLower(mac),
-			ChassisSerial: serial,
+		nics = make([]*devices.Nic, 0)
+		n := &devices.Nic{
+			Name:       "OA1",
+			MacAddress: strings.ToLower(mac),
 		}
 		nics = append(nics, n)
 	}
@@ -269,7 +266,7 @@ func (m *M1000e) PassThru() (passthru string, err error) {
 }
 
 // Psus returns a list of psus installed on the device
-func (m *M1000e) Psus() (psus []*model.Psu, err error) {
+func (m *M1000e) Psus() (psus []*devices.Psu, err error) {
 	serial, _ := m.Serial()
 	for _, psu := range m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.PsuStatus.Psus {
 		if psu.PsuPresent == 0 {
@@ -293,12 +290,11 @@ func (m *M1000e) Psus() (psus []*model.Psu, err error) {
 			status = psu.PsuActiveError
 		}
 
-		p := &model.Psu{
-			Serial:        fmt.Sprintf("%s_%s", serial, psu.PsuPosition),
-			CapacityKw:    float64(psu.PsuCapacity) / 1000.00,
-			PowerKw:       (i * e) / 1000.00,
-			Status:        status,
-			ChassisSerial: serial,
+		p := &devices.Psu{
+			Serial:     fmt.Sprintf("%s_%s", serial, psu.PsuPosition),
+			CapacityKw: float64(psu.PsuCapacity) / 1000.00,
+			PowerKw:    (i * e) / 1000.00,
+			Status:     status,
 		}
 
 		psus = append(psus, p)
@@ -308,10 +304,10 @@ func (m *M1000e) Psus() (psus []*model.Psu, err error) {
 }
 
 // StorageBlades returns all StorageBlades found in this chassis
-func (m *M1000e) StorageBlades() (storageBlades []*model.StorageBlade, err error) {
+func (m *M1000e) StorageBlades() (storageBlades []*devices.StorageBlade, err error) {
 	for _, dellBlade := range m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.Blades {
 		if dellBlade.BladePresent == 1 && dellBlade.IsStorageBlade == 1 {
-			storageBlade := model.StorageBlade{}
+			storageBlade := devices.StorageBlade{}
 			storageBlade.BladePosition = dellBlade.BladeMasterSlot
 			storageBlade.Serial = strings.ToLower(dellBlade.BladeSvcTag)
 			storageBlade.Model = dellBlade.BladeModel
@@ -336,10 +332,10 @@ func (m *M1000e) StorageBlades() (storageBlades []*model.StorageBlade, err error
 }
 
 // Blades returns all StorageBlades found in this chassis
-func (m *M1000e) Blades() (blades []*model.Blade, err error) {
+func (m *M1000e) Blades() (blades []*devices.Blade, err error) {
 	for _, dellBlade := range m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.Blades {
 		if dellBlade.BladePresent == 1 && dellBlade.IsStorageBlade == 0 {
-			blade := model.Blade{}
+			blade := devices.Blade{}
 			blade.BladePosition = dellBlade.BladeMasterSlot
 			blade.Serial = strings.ToLower(dellBlade.BladeSvcTag)
 			blade.Model = dellBlade.BladeModel
@@ -366,7 +362,7 @@ func (m *M1000e) Blades() (blades []*model.Blade, err error) {
 			blade.BmcVersion = dellBlade.BladeUSCVer
 
 			if bmcData, ok := m.cmcWWN.SlotMacWwn.SlotMacWwnList[blade.BladePosition]; ok {
-				n := &model.Nic{
+				n := &devices.Nic{
 					Name:       "bmc",
 					MacAddress: strings.ToLower(bmcData.IsNotDoubleHeight.PortFMAC),
 				}
@@ -390,7 +386,7 @@ func (m *M1000e) Blades() (blades []*model.Blade, err error) {
 					log.WithFields(log.Fields{"operation": "connection", "ip": m.ip, "position": blade.BladePosition, "type": "chassis"}).Error("Network card information missing, please verify")
 					continue
 				}
-				n := &model.Nic{
+				n := &devices.Nic{
 					Name:       strings.ToLower(nic.BladeNicName[:len(nic.BladeNicName)-17]),
 					MacAddress: strings.ToLower(nic.BladeNicName[len(nic.BladeNicName)-17:]),
 				}
@@ -405,4 +401,30 @@ func (m *M1000e) Blades() (blades []*model.Blade, err error) {
 // Vendor returns bmc's vendor
 func (m *M1000e) Vendor() (vendor string) {
 	return dell.VendorID
+}
+
+// ChassisSnapshot do best effort to populate the server data and returns a blade or discrete
+func (m *M1000e) ChassisSnapshot() (chassis *devices.Chassis, err error) {
+	chassis = &devices.Chassis{}
+	chassis.Vendor = m.Vendor()
+	chassis.BmcAddress = m.ip
+	chassis.Name, _ = m.Name()
+	chassis.Serial, _ = m.Serial()
+	chassis.Model, _ = m.Model()
+	chassis.PowerKw, _ = m.PowerKw()
+	chassis.TempC, _ = m.TempC()
+	chassis.Status, _ = m.Status()
+	chassis.FwVersion, _ = m.FwVersion()
+	chassis.PassThru, _ = m.PassThru()
+	chassis.Blades, _ = m.Blades()
+	chassis.StorageBlades, _ = m.StorageBlades()
+	chassis.Nics, _ = m.Nics()
+	chassis.Psus, _ = m.Psus()
+	return chassis, err
+}
+
+// UpdateCredentials updates login credentials
+func (m *M1000e) UpdateCredentials(username string, password string) {
+	m.username = username
+	m.password = password
 }

@@ -552,3 +552,9 @@ func (i *IDrac8) ServerSnapshot() (server interface{}, err error) {
 
 	return server, err
 }
+
+// UpdateCredentials updates login credentials
+func (i *IDrac8) UpdateCredentials(username string, password string) {
+	i.username = username
+	i.password = password
+}

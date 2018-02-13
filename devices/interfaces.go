@@ -20,6 +20,7 @@ type Bmc interface {
 	TempC() (int, error)
 	Vendor() string
 	ServerSnapshot() (interface{}, error)
+	UpdateCredentials(string, string)
 }
 
 // BmcChassis represents the requirement of items to be collected from a chassis
@@ -39,4 +40,7 @@ type BmcChassis interface {
 	IsActive() bool
 	StorageBlades() ([]*StorageBlade, error)
 	TempC() (int, error)
+	Vendor() string
+	ChassisSnapshot() (*Chassis, error)
+	UpdateCredentials(string, string)
 }
