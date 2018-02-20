@@ -241,3 +241,9 @@ func (c *C7000) ChassisSnapshot() (chassis *devices.Chassis, err error) {
 	chassis.Psus, _ = c.Psus()
 	return chassis, err
 }
+
+// UpdateCredentials updates login credentials
+func (c *C7000) UpdateCredentials(username string, password string) {
+	c.username = username
+	c.password = password
+}

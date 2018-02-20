@@ -2683,3 +2683,16 @@ func TestHpChassisRole(t *testing.T) {
 
 	tearDown()
 }
+
+// func TestHpChassisIsBMC(t *testing.T) {
+// 	expectedAnswer := true
+
+// 	chassis, err := setup()
+// 	if err != nil {
+// 		t.Fatalf("Found errors during the test setup %v", err)
+// 	}
+
+// 	_ := devices.BmcChassis(chassis)
+
+// 	tearDown()
+// }
