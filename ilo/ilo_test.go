@@ -573,6 +573,7 @@ func TestIloDisks(t *testing.T) {
 
 	teardown()
 }
+
 func TestIloIsBlade(t *testing.T) {
 	expectedAnswer := false
 

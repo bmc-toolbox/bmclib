@@ -4228,6 +4228,47 @@ func TestIDracLicense(t *testing.T) {
 	tearDown()
 }
 
+func TestDiskDisks(t *testing.T) {
+	expectedAnswer := []*devices.Disk{
+		&devices.Disk{
+			Serial: "s37mnx0j700554",
+			Type:   "SSD",
+			Size:   "3576 GB",
+			Model:  "mz7lm3t8hmlp0d3",
+			Status: "OK",
+		},
+		&devices.Disk{
+			Serial: "s37mnx0j700557",
+			Type:   "SSD",
+			Size:   "3576 GB",
+			Model:  "mz7lm3t8hmlp0d3",
+			Status: "OK",
+		},
+	}
+
+	bmc, err := setup()
+	if err != nil {
+		t.Fatalf("Found errors during the test hpChassissetup %v", err)
+	}
+
+	disks, err := bmc.Disks()
+	if err != nil {
+		t.Fatalf("Found errors calling chassis.Disks %v", err)
+	}
+
+	if len(disks) != len(expectedAnswer) {
+		t.Fatalf("Expected %v disks: found %v disks", len(expectedAnswer), len(disks))
+	}
+
+	for pos, disk := range disks {
+		if disk.Serial != expectedAnswer[pos].Serial || disk.Type != expectedAnswer[pos].Type || disk.Size != expectedAnswer[pos].Size || disk.Status != expectedAnswer[pos].Status || disk.Model != expectedAnswer[pos].Model {
+			t.Errorf("Expected answer %v: found %v", expectedAnswer[pos], disk)
+		}
+	}
+
+	tearDown()
+}
+
 // func TestIDracPsu(t *testing.T) {
 // 	expectedAnswer := []*devices.Psu{
 // 		&devices.Psu{

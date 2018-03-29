@@ -525,6 +525,47 @@ func (i *IDrac9) ServerSnapshot() (server interface{}, err error) {
 	return server, err
 }
 
+// Disks returns a list of disks installed on the device
+func (i *IDrac9) Disks() (disks []*devices.Disk, err error) {
+	for _, component := range i.iDracInventory.Component {
+		if component.Classname == "DCIM_PhysicalDiskView" {
+			if disks == nil {
+				disks = make([]*devices.Disk, 0)
+			}
+			disk := &devices.Disk{}
+
+			for _, property := range component.Properties {
+				if property.Name == "Model" {
+					disk.Model = strings.ToLower(property.Value)
+				} else if property.Name == "SerialNumber" {
+					disk.Serial = strings.ToLower(property.Value)
+				} else if property.Name == "MediaType" {
+					if property.DisplayValue == "Solid State Drive" {
+						disk.Type = "SSD"
+					} else if property.DisplayValue == "Hard Disk Drive" {
+						disk.Type = "HDD"
+					} else {
+						disk.Type = property.DisplayValue
+					}
+				} else if property.Name == "PrimaryStatus" {
+					disk.Status = property.DisplayValue
+				} else if property.Name == "SizeInBytes" {
+					size, err := strconv.Atoi(property.Value)
+					if err != nil {
+						return disks, err
+					}
+					disk.Size = fmt.Sprintf("%d GB", size/1024/1024/1024)
+				}
+			}
+
+			if disk.Serial != "" {
+				disks = append(disks, disk)
+			}
+		}
+	}
+	return disks, err
+}
+
 // UpdateCredentials updates login credentials
 func (i *IDrac9) UpdateCredentials(username string, password string) {
 	i.username = username
