@@ -10,6 +10,7 @@ type Blade struct {
 	BmcVersion           string
 	BmcLicenceType       string
 	BmcLicenceStatus     string
+	Disks                []*Disk
 	Nics                 []*Nic
 	BladePosition        int
 	Model                string

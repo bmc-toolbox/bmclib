@@ -224,3 +224,23 @@ type IloPowerSupply struct {
 	} `json:"supplies"`
 	PresentPowerReading int `json:"present_power_reading"`
 }
+
+// IloDisks is the struct used to render the data from https://$ip/json/health_phy_drives, it contains the list of disks and their current health state
+type IloDisks struct {
+	PhyDriveArrays []struct {
+		PhysicalDrives []struct {
+			Name           string `json:"name"`
+			Status         string `json:"status"`
+			SerialNo       string `json:"serial_no"`
+			Model          string `json:"model"`
+			Capacity       string `json:"capacity"`
+			Location       string `json:"location"`
+			FwVersion      string `json:"fw_version"`
+			PhysStatus     string `json:"phys_status"`
+			DriveType      string `json:"drive_type"`
+			EncrStat       string `json:"encr_stat"`
+			PhysIdx        int    `json:"phys_idx"`
+			DriveMediatype string `json:"drive_mediatype"`
+		} `json:"physical_drives"`
+	} `json:"phy_drive_arrays"`
+}

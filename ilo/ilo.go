@@ -397,6 +397,57 @@ func (i *Ilo) Psus() (psus []*devices.Psu, err error) {
 	return psus, err
 }
 
+// Disks returns a list of disks installed on the device
+func (i *Ilo) Disks() (disks []*devices.Disk, err error) {
+	url := "json/health_phy_drives"
+	payload, err := i.get(url)
+	if err != nil {
+		return disks, err
+	}
+
+	hpIloDisks := &hp.IloDisks{}
+	err = json.Unmarshal(payload, hpIloDisks)
+	if err != nil {
+		httpclient.DumpInvalidPayload(url, i.ip, payload)
+		return disks, err
+	}
+
+	for _, disksArray := range hpIloDisks.PhyDriveArrays {
+		for _, physicalDrive := range disksArray.PhysicalDrives {
+			if disks == nil {
+				disks = make([]*devices.Disk, 0)
+			}
+			var status string
+			if physicalDrive.Status == "OP_STATUS_OK" {
+				status = "OK"
+			} else {
+				status = physicalDrive.Status
+			}
+
+			var diskType string
+			if strings.Contains(physicalDrive.DriveMediatype, "HDD") {
+				diskType = "HDD"
+			} else if strings.Contains(physicalDrive.DriveMediatype, "SSD") {
+				diskType = "SSD"
+			} else {
+				diskType = physicalDrive.DriveMediatype
+			}
+
+			disk := &devices.Disk{
+				Serial: strings.ToLower(physicalDrive.SerialNo),
+				Status: status,
+				Model:  strings.ToLower(physicalDrive.Model),
+				Size:   physicalDrive.Capacity,
+				Type:   diskType,
+			}
+
+			disks = append(disks, disk)
+		}
+	}
+
+	return disks, err
+}
+
 // Logout logs out and close the iLo connection
 func (i *Ilo) Logout() (err error) {
 	log.WithFields(log.Fields{"step": "bmc connection", "vendor": hp.VendorID, "ip": i.ip}).Debug("logout from bmc")
