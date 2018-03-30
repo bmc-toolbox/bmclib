@@ -14,7 +14,7 @@ type Discrete struct {
 	BmcLicenceType       string
 	BmcLicenceStatus     string
 	BmcAuth              bool
-	Disk                 []*Disk
+	Disks                []*Disk
 	Nics                 []*Nic
 	Psus                 []*Psu
 	Model                string
