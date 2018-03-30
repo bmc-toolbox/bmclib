@@ -438,6 +438,11 @@ func (s *SupermicroX10) ServerSnapshot() (server interface{}, err error) {
 	return server, err
 }
 
+// Disks returns a list of disks installed on the device
+func (s *SupermicroX10) Disks() (disks []*devices.Disk, err error) {
+	return disks, err
+}
+
 // UpdateCredentials updates login credentials
 func (s SupermicroX10) UpdateCredentials(username string, password string) {
 	s.username = username
