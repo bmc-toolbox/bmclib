@@ -99,6 +99,7 @@ var (
 			<IPMI>
 			  <BIOS_LINCESNE CHECK="0"/>
 			</IPMI>`),
+		"POWER_INFO.XML=(0,0)": []byte(`<?xml version="1.0"?>  <IPMI>  <POWER_INFO>  <POWER STATUS="ON"/>  </POWER_INFO>  </IPMI>`),
 	}
 )
 
@@ -462,6 +463,26 @@ func TestIsBlade(t *testing.T) {
 	}
 
 	if answer != expectedAnswer {
+		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+	}
+
+	tearDown()
+}
+
+func TestPoweState(t *testing.T) {
+	expectedAnswer := "on"
+
+	bmc, err := setup()
+	if err != nil {
+		t.Fatalf("Found errors during the test setup %v", err)
+	}
+
+	answer, err := bmc.PowerState()
+	if err != nil {
+		t.Fatalf("Found errors calling bmc.PowerState %v", err)
+	}
+
+	if expectedAnswer != answer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
 

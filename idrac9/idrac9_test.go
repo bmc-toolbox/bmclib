@@ -4327,3 +4327,23 @@ func TestIDracIsBlade(t *testing.T) {
 
 	tearDown()
 }
+
+func TestIDracPoweState(t *testing.T) {
+	expectedAnswer := "on"
+
+	bmc, err := setup()
+	if err != nil {
+		t.Fatalf("Found errors during the test setup %v", err)
+	}
+
+	answer, err := bmc.PowerState()
+	if err != nil {
+		t.Fatalf("Found errors calling bmc.PowerState %v", err)
+	}
+
+	if expectedAnswer != answer {
+		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+	}
+
+	tearDown()
+}

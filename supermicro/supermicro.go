@@ -19,6 +19,7 @@ type IPMI struct {
 	GenericInfo  *GenericInfo   `xml:" GENERIC_INFO,omitempty"`
 	PlatformInfo *PlatformInfo  `xml:" PLATFORM_INFO,omitempty"`
 	PowerSupply  []*PowerSupply `xml:" PowerSupply,omitempty"`
+	PowerInfo    *PowerInfo     `xml:"POWER_INFO"`
 	NodeInfo     *NodeInfo      `xml:" NodeInfo,omitempty"`
 	BiosLicense  *BiosLicense   `xml:" BIOS_LINCESNE,omitempty" json:"BIOS_LINCESNE,omitempty"`
 }
@@ -129,5 +130,12 @@ type Node struct {
 
 // BiosLicense contains the license of bmc
 type BiosLicense struct {
-	Check string `xml:" CHECK,attr"  json:",omitempty"`
+	Check string `xml:" CHECK,attr"`
+}
+
+// PowerInfo renders the current power state of the machine
+type PowerInfo struct {
+	Power struct {
+		Status string `xml:" STATUS,attr"`
+	} `xml:" POWER,omitempty"`
 }

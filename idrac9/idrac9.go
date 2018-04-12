@@ -253,6 +253,20 @@ func (i *IDrac9) PowerKw() (power float64, err error) {
 	return iDracPowerData.Root.Powermonitordata.PresentReading.Reading.Reading / 1000.00, err
 }
 
+// PowerState returns the current power state of the machine
+func (i *IDrac9) PowerState() (state string, err error) {
+	for _, component := range i.iDracInventory.Component {
+		if component.Classname == "DCIM_SystemView" {
+			for _, property := range component.Properties {
+				if property.Name == "PowerState" && property.Type == "uint16" {
+					return strings.ToLower(property.DisplayValue), err
+				}
+			}
+		}
+	}
+	return state, err
+}
+
 // BiosVersion returns the current version of the bios
 func (i *IDrac9) BiosVersion() (version string, err error) {
 	for _, component := range i.iDracInventory.Component {

@@ -202,6 +202,7 @@ func (c *C7000) Blades() (blades []*devices.Blade, err error) {
 				blade.Serial = strings.ToLower(strings.TrimSpace(hpBlade.Bsn))
 				blade.ChassisSerial = chassisSerial
 				blade.PowerKw = hpBlade.Power.PowerConsumed / 1000.00
+				blade.PowerState = strings.ToLower(hpBlade.Power.PowerState)
 				blade.TempC = hpBlade.Temp.C
 				blade.Vendor = hp.VendorID
 				blade.Model = hpBlade.Spn

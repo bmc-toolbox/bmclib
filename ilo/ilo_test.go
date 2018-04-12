@@ -171,7 +171,7 @@ func setup() (bmc *Ilo, err error) {
 	return bmc, err
 }
 
-func teardown() {
+func tearDown() {
 	server.Close()
 }
 
@@ -192,7 +192,7 @@ func TestIloSerial(t *testing.T) {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
 
-	teardown()
+	tearDown()
 }
 
 func TestIloModel(t *testing.T) {
@@ -212,7 +212,7 @@ func TestIloModel(t *testing.T) {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
 
-	teardown()
+	tearDown()
 }
 
 func TestIloBmcType(t *testing.T) {
@@ -232,7 +232,7 @@ func TestIloBmcType(t *testing.T) {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
 
-	teardown()
+	tearDown()
 }
 
 func TestIloBmcVersion(t *testing.T) {
@@ -252,7 +252,7 @@ func TestIloBmcVersion(t *testing.T) {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
 
-	teardown()
+	tearDown()
 }
 
 func TestIloName(t *testing.T) {
@@ -272,7 +272,7 @@ func TestIloName(t *testing.T) {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
 
-	teardown()
+	tearDown()
 }
 
 func TestIloStatus(t *testing.T) {
@@ -292,7 +292,7 @@ func TestIloStatus(t *testing.T) {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
 
-	teardown()
+	tearDown()
 }
 
 func TestIloMemory(t *testing.T) {
@@ -312,7 +312,7 @@ func TestIloMemory(t *testing.T) {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
 
-	teardown()
+	tearDown()
 }
 
 func TestIloCPU(t *testing.T) {
@@ -347,7 +347,7 @@ func TestIloCPU(t *testing.T) {
 		t.Errorf("Expected ht answer %v: found %v", expectedAnswerHyperthread, ht)
 	}
 
-	teardown()
+	tearDown()
 }
 
 func TestIloBiosVersion(t *testing.T) {
@@ -367,7 +367,7 @@ func TestIloBiosVersion(t *testing.T) {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
 
-	teardown()
+	tearDown()
 }
 
 func TestIloPowerKW(t *testing.T) {
@@ -387,7 +387,7 @@ func TestIloPowerKW(t *testing.T) {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
 
-	teardown()
+	tearDown()
 }
 
 func TestIloTempC(t *testing.T) {
@@ -407,7 +407,7 @@ func TestIloTempC(t *testing.T) {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
 
-	teardown()
+	tearDown()
 }
 
 func TestIloNics(t *testing.T) {
@@ -466,7 +466,7 @@ func TestIloNics(t *testing.T) {
 		}
 	}
 
-	teardown()
+	tearDown()
 }
 
 func TestIloLicense(t *testing.T) {
@@ -491,7 +491,7 @@ func TestIloLicense(t *testing.T) {
 		t.Errorf("Expected name %v: found %v", expectedLicType, licType)
 	}
 
-	teardown()
+	tearDown()
 }
 
 func TestIloPsu(t *testing.T) {
@@ -530,7 +530,7 @@ func TestIloPsu(t *testing.T) {
 		}
 	}
 
-	teardown()
+	tearDown()
 }
 
 func TestIloDisks(t *testing.T) {
@@ -571,7 +571,7 @@ func TestIloDisks(t *testing.T) {
 		}
 	}
 
-	teardown()
+	tearDown()
 }
 
 func TestIloIsBlade(t *testing.T) {
@@ -591,5 +591,25 @@ func TestIloIsBlade(t *testing.T) {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
 
-	teardown()
+	tearDown()
+}
+
+func TestIloPoweState(t *testing.T) {
+	expectedAnswer := "on"
+
+	bmc, err := setup()
+	if err != nil {
+		t.Fatalf("Found errors during the test setup %v", err)
+	}
+
+	answer, err := bmc.PowerState()
+	if err != nil {
+		t.Fatalf("Found errors calling bmc.PowerState %v", err)
+	}
+
+	if expectedAnswer != answer {
+		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+	}
+
+	tearDown()
 }

@@ -291,6 +291,24 @@ func (i *Ilo) PowerKw() (power float64, err error) {
 	return float64(hpPowerSummary.PowerSupplyInputPower) / 1024, err
 }
 
+// PowerState returns the current power state of the machine
+func (i *Ilo) PowerState() (state string, err error) {
+	url := "json/power_summary"
+	payload, err := i.get(url)
+	if err != nil {
+		return state, err
+	}
+
+	hpPowerSummary := &hp.PowerSummary{}
+	err = json.Unmarshal(payload, hpPowerSummary)
+	if err != nil {
+		httpclient.DumpInvalidPayload(url, i.ip, payload)
+		return state, err
+	}
+
+	return strings.ToLower(hpPowerSummary.HostpwrState), err
+}
+
 // TempC returns the current temperature of the machine
 func (i *Ilo) TempC() (temp int, err error) {
 	url := "json/health_temperature"

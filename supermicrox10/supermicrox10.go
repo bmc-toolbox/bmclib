@@ -286,6 +286,20 @@ func (s *SupermicroX10) PowerKw() (power float64, err error) {
 	return power, err
 }
 
+// PowerState returns the current power state of the machine
+func (s *SupermicroX10) PowerState() (state string, err error) {
+	ipmi, err := s.query("POWER_INFO.XML=(0,0)")
+	if err != nil {
+		return state, err
+	}
+
+	if ipmi.PowerInfo != nil {
+		return strings.ToLower(ipmi.PowerInfo.Power.Status), err
+	}
+
+	return "unknow", err
+}
+
 // TempC returns the current temperature of the machine
 func (s *SupermicroX10) TempC() (temp int, err error) {
 	ipmi, err := s.query("Get_NodeInfoReadings.XML=(0,0)")

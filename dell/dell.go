@@ -84,6 +84,7 @@ type Blade struct {
 	BladeSvcTag         string          `json:"bladeSvcTag"`
 	BladeBIOSver        string          `json:"bladeBIOSver"`
 	ActualPwrConsump    int             `json:"actualPwrConsump"`
+	BladePowerState     int             `json:"bladePowerStatus"`
 	IsStorageBlade      int             `json:"isStorageBlade"`
 	BladeModel          string          `json:"bladeModel"`
 	BladeName           string          `json:"bladeName"`

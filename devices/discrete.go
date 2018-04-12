@@ -20,6 +20,7 @@ type Discrete struct {
 	Model                string
 	TempC                int
 	PowerKw              float64
+	PowerState           string
 	Status               string
 	Vendor               string
 	Processor            string

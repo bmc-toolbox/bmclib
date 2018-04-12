@@ -14,6 +14,7 @@ type Blade struct {
 	Nics                 []*Nic
 	BladePosition        int
 	Model                string
+	PowerState           string
 	TempC                int
 	PowerKw              float64
 	Status               string

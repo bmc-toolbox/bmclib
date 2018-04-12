@@ -339,6 +339,14 @@ func (m *M1000e) Blades() (blades []*devices.Blade, err error) {
 			blade.BladePosition = dellBlade.BladeMasterSlot
 			blade.Serial = strings.ToLower(dellBlade.BladeSvcTag)
 			blade.Model = dellBlade.BladeModel
+			if dellBlade.BladePowerState == 1 {
+				blade.PowerState = "on"
+			} else if dellBlade.BladePowerState == 8 {
+				blade.PowerState = "off"
+			} else {
+				blade.PowerState = "unknow"
+			}
+
 			blade.PowerKw = float64(dellBlade.ActualPwrConsump) / 1000
 			temp, err := strconv.Atoi(dellBlade.BladeTemperature)
 			if err != nil {

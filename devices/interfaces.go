@@ -16,6 +16,7 @@ type Bmc interface {
 	Name() (string, error)
 	Nics() ([]*Nic, error)
 	PowerKw() (float64, error)
+	PowerStatus() (string, error)
 	Serial() (string, error)
 	Status() (string, error)
 	TempC() (int, error)
