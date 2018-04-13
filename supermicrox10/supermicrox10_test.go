@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
+	"github.com/ncode/bmc/devices"
 	"github.com/ncode/dora/model"
 )
 
@@ -486,5 +487,14 @@ func TestPoweState(t *testing.T) {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
 
+	tearDown()
+}
+
+func TestIDracInterface(t *testing.T) {
+	bmc, err := setup()
+	if err != nil {
+		t.Fatalf("Found errors during the test setup %v", err)
+	}
+	_ = devices.Bmc(bmc)
 	tearDown()
 }

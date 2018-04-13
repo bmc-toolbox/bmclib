@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
+	"github.com/ncode/bmc/devices"
 	"github.com/ncode/dora/model"
 )
 
@@ -532,9 +533,8 @@ func TestChassisTempC(t *testing.T) {
 func TestChassisNics(t *testing.T) {
 	expectedAnswer := []*model.Nic{
 		&model.Nic{
-			MacAddress:    "18:66:da:9d:cd:cd",
-			Name:          "OA1",
-			ChassisSerial: "51f3dk2",
+			MacAddress: "18:66:da:9d:cd:cd",
+			Name:       "OA1",
 		},
 	}
 
@@ -553,7 +553,7 @@ func TestChassisNics(t *testing.T) {
 	}
 
 	for pos, nic := range nics {
-		if nic.MacAddress != expectedAnswer[pos].MacAddress || nic.Name != expectedAnswer[pos].Name || nic.ChassisSerial != expectedAnswer[pos].ChassisSerial {
+		if nic.MacAddress != expectedAnswer[pos].MacAddress || nic.Name != expectedAnswer[pos].Name {
 			t.Errorf("Expected answer %v: found %v", expectedAnswer[pos], nic)
 		}
 	}
@@ -564,32 +564,28 @@ func TestChassisNics(t *testing.T) {
 func TestChassisPsu(t *testing.T) {
 	expectedAnswer := []*model.Psu{
 		&model.Psu{
-			Serial:        "51f3dk2_psu_1",
-			CapacityKw:    2.7,
-			Status:        "OK",
-			PowerKw:       0.184,
-			ChassisSerial: "51f3dk2",
+			Serial:     "51f3dk2_psu_1",
+			CapacityKw: 2.7,
+			Status:     "OK",
+			PowerKw:    0.184,
 		},
 		&model.Psu{
-			Serial:        "51f3dk2_psu_2",
-			CapacityKw:    2.7,
-			Status:        "OK",
-			PowerKw:       0.20862,
-			ChassisSerial: "51f3dk2",
+			Serial:     "51f3dk2_psu_2",
+			CapacityKw: 2.7,
+			Status:     "OK",
+			PowerKw:    0.20862,
 		},
 		&model.Psu{
-			Serial:        "51f3dk2_psu_5",
-			CapacityKw:    2.7,
-			Status:        "OK",
-			PowerKw:       0.20772000000000002,
-			ChassisSerial: "51f3dk2",
+			Serial:     "51f3dk2_psu_5",
+			CapacityKw: 2.7,
+			Status:     "OK",
+			PowerKw:    0.20772000000000002,
 		},
 		&model.Psu{
-			Serial:        "51f3dk2_psu_6",
-			CapacityKw:    2.7,
-			Status:        "OK",
-			PowerKw:       0.25278,
-			ChassisSerial: "51f3dk2",
+			Serial:     "51f3dk2_psu_6",
+			CapacityKw: 2.7,
+			Status:     "OK",
+			PowerKw:    0.25278,
 		},
 	}
 
@@ -608,10 +604,19 @@ func TestChassisPsu(t *testing.T) {
 	}
 
 	for pos, psu := range psus {
-		if psu.Serial != expectedAnswer[pos].Serial || psu.CapacityKw != expectedAnswer[pos].CapacityKw || psu.PowerKw != expectedAnswer[pos].PowerKw || psu.Status != expectedAnswer[pos].Status || psu.ChassisSerial != expectedAnswer[pos].ChassisSerial {
+		if psu.Serial != expectedAnswer[pos].Serial || psu.CapacityKw != expectedAnswer[pos].CapacityKw || psu.PowerKw != expectedAnswer[pos].PowerKw || psu.Status != expectedAnswer[pos].Status {
 			t.Errorf("Expected answer %v: found %v", expectedAnswer[pos], psu)
 		}
 	}
 
+	tearDown()
+}
+
+func TestChassisInterface(t *testing.T) {
+	chassis, err := setup()
+	if err != nil {
+		t.Fatalf("Found errors during the test setup %v", err)
+	}
+	_ = devices.BmcChassis(chassis)
 	tearDown()
 }
