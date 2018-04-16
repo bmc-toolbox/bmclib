@@ -1,0 +1,7 @@
+bmcCfgDir: /etc/bmcbutler/cfg/
+bmcUser: Administrator
+bmcPassword: foobar
+inventory:
+  source: dora
+  dora:
+    apiUrl: http://dora.booking.com/api

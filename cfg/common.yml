@@ -1,0 +1,15 @@
+syslog:
+  server: example.com
+  port: 514
+  enable: true
+
+user:
+  Administrator:
+    password: foobar
+    role: admin
+
+ldap:
+  server: example.com
+  port: 636
+  enable: true
+  role: admin
