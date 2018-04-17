@@ -536,18 +536,20 @@ func TestIloPsu(t *testing.T) {
 func TestIloDisks(t *testing.T) {
 	expectedAnswer := []*devices.Disk{
 		&devices.Disk{
-			Serial: "s403crxk0000e7227365",
-			Type:   "HDD",
-			Size:   "1200 GB",
-			Model:  "eg1200jemda",
-			Status: "OK",
+			Serial:    "s403crxk0000e7227365",
+			Type:      "HDD",
+			Size:      "1200 GB",
+			Model:     "eg1200jemda",
+			Status:    "OK",
+			FwVersion: "HPD6",
 		},
 		&devices.Disk{
-			Serial: "s403d7j40000e722a3mt",
-			Type:   "HDD",
-			Size:   "1200 GB",
-			Model:  "eg1200jemda",
-			Status: "OK",
+			Serial:    "s403d7j40000e722a3mt",
+			Type:      "HDD",
+			Size:      "1200 GB",
+			Model:     "eg1200jemda",
+			Status:    "OK",
+			FwVersion: "HPD6",
 		},
 	}
 
@@ -566,7 +568,7 @@ func TestIloDisks(t *testing.T) {
 	}
 
 	for pos, disk := range disks {
-		if disk.Serial != expectedAnswer[pos].Serial || disk.Type != expectedAnswer[pos].Type || disk.Size != expectedAnswer[pos].Size || disk.Status != expectedAnswer[pos].Status || disk.Model != expectedAnswer[pos].Model {
+		if disk.Serial != expectedAnswer[pos].Serial || disk.Type != expectedAnswer[pos].Type || disk.Size != expectedAnswer[pos].Size || disk.Status != expectedAnswer[pos].Status || disk.Model != expectedAnswer[pos].Model || disk.FwVersion != expectedAnswer[pos].FwVersion {
 			t.Errorf("Expected answer %v: found %v", expectedAnswer[pos], disk)
 		}
 	}

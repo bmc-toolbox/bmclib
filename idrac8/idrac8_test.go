@@ -5214,11 +5214,12 @@ var (
 			<fwVersion>00.16.4F</fwVersion>
 			</sensor></psSensorList><status>ok</status>
 			</root>`),
-		"/sysmgmt/2012/server/license":     []byte(`{"License":{"AUTO_DISCOVERY":1,"BACKUP_RESTORE":1,"BASIC_REMOTE_INVENTORY_EXPORT":1,"BOOT_CAPTURE":1,"CONSOLE_COLLABORATION":1,"DEDICATED_NIC":1,"DEVICE_MONITORING":1,"DIRECTORY_SERVICES":1,"DYNAMIC_DNS":1,"EMAIL_ALERTING":1,"FULL_UI":1,"INBAND_FIRMWARE_UPDATE":1,"IPV6":1,"LAST_CRASH_SCREEN_CAPTURE":1,"LAST_CRASH_VIDEO_CAPTURE":1,"LICENSE_UI":1,"NTP":1,"PART_REPLACEMENT":1,"POWER_BUDGETING":1,"POWER_MONITORING":1,"RACADM_CLI":1,"REMOTE_ASSET_INVENTORY":1,"REMOTE_CONFIGURATION":1,"REMOTE_FILE_SHARE":1,"REMOTE_FIRWARE_UPDATE":1,"REMOTE_OS_DEPLOYMENT":1,"REMOTE_SYSLOG":1,"SECURITY_LOCKOUT":1,"SMASH_CLP":1,"SNMP":1,"SSH":1,"SSH_PK_AUTHEN":1,"SSO":1,"STORAGE_MONITORING":1,"TELNET":1,"TWO_FACTOR_AUTHEN":1,"USC_ASSISTED_OS_DEPLOYEMENT":1,"USC_DEVICE_CONFIGURATION":1,"USC_EMBEDDED_DIAGNOSTICS":1,"USC_FIRMWARE_UPDATE":1,"VCONSOLE":1,"VFOLDER":1,"VIRTUAL_FLASH_PARTITIONS":1,"VIRTUAL_NW_CONSOLE":1,"VMEDIA":1,"WSMAN":1}}`),
-		"/sysmgmt/2012/server/processor":   []byte(`{"Processor":{"D2||CPU.Socket.1":{"brand":"Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz","cache":"/sysmgmt/2012/server/cache?processor=D2||CPU.Socket.1","core_count":14,"current_speed":2600,"device_description":"CPU 1","executeDisable":[{"capable":1,"enabled":1}],"hyperThreading":[{"capable":1,"enabled":1}],"name":"[CPU1]","state":3,"status":2,"turboMode":[{"capable":1,"enabled":1}],"version":"Model 79 Stepping 1","virtualizationTech":[{"capable":1,"enabled":1}]},"D2||CPU.Socket.2":{"brand":"Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz","cache":"/sysmgmt/2012/server/cache?processor=D2||CPU.Socket.2","core_count":14,"current_speed":2600,"device_description":"CPU 2","executeDisable":[{"capable":1,"enabled":1}],"hyperThreading":[{"capable":1,"enabled":1}],"name":"[CPU2]","state":3,"status":2,"turboMode":[{"capable":1,"enabled":1}],"version":"Model 79 Stepping 1","virtualizationTech":[{"capable":1,"enabled":1}]}}}`),
-		"/sysmgmt/2012/server/temperature": []byte(`{"Statistics":"/sysmgmt/2012/server/temperature/statistics","Temperatures":{"iDRAC.Embedded.1#CPU1Temp":{"max_failure":103,"max_warning":98,"max_warning_settable":0,"min_failure":3,"min_warning":8,"min_warning_settable":0,"name":"CPU1 Temp","reading":46,"sensor_status":2},"iDRAC.Embedded.1#CPU2Temp":{"max_failure":103,"max_warning":98,"max_warning_settable":0,"min_failure":3,"min_warning":8,"min_warning_settable":0,"name":"CPU2 Temp","reading":41,"sensor_status":2},"iDRAC.Embedded.1#SystemBoardInletTemp":{"max_failure":47,"max_warning":42,"max_warning_settable":1,"min_failure":-7,"min_warning":3,"min_warning_settable":1,"name":"System Board Inlet Temp","reading":19,"sensor_status":2}},"is_fresh_air_compliant":1}`),
-		"/data/logout":                     []byte(``),
-		"/data/login":                      []byte(`<?xml version="1.0" encoding="UTF-8"?> <root> <status>ok</status> <authResult>0</authResult> <forwardUrl>index.html?ST1=3fd2ec4d84e406f348972d2fb5a1cdd2,ST2=a47f9a0ea441fdd5bf59c63f902c03d2</forwardUrl> </root>`),
+		"/sysmgmt/2012/server/license":         []byte(`{"License":{"AUTO_DISCOVERY":1,"BACKUP_RESTORE":1,"BASIC_REMOTE_INVENTORY_EXPORT":1,"BOOT_CAPTURE":1,"CONSOLE_COLLABORATION":1,"DEDICATED_NIC":1,"DEVICE_MONITORING":1,"DIRECTORY_SERVICES":1,"DYNAMIC_DNS":1,"EMAIL_ALERTING":1,"FULL_UI":1,"INBAND_FIRMWARE_UPDATE":1,"IPV6":1,"LAST_CRASH_SCREEN_CAPTURE":1,"LAST_CRASH_VIDEO_CAPTURE":1,"LICENSE_UI":1,"NTP":1,"PART_REPLACEMENT":1,"POWER_BUDGETING":1,"POWER_MONITORING":1,"RACADM_CLI":1,"REMOTE_ASSET_INVENTORY":1,"REMOTE_CONFIGURATION":1,"REMOTE_FILE_SHARE":1,"REMOTE_FIRWARE_UPDATE":1,"REMOTE_OS_DEPLOYMENT":1,"REMOTE_SYSLOG":1,"SECURITY_LOCKOUT":1,"SMASH_CLP":1,"SNMP":1,"SSH":1,"SSH_PK_AUTHEN":1,"SSO":1,"STORAGE_MONITORING":1,"TELNET":1,"TWO_FACTOR_AUTHEN":1,"USC_ASSISTED_OS_DEPLOYEMENT":1,"USC_DEVICE_CONFIGURATION":1,"USC_EMBEDDED_DIAGNOSTICS":1,"USC_FIRMWARE_UPDATE":1,"VCONSOLE":1,"VFOLDER":1,"VIRTUAL_FLASH_PARTITIONS":1,"VIRTUAL_NW_CONSOLE":1,"VMEDIA":1,"WSMAN":1}}`),
+		"/sysmgmt/2012/server/processor":       []byte(`{"Processor":{"D2||CPU.Socket.1":{"brand":"Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz","cache":"/sysmgmt/2012/server/cache?processor=D2||CPU.Socket.1","core_count":14,"current_speed":2600,"device_description":"CPU 1","executeDisable":[{"capable":1,"enabled":1}],"hyperThreading":[{"capable":1,"enabled":1}],"name":"[CPU1]","state":3,"status":2,"turboMode":[{"capable":1,"enabled":1}],"version":"Model 79 Stepping 1","virtualizationTech":[{"capable":1,"enabled":1}]},"D2||CPU.Socket.2":{"brand":"Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz","cache":"/sysmgmt/2012/server/cache?processor=D2||CPU.Socket.2","core_count":14,"current_speed":2600,"device_description":"CPU 2","executeDisable":[{"capable":1,"enabled":1}],"hyperThreading":[{"capable":1,"enabled":1}],"name":"[CPU2]","state":3,"status":2,"turboMode":[{"capable":1,"enabled":1}],"version":"Model 79 Stepping 1","virtualizationTech":[{"capable":1,"enabled":1}]}}}`),
+		"/sysmgmt/2012/server/temperature":     []byte(`{"Statistics":"/sysmgmt/2012/server/temperature/statistics","Temperatures":{"iDRAC.Embedded.1#CPU1Temp":{"max_failure":103,"max_warning":98,"max_warning_settable":0,"min_failure":3,"min_warning":8,"min_warning_settable":0,"name":"CPU1 Temp","reading":46,"sensor_status":2},"iDRAC.Embedded.1#CPU2Temp":{"max_failure":103,"max_warning":98,"max_warning_settable":0,"min_failure":3,"min_warning":8,"min_warning_settable":0,"name":"CPU2 Temp","reading":41,"sensor_status":2},"iDRAC.Embedded.1#SystemBoardInletTemp":{"max_failure":47,"max_warning":42,"max_warning_settable":1,"min_failure":-7,"min_warning":3,"min_warning_settable":1,"name":"System Board Inlet Temp","reading":19,"sensor_status":2}},"is_fresh_air_compliant":1}`),
+		"/data/logout":                         []byte(``),
+		"/data/login":                          []byte(`<?xml version="1.0" encoding="UTF-8"?> <root> <status>ok</status> <authResult>0</authResult> <forwardUrl>index.html?ST1=3fd2ec4d84e406f348972d2fb5a1cdd2,ST2=a47f9a0ea441fdd5bf59c63f902c03d2</forwardUrl> </root>`),
+		"/sysmgmt/2016/server/extended_health": []byte(`{"healthStatus":[2,2,0,0,0,0,2,0,2,2,2,2,2,2,0,2,2]}`),
 	}
 )
 
@@ -5355,7 +5356,7 @@ func TestIDracName(t *testing.T) {
 }
 
 func TestIDracStatus(t *testing.T) {
-	expectedAnswer := "NotSupported"
+	expectedAnswer := "OK"
 
 	bmc, err := setup()
 	if err != nil {
@@ -5615,18 +5616,20 @@ func TestIDracIsBlade(t *testing.T) {
 func TestDiskDisks(t *testing.T) {
 	expectedAnswer := []*devices.Disk{
 		&devices.Disk{
-			Serial: "phdv707000d51p6egn",
-			Type:   "SSD",
-			Size:   "1490 GB",
-			Model:  "ssdsc2bb016t7r",
-			Status: "OK",
+			Serial:    "phdv707000d51p6egn",
+			Type:      "SSD",
+			Size:      "1490 GB",
+			Model:     "ssdsc2bb016t7r",
+			Status:    "OK",
+			FwVersion: "N201DL42",
 		},
 		&devices.Disk{
-			Serial: "phdv707000fx1p6egn",
-			Type:   "SSD",
-			Size:   "1490 GB",
-			Model:  "ssdsc2bb016t7r",
-			Status: "OK",
+			Serial:    "phdv707000fx1p6egn",
+			Type:      "SSD",
+			Size:      "1490 GB",
+			Model:     "ssdsc2bb016t7r",
+			Status:    "OK",
+			FwVersion: "N201DL42",
 		},
 	}
 
@@ -5645,7 +5648,7 @@ func TestDiskDisks(t *testing.T) {
 	}
 
 	for pos, disk := range disks {
-		if disk.Serial != expectedAnswer[pos].Serial || disk.Type != expectedAnswer[pos].Type || disk.Size != expectedAnswer[pos].Size || disk.Status != expectedAnswer[pos].Status || disk.Model != expectedAnswer[pos].Model {
+		if disk.Serial != expectedAnswer[pos].Serial || disk.Type != expectedAnswer[pos].Type || disk.Size != expectedAnswer[pos].Size || disk.Status != expectedAnswer[pos].Status || disk.Model != expectedAnswer[pos].Model || disk.FwVersion != expectedAnswer[pos].FwVersion {
 			t.Errorf("Expected answer %v: found %v", expectedAnswer[pos], disk)
 		}
 	}

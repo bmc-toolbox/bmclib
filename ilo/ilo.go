@@ -452,11 +452,12 @@ func (i *Ilo) Disks() (disks []*devices.Disk, err error) {
 			}
 
 			disk := &devices.Disk{
-				Serial: strings.ToLower(physicalDrive.SerialNo),
-				Status: status,
-				Model:  strings.ToLower(physicalDrive.Model),
-				Size:   physicalDrive.Capacity,
-				Type:   diskType,
+				Serial:    strings.ToLower(physicalDrive.SerialNo),
+				Status:    status,
+				Model:     strings.ToLower(physicalDrive.Model),
+				Size:      physicalDrive.Capacity,
+				Type:      diskType,
+				FwVersion: physicalDrive.FwVersion,
 			}
 
 			disks = append(disks, disk)

@@ -4231,18 +4231,20 @@ func TestIDracLicense(t *testing.T) {
 func TestDiskDisks(t *testing.T) {
 	expectedAnswer := []*devices.Disk{
 		&devices.Disk{
-			Serial: "s37mnx0j700554",
-			Type:   "SSD",
-			Size:   "3576 GB",
-			Model:  "mz7lm3t8hmlp0d3",
-			Status: "OK",
+			Serial:    "s37mnx0j700554",
+			Type:      "SSD",
+			Size:      "3576 GB",
+			Model:     "mz7lm3t8hmlp0d3",
+			Status:    "OK",
+			FwVersion: "GC57",
 		},
 		&devices.Disk{
-			Serial: "s37mnx0j700557",
-			Type:   "SSD",
-			Size:   "3576 GB",
-			Model:  "mz7lm3t8hmlp0d3",
-			Status: "OK",
+			Serial:    "s37mnx0j700557",
+			Type:      "SSD",
+			Size:      "3576 GB",
+			Model:     "mz7lm3t8hmlp0d3",
+			Status:    "OK",
+			FwVersion: "GC57",
 		},
 	}
 
@@ -4261,7 +4263,7 @@ func TestDiskDisks(t *testing.T) {
 	}
 
 	for pos, disk := range disks {
-		if disk.Serial != expectedAnswer[pos].Serial || disk.Type != expectedAnswer[pos].Type || disk.Size != expectedAnswer[pos].Size || disk.Status != expectedAnswer[pos].Status || disk.Model != expectedAnswer[pos].Model {
+		if disk.Serial != expectedAnswer[pos].Serial || disk.Type != expectedAnswer[pos].Type || disk.Size != expectedAnswer[pos].Size || disk.Status != expectedAnswer[pos].Status || disk.Model != expectedAnswer[pos].Model || disk.FwVersion != expectedAnswer[pos].FwVersion {
 			t.Errorf("Expected answer %v: found %v", expectedAnswer[pos], disk)
 		}
 	}
