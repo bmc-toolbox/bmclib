@@ -426,7 +426,7 @@ func (i *IDrac8) Disks() (disks []*devices.Disk, err error) {
 					}
 					disk.Size = fmt.Sprintf("%d GB", size/1024/1024/1024)
 				} else if property.Name == "Revision" {
-					disk.FwVersion = property.Value
+					disk.FwVersion = strings.ToLower(property.Value)
 				}
 			}
 

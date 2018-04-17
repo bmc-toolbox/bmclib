@@ -457,7 +457,7 @@ func (i *Ilo) Disks() (disks []*devices.Disk, err error) {
 				Model:     strings.ToLower(physicalDrive.Model),
 				Size:      physicalDrive.Capacity,
 				Type:      diskType,
-				FwVersion: physicalDrive.FwVersion,
+				FwVersion: strings.ToLower(physicalDrive.FwVersion),
 			}
 
 			disks = append(disks, disk)
