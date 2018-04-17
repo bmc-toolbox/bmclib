@@ -59,7 +59,7 @@ type Switch struct {
 // Power contains the power information of a blade
 type Power struct {
 	PowerConsumed float64 `xml:" POWER_CONSUMED,omitempty"`
-	PowerState    string  `xml:" POWER_STATE,omitempty"`
+	PowerState    string  `xml:" POWERSTATE,omitempty"`
 }
 
 // ChassisPower contains the power information of the chassis
