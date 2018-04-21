@@ -21,4 +21,6 @@ var (
 	ErrUnableToReadData = errors.New("unable to read data from this device")
 	// ErrVendorNotSupported is returned when we are able to identify a vendor but we won't support it
 	ErrVendorNotSupported = errors.New("vendor not supported")
+	// ErrUnableToGetSessionToken is returned when we are unable to retrieve ST2 which is required to set configuration parameters
+	ErrUnableToGetSessionToken = errors.New("Unable to get ST2 session token.")
 )
