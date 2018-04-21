@@ -30,13 +30,14 @@ var (
 
 // M1000e holds the status and properties of a connection to a CMC device
 type M1000e struct {
-	ip       string
-	username string
-	password string
-	client   *http.Client
-	cmcJSON  *dell.CMC
-	cmcTemp  *dell.CMCTemp
-	cmcWWN   *dell.CMCWWN
+	ip           string
+	username     string
+	password     string
+	client       *http.Client
+	cmcJSON      *dell.CMC
+	cmcTemp      *dell.CMCTemp
+	cmcWWN       *dell.CMCWWN
+	SessionToken string //required to set config
 }
 
 // New returns a connection to M1000e
