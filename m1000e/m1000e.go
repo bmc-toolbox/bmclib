@@ -131,7 +131,10 @@ func (m *M1000e) loadHwData() (err error) {
 
 // Logout logs out and close the chassis connection
 func (m *M1000e) Logout() (err error) {
-	_, err = m.get(fmt.Sprintf("https://%s/cgi-bin/webcgi/logout", m.ip))
+	_, err = m.client.Get(fmt.Sprintf("https://%s/cgi-bin/webcgi/logout", m.ip))
+	if err != nil {
+		return err
+	}
 	return err
 }
 
