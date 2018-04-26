@@ -50,6 +50,7 @@ func init() {
 
 	//setup logging
 	log = logrus.New()
+	log.SetLevel(logrus.DebugLevel)
 	log.Out = os.Stdout
 	logFile, err := os.OpenFile("/var/log/bmcbutler.log", os.O_CREATE|os.O_WRONLY, 0666)
 	if err == nil {

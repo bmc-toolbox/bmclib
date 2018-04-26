@@ -53,9 +53,12 @@ func (b *Butler) Spawn() {
 		"count":     b.SpawnCount,
 	}).Info("Spawned butlers.")
 
-	b.SyncWG.Wait()
-	runtime.Goexit()
+	//runtime.Goexit()
 
+}
+
+func (b *Butler) Wait() {
+	b.SyncWG.Wait()
 }
 
 // butler recieves config, assets over channel
@@ -63,7 +66,7 @@ func (b *Butler) Spawn() {
 func (b *Butler) butler(id int) {
 
 	log := b.Log
-	component := "butler"
+	component := "butler-worker"
 
 	defer b.SyncWG.Done()
 

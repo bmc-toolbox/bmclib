@@ -111,79 +111,94 @@ func (i *Inventory) AssetIter() {
 	//Iter writes the assets array to the channel
 	// split out dora code into dora.go
 
+	//assetTypes := []string{"blade", "chassis", "discrete"}
+	assetTypes := []string{"chassis"}
 	component := "inventory"
 	log := i.Log
 
 	apiUrl := viper.GetString("inventory.dora.apiUrl")
-	//queryUrl := fmt.Sprintf("%s/v1/blades?page[offset]=%d&page[limit]=%d", apiUrl, 0, i.BatchSize)
-	// TESTING - return only HP
-	queryUrl := fmt.Sprintf("%s/v1/blades?page[offset]=%d&page[limit]=%d&filter[vendor]!=Dell", apiUrl, 0, i.BatchSize)
 
-	for {
-		assets := make([]asset.Asset, 0)
+	for _, assetType := range assetTypes {
+		var path string
 
-		resp, err := http.Get(queryUrl)
-		if err != nil {
-			log.WithFields(logrus.Fields{
-				"component": component,
-				"url":       queryUrl,
-				"error":     err,
-			}).Fatal("Failed to query dora for assets.")
+		//since this asset type in dora is plural.
+		if assetType == "blade" {
+			path = "blades"
+		} else {
+			path = assetType
 		}
 
-		body, err := ioutil.ReadAll(resp.Body)
-		resp.Body.Close()
+		// TESTING - return only Dell
+		queryUrl := fmt.Sprintf("%s/v1/%s?page[offset]=%d&page[limit]=%d&filter[vendor]!=HP&filter&filter[serial]=gf85c92", apiUrl, path, 0, i.BatchSize)
+		//queryUrl := fmt.Sprintf("%s/v1/blades?page[offset]=%d&page[limit]=%d", apiUrl, 0, i.BatchSize)
 
-		var doraAssets DoraAsset
-		err = json.Unmarshal(body, &doraAssets)
-		if err != nil {
-			log.WithFields(logrus.Fields{
-				"component": component,
-				"url":       queryUrl,
-				"error":     err,
-			}).Fatal("Unable to unmarshal data returned from dora.")
-		}
+		for {
+			assets := make([]asset.Asset, 0)
 
-		// for each asset, get its location
-		// store in the assets slice
-		// if an asset has no bmcAddress we log and skip it.
-		for _, item := range doraAssets.Data {
-
-			if item.Attributes.BmcAddress == "" {
+			resp, err := http.Get(queryUrl)
+			if err != nil {
 				log.WithFields(logrus.Fields{
 					"component": component,
-					"DoraAsset": fmt.Sprintf("%+v", item),
-				}).Warn("Asset location could not be determined, since the asset has no IP.")
-				continue
+					"url":       queryUrl,
+					"error":     err,
+				}).Fatal("Failed to query dora for assets.")
 			}
 
-			assets = append(assets,
-				asset.Asset{IpAddress: item.Attributes.BmcAddress,
-					Serial: item.Attributes.Serial,
-					Vendor: item.Attributes.Vendor,
-					Type:   "blade"})
+			body, err := ioutil.ReadAll(resp.Body)
+			resp.Body.Close()
+
+			var doraAssets DoraAsset
+			err = json.Unmarshal(body, &doraAssets)
+			if err != nil {
+				log.WithFields(logrus.Fields{
+					"component": component,
+					"url":       queryUrl,
+					"error":     err,
+				}).Fatal("Unable to unmarshal data returned from dora.")
+			}
+
+			// for each asset, get its location
+			// store in the assets slice
+			// if an asset has no bmcAddress we log and skip it.
+			for _, item := range doraAssets.Data {
+
+				if item.Attributes.BmcAddress == "" {
+					log.WithFields(logrus.Fields{
+						"component": component,
+						"DoraAsset": fmt.Sprintf("%+v", item),
+					}).Warn("Asset location could not be determined, since the asset has no IP.")
+					continue
+				}
+
+				assets = append(assets,
+					asset.Asset{IpAddress: item.Attributes.BmcAddress,
+						Serial: item.Attributes.Serial,
+						Vendor: item.Attributes.Vendor,
+						Type:   assetType})
+
+			}
+
+			//set the location for the assets
+			i.setLocation(assets)
+
+			//pass the asset to the channel
+			i.Channel <- assets
+
+			// if we reached the end of dora assets
+			if doraAssets.Links.Next == "" {
+				log.WithFields(logrus.Fields{
+					"component": component,
+					"url":       queryUrl,
+				}).Info("Reached end of assets in dora")
+				close(i.Channel)
+				break
+			}
+
+			// next url to query
+			queryUrl = fmt.Sprintf("%s%s", apiUrl, doraAssets.Links.Next)
+			fmt.Printf("--> %s\n", queryUrl)
 
 		}
-
-		//set the location for the assets
-		i.setLocation(assets)
-
-		//pass the asset to the channel
-		i.Channel <- assets
-
-		// if we reached the end of dora assets
-		if doraAssets.Links.Next == "" {
-			log.WithFields(logrus.Fields{
-				"component": component,
-				"url":       queryUrl,
-			}).Info("Reached end of assets in dora")
-			close(i.Channel)
-			break
-		}
-
-		// next url to query
-		queryUrl = fmt.Sprintf("%s%s", apiUrl, doraAssets.Links.Next)
-		//fmt.Printf("--> %s\n", queryUrl)
 
 	}
 

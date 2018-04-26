@@ -40,27 +40,31 @@ func init() {
 
 func apply() {
 
-	// Read in declared resources
-	resourceInstance := resource.Resource{Log: log}
-	config := resourceInstance.ReadResources()
-
 	// A channel to recieve inventory assets
 	inventoryChan := make(chan []asset.Asset)
 	inventoryInstance := inventory.Inventory{Log: log, BatchSize: 10, Channel: inventoryChan}
 
-	//// Spawn a goroutine that returns a slice of assets over inventoryChan
-	//// the number of assets in the slice is determined by the batch size.
+	// Spawn a goroutine that returns a slice of assets over inventoryChan
+	// the number of assets in the slice is determined by the batch size.
 	go inventoryInstance.AssetIter()
 
+	// Read in declared resources
+	resourceInstance := resource.Resource{Log: log}
+	config := resourceInstance.ReadResources()
+
 	// Spawn butlers to work
-	butlerChan := make(chan butler.ButlerMsg)
+	butlerChan := make(chan butler.ButlerMsg, 10)
 	butlerInstance := butler.Butler{Log: log, SpawnCount: 5, Channel: butlerChan}
 	go butlerInstance.Spawn()
 
-	////iterate over assets, pass them to the spawned butlers
+	//iterate over assets, pass them to the spawned butlers
 	for asset := range inventoryChan {
 		butlerMsg := butler.ButlerMsg{Assets: asset, Config: config}
 		butlerChan <- butlerMsg
-		time.Sleep(5000 * time.Millisecond)
+		//time.Sleep(10000 * time.Millisecond)
 	}
+
+	close(butlerChan)
+	//wait until butlers are done.
+	butlerInstance.Wait()
 }
