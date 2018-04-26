@@ -4,9 +4,14 @@ syslog:
   enable: true
 
 user:
-  Administrator:
-    password: foobar
+  - name: Administrator
+    password: foobar012
     role: admin
+    enable: true
+  - name: Guest
+    password: foob4r
+    role: admin
+    enable: false
 
 ldap:
   server: example.com
