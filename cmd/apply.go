@@ -15,14 +15,11 @@
 package cmd
 
 import (
-	//"fmt"
 	"github.com/spf13/cobra"
 	"github.com/ncode/bmcbutler/asset"
 	"github.com/ncode/bmcbutler/butler"
 	"github.com/ncode/bmcbutler/inventory"
 	"github.com/ncode/bmcbutler/resource"
-	"time"
-	//"os"
 )
 
 // applyCmd represents the apply command
@@ -61,7 +58,6 @@ func apply() {
 	for asset := range inventoryChan {
 		butlerMsg := butler.ButlerMsg{Assets: asset, Config: config}
 		butlerChan <- butlerMsg
-		//time.Sleep(10000 * time.Millisecond)
 	}
 
 	close(butlerChan)
