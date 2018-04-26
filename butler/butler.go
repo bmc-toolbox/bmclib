@@ -18,19 +18,16 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"github.com/ncode/bmc/cfgresources"
 	"github.com/ncode/bmc/devices"
 	"github.com/ncode/bmc/discover"
 	"github.com/ncode/bmcbutler/asset"
-	"github.com/ncode/bmcbutler/resource"
-	//"reflect"
-	"runtime"
 	"sync"
-	"time"
 )
 
 type ButlerMsg struct {
 	Assets []asset.Asset
-	Config []interface{}
+	Config *cfgresources.ResourcesConfig
 }
 
 type Butler struct {
@@ -76,21 +73,29 @@ func (b *Butler) butler(id int) {
 			log.WithFields(logrus.Fields{
 				"component": component,
 				"butler-id": id,
-			}).Info("Channel returned !ok, goodbye.")
+			}).Info("butler msg channel was closed, goodbye.")
 			return
 		}
 
 		for _, asset := range msg.Assets {
-			fmt.Printf("Applying config for: %+v\n", asset)
+			log.WithFields(logrus.Fields{
+				"component": component,
+				"butler-id": id,
+				"AssetType": asset.Type,
+				"IP":        asset.IpAddress,
+				"Vendor":    asset.Vendor,
+				"Serial":    asset.Serial,
+				"Location":  asset.Location,
+			}).Info("Applying config.")
+
 			b.applyConfig(id, msg.Config, asset)
 		}
-
 	}
 }
 
 // applyConfig setups up the bmc connection,
 // and iterates over the config to be applied.
-func (b *Butler) applyConfig(id int, config []interface{}, asset asset.Asset) {
+func (b *Butler) applyConfig(id int, config *cfgresources.ResourcesConfig, asset asset.Asset) {
 
 	log := b.Log
 	component := "butler-apply-config"
@@ -103,51 +108,68 @@ func (b *Butler) applyConfig(id int, config []interface{}, asset asset.Asset) {
 			"component": component,
 			"butler-id": id,
 			"Asset":     fmt.Sprintf("%+v", asset),
+			"Error":     err,
 		}).Warn("Unable to connect to bmc.")
 		return
 	}
 
-	bmc, ok := client.(devices.Bmc)
-	if ok {
-		for _, configResource := range config {
-
-			switch resourceType := configResource.(type) {
-			case resource.Ldap:
-				return
-			case resource.Syslog:
-				syslogCfg := configResource.(resource.Syslog)
-				_, err := bmc.SyslogSet(syslogCfg.Server, syslogCfg.Port, syslogCfg.Enable)
-				if err != nil {
-					log.WithFields(logrus.Fields{
-						"component": component,
-						"butler-id": id,
-						"Error":     err,
-						"Asset":     fmt.Sprintf("%+v", asset),
-					}).Warn("Unable to set syslog resource.")
-					return
-				} else {
-					log.WithFields(logrus.Fields{
-						"component": component,
-						"butler-id": id,
-						"Asset":     fmt.Sprintf("%+v", asset),
-					}).Info("Applied syslog config.")
-				}
-			case []resource.User:
-				return
-			default:
-				log.WithFields(logrus.Fields{
-					"component":    component,
-					"butler-id":    id,
-					"resourceType": resourceType,
-					"Config":       fmt.Sprintf("%+v", configResource),
-				}).Warn("Unsupported resource type.")
-				return
-			}
+	switch deviceType := client.(type) {
+	case devices.Bmc:
+		bmc := client.(devices.Bmc)
+		err := bmc.Login()
+		if err != nil {
+			log.WithFields(logrus.Fields{
+				"component": component,
+				"butler-id": id,
+				"Asset":     fmt.Sprintf("%+v", asset),
+				"Error":     err,
+			}).Warn("Unable to login to bmc.")
+			return
+		} else {
+			log.WithFields(logrus.Fields{
+				"component": component,
+				"butler-id": id,
+				"Asset":     fmt.Sprintf("%+v", asset),
+			}).Info("Successfully logged into asset.")
 		}
 
-		time.Sleep(1000 * time.Millisecond)
-		bmc.SshClose()
+		bmc.ApplyCfg(config)
+		fmt.Printf("%+v\n", deviceType)
+		fmt.Println("Device is a blade")
+	case devices.BmcChassis:
+		chassis := client.(devices.BmcChassis)
+
+		err := chassis.Login()
+		if err != nil {
+			log.WithFields(logrus.Fields{
+				"component": component,
+				"butler-id": id,
+				"Asset":     fmt.Sprintf("%+v", asset),
+				"Error":     err,
+			}).Warn("Unable to login to bmc.")
+			return
+		} else {
+			log.WithFields(logrus.Fields{
+				"component": component,
+				"butler-id": id,
+				"Asset":     fmt.Sprintf("%+v", asset),
+			}).Debug("Logged into asset.")
+		}
+
+		chassis.ApplyCfg(config)
+		log.WithFields(logrus.Fields{
+			"component": component,
+			"butler-id": id,
+			"Asset":     fmt.Sprintf("%+v", asset),
+		}).Info("Config applied.")
+
+		chassis.Logout()
+	default:
+		fmt.Println("--> Unknown device")
+		fmt.Printf("%+v\n", client)
+		return
 	}
-	//		status, err := bmc.IsOn()
+
+	return
 
 }
