@@ -17,12 +17,15 @@ type Syslog struct {
 }
 
 type Ldap struct {
-	Server  string `yaml:"server"`
-	Port    int    `yaml:"port"`
-	Enable  bool   `yaml:"enable"`
-	Role    string `yaml:"role"`
-	BaseDn  string `yaml:"baseDn"`
-	GroupDn string `yaml:"groupDn"`
+	Server         string `yaml:"server"`
+	Port           int    `yaml:"port"`
+	Enable         bool   `yaml:"enable"`
+	Role           string `yaml:"role"`
+	BaseDn         string `yaml:"baseDn"`
+	GroupDn        string `yaml:"groupDn"`
+	UserAttribute  string `yaml:"userAttribute"`
+	GroupAttribute string `yaml:"groupAttribute"`
+	SearchFilter   string `yaml:"searchFilter"`
 }
 
 type Network struct {

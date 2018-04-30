@@ -1,5 +1,75 @@
 package m1000e
 
+// Setup LDAP role group - administrator
+// 1. the url parameter ?index=<int> and Index form value must match,
+// 2. the PrivBitmap, GenLdapRolePrivilege params must match,
+//    4095 = Administrator - full access
+//    3801 = Power user - no access to chassis, user config, debug commands
+//    1    = Guest user - login access only
+// /cgi-bin/webcgi/ldaprg?index=1
+type LdapArgParams struct {
+	SessionToken         string `url:"ST2"`                    //ST2=2ee3449549f4f61b292e31c251da2b36
+	PrivBitmap           int    `url:"PrivBitmap"`             //PrivBitmap=4095
+	Index                int    `url:"index"`                  //index=1
+	GenLdapRoleDn        string `url:"GENLDAP_ROLE_dn"`        //GENLDAP_ROLE_dn=cn=bmcAdmins,ou=Group,dc=activehotels,dc=com
+	GenLdapRolePrivilege int    `url:"GENLDAP_ROLE_privilege"` //GENLDAP_ROLE_privilege=4095
+	Login                bool   `url:"login,int"`              //login=1
+	Cfg                  bool   `url:"cfg,int"`                //cfg=1
+	Cfguser              bool   `url:"cfguser,int"`            //cfguser=1
+	Clearlog             bool   `url:"clearlog,int"`           //clearlog=1
+	Chassiscontrol       bool   `url:"chassiscontrol,int"`     //chassiscontrol=1
+	Superuser            bool   `url:"superuser,int"`          //superuser=1
+	Serveradmin          bool   `url:"serveradmin,int"`        //serveradmin=1
+	Testalert            bool   `url:"testalert,int"`          //testalert=1
+	Debug                bool   `url:"debug,int"`              //debug=1
+	Afabricadmin         bool   `url:"afabricadmin,int"`       //afabricadmin=1
+	Bfabricadmin         bool   `url:"bfabricadmin,int"`       //bfabricadmin=1
+}
+
+// /cgi-bin/webcgi/dirsvcs
+
+type DirectoryServicesParams struct {
+	SessionToken                 string `url:"ST2"`
+	SeviceSelected               string `url:"service_selected"`                     //service_selected=ldap
+	CertType                     int    `url:"certType"`                             //certType=5
+	Action                       int    `url:"action"`                               //action=1
+	Choose                       int    `url:"choose"`                               //choose=2
+	GenLdapEnableCk              bool   `url:"GENLDAP_enable_ck,int"`                //GENLDAP_enable_ck=1
+	GenLdapEnable                bool   `url:"GENLDAP_enable,int"`                   //GENLDAP_enable=1
+	GenLdapGroupAttributeIsDnCk  bool   `url:"GENLDAP_group_attribute_is_dn_ck,int"` //GENLDAP_group_attribute_is_dn_ck=1
+	GenLdapGroupAttributeIsDn    bool   `url:"GENLDAP_group_attribute_is_dn,int"`    //GENLDAP_group_attribute_is_dn=1
+	GenLdapCertValidateEnableCk  bool   `url:"GENLDAP_cert_validate_enable_ck,int"`  //GENLDAP_cert_validate_enable_ck=1
+	GenLdapCertValidateEnable    bool   `url:"GENLDAP_cert_validate_enable,int"`     //GENLDAP_cert_validate_enable=1
+	GenLdapBindDn                string `url:"GENLDAP_bind_dn"`                      //GENLDAP_bind_dn=
+	GenLdapBindPasswd            string `url:"GENLDAP_bind_passwd"`                  //GENLDAP_bind_passwd=PASSWORD
+	GenLdapBindPasswdChanged     bool   `url:"GENLDAP_bind_passwd_changed,int"`      //GENLDAP_bind_passwd_changed=0
+	GenLdapBaseDn                string `url:"GENLDAP_base_dn"`                      //GENLDAP_base_dn=ou=People,dc=foo,dc=com
+	GenLdapUserAttribute         string `url:"GENLDAP_user_attribute"`               //GENLDAP_user_attribute=uid
+	GenLdapGroupAttribute        string `url:"GENLDAP_group_attribute"`              //GENLDAP_group_attribute=memberUid
+	GenLdapSearchFilter          string `url:"GENLDAP_search_filter"`                //GENLDAP_search_filter=
+	GenLdapConnectTimeoutSeconds int    `url:"GENLDAP_connect_timeout_seconds"`      //GENLDAP_connect_timeout_seconds=30
+	GenLdapSearchTimeoutSeconds  int    `url:"GENLDAP_search_timeout_seconds"`       //GENLDAP_search_timeout_seconds=120
+	LdapServers                  int    `url:"ldapservers"`                          //ldapservers=1
+	GenLdapServerAddr            string `url:"GENLDAP_server_addr"`                  //GENLDAP_server_addr=ldaps.prod.foo.com
+	GenLdapServerPort            int    `url:"GENLDAP_server_port"`                  //GENLDAP_server_port=636
+	GenLdapSrvLookupEnable       bool   `url:"GENLDAP_srvlookup_enable,int"`         //GENLDAP_srvlookup_enable=0
+	AdEnable                     bool   `url:"AD_enable,int"`                        //AD_enable=0
+	AdTfaSsoEnableBitmask1       int    `url:"AD_tfa_sso_enable_bitmask.1"`          //AD_tfa_sso_enable_bitmask.1=0
+	AdTfaSsoEnableBitmask2       int    `url:"AD_tfa_sso_enable_bitmask.2"`          //AD_tfa_sso_enable_bitmask.2=0
+	AdCertValidateEnableCk       bool   `url:"AD_cert_validate_enable_ck,int"`       //AD_cert_validate_enable_ck=1
+	AdCertValidateEnable         bool   `url:"AD_cert_validate_enable,int"`          //AD_cert_validate_enable=1
+	AdRootDomain                 string `url:"AD_root_domain"`                       //AD_root_domain=
+	AdTimeout                    int    `url:"AD_timeout"`                           //AD_timeout=120
+	AdFilterEnable               bool   `url:"AD_filter_enable,int"`                 //AD_filter_enable=0
+	AdDcFilter                   string `url:"AD_dc_filter"`                         //AD_dc_filter=
+	AdGcFilter                   string `url:"AD_gc_filter"`                         //AD_gc_filter=
+	AdSchemaExt                  int    `url:"AD_schema_ext"`                        //AD_schema_ext=1
+	RoleGroupFlag                int    `url:"RoleGroupFlag"`                        //RoleGroupFlag=0
+	RoleGroupIndex               string `url:"RoleGroupIndex"`                       //RoleGroupIndex=
+	AdCmcName                    string `url:"AD_cmc_name"`                          //AD_cmc_name=
+	AdCmcdomain                  string `url:"AD_cmc_domain"`                        //AD_cmc_domain=
+}
+
 // /cgi-bin/webcgi/loginSecurity
 type LoginSecurityParams struct {
 	SessionToken               string `url:"ST2"`                          //7bdaaa73307ebb471d0e71a9cecc44fb most likely the auth token
