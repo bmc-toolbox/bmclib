@@ -62,7 +62,28 @@ func (m *M1000e) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 			case "Ntp":
 				fmt.Printf("%s: %v : %s\n", resourceName, cfg.Field(r), cfg.Field(r).Kind())
 			case "Ldap":
-				fmt.Printf("%s: %v : %s\n", resourceName, cfg.Field(r), cfg.Field(r).Kind())
+				//configure ldap service parameters
+				directoryServicesParams := m.newDirectoryServicesCfg(cfg.Field(r).Interface().(*cfgresources.Ldap))
+				err = m.applyDirectoryServicesCfg(directoryServicesParams)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"step":     "ApplyCfg",
+						"resource": cfg.Field(r).Kind(),
+						"IP":       m.ip,
+					}).Warn("Unable to set Ldap services config.")
+				}
+
+				//configure ldap role groups
+				ldapRoleParams := m.newLdapRoleCfg(cfg.Field(r).Interface().(*cfgresources.Ldap))
+				err := m.applyLdapRoleCfg(ldapRoleParams, 1)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"step":     "ApplyCfg",
+						"resource": cfg.Field(r).Kind(),
+						"IP":       m.ip,
+					}).Warn("Unable to set Ldap role group config.")
+				}
+
 			default:
 				log.WithFields(log.Fields{
 					"step": "ApplyCfg",
@@ -73,6 +94,139 @@ func (m *M1000e) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 		}
 	}
 	return err
+}
+
+// TODO:
+// support Certificate Validation Enabled
+// A multipart form would be required to upload the cacert
+// Given the Ldap resource, populate required DirectoryServicesParams
+func (m *M1000e) newDirectoryServicesCfg(ldap *cfgresources.Ldap) DirectoryServicesParams {
+
+	var userAttribute, groupAttribute string
+	if ldap.Server == "" {
+		log.WithFields(log.Fields{
+			"step": "apply-ldap-cfg",
+		}).Fatal("Ldap resource parameter Server required but not declared.")
+	}
+
+	if ldap.Port == 0 {
+		log.WithFields(log.Fields{
+			"step": "apply-ldap-cfg",
+		}).Fatal("Ldap resource parameter Port required but not declared.")
+	}
+
+	if ldap.GroupDn == "" {
+		log.WithFields(log.Fields{
+			"step": "apply-ldap-cfg",
+		}).Fatal("Ldap resource parameter baseDn required but not declared.")
+	}
+
+	if ldap.UserAttribute == "" {
+		userAttribute = "uid"
+	} else {
+		userAttribute = ldap.UserAttribute
+	}
+
+	if ldap.GroupAttribute == "" {
+		groupAttribute = "memberUid"
+	} else {
+		groupAttribute = ldap.GroupAttribute
+	}
+
+	directoryServicesParams := DirectoryServicesParams{
+		SessionToken:                 m.SessionToken,
+		SeviceSelected:               "ldap",
+		CertType:                     5,
+		Action:                       1,
+		Choose:                       2,
+		GenLdapEnableCk:              true,
+		GenLdapEnable:                true,
+		GenLdapGroupAttributeIsDnCk:  true,
+		GenLdapGroupAttributeIsDn:    true,
+		GenLdapCertValidateEnableCk:  true,
+		GenLdapCertValidateEnable:    false,
+		GenLdapBindDn:                "",
+		GenLdapBindPasswd:            "PASSWORD", //we
+		GenLdapBindPasswdChanged:     false,
+		GenLdapBaseDn:                ldap.GroupDn,
+		GenLdapUserAttribute:         userAttribute,
+		GenLdapGroupAttribute:        groupAttribute,
+		GenLdapSearchFilter:          ldap.SearchFilter,
+		GenLdapConnectTimeoutSeconds: 30,
+		GenLdapSearchTimeoutSeconds:  120,
+		LdapServers:                  1,
+		GenLdapServerAddr:            ldap.Server,
+		GenLdapServerPort:            ldap.Port,
+		GenLdapSrvLookupEnable:       false,
+		AdEnable:                     false,
+		AdTfaSsoEnableBitmask1:       0,
+		AdTfaSsoEnableBitmask2:       0,
+		AdCertValidateEnableCk:       false,
+		AdCertValidateEnable:         false,
+		AdRootDomain:                 "",
+		AdTimeout:                    120,
+		AdFilterEnable:               false,
+		AdDcFilter:                   "",
+		AdGcFilter:                   "",
+		AdSchemaExt:                  1,
+		RoleGroupFlag:                0,
+		RoleGroupIndex:               "",
+		AdCmcName:                    "",
+		AdCmcdomain:                  "",
+	}
+
+	return directoryServicesParams
+}
+
+// Given the Ldap resource, populate required LdapArgParams
+func (m *M1000e) newLdapRoleCfg(ldap *cfgresources.Ldap) LdapArgParams {
+
+	// as of now we care to only set the admin role.
+	// this needs to be updated to support various roles.
+
+	roleId := 1
+
+	validRole := "admin"
+	var privBitmap, genLdapRolePrivilege int
+
+	if ldap.Role != validRole {
+		log.WithFields(log.Fields{
+			"step": "apply-ldap-cfg",
+		}).Fatal("Ldap resource Role must be declared and a valid role: admin.")
+	}
+
+	if ldap.GroupDn == "" {
+		log.WithFields(log.Fields{
+			"step": "apply-ldap-cfg",
+		}).Fatal("Ldap resource GroupDn must be declared.")
+	}
+
+	if ldap.Role == "admin" {
+		privBitmap = 4095
+		genLdapRolePrivilege = privBitmap
+	}
+
+	ldapArgCfg := LdapArgParams{
+		SessionToken:         m.SessionToken,
+		PrivBitmap:           privBitmap,
+		Index:                roleId,
+		GenLdapRoleDn:        ldap.GroupDn,
+		GenLdapRolePrivilege: genLdapRolePrivilege,
+		Login:                true,
+		Cfg:                  true,
+		Cfguser:              true,
+		Clearlog:             true,
+		Chassiscontrol:       true,
+		Superuser:            true,
+		Serveradmin:          true,
+		Testalert:            true,
+		Debug:                true,
+		Afabricadmin:         true,
+		Bfabricadmin:         true,
+	}
+
+	return ldapArgCfg
+
 }
 
 // Given the syslog resource, populate the required InterfaceParams
@@ -191,6 +345,36 @@ func (m *M1000e) newUserCfg(user *cfgresources.User, userId int) UserParams {
 	return userCfg
 }
 
+//  /cgi-bin/webcgi/dirsvcs
+// apply directoryservices payload
+func (m *M1000e) applyDirectoryServicesCfg(cfg DirectoryServicesParams) (err error) {
+
+	cfg.SessionToken = m.SessionToken
+	path := fmt.Sprintf("dirsvcs")
+	form, _ := query.Values(cfg)
+	err = m.post(path, &form)
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
+// /cgi-bin/webcgi/ldaprg?index=1
+// apply ldap role payload
+func (m *M1000e) applyLdapRoleCfg(cfg LdapArgParams, roleId int) (err error) {
+
+	cfg.SessionToken = m.SessionToken
+	path := fmt.Sprintf("ldaprg?index=%d", roleId)
+	form, _ := query.Values(cfg)
+	err = m.post(path, &form)
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
 // Configures various interface params - syslog, snmp etc.
 func (m *M1000e) ApplySecurityCfg(cfg LoginSecurityParams) (err error) {
 
@@ -245,7 +429,7 @@ func (m *M1000e) post(endpoint string, form *url.Values) (err error) {
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	//XXX to debug
-	fmt.Printf("--> %+v\n", form.Encode())
+	//fmt.Printf("--> %+v\n", form.Encode())
 	//return err
 	resp, err := m.client.Do(req)
 	if err != nil {
@@ -257,7 +441,7 @@ func (m *M1000e) post(endpoint string, form *url.Values) (err error) {
 	if err != nil {
 		return err
 	}
-
+	//fmt.Printf("-->> %d\n", resp.StatusCode)
 	//fmt.Printf("%s\n", body)
 	return err
 }
