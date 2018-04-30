@@ -60,7 +60,16 @@ func (m *M1000e) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 			case "Network":
 				fmt.Printf("%s: %v : %s\n", resourceName, cfg.Field(r), cfg.Field(r).Kind())
 			case "Ntp":
-				fmt.Printf("%s: %v : %s\n", resourceName, cfg.Field(r), cfg.Field(r).Kind())
+				datetimeParams := m.newDatetimeCfg(cfg.Field(r).Interface().(*cfgresources.Ntp))
+				err = m.applyDatetimeCfg(datetimeParams)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"step":     "ApplyCfg",
+						"resource": cfg.Field(r).Kind(),
+						"IP":       m.ip,
+					}).Warn("Unable to set Ntp config.")
+				}
+
 			case "Ldap":
 				//configure ldap service parameters
 				directoryServicesParams := m.newDirectoryServicesCfg(cfg.Field(r).Interface().(*cfgresources.Ldap))
@@ -94,6 +103,36 @@ func (m *M1000e) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 		}
 	}
 	return err
+}
+
+// Given the Ntp resource,
+// populate the required Datetime params
+func (m *M1000e) newDatetimeCfg(ntp *cfgresources.Ntp) DatetimeParams {
+
+	if ntp.Timezone == "" {
+		log.WithFields(log.Fields{
+			"step": "apply-ldap-cfg",
+		}).Fatal("Ntp resource parameter timezone required but not declared.")
+	}
+
+	if ntp.Server1 == "" {
+		log.WithFields(log.Fields{
+			"step": "apply-ldap-cfg",
+		}).Fatal("Ntp resource parameter server1 required but not declared.")
+	}
+
+	dateTime := DatetimeParams{
+		SessionToken:          m.SessionToken,
+		NtpEnable:             ntp.Enable,
+		NtpServer1:            ntp.Server1,
+		NtpServer2:            ntp.Server2,
+		NtpServer3:            ntp.Server3,
+		DateTimeChanged:       true,
+		CmcTimeTimezoneString: ntp.Timezone,
+		TzChanged:             true,
+	}
+
+	return dateTime
 }
 
 // TODO:
@@ -343,6 +382,21 @@ func (m *M1000e) newUserCfg(user *cfgresources.User, userId int) UserParams {
 	}
 
 	return userCfg
+}
+
+//  /cgi-bin/webcgi/datetime
+// apply datetime payload
+func (m *M1000e) applyDatetimeCfg(cfg DatetimeParams) (err error) {
+
+	cfg.SessionToken = m.SessionToken
+	path := fmt.Sprintf("datetime")
+	form, _ := query.Values(cfg)
+	err = m.post(path, &form)
+	if err != nil {
+		return err
+	}
+
+	return err
 }
 
 //  /cgi-bin/webcgi/dirsvcs

@@ -34,6 +34,7 @@ type Network struct {
 }
 
 type Ntp struct {
+	Enable   bool   `yaml:"enable"`
 	Server1  string `yaml:"server1"`
 	Server2  string `yaml:"server2"`
 	Server3  string `yaml:"server3"`

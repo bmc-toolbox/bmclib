@@ -80,7 +80,7 @@ type LoginSecurityParams struct {
 }
 
 // cgi-bin/webcgi/datetime
-type Datetime struct {
+type DatetimeParams struct {
 	SessionToken          string `url:"ST2"`                      //ST2=ba9a6bbf88764c829ca4f49146fd4817
 	NtpEnable             bool   `url:"NTP_enable,int"`           //NTP_enable=1
 	NtpServer1            string `url:"NTP_server1"`              //NTP_server1=ntp0.example.com
