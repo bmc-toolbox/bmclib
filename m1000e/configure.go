@@ -1,13 +1,18 @@
 package m1000e
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/google/go-querystring/query"
 	log "github.com/sirupsen/logrus"
 	"github.com/ncode/bmc/cfgresources"
+	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 )
@@ -92,7 +97,15 @@ func (m *M1000e) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 						"IP":       m.ip,
 					}).Warn("Unable to set Ldap role group config.")
 				}
-
+			case "Ssl":
+				err := m.applySslCfg(cfg.Field(r).Interface().(*cfgresources.Ssl))
+				if err != nil {
+					log.WithFields(log.Fields{
+						"step":     "ApplyCfg",
+						"resource": cfg.Field(r).Kind(),
+						"IP":       m.ip,
+					}).Warn("Unable to set SSL config.")
+				}
 			default:
 				log.WithFields(log.Fields{
 					"step": "ApplyCfg",
@@ -466,6 +479,105 @@ func (m *M1000e) applyUserCfg(cfg UserParams, userId int) (err error) {
 		return err
 	}
 
+	return err
+}
+
+// call cgi-bin/webcgi/certuploadext
+// with the ssl cert payload
+func (m *M1000e) applySslCfg(ssl *cfgresources.Ssl) (err error) {
+
+	endpoint := fmt.Sprintf("certuploadext")
+
+	formParams := make(map[string]string)
+	formParams["ST2"] = m.SessionToken
+	formParams["caller"] = ""
+	formParams["pageCode"] = ""
+	formParams["pageId"] = "2"
+	formParams["pageName"] = ""
+
+	err = m.NewSslMultipartUpload(endpoint, formParams, ssl.CertFile, ssl.KeyFile)
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
+// setup a multipart form with the expected order of form parameters
+// for the payload format see  https://github.com/ncode/bmc/issues/3
+func (m *M1000e) NewSslMultipartUpload(endpoint string, params map[string]string, SslCert string, SslKey string) (err error) {
+
+	file, err := os.Open(SslKey)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"step": "ssl-multipart-upload",
+		}).Fatal("Declared SSL key file doesnt exist: ", SslKey)
+		return err
+	}
+	defer file.Close()
+
+	//given a map of key values, post the payload as a multipart form
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	//first we write the form params
+	for key, val := range params {
+		_ = writer.WriteField(key, val)
+	}
+
+	//create a form part with the ssl key
+	keyPart, err := writer.CreateFormFile("file_key", filepath.Base(SslKey))
+	if err != nil {
+		return err
+	}
+
+	//copy the ssl key into the keypart
+	_, err = io.Copy(keyPart, file)
+
+	//write cert type into the form after the ssl key file
+	_ = writer.WriteField("certType", "6")
+
+	file, err = os.Open(SslCert)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"step": "ssl-multipart-upload",
+		}).Fatal("Declared SSL cert file doesnt exist: ", SslCert)
+		return err
+	}
+	defer file.Close()
+
+	//create a form part with the ssl cert
+	certPart, err := writer.CreateFormFile("file", filepath.Base(SslCert))
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(certPart, file)
+
+	//write cert type into the form after the ssl key file
+	_ = writer.WriteField("certType", "6")
+
+	err = writer.Close()
+	if err != nil {
+		return err
+	}
+
+	url := fmt.Sprintf("https://%s/cgi-bin/webcgi/%s", m.ip, endpoint)
+	req, err := http.NewRequest("POST", url, body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	//fmt.Printf("--> %s", req.Body)
+
+	resp, err := m.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	_, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	//fmt.Printf("%s\n", body)
 	return err
 }
 
