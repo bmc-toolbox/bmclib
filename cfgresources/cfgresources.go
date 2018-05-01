@@ -1,8 +1,14 @@
 package cfgresources
 
-//if a resource is added/updated here it needs to be updated in bmc butler as well,
-//bmc butlers resources need to be the same as bmclib resources,
-//this is until we figure how we want these two packages to depend on each other.
+type ResourcesConfig struct {
+	Ldap    *Ldap    `yaml:"ldap"`
+	Network *Network `yaml:"network"`
+	Ntp     *Ntp     `yaml:"ntp"`
+	Syslog  *Syslog  `yaml:"syslog"`
+	User    []*User  `yaml:"user'`
+	Ssl     *Ssl     `yaml:"ssl"`
+}
+
 type User struct {
 	Name     string `yaml:"name"`
 	Password string `yaml:"password"`
@@ -27,6 +33,10 @@ type Ldap struct {
 	GroupAttribute string `yaml:"groupAttribute"`
 	SearchFilter   string `yaml:"searchFilter"`
 }
+type Ssl struct {
+	CertFile string `yaml:"certfile"`
+	KeyFile  string `yaml:"keyfile"`
+}
 
 type Network struct {
 	Hostname    string `yaml:"hostname"`
@@ -39,12 +49,4 @@ type Ntp struct {
 	Server2  string `yaml:"server2"`
 	Server3  string `yaml:"server3"`
 	Timezone string `yaml:"timezone"`
-}
-
-type ResourcesConfig struct {
-	Ldap    *Ldap    `yaml:"ldap"`
-	Network *Network `yaml:"network"`
-	Ntp     *Ntp     `yaml:"ntp"`
-	Syslog  *Syslog  `yaml:"syslog"`
-	User    []*User  `yaml:"user'`
 }
