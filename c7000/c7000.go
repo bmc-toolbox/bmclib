@@ -23,6 +23,7 @@ type C7000 struct {
 	ip       string
 	username string
 	password string
+	XmlToken string //required to send SOAP XML payloads
 	client   *http.Client
 	Rimp     *hp.Rimp
 }
@@ -61,6 +62,39 @@ func New(ip string, username string, password string) (chassis *C7000, err error
 
 // Login initiates the connection to a chassis device
 func (c *C7000) Login() (err error) {
+
+	//setup the login payload
+	username := Username{Text: c.username}
+	password := Password{Text: c.password}
+	userlogin := UserLogIn{Username: username, Password: password}
+
+	//wrap the XML doc in the SOAP envelope
+	doc := wrapXML(userlogin, "")
+
+	output, err := xml.MarshalIndent(doc, "  ", "    ")
+	if err != nil {
+		return err
+	}
+
+	c.client, err = httpclient.Build()
+	if err != nil {
+		return err
+	}
+
+	statusCode, responseBody, err := c.postXML(output)
+
+	if err != nil || statusCode != 200 {
+		return errors.ErrLoginFailed
+	}
+
+	var loginResponse EnvelopeLoginResponse
+	err = xml.Unmarshal(responseBody, &loginResponse)
+	if err != nil {
+		return errors.ErrLoginFailed
+	}
+
+	c.XmlToken = loginResponse.Body.UserLogInResponse.HpOaSessionKeyToken.OaSessionKey.Text
+
 	return err
 }
 
