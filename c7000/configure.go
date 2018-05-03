@@ -32,7 +32,15 @@ func (c *C7000) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 			case "Network":
 				fmt.Printf("%s: %v : %s\n", resourceName, cfg.Field(r), cfg.Field(r).Kind())
 			case "Ntp":
-				fmt.Printf("%s: %v : %s\n", resourceName, cfg.Field(r), cfg.Field(r).Kind())
+				ntpCfg := cfg.Field(r).Interface().(*cfgresources.Ntp)
+				err := c.applyNtpParams(ntpCfg)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"step":     "ApplyCfg",
+						"resource": cfg.Field(r).Kind(),
+						"IP":       c.ip,
+					}).Warn("Unable to set NTP config.")
+				}
 			case "Ldap":
 				fmt.Printf("%s: %v : %s\n", resourceName, cfg.Field(r), cfg.Field(r).Kind())
 			case "Ssl":
@@ -47,6 +55,96 @@ func (c *C7000) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 		}
 	}
 
+	return err
+}
+
+// Applies ntp parameters
+// 1. SOAP call to set the NTP server params
+// 2. SOAP call to set TZ
+func (c *C7000) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
+
+	if cfg.Server1 == "" {
+		log.WithFields(log.Fields{
+			"step": "apply-ntp-cfg",
+		}).Warn("NTP resource expects parameter: server1.")
+		return
+	}
+
+	if cfg.Timezone == "" {
+		log.WithFields(log.Fields{
+			"step": "apply-ntp-cfg",
+		}).Warn("NTP resource expects parameter: timezone.")
+		return
+	}
+
+	if cfg.Enable != true {
+		log.WithFields(log.Fields{
+			"step": "apply-ntp-cfg",
+		}).Debug("Ntp resource declared with enable: false.")
+		return
+	}
+
+	//setup ntp XML payload
+	ntppoll := NtpPoll{Text: "720"} //default period to poll the NTP server
+	primaryServer := NtpPrimary{Text: cfg.Server1}
+	secondaryServer := NtpSecondary{Text: cfg.Server2}
+	ntp := configureNtp{NtpPrimary: primaryServer, NtpSecondary: secondaryServer, NtpPoll: ntppoll}
+
+	//wrap the XML payload in the SOAP envelope
+	doc := wrapXML(ntp, c.XmlToken)
+	output, err := xml.MarshalIndent(doc, "  ", "    ")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"step": "apply-ntp-cfg",
+		}).Warn("Unable to marshal ntp payload.")
+		return err
+	}
+
+	//fmt.Printf("%s\n", output)
+	statusCode, _, err := c.postXML(output)
+	if err != nil || statusCode != 200 {
+		log.WithFields(log.Fields{
+			"step": "apply-ntp-cfg",
+		}).Warn("NTP apply request returned non 200.")
+		return err
+	}
+
+	err = c.applyNtpTimezoneParam(cfg.Timezone)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"step": "apply-ntp-timezone-cfg",
+		}).Warn("Unable to apply cfg.")
+		return err
+	}
+
+	return err
+}
+
+//applies timezone
+// TODO: validate timezone string.
+func (c *C7000) applyNtpTimezoneParam(timezone string) (err error) {
+
+	//setup timezone XML payload
+	tz := setEnclosureTimeZone{Timezone: timeZone{Text: timezone}}
+
+	//wrap the XML payload in the SOAP envelope
+	doc := wrapXML(tz, c.XmlToken)
+	output, err := xml.MarshalIndent(doc, "  ", "    ")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"step": "apply-ntp-timezone-cfg",
+		}).Warn("Unable to marshal ntp timezone payload.")
+		return err
+	}
+
+	//fmt.Printf("%s\n", output)
+	statusCode, _, err := c.postXML(output)
+	if err != nil || statusCode != 200 {
+		log.WithFields(log.Fields{
+			"step": "apply-ntp-timezone-cfg",
+		}).Warn("NTP apply timezone request returned non 200.")
+		return err
+	}
 	return err
 }
 

@@ -89,3 +89,44 @@ type Envelope struct {
 	Header  Header
 	Body    Body
 }
+
+// Ntp payload - minus the body, envelope
+// <hpoa:configureNtp>
+//   <hpoa:ntpPrimary>ntp0.example.com</hpoa:ntpPrimary>
+//   <hpoa:ntpSecondary>ntp1.example.com</hpoa:ntpSecondary>
+//   <hpoa:ntpPoll>720</hpoa:ntpPoll>
+//  </hpoa:configureNtp>
+type configureNtp struct {
+	XMLName      xml.Name `xml:"hpoa:configureNtp"`
+	NtpPrimary   NtpPrimary
+	NtpSecondary NtpSecondary
+	NtpPoll      NtpPoll
+}
+
+type NtpPrimary struct {
+	XMLName xml.Name `xml:"hpoa:ntpPrimary"`
+	Text    string   `xml:",chardata"`
+}
+
+type NtpSecondary struct {
+	XMLName xml.Name `xml:"hpoa:ntpSecondary"`
+	Text    string   `xml:",chardata"`
+}
+
+type NtpPoll struct {
+	XMLName xml.Name `xml:"hpoa:ntpPoll"`
+	Text    string   `xml:",chardata"`
+}
+
+// <hpoa:setEnclosureTimeZone>
+//  <hpoa:timeZone>CET</hpoa:timeZone>
+// </hpoa:setEnclosureTimeZone>
+type setEnclosureTimeZone struct {
+	XMLName  xml.Name `xml:"hpoa:setEnclosureTimeZone"`
+	Timezone timeZone
+}
+
+type timeZone struct {
+	XMLName xml.Name `xml:"hpoa:timeZone"`
+	Text    string   `xml:",chardata"`
+}
