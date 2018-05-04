@@ -5,18 +5,20 @@ import (
 )
 
 type Username struct {
-	Text string `xml:",chardata"`
+	XMLName xml.Name `xml:"hpoa:username"`
+	Text    string   `xml:",chardata"`
 }
 
 type Password struct {
-	Text string `xml:",chardata"`
+	XMLName xml.Name `xml:"hpoa:password"`
+	Text    string   `xml:",chardata"`
 }
 
 type UserLogIn struct {
 	XMLName  xml.Name `xml:"hpoa:userLogIn"`
 	Text     string   `xml:",chardata"`
-	Username Username `xml:"hpoa:username"`
-	Password Password `xml:"hpoa:password"`
+	Username Username
+	Password Password
 }
 
 type Body struct {
@@ -88,6 +90,26 @@ type Envelope struct {
 	Hpoa    string   `xml:"xmlns:hpoa,attr"`
 	Header  Header
 	Body    Body
+}
+
+// <hpoa:addUser>
+//  <hpoa:username>Test</hpoa:username>
+//   <hpoa:password>foobar</hpoa:password>
+// </hpoa:addUser>
+type AddUser struct {
+	XMLName  xml.Name `xml:"hpoa:addUser"`
+	Username Username
+	Password Password
+}
+
+// <hpoa:setUserPassword>
+//  <hpoa:username>Administrator</hpoa:username>
+//  <hpoa:password>foobar</hpoa:password>
+// </hpoa:setUserPassword>
+type SetUserPassword struct {
+	XMLName  xml.Name `xml:"hpoa:setUserPassword"`
+	Username Username
+	Password Password
 }
 
 // Ntp payload - minus the body, envelope
