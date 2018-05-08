@@ -25,7 +25,7 @@ import (
 	"strings"
 )
 
-type Inventory struct {
+type Dora struct {
 	Log       *logrus.Logger
 	BatchSize int
 	Channel   chan<- []asset.Asset
@@ -55,10 +55,10 @@ type DoraAsset struct {
 }
 
 // for a list of assets, update its location value
-func (i *Inventory) setLocation(doraInventoryAssets []asset.Asset) {
+func (d *Dora) setLocation(doraInventoryAssets []asset.Asset) {
 
 	component := "inventory"
-	log := i.Log
+	log := d.Log
 
 	apiUrl := viper.GetString("inventory.dora.apiUrl")
 	queryUrl := fmt.Sprintf("%s/v1/scanned_ports?filter[port]=22&filter[ip]=", apiUrl)
@@ -104,7 +104,7 @@ func (i *Inventory) setLocation(doraInventoryAssets []asset.Asset) {
 }
 
 // A routine that returns data to iter over
-func (i *Inventory) AssetIter() {
+func (d *Dora) AssetIter() {
 
 	//Asset needs to be an inventory asset
 	//Iter stuffs assets into an array of Assets
@@ -114,7 +114,7 @@ func (i *Inventory) AssetIter() {
 	//assetTypes := []string{"blade", "chassis", "discrete"}
 	assetTypes := []string{"chassis"}
 	component := "inventory"
-	log := i.Log
+	log := d.Log
 
 	apiUrl := viper.GetString("inventory.dora.apiUrl")
 
@@ -129,8 +129,9 @@ func (i *Inventory) AssetIter() {
 		}
 
 		// TESTING - return only Dell
-		queryUrl := fmt.Sprintf("%s/v1/%s?page[offset]=%d&page[limit]=%d&filter[vendor]!=HP&filter&filter[serial]=gf85c92", apiUrl, path, 0, i.BatchSize)
-		//queryUrl := fmt.Sprintf("%s/v1/blades?page[offset]=%d&page[limit]=%d", apiUrl, 0, i.BatchSize)
+		queryUrl := fmt.Sprintf("%s/v1/%s?page[offset]=%d&page[limit]=%d&filter[vendor]!=HP&filter&filter[serial]=gf85c92", apiUrl, path, 0, d.BatchSize)
+		//queryUrl := fmt.Sprintf("%s/v1/%s?page[offset]=%d&page[limit]=%d&filter[vendor]!=Dell&filter&filter[serial]=cz372137h3", apiUrl, path, 0, d.BatchSize)
+		//queryUrl := fmt.Sprintf("%s/v1/blades?page[offset]=%d&page[limit]=%d", apiUrl, 0, d.BatchSize)
 
 		for {
 			assets := make([]asset.Asset, 0)
@@ -179,10 +180,10 @@ func (i *Inventory) AssetIter() {
 			}
 
 			//set the location for the assets
-			i.setLocation(assets)
+			d.setLocation(assets)
 
 			//pass the asset to the channel
-			i.Channel <- assets
+			d.Channel <- assets
 
 			// if we reached the end of dora assets
 			if doraAssets.Links.Next == "" {
@@ -190,7 +191,7 @@ func (i *Inventory) AssetIter() {
 					"component": component,
 					"url":       queryUrl,
 				}).Info("Reached end of assets in dora")
-				close(i.Channel)
+				close(d.Channel)
 				break
 			}
 

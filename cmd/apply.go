@@ -15,11 +15,14 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/ncode/bmcbutler/asset"
 	"github.com/ncode/bmcbutler/butler"
 	"github.com/ncode/bmcbutler/inventory"
 	"github.com/ncode/bmcbutler/resource"
+	"os"
 )
 
 // applyCmd represents the apply command
@@ -39,11 +42,24 @@ func apply() {
 
 	// A channel to recieve inventory assets
 	inventoryChan := make(chan []asset.Asset)
-	inventoryInstance := inventory.Inventory{Log: log, BatchSize: 10, Channel: inventoryChan}
 
-	// Spawn a goroutine that returns a slice of assets over inventoryChan
-	// the number of assets in the slice is determined by the batch size.
-	go inventoryInstance.AssetIter()
+	inventorySource := viper.GetString("inventory.source")
+	switch inventorySource {
+	case "dora":
+		inventoryInstance := inventory.Dora{Log: log, BatchSize: 10, Channel: inventoryChan}
+		// Spawn a goroutine that returns a slice of assets over inventoryChan
+		// the number of assets in the slice is determined by the batch size.
+		go inventoryInstance.AssetIter()
+	case "serverDb":
+		inventoryInstance := inventory.ServerDb{Log: log, BatchSize: 10, Channel: inventoryChan}
+		// Spawn a goroutine that returns a slice of assets over inventoryChan
+		// the number of assets in the slice is determined by the batch size.
+		go inventoryInstance.AssetIter()
+
+	default:
+		fmt.Println("Unknown inventory source declared in cfg: ", inventorySource)
+		os.Exit(1)
+	}
 
 	// Read in declared resources
 	resourceInstance := resource.Resource{Log: log}
