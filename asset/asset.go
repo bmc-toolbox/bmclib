@@ -18,6 +18,7 @@ type Asset struct {
 	IpAddress string
 	Serial    string
 	Vendor    string
+	Model     string
 	Type      string //blade or chassis
 	Location  string
 }
