@@ -18,3 +18,19 @@ ldap:
   port: 636
   enable: true
   role: admin
+  baseDn: ou=People,dc=example,dc=com
+  groupDn: cn=bmcAdmins,ou=Group,dc=example,dc=com
+  userAttribute: uid
+  groupAttribute: memberUid
+  searchFilter: objectClass=posixAccount
+
+ntp:
+   enable: True
+   server1: ntp0.example.com
+   server2: ntp1.example.com
+   server3: ntp3.example.com
+   timezone: CET
+
+ssl:
+    certfile: "/home/jrebello/loms/ams4/wildcard.$location.bmc.example.com.crt"
+    keyfile: "/home/jrebello/loms/ams4/wildcard.$location.bmc.example.com.key"
