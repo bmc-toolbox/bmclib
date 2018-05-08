@@ -5,3 +5,10 @@ inventory:
   source: dora
   dora:
     apiUrl: http://dora.booking.com/api
+bmcDefaults:
+  c7000:
+    user: Administrator
+    password: password
+  m1000e:
+    user: root
+    password: calvin
