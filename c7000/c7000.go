@@ -108,7 +108,12 @@ func (c *C7000) Name() (name string, err error) {
 	return c.Rimp.Infra2.Encl, err
 }
 
-// Model returns the device model
+// ModelId returns the model id string - c7000
+func (c *C7000) ModelId() (model string) {
+	return "c7000"
+}
+
+// Model returns the full device model string
 func (c *C7000) Model() (model string, err error) {
 	return c.Rimp.MP.Pn, err
 }

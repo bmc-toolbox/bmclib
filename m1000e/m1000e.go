@@ -201,7 +201,12 @@ func (m *M1000e) Name() (name string, err error) {
 	return m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.ChassisStatus.CHASSISName, err
 }
 
-// Model returns the device model
+// ModelId returns just Model id string - m1000e
+func (m *M1000e) ModelId() (model string) {
+	return "m1000e"
+}
+
+// Model returns the full device model string
 func (m *M1000e) Model() (model string, err error) {
 	return strings.TrimSpace(m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.ChassisStatus.ROChassisProductname), err
 }
