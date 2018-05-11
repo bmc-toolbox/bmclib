@@ -1,6 +1,7 @@
 package m1000e
 
 import (
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/ncode/bmc/cfgresources"
 )
@@ -25,13 +26,13 @@ func (m *M1000e) newDatetimeCfg(ntp *cfgresources.Ntp) DatetimeParams {
 
 	if ntp.Timezone == "" {
 		log.WithFields(log.Fields{
-			"step": "apply-ldap-cfg",
+			"step": "apply-ntp-cfg",
 		}).Fatal("Ntp resource parameter timezone required but not declared.")
 	}
 
 	if ntp.Server1 == "" {
 		log.WithFields(log.Fields{
-			"step": "apply-ldap-cfg",
+			"step": "apply-ntp-cfg",
 		}).Fatal("Ntp resource parameter server1 required but not declared.")
 	}
 
@@ -59,7 +60,7 @@ func (m *M1000e) newDirectoryServicesCfg(ldap *cfgresources.Ldap) DirectoryServi
 	if ldap.Server == "" {
 		log.WithFields(log.Fields{
 			"step": "apply-ldap-cfg",
-		}).Fatal("Ldap resource parameter Server required but not declared.")
+		}).Warn("Ldap resource parameter Server required but not declared.")
 	}
 
 	if ldap.Port == 0 {
@@ -67,11 +68,16 @@ func (m *M1000e) newDirectoryServicesCfg(ldap *cfgresources.Ldap) DirectoryServi
 			"step": "apply-ldap-cfg",
 		}).Fatal("Ldap resource parameter Port required but not declared.")
 	}
-
-	if ldap.GroupDn == "" {
+	if ldap.Group == "" {
 		log.WithFields(log.Fields{
 			"step": "apply-ldap-cfg",
-		}).Fatal("Ldap resource parameter baseDn required but not declared.")
+		}).Fatal("Ldap resource parameter Group required but not declared.")
+	}
+
+	if ldap.GroupBaseDn == "" {
+		log.WithFields(log.Fields{
+			"step": "apply-ldap-cfg",
+		}).Fatal("Ldap resource parameter GroupBaseDn required but not declared.")
 	}
 
 	if ldap.UserAttribute == "" {
@@ -86,6 +92,7 @@ func (m *M1000e) newDirectoryServicesCfg(ldap *cfgresources.Ldap) DirectoryServi
 		groupAttribute = ldap.GroupAttribute
 	}
 
+	groupDn := fmt.Sprintf("cn=%s,%s", ldap.Group, ldap.GroupBaseDn)
 	directoryServicesParams := DirectoryServicesParams{
 		SessionToken:                 m.SessionToken,
 		SeviceSelected:               "ldap",
@@ -101,7 +108,7 @@ func (m *M1000e) newDirectoryServicesCfg(ldap *cfgresources.Ldap) DirectoryServi
 		GenLdapBindDn:                "",
 		GenLdapBindPasswd:            "PASSWORD", //we
 		GenLdapBindPasswdChanged:     false,
-		GenLdapBaseDn:                ldap.GroupDn,
+		GenLdapBaseDn:                groupDn,
 		GenLdapUserAttribute:         userAttribute,
 		GenLdapGroupAttribute:        groupAttribute,
 		GenLdapSearchFilter:          ldap.SearchFilter,
@@ -131,31 +138,58 @@ func (m *M1000e) newDirectoryServicesCfg(ldap *cfgresources.Ldap) DirectoryServi
 	return directoryServicesParams
 }
 
+// Return bool value if the role is valid.
+func (m *M1000e) isRoleValid(role string) bool {
+
+	validRoles := []string{"admin", "user"}
+	for _, v := range validRoles {
+		if role == v {
+			return true
+		}
+	}
+
+	return false
+}
+
+// TODO: the code should not Fatal, but return so configuration continues.
 // Given the Ldap resource, populate required LdapArgParams
 func (m *M1000e) newLdapRoleCfg(ldap *cfgresources.Ldap) LdapArgParams {
 
-	// as of now we care to only set the admin role.
 	// this needs to be updated to support various roles.
-
 	roleId := 1
 
-	validRole := "admin"
 	var privBitmap, genLdapRolePrivilege int
 
-	if ldap.Role != validRole {
+	if !m.isRoleValid(ldap.Role) {
 		log.WithFields(log.Fields{
 			"step": "apply-ldap-cfg",
-		}).Fatal("Ldap resource Role must be declared and a valid role: admin.")
+			"role": ldap.Role,
+		}).Fatal("Ldap resource Role must be a valid role: admin OR user.")
 	}
 
-	if ldap.GroupDn == "" {
+	if ldap.Group == "" {
 		log.WithFields(log.Fields{
 			"step": "apply-ldap-cfg",
-		}).Fatal("Ldap resource GroupDn must be declared.")
+		}).Fatal("Ldap resource Group required but not declared.")
 	}
 
-	if ldap.Role == "admin" {
+	if ldap.GroupBaseDn == "" {
+		log.WithFields(log.Fields{
+			"step": "apply-ldap-cfg",
+		}).Fatal("Ldap resource GroupBaseDn required but not declared.")
+	}
+
+	groupDn := fmt.Sprintf("cn=%s,%s", ldap.Group, ldap.GroupBaseDn)
+
+	//TODO
+	//this needs more work, the resource declaration needs to support a list of roles,
+	//and the appropriate permissions need to be set below.
+	switch ldap.Role {
+	case "admin":
 		privBitmap = 4095
+		genLdapRolePrivilege = privBitmap
+	case "user":
+		privBitmap = 1
 		genLdapRolePrivilege = privBitmap
 	}
 
@@ -163,7 +197,7 @@ func (m *M1000e) newLdapRoleCfg(ldap *cfgresources.Ldap) LdapArgParams {
 		SessionToken:         m.SessionToken,
 		PrivBitmap:           privBitmap,
 		Index:                roleId,
-		GenLdapRoleDn:        ldap.GroupDn,
+		GenLdapRoleDn:        groupDn,
 		GenLdapRolePrivilege: genLdapRolePrivilege,
 		Login:                true,
 		Cfg:                  true,
