@@ -580,6 +580,16 @@ func (c *C7000) setUserPassword(user string, password string) (err error) {
 // Applies ntp parameters
 // 1. SOAP call to set the NTP server params
 // 2. SOAP call to set TZ
+// 1.
+// <hpoa:configureNtp>
+//   <hpoa:ntpPrimary>ntp0.example.com</hpoa:ntpPrimary>
+//   <hpoa:ntpSecondary>ntp1.example.com</hpoa:ntpSecondary>
+//   <hpoa:ntpPoll>720</hpoa:ntpPoll>
+//  </hpoa:configureNtp>
+// 2.
+// <hpoa:setEnclosureTimeZone>
+//  <hpoa:timeZone>CET</hpoa:timeZone>
+// </hpoa:setEnclosureTimeZone>
 func (c *C7000) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 
 	if cfg.Server1 == "" {
@@ -661,7 +671,7 @@ func (c *C7000) applyNtpTimezoneParam(timezone string) (err error) {
 	if err != nil || statusCode != 200 {
 		log.WithFields(log.Fields{
 			"step": "apply-ntp-timezone-cfg",
-		}).Warn("NTP apply timezone request returned non 200.")
+		}).Warn("NTP applyNtpTimezoneParam request returned non 200.")
 		return err
 	}
 	return err

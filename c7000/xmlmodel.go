@@ -113,11 +113,6 @@ type SetUserPassword struct {
 }
 
 // Ntp payload - minus the body, envelope
-// <hpoa:configureNtp>
-//   <hpoa:ntpPrimary>ntp0.example.com</hpoa:ntpPrimary>
-//   <hpoa:ntpSecondary>ntp1.example.com</hpoa:ntpSecondary>
-//   <hpoa:ntpPoll>720</hpoa:ntpPoll>
-//  </hpoa:configureNtp>
 type configureNtp struct {
 	XMLName      xml.Name `xml:"hpoa:configureNtp"`
 	NtpPrimary   NtpPrimary
@@ -140,9 +135,6 @@ type NtpPoll struct {
 	Text    string   `xml:",chardata"`
 }
 
-// <hpoa:setEnclosureTimeZone>
-//  <hpoa:timeZone>CET</hpoa:timeZone>
-// </hpoa:setEnclosureTimeZone>
 type setEnclosureTimeZone struct {
 	XMLName  xml.Name `xml:"hpoa:setEnclosureTimeZone"`
 	Timezone timeZone
