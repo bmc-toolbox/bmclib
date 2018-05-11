@@ -152,3 +152,130 @@ type timeZone struct {
 	XMLName xml.Name `xml:"hpoa:timeZone"`
 	Text    string   `xml:",chardata"`
 }
+
+type addLdapGroup struct {
+	XMLName   xml.Name `xml:"hpoa:addLdapGroup"`
+	LdapGroup ldapGroup
+}
+
+type ldapGroup struct {
+	XMLName xml.Name `xml:"hpoa:ldapGroup"`
+	Text    string   `xml:",chardata"`
+}
+
+type setLdapGroupBayAcl struct {
+	XMLName   xml.Name `xml:"hpoa:setLdapGroupBayAcl"`
+	LdapGroup ldapGroup
+	Acl       acl
+}
+
+type acl struct {
+	XMLName xml.Name `xml:"hpoa:acl"`
+	Text    string   `xml:",chardata"`
+}
+
+type addLdapGroupBayAccess struct {
+	XMLName   xml.Name `xml:"hpoa:addLdapGroupBayAccess"`
+	LdapGroup ldapGroup
+	Bays      bays
+}
+
+type bays struct {
+	XMLName              xml.Name `xml:"hpoa:bays"`
+	Hpoa                 string   `xml:"xmlns:hpoa,attr"`
+	OaAccess             oaAccess
+	BladeBays            bladeBays
+	InterconnectTrayBays interconnectTrayBays
+}
+
+type oaAccess struct {
+	XMLName xml.Name `xml:"hpoa:oaAccess"`
+	Text    bool     `xml:",chardata"` //bool
+}
+
+type bladeBays struct {
+	XMLName xml.Name `xml:"hpoa:bladeBays"`
+	Blade   []blade
+}
+
+type blade struct {
+	XMLName   xml.Name `xml:"hpoa:blade"`
+	Hpoa      string   `xml:"xmlns:hpoa,attr"`
+	BayNumber bayNumber
+	Access    access
+}
+
+type bayNumber struct {
+	XMLName xml.Name `xml:"hpoa:bayNumber"`
+	Text    int      `xml:",chardata"`
+}
+
+type access struct {
+	XMLName xml.Name `xml:"hpoa:access"`
+	Text    bool     `xml:",chardata"`
+}
+
+type interconnectTrayBays struct {
+	XMLName          xml.Name `xml:"hpoa:interconnectTrayBays"`
+	InterconnectTray []interconnectTray
+}
+
+type interconnectTray struct {
+	XMLName   xml.Name `xml:"hpoa:interconnectTray"`
+	Hpoa      string   `xml:"xmlns:hpoa,attr"`
+	BayNumber bayNumber
+	Access    access
+}
+
+type enableLdapAuthentication struct {
+	XMLName          xml.Name `xml:"hpoa:enableLdapAuthentication"`
+	EnableLdap       bool     `xml:"hpoa:enableLdap"`
+	EnableLocalUsers bool     `xml:"hpoa:enableLocalUsers"`
+}
+
+type setLdapInfo4 struct {
+	XMLName                  xml.Name `xml:"hpoa:setLdapInfo4"`
+	DirectoryServerAddress   string   `xml:"hpoa:directoryServerAddress"`
+	DirectoryServerSslPort   int      `xml:"hpoa:directoryServerSslPort"`
+	DirectoryServerGCPort    int      `xml:"hpoa:directoryServerGCPort"`
+	UserNtAccountNameMapping bool     `xml:"hpoa:userNtAccountNameMapping"`
+	EnableServiceAccount     bool     `xml:"hpoa:enableServiceAccount"`
+	ServiceAccountName       string   `xml:"hpoa:serviceAccountName"`
+	ServiceAccountPassword   string   `xml:"hpoa:serviceAccountPassword"`
+	SearchContexts           SearchContexts
+}
+
+type SearchContexts struct {
+	XMLName       xml.Name `xml:"hpoa:searchContexts"`
+	Hpoa          string   `xml:"xmlns:hpoa,attr"`
+	SearchContext []SearchContext
+}
+
+type SearchContext struct {
+	XMLName xml.Name `xml:"hpoa:searchContext"`
+	Text    string   `xml:",chardata"`
+}
+
+// <hpoa:setLdapInfo4>
+//   <hpoa:directoryServerAddress>example.com</hpoa:directoryServerAddress>
+//   <hpoa:directoryServerSslPort>636</hpoa:directoryServerSslPort>
+//   <hpoa:directoryServerGCPort>0</hpoa:directoryServerGCPort>
+//   <hpoa:userNtAccountNameMapping>false</hpoa:userNtAccountNameMapping>
+//   <hpoa:enableServiceAccount>false</hpoa:enableServiceAccount>
+//   <hpoa:serviceAccountName></hpoa:serviceAccountName>
+//   <hpoa:serviceAccountPassword></hpoa:serviceAccountPassword>
+//   <hpoa:searchContexts xmlns:hpoa="hpoa.xsd">
+//    <hpoa:searchContext>ou=People,dc=activehotels,dc=com</hpoa:searchContext>
+//    <hpoa:searchContext/>
+//    <hpoa:searchContext/>
+//    <hpoa:searchContext/>
+//    <hpoa:searchContext/>
+//    <hpoa:searchContext/>
+//   </hpoa:searchContexts>
+// </hpoa:setLdapInfo4>
+
+// manage power config
+//<hpoa:setPowerConfigInfo><hpoa:redundancyMode>AC_REDUNDANT</hpoa:redundancyMode><hpoa:powerCeiling>0</hpoa:powerCeiling><hpoa:dynamicPowerSaverEnabled>false</hpoa:dynamicPowerSaverEnabled></hpoa:setPowerConfigInfo>
+
+//mark setup wizard complete - required if the chassis was reset.
+//<hpoa:setWizardComplete><hpoa:wizardStatus>WIZARD_SETUP_COMPLETE</hpoa:wizardStatus></hpoa:setWizardComplete>

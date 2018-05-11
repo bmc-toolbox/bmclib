@@ -6,6 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/ncode/bmc/cfgresources"
 	"reflect"
+	"strings"
 )
 
 func (c *C7000) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
@@ -57,7 +58,8 @@ func (c *C7000) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 					}).Warn("Unable to set NTP config.")
 				}
 			case "Ldap":
-				fmt.Printf("%s: %v : %s\n", resourceName, cfg.Field(r), cfg.Field(r).Kind())
+				ldapCfg := cfg.Field(r).Interface().(*cfgresources.Ldap)
+				c.applyLdapParams(ldapCfg)
 			case "Ssl":
 				fmt.Printf("%s: %v : %s\n", resourceName, cfg.Field(r), cfg.Field(r).Kind())
 			default:
@@ -68,6 +70,408 @@ func (c *C7000) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 
 			}
 		}
+	}
+
+	return err
+}
+
+// Return bool value if the role is valid.
+func (c *C7000) isRoleValid(role string) bool {
+
+	validRoles := []string{"admin", "user"}
+	for _, v := range validRoles {
+		if role == v {
+			return true
+		}
+	}
+
+	return false
+}
+
+//1. apply ldap group params
+//2. enable ldap auth
+//3. apply ldap server params
+func (c *C7000) applyLdapParams(cfg *cfgresources.Ldap) {
+
+	err := c.applyLdapGroupParams(cfg)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"step":     "applyLdapParams",
+			"resource": "Ldap",
+			"IP":       c.ip,
+			"Error":    err,
+		}).Warn("applyLdapParams returned error.")
+		return
+	}
+
+	err = c.applysetLdapInfo4(cfg)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"step":     "applyLdapParams",
+			"resource": "Ldap",
+			"IP":       c.ip,
+			"Error":    err,
+		}).Warn("applyLdapParams returned error.")
+		return
+	}
+
+	err = c.applyEnableLdapAuth(cfg.Enable)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"step":     "applyLdapParams",
+			"resource": "Ldap",
+			"IP":       c.ip,
+			"Error":    err,
+		}).Warn("applyLdapParams returned error.")
+		return
+	}
+
+}
+
+// Apply Ldap server config params
+// <hpoa:setLdapInfo4>
+//   <hpoa:directoryServerAddress>example.com</hpoa:directoryServerAddress>
+//   <hpoa:directoryServerSslPort>636</hpoa:directoryServerSslPort>
+//   <hpoa:directoryServerGCPort>0</hpoa:directoryServerGCPort>
+//   <hpoa:userNtAccountNameMapping>false</hpoa:userNtAccountNameMapping>
+//   <hpoa:enableServiceAccount>false</hpoa:enableServiceAccount>
+//   <hpoa:serviceAccountName></hpoa:serviceAccountName>
+//   <hpoa:serviceAccountPassword></hpoa:serviceAccountPassword>
+//   <hpoa:searchContexts xmlns:hpoa="hpoa.xsd">
+//    <hpoa:searchContext>ou=People,dc=activehotels,dc=com</hpoa:searchContext>
+//    <hpoa:searchContext/>
+//    <hpoa:searchContext/>
+//    <hpoa:searchContext/>
+//    <hpoa:searchContext/>
+//    <hpoa:searchContext/>
+//   </hpoa:searchContexts>
+// </hpoa:setLdapInfo4>
+func (c *C7000) applysetLdapInfo4(cfg *cfgresources.Ldap) (err error) {
+	if cfg.Server == "" {
+		log.WithFields(log.Fields{
+			"step": "applysetLdapInfo4",
+		}).Warn("Ldap resource parameter Server required but not declared.")
+		return err
+	}
+
+	if cfg.Port == 0 {
+		log.WithFields(log.Fields{
+			"step": "applysetLdapInfo4",
+		}).Fatal("Ldap resource parameter Port required but not declared.")
+		return err
+	}
+
+	if cfg.Group == "" {
+		log.WithFields(log.Fields{
+			"step": "applysetLdapInfo4",
+		}).Fatal("Ldap resource parameter Group required but not declared.")
+		return err
+	}
+
+	if cfg.BaseDn == "" {
+		log.WithFields(log.Fields{
+			"step": "applysetLdapInfo4",
+		}).Fatal("Ldap resource parameter GroupBaseDn required but not declared.")
+		return err
+	}
+
+	searchcontexts := SearchContexts{Hpoa: "hpoa.xsd"}
+	searchcontexts.SearchContext = append(searchcontexts.SearchContext, SearchContext{Text: cfg.BaseDn})
+	for s := 1; s <= 6; s++ {
+		searchcontexts.SearchContext = append(searchcontexts.SearchContext, SearchContext{Text: ""})
+	}
+
+	payload := setLdapInfo4{
+		DirectoryServerAddress:   cfg.Server,
+		DirectoryServerSslPort:   cfg.Port,
+		DirectoryServerGCPort:    0,
+		UserNtAccountNameMapping: false,
+		EnableServiceAccount:     false,
+		ServiceAccountName:       "",
+		ServiceAccountPassword:   "",
+		SearchContexts:           searchcontexts,
+	}
+
+	doc := wrapXML(payload, c.XmlToken)
+	output, err := xml.MarshalIndent(doc, "  ", "    ")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"step":  "applysetLdapInfo4",
+			"Error": err,
+		}).Warn("Unable to marshal ldap payload.")
+		return err
+	}
+
+	// A hack to declare self closing xml tags, until https://github.com/golang/go/issues/21399 is fixed.
+	output = []byte(strings.Replace(string(output), "<hpoa:searchContext></hpoa:searchContext>", "<hpoa:searchContext/>", -1))
+	statusCode, _, err := c.postXML(output)
+	if statusCode != 200 || err != nil {
+		log.WithFields(log.Fields{
+			"step":       "applysetLdapInfo4",
+			"statusCode": statusCode,
+			"Error":      err,
+		}).Warn("Ldap applysetLdapInfo4 apply request returned non 200.")
+		return err
+	}
+
+	return err
+
+}
+
+// <hpoa:enableLdapAuthentication>
+//  <hpoa:enableLdap>true</hpoa:enableLdap>
+//  <hpoa:enableLocalUsers>true</hpoa:enableLocalUsers>
+// </hpoa:enableLdapAuthentication>
+func (c *C7000) applyEnableLdapAuth(enable bool) (err error) {
+
+	payload := enableLdapAuthentication{EnableLdap: enable, EnableLocalUsers: true}
+	doc := wrapXML(payload, c.XmlToken)
+	output, err := xml.MarshalIndent(doc, "  ", "    ")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"step":  "applyEnableLdapAuth",
+			"Error": err,
+		}).Warn("Unable to marshal ldap payload.")
+		return err
+	}
+
+	statusCode, _, err := c.postXML(output)
+	if statusCode != 200 || err != nil {
+		log.WithFields(log.Fields{
+			"step":       "applyEnableLdapAuth",
+			"statusCode": statusCode,
+			"Error":      err,
+		}).Warn("Ldap applyEnableLdapAuth apply request returned non 200.")
+		return err
+	}
+
+	return err
+}
+
+// Actions carried out in order
+// 1.  addLdapGroup
+// 2.  setLdapGroupBayAcl
+// 3.  addLdapGroupBayAccess (done)
+func (c *C7000) applyLdapGroupParams(cfg *cfgresources.Ldap) (err error) {
+
+	if cfg.Role == "" {
+		log.WithFields(log.Fields{
+			"step": "apply-ldap-cfg",
+		}).Warn("Ldap resource parameter Role required but not declared.")
+		return
+	}
+
+	if !c.isRoleValid(cfg.Role) {
+		log.WithFields(log.Fields{
+			"step": "apply-ldap-cfg",
+			"role": cfg.Role,
+		}).Warn("Ldap resource Role must be a valid role: admin OR user.")
+		return
+	}
+
+	if cfg.Group == "" {
+		log.WithFields(log.Fields{
+			"step": "apply-ldap-cfg",
+		}).Warn("Ldap resource parameter Group required but not declared.")
+		return
+	}
+
+	//1. addLdapGroup
+	err = c.applyAddLdapGroup(cfg.Group)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"step":     "addLdapGroup",
+			"resource": "Ldap",
+			"IP":       c.ip,
+			"Error":    err,
+		}).Warn("addLdapGroup returned error.")
+		return
+	}
+
+	//2. setLdapGroupBayAcl
+	err = c.applyLdapGroupBayAcl(cfg.Role, cfg.Group)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"step":     "setLdapGroupBayAcl",
+			"resource": "Ldap",
+			"IP":       c.ip,
+			"Error":    err,
+		}).Warn("addLdapGroup returned error.")
+		return
+	}
+
+	//3. applyAddLdapGroupBayAccess
+	err = c.applyAddLdapGroupBayAccess(cfg.Group)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"step":     "applyAddLdapGroupBayAccess",
+			"resource": "Ldap",
+			"IP":       c.ip,
+			"Error":    err,
+		}).Warn("addLdapGroup returned error.")
+		return
+	}
+
+	return
+}
+
+// LDAP setup group, soap actions in order.
+// <hpoa:addLdapGroup>
+//  <hpoa:ldapGroup>bmcAdmins</hpoa:ldapGroup>
+// </hpoa:addLdapGroup>
+func (c *C7000) applyAddLdapGroup(group string) (err error) {
+
+	payload := addLdapGroup{LdapGroup: ldapGroup{Text: group}}
+	doc := wrapXML(payload, c.XmlToken)
+	output, err := xml.MarshalIndent(doc, "  ", "    ")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"step":  "applyAddLdapGroup",
+			"Error": err,
+		}).Warn("Unable to marshal ldap payload.")
+		return err
+	}
+
+	statusCode, _, err := c.postXML(output)
+	if statusCode == 200 || statusCode == 500 { // 500 indicates the group exists.
+		log.WithFields(log.Fields{
+			"step":       "applyAddLdapGroup",
+			"statusCode": statusCode,
+		}).Debug("Ldap applyAddLdapGroup applied.")
+		return nil
+	}
+
+	if statusCode >= 300 || err != nil {
+		log.WithFields(log.Fields{
+			"step":       "applyAddLdapGroup",
+			"statusCode": statusCode,
+		}).Warn("Ldap applyAddLdapGroup request returned non 200.")
+		return err
+	}
+
+	return nil
+}
+
+// Applies ldap group ACL
+// <hpoa:setLdapGroupBayAcl>
+//  <hpoa:ldapGroup>bmcAdmins</hpoa:ldapGroup>
+//  <hpoa:acl>ADMINISTRATOR</hpoa:acl>
+// </hpoa:setLdapGroupBayAcl>
+func (c *C7000) applyLdapGroupBayAcl(role string, group string) (err error) {
+
+	var userAcl string
+
+	if role == "admin" {
+		userAcl = "ADMINISTRATOR"
+	} else {
+		userAcl = "USER"
+	}
+
+	payload := setLdapGroupBayAcl{LdapGroup: ldapGroup{Text: group}, Acl: acl{Text: userAcl}}
+
+	doc := wrapXML(payload, c.XmlToken)
+	output, err := xml.MarshalIndent(doc, "  ", "    ")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"step":  "applyLdapGroupBayAcl",
+			"Error": err,
+		}).Fatal("Unable to marshal ldap payload.")
+	}
+
+	statusCode, _, err := c.postXML(output)
+	if statusCode != 200 || err != nil {
+		log.WithFields(log.Fields{
+			"step":       "applyLdapGroupBayAcl",
+			"statusCode": statusCode,
+			"Error":      err,
+		}).Warn("LDAP applyLdapGroupBayAcl request returned non 200.")
+		return err
+	}
+
+	return err
+}
+
+// Set blade, interconnect access
+//<hpoa:addLdapGroupBayAccess>
+// <hpoa:ldapGroup>bmcAdmins</hpoa:ldapGroup>
+// <hpoa:bays xmlns:hpoa="hpoa.xsd">
+//  <hpoa:oaAccess>true</hpoa:oaAccess>
+//  <hpoa:bladeBays>
+//   <hpoa:blade xmlns:hpoa="hpoa.xsd">
+//    <hpoa:bayNumber>1</hpoa:bayNumber>
+//    <hpoa:access>true</hpoa:access>
+//   </hpoa:blade>
+//  <hpoa:blade xmlns:hpoa="hpoa.xsd">
+//    <hpoa:bayNumber>2</hpoa:bayNumber>
+//    <hpoa:access>true</hpoa:access>
+//    </hpoa:blade>
+//    .... repeat for number of blades in a c7000 chassis ~ 16 max
+// </hpoa:bladeBays>
+// <hpoa:interconnectTrayBays>
+//  <hpoa:interconnectTray xmlns:hpoa="hpoa.xsd">
+//  <hpoa:bayNumber>1</hpoa:bayNumber>
+//  <hpoa:access>true</hpoa:access>
+// </hpoa:interconnectTray>
+// <hpoa:interconnectTray xmlns:hpoa="hpoa.xsd">
+//  <hpoa:bayNumber>2</hpoa:bayNumber>
+//  <hpoa:access>true</hpoa:access>
+//  </hpoa:interconnectTray>
+// ...  repeat for number of interconnect bays in chassis ~ 8
+//  <hpoa:interconnectTrayBays>
+// </hpoa:bays>
+//</hpoa:addLdapGroupBayAccess>
+
+func (c *C7000) applyAddLdapGroupBayAccess(group string) (err error) {
+	//group = "bmcAdmins"
+
+	//setup blade bays payload
+	bladebays := bladeBays{}
+	for b := 1; b <= 16; b++ {
+		baynumber := bayNumber{Text: b}
+		access := access{Text: true}
+		blade := blade{Hpoa: "hpoa.xsd", BayNumber: baynumber, Access: access}
+		bladebays.Blade = append(bladebays.Blade, blade)
+	}
+
+	//setup interconnect tray bays payload
+	interconnecttraybays := interconnectTrayBays{}
+	for t := 1; t <= 8; t++ {
+		access := access{Text: true}
+		baynumber := bayNumber{Text: t}
+		interconnecttray := interconnectTray{Hpoa: "hpoa.xsd", Access: access, BayNumber: baynumber}
+		interconnecttraybays.InterconnectTray = append(interconnecttraybays.InterconnectTray, interconnecttray)
+	}
+
+	//setup the bays payload
+	bayz := bays{
+		Hpoa:                 "hpoa.xsd",
+		OaAccess:             oaAccess{Text: true},
+		BladeBays:            bladebays,
+		InterconnectTrayBays: interconnecttraybays,
+	}
+
+	payload := addLdapGroupBayAccess{
+		LdapGroup: ldapGroup{Text: group},
+		Bays:      bayz,
+	}
+
+	doc := wrapXML(payload, c.XmlToken)
+	output, err := xml.MarshalIndent(doc, "  ", "    ")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"step":  "applyAddLdapGroupBayAccess",
+			"Error": err,
+		}).Fatal("Unable to marshal ldap payload.")
+	}
+
+	statusCode, _, err := c.postXML(output)
+	if statusCode != 200 || err != nil {
+		log.WithFields(log.Fields{
+			"step":       "applyAddLdapGroupBayAccess",
+			"statusCode": statusCode,
+			"Error":      err,
+		}).Warn("LDAP applyAddLdapGroupBayAccess apply request returned non 200.")
+		return err
 	}
 
 	return err
@@ -113,7 +517,6 @@ func (c *C7000) applyUserParams(cfg *cfgresources.User) (err error) {
 		}).Fatal("Unable to marshal user payload.")
 	}
 
-	//fmt.Printf("-->> %d\n", statusCode)
 	statusCode, _, err := c.postXML(output)
 	if err != nil {
 		return err
