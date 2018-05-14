@@ -76,7 +76,17 @@ type Server struct {
 
 type SetRemoteSyslogServer struct {
 	XMLName xml.Name `xml:"hpoa:setRemoteSyslogServer"`
-	Server  Server
+	Server  string   `xml:"hpoa:server"`
+}
+
+type SetRemoteSyslogPort struct {
+	XMLName xml.Name `xml:"hpoa:setRemoteSyslogPort"`
+	Port    int      `xml:"hpoa:port"`
+}
+
+type SetRemoteSyslogEnabled struct {
+	XMLName xml.Name `xml:"hpoa:setRemoteSyslogEnabled"`
+	Enabled bool     `xml:"hpoa:enabled"`
 }
 
 type Envelope struct {

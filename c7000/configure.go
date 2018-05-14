@@ -678,9 +678,13 @@ func (c *C7000) applyNtpTimezoneParam(timezone string) (err error) {
 }
 
 // Applies syslog parameters
+// 1. set syslog server
+// 2. set syslog port
+// 3. enable syslog
 // theres no option to set the port
 func (c *C7000) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
 
+	var port int
 	if cfg.Server == "" {
 		log.WithFields(log.Fields{
 			"step": "apply-syslog-cfg",
@@ -688,34 +692,111 @@ func (c *C7000) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
 		return
 	}
 
+	if cfg.Port == 0 {
+		log.WithFields(log.Fields{
+			"step": "apply-syslog-cfg",
+		}).Debug("Syslog resource port set to default: 514.")
+		port = 514
+	} else {
+		port = cfg.Port
+	}
+
 	if cfg.Enable != true {
 		log.WithFields(log.Fields{
 			"step": "apply-syslog-cfg",
 		}).Debug("Syslog resource declared with enable: false.")
-		return
 	}
 
-	//setup the XML payload
-	server := Server{Text: cfg.Server}
-	syslog := SetRemoteSyslogServer{Server: server}
+	c.applySyslogServer(cfg.Server)
+	c.applySyslogPort(port)
+	c.applySyslogEnabled(cfg.Enable)
+
+	return err
+}
+
+// Sets syslog server
+// <hpoa:setRemoteSyslogServer>
+//  <hpoa:server>foobar</hpoa:server>
+// </hpoa:setRemoteSyslogServer>
+func (c *C7000) applySyslogServer(server string) {
+
+	payload := SetRemoteSyslogServer{Server: server}
 
 	//wrap the XML payload in the SOAP envelope
-	doc := wrapXML(syslog, c.XmlToken)
+	doc := wrapXML(payload, c.XmlToken)
 	output, err := xml.MarshalIndent(doc, "  ", "    ")
 	if err != nil {
 		log.WithFields(log.Fields{
-			"step": "apply-syslog-cfg",
+			"step": "applySyslogServer",
 		}).Warn("Unable to marshal syslog payload.")
-		return err
+		return
 	}
 
 	statusCode, _, err := c.postXML(output)
 	if err != nil || statusCode != 200 {
 		log.WithFields(log.Fields{
-			"step": "apply-syslog-cfg",
-		}).Warn("Syslog apply request returned non 200.")
-		return err
+			"step": "applySyslogServer",
+		}).Warn("Syslog set server request returned non 200.")
+		return
 	}
 
-	return err
+	return
+}
+
+// Sets syslog port
+// <hpoa:setRemoteSyslogPort>
+//  <hpoa:port>514</hpoa:port>
+// </hpoa:setRemoteSyslogPort>
+func (c *C7000) applySyslogPort(port int) {
+	payload := SetRemoteSyslogPort{Port: port}
+
+	//wrap the XML payload in the SOAP envelope
+	doc := wrapXML(payload, c.XmlToken)
+	output, err := xml.MarshalIndent(doc, "  ", "    ")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"step": "applySyslogPort",
+		}).Warn("Unable to marshal syslog payload.")
+		return
+	}
+
+	statusCode, _, err := c.postXML(output)
+	if err != nil || statusCode != 200 {
+		log.WithFields(log.Fields{
+			"step": "applySyslogPort",
+		}).Warn("Syslog set port request returned non 200.")
+		return
+	}
+
+	return
+}
+
+// Enables syslogging
+// <hpoa:setRemoteSyslogEnabled>
+//  <hpoa:enabled>true</hpoa:enabled>
+// </hpoa:setRemoteSyslogEnabled>
+func (c *C7000) applySyslogEnabled(enabled bool) {
+
+	payload := SetRemoteSyslogEnabled{Enabled: enabled}
+
+	//wrap the XML payload in the SOAP envelope
+	doc := wrapXML(payload, c.XmlToken)
+	output, err := xml.MarshalIndent(doc, "  ", "    ")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"step": "SetRemoteSyslogEnabled",
+		}).Warn("Unable to marshal syslog payload.")
+		return
+	}
+
+	statusCode, _, err := c.postXML(output)
+	if err != nil || statusCode != 200 {
+		log.WithFields(log.Fields{
+			"step": "SetRemoteSyslogEnabled",
+		}).Warn("Syslog enable request returned non 200.")
+		return
+	}
+
+	return
+
 }
