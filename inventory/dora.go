@@ -128,10 +128,10 @@ func (d *Dora) AssetIter() {
 			path = assetType
 		}
 
+		queryUrl := fmt.Sprintf("%s/v1/%s?page[offset]=%d&page[limit]=%d", apiUrl, path, 0, d.BatchSize)
 		// TESTING - return only Dell
-		queryUrl := fmt.Sprintf("%s/v1/%s?page[offset]=%d&page[limit]=%d&filter[vendor]!=HP&filter&filter[serial]=gf85c92", apiUrl, path, 0, d.BatchSize)
+		//	queryUrl := fmt.Sprintf("%s/v1/%s?page[offset]=%d&page[limit]=%d&filter[vendor]!=HP&filter&filter[serial]=gf85c92", apiUrl, path, 0, d.BatchSize)
 		//queryUrl := fmt.Sprintf("%s/v1/%s?page[offset]=%d&page[limit]=%d&filter[vendor]!=Dell&filter&filter[serial]=cz372137h3", apiUrl, path, 0, d.BatchSize)
-		//queryUrl := fmt.Sprintf("%s/v1/blades?page[offset]=%d&page[limit]=%d", apiUrl, 0, d.BatchSize)
 
 		for {
 			assets := make([]asset.Asset, 0)
@@ -197,7 +197,7 @@ func (d *Dora) AssetIter() {
 
 			// next url to query
 			queryUrl = fmt.Sprintf("%s%s", apiUrl, doraAssets.Links.Next)
-			fmt.Printf("--> %s\n", queryUrl)
+			//fmt.Printf("--> %s\n", queryUrl)
 
 		}
 

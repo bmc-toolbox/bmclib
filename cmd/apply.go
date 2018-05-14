@@ -70,7 +70,7 @@ func apply() {
 	butlerInstance := butler.Butler{Log: log, SpawnCount: 5, Channel: butlerChan}
 	go butlerInstance.Spawn()
 
-	//iterate over assets, pass them to the spawned butlers
+	//over inventory channel and pass asset lists recieved to bmcbutlers
 	for asset := range inventoryChan {
 		butlerMsg := butler.ButlerMsg{Assets: asset, Config: config}
 		butlerChan <- butlerMsg
