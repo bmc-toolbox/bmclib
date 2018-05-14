@@ -61,13 +61,23 @@ func (b *Butler) Wait() {
 	b.SyncWG.Wait()
 }
 
+func myLocation(location string) bool {
+	myLocations := viper.GetStringSlice("locations")
+	for _, l := range myLocations {
+		if l == location {
+			return true
+		}
+	}
+
+	return false
+}
+
 // butler recieves config, assets over channel
 // iterate over assets and apply config
 func (b *Butler) butler(id int) {
 
 	log := b.Log
 	component := "butler-worker"
-
 	defer b.SyncWG.Done()
 
 	for {
@@ -81,6 +91,14 @@ func (b *Butler) butler(id int) {
 		}
 
 		for _, asset := range msg.Assets {
+
+			if !myLocation(asset.Location) {
+				log.WithFields(logrus.Fields{
+					"Asset": asset,
+				}).Debug("Skipped asset based on location.")
+				continue
+			}
+
 			log.WithFields(logrus.Fields{
 				"component": component,
 				"butler-id": id,

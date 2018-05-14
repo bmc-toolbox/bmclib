@@ -1,3 +1,4 @@
+locations: ['fra4', 'hkg1']
 bmcCfgDir: /etc/bmcbutler/cfg/
 bmcUser: Administrator
 bmcPassword: foobar
