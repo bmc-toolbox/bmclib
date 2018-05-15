@@ -31,10 +31,11 @@ type ButlerMsg struct {
 }
 
 type Butler struct {
-	Log        *logrus.Logger
-	SpawnCount int
-	SyncWG     sync.WaitGroup
-	Channel    <-chan ButlerMsg
+	Log            *logrus.Logger
+	SpawnCount     int
+	SyncWG         sync.WaitGroup
+	Channel        <-chan ButlerMsg
+	IgnoreLocation bool
 }
 
 // spawn a pool of butlers
@@ -92,7 +93,7 @@ func (b *Butler) butler(id int) {
 
 		for _, asset := range msg.Assets {
 
-			if !myLocation(asset.Location) {
+			if !myLocation(asset.Location) && !b.IgnoreLocation {
 				log.WithFields(logrus.Fields{
 					"Asset": asset,
 				}).Debug("Skipped asset based on location.")

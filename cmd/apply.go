@@ -77,6 +77,9 @@ func apply() {
 	// Spawn butlers to work
 	butlerChan := make(chan butler.ButlerMsg, 10)
 	butlerInstance := butler.Butler{Log: log, SpawnCount: 5, Channel: butlerChan}
+	if serial != "" {
+		butlerInstance.IgnoreLocation = true
+	}
 	go butlerInstance.Spawn()
 
 	//over inventory channel and pass asset lists recieved to bmcbutlers
