@@ -25,6 +25,10 @@ import (
 	"os"
 )
 
+var (
+	serial string
+)
+
 // applyCmd represents the apply command
 var applyCmd = &cobra.Command{
 	Use:   "apply",
@@ -36,6 +40,7 @@ var applyCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(applyCmd)
+	applyCmd.Flags().StringVarP(&serial, "serial", "s", "", "Serial(s) of the asset to apply config (separated by commas - no spaces).")
 }
 
 func apply() {
@@ -49,7 +54,11 @@ func apply() {
 		inventoryInstance := inventory.Dora{Log: log, BatchSize: 10, Channel: inventoryChan}
 		// Spawn a goroutine that returns a slice of assets over inventoryChan
 		// the number of assets in the slice is determined by the batch size.
-		go inventoryInstance.AssetIter()
+		if serial == "" {
+			go inventoryInstance.AssetIter()
+		} else {
+			go inventoryInstance.AssetIterBySerial(serial)
+		}
 	case "serverDb":
 		inventoryInstance := inventory.ServerDb{Log: log, BatchSize: 10, Channel: inventoryChan}
 		// Spawn a goroutine that returns a slice of assets over inventoryChan

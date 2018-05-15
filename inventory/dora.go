@@ -103,6 +103,79 @@ func (d *Dora) setLocation(doraInventoryAssets []asset.Asset) {
 	}
 }
 
+func (d *Dora) AssetIterBySerial(serial string) {
+
+	//assetTypes := []string{"blade", "chassis", "discrete"}
+	assetType := "chassis"
+	component := "inventory"
+	log := d.Log
+
+	apiUrl := viper.GetString("inventory.dora.apiUrl")
+
+	assets := make([]asset.Asset, 0)
+	serials := strings.Split(serial, ",")
+
+	for _, s := range serials {
+
+		queryUrl := fmt.Sprintf("%s/v1/%s?filter[serial]=%s", apiUrl, "chassis", strings.ToLower(s))
+		resp, err := http.Get(queryUrl)
+		if err != nil {
+			log.WithFields(logrus.Fields{
+				"component": component,
+				"url":       queryUrl,
+				"serial":    s,
+				"error":     err,
+			}).Fatal("Failed to query dora for serial.")
+		}
+
+		body, err := ioutil.ReadAll(resp.Body)
+		resp.Body.Close()
+
+		//dora returns a list of assets
+		var doraAssets DoraAsset
+		err = json.Unmarshal(body, &doraAssets)
+		if err != nil {
+			log.WithFields(logrus.Fields{
+				"component": component,
+				"url":       queryUrl,
+				"error":     err,
+			}).Fatal("Unable to unmarshal data returned from dora.")
+		}
+
+		if len(doraAssets.Data) == 0 {
+			log.WithFields(logrus.Fields{
+				"component": component,
+				"serial":    s,
+			}).Warn("No data for asset in dora.")
+			continue
+		}
+
+		for _, item := range doraAssets.Data {
+			if item.Attributes.BmcAddress == "" {
+				log.WithFields(logrus.Fields{
+					"component": component,
+					"DoraAsset": fmt.Sprintf("%+v", item),
+				}).Warn("Asset location could not be determined, since the asset has no IP.")
+				continue
+			}
+
+			assets = append(assets, asset.Asset{IpAddress: item.Attributes.BmcAddress,
+				Serial: item.Attributes.Serial,
+				Vendor: item.Attributes.Vendor,
+				Type:   assetType})
+
+			//set the location for the assets
+			d.setLocation(assets)
+
+			//pass the asset to the channel
+			d.Channel <- assets
+		}
+	}
+
+	defer close(d.Channel)
+
+}
+
 // A routine that returns data to iter over
 func (d *Dora) AssetIter() {
 
