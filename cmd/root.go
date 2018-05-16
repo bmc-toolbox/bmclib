@@ -19,11 +19,13 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"io"
 	"os"
 )
 
 var (
 	log              *logrus.Logger
+	verbose          bool
 	cfgFile          string
 	inventorySource  string
 	classifierSource string
@@ -35,6 +37,11 @@ var rootCmd = &cobra.Command{
 	Use:              "bmcbutler",
 	Short:            "A bmc config manager",
 	TraverseChildren: true,
+	//setup logger before we run our code, but after init()
+	//so cli flags are evaluated
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		setupLogger()
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -46,32 +53,39 @@ func Execute() {
 	}
 }
 
-func init() {
+func setupLogger() {
 
 	//setup logging
 	log = logrus.New()
-	log.SetLevel(logrus.DebugLevel)
 	log.Out = os.Stdout
-	logFile, err := os.OpenFile("/var/log/bmcbutler.log", os.O_CREATE|os.O_WRONLY, 0666)
-	if err == nil {
-		log.Out = logFile
+
+	if verbose == true {
+		log.SetLevel(logrus.DebugLevel)
 	} else {
-		log.Warn("Unable to log to /var/log/bmcbutlter.log, using default stderr")
+		log.SetLevel(logrus.InfoLevel)
 	}
 
-	cobra.OnInitialize(initConfig)
-	rootCmd.PersistentFlags().StringVar(&cfgFile,
-		"config",
-		"/etc/bmcbutler/bmcbutler.yml",
-		"config (default /etc/bmcbutler/bmcbutler.yml)")
+	logFile, err := os.OpenFile("/var/log/bmcbutler.log", os.O_CREATE|os.O_WRONLY, 0666)
+	if err == nil {
+		if verbose == true {
+			m := io.MultiWriter(os.Stdout, logFile)
+			logrus.SetOutput(m)
+		} else {
+			log.Out = logFile
+		}
+	} else {
+		log.Info("Unable to log to /var/log/bmcbutlter.log, using default stderr")
+	}
+}
 
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+func init() {
+	cobra.OnInitialize(initConfig)
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose logging")
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
+	cfgFile = "/etc/bmcbutler/bmcbutler.yml"
 	// Use config file from the flag.
 	viper.SetConfigFile(cfgFile)
 

@@ -21,6 +21,7 @@ import (
 	"github.com/ncode/bmc/cfgresources"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"os"
 )
 
 type Resource struct {
@@ -36,6 +37,15 @@ func (r *Resource) ReadResources() (config *cfgresources.ResourcesConfig) {
 
 	cfgDir := viper.GetString("bmcCfgDir")
 	cfgFile := fmt.Sprintf("%s/%s", cfgDir, "common.yml")
+
+	_, err := os.Stat(cfgFile)
+	if err != nil {
+		log.WithFields(logrus.Fields{
+			"component": component,
+			"cfgFile":   cfgFile,
+			"error":     err,
+		}).Fatal("Declared cfg file not found.")
+	}
 
 	yamlData, err := ioutil.ReadFile(cfgFile)
 	if err != nil {
