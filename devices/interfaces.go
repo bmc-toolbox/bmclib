@@ -6,7 +6,6 @@ import (
 
 // Bmc represents the requirement of items to be collected a server
 type Bmc interface {
-	ApplyCfg(*cfgresources.ResourcesConfig) error
 	BiosVersion() (string, error)
 	BmcType() (string, error)
 	BmcVersion() (string, error)
@@ -18,7 +17,6 @@ type Bmc interface {
 	Logout() error
 	Memory() (int, error)
 	Model() (string, error)
-	ModelId() string
 	Name() (string, error)
 	Nics() ([]*Nic, error)
 	PowerKw() (float64, error)
