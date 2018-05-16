@@ -1,5 +1,9 @@
 package devices
 
+import (
+	"github.com/ncode/bmc/cfgresources"
+)
+
 // Bmc represents the requirement of items to be collected a server
 type Bmc interface {
 	BiosVersion() (string, error)
@@ -27,11 +31,13 @@ type Bmc interface {
 
 // BmcChassis represents the requirement of items to be collected from a chassis
 type BmcChassis interface {
+	ApplyCfg(*cfgresources.ResourcesConfig) error
 	Blades() ([]*Blade, error)
 	FwVersion() (string, error)
 	Login() error
 	Logout() error
 	Model() (string, error)
+	ModelId() string
 	Name() (string, error)
 	Nics() ([]*Nic, error)
 	PassThru() (string, error)

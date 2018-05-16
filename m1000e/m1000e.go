@@ -30,13 +30,14 @@ var (
 
 // M1000e holds the status and properties of a connection to a CMC device
 type M1000e struct {
-	ip       string
-	username string
-	password string
-	client   *http.Client
-	cmcJSON  *dell.CMC
-	cmcTemp  *dell.CMCTemp
-	cmcWWN   *dell.CMCWWN
+	ip           string
+	username     string
+	password     string
+	client       *http.Client
+	cmcJSON      *dell.CMC
+	cmcTemp      *dell.CMCTemp
+	cmcWWN       *dell.CMCWWN
+	SessionToken string //required to set config
 }
 
 // New returns a connection to M1000e
@@ -92,7 +93,38 @@ func (m *M1000e) Login() (err error) {
 		return err
 	}
 
+	// retrieve session token to set config params.
+	token, err := m.getSessionToken()
+	if err != nil {
+		return err
+	}
+	m.SessionToken = token
+
 	return err
+}
+
+// retrieves ST2 which is required to submit form data
+func (m *M1000e) getSessionToken() (token string, err error) {
+
+	u := fmt.Sprintf("https://%s/cgi-bin/webcgi/general", m.ip)
+	resp, err := m.client.Get(u)
+
+	defer resp.Body.Close()
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return token, err
+	}
+
+	//<input xmlns="" type="hidden" value="2a17b6d37baa526b75e06243d34763da" name="ST2" id="ST2" />
+	reToken := "<input.*value=\\\"(\\w+)\\\" name=\"ST2\""
+	re := regexp.MustCompile(reToken)
+	match := re.FindSubmatch(data)
+	if len(match) == 0 {
+		return token, errors.ErrUnableToGetSessionToken
+	}
+
+	return string(match[1]), err
 }
 
 func (m *M1000e) loadHwData() (err error) {
@@ -131,7 +163,10 @@ func (m *M1000e) loadHwData() (err error) {
 
 // Logout logs out and close the chassis connection
 func (m *M1000e) Logout() (err error) {
-	_, err = m.get(fmt.Sprintf("https://%s/cgi-bin/webcgi/logout", m.ip))
+	_, err = m.client.Get(fmt.Sprintf("https://%s/cgi-bin/webcgi/logout", m.ip))
+	if err != nil {
+		return err
+	}
 	return err
 }
 
@@ -166,7 +201,12 @@ func (m *M1000e) Name() (name string, err error) {
 	return m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.ChassisStatus.CHASSISName, err
 }
 
-// Model returns the device model
+// ModelId returns just Model id string - m1000e
+func (m *M1000e) ModelId() (model string) {
+	return "m1000e"
+}
+
+// Model returns the full device model string
 func (m *M1000e) Model() (model string, err error) {
 	return strings.TrimSpace(m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.ChassisStatus.ROChassisProductname), err
 }
