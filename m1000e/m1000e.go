@@ -109,12 +109,12 @@ func (m *M1000e) getSessionToken() (token string, err error) {
 	u := fmt.Sprintf("https://%s/cgi-bin/webcgi/general", m.ip)
 	resp, err := m.client.Get(u)
 
-	defer resp.Body.Close()
-
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return token, err
 	}
+
+	defer resp.Body.Close()
 
 	//<input xmlns="" type="hidden" value="2a17b6d37baa526b75e06243d34763da" name="ST2" id="ST2" />
 	reToken := "<input.*value=\\\"(\\w+)\\\" name=\"ST2\""
