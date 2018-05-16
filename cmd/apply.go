@@ -49,6 +49,12 @@ func apply() {
 	inventoryChan := make(chan []asset.Asset)
 
 	inventorySource := viper.GetString("inventory.source")
+	butlersToSpawn := viper.GetInt("butlersToSpawn")
+
+	if butlersToSpawn == 0 {
+		butlersToSpawn = 5
+	}
+
 	switch inventorySource {
 	case "dora":
 		inventoryInstance := inventory.Dora{Log: log, BatchSize: 10, Channel: inventoryChan}
@@ -76,7 +82,7 @@ func apply() {
 
 	// Spawn butlers to work
 	butlerChan := make(chan butler.ButlerMsg, 10)
-	butlerInstance := butler.Butler{Log: log, SpawnCount: 5, Channel: butlerChan}
+	butlerInstance := butler.Butler{Log: log, SpawnCount: butlersToSpawn, Channel: butlerChan}
 	if serial != "" {
 		butlerInstance.IgnoreLocation = true
 	}

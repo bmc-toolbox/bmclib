@@ -87,7 +87,7 @@ func (b *Butler) butler(id int) {
 			log.WithFields(logrus.Fields{
 				"component": component,
 				"butler-id": id,
-			}).Info("butler msg channel was closed, goodbye.")
+			}).Debug("butler msg channel was closed, goodbye.")
 			return
 		}
 
