@@ -103,21 +103,27 @@ func (d *Dora) setLocation(doraInventoryAssets []asset.Asset) {
 	}
 }
 
-func (d *Dora) AssetIterBySerial(serial string) {
+func (d *Dora) AssetIterBySerial(serial string, assetType string) {
 
 	//assetTypes := []string{"blade", "chassis", "discrete"}
-	assetType := "chassis"
 	component := "inventory"
 	log := d.Log
 
 	apiUrl := viper.GetString("inventory.dora.apiUrl")
 
+	var path string
 	assets := make([]asset.Asset, 0)
 	serials := strings.Split(serial, ",")
 
+	if assetType == "blade" {
+		path = "blades"
+	} else {
+		path = assetType
+	}
+
 	for _, s := range serials {
 
-		queryUrl := fmt.Sprintf("%s/v1/%s?filter[serial]=%s", apiUrl, "chassis", strings.ToLower(s))
+		queryUrl := fmt.Sprintf("%s/v1/%s?filter[serial]=%s", apiUrl, path, strings.ToLower(s))
 		resp, err := http.Get(queryUrl)
 		if err != nil {
 			log.WithFields(logrus.Fields{
