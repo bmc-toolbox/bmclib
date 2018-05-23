@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ncode/bmc/devices"
+	"github.com/ncode/bmclib/devices"
 )
 
 const (

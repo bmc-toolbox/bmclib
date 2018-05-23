@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
-	"github.com/ncode/bmc/devices"
+	"github.com/ncode/bmclib/devices"
 	"github.com/ncode/dora/model"
 )
 
@@ -541,7 +541,7 @@ func TestIloDisks(t *testing.T) {
 			Size:      "1200 GB",
 			Model:     "eg1200jemda",
 			Status:    "OK",
-			FwVersion: "HPD6",
+			FwVersion: "hpd6",
 		},
 		&devices.Disk{
 			Serial:    "s403d7j40000e722a3mt",
@@ -549,7 +549,7 @@ func TestIloDisks(t *testing.T) {
 			Size:      "1200 GB",
 			Model:     "eg1200jemda",
 			Status:    "OK",
-			FwVersion: "HPD6",
+			FwVersion: "hpd6",
 		},
 	}
 

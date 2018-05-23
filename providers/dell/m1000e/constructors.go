@@ -3,7 +3,7 @@ package m1000e
 import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
-	"github.com/ncode/bmc/cfgresources"
+	"github.com/ncode/bmclib/cfgresources"
 )
 
 func (m *M1000e) newSslCfg(ssl *cfgresources.Ssl) (MFormParams map[string]string) {
