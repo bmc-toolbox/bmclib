@@ -63,13 +63,13 @@ func (c *C7000) postXML(data []byte) (statusCode int, body []byte, err error) {
 	//return err
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return resp.StatusCode, []byte{}, err
+		return 0, []byte{}, err
 	}
 	defer resp.Body.Close()
 
 	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return resp.StatusCode, []byte{}, err
+		return 0, []byte{}, err
 	}
 
 	//fmt.Printf("%+v\n", body)
