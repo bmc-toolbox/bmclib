@@ -175,6 +175,47 @@ func (i *IDrac8) put(endpoint string, payload []byte, debug bool) (response []by
 	return response, err
 }
 
+// posts the payload to the given endpoint
+func (i *IDrac8) post(endpoint string, data []byte) (statusCode int, body []byte, err error) {
+
+	u, err := url.Parse(fmt.Sprintf("https://%s/%s", i.ip, endpoint))
+	if err != nil {
+		return 0, []byte{}, err
+	}
+
+	req, err := http.NewRequest("POST", u.String(), bytes.NewReader(data))
+	if err != nil {
+		return 0, []byte{}, err
+	}
+
+	for _, cookie := range i.client.Jar.Cookies(u) {
+		if cookie.Name == "-http-session-" || cookie.Name == "tokenvalue" {
+			req.AddCookie(cookie)
+		}
+	}
+
+	req.Header.Add("ST2", i.st2)
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	//XXX to debug
+	//fmt.Printf("--> %s\n", data)
+	//return 0, []byte{}, err
+
+	resp, err := i.client.Do(req)
+	if err != nil {
+		return 0, []byte{}, err
+	}
+	defer resp.Body.Close()
+
+	body, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return 0, []byte{}, err
+	}
+
+	//fmt.Printf("%s\n", body)
+	return resp.StatusCode, body, err
+}
+
 // get calls a given json endpoint of the ilo and returns the data
 func (i *IDrac8) get(endpoint string, extraHeaders *map[string]string) (payload []byte, err error) {
 	log.WithFields(log.Fields{"step": "bmc connection", "vendor": dell.VendorID, "ip": i.ip, "endpoint": endpoint}).Debug("retrieving data from bmc")

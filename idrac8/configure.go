@@ -91,10 +91,23 @@ func (i *IDrac8) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 // foobar == @066@06f@06f@062@061@072
 // convert ever character to its hex equiv, and prepend @0
 func encodeCred(s string) string {
-
 	r := ""
 	for _, c := range s {
 		r += fmt.Sprintf("@0%x", c)
+	}
+
+	return r
+}
+
+// escapeLdapString escapes ldap parameters strings
+func escapeLdapString(s string) string {
+	r := ""
+	for _, c := range s {
+		if c == '=' || c == ',' {
+			r += fmt.Sprintf("\\%c", c)
+		} else {
+			r += string(c)
+		}
 	}
 
 	return r
@@ -179,8 +192,9 @@ func (i *IDrac8) applyUserParams(cfg *cfgresources.User, Id int) (err error) {
 	}
 
 	log.WithFields(log.Fields{
-		"IP": i.ip,
-	}).Info("Syslog parameters applied.")
+		"IP":   i.ip,
+		"User": user.UserName,
+	}).Info("User parameters applied.")
 
 	return err
 }
@@ -310,23 +324,230 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 
 }
 
+//applies ldap config parameters
 func (i *IDrac8) applyLdapParams(cfg *cfgresources.Ldap) {
-	//step 2
-	//enabled
-	//disabled
-	//ldaps.example.com
-	//636
-	//empty
-	//disabled
-	//empty
-	//ou=People,dc=activehotels,dc=com
-	//uid
-	//memberUid
-	//objectClass=posixAccount
-	//step3 -role group - administrator
-	//cn=bmcAdmins,ou=Group,dc=activehotels,dc=com
+	// LDAP settings
+	// Notes: - all non-numeric,alphabetic characters are escaped
+	//        - the idrac posts each payload twice?
+	//        - requests can be either POST or GET except for the final one - postset?ldapconf
+
+	//Set ldap groups
+
+	r := i.applyLdapServerParam(cfg)
+	if r != 0 {
+		return
+	}
+
+	r = i.applyLdapSearchFilterParam(cfg)
+	if r != 0 {
+		return
+	}
+
+	r = i.applyLdapGroupParam(cfg)
+	if r != 0 {
+		return
+	}
+
+	r = i.applyLdapRoleGroupPrivParam(cfg)
+	if r != 0 {
+		return
+	}
 
 }
+
+// Applies ldap server param
+// https://10.193.251.10/data?set=xGLServer:ldaps.prod.blah.com
+func (i *IDrac8) applyLdapServerParam(cfg *cfgresources.Ldap) int {
+
+	if cfg.Server == "" {
+		log.WithFields(log.Fields{
+			"step": "applyLdapServerParam",
+		}).Warn("Ldap resource parameter Server required but not declared.")
+		return 1
+	}
+
+	endpoint := fmt.Sprintf("data?set=xGLServer:%s", cfg.Server)
+	response, err := i.get(endpoint, nil)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IP":       i.ip,
+			"endpoint": endpoint,
+			"step":     funcName(),
+			"response": string(response),
+		}).Warn("GET request failed.")
+		return 1
+	}
+
+	log.WithFields(log.Fields{
+		"IP": i.ip,
+	}).Info("Ldap server param set.")
+
+	return 0
+}
+
+// Applies ldap search filter param.
+// set=xGLSearchFilter:objectClass\=posixAccount
+func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) int {
+	if cfg.SearchFilter == "" {
+		log.WithFields(log.Fields{
+			"step": "applyLdapSearchFilterParam",
+		}).Warn("Ldap resource parameter SearchFilter required but not declared.")
+		return 1
+	}
+
+	endpoint := fmt.Sprintf("data?set=xGLSearchFilter:%s", escapeLdapString(cfg.SearchFilter))
+	response, err := i.get(endpoint, nil)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IP":       i.ip,
+			"endpoint": endpoint,
+			"step":     funcName(),
+			"response": string(response),
+		}).Warn("GET request failed.")
+		return 1
+	}
+
+	log.WithFields(log.Fields{
+		"IP": i.ip,
+	}).Info("Ldap search filter param applied.")
+
+	return 0
+}
+
+//applies ldap group params
+//data?set=xGLGroup1Name:cn\=bmcAdmins\,ou\=Group\,dc\=activehotels\,dc\=com
+func (i *IDrac8) applyLdapGroupParam(cfg *cfgresources.Ldap) int {
+
+	if cfg.Group == "" {
+		log.WithFields(log.Fields{
+			"step": "applyLdapGroupParam",
+		}).Warn("Ldap resource parameter Group required but not declared.")
+		return 1
+	}
+
+	if cfg.GroupBaseDn == "" {
+		log.WithFields(log.Fields{
+			"step": "applyLdapGroupParam",
+		}).Warn("Ldap resource parameter GroupBaseDn required but not declared.")
+		return 1
+	}
+
+	groupDn := fmt.Sprintf("cn=%s,%s", cfg.Group, cfg.GroupBaseDn)
+
+	groupDn = escapeLdapString(groupDn)
+
+	endpoint := fmt.Sprintf("data?set=xGLGroup1Name:%s", groupDn)
+	response, err := i.get(endpoint, nil)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IP":       i.ip,
+			"endpoint": endpoint,
+			"step":     funcName(),
+			"response": string(response),
+		}).Warn("GET request failed.")
+		return 1
+	}
+
+	log.WithFields(log.Fields{
+		"IP": i.ip,
+	}).Info("Ldap GroupDN config applied.")
+
+	return 0
+}
+
+//TODO - refactor to allow multiple role groups
+// Apply ldap group privileges
+//https://10.193.251.10/postset?ldapconf
+// data=LDAPEnableMode:3,xGLNameSearchEnabled:0,xGLBaseDN:ou%5C%3DPeople%5C%2Cdc%5C%3Dactivehotels%5C%2Cdc%5C%3Dcom,xGLUserLogin:uid,xGLGroupMem:memberUid,xGLBindDN:,xGLCertValidationEnabled:1,xGLGroup1Priv:511,xGLGroup2Priv:97,xGLGroup3Priv:0,xGLGroup4Priv:0,xGLGroup5Priv:0,xGLServerPort:636
+func (i *IDrac8) applyLdapRoleGroupPrivParam(cfg *cfgresources.Ldap) int {
+
+	if cfg.Port == 0 {
+		log.WithFields(log.Fields{
+			"step": "applyLdapRoleGroupPrivParam",
+		}).Warn("Ldap resource parameter Port required but not declared.")
+		return 1
+	}
+
+	if cfg.Role == "" {
+		log.WithFields(log.Fields{
+			"step": "applyLdapRoleGroupPrivParam",
+		}).Warn("Ldap resource parameter Role required but not declared.")
+		return 1
+	}
+
+	if cfg.Group == "" {
+		log.WithFields(log.Fields{
+			"step": "applyLdapRoleGroupPrivParam",
+		}).Warn("Ldap resource parameter Group required but not declared.")
+		return 1
+	}
+
+	if cfg.BaseDn == "" {
+		log.WithFields(log.Fields{
+			"step": "applyLdapRoleGroupPrivParam",
+		}).Warn("Ldap resource parameter BaseDn required but not declared.")
+		return 1
+	}
+
+	if cfg.UserAttribute == "" {
+		log.WithFields(log.Fields{
+			"step": "applyLdapRoleGroupPrivParam",
+		}).Warn("Ldap resource parameter userAttribute required but not declared.")
+		return 1
+	}
+
+	if cfg.GroupAttribute == "" {
+		log.WithFields(log.Fields{
+			"step": "applyLdapRoleGroupPrivParam",
+		}).Warn("Ldap resource parameter groupAttribute required but not declared.")
+		return 1
+	}
+
+	if !i.isRoleValid(cfg.Role) {
+		log.WithFields(log.Fields{
+			"step": "applyLdapRoleGroupPrivParam",
+			"role": cfg.Role,
+		}).Warn("Ldap resource Role must be a valid role: admin OR user.")
+		return 1
+	}
+
+	//511 == full privileges
+	privId := "0"
+	if cfg.Role == "admin" {
+		privId = "511"
+	}
+
+	baseDn := escapeLdapString(cfg.BaseDn)
+	payload := "data=LDAPEnableMode:3,"  //setup generic ldap
+	payload += "xGLNameSearchEnabled:0," //lookup ldap server from dns
+	payload += fmt.Sprintf("xGLBaseDN:%s,", baseDn)
+	payload += fmt.Sprintf("xGLUserLogin:%s,", cfg.UserAttribute)
+	payload += fmt.Sprintf("xGLGroupMem:%s,", cfg.GroupAttribute)
+	payload += "xGLBindDN:,xGLCertValidationEnabled:1," //we may want to be able to set this from config
+	payload += fmt.Sprintf("xGLGroup1Priv:%s,", privId)
+	payload += "xGLGroup2Priv:0,xGLGroup3Priv:0,xGLGroup4Priv:0,xGLGroup5Priv:0," //for now we have just one group.
+	payload += "xGLServerPort:636"
+
+	endpoint := "postset?ldapconf"
+	responseCode, responseBody, err := i.post(endpoint, []byte(payload))
+	if err != nil || responseCode != 200 {
+		log.WithFields(log.Fields{
+			"IP":           i.ip,
+			"endpoint":     endpoint,
+			"step":         funcName(),
+			"responseCode": responseCode,
+			"response":     string(responseBody),
+		}).Warn("POST request failed.")
+		return 1
+	}
+
+	log.WithFields(log.Fields{
+		"IP": i.ip,
+	}).Info("Ldap Group role privileges applied.")
+
+	return 0
+}
+
 func (i *IDrac8) applyTimezoneParam(timezone string) {
 	//POST - params as query string
 	//timezone
