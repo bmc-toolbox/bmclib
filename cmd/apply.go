@@ -26,7 +26,8 @@ import (
 )
 
 var (
-	serial string
+	serial    string
+	assetType string
 )
 
 // applyCmd represents the apply command
@@ -41,6 +42,7 @@ var applyCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(applyCmd)
 	applyCmd.Flags().StringVarP(&serial, "serial", "s", "", "Serial(s) of the asset to apply config (separated by commas - no spaces).")
+	applyCmd.Flags().StringVarP(&assetType, "asset", "a", "blade", "Use in conjuction with --serial, declare type of asset - blade OR chassis")
 }
 
 func apply() {
@@ -63,7 +65,7 @@ func apply() {
 		if serial == "" {
 			go inventoryInstance.AssetIter()
 		} else {
-			go inventoryInstance.AssetIterBySerial(serial)
+			go inventoryInstance.AssetIterBySerial(serial, assetType)
 		}
 	case "serverDb":
 		inventoryInstance := inventory.ServerDb{Log: log, BatchSize: 10, Channel: inventoryChan}
