@@ -85,12 +85,14 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
+
 	cfgFile = "/etc/bmcbutler/bmcbutler.yml"
 	// Use config file from the flag.
 	viper.SetConfigFile(cfgFile)
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 }
