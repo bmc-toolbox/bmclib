@@ -175,59 +175,66 @@ func (b *Butler) applyConfig(id int, config *cfgresources.ResourcesConfig, asset
 
 	switch deviceType := client.(type) {
 	case devices.Bmc:
-		log.WithFields(logrus.Fields{
-			"butler-id":   id,
-			"device-type": deviceType,
-			"Asset":       fmt.Sprintf("%+v", asset),
-		}).Warn("blade/discrete BMC not yet supported.")
 
-		//bmc := client.(devices.Bmc)
-		//asset.Model = bmc.ModelId()
+		bmc := client.(devices.Bmc)
+		asset.Model = bmc.ModelId()
 
-		//err = bmc.Login()
-		////if the first attempt to login fails, try with default creds
-		//if err != nil {
-		//	log.WithFields(logrus.Fields{
-		//		"component":         component,
-		//		"butler-id":         id,
-		//		"use-default-login": useDefaultLogin,
-		//		"Asset":             fmt.Sprintf("%+v", asset),
-		//		"Error":             err,
-		//	}).Warn("Unable to login to bmc with current credentials, trying default login..")
+		err = bmc.Login()
+		//if the first attempt to login fails, try with default creds
+		if err != nil {
+			log.WithFields(logrus.Fields{
+				"component":         component,
+				"butler-id":         id,
+				"device-type":       deviceType,
+				"use-default-login": useDefaultLogin,
+				"Serial":            asset.Serial,
+				"IP":                asset.IpAddress,
+				"Vendor":            asset.Vendor,
+				"Model":             asset.Model,
+				"Type":              asset.Type,
+				"Error":             err,
+			}).Warn("Unable to login with current credentials, attempting default login..")
 
-		//	useDefaultLogin = true
-		//	client, err = b.connectAsset(asset, useDefaultLogin)
-		//	if err != nil {
-		//		return
-		//	}
+			useDefaultLogin = true
+			client, err = b.connectAsset(asset, useDefaultLogin)
+			if err != nil {
+				return
+			}
 
-		//	bmc = client.(devices.Bmc)
-		//	err = bmc.Login()
+			bmc = client.(devices.Bmc)
+			err = bmc.Login()
 
-		//	//all attempts to login have failed.
-		//	if err != nil {
-		//		log.WithFields(logrus.Fields{
-		//			"component":         component,
-		//			"butler-id":         id,
-		//			"use-default-login": useDefaultLogin,
-		//			"Asset":             fmt.Sprintf("%+v", asset),
-		//			"Error":             err,
-		//		}).Warn("Unable to login to bmc with default credentials")
-		//		return
-		//	}
+			//all attempts to login have failed.
+			if err != nil {
+				log.WithFields(logrus.Fields{
+					"component":         component,
+					"butler-id":         id,
+					"use-default-login": useDefaultLogin,
+					"Serial":            asset.Serial,
+					"IP":                asset.IpAddress,
+					"Vendor":            asset.Vendor,
+					"Model":             asset.Model,
+					"Type":              asset.Type,
+					"Error":             err,
+				}).Warn("Unable to login with default credentials.")
+				return
+			}
 
-		//} else {
-		//	log.WithFields(logrus.Fields{
-		//		"component":         component,
-		//		"butler-id":         id,
-		//		"device-type":       deviceType,
-		//		"use-default-login": useDefaultLogin,
-		//		"Asset":             fmt.Sprintf("%+v", asset),
-		//	}).Info("Successfully logged into asset.")
-		//}
+		} else {
+			log.WithFields(logrus.Fields{
+				"component":         component,
+				"butler-id":         id,
+				"use-default-login": useDefaultLogin,
+				"Serial":            asset.Serial,
+				"IP":                asset.IpAddress,
+				"Vendor":            asset.Vendor,
+				"Model":             asset.Model,
+				"Type":              asset.Type,
+			}).Info("Logged into asset.")
+		}
 
-		//bmc.ApplyCfg(config)
-		//bmc.Logout()
+		bmc.ApplyCfg(config)
+		bmc.Logout()
 	case devices.BmcChassis:
 		chassis := client.(devices.BmcChassis)
 		asset.Model = chassis.ModelId()
