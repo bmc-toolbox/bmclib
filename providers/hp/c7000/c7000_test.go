@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
-	"github.com/ncode/bmc/devices"
+	"github.com/ncode/bmclib/devices"
 )
 
 var (

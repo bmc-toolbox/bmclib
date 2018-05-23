@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
-	"github.com/ncode/bmc/devices"
+	"github.com/ncode/bmclib/devices"
 )
 
 var (
@@ -5621,7 +5621,7 @@ func TestDiskDisks(t *testing.T) {
 			Size:      "1490 GB",
 			Model:     "ssdsc2bb016t7r",
 			Status:    "OK",
-			FwVersion: "N201DL42",
+			FwVersion: "n201dl42",
 		},
 		&devices.Disk{
 			Serial:    "phdv707000fx1p6egn",
@@ -5629,7 +5629,7 @@ func TestDiskDisks(t *testing.T) {
 			Size:      "1490 GB",
 			Model:     "ssdsc2bb016t7r",
 			Status:    "OK",
-			FwVersion: "N201DL42",
+			FwVersion: "n201dl42",
 		},
 	}
 
