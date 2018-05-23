@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"strconv"
 	"strings"
@@ -119,6 +120,59 @@ func (i *IDrac8) loadHwData() (err error) {
 	i.iDracInventory = iDracInventory
 
 	return err
+}
+
+// PUTs data
+func (i *IDrac8) put(endpoint string, payload []byte, debug bool) (response []byte, err error) {
+
+	bmcURL := fmt.Sprintf("https://%s", i.ip)
+
+	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/%s", bmcURL, endpoint), bytes.NewReader(payload))
+	if err != nil {
+		return response, err
+	}
+	req.Header.Add("ST2", i.st2)
+
+	u, err := url.Parse(bmcURL)
+	if err != nil {
+		return response, err
+	}
+
+	for _, cookie := range i.client.Jar.Cookies(u) {
+		if cookie.Name == "-http-session-" || cookie.Name == "tokenvalue" {
+			req.AddCookie(cookie)
+		}
+	}
+	if debug {
+		fmt.Println(fmt.Sprintf("%s/%s", bmcURL, endpoint))
+		dump, err := httputil.DumpRequestOut(req, true)
+		if err == nil {
+			fmt.Printf("%s\n\n", dump)
+		}
+	}
+
+	resp, err := i.client.Do(req)
+	if err != nil {
+		return response, err
+	}
+	defer resp.Body.Close()
+	if debug {
+		dump, err := httputil.DumpResponse(resp, true)
+		if err == nil {
+			fmt.Printf("%s\n\n", dump)
+		}
+	}
+
+	response, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return response, err
+	}
+
+	if resp.StatusCode == 500 {
+		return response, errors.Err500
+	}
+
+	return response, err
 }
 
 // get calls a given json endpoint of the ilo and returns the data
@@ -345,6 +399,11 @@ func (i *IDrac8) Model() (model string, err error) {
 		}
 	}
 	return model, err
+}
+
+// ModelId returns the model id string - idrac8
+func (c *IDrac8) ModelId() (model string) {
+	return "idrac8"
 }
 
 // BmcType returns the type of bmc we are talking to

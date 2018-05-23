@@ -23,4 +23,6 @@ var (
 	ErrVendorNotSupported = errors.New("vendor not supported")
 	// ErrUnableToGetSessionToken is returned when we are unable to retrieve ST2 which is required to set configuration parameters
 	ErrUnableToGetSessionToken = errors.New("Unable to get ST2 session token.")
+	// Err500 is returned when we recieve a 500 response from an endpoint.
+	Err500 = errors.New("we've received 500 calling this endpoint")
 )
