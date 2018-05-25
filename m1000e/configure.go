@@ -168,6 +168,10 @@ func (m *M1000e) applyDatetimeCfg(cfg DatetimeParams) (err error) {
 		return err
 	}
 
+	log.WithFields(log.Fields{
+		"IP":    m.ip,
+		"Model": m.ModelId(),
+	}).Info("DateTime config parameters applied.")
 	return err
 }
 
@@ -183,6 +187,10 @@ func (m *M1000e) applyDirectoryServicesCfg(cfg DirectoryServicesParams) (err err
 		return err
 	}
 
+	log.WithFields(log.Fields{
+		"IP":    m.ip,
+		"Model": m.ModelId(),
+	}).Info("Ldap config parameters applied.")
 	return err
 }
 
@@ -198,10 +206,13 @@ func (m *M1000e) applyLdapRoleCfg(cfg LdapArgParams, roleId int) (err error) {
 		return err
 	}
 
+	log.WithFields(log.Fields{
+		"IP":    m.ip,
+		"Model": m.ModelId(),
+	}).Info("Ldap Role group config parameters applied.")
 	return err
 }
 
-// Configures various interface params - syslog, snmp etc.
 func (m *M1000e) ApplySecurityCfg(cfg LoginSecurityParams) (err error) {
 
 	cfg.SessionToken = m.SessionToken
@@ -211,9 +222,15 @@ func (m *M1000e) ApplySecurityCfg(cfg LoginSecurityParams) (err error) {
 		return err
 	}
 
+	log.WithFields(log.Fields{
+		"IP":    m.ip,
+		"Model": m.ModelId(),
+	}).Info("Security config parameters applied.")
 	return err
 
 }
+
+// Configures various interface params - syslog, snmp etc.
 func (m *M1000e) applyInterfaceCfg(cfg InterfaceParams) (err error) {
 
 	cfg.SessionToken = m.SessionToken
@@ -223,6 +240,10 @@ func (m *M1000e) applyInterfaceCfg(cfg InterfaceParams) (err error) {
 		return err
 	}
 
+	log.WithFields(log.Fields{
+		"IP":    m.ip,
+		"Model": m.ModelId(),
+	}).Info("Interface config parameters applied.")
 	return err
 }
 
@@ -238,6 +259,10 @@ func (m *M1000e) applyUserCfg(cfg UserParams, userId int) (err error) {
 		return err
 	}
 
+	log.WithFields(log.Fields{
+		"IP":    m.ip,
+		"Model": m.ModelId(),
+	}).Info("User account config parameters applied.")
 	return err
 }
 
@@ -259,6 +284,10 @@ func (m *M1000e) applySslCfg(ssl *cfgresources.Ssl) (err error) {
 		return err
 	}
 
+	log.WithFields(log.Fields{
+		"IP":    m.ip,
+		"Model": m.ModelId(),
+	}).Info("SSL certs uploaded.")
 	return err
 }
 

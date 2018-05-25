@@ -1,6 +1,7 @@
 package m1000e
 
 import (
+	"errors"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/ncode/bmc/cfgresources"
