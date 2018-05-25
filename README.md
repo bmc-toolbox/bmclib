@@ -11,5 +11,6 @@ which the authors would like to express their gratitude.
 
 #### Copyright and License
 
-Copyright (C) 2018 by Juliano Martinez
-
+Authors: 
+- Juliano Martinez
+- Joel Rebello 
