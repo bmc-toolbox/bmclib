@@ -57,6 +57,17 @@ func (c *C7000) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 						"IP":       c.ip,
 					}).Warn("Unable to set NTP config.")
 				}
+			case "LdapGroup":
+				ldapGroups := cfg.Field(r).Interface()
+				err := c.applyLdapGroupParams(ldapGroups.([]*cfgresources.LdapGroup))
+				if err != nil {
+					log.WithFields(log.Fields{
+						"step":     "applyLdapParams",
+						"resource": "Ldap",
+						"IP":       c.ip,
+						"Error":    err,
+					}).Warn("applyLdapGroupParams returned error.")
+				}
 			case "Ldap":
 				ldapCfg := cfg.Field(r).Interface().(*cfgresources.Ldap)
 				c.applyLdapParams(ldapCfg)
@@ -93,18 +104,7 @@ func (c *C7000) isRoleValid(role string) bool {
 //3. apply ldap server params
 func (c *C7000) applyLdapParams(cfg *cfgresources.Ldap) {
 
-	err := c.applyLdapGroupParams(cfg)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"step":     "applyLdapParams",
-			"resource": "Ldap",
-			"IP":       c.ip,
-			"Error":    err,
-		}).Warn("applyLdapParams returned error.")
-		return
-	}
-
-	err = c.applysetLdapInfo4(cfg)
+	err := c.applysetLdapInfo4(cfg)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"step":     "applyLdapParams",
@@ -161,17 +161,10 @@ func (c *C7000) applysetLdapInfo4(cfg *cfgresources.Ldap) (err error) {
 		return err
 	}
 
-	if cfg.Group == "" {
-		log.WithFields(log.Fields{
-			"step": "applysetLdapInfo4",
-		}).Fatal("Ldap resource parameter Group required but not declared.")
-		return err
-	}
-
 	if cfg.BaseDn == "" {
 		log.WithFields(log.Fields{
 			"step": "applysetLdapInfo4",
-		}).Fatal("Ldap resource parameter GroupBaseDn required but not declared.")
+		}).Fatal("Ldap resource parameter BaseDn required but not declared.")
 		return err
 	}
 
@@ -252,64 +245,70 @@ func (c *C7000) applyEnableLdapAuth(enable bool) (err error) {
 // 1.  addLdapGroup
 // 2.  setLdapGroupBayAcl
 // 3.  addLdapGroupBayAccess (done)
-func (c *C7000) applyLdapGroupParams(cfg *cfgresources.Ldap) (err error) {
+func (c *C7000) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) {
 
-	if cfg.Role == "" {
-		log.WithFields(log.Fields{
-			"step": "apply-ldap-cfg",
-		}).Warn("Ldap resource parameter Role required but not declared.")
-		return
-	}
+	for _, group := range cfg {
 
-	if !c.isRoleValid(cfg.Role) {
-		log.WithFields(log.Fields{
-			"step": "apply-ldap-cfg",
-			"role": cfg.Role,
-		}).Warn("Ldap resource Role must be a valid role: admin OR user.")
-		return
-	}
+		if !c.isRoleValid(group.Role) {
+			log.WithFields(log.Fields{
+				"step": "applyLdapGroupParams",
+				"role": group.Role,
+			}).Warn("Ldap resource Role must be a valid role: admin OR user.")
+			return
+		}
 
-	if cfg.Group == "" {
-		log.WithFields(log.Fields{
-			"step": "apply-ldap-cfg",
-		}).Warn("Ldap resource parameter Group required but not declared.")
-		return
-	}
+		if group.Group == "" {
+			log.WithFields(log.Fields{
+				"step":      "applyLdapGroupParams",
+				"Ldap role": group.Role,
+			}).Warn("Ldap resource parameter Group required but not declared.")
+			return
+		}
 
-	//1. addLdapGroup
-	err = c.applyAddLdapGroup(cfg.Group)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"step":     "addLdapGroup",
-			"resource": "Ldap",
-			"IP":       c.ip,
-			"Error":    err,
-		}).Warn("addLdapGroup returned error.")
-		return
-	}
+		//1. addLdapGroup
+		err = c.applyAddLdapGroup(group.Group)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"step":     "applyAddLdapGroup",
+				"resource": "Ldap",
+				"IP":       c.ip,
+				"Error":    err,
+			}).Warn("addLdapGroup returned error.")
+			return
+		}
 
-	//2. setLdapGroupBayAcl
-	err = c.applyLdapGroupBayAcl(cfg.Role, cfg.Group)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"step":     "setLdapGroupBayAcl",
-			"resource": "Ldap",
-			"IP":       c.ip,
-			"Error":    err,
-		}).Warn("addLdapGroup returned error.")
-		return
-	}
+		//2. setLdapGroupBayAcl
+		err = c.applyLdapGroupBayAcl(group.Role, group.Group)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"step":     "setLdapGroupBayAcl",
+				"resource": "Ldap",
+				"IP":       c.ip,
+				"Error":    err,
+			}).Warn("addLdapGroup returned error.")
+			return
+		}
 
-	//3. applyAddLdapGroupBayAccess
-	err = c.applyAddLdapGroupBayAccess(cfg.Group)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"step":     "applyAddLdapGroupBayAccess",
-			"resource": "Ldap",
-			"IP":       c.ip,
-			"Error":    err,
-		}).Warn("addLdapGroup returned error.")
-		return
+		//3. applyAddLdapGroupBayAccess
+		err = c.applyAddLdapGroupBayAccess(group.Group)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"step":     "applyAddLdapGroupBayAccess",
+				"resource": "Ldap",
+				"IP":       c.ip,
+				"Error":    err,
+			}).Warn("addLdapGroup returned error.")
+			return
+		}
+
+		if err != nil {
+			log.WithFields(log.Fields{
+				"step":  "applyLdapGroupParams",
+				"IP":    c.ip,
+				"Role":  group.Role,
+				"Error": err,
+			}).Warn("Unable to set LdapGroup config for role.")
+		}
 	}
 
 	return
