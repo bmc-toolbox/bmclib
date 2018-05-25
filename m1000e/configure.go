@@ -84,18 +84,18 @@ func (m *M1000e) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 						"step":     "ApplyCfg",
 						"resource": cfg.Field(r).Kind(),
 						"IP":       m.ip,
-					}).Warn("Unable to set Ldap services config.")
+					}).Warn("Unable to set Ldap config.")
 				}
-
-				//configure ldap role groups
-				ldapRoleParams := m.newLdapRoleCfg(cfg.Field(r).Interface().(*cfgresources.Ldap))
-				err := m.applyLdapRoleCfg(ldapRoleParams, 1)
+			case "LdapGroup":
+				ldapGroups := cfg.Field(r).Interface()
+				err := m.applyLdapGroupParams(ldapGroups.([]*cfgresources.LdapGroup))
 				if err != nil {
 					log.WithFields(log.Fields{
-						"step":     "ApplyCfg",
-						"resource": cfg.Field(r).Kind(),
+						"step":     "applyLdapParams",
+						"resource": "Ldap",
 						"IP":       m.ip,
-					}).Warn("Unable to set Ldap role group config.")
+						"Error":    err,
+					}).Warn("applyLdapGroupParams returned error.")
 				}
 			case "Ssl":
 				err := m.applySslCfg(cfg.Field(r).Interface().(*cfgresources.Ssl))
@@ -116,6 +116,44 @@ func (m *M1000e) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 		}
 	}
 	return err
+}
+
+func (m *M1000e) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) {
+
+	roleId := 1
+	for _, group := range cfg {
+		ldapRoleParams, err := m.newLdapRoleCfg(group, roleId)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"step":      "applyLdapGroupParams",
+				"Ldap role": group.Role,
+				"IP":        m.ip,
+				"Error":     err,
+			}).Warn("Unable to apply Ldap role group config.")
+			return err
+		}
+
+		err = m.applyLdapRoleCfg(ldapRoleParams, roleId)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"step":      "applyLdapGroupParams",
+				"Ldap role": group.Role,
+				"IP":        m.ip,
+				"Error":     err,
+			}).Warn("Unable to apply Ldap role group config.")
+			return err
+		}
+
+		log.WithFields(log.Fields{
+			"IP":    m.ip,
+			"Role":  group.Role,
+			"Group": group.Group,
+		}).Info("Ldap group parameters applied.")
+
+		roleId += 1
+	}
+
+	return nil
 }
 
 //  /cgi-bin/webcgi/datetime

@@ -59,25 +59,20 @@ func (m *M1000e) newDirectoryServicesCfg(ldap *cfgresources.Ldap) DirectoryServi
 	var userAttribute, groupAttribute string
 	if ldap.Server == "" {
 		log.WithFields(log.Fields{
-			"step": "apply-ldap-cfg",
+			"step": "newDirectoryServicesCfg",
 		}).Warn("Ldap resource parameter Server required but not declared.")
 	}
 
 	if ldap.Port == 0 {
 		log.WithFields(log.Fields{
-			"step": "apply-ldap-cfg",
+			"step": "newDirectoryServicesCfg",
 		}).Fatal("Ldap resource parameter Port required but not declared.")
 	}
-	if ldap.Group == "" {
-		log.WithFields(log.Fields{
-			"step": "apply-ldap-cfg",
-		}).Fatal("Ldap resource parameter Group required but not declared.")
-	}
 
-	if ldap.GroupBaseDn == "" {
+	if ldap.BaseDn == "" {
 		log.WithFields(log.Fields{
-			"step": "apply-ldap-cfg",
-		}).Fatal("Ldap resource parameter GroupBaseDn required but not declared.")
+			"step": "newDirectoryServicesCfg",
+		}).Warn("Ldap resource parameter baseDn required but not declared.")
 	}
 
 	if ldap.UserAttribute == "" {
@@ -92,7 +87,6 @@ func (m *M1000e) newDirectoryServicesCfg(ldap *cfgresources.Ldap) DirectoryServi
 		groupAttribute = ldap.GroupAttribute
 	}
 
-	groupDn := fmt.Sprintf("cn=%s,%s", ldap.Group, ldap.GroupBaseDn)
 	directoryServicesParams := DirectoryServicesParams{
 		SessionToken:                 m.SessionToken,
 		SeviceSelected:               "ldap",
@@ -108,7 +102,7 @@ func (m *M1000e) newDirectoryServicesCfg(ldap *cfgresources.Ldap) DirectoryServi
 		GenLdapBindDn:                "",
 		GenLdapBindPasswd:            "PASSWORD", //we
 		GenLdapBindPasswdChanged:     false,
-		GenLdapBaseDn:                groupDn,
+		GenLdapBaseDn:                ldap.BaseDn,
 		GenLdapUserAttribute:         userAttribute,
 		GenLdapGroupAttribute:        groupAttribute,
 		GenLdapSearchFilter:          ldap.SearchFilter,
@@ -153,38 +147,43 @@ func (m *M1000e) isRoleValid(role string) bool {
 
 // TODO: the code should not Fatal, but return so configuration continues.
 // Given the Ldap resource, populate required LdapArgParams
-func (m *M1000e) newLdapRoleCfg(ldap *cfgresources.Ldap) LdapArgParams {
-
-	// this needs to be updated to support various roles.
-	roleId := 1
+func (m *M1000e) newLdapRoleCfg(cfg *cfgresources.LdapGroup, roleId int) (ldapArgCfg LdapArgParams, err error) {
 
 	var privBitmap, genLdapRolePrivilege int
 
-	if !m.isRoleValid(ldap.Role) {
+	if cfg.Group == "" {
+		msg := "Ldap resource parameter Group required but not declared."
 		log.WithFields(log.Fields{
-			"step": "apply-ldap-cfg",
-			"role": ldap.Role,
-		}).Fatal("Ldap resource Role must be a valid role: admin OR user.")
+			"Role": cfg.Role,
+			"step": "newLdapRoleCfg",
+		}).Warn(msg)
+		return ldapArgCfg, errors.New(msg)
 	}
 
-	if ldap.Group == "" {
+	if cfg.GroupBaseDn == "" {
+		msg := "Ldap resource parameter GroupBaseDn required but not declared."
 		log.WithFields(log.Fields{
-			"step": "apply-ldap-cfg",
-		}).Fatal("Ldap resource Group required but not declared.")
+			"Role": cfg.Role,
+			"step": "newLdapRoleCfg",
+		}).Warn(msg)
+		return ldapArgCfg, errors.New(msg)
 	}
 
-	if ldap.GroupBaseDn == "" {
+	if !m.isRoleValid(cfg.Role) {
+		msg := "Ldap resource Role must be a valid role: admin OR user."
 		log.WithFields(log.Fields{
-			"step": "apply-ldap-cfg",
-		}).Fatal("Ldap resource GroupBaseDn required but not declared.")
+			"Role": cfg.Role,
+			"step": "newLdapRoleCfg",
+		}).Warn(msg)
+		return ldapArgCfg, errors.New(msg)
 	}
 
-	groupDn := fmt.Sprintf("cn=%s,%s", ldap.Group, ldap.GroupBaseDn)
+	groupDn := fmt.Sprintf("cn=%s,%s", cfg.Group, cfg.GroupBaseDn)
 
 	//TODO
 	//this needs more work, the resource declaration needs to support a list of roles,
 	//and the appropriate permissions need to be set below.
-	switch ldap.Role {
+	switch cfg.Role {
 	case "admin":
 		privBitmap = 4095
 		genLdapRolePrivilege = privBitmap
@@ -193,7 +192,7 @@ func (m *M1000e) newLdapRoleCfg(ldap *cfgresources.Ldap) LdapArgParams {
 		genLdapRolePrivilege = privBitmap
 	}
 
-	ldapArgCfg := LdapArgParams{
+	ldapArgCfg = LdapArgParams{
 		SessionToken:         m.SessionToken,
 		PrivBitmap:           privBitmap,
 		Index:                roleId,
@@ -212,7 +211,7 @@ func (m *M1000e) newLdapRoleCfg(ldap *cfgresources.Ldap) LdapArgParams {
 		Bfabricadmin:         true,
 	}
 
-	return ldapArgCfg
+	return ldapArgCfg, err
 
 }
 
