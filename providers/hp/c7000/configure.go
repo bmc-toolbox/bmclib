@@ -130,7 +130,7 @@ func (c *C7000) applyLdapParams(cfg *cfgresources.Ldap) {
 
 // Apply Ldap server config params
 // <hpoa:setLdapInfo4>
-//   <hpoa:directoryServerAddress>example.com</hpoa:directoryServerAddress>
+//   <hpoa:directoryServerAddress>machine.example.com</hpoa:directoryServerAddress>
 //   <hpoa:directoryServerSslPort>636</hpoa:directoryServerSslPort>
 //   <hpoa:directoryServerGCPort>0</hpoa:directoryServerGCPort>
 //   <hpoa:userNtAccountNameMapping>false</hpoa:userNtAccountNameMapping>

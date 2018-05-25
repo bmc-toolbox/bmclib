@@ -9,7 +9,6 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/ncode/bmclib/devices"
-	"github.com/ncode/dora/model"
 )
 
 var (
@@ -387,16 +386,16 @@ func TestTempC(t *testing.T) {
 }
 
 func TestNics(t *testing.T) {
-	expectedAnswer := []*model.Nic{
-		&model.Nic{
+	expectedAnswer := []*devices.Nic{
+		&devices.Nic{
 			MacAddress: "0c:c4:7a:b8:22:64",
 			Name:       "bmc",
 		},
-		&model.Nic{
+		&devices.Nic{
 			MacAddress: "0c:c4:7a:bc:dc:1a",
 			Name:       "eth0",
 		},
-		&model.Nic{
+		&devices.Nic{
 			MacAddress: "0c:c4:7a:bc:dc:1b",
 			Name:       "eth1",
 		},

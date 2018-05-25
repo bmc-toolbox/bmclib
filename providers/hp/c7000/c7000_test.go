@@ -201,7 +201,7 @@ var (
 							</BAY>
 							<MGMTIPADDR>0.0.0.0</MGMTIPADDR>
 							<MGMTIPV6ADDR_LL>fe80::5265:f3ff:fe66:3902/64</MGMTIPV6ADDR_LL>
-							<MGMTDNSNAME>.example.com</MGMTDNSNAME>
+							<MGMTDNSNAME>.machine.example.com</MGMTDNSNAME>
 							<MGMTPN>iLO4</MGMTPN>
 							<MGMTFWVERSION>2.55 Aug 16 2017</MGMTFWVERSION>
 							<PN>727021-B21</PN>
@@ -387,7 +387,7 @@ var (
 							</BAY>
 							<MGMTIPADDR>0.0.0.0</MGMTIPADDR>
 							<MGMTIPV6ADDR_LL>fe80::7210:6fff:feba:2d16/64</MGMTIPV6ADDR_LL>
-							<MGMTDNSNAME>.example.com</MGMTDNSNAME>
+							<MGMTDNSNAME>.machine.example.com</MGMTDNSNAME>
 							<MGMTPN>iLO4</MGMTPN>
 							<MGMTFWVERSION>2.54 Jun 15 2017</MGMTFWVERSION>
 							<PN>813198-B21</PN>
@@ -573,7 +573,7 @@ var (
 							</BAY>
 							<MGMTIPADDR>0.0.0.0</MGMTIPADDR>
 							<MGMTIPV6ADDR_LL>fe80::9eb6:54ff:fe94:2905/64</MGMTIPV6ADDR_LL>
-							<MGMTDNSNAME>.example.com</MGMTDNSNAME>
+							<MGMTDNSNAME>.machine.example.com</MGMTDNSNAME>
 							<MGMTPN>iLO4</MGMTPN>
 							<MGMTFWVERSION>2.55 Aug 16 2017</MGMTFWVERSION>
 							<PN>641016-B21     </PN>
@@ -759,7 +759,7 @@ var (
 							</BAY>
 							<MGMTIPADDR>0.0.0.0</MGMTIPADDR>
 							<MGMTIPV6ADDR_LL>fe80::7646:a0ff:fef7:57c3/64</MGMTIPV6ADDR_LL>
-							<MGMTDNSNAME>.example.com</MGMTDNSNAME>
+							<MGMTDNSNAME>.machine.example.com</MGMTDNSNAME>
 							<MGMTPN>iLO4</MGMTPN>
 							<MGMTFWVERSION>2.55 Aug 16 2017</MGMTFWVERSION>
 							<PN>641016-B21     </PN>
@@ -945,7 +945,7 @@ var (
 							</BAY>
 							<MGMTIPADDR>0.0.0.0</MGMTIPADDR>
 							<MGMTIPV6ADDR_LL>fe80::5265:f3ff:fe66:310c/64</MGMTIPV6ADDR_LL>
-							<MGMTDNSNAME>.example.com</MGMTDNSNAME>
+							<MGMTDNSNAME>.machine.example.com</MGMTDNSNAME>
 							<MGMTPN>iLO4</MGMTPN>
 							<MGMTFWVERSION>2.54 Jun 15 2017</MGMTFWVERSION>
 							<PN>727021-B21</PN>
@@ -1131,7 +1131,7 @@ var (
 							</BAY>
 							<MGMTIPADDR>0.0.0.0</MGMTIPADDR>
 							<MGMTIPV6ADDR_LL>fe80::9eb6:54ff:fe79:21cc/64</MGMTIPV6ADDR_LL>
-							<MGMTDNSNAME>.example.com</MGMTDNSNAME>
+							<MGMTDNSNAME>.machine.example.com</MGMTDNSNAME>
 							<MGMTPN>iLO4</MGMTPN>
 							<MGMTFWVERSION>2.55 Aug 16 2017</MGMTFWVERSION>
 							<PN>727021-B21</PN>
@@ -1317,7 +1317,7 @@ var (
 							</BAY>
 							<MGMTIPADDR>0.0.0.0</MGMTIPADDR>
 							<MGMTIPV6ADDR_LL>fe80::b6b5:2fff:fe58:ed10/64</MGMTIPV6ADDR_LL>
-							<MGMTDNSNAME>.example.com</MGMTDNSNAME>
+							<MGMTDNSNAME>.machine.example.com</MGMTDNSNAME>
 							<MGMTPN>iLO4</MGMTPN>
 							<MGMTFWVERSION>2.55 Aug 16 2017</MGMTFWVERSION>
 							<PN>641016-B21     </PN>
