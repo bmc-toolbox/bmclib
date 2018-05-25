@@ -2,6 +2,7 @@ package idrac8
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/ncode/bmc/cfgresources"
@@ -41,6 +42,7 @@ func (i *IDrac8) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 							"step":     "ApplyCfg",
 							"Resource": cfg.Field(r).Kind(),
 							"IP":       i.ip,
+							"Model":    i.ModelId(),
 							"Error":    err,
 						}).Warn("Unable to set user config.")
 					}
@@ -54,6 +56,7 @@ func (i *IDrac8) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 						"step":     "ApplyCfg",
 						"resource": cfg.Field(r).Kind(),
 						"IP":       i.ip,
+						"Model":    i.ModelId(),
 						"Error":    err,
 					}).Warn("Unable to set Syslog config.")
 				}
@@ -205,8 +208,9 @@ func (i *IDrac8) applyUserParams(cfg *cfgresources.User, Id int) (err error) {
 	}
 
 	log.WithFields(log.Fields{
-		"IP":   i.ip,
-		"User": user.UserName,
+		"IP":    i.ip,
+		"Model": i.ModelId(),
+		"User":  user.UserName,
 	}).Info("User parameters applied.")
 
 	return err
@@ -268,7 +272,8 @@ func (i *IDrac8) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
 	}
 
 	log.WithFields(log.Fields{
-		"IP": i.ip,
+		"IP":    i.ip,
+		"Model": i.ModelId(),
 	}).Info("Syslog parameters applied.")
 
 	return err
@@ -325,6 +330,7 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
+			"Model":    i.ModelId(),
 			"endpoint": endpoint,
 			"step":     funcName(),
 			"response": string(response),
@@ -332,7 +338,8 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 	}
 
 	log.WithFields(log.Fields{
-		"IP": i.ip,
+		"IP":    i.ip,
+		"Model": i.ModelId(),
 	}).Info("NTP servers param applied.")
 
 }
@@ -356,15 +363,10 @@ func (i *IDrac8) applyLdapParams(cfg *cfgresources.Ldap) {
 		return
 	}
 
-	r = i.applyLdapGroupParam(cfg)
-	if r != 0 {
-		return
-	}
-
-	r = i.applyLdapRoleGroupPrivParam(cfg)
-	if r != 0 {
-		return
-	}
+	log.WithFields(log.Fields{
+		"IP":    i.ip,
+		"Model": i.ModelId(),
+	}).Info("Ldap config applied.")
 
 }
 
@@ -384,6 +386,7 @@ func (i *IDrac8) applyLdapServerParam(cfg *cfgresources.Ldap) int {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
+			"Model":    i.ModelId(),
 			"endpoint": endpoint,
 			"step":     funcName(),
 			"response": string(response),
@@ -392,7 +395,8 @@ func (i *IDrac8) applyLdapServerParam(cfg *cfgresources.Ldap) int {
 	}
 
 	log.WithFields(log.Fields{
-		"IP": i.ip,
+		"IP":    i.ip,
+		"Model": i.ModelId(),
 	}).Info("Ldap server param set.")
 
 	return 0
@@ -413,6 +417,7 @@ func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) int {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
+			"Model":    i.ModelId(),
 			"endpoint": endpoint,
 			"step":     funcName(),
 			"response": string(response),
@@ -613,6 +618,7 @@ func (i *IDrac8) applyTimezoneParam(timezone string) {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
+			"Model":    i.ModelId(),
 			"endpoint": endpoint,
 			"step":     funcName(),
 			"response": string(response),
@@ -620,7 +626,8 @@ func (i *IDrac8) applyTimezoneParam(timezone string) {
 	}
 
 	log.WithFields(log.Fields{
-		"IP": i.ip,
+		"IP":    i.ip,
+		"Model": i.ModelId(),
 	}).Info("Timezone param applied.")
 
 }
