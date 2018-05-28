@@ -15,12 +15,12 @@ var (
 	ErrPageNotFound = errors.New("requested page couldn't be found in the server")
 	// ErrRedFishNotSupported is returned when redfish isn't supported by the vendor
 	ErrRedFishNotSupported = errors.New("redFish not supported")
-	// ErrRedFishEndPoint500 is returned when we receive 500 in a redfish api call and the bmc dies with the request
-	ErrRedFishEndPoint500 = errors.New("we've received 500 calling this endpoint")
 	// ErrUnableToReadData is returned when we fail to read data from a chassis or bmc
 	ErrUnableToReadData = errors.New("unable to read data from this device")
 	// ErrVendorNotSupported is returned when we are able to identify a vendor but we won't support it
 	ErrVendorNotSupported = errors.New("vendor not supported")
 	// ErrUnableToGetSessionToken is returned when we are unable to retrieve ST2 which is required to set configuration parameters
 	ErrUnableToGetSessionToken = errors.New("Unable to get ST2 session token.")
+	// Err500 is returned when we recieve a 500 response from an endpoint.
+	Err500 = errors.New("we've received 500 calling this endpoint")
 )

@@ -14,11 +14,11 @@ import (
 	"github.com/ncode/bmclib/providers/hp"
 	"github.com/ncode/bmclib/providers/hp/c7000"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/ncode/bmclib/devices"
 	"github.com/ncode/bmclib/httpclient"
 	"github.com/ncode/bmclib/providers/hp/ilo"
 	"github.com/ncode/bmclib/providers/supermicro/supermicrox10"
+	log "github.com/sirupsen/logrus"
 )
 
 // ScanAndConnect will scan the bmc trying to learn the device type and return a working connection

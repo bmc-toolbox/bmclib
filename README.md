@@ -1,3 +1,8 @@
+# bmc - board management controller
+
+Library to interact with bmc from all vendors we support at Booking.com
+
+=======
 # bmclib - board management controller library
 
 Library to interact with bmcs from different vendors

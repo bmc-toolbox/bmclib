@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/spf13/viper"
 	"github.com/ncode/bmclib/devices"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -5337,7 +5337,6 @@ func TestIDracBmcVersion(t *testing.T) {
 
 func TestIDracName(t *testing.T) {
 	expectedAnswer := "machine.example.com"
-
 	bmc, err := setup()
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)

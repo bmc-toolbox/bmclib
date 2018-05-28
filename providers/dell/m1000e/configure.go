@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/google/go-querystring/query"
-	log "github.com/sirupsen/logrus"
 	"github.com/ncode/bmclib/cfgresources"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -84,7 +84,18 @@ func (m *M1000e) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 						"step":     "ApplyCfg",
 						"resource": cfg.Field(r).Kind(),
 						"IP":       m.ip,
-					}).Warn("Unable to set Ldap services config.")
+					}).Warn("Unable to set Ldap config.")
+				}
+			case "LdapGroup":
+				ldapGroups := cfg.Field(r).Interface()
+				err := m.applyLdapGroupParams(ldapGroups.([]*cfgresources.LdapGroup))
+				if err != nil {
+					log.WithFields(log.Fields{
+						"step":     "applyLdapParams",
+						"resource": "Ldap",
+						"IP":       m.ip,
+						"Error":    err,
+					}).Warn("applyLdapGroupParams returned error.")
 				}
 
 				//configure ldap role groups
@@ -118,6 +129,44 @@ func (m *M1000e) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 	return err
 }
 
+func (m *M1000e) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) {
+
+	roleId := 1
+	for _, group := range cfg {
+		ldapRoleParams, err := m.newLdapRoleCfg(group, roleId)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"step":      "applyLdapGroupParams",
+				"Ldap role": group.Role,
+				"IP":        m.ip,
+				"Error":     err,
+			}).Warn("Unable to apply Ldap role group config.")
+			return err
+		}
+
+		err = m.applyLdapRoleCfg(ldapRoleParams, roleId)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"step":      "applyLdapGroupParams",
+				"Ldap role": group.Role,
+				"IP":        m.ip,
+				"Error":     err,
+			}).Warn("Unable to apply Ldap role group config.")
+			return err
+		}
+
+		log.WithFields(log.Fields{
+			"IP":    m.ip,
+			"Role":  group.Role,
+			"Group": group.Group,
+		}).Info("Ldap group parameters applied.")
+
+		roleId += 1
+	}
+
+	return nil
+}
+
 //  /cgi-bin/webcgi/datetime
 // apply datetime payload
 func (m *M1000e) applyDatetimeCfg(cfg DatetimeParams) (err error) {
@@ -130,6 +179,10 @@ func (m *M1000e) applyDatetimeCfg(cfg DatetimeParams) (err error) {
 		return err
 	}
 
+	log.WithFields(log.Fields{
+		"IP":    m.ip,
+		"Model": m.ModelId(),
+	}).Info("DateTime config parameters applied.")
 	return err
 }
 
@@ -145,6 +198,10 @@ func (m *M1000e) applyDirectoryServicesCfg(cfg DirectoryServicesParams) (err err
 		return err
 	}
 
+	log.WithFields(log.Fields{
+		"IP":    m.ip,
+		"Model": m.ModelId(),
+	}).Info("Ldap config parameters applied.")
 	return err
 }
 
@@ -160,6 +217,10 @@ func (m *M1000e) applyLdapRoleCfg(cfg LdapArgParams, roleId int) (err error) {
 		return err
 	}
 
+	log.WithFields(log.Fields{
+		"IP":    m.ip,
+		"Model": m.ModelId(),
+	}).Info("Ldap Role group config parameters applied.")
 	return err
 }
 
@@ -173,9 +234,15 @@ func (m *M1000e) ApplySecurityCfg(cfg LoginSecurityParams) (err error) {
 		return err
 	}
 
+	log.WithFields(log.Fields{
+		"IP":    m.ip,
+		"Model": m.ModelId(),
+	}).Info("Security config parameters applied.")
 	return err
 
 }
+
+// Configures various interface params - syslog, snmp etc.
 func (m *M1000e) applyInterfaceCfg(cfg InterfaceParams) (err error) {
 
 	cfg.SessionToken = m.SessionToken
@@ -185,6 +252,10 @@ func (m *M1000e) applyInterfaceCfg(cfg InterfaceParams) (err error) {
 		return err
 	}
 
+	log.WithFields(log.Fields{
+		"IP":    m.ip,
+		"Model": m.ModelId(),
+	}).Info("Interface config parameters applied.")
 	return err
 }
 
@@ -200,6 +271,10 @@ func (m *M1000e) applyUserCfg(cfg UserParams, userId int) (err error) {
 		return err
 	}
 
+	log.WithFields(log.Fields{
+		"IP":    m.ip,
+		"Model": m.ModelId(),
+	}).Info("User account config parameters applied.")
 	return err
 }
 
@@ -221,6 +296,10 @@ func (m *M1000e) applySslCfg(ssl *cfgresources.Ssl) (err error) {
 		return err
 	}
 
+	log.WithFields(log.Fields{
+		"IP":    m.ip,
+		"Model": m.ModelId(),
+	}).Info("SSL certs uploaded.")
 	return err
 }
 

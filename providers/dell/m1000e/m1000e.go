@@ -11,11 +11,11 @@ import (
 	"strconv"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/ncode/bmclib/devices"
 	"github.com/ncode/bmclib/errors"
 	"github.com/ncode/bmclib/httpclient"
 	"github.com/ncode/bmclib/providers/dell"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
