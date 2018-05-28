@@ -1,5 +1,5 @@
 syslog:
-  server: example.com
+  server: syslog.example.com
   port: 514
   enable: true
 
@@ -14,7 +14,7 @@ user:
     enable: false
 
 ldap:
-  server: example.com
+  server: ldap.example.com
   port: 636
   enable: true
   role: admin
@@ -32,5 +32,5 @@ ntp:
    timezone: CET
 
 ssl:
-    certfile: "/home/jrebello/loms/ams4/wildcard.$location.bmc.example.com.crt"
-    keyfile: "/home/jrebello/loms/ams4/wildcard.$location.bmc.example.com.key"
+    certfile: "bmc.example.com.crt"
+    keyfile: "bmc.example.com.key"
