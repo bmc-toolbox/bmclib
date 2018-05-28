@@ -16,12 +16,12 @@ package butler
 
 import (
 	"fmt"
+	"github.com/joelrebel/bmcbutler/asset"
+	"github.com/ncode/bmclib/cfgresources"
+	"github.com/ncode/bmclib/devices"
+	"github.com/ncode/bmclib/discover"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"github.com/ncode/bmc/cfgresources"
-	"github.com/ncode/bmc/devices"
-	"github.com/ncode/bmc/discover"
-	"github.com/ncode/bmcbutler/asset"
 	"sync"
 )
 
@@ -93,11 +93,14 @@ func (b *Butler) butler(id int) {
 
 		for _, asset := range msg.Assets {
 
-			if !myLocation(asset.Location) && !b.IgnoreLocation {
-				log.WithFields(logrus.Fields{
-					"Asset": asset,
-				}).Debug("Skipped asset based on location.")
-				continue
+			//if asset has a location defined, we may want to filter it
+			if asset.Location != "" {
+				if !myLocation(asset.Location) && !b.IgnoreLocation {
+					log.WithFields(logrus.Fields{
+						"Asset": asset,
+					}).Debug("Skipped asset based on location.")
+					continue
+				}
 			}
 
 			log.WithFields(logrus.Fields{

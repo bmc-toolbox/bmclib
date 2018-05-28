@@ -17,9 +17,9 @@ package inventory
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/joelrebel/bmcbutler/asset"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"github.com/ncode/bmcbutler/asset"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -208,10 +208,6 @@ func (d *Dora) AssetIter() {
 		}
 
 		queryUrl := fmt.Sprintf("%s/v1/%s?page[offset]=%d&page[limit]=%d", apiUrl, path, 0, d.BatchSize)
-		// TESTING - return only Dell
-		//	queryUrl := fmt.Sprintf("%s/v1/%s?page[offset]=%d&page[limit]=%d&filter[vendor]!=HP&filter&filter[serial]=gf85c92", apiUrl, path, 0, d.BatchSize)
-		//queryUrl := fmt.Sprintf("%s/v1/%s?page[offset]=%d&page[limit]=%d&filter[vendor]!=Dell&filter&filter[serial]=cz372137h3", apiUrl, path, 0, d.BatchSize)
-
 		for {
 			assets := make([]asset.Asset, 0)
 
