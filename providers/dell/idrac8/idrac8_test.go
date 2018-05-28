@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
-	"github.com/ncode/bmc/devices"
+	"github.com/ncode/bmclib/devices"
 )
 
 var (
@@ -2788,8 +2788,8 @@ var (
 					 <DisplayValue/>
 				   </PROPERTY>
 				   <PROPERTY NAME="HostName" TYPE="string">
-					 <VALUE>machine.example.com</VALUE>
-					 <DisplayValue>machine.example.com</DisplayValue>
+					 <VALUE>containers-node-8023.fab4.example.com</VALUE>
+					 <DisplayValue>containers-node-8023.fab4.example.com</DisplayValue>
 				   </PROPERTY>
 				   <PROPERTY NAME="UUID" TYPE="string">
 					 <VALUE>4c4c4544-0035-4b10-8054-b6c04f374a32</VALUE>
@@ -5336,7 +5336,7 @@ func TestIDracBmcVersion(t *testing.T) {
 }
 
 func TestIDracName(t *testing.T) {
-	expectedAnswer := "machine.example.com"
+	expectedAnswer := "containers-node-8023.fab4.example.com"
 
 	bmc, err := setup()
 	if err != nil {

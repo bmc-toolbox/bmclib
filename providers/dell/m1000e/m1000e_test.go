@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
-	"github.com/ncode/bmc/devices"
+	"github.com/ncode/bmclib/devices"
 	"github.com/ncode/dora/model"
 )
 
@@ -151,7 +151,7 @@ var (
 							<tr class="fill">
 							  <td class="left" width="3px"></td>
 							  <td class="contents borderright borderbottom">DNS Domain Name</td>
-							  <td class="contents borderbottom" id="DNSCurrentDomainName">example.com</td>
+							  <td class="contents borderbottom" id="DNSCurrentDomainName">machine.example.com</td>
 							  <td class="right"></td>
 							</tr>
 							<tr>

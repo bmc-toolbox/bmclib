@@ -12,10 +12,10 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/ncode/bmc/devices"
-	"github.com/ncode/bmc/errors"
-	"github.com/ncode/bmc/hp"
-	"github.com/ncode/bmc/httpclient"
+	"github.com/ncode/bmclib/devices"
+	"github.com/ncode/bmclib/errors"
+	"github.com/ncode/bmclib/hp"
+	"github.com/ncode/bmclib/httpclient"
 )
 
 const (

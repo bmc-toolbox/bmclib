@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	log "github.com/sirupsen/logrus"
-	"github.com/ncode/bmc/cfgresources"
+	"github.com/ncode/bmclib/cfgresources"
 	"reflect"
 	"runtime"
 	"strconv"

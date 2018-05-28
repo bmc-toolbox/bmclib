@@ -259,7 +259,7 @@ type SearchContext struct {
 }
 
 // <hpoa:setLdapInfo4>
-//   <hpoa:directoryServerAddress>example.com</hpoa:directoryServerAddress>
+//   <hpoa:directoryServerAddress>provision.anycast.example.com</hpoa:directoryServerAddress>
 //   <hpoa:directoryServerSslPort>636</hpoa:directoryServerSslPort>
 //   <hpoa:directoryServerGCPort>0</hpoa:directoryServerGCPort>
 //   <hpoa:userNtAccountNameMapping>false</hpoa:userNtAccountNameMapping>

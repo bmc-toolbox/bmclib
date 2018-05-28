@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
-	"github.com/ncode/bmc/devices"
+	"github.com/ncode/bmclib/devices"
 )
 
 var (
@@ -2687,8 +2687,8 @@ var (
 					 <DisplayValue>2018-02-07T12:13:29</DisplayValue>
 				   </PROPERTY>
 				   <PROPERTY NAME="DNSDomainName" TYPE="string">
-					 <VALUE>example.com</VALUE>
-					 <DisplayValue>example.com</DisplayValue>
+					 <VALUE>machine.example.com</VALUE>
+					 <DisplayValue>machine.example.com</DisplayValue>
 				   </PROPERTY>
 				   <PROPERTY NAME="DNSRacName" TYPE="string">
 					 <VALUE>spare-H16Z4M2</VALUE>

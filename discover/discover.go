@@ -7,18 +7,18 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/ncode/bmc/c7000"
-	"github.com/ncode/bmc/errors"
-	"github.com/ncode/bmc/idrac8"
-	"github.com/ncode/bmc/idrac9"
-	"github.com/ncode/bmc/m1000e"
+	"github.com/ncode/bmclib/c7000"
+	"github.com/ncode/bmclib/errors"
+	"github.com/ncode/bmclib/idrac8"
+	"github.com/ncode/bmclib/idrac9"
+	"github.com/ncode/bmclib/m1000e"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/ncode/bmc/devices"
-	"github.com/ncode/bmc/hp"
-	"github.com/ncode/bmc/httpclient"
-	"github.com/ncode/bmc/ilo"
-	"github.com/ncode/bmc/supermicrox10"
+	"github.com/ncode/bmclib/devices"
+	"github.com/ncode/bmclib/hp"
+	"github.com/ncode/bmclib/httpclient"
+	"github.com/ncode/bmclib/ilo"
+	"github.com/ncode/bmclib/supermicrox10"
 )
 
 // ScanAndConnect will scan the bmc trying to learn the device type and return a working connection

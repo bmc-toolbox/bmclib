@@ -1,7 +1,7 @@
 package idrac8
 
 //https://10.193.251.5/sysmgmt/2012/server/configgroup/iDRAC.SysLog
-//{"iDRAC.SysLog":{"Port":"514","SysLogEnable":"Enabled","Server1":"example.com","Server2":"","Server3":""}}
+//{"iDRAC.SysLog":{"Port":"514","SysLogEnable":"Enabled","Server1":"provision.anycast.example.com","Server2":"","Server3":""}}
 
 type Syslog struct {
 	Port    string `json:"Port"`

@@ -4,7 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	log "github.com/sirupsen/logrus"
-	"github.com/ncode/bmc/cfgresources"
+	"github.com/ncode/bmclib/cfgresources"
 	"reflect"
 	"strings"
 )
@@ -137,7 +137,7 @@ func (c *C7000) applyLdapParams(cfg *cfgresources.Ldap) {
 
 // Apply Ldap server config params
 // <hpoa:setLdapInfo4>
-//   <hpoa:directoryServerAddress>example.com</hpoa:directoryServerAddress>
+//   <hpoa:directoryServerAddress>provision.anycast.example.com</hpoa:directoryServerAddress>
 //   <hpoa:directoryServerSslPort>636</hpoa:directoryServerSslPort>
 //   <hpoa:directoryServerGCPort>0</hpoa:directoryServerGCPort>
 //   <hpoa:userNtAccountNameMapping>false</hpoa:userNtAccountNameMapping>
