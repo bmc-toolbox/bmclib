@@ -9,8 +9,8 @@ import (
 
 	"github.com/ncode/bmclib/devices"
 	"github.com/ncode/bmclib/errors"
-	"github.com/ncode/bmclib/hp"
 	"github.com/ncode/bmclib/httpclient"
+	"github.com/ncode/bmclib/providers/hp"
 )
 
 const (

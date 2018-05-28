@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/google/go-querystring/query"
-	log "github.com/sirupsen/logrus"
 	"github.com/ncode/bmclib/cfgresources"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -96,6 +96,17 @@ func (m *M1000e) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 						"IP":       m.ip,
 						"Error":    err,
 					}).Warn("applyLdapGroupParams returned error.")
+				}
+
+				//configure ldap role groups
+				ldapRoleParams := m.newLdapRoleCfg(cfg.Field(r).Interface().(*cfgresources.Ldap))
+				err := m.applyLdapRoleCfg(ldapRoleParams, 1)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"step":     "ApplyCfg",
+						"resource": cfg.Field(r).Kind(),
+						"IP":       m.ip,
+					}).Warn("Unable to set Ldap role group config.")
 				}
 			case "Ssl":
 				err := m.applySslCfg(cfg.Field(r).Interface().(*cfgresources.Ssl))
@@ -213,6 +224,7 @@ func (m *M1000e) applyLdapRoleCfg(cfg LdapArgParams, roleId int) (err error) {
 	return err
 }
 
+// Configures various interface params - syslog, snmp etc.
 func (m *M1000e) ApplySecurityCfg(cfg LoginSecurityParams) (err error) {
 
 	cfg.SessionToken = m.SessionToken

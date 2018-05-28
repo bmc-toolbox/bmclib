@@ -7,10 +7,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ncode/bmclib/idrac8"
-	"github.com/ncode/bmclib/idrac9"
-	"github.com/ncode/bmclib/ilo"
-	"github.com/ncode/bmclib/supermicrox10"
+	"github.com/ncode/bmclib/providers/dell/idrac8"
+	"github.com/ncode/bmclib/providers/dell/idrac9"
+	"github.com/ncode/bmclib/providers/hp/ilo"
+	"github.com/ncode/bmclib/providers/supermicro/supermicrox10"
 
 	"github.com/spf13/viper"
 )
@@ -108,7 +108,7 @@ var (
 			</HEALTH>
 			</RIMP>`),
 		},
-		"IDrac8":        map[string][]byte{"/session": []byte(`{"aimGetProp" : {"hostname" :"incubatordb-2011","gui_str_title_bar" :"","OEMHostName" :"bkbuild-204.lhr4.example.com","fwVersion" :"2.50.33","sysDesc" :"PowerEdge M630","status" : "OK"}}`)},
+		"IDrac8":        map[string][]byte{"/session": []byte(`{"aimGetProp" : {"hostname" :"machine","gui_str_title_bar" :"","OEMHostName" :"machine.example.com","fwVersion" :"2.50.33","sysDesc" :"PowerEdge M630","status" : "OK"}}`)},
 		"IDrac9":        map[string][]byte{"/sysmgmt/2015/bmc/info": []byte(`{"Attributes":{"ADEnabled":"Disabled","BuildVersion":"37","FwVer":"3.15.15.15","GUITitleBar":"spare-H16Z4M2","IsOEMBranded":"0","License":"Enterprise","SSOEnabled":"Disabled","SecurityPolicyMessage":"By accessing this computer, you confirm that such access complies with your organization's security policy.","ServerGen":"14G","SrvPrcName":"NULL","SystemLockdown":"Disabled","SystemModelName":"PowerEdge M640","TFAEnabled":"Disabled","iDRACName":"spare-H16Z4M2"}}`)},
 		"SupermicroX10": map[string][]byte{"/cgi/login.cgi": []byte(`ok`)},
 	}

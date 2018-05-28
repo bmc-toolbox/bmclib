@@ -3,8 +3,8 @@ package c7000
 import (
 	"encoding/xml"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"github.com/ncode/bmclib/cfgresources"
+	log "github.com/sirupsen/logrus"
 	"reflect"
 	"strings"
 )
@@ -110,7 +110,18 @@ func (c *C7000) isRoleValid(role string) bool {
 //3. apply ldap server params
 func (c *C7000) applyLdapParams(cfg *cfgresources.Ldap) {
 
-	err := c.applysetLdapInfo4(cfg)
+	err := c.applyLdapGroupParams(cfg)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"step":     "applyLdapParams",
+			"resource": "Ldap",
+			"IP":       c.ip,
+			"Error":    err,
+		}).Warn("applyLdapParams returned error.")
+		return
+	}
+
+	err = c.applysetLdapInfo4(cfg)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"step":     "applyLdapParams",
@@ -137,7 +148,7 @@ func (c *C7000) applyLdapParams(cfg *cfgresources.Ldap) {
 
 // Apply Ldap server config params
 // <hpoa:setLdapInfo4>
-//   <hpoa:directoryServerAddress>provision.anycast.example.com</hpoa:directoryServerAddress>
+//   <hpoa:directoryServerAddress>machine.example.com</hpoa:directoryServerAddress>
 //   <hpoa:directoryServerSslPort>636</hpoa:directoryServerSslPort>
 //   <hpoa:directoryServerGCPort>0</hpoa:directoryServerGCPort>
 //   <hpoa:userNtAccountNameMapping>false</hpoa:userNtAccountNameMapping>
@@ -158,6 +169,7 @@ func (c *C7000) applysetLdapInfo4(cfg *cfgresources.Ldap) (err error) {
 		log.WithFields(log.Fields{
 			"step":  "applysetLdapInfo4",
 			"Model": c.ModelId(),
+			"step":  "applysetLdapInfo4",
 		}).Warn("Ldap resource parameter Server required but not declared.")
 		return err
 	}
@@ -166,15 +178,21 @@ func (c *C7000) applysetLdapInfo4(cfg *cfgresources.Ldap) (err error) {
 		log.WithFields(log.Fields{
 			"step":  "applysetLdapInfo4",
 			"Model": c.ModelId(),
-		}).Fatal("Ldap resource parameter Port required but not declared.")
+		}).Warn("Ldap resource parameter Port required but not declared.")
+		return err
+	}
+
+	if cfg.Group == "" {
+		log.WithFields(log.Fields{
+			"step": "applysetLdapInfo4",
+		}).Warn("Ldap resource parameter Group required but not declared.")
 		return err
 	}
 
 	if cfg.BaseDn == "" {
 		log.WithFields(log.Fields{
-			"step":  "applysetLdapInfo4",
-			"Model": c.ModelId(),
-		}).Fatal("Ldap resource parameter BaseDn required but not declared.")
+			"step": "applysetLdapInfo4",
+		}).Warn("Ldap resource parameter GroupBaseDn required but not declared.")
 		return err
 	}
 
@@ -443,7 +461,6 @@ func (c *C7000) applyLdapGroupBayAcl(role string, group string) (err error) {
 		"Role":  role,
 		"Group": group,
 	}).Info("Ldap group ACL added.")
-
 	return err
 }
 
@@ -584,7 +601,8 @@ func (c *C7000) applyUserParams(cfg *cfgresources.User) (err error) {
 			"IP":    c.ip,
 			"Model": c.ModelId(),
 			"Error": err,
-		}).Fatal("Unable to marshal user payload.")
+		}).Warn("Unable to marshal user payload.")
+		return err
 	}
 
 	statusCode, _, err := c.postXML(output)
@@ -613,7 +631,7 @@ func (c *C7000) applyUserParams(cfg *cfgresources.User) (err error) {
 		"IP":    c.ip,
 		"Model": c.ModelId(),
 		"user":  cfg.Name,
-	}).Info("User cfg applied.")
+	}).Debug("User cfg applied.")
 	return err
 }
 
@@ -633,7 +651,7 @@ func (c *C7000) setUserPassword(user string, password string) (err error) {
 			"IP":    c.ip,
 			"Model": c.ModelId(),
 			"Error": err,
-		}).Fatal("Unable to set user password.")
+		}).Fatal("Unable to marshal payload.")
 	}
 
 	//fmt.Printf("-->> %d\n", statusCode)

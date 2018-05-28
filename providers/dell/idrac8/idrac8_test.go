@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/spf13/viper"
 	"github.com/ncode/bmclib/devices"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -2788,8 +2788,8 @@ var (
 					 <DisplayValue/>
 				   </PROPERTY>
 				   <PROPERTY NAME="HostName" TYPE="string">
-					 <VALUE>containers-node-8023.fab4.example.com</VALUE>
-					 <DisplayValue>containers-node-8023.fab4.example.com</DisplayValue>
+					 <VALUE>machine.example.com</VALUE>
+					 <DisplayValue>machine.example.com</DisplayValue>
 				   </PROPERTY>
 				   <PROPERTY NAME="UUID" TYPE="string">
 					 <VALUE>4c4c4544-0035-4b10-8054-b6c04f374a32</VALUE>
@@ -5336,8 +5336,7 @@ func TestIDracBmcVersion(t *testing.T) {
 }
 
 func TestIDracName(t *testing.T) {
-	expectedAnswer := "containers-node-8023.fab4.example.com"
-
+	expectedAnswer := "machine.example.com"
 	bmc, err := setup()
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
@@ -5621,7 +5620,7 @@ func TestDiskDisks(t *testing.T) {
 			Size:      "1490 GB",
 			Model:     "ssdsc2bb016t7r",
 			Status:    "OK",
-			FwVersion: "N201DL42",
+			FwVersion: "n201dl42",
 		},
 		&devices.Disk{
 			Serial:    "phdv707000fx1p6egn",
@@ -5629,7 +5628,7 @@ func TestDiskDisks(t *testing.T) {
 			Size:      "1490 GB",
 			Model:     "ssdsc2bb016t7r",
 			Status:    "OK",
-			FwVersion: "N201DL42",
+			FwVersion: "n201dl42",
 		},
 	}
 

@@ -6,9 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/spf13/viper"
 	"github.com/ncode/bmclib/devices"
-	"github.com/ncode/dora/model"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -531,8 +530,8 @@ func TestChassisTempC(t *testing.T) {
 }
 
 func TestChassisNics(t *testing.T) {
-	expectedAnswer := []*model.Nic{
-		&model.Nic{
+	expectedAnswer := []*devices.Nic{
+		&devices.Nic{
 			MacAddress: "18:66:da:9d:cd:cd",
 			Name:       "OA1",
 		},
@@ -562,26 +561,26 @@ func TestChassisNics(t *testing.T) {
 }
 
 func TestChassisPsu(t *testing.T) {
-	expectedAnswer := []*model.Psu{
-		&model.Psu{
+	expectedAnswer := []*devices.Psu{
+		&devices.Psu{
 			Serial:     "51f3dk2_psu_1",
 			CapacityKw: 2.7,
 			Status:     "OK",
 			PowerKw:    0.184,
 		},
-		&model.Psu{
+		&devices.Psu{
 			Serial:     "51f3dk2_psu_2",
 			CapacityKw: 2.7,
 			Status:     "OK",
 			PowerKw:    0.20862,
 		},
-		&model.Psu{
+		&devices.Psu{
 			Serial:     "51f3dk2_psu_5",
 			CapacityKw: 2.7,
 			Status:     "OK",
 			PowerKw:    0.20772000000000002,
 		},
-		&model.Psu{
+		&devices.Psu{
 			Serial:     "51f3dk2_psu_6",
 			CapacityKw: 2.7,
 			Status:     "OK",

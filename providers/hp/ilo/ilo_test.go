@@ -6,9 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/spf13/viper"
 	"github.com/ncode/bmclib/devices"
-	"github.com/ncode/dora/model"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -411,36 +410,36 @@ func TestIloTempC(t *testing.T) {
 }
 
 func TestIloNics(t *testing.T) {
-	expectedAnswer := []*model.Nic{
-		&model.Nic{
+	expectedAnswer := []*devices.Nic{
+		&devices.Nic{
 			MacAddress: "94:57:a5:60:aa:ca",
 			Name:       "bmc",
 		},
-		&model.Nic{
+		&devices.Nic{
 			MacAddress: "94:57:a5:60:aa:cb",
 			Name:       "bmc",
 		},
-		&model.Nic{
+		&devices.Nic{
 			MacAddress: "14:02:ec:33:1d:30",
 			Name:       "HPE Ethernet 1Gb 4-port 331i Adapter - NIC",
 		},
-		&model.Nic{
+		&devices.Nic{
 			MacAddress: "14:02:ec:33:1d:31",
 			Name:       "HPE Ethernet 1Gb 4-port 331i Adapter - NIC",
 		},
-		&model.Nic{
+		&devices.Nic{
 			MacAddress: "14:02:ec:33:1d:32",
 			Name:       "HPE Ethernet 1Gb 4-port 331i Adapter - NIC",
 		},
-		&model.Nic{
+		&devices.Nic{
 			MacAddress: "14:02:ec:33:1d:33",
 			Name:       "HPE Ethernet 1Gb 4-port 331i Adapter - NIC",
 		},
-		&model.Nic{
+		&devices.Nic{
 			MacAddress: "14:02:ec:6c:95:20",
 			Name:       "HPE Ethernet 10Gb 2-port 562FLR-SFP+ Adpt",
 		},
-		&model.Nic{
+		&devices.Nic{
 			MacAddress: "14:02:ec:6c:95:28",
 			Name:       "HPE Ethernet 10Gb 2-port 562FLR-SFP+ Adpt",
 		},
@@ -541,7 +540,7 @@ func TestIloDisks(t *testing.T) {
 			Size:      "1200 GB",
 			Model:     "eg1200jemda",
 			Status:    "OK",
-			FwVersion: "HPD6",
+			FwVersion: "hpd6",
 		},
 		&devices.Disk{
 			Serial:    "s403d7j40000e722a3mt",
@@ -549,7 +548,7 @@ func TestIloDisks(t *testing.T) {
 			Size:      "1200 GB",
 			Model:     "eg1200jemda",
 			Status:    "OK",
-			FwVersion: "HPD6",
+			FwVersion: "hpd6",
 		},
 	}
 

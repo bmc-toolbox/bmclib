@@ -3,8 +3,8 @@ package m1000e
 import (
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"github.com/ncode/bmclib/cfgresources"
+	log "github.com/sirupsen/logrus"
 )
 
 func (m *M1000e) newSslCfg(ssl *cfgresources.Ssl) (MFormParams map[string]string) {
@@ -67,7 +67,7 @@ func (m *M1000e) newDirectoryServicesCfg(ldap *cfgresources.Ldap) DirectoryServi
 	if ldap.Port == 0 {
 		log.WithFields(log.Fields{
 			"step": "newDirectoryServicesCfg",
-		}).Fatal("Ldap resource parameter Port required but not declared.")
+		}).Warn("Ldap resource parameter Port required but not declared.")
 	}
 
 	if ldap.BaseDn == "" {
@@ -88,6 +88,7 @@ func (m *M1000e) newDirectoryServicesCfg(ldap *cfgresources.Ldap) DirectoryServi
 		groupAttribute = ldap.GroupAttribute
 	}
 
+	groupDn := fmt.Sprintf("cn=%s,%s", ldap.Group, ldap.GroupBaseDn)
 	directoryServicesParams := DirectoryServicesParams{
 		SessionToken:                 m.SessionToken,
 		SeviceSelected:               "ldap",
@@ -146,7 +147,6 @@ func (m *M1000e) isRoleValid(role string) bool {
 	return false
 }
 
-// TODO: the code should not Fatal, but return so configuration continues.
 // Given the Ldap resource, populate required LdapArgParams
 func (m *M1000e) newLdapRoleCfg(cfg *cfgresources.LdapGroup, roleId int) (ldapArgCfg LdapArgParams, err error) {
 
@@ -181,9 +181,6 @@ func (m *M1000e) newLdapRoleCfg(cfg *cfgresources.LdapGroup, roleId int) (ldapAr
 
 	groupDn := fmt.Sprintf("cn=%s,%s", cfg.Group, cfg.GroupBaseDn)
 
-	//TODO
-	//this needs more work, the resource declaration needs to support a list of roles,
-	//and the appropriate permissions need to be set below.
 	switch cfg.Role {
 	case "admin":
 		privBitmap = 4095
@@ -213,7 +210,6 @@ func (m *M1000e) newLdapRoleCfg(cfg *cfgresources.LdapGroup, roleId int) (ldapAr
 	}
 
 	return ldapArgCfg, err
-
 }
 
 // Given the syslog resource, populate the required InterfaceParams

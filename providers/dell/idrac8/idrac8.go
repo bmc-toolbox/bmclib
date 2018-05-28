@@ -16,10 +16,10 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/ncode/bmclib/dell"
 	"github.com/ncode/bmclib/devices"
 	"github.com/ncode/bmclib/errors"
 	"github.com/ncode/bmclib/httpclient"
+	"github.com/ncode/bmclib/providers/dell"
 )
 
 const (

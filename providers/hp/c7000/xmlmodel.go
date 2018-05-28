@@ -258,24 +258,6 @@ type SearchContext struct {
 	Text    string   `xml:",chardata"`
 }
 
-// <hpoa:setLdapInfo4>
-//   <hpoa:directoryServerAddress>provision.anycast.example.com</hpoa:directoryServerAddress>
-//   <hpoa:directoryServerSslPort>636</hpoa:directoryServerSslPort>
-//   <hpoa:directoryServerGCPort>0</hpoa:directoryServerGCPort>
-//   <hpoa:userNtAccountNameMapping>false</hpoa:userNtAccountNameMapping>
-//   <hpoa:enableServiceAccount>false</hpoa:enableServiceAccount>
-//   <hpoa:serviceAccountName></hpoa:serviceAccountName>
-//   <hpoa:serviceAccountPassword></hpoa:serviceAccountPassword>
-//   <hpoa:searchContexts xmlns:hpoa="hpoa.xsd">
-//    <hpoa:searchContext>ou=People,dc=activehotels,dc=com</hpoa:searchContext>
-//    <hpoa:searchContext/>
-//    <hpoa:searchContext/>
-//    <hpoa:searchContext/>
-//    <hpoa:searchContext/>
-//    <hpoa:searchContext/>
-//   </hpoa:searchContexts>
-// </hpoa:setLdapInfo4>
-
 // manage power config
 //<hpoa:setPowerConfigInfo><hpoa:redundancyMode>AC_REDUNDANT</hpoa:redundancyMode><hpoa:powerCeiling>0</hpoa:powerCeiling><hpoa:dynamicPowerSaverEnabled>false</hpoa:dynamicPowerSaverEnabled></hpoa:setPowerConfigInfo>
 

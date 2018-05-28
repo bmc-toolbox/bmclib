@@ -29,6 +29,8 @@ type Ldap struct {
 	Enable         bool   `yaml:"enable"`
 	Role           string `yaml:"role"`
 	BaseDn         string `yaml:"baseDn"`
+	Group          string `yaml:"group"`
+	GroupBaseDn    string `yaml:"groupBaseDn"`
 	UserAttribute  string `yaml:"userAttribute"`
 	GroupAttribute string `yaml:"groupAttribute"`
 	SearchFilter   string `yaml:"searchFilter"`
