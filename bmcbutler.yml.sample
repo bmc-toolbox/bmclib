@@ -6,6 +6,8 @@ inventory:
   source: dora
   dora:
     apiUrl: http://dora.booking.com/api
+  csv:
+    file: /etc/bmcbutler/inventory.csv
 bmcDefaults:
   c7000:
     user: Administrator

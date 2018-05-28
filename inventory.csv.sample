@@ -1,0 +1,4 @@
+bmcaddress,serial,vendor,type
+10.193.251.10,bl12ah,dell,blade
+10.193.251.22,fooasd123,hp,chassis
+10.183.193.202,,,

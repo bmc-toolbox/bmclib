@@ -16,12 +16,12 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/joelrebel/bmcbutler/asset"
+	"github.com/joelrebel/bmcbutler/butler"
+	"github.com/joelrebel/bmcbutler/inventory"
+	"github.com/joelrebel/bmcbutler/resource"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/ncode/bmcbutler/asset"
-	"github.com/ncode/bmcbutler/butler"
-	"github.com/ncode/bmcbutler/inventory"
-	"github.com/ncode/bmcbutler/resource"
 	"os"
 )
 
@@ -58,6 +58,13 @@ func apply() {
 	}
 
 	switch inventorySource {
+	case "csv":
+		inventoryInstance := inventory.Csv{Log: log, Channel: inventoryChan}
+		if serial == "" {
+			go inventoryInstance.AssetIter()
+		} else {
+			go inventoryInstance.AssetIterBySerial(serial)
+		}
 	case "dora":
 		inventoryInstance := inventory.Dora{Log: log, BatchSize: 10, Channel: inventoryChan}
 		// Spawn a goroutine that returns a slice of assets over inventoryChan
@@ -67,12 +74,6 @@ func apply() {
 		} else {
 			go inventoryInstance.AssetIterBySerial(serial, assetType)
 		}
-	case "serverDb":
-		inventoryInstance := inventory.ServerDb{Log: log, BatchSize: 10, Channel: inventoryChan}
-		// Spawn a goroutine that returns a slice of assets over inventoryChan
-		// the number of assets in the slice is determined by the batch size.
-		go inventoryInstance.AssetIter()
-
 	default:
 		fmt.Println("Unknown inventory source declared in cfg: ", inventorySource)
 		os.Exit(1)
