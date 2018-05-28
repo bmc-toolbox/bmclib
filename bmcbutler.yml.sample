@@ -5,7 +5,7 @@ bmcPassword: foobar
 inventory:
   source: dora
   dora:
-    apiUrl: http://dora.booking.com/api
+    apiUrl: http://dora.example.com/api
   csv:
     file: /etc/bmcbutler/inventory.csv
 bmcDefaults:
