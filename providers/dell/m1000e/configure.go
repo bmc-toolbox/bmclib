@@ -97,17 +97,6 @@ func (m *M1000e) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 						"Error":    err,
 					}).Warn("applyLdapGroupParams returned error.")
 				}
-
-				//configure ldap role groups
-				ldapRoleParams := m.newLdapRoleCfg(cfg.Field(r).Interface().(*cfgresources.Ldap))
-				err := m.applyLdapRoleCfg(ldapRoleParams, 1)
-				if err != nil {
-					log.WithFields(log.Fields{
-						"step":     "ApplyCfg",
-						"resource": cfg.Field(r).Kind(),
-						"IP":       m.ip,
-					}).Warn("Unable to set Ldap role group config.")
-				}
 			case "Ssl":
 				err := m.applySslCfg(cfg.Field(r).Interface().(*cfgresources.Ssl))
 				if err != nil {

@@ -88,7 +88,6 @@ func (m *M1000e) newDirectoryServicesCfg(ldap *cfgresources.Ldap) DirectoryServi
 		groupAttribute = ldap.GroupAttribute
 	}
 
-	groupDn := fmt.Sprintf("cn=%s,%s", ldap.Group, ldap.GroupBaseDn)
 	directoryServicesParams := DirectoryServicesParams{
 		SessionToken:                 m.SessionToken,
 		SeviceSelected:               "ldap",

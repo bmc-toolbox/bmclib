@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"github.com/ncode/bmclib/cfgresources"
+	log "github.com/sirupsen/logrus"
 	"reflect"
 	"runtime"
 	"strconv"
@@ -210,7 +210,7 @@ func (i *IDrac8) applyUserParams(cfg *cfgresources.User, Id int) (err error) {
 	log.WithFields(log.Fields{
 		"IP":    i.ip,
 		"Model": i.ModelId(),
-		"User":  user.UserName,
+		"User":  cfg.Name,
 	}).Info("User parameters applied.")
 
 	return err

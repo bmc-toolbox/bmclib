@@ -110,18 +110,7 @@ func (c *C7000) isRoleValid(role string) bool {
 //3. apply ldap server params
 func (c *C7000) applyLdapParams(cfg *cfgresources.Ldap) {
 
-	err := c.applyLdapGroupParams(cfg)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"step":     "applyLdapParams",
-			"resource": "Ldap",
-			"IP":       c.ip,
-			"Error":    err,
-		}).Warn("applyLdapParams returned error.")
-		return
-	}
-
-	err = c.applysetLdapInfo4(cfg)
+	err := c.applysetLdapInfo4(cfg)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"step":     "applyLdapParams",
@@ -169,7 +158,6 @@ func (c *C7000) applysetLdapInfo4(cfg *cfgresources.Ldap) (err error) {
 		log.WithFields(log.Fields{
 			"step":  "applysetLdapInfo4",
 			"Model": c.ModelId(),
-			"step":  "applysetLdapInfo4",
 		}).Warn("Ldap resource parameter Server required but not declared.")
 		return err
 	}
