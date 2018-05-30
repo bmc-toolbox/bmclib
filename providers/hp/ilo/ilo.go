@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"strings"
 
@@ -34,12 +35,13 @@ const (
 
 // Ilo holds the status and properties of a connection to an iLO device
 type Ilo struct {
-	ip        string
-	username  string
-	password  string
-	client    *http.Client
-	loginURL  *url.URL
-	rimpBlade *hp.RimpBlade
+	ip         string
+	username   string
+	password   string
+	sessionKey string
+	client     *http.Client
+	loginURL   *url.URL
+	rimpBlade  *hp.RimpBlade
 }
 
 // New returns a new Ilo ready to be used
@@ -93,6 +95,25 @@ func (i *Ilo) Login() (err error) {
 		return err
 	}
 
+	u, err := url.Parse(i.loginURL.String())
+	if err != nil {
+		return err
+	}
+
+	for _, cookie := range i.client.Jar.Cookies(u) {
+		if cookie.Name == "sessionKey" {
+			i.sessionKey = cookie.Value
+		}
+	}
+
+	if i.sessionKey == "" {
+		log.WithFields(log.Fields{
+			"step":  "Login()",
+			"IP":    i.ip,
+			"Model": i.ModelId(),
+		}).Warn("Expected sessionKey cookie value not found.")
+	}
+
 	if resp.StatusCode == 404 {
 		return errors.ErrPageNotFound
 	}
@@ -112,13 +133,41 @@ func (i *Ilo) Login() (err error) {
 
 // get calls a given json endpoint of the ilo and returns the data
 func (i *Ilo) get(endpoint string) (payload []byte, err error) {
+
 	log.WithFields(log.Fields{"step": "bmc connection", "vendor": hp.VendorID, "ip": i.ip, "endpoint": endpoint}).Debug("retrieving data from bmc")
 
-	resp, err := i.client.Get(fmt.Sprintf("https://%s/%s", i.ip, endpoint))
+	bmcURL := fmt.Sprintf("https://%s", i.ip)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s", bmcURL, endpoint), nil)
+	if err != nil {
+		return payload, err
+	}
+
+	u, err := url.Parse(bmcURL)
+	if err != nil {
+		return payload, err
+	}
+
+	for _, cookie := range i.client.Jar.Cookies(u) {
+		if cookie.Name == "sessionKey" {
+			req.AddCookie(cookie)
+		}
+	}
+
+	//fmt.Println(fmt.Sprintf("%s/%s", bmcURL, endpoint))
+	//dump, err := httputil.DumpRequestOut(req, true)
+	//if err == nil {
+	//	fmt.Printf("%s\n\n", dump)
+	//}
+
+	resp, err := i.client.Do(req)
 	if err != nil {
 		return payload, err
 	}
 	defer resp.Body.Close()
+	//dump, err = httputil.DumpResponse(resp, true)
+	//if err == nil {
+	//	fmt.Printf("%s\n\n", dump)
+	//}
 
 	payload, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -132,6 +181,54 @@ func (i *Ilo) get(endpoint string) (payload []byte, err error) {
 	return payload, err
 }
 
+// posts the payload to the given endpoint
+func (i *Ilo) post(endpoint string, data []byte, debug bool) (statusCode int, body []byte, err error) {
+
+	u, err := url.Parse(fmt.Sprintf("https://%s/%s", i.ip, endpoint))
+	if err != nil {
+		return 0, []byte{}, err
+	}
+
+	req, err := http.NewRequest("POST", u.String(), bytes.NewReader(data))
+	if err != nil {
+		return 0, []byte{}, err
+	}
+
+	for _, cookie := range i.client.Jar.Cookies(u) {
+		if cookie.Name == "sessionKey" {
+			req.AddCookie(cookie)
+		}
+	}
+
+	if debug {
+		fmt.Println(fmt.Sprintf("%s/%s", i.ip, endpoint))
+		dump, err := httputil.DumpRequestOut(req, true)
+		if err == nil {
+			fmt.Printf("%s\n\n", dump)
+		}
+	}
+
+	resp, err := i.client.Do(req)
+	if err != nil {
+		return 0, []byte{}, err
+	}
+	defer resp.Body.Close()
+	if debug {
+		dump, err := httputil.DumpResponse(resp, true)
+		if err == nil {
+			fmt.Printf("%s\n\n", dump)
+		}
+	}
+
+	body, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return 0, []byte{}, err
+	}
+
+	//fmt.Printf("%s\n", body)
+	return resp.StatusCode, body, err
+}
+
 // Serial returns the device serial
 func (i *Ilo) Serial() (serial string, err error) {
 	return strings.ToLower(strings.TrimSpace(i.rimpBlade.HSI.Sbsn)), err
@@ -140,6 +237,11 @@ func (i *Ilo) Serial() (serial string, err error) {
 // Model returns the device model
 func (i *Ilo) Model() (model string, err error) {
 	return i.rimpBlade.HSI.Spn, err
+}
+
+// ModelId returns the model id string - ilo4
+func (i *Ilo) ModelId() (model string) {
+	return "ilo"
 }
 
 // BmcType returns the type of bmc we are talking to
