@@ -129,7 +129,6 @@ func userExists(user string, usersInfo []UserInfo) (userInfo UserInfo, exists bo
 // if the user exists, update the users password.
 func (i *Ilo) applyUserParams(users []*cfgresources.User) (err error) {
 
-	fmt.Printf("%+v", users)
 	existingUsers, err := i.queryUsers()
 	if err != nil {
 		msg := "Unable to query existing users"
@@ -236,7 +235,7 @@ func (i *Ilo) applyUserParams(users []*cfgresources.User) (err error) {
 			}
 
 			endpoint := "json/user_info"
-			statusCode, response, err := i.post(endpoint, payload, true)
+			statusCode, response, err := i.post(endpoint, payload, false)
 			if err != nil || statusCode != 200 {
 				log.WithFields(log.Fields{
 					"IP":         i.ip,
