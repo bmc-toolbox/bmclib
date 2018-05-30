@@ -37,3 +37,33 @@ func (i *Ilo) queryUsers() (usersInfo []UserInfo, err error) {
 
 	return users.UsersInfo, err
 }
+
+func (i *Ilo) queryNetworkSntp() (networkSntp NetworkSntp, err error) {
+
+	endpoint := "json/network_sntp/interface/0"
+
+	payload, err := i.get(endpoint)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IP":       i.ip,
+			"Model":    i.ModelId(),
+			"endpoint": endpoint,
+			"step":     funcName(),
+			"Error":    err,
+		}).Warn("GET request failed.")
+		return networkSntp, err
+	}
+
+	err = json.Unmarshal(payload, &networkSntp)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IP":    i.ip,
+			"step":  funcName(),
+			"Model": i.ModelId(),
+			"Error": err,
+		}).Warn("Unable to unmarshal payload.")
+		return networkSntp, err
+	}
+
+	return networkSntp, err
+}

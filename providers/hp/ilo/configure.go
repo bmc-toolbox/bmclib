@@ -337,19 +337,105 @@ func (i *Ilo) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
 
 func (i *Ilo) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 
+	enable := 1
 	if cfg.Server1 == "" {
+		msg := "NTP resource expects parameter: server1."
 		log.WithFields(log.Fields{
 			"step": funcName(),
-		}).Warn("NTP resource expects parameter: server1.")
-		return
+		}).Warn(msg)
+		return errors.New(msg)
 	}
 
 	if cfg.Timezone == "" {
+		msg := "NTP resource expects parameter: timezone."
 		log.WithFields(log.Fields{
-			"step": "apply-ntp-cfg",
-		}).Warn("NTP resource expects parameter: timezone.")
-		return
+			"step": funcName(),
+		}).Warn(msg)
+		return errors.New(msg)
 	}
+
+	_, validTimezone := Timezones[cfg.Timezone]
+	if !validTimezone {
+		msg := "NTP resource a valid timezone parameter, for valid timezones see hp/ilo/model.go"
+		log.WithFields(log.Fields{
+			"step":             funcName(),
+			"Unknown Timezone": cfg.Timezone,
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	if cfg.Enable != true {
+		enable = 0
+		log.WithFields(log.Fields{
+			"step": funcName(),
+		}).Debug("NTP resource declared with disable.")
+	}
+
+	existingConfig, err := i.queryNetworkSntp()
+	if err != nil {
+		msg := "Unable to query existing config"
+		log.WithFields(log.Fields{
+			"step":  funcName(),
+			"IP":    i.ip,
+			"Model": i.ModelId(),
+			"Error": err,
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	networkSntp := NetworkSntp{
+		Interface:                   existingConfig.Interface,
+		PendingChange:               existingConfig.PendingChange,
+		NicWcount:                   existingConfig.NicWcount,
+		TzWcount:                    existingConfig.TzWcount,
+		Ipv4Disabled:                0,
+		Ipv6Disabled:                0,
+		DhcpEnabled:                 enable,
+		Dhcp6Enabled:                enable,
+		UseDhcpSuppliedTimeServers:  0, //we probably want to expose these as params
+		UseDhcp6SuppliedTimeServers: 0,
+		Sdn1WCount:                  existingConfig.Sdn1WCount,
+		Sdn2WCount:                  existingConfig.Sdn2WCount,
+		TimePropagate:               existingConfig.TimePropagate,
+		SntpServer1:                 cfg.Server1,
+		SntpServer2:                 cfg.Server2,
+		OurZone:                     Timezones[cfg.Timezone],
+		Method:                      "set_sntp",
+		SessionKey:                  i.sessionKey,
+	}
+
+	payload, err := json.Marshal(networkSntp)
+	if err != nil {
+		msg := "Unable to marshal NetworkSntp payload to set NTP config."
+		log.WithFields(log.Fields{
+			"IP":    i.ip,
+			"Model": i.ModelId(),
+			"step":  funcName(),
+			"Error": err,
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	endpoint := "json/network_sntp"
+	statusCode, response, err := i.post(endpoint, payload, false)
+	if err != nil || statusCode != 200 {
+		msg := "POST request to set NTP config returned error."
+		log.WithFields(log.Fields{
+			"IP":         i.ip,
+			"Model":      i.ModelId(),
+			"endpoint":   endpoint,
+			"step":       funcName(),
+			"StatusCode": statusCode,
+			"response":   string(response),
+			"Error":      err,
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	log.WithFields(log.Fields{
+		"IP":    i.ip,
+		"Model": i.ModelId(),
+	}).Info("NTP parameters applied.")
 
 	return err
 }
