@@ -264,31 +264,73 @@ func (i *Ilo) applyUserParams(users []*cfgresources.User) (err error) {
 
 func (i *Ilo) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
 
-	//var port int
-	//enable := "Enabled"
+	var port int
+	enable := 1
 
-	//if cfg.Server == "" {
-	//	log.WithFields(log.Fields{
-	//		"step": funcName(),
-	//	}).Warn("Syslog resource expects parameter: Server.")
-	//	return
-	//}
+	if cfg.Server == "" {
+		msg := "Syslog resource expects parameter: Server."
+		log.WithFields(log.Fields{
+			"step": funcName(),
+		}).Warn(msg)
+		return errors.New(msg)
+	}
 
-	//if cfg.Port == 0 {
-	//	log.WithFields(log.Fields{
-	//		"step": funcName(),
-	//	}).Debug("Syslog resource port set to default: 514.")
-	//	port = 514
-	//} else {
-	//	port = cfg.Port
-	//}
+	if cfg.Port == 0 {
+		log.WithFields(log.Fields{
+			"step": funcName(),
+		}).Debug("Syslog resource port set to default: 514.")
+		port = 514
+	} else {
+		port = cfg.Port
+	}
 
-	//if cfg.Enable != true {
-	//	enable = "Disabled"
-	//	log.WithFields(log.Fields{
-	//		"step": funcName(),
-	//	}).Debug("Syslog resource declared with enable: false.")
-	//}
+	if cfg.Enable != true {
+		enable = 0
+		log.WithFields(log.Fields{
+			"step": funcName(),
+		}).Debug("Syslog resource declared with disable.")
+	}
+
+	remoteSyslog := RemoteSyslog{
+		SyslogEnable: enable,
+		SyslogPort:   port,
+		Method:       "syslog_save",
+		SyslogServer: cfg.Server,
+		SessionKey:   i.sessionKey,
+	}
+
+	payload, err := json.Marshal(remoteSyslog)
+	if err != nil {
+		msg := "Unable to marshal RemoteSyslog payload to set Syslog config."
+		log.WithFields(log.Fields{
+			"IP":    i.ip,
+			"Model": i.ModelId(),
+			"step":  funcName(),
+			"Error": err,
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	endpoint := "json/remote_syslog"
+	statusCode, response, err := i.post(endpoint, payload, false)
+	if err != nil || statusCode != 200 {
+		msg := "POST request to set User config returned error."
+		log.WithFields(log.Fields{
+			"IP":         i.ip,
+			"Model":      i.ModelId(),
+			"endpoint":   endpoint,
+			"step":       funcName(),
+			"StatusCode": statusCode,
+			"response":   string(response),
+			"Error":      err,
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	log.WithFields(log.Fields{
+		"IP":    i.ip,
+		"Model": i.ModelId(),
+	}).Info("Syslog parameters applied.")
 
 	return err
 }
