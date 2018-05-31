@@ -15,7 +15,7 @@ Hardware     | User accounts | Syslog  |  NTP  | Ldap  | Ldap groups  | SSL  |
 Dell M1000e  | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | | 
 Dell idrac8  | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | |
 HP C7000     | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | |
-HP ILO4      | | | | | | |
+HP ILO4      | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | |
 SuperMicro   | | | | | | |
 
 
