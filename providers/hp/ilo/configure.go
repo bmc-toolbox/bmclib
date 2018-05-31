@@ -81,16 +81,35 @@ func (i *Ilo) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 				}
 			case "LdapGroup":
 				ldapGroups := cfg.Field(r).Interface()
-				fmt.Println(ldapGroups)
+				err := i.applyLdapGroupParams(ldapGroups.([]*cfgresources.LdapGroup))
+				if err != nil {
+					log.WithFields(log.Fields{
+						"step":     "applyLdapParams",
+						"resource": "Ldap",
+						"IP":       i.ip,
+						"Model":    i.ModelId(),
+						"Error":    err,
+					}).Warn("applyLdapGroupParams returned error.")
+				}
 			case "Ldap":
-				ldapCfg := cfg.Field(r).Interface().(*cfgresources.Ldap)
-				fmt.Println(ldapCfg)
+				ldapCfg := cfg.Field(r).Interface()
+				err := i.applyLdapParams(ldapCfg.(*cfgresources.Ldap))
+				if err != nil {
+					log.WithFields(log.Fields{
+						"step":     "applyLdapParams",
+						"resource": "Ldap",
+						"IP":       i.ip,
+						"Model":    i.ModelId(),
+						"Error":    err,
+					}).Warn("applyLdapGroupParams returned error.")
+				}
 			case "Ssl":
 				fmt.Printf("%s: %v : %s\n", resourceName, cfg.Field(r), cfg.Field(r).Kind())
 			default:
 				log.WithFields(log.Fields{
-					"step": "ApplyCfg",
-				}).Warn("Unknown resource.")
+					"step":     "ApplyCfg",
+					"Resource": cfg.Field(r).Kind(),
+				}).Warn("Unknown resource definition.")
 				//fmt.Printf("%v\n", cfg.Field(r))
 
 			}
@@ -123,6 +142,18 @@ func userExists(user string, usersInfo []UserInfo) (userInfo UserInfo, exists bo
 	}
 
 	return userInfo, false
+}
+
+// checks if a ldap group is present in a given list
+func ldapGroupExists(group string, directoryGroups []DirectoryGroups) (directoryGroup DirectoryGroups, exists bool) {
+
+	for _, directoryGroup := range directoryGroups {
+		if directoryGroup.Dn == group {
+			return directoryGroup, true
+		}
+	}
+
+	return directoryGroup, false
 }
 
 // attempts to add the user
@@ -438,4 +469,212 @@ func (i *Ilo) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 	}).Info("NTP parameters applied.")
 
 	return err
+}
+
+func (i *Ilo) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) {
+
+	directoryGroups, err := i.queryDirectoryGroups()
+	if err != nil {
+		msg := "Unable to query existing Ldap groups"
+		log.WithFields(log.Fields{
+			"IP":    i.ip,
+			"Model": i.ModelId(),
+			"Step":  funcName(),
+			"Error": err,
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	for _, group := range cfg {
+
+		var postPayload bool
+		if group.Group == "" {
+			msg := "Ldap resource parameter Group required but not declared."
+			log.WithFields(log.Fields{
+				"Model":     i.ModelId(),
+				"step":      funcName,
+				"Ldap role": group.Role,
+			}).Warn(msg)
+			return errors.New(msg)
+		}
+
+		if !i.isRoleValid(group.Role) {
+			msg := "Ldap resource Role must be a valid role: admin OR user."
+			log.WithFields(log.Fields{
+				"Model":     i.ModelId(),
+				"step":      funcName(),
+				"Ldap role": group.Role,
+			}).Warn(msg)
+			return errors.New(msg)
+		}
+
+		groupDn := fmt.Sprintf("cn=%s", group.Group)
+		directoryGroup, gexists := ldapGroupExists(groupDn, directoryGroups)
+
+		directoryGroup.Dn = groupDn
+		directoryGroup.SessionKey = i.sessionKey
+
+		//if the group is enabled setup parameters
+		if group.Enable {
+
+			directoryGroup.LoginPriv = 1
+			directoryGroup.RemoteConsPriv = 1
+			directoryGroup.VirtualMediaPriv = 1
+			directoryGroup.ResetPriv = 1
+
+			if group.Role == "admin" {
+				directoryGroup.ConfigPriv = 1
+				directoryGroup.UserPriv = 1
+			} else if group.Role == "user" {
+				directoryGroup.ConfigPriv = 0
+				directoryGroup.UserPriv = 0
+			}
+
+			//if the group exists, modify it
+			if gexists {
+				directoryGroup.Method = "mod_group"
+			} else {
+
+				directoryGroup.Method = "add_group"
+			}
+
+			postPayload = true
+		}
+
+		//if the group is disabled remove it
+		if group.Enable == false && gexists {
+			directoryGroup.Method = "del_group"
+			log.WithFields(log.Fields{
+				"IP":    i.ip,
+				"Model": i.ModelId(),
+				"User":  group.Group,
+			}).Info("Ldap role group disabled in config, will be removed.")
+			postPayload = true
+		}
+
+		if postPayload {
+			payload, err := json.Marshal(directoryGroup)
+			if err != nil {
+				log.WithFields(log.Fields{
+					"IP":    i.ip,
+					"Model": i.ModelId(),
+					"Step":  funcName(),
+					"Group": group.Group,
+					"Error": err,
+				}).Warn("Unable to marshal directoryGroup payload to set LdapGroup config.")
+				continue
+			}
+
+			endpoint := "json/directory_groups"
+			statusCode, response, err := i.post(endpoint, payload, false)
+			if err != nil || statusCode != 200 {
+				log.WithFields(log.Fields{
+					"IP":         i.ip,
+					"Model":      i.ModelId(),
+					"endpoint":   endpoint,
+					"step":       funcName(),
+					"Group":      group.Group,
+					"StatusCode": statusCode,
+					"response":   string(response),
+					"Error":      err,
+				}).Warn("POST request to set User config returned error.")
+				continue
+			}
+
+			log.WithFields(log.Fields{
+				"IP":    i.ip,
+				"Model": i.ModelId(),
+				"User":  group.Group,
+			}).Info("LdapGroup parameters applied.")
+
+		}
+
+	}
+
+	return err
+}
+
+func (i *Ilo) applyLdapParams(cfg *cfgresources.Ldap) (err error) {
+
+	if cfg.Server == "" {
+		msg := "Ldap resource parameter Server required but not declared."
+		log.WithFields(log.Fields{
+			"Model": i.ModelId(),
+			"step":  funcName,
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	if cfg.Port == 0 {
+		msg := "Ldap resource parameter Port required but not declared."
+		log.WithFields(log.Fields{
+			"Model": i.ModelId(),
+			"step":  funcName,
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	if cfg.BaseDn == "" {
+		msg := "Ldap resource parameter BaseDn required but not declared."
+		log.WithFields(log.Fields{
+			"Model": i.ModelId(),
+			"step":  funcName,
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	var enable int
+	if cfg.Enable == false {
+		enable = 0
+	} else {
+		enable = 1
+	}
+
+	directory := Directory{
+		ServerAddress:         cfg.Server,
+		ServerPort:            cfg.Port,
+		UserContexts:          []string{cfg.BaseDn},
+		AuthenticationEnabled: enable,
+		LocalUserAcct:         1,
+		EnableGroupAccount:    1,
+		EnableKerberos:        0,
+		EnableGenericLdap:     enable,
+		Method:                "mod_dir_config",
+		SessionKey:            i.sessionKey,
+	}
+
+	payload, err := json.Marshal(directory)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IP":    i.ip,
+			"Model": i.ModelId(),
+			"Step":  funcName(),
+			"Error": err,
+		}).Warn("Unable to marshal directory payload to set Ldap config.")
+		return err
+	}
+
+	endpoint := "json/directory"
+	statusCode, response, err := i.post(endpoint, payload, false)
+	if err != nil || statusCode != 200 {
+		msg := "POST request to set Ldap config returned error."
+		log.WithFields(log.Fields{
+			"IP":         i.ip,
+			"Model":      i.ModelId(),
+			"endpoint":   endpoint,
+			"step":       funcName(),
+			"StatusCode": statusCode,
+			"response":   string(response),
+			"Error":      err,
+		}).Warn(msg)
+		return err
+	}
+
+	log.WithFields(log.Fields{
+		"IP":    i.ip,
+		"Model": i.ModelId(),
+	}).Info("Ldap parameters applied.")
+
+	return err
+
 }

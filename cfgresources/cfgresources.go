@@ -40,6 +40,7 @@ type LdapGroup struct {
 	Role        string `yaml:"role"`
 	Group       string `yaml:"group"`
 	GroupBaseDn string `yaml:"groupBaseDn"`
+	Enable      bool   `yaml:"enable"`
 }
 
 type Ssl struct {
