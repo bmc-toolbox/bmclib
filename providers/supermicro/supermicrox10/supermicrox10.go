@@ -162,6 +162,11 @@ func (s *SupermicroX10) Serial() (serial string, err error) {
 	return strings.ToLower(serial), err
 }
 
+// ModelId returns just Model id string - supermicrox10
+func (s *SupermicroX10) ModelId() (model string) {
+	return "supermicrox10"
+}
+
 // Model returns the device model
 func (s *SupermicroX10) Model() (model string, err error) {
 	ipmi, err := s.query("FRU_INFO.XML=(0,0)")
