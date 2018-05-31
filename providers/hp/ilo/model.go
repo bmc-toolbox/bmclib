@@ -61,7 +61,7 @@ type NetworkSntp struct {
 }
 
 // /json/directory
-//{"server_address":"provisioon.anycast.example.com","method":"mod_dir_config","session_key":"51b01f402d65eb2f42342f6d67832989","server_port":637,"user_contexts":["ou=People,dc=example,dc=con"],"authentication_enabled":1,"enable_group_acct":1,"enable_kerberos":0,"local_user_acct":1,"enable_generic_ldap":1}
+//{"server_address":"ldap.example.com","method":"mod_dir_config","session_key":"51b01f402d65eb2f42342f6d67832989","server_port":637,"user_contexts":["ou=People,dc=example,dc=con"],"authentication_enabled":1,"enable_group_acct":1,"enable_kerberos":0,"local_user_acct":1,"enable_generic_ldap":1}
 type Directory struct {
 	ServerAddress         string   `json:"server_address"`
 	ServerPort            int      `json:"server_port"`
