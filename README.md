@@ -10,13 +10,14 @@ Library to interact with bmcs from different vendors
 
 ## BMCs configuration support
 
-Hardware     | User accounts | Syslog  |  NTP  | Ldap  | Ldap groups  | SSL  |
------------- | ------------- | ------- | ----- | ----- | ------------ | ---- |
-Dell M1000e  | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | | 
-Dell idrac8  | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | |
-HP C7000     | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | |
-HP ILO4      | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | |
-SuperMicro   | | | | | | |
+Hardware      | User accounts | Syslog  |  NTP  | Ldap  | Ldap groups  | SSL  |
+------------  | ------------- | ------- | ----- | ----- | ------------ | ---- |
+Dell M1000e   | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | | 
+Dell idrac8   | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | |
+HP C7000      | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | |
+HP ILO4       | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | |
+SupermicroX10 | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | | | |
+
 
 
 #### Acknowledgment
