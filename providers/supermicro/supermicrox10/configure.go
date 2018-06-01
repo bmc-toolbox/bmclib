@@ -14,6 +14,7 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+	"time"
 )
 
 // returns the calling function.
@@ -245,6 +246,96 @@ func (s *SupermicroX10) applyUserParams(users []*cfgresources.User) (err error) 
 }
 
 func (s *SupermicroX10) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
+
+	var enable string
+	if cfg.Server1 == "" {
+		log.WithFields(log.Fields{
+			"step":  "applyNtpParams",
+			"Model": s.ModelId(),
+		}).Warn("NTP resource expects parameter: server1.")
+		return
+	}
+
+	if cfg.Timezone == "" {
+		log.WithFields(log.Fields{
+			"step":  "applyNtpParams",
+			"Model": s.ModelId(),
+		}).Warn("NTP resource expects parameter: timezone.")
+		return
+	}
+
+	tzLocation, err := time.LoadLocation(cfg.Timezone)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"step":              "applyNtpParams",
+			"Model":             s.ModelId(),
+			"Declared timezone": cfg.Timezone,
+			"Error":             err,
+		}).Warn("NTP resource declared parameter timezone invalid.")
+		return
+	}
+
+	tzUtcOffset := timezoneToUtcOffset(tzLocation)
+
+	if cfg.Enable != true {
+		enable = "off"
+		log.WithFields(log.Fields{
+			"step":  "applyNtpParams",
+			"Model": s.ModelId(),
+		}).Debug("Ntp resource declared with enable: false.")
+		return
+	} else {
+		enable = "on"
+	}
+
+	t := time.Now().In(tzLocation)
+	//Fri Jun 06 2018 14:28:25 GMT+0100 (CET)
+	ts := fmt.Sprintf("%s %d %d:%d:%d %s (%s)",
+		t.Format("Fri Jun 01"),
+		t.Year(),
+		t.Hour(),
+		t.Minute(),
+		t.Second(),
+		t.Format("GMT+0200"),
+		tzLocation)
+
+	configDateTime := ConfigDateTime{
+		Op:                 "config_date_time",
+		Timezone:           tzUtcOffset,
+		DstEn:              false, //daylight savings
+		Enable:             enable,
+		NtpServerPrimary:   cfg.Server1,
+		NtpServerSecondary: cfg.Server2,
+		Year:               t.Year(),
+		Month:              int(t.Month()),
+		Day:                int(t.Day()),
+		Hour:               int(t.Hour()),
+		Minute:             int(t.Minute()),
+		Second:             int(t.Second()),
+		TimeStamp:          ts,
+	}
+
+	endpoint := fmt.Sprintf("op.cgi")
+	form, _ := query.Values(configDateTime)
+	statusCode, err := s.post(endpoint, &form, false)
+	if err != nil || statusCode != 200 {
+		msg := "POST request to set Syslog config returned error."
+		log.WithFields(log.Fields{
+			"IP":         s.ip,
+			"Model":      s.ModelId(),
+			"Endpoint":   endpoint,
+			"StatusCode": statusCode,
+			"Step":       funcName(),
+			"Error":      err,
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	//
+	log.WithFields(log.Fields{
+		"IP":    s.ip,
+		"Model": s.ModelId(),
+	}).Info("NTP config parameters applied.")
 	return err
 }
 
@@ -301,15 +392,16 @@ func (s *SupermicroX10) applySyslogParams(cfg *cfgresources.Syslog) (err error) 
 
 	endpoint := fmt.Sprintf("op.cgi")
 	form, _ := query.Values(configSyslog)
-	err = s.post(endpoint, &form, false)
-	if err != nil {
+	statusCode, err := s.post(endpoint, &form, false)
+	if err != nil || statusCode != 200 {
 		msg := "POST request to set Syslog config returned error."
 		log.WithFields(log.Fields{
-			"IP":       s.ip,
-			"Model":    s.ModelId(),
-			"endpoint": endpoint,
-			"step":     funcName(),
-			"Error":    err,
+			"IP":         s.ip,
+			"Model":      s.ModelId(),
+			"Endpoint":   endpoint,
+			"StatusCode": statusCode,
+			"step":       funcName(),
+			"Error":      err,
 		}).Warn(msg)
 		return errors.New(msg)
 	}
