@@ -22,6 +22,45 @@ func funcName() string {
 	return runtime.FuncForPC(pc).Name()
 }
 
+// Returns the UTC offset for a given timezone location
+func timezoneToUtcOffset(location *time.Location) (offset int) {
+	utcTime := time.Now().In(location)
+	_, offset = utcTime.Zone()
+	return offset
+}
+
+// Return bool value if the role is valid.
+func (s *SupermicroX10) isRoleValid(role string) bool {
+
+	validRoles := []string{"admin", "user"}
+	for _, v := range validRoles {
+		if role == v {
+			return true
+		}
+	}
+
+	return false
+}
+
+// returns a map of user accounts and thier ids
+func (s *SupermicroX10) queryUserAccounts() (userAccounts map[string]int, err error) {
+
+	userAccounts = make(map[string]int)
+	ipmi, err := s.query("CONFIG_INFO.XML=(0,0)")
+	if err != nil {
+		fmt.Println(err)
+		return userAccounts, err
+	}
+
+	for idx, account := range ipmi.ConfigInfo.UserAccounts {
+		if account.Name != "" {
+			userAccounts[account.Name] = idx
+		}
+	}
+
+	return userAccounts, err
+}
+
 func (s *SupermicroX10) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 
 	cfg := reflect.ValueOf(config).Elem()
@@ -104,7 +143,104 @@ func (s *SupermicroX10) ApplyCfg(config *cfgresources.ResourcesConfig) (err erro
 	return err
 }
 
+// attempts to add the user
+// if the user exists, update the users password.
+// supermicro user accounts start with 1, account 0 which is a large empty string :\.
 func (s *SupermicroX10) applyUserParams(users []*cfgresources.User) (err error) {
+
+	currentUsers, err := s.queryUserAccounts()
+	if err != nil {
+		msg := "Unable to query current user accounts."
+		log.WithFields(log.Fields{
+			"IP":    s.ip,
+			"Model": s.ModelId(),
+			"Step":  funcName(),
+			"Error": err,
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	userId := 1
+	for _, user := range users {
+
+		if user.Name == "" {
+			msg := "User resource expects parameter: Name."
+			log.WithFields(log.Fields{
+				"step": "applyUserParams",
+			}).Warn(msg)
+			return errors.New(msg)
+		}
+
+		if user.Password == "" {
+			msg := "User resource expects parameter: Password."
+			log.WithFields(log.Fields{
+				"step":     "applyUserParams",
+				"Username": user.Name,
+			}).Warn(msg)
+			return errors.New(msg)
+		}
+
+		if !s.isRoleValid(user.Role) {
+			msg := "User resource Role must be declared and a must be a valid role: 'admin' OR 'user'."
+			log.WithFields(log.Fields{
+				"step":     "applyUserParams",
+				"Username": user.Name,
+			}).Warn(msg)
+			return errors.New(msg)
+		}
+
+		configUser := ConfigUser{}
+
+		//if the user is enabled setup parameters
+		if user.Enable {
+			configUser.Username = user.Name
+			configUser.Password = user.Password
+			configUser.UserId = userId
+
+			if user.Role == "admin" {
+				configUser.NewPrivilege = 4
+			} else if user.Role == "user" {
+				configUser.NewPrivilege = 3
+			}
+		} else {
+			_, uexists := currentUsers[user.Name]
+			//if the user exists, delete it
+			//this is done by sending an empty username along with,
+			//the respective userid
+			if uexists {
+				configUser.Username = ""
+				configUser.UserId = currentUsers[user.Name]
+			} else {
+				userId += 1
+				continue
+			}
+		}
+
+		endpoint := "config_user.cgi"
+		form, _ := query.Values(configUser)
+		statusCode, err := s.post(endpoint, &form, false)
+		if err != nil || statusCode != 200 {
+			msg := "POST request to set User config returned error."
+			log.WithFields(log.Fields{
+				"IP":         s.ip,
+				"Model":      s.ModelId(),
+				"Endpoint":   endpoint,
+				"StatusCode": statusCode,
+				"Step":       funcName(),
+				"Error":      err,
+			}).Warn(msg)
+			return errors.New(msg)
+		}
+
+		log.WithFields(log.Fields{
+			"IP":    s.ip,
+			"Model": s.ModelId(),
+			"User":  user.Name,
+		}).Info("User parameters applied.")
+
+		userId += 1
+	}
+
 	return err
 }
 
@@ -187,15 +323,15 @@ func (s *SupermicroX10) applySyslogParams(cfg *cfgresources.Syslog) (err error) 
 }
 
 // posts a urlencoded form to the given endpoint
-func (s *SupermicroX10) post(endpoint string, form *url.Values, debug bool) (err error) {
+func (s *SupermicroX10) post(endpoint string, form *url.Values, debug bool) (statusCode int, err error) {
 
 	u, err := url.Parse(fmt.Sprintf("https://%s/cgi/%s", s.ip, endpoint))
 	if err != nil {
-		return err
+		return statusCode, err
 	}
 	req, err := http.NewRequest("POST", u.String(), strings.NewReader(form.Encode()))
 	if err != nil {
-		return err
+		return statusCode, err
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
@@ -217,7 +353,7 @@ func (s *SupermicroX10) post(endpoint string, form *url.Values, debug bool) (err
 
 	resp, err := s.client.Do(req)
 	if err != nil {
-		return err
+		return statusCode, err
 	}
 	defer resp.Body.Close()
 	if debug {
@@ -227,11 +363,12 @@ func (s *SupermicroX10) post(endpoint string, form *url.Values, debug bool) (err
 		}
 	}
 
+	statusCode = resp.StatusCode
 	_, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return statusCode, err
 	}
 	//fmt.Printf("-->> %d\n", resp.StatusCode)
 	//fmt.Printf("%s\n", body)
-	return err
+	return statusCode, err
 }

@@ -1,6 +1,5 @@
 package supermicrox10
 
-// op=config_syslog&syslogport1=514&syslogport2=0&syslogport3=0&syslogip1=10.156.63.58&syslogip2=&syslogip3=&enable=1
 // /cgi/op.cgi
 type ConfigSyslog struct {
 	Op          string `url:"op"`          //op=config_syslog
@@ -11,4 +10,33 @@ type ConfigSyslog struct {
 	SyslogPort2 int    `url:"syslogport2"` //syslogport2=0
 	SyslogPort3 int    `url:"syslogport3"` //syslogport3=0
 	Enable      bool   `url:"enable,int"`  //enable=1
+}
+
+// /cgi/op.cgi
+type ConfigDateTime struct {
+	Op                 string `url:"op"`             //op=config_date_time
+	Timezone           int    `url:"timezone"`       //timezone=-7200
+	DstEn              bool   `url:"dst_en,int"`     //dst_en=0
+	Enable             string `url:"ntp"`            //ntp=on
+	NtpServerPrimary   string `url:"ntp_server_pri"` //ntp_server_pri=ntp0.example.com
+	NtpServerSecondary string `url:"ntp_server_2nd"` //ntp_server_2nd=ntp1.example.com
+	Year               int    `url:"year"`           //year=2018
+	Month              int    `url:"month"`          //month=6
+	Day                int    `url:"day"`            //day=1
+	Hour               int    `url:"hour"`           //hour=05
+	Minute             int    `url:"min"`            //min=49
+	Second             int    `url:"sec"`            //sec=42
+	TimeStamp          string `url:"time_stamp"`     //time_stamp=Fri%20Jun%2001%202018%2009%3A58%3A19%20GMT%2B0200%20(CEST)
+}
+
+// /cgi/config_user.cgi
+type ConfigUser struct {
+	Username     string `url:"username"`
+	UserId       int    `url:"original_username"` //username integer
+	Password     string `url:"password,omitempty"`
+	NewPrivilege int    `url:"new_privilege,omitempty"` //4 == administrator, 3 == operator
+}
+
+type xmlConfigReq struct {
+	Query string `url:"CONFIG_INFO.XML"`
 }

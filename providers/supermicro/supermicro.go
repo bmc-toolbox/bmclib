@@ -39,11 +39,17 @@ type CPU struct {
 
 // ConfigInfo holds the bmc configuration
 type ConfigInfo struct {
-	Hostname *Hostname `xml:" HOSTNAME,omitempty"`
+	Hostname     *Hostname       `xml:" HOSTNAME,omitempty"`
+	UserAccounts []*UserAccounts `xml:" USER,omitempty"`
 }
 
 // Hostname is the bmc hostname
 type Hostname struct {
+	Name string `xml:" NAME,attr"`
+}
+
+// UserAccounts contains the user account information
+type UserAccounts struct {
 	Name string `xml:" NAME,attr"`
 }
 
