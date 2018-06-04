@@ -153,6 +153,8 @@ func setup() (bmc *Ilo, err error) {
 	for url := range Answers {
 		url := url
 		mux.HandleFunc(url, func(w http.ResponseWriter, r *http.Request) {
+			cookie := http.Cookie{Name: "sessionKey", Value: "sessionKey_test"}
+			http.SetCookie(w, &cookie)
 			w.Write(Answers[url])
 		})
 	}
