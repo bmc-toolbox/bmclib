@@ -215,7 +215,7 @@ func (c *C7000) applysetLdapInfo4(cfg *cfgresources.Ldap) (err error) {
 
 	// A hack to declare self closing xml tags, until https://github.com/golang/go/issues/21399 is fixed.
 	output = []byte(strings.Replace(string(output), "<hpoa:searchContext></hpoa:searchContext>", "<hpoa:searchContext/>", -1))
-	statusCode, _, err := c.postXML(output)
+	statusCode, _, err := c.postXML(output, false)
 	if statusCode != 200 || err != nil {
 		log.WithFields(log.Fields{
 			"step":       "applysetLdapInfo4",
@@ -253,7 +253,7 @@ func (c *C7000) applyEnableLdapAuth(enable bool) (err error) {
 		return err
 	}
 
-	statusCode, _, err := c.postXML(output)
+	statusCode, _, err := c.postXML(output, false)
 	if statusCode != 200 || err != nil {
 		log.WithFields(log.Fields{
 			"step":       "applyEnableLdapAuth",
@@ -374,7 +374,7 @@ func (c *C7000) applyAddLdapGroup(group string) (err error) {
 		return err
 	}
 
-	statusCode, _, err := c.postXML(output)
+	statusCode, _, err := c.postXML(output, false)
 	if statusCode == 200 || statusCode == 500 { // 500 indicates the group exists.
 		log.WithFields(log.Fields{
 			"step":       "applyAddLdapGroup",
@@ -431,7 +431,7 @@ func (c *C7000) applyLdapGroupBayAcl(role string, group string) (err error) {
 		}).Fatal("Unable to marshal ldap payload.")
 	}
 
-	statusCode, _, err := c.postXML(output)
+	statusCode, _, err := c.postXML(output, false)
 	if statusCode != 200 || err != nil {
 		log.WithFields(log.Fields{
 			"step":       "applyLdapGroupBayAcl",
@@ -527,7 +527,7 @@ func (c *C7000) applyAddLdapGroupBayAccess(group string) (err error) {
 		}).Fatal("Unable to marshal ldap payload.")
 	}
 
-	statusCode, _, err := c.postXML(output)
+	statusCode, _, err := c.postXML(output, false)
 	if statusCode != 200 || err != nil {
 		log.WithFields(log.Fields{
 			"step":       "applyAddLdapGroupBayAccess",
@@ -593,7 +593,7 @@ func (c *C7000) applyUserParams(cfg *cfgresources.User) (err error) {
 		return err
 	}
 
-	statusCode, _, err := c.postXML(output)
+	statusCode, _, err := c.postXML(output, false)
 	if err != nil {
 		return err
 	}
@@ -643,7 +643,7 @@ func (c *C7000) setUserPassword(user string, password string) (err error) {
 	}
 
 	//fmt.Printf("-->> %d\n", statusCode)
-	statusCode, _, err := c.postXML(output)
+	statusCode, _, err := c.postXML(output, false)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"step":        "setUserPassword",
@@ -723,7 +723,7 @@ func (c *C7000) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 	}
 
 	//fmt.Printf("%s\n", output)
-	statusCode, _, err := c.postXML(output)
+	statusCode, _, err := c.postXML(output, false)
 	if err != nil || statusCode != 200 {
 		log.WithFields(log.Fields{
 			"step":       "applyNtpParams",
@@ -774,7 +774,7 @@ func (c *C7000) applyNtpTimezoneParam(timezone string) (err error) {
 	}
 
 	//fmt.Printf("%s\n", output)
-	statusCode, _, err := c.postXML(output)
+	statusCode, _, err := c.postXML(output, false)
 	if err != nil || statusCode != 200 {
 		log.WithFields(log.Fields{
 			"step":       "applyNtpTimezoneParam",
@@ -861,7 +861,7 @@ func (c *C7000) applySyslogServer(server string) {
 		return
 	}
 
-	statusCode, _, err := c.postXML(output)
+	statusCode, _, err := c.postXML(output, false)
 	if err != nil || statusCode != 200 {
 		log.WithFields(log.Fields{
 			"step":       "applySyslogServer",
@@ -900,7 +900,7 @@ func (c *C7000) applySyslogPort(port int) {
 		return
 	}
 
-	statusCode, _, err := c.postXML(output)
+	statusCode, _, err := c.postXML(output, false)
 	if err != nil || statusCode != 200 {
 		log.WithFields(log.Fields{
 			"step":       "applySyslogPort",
@@ -940,7 +940,7 @@ func (c *C7000) applySyslogEnabled(enabled bool) {
 		return
 	}
 
-	statusCode, _, err := c.postXML(output)
+	statusCode, _, err := c.postXML(output, false)
 	if err != nil || statusCode != 200 {
 		log.WithFields(log.Fields{
 			"step":       "SetRemoteSyslogEnabled",

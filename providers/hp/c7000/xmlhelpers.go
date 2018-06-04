@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 )
 
@@ -36,14 +37,8 @@ func wrapXML(element interface{}, sessionKey string) (doc Envelope) {
 	return doc
 }
 
-func (c *C7000) postXML(data []byte) (statusCode int, body []byte, err error) {
+func (c *C7000) postXML(data []byte, debug bool) (statusCode int, body []byte, err error) {
 
-	//THIS BIT IS SUPER IMPORTANT - dont use the hostname for HP OAs!
-	//Joel spent 3-4 hours debugging why, requests would fail intermittently becaues it was connecting
-	//to the standby ! :<
-
-	//ip := "10.193.251.22"
-	//fmt.Println("IP:", c.ip)
 	u, err := url.Parse(fmt.Sprintf("https://%s/hpoa", c.ip))
 	if err != nil {
 		return 0, []byte{}, err
@@ -55,17 +50,25 @@ func (c *C7000) postXML(data []byte) (statusCode int, body []byte, err error) {
 	}
 	//	req.Header.Add("Content-Type", "application/soap+xml; charset=utf-8")
 	req.Header.Add("Content-Type", "text/plain;charset=UTF-8")
+	if debug {
+		fmt.Println(fmt.Sprintf("https://%s/hpoa", c.ip))
+		dump, err := httputil.DumpRequestOut(req, true)
+		if err == nil {
+			fmt.Printf("%s\n\n", dump)
+		}
+	}
 
-	//fmt.Printf("---\n%s\n\n---\n", bytes.NewReader(data))
-	//XXX to debug
-	//fmt.Printf("--> %s\n", bytes.NewReader(data))
-	//return 0, []byte{}, err
-	//return err
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return 0, []byte{}, err
 	}
 	defer resp.Body.Close()
+	if debug {
+		dump, err := httputil.DumpResponse(resp, true)
+		if err == nil {
+			fmt.Printf("%s\n\n", dump)
+		}
+	}
 
 	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {

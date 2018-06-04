@@ -84,7 +84,7 @@ func (c *C7000) Login() (err error) {
 		return err
 	}
 
-	statusCode, responseBody, err := c.postXML(output)
+	statusCode, responseBody, err := c.postXML(output, false)
 
 	if err != nil || statusCode != 200 {
 		return errors.ErrLoginFailed
