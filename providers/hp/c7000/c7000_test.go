@@ -6,14 +6,24 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/spf13/viper"
 	"github.com/bmc-toolbox/bmclib/devices"
+	"github.com/spf13/viper"
 )
 
 var (
 	mux     *http.ServeMux
 	server  *httptest.Server
 	answers = map[string][]byte{
+		"/hpoa": []byte(`<?xml version="1.0" encoding="UTF-8"?>
+			<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://www.w3.org/2003/05/soap-envelope" xmlns:SOAP-ENC="http://www.w3.org/2003/05/soap-encoding" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:hpoa="hpoa.xsd">
+				<SOAP-ENV:Body>
+					<hpoa:userLogInResponse>
+						<hpoa:HpOaSessionKeyToken>
+							<hpoa:oaSessionKey>a8223b7caad9ea0e</hpoa:oaSessionKey>
+						</hpoa:HpOaSessionKeyToken>
+					</hpoa:userLogInResponse>
+				</SOAP-ENV:Body>
+			</SOAP-ENV:Envelope>`),
 		"/xmldata": []byte(`
 			<RIMP>
 				<MP>
@@ -2410,6 +2420,11 @@ func setup() (r *C7000, err error) {
 	}
 
 	r, err = New(ip, username, password)
+	if err != nil {
+		return r, err
+	}
+
+	err = r.Login()
 	if err != nil {
 		return r, err
 	}
