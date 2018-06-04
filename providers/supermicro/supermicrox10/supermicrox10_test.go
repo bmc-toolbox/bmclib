@@ -469,7 +469,7 @@ func TestIsBlade(t *testing.T) {
 	tearDown()
 }
 
-func TestPoweState(t *testing.T) {
+func TestPowerState(t *testing.T) {
 	expectedAnswer := "on"
 
 	bmc, err := setup()
@@ -489,7 +489,7 @@ func TestPoweState(t *testing.T) {
 	tearDown()
 }
 
-func TestIDracInterface(t *testing.T) {
+func TestIBmcInterface(t *testing.T) {
 	bmc, err := setup()
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
