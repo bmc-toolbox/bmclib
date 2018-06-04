@@ -60,7 +60,7 @@ func (d *Dora) setLocation(doraInventoryAssets []asset.Asset) {
 	component := "inventory"
 	log := d.Log
 
-	apiUrl := viper.GetString("inventory.dora.apiUrl")
+	apiUrl := viper.GetString("inventory.configure.dora.apiUrl")
 	queryUrl := fmt.Sprintf("%s/v1/scanned_ports?filter[port]=22&filter[ip]=", apiUrl)
 
 	//collect IpAddresses used to look up the location
@@ -109,7 +109,7 @@ func (d *Dora) AssetIterBySerial(serial string, assetType string) {
 	component := "inventory"
 	log := d.Log
 
-	apiUrl := viper.GetString("inventory.dora.apiUrl")
+	apiUrl := viper.GetString("inventory.configure.dora.apiUrl")
 
 	var path string
 	assets := make([]asset.Asset, 0)
@@ -117,6 +117,8 @@ func (d *Dora) AssetIterBySerial(serial string, assetType string) {
 
 	if assetType == "blade" {
 		path = "blades"
+	} else if assetType == "discrete" {
+		path = "discretes"
 	} else {
 		path = assetType
 	}
@@ -190,12 +192,11 @@ func (d *Dora) AssetIter() {
 	//Iter writes the assets array to the channel
 	// split out dora code into dora.go
 
-	//assetTypes := []string{"blade", "chassis", "discrete"}
-	assetTypes := []string{"chassis"}
+	assetTypes := []string{"blade", "chassis", "discrete"}
 	component := "inventory"
 	log := d.Log
 
-	apiUrl := viper.GetString("inventory.dora.apiUrl")
+	apiUrl := viper.GetString("inventory.configure.dora.apiUrl")
 
 	for _, assetType := range assetTypes {
 		var path string
