@@ -93,12 +93,20 @@ func (b *Butler) butler(id int) {
 
 		for _, asset := range msg.Assets {
 
+			//if asset has no IPAddress, we can't do anything about it
+			if asset.IpAddress == "" {
+				log.WithFields(logrus.Fields{
+					"Asset": asset,
+				}).Warn("Ignored asset since no IpAddress was set.")
+				continue
+			}
+
 			//if asset has a location defined, we may want to filter it
 			if asset.Location != "" {
 				if !myLocation(asset.Location) && !b.IgnoreLocation {
 					log.WithFields(logrus.Fields{
 						"Asset": asset,
-					}).Debug("Skipped asset based on location.")
+					}).Info("Ignored asset since location did not match.")
 					continue
 				}
 			}
@@ -111,9 +119,15 @@ func (b *Butler) butler(id int) {
 				"Vendor":    asset.Vendor,
 				"Serial":    asset.Serial,
 				"Location":  asset.Location,
-			}).Info("Applying config.")
+			}).Info("Configuring asset..")
+
+			//this asset needs to be setup
+			if asset.Setup == true {
+				b.setupAsset(id, msg.Config, &asset)
+			}
 
 			b.applyConfig(id, msg.Config, &asset)
+
 		}
 	}
 }
@@ -156,6 +170,12 @@ func (b *Butler) connectAsset(asset *asset.Asset, useDefaultLogin bool) (bmcConn
 
 	return bmcConnection, err
 
+}
+
+//runs one time setup actions.
+// TODO: read in resource config for needs setup from cfg dif
+func (b *Butler) setupAsset(id int, config *cfgresources.ResourcesConfig, asset *asset.Asset) {
+	fmt.Printf("--> Asset to setup : %+v", asset)
 }
 
 // applyConfig setups up the bmc connection,

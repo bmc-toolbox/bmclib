@@ -29,7 +29,7 @@ type CsvAsset struct {
 
 func readCsv() []*CsvAsset {
 
-	csvFile_ := viper.GetString("inventory.csv.file")
+	csvFile_ := viper.GetString("inventory.configure.csv.file")
 
 	var csvAssets []*CsvAsset
 	csvFile, err := os.Open(csvFile_)

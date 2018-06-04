@@ -21,4 +21,6 @@ type Asset struct {
 	Model     string
 	Type      string //blade or chassis
 	Location  string
+	Setup     bool //If setup is set, butlers will try to run setup config,
+	//by default they just configure.
 }
