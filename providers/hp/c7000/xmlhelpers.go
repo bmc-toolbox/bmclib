@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // wraps the XML to be sent in the SOAP envelope
@@ -50,7 +52,7 @@ func (c *C7000) postXML(data []byte, debug bool) (statusCode int, body []byte, e
 	}
 	//	req.Header.Add("Content-Type", "application/soap+xml; charset=utf-8")
 	req.Header.Add("Content-Type", "text/plain;charset=UTF-8")
-	if debug {
+	if log.GetLevel() == log.DebugLevel {
 		fmt.Println(fmt.Sprintf("https://%s/hpoa", c.ip))
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
@@ -63,7 +65,8 @@ func (c *C7000) postXML(data []byte, debug bool) (statusCode int, body []byte, e
 		return 0, []byte{}, err
 	}
 	defer resp.Body.Close()
-	if debug {
+
+	if log.GetLevel() == log.DebugLevel {
 		dump, err := httputil.DumpResponse(resp, true)
 		if err == nil {
 			fmt.Printf("%s\n\n", dump)
