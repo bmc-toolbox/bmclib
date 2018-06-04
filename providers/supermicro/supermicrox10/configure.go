@@ -114,11 +114,8 @@ func (s *SupermicroX10) ApplyCfg(config *cfgresources.ResourcesConfig) (err erro
 						"Error":    err,
 					}).Warn("Unable to set NTP config.")
 				}
-			case "LdapGroup":
-				continue
 			case "Ldap":
-				ldapCfg := cfg.Field(r).Interface()
-				err := s.applyLdapParams(ldapCfg.(*cfgresources.Ldap))
+				err := s.applyLdapParams((config.Ldap), config.LdapGroup)
 				if err != nil {
 					log.WithFields(log.Fields{
 						"step":     "applyLdapParams",
@@ -128,6 +125,11 @@ func (s *SupermicroX10) ApplyCfg(config *cfgresources.ResourcesConfig) (err erro
 						"Error":    err,
 					}).Warn("applyLdapParams returned error.")
 				}
+			case "LdapGroup":
+				//ldap config is set as part of LdapGroup
+				//since supermicro does not have separate ldap group config,
+				//for generic ldap configuration.
+				continue
 			case "Ssl":
 				fmt.Printf("%s: %v : %s\n", resourceName, cfg.Field(r), cfg.Field(r).Kind())
 			default:
@@ -339,7 +341,128 @@ func (s *SupermicroX10) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 	return err
 }
 
-func (s *SupermicroX10) applyLdapParams(cfg *cfgresources.Ldap) (err error) {
+// Applies Ldap parameters
+// Supermicro does not have any separate configuration for Ldap groups - for generic ldap
+func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*cfgresources.LdapGroup) (err error) {
+
+	var enable string
+
+	if cfgLdap.Server == "" {
+		msg := "Ldap resource parameter Server required but not declared."
+		log.WithFields(log.Fields{
+			"step":  funcName(),
+			"Model": s.ModelId(),
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	//first some preliminary checks
+	if cfgLdap.Port == 0 {
+		msg := "Ldap resource parameter Port required but not declared"
+		log.WithFields(log.Fields{
+			"step":  funcName(),
+			"Model": s.ModelId(),
+		}).Warn(msg)
+		errors.New(msg)
+	}
+
+	if cfgLdap.Enable != true {
+		enable = "off"
+		log.WithFields(log.Fields{
+			"step":  funcName(),
+			"Model": s.ModelId(),
+		}).Debug("Ldap resource declared with enable: false.")
+		return
+	} else {
+		enable = "on"
+	}
+
+	serverIp, err := net.LookupIP(cfgLdap.Server)
+	if err != nil || serverIp == nil {
+		msg := "Unable to lookup the IP for ldap server hostname."
+		log.WithFields(log.Fields{
+			"step":  funcName(),
+			"Model": s.ModelId(),
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	//for each ldap group setup config
+	//since supermicro can work with just one Searchbase, we go with the 'user' role group
+	for _, group := range cfgGroup {
+
+		if group.Role == "" {
+			msg := "Ldap resource parameter Role required but not declared."
+			log.WithFields(log.Fields{
+				"Role": group.Role,
+				"step": funcName(),
+			}).Warn(msg)
+			continue
+		}
+
+		if strings.Contains(group.Role, "admin") {
+			continue
+		}
+
+		if group.Group == "" {
+			msg := "Ldap resource parameter Group required but not declared."
+			log.WithFields(log.Fields{
+				"Role": group.Role,
+				"step": funcName(),
+			}).Warn(msg)
+			return errors.New(msg)
+		}
+
+		if group.GroupBaseDn == "" {
+			msg := "Ldap resource parameter GroupBaseDn required but not declared."
+			log.WithFields(log.Fields{
+				"Role": group.Role,
+				"step": funcName(),
+			}).Warn(msg)
+			return errors.New(msg)
+		}
+
+		if !s.isRoleValid(group.Role) {
+			msg := "Ldap resource Role must be a valid role: admin OR user."
+			log.WithFields(log.Fields{
+				"Role": group.Role,
+				"step": "applyLdapParams",
+			}).Warn(msg)
+			return errors.New(msg)
+		}
+
+		configLdap := ConfigLdap{
+			Op:           "config_ldap",
+			Enable:       enable,
+			EnableSsl:    true,
+			LdapIp:       fmt.Sprintf("%s", serverIp[0]),
+			BaseDn:       group.Group,
+			LdapPort:     cfgLdap.Port,
+			BindDn:       "undefined", //default value
+			BindPassword: "********",  //default value
+		}
+
+		endpoint := fmt.Sprintf("op.cgi")
+		form, _ := query.Values(configLdap)
+		statusCode, err := s.post(endpoint, &form, false)
+		if err != nil || statusCode != 200 {
+			msg := "POST request to set Ldap config returned error."
+			log.WithFields(log.Fields{
+				"IP":         s.ip,
+				"Model":      s.ModelId(),
+				"Endpoint":   endpoint,
+				"StatusCode": statusCode,
+				"Step":       funcName(),
+				"Error":      err,
+			}).Warn(msg)
+			return errors.New(msg)
+		}
+	}
+
+	log.WithFields(log.Fields{
+		"IP":    s.ip,
+		"Model": s.ModelId(),
+	}).Info("Ldap config parameters applied.")
 	return err
 }
 
@@ -432,9 +555,7 @@ func (s *SupermicroX10) post(endpoint string, form *url.Values, debug bool) (sta
 			req.AddCookie(cookie)
 		}
 	}
-	//XXX to debug
-	//fmt.Printf("--> %+v\n", form.Encode())
-	//return err
+
 	if debug {
 		fmt.Println(fmt.Sprintf("https://%s/cgi/%s", s.ip, endpoint))
 		dump, err := httputil.DumpRequestOut(req, true)

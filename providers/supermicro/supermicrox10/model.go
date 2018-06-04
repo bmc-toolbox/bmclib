@@ -37,6 +37,18 @@ type ConfigUser struct {
 	NewPrivilege int    `url:"new_privilege,omitempty"` //4 == administrator, 3 == operator
 }
 
+// /cgi/op.cgi
+type ConfigLdap struct {
+	Op           string `url:"op"`        //op=config_ldap
+	Enable       string `url:"en_ldap"`   //en_ldap=on
+	EnableSsl    bool   `url:"enSSL,int"` //enSSL=1
+	LdapIp       string `url:"ldapip"`    //ldapip=10.252.13.5
+	BaseDn       string `url:"basedn"`    //basedn=cn=Supermicro,cn=bmcUsers
+	LdapPort     int    `url:"ldapport"`  //ldapport=636
+	BindDn       string `url:"bind_dn"`   //bind_dn=undefined <- default value
+	BindPassword string `url:"bind_pwd"`  //bind_pwd=******** <- default value
+}
+
 type xmlConfigReq struct {
 	Query string `url:"CONFIG_INFO.XML"`
 }
