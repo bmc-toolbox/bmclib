@@ -30,6 +30,12 @@ var (
 	inventorySource  string
 	classifierSource string
 	version          string
+	assetType        string
+	serial           string
+	isChassis        bool
+	isBlade          bool
+	isDiscrete       bool
+	all              bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -41,6 +47,7 @@ var rootCmd = &cobra.Command{
 	//so cli flags are evaluated
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		setupLogger()
+		validateArgs()
 	},
 }
 
@@ -78,9 +85,53 @@ func setupLogger() {
 	}
 }
 
+func validateArgs() {
+	if all == true && serial != "" {
+		fmt.Println("--all and --serial are mutually exclusive args.")
+		os.Exit(1)
+	}
+
+	if serial != "" && (isChassis == false && isBlade == false && isDiscrete == false) {
+		fmt.Println("--serial requires one of --chassis | --blade | -discrete")
+		os.Exit(1)
+	}
+
+	if isChassis == true && isBlade == true {
+		fmt.Println("Either --chassis or --blade may be specified.")
+		os.Exit(1)
+	}
+
+	if isChassis == true && isDiscrete == true {
+		fmt.Println("Either --chassis or --discrete may be specified.")
+		os.Exit(1)
+	}
+
+	if isDiscrete == true && isBlade == true {
+		fmt.Println("Either --discrete or --blade may be specified.")
+		os.Exit(1)
+	}
+
+	if isChassis == true {
+		assetType = "chassis"
+	} else if isBlade == true {
+		assetType = "blade"
+	} else if isDiscrete == true {
+		assetType = "discrete"
+	} else {
+		fmt.Println("Asset type not known, see --help.")
+		os.Exit(1)
+	}
+}
+
 func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose logging")
+	rootCmd.PersistentFlags().StringVarP(&serial, "serial", "", "", "Serial(s) of the asset to setup config (separated by commas - no spaces).")
+	rootCmd.PersistentFlags().BoolVarP(&isChassis, "chassis", "", false, "Use in conjuction with --serial, declare asset to be a chassis")
+	rootCmd.PersistentFlags().BoolVarP(&isBlade, "blade", "", false, "Use in conjuction with --serial, declare asset to be a blade")
+	rootCmd.PersistentFlags().BoolVarP(&isDiscrete, "discrete", "", false, "Use in conjuction with --serial, declare asset to be a discrete")
+	rootCmd.PersistentFlags().BoolVarP(&all, "all", "", false, "Runs configuration/setup on all assets")
+
 }
 
 // initConfig reads in config file and ENV variables if set.
