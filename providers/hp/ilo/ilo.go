@@ -16,6 +16,9 @@ import (
 	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/httpclient"
 	"github.com/bmc-toolbox/bmclib/providers/hp"
+
+	// this make possible to setup logging and properties at any stage
+	_ "github.com/bmc-toolbox/bmclib/logging"
 	log "github.com/sirupsen/logrus"
 )
 
