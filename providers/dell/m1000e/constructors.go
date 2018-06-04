@@ -3,7 +3,7 @@ package m1000e
 import (
 	"errors"
 	"fmt"
-	"github.com/ncode/bmclib/cfgresources"
+	"github.com/bmc-toolbox/bmclib/cfgresources"
 	log "github.com/sirupsen/logrus"
 )
 

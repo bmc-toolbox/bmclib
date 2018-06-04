@@ -7,17 +7,17 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/ncode/bmclib/errors"
-	"github.com/ncode/bmclib/providers/dell/idrac8"
-	"github.com/ncode/bmclib/providers/dell/idrac9"
-	"github.com/ncode/bmclib/providers/dell/m1000e"
-	"github.com/ncode/bmclib/providers/hp"
-	"github.com/ncode/bmclib/providers/hp/c7000"
+	"github.com/bmc-toolbox/bmclib/errors"
+	"github.com/bmc-toolbox/bmclib/providers/dell/idrac8"
+	"github.com/bmc-toolbox/bmclib/providers/dell/idrac9"
+	"github.com/bmc-toolbox/bmclib/providers/dell/m1000e"
+	"github.com/bmc-toolbox/bmclib/providers/hp"
+	"github.com/bmc-toolbox/bmclib/providers/hp/c7000"
 
-	"github.com/ncode/bmclib/devices"
-	"github.com/ncode/bmclib/httpclient"
-	"github.com/ncode/bmclib/providers/hp/ilo"
-	"github.com/ncode/bmclib/providers/supermicro/supermicrox10"
+	"github.com/bmc-toolbox/bmclib/devices"
+	"github.com/bmc-toolbox/bmclib/httpclient"
+	"github.com/bmc-toolbox/bmclib/providers/hp/ilo"
+	"github.com/bmc-toolbox/bmclib/providers/supermicro/supermicrox10"
 	log "github.com/sirupsen/logrus"
 )
 

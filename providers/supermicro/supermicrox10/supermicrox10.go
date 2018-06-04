@@ -10,10 +10,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ncode/bmclib/devices"
-	"github.com/ncode/bmclib/errors"
-	"github.com/ncode/bmclib/httpclient"
-	"github.com/ncode/bmclib/providers/supermicro"
+	"github.com/bmc-toolbox/bmclib/devices"
+	"github.com/bmc-toolbox/bmclib/errors"
+	"github.com/bmc-toolbox/bmclib/httpclient"
+	"github.com/bmc-toolbox/bmclib/providers/supermicro"
 	log "github.com/sirupsen/logrus"
 )
 

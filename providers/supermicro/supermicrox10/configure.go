@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/go-querystring/query"
-	"github.com/ncode/bmclib/cfgresources"
+	"github.com/bmc-toolbox/bmclib/cfgresources"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net"

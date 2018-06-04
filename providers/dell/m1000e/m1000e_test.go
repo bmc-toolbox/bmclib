@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ncode/bmclib/devices"
+	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/spf13/viper"
 )
 

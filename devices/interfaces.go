@@ -1,7 +1,7 @@
 package devices
 
 import (
-	"github.com/ncode/bmclib/cfgresources"
+	"github.com/bmc-toolbox/bmclib/cfgresources"
 )
 
 // Bmc represents the requirement of items to be collected a server

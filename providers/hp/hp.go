@@ -1,6 +1,6 @@
 package hp
 
-import "github.com/ncode/bmclib/devices"
+import "github.com/bmc-toolbox/bmclib/devices"
 
 const (
 	// VendorID represents the id of the vendor across all packages

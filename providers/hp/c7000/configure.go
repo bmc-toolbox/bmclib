@@ -3,7 +3,7 @@ package c7000
 import (
 	"encoding/xml"
 	"fmt"
-	"github.com/ncode/bmclib/cfgresources"
+	"github.com/bmc-toolbox/bmclib/cfgresources"
 	log "github.com/sirupsen/logrus"
 	"reflect"
 	"strings"

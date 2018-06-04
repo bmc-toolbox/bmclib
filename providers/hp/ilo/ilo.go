@@ -12,10 +12,10 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/ncode/bmclib/devices"
-	"github.com/ncode/bmclib/errors"
-	"github.com/ncode/bmclib/httpclient"
-	"github.com/ncode/bmclib/providers/hp"
+	"github.com/bmc-toolbox/bmclib/devices"
+	"github.com/bmc-toolbox/bmclib/errors"
+	"github.com/bmc-toolbox/bmclib/httpclient"
+	"github.com/bmc-toolbox/bmclib/providers/hp"
 	log "github.com/sirupsen/logrus"
 )
 

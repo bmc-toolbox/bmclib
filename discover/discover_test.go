@@ -7,10 +7,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ncode/bmclib/providers/dell/idrac8"
-	"github.com/ncode/bmclib/providers/dell/idrac9"
-	"github.com/ncode/bmclib/providers/hp/ilo"
-	"github.com/ncode/bmclib/providers/supermicro/supermicrox10"
+	"github.com/bmc-toolbox/bmclib/providers/dell/idrac8"
+	"github.com/bmc-toolbox/bmclib/providers/dell/idrac9"
+	"github.com/bmc-toolbox/bmclib/providers/hp/ilo"
+	"github.com/bmc-toolbox/bmclib/providers/supermicro/supermicrox10"
 
 	"github.com/spf13/viper"
 )

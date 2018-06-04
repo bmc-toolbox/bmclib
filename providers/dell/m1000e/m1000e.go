@@ -11,10 +11,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ncode/bmclib/devices"
-	"github.com/ncode/bmclib/errors"
-	"github.com/ncode/bmclib/httpclient"
-	"github.com/ncode/bmclib/providers/dell"
+	"github.com/bmc-toolbox/bmclib/devices"
+	"github.com/bmc-toolbox/bmclib/errors"
+	"github.com/bmc-toolbox/bmclib/httpclient"
+	"github.com/bmc-toolbox/bmclib/providers/dell"
 	log "github.com/sirupsen/logrus"
 )
 

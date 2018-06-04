@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/google/go-querystring/query"
-	"github.com/ncode/bmclib/cfgresources"
+	"github.com/bmc-toolbox/bmclib/cfgresources"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
@@ -293,7 +293,7 @@ func (m *M1000e) applySslCfg(ssl *cfgresources.Ssl) (err error) {
 }
 
 // setup a multipart form with the expected order of form parameters
-// for the payload format see  https://github.com/ncode/bmclib/issues/3
+// for the payload format see  https://github.com/bmc-toolbox/bmclib/issues/3
 func (m *M1000e) NewSslMultipartUpload(endpoint string, params map[string]string, SslCert string, SslKey string) (err error) {
 
 	file, err := os.Open(SslKey)
