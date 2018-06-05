@@ -49,6 +49,25 @@ type ConfigLdap struct {
 	BindPassword string `url:"bind_pwd"`  //bind_pwd=******** <- default value
 }
 
+type ConfigPort struct {
+	Op                string `url:"op"`                //op=config_port
+	HttpPort          int    `url:"HTTP_PORT"`         //HTTP_PORT=80
+	HttpsPort         int    `url:"HTTPS_PORT"`        //HTTPS_PORT=443
+	IkvmPort          int    `url:"IKVM_PORT"`         //IKVM_PORT=5900
+	VmPort            int    `url:"VM_PORT"`           //VM_PORT=623  <- virtual media port
+	SshPort           int    `url:"SSH_PORT"`          //SSH_PORT=22
+	WsmanPort         int    `url:"WSMAN_PORT"`        //WSMAN_PORT=5985
+	SnmpPort          int    `url:"SNMP_PORT"`         //SNMP_PORT=161
+	httpEnable        bool   `url:"HTTP_SERVICE,int"`  //HTTP_SERVICE=1
+	httpsEnable       bool   `url:"HTTPS_SERVICE,int"` //HTTPS_SERVICE=1
+	IkvmEnable        bool   `url:"IKVM_SERVICE,int"`  //IKVM_SERVICE=1
+	VmEnable          bool   `url:"VM_SERVICE,int"`    //VM_SERVICE=1
+	SshEnable         bool   `url:"SSH_SERVICE,int"`   //SSH_SERVICE=1
+	SnmpEnable        bool   `url:"SNMP_SERVICE,int"`  //SNMP_SERVICE=1
+	WsmanEnable       bool   `url:"WSMAN_SERVICE,int"` //WSMAN_SERVICE=0
+	SslRedirectEnable bool   `url:"SSL_REDIRECT,int"`  //SSL_REDIRECT=1
+}
+
 type xmlConfigReq struct {
 	Query string `url:"CONFIG_INFO.XML"`
 }

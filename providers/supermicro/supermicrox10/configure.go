@@ -97,11 +97,23 @@ func (s *SupermicroX10) ApplyCfg(config *cfgresources.ResourcesConfig) (err erro
 						"resource": cfg.Field(r).Kind(),
 						"IP":       s.ip,
 						"Model":    s.BmcType(),
+						"Serial":   s.serial,
 						"Error":    err,
 					}).Warn("Unable to set Syslog config.")
 				}
 			case "Network":
-				fmt.Printf("%s: %v : %s\n", resourceName, cfg.Field(r), cfg.Field(r).Kind())
+				networkCfg := cfg.Field(r).Interface().(*cfgresources.Network)
+				err := s.applyNetworkParams(networkCfg)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"step":     "ApplyCfg",
+						"resource": cfg.Field(r).Kind(),
+						"IP":       s.ip,
+						"Model":    s.BmcType(),
+						"Serial":   s.serial,
+						"Error":    err,
+					}).Warn("Unable to set Network config params.")
+				}
 			case "Ntp":
 				ntpCfg := cfg.Field(r).Interface().(*cfgresources.Ntp)
 				err := s.applyNtpParams(ntpCfg)
@@ -132,6 +144,18 @@ func (s *SupermicroX10) ApplyCfg(config *cfgresources.ResourcesConfig) (err erro
 				continue
 			case "Ssl":
 				fmt.Printf("%s: %v : %s\n", resourceName, cfg.Field(r), cfg.Field(r).Kind())
+			case "Supermicro":
+				err := s.applyVendorSpecificConfig(config.Supermicro)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"step":     "applyVendorSpecificConfig",
+						"resource": "Supermicro",
+						"IP":       s.ip,
+						"Model":    s.BmcType(),
+						"Serial":   s.serial,
+						"Error":    err,
+					}).Warn("applyVendorSpecificConfig returned error.")
+				}
 			default:
 				log.WithFields(log.Fields{
 					"step":     "ApplyCfg",
@@ -244,6 +268,62 @@ func (s *SupermicroX10) applyUserParams(users []*cfgresources.User) (err error) 
 		userId += 1
 	}
 
+	return err
+}
+
+func (s *SupermicroX10) applyNetworkParams(cfg *cfgresources.Network) (err error) {
+
+	sshPort := 22
+	ipmiPort := 623
+
+	if cfg.SshPort != 0 && cfg.SshPort != sshPort {
+		sshPort = cfg.SshPort
+	}
+	if cfg.IpmiPort != 0 && cfg.IpmiPort != ipmiPort {
+		ipmiPort = cfg.IpmiPort
+	}
+
+	configPort := ConfigPort{
+		Op:                "config_port",
+		HttpPort:          80,
+		HttpsPort:         443,
+		IkvmPort:          5900,
+		VmPort:            623,
+		SshPort:           sshPort,
+		WsmanPort:         5985,
+		SnmpPort:          161,
+		httpEnable:        true,
+		httpsEnable:       true,
+		IkvmEnable:        true,
+		VmEnable:          true,
+		SshEnable:         cfg.SshEnable,
+		SnmpEnable:        false,
+		WsmanEnable:       false,
+		SslRedirectEnable: true,
+	}
+
+	endpoint := fmt.Sprintf("op.cgi")
+	form, _ := query.Values(configPort)
+	statusCode, err := s.post(endpoint, &form)
+	if err != nil || statusCode != 200 {
+		msg := "POST request to set Port config returned error."
+		log.WithFields(log.Fields{
+			"IP":         s.ip,
+			"Model":      s.BmcType(),
+			"Serial":     s.serial,
+			"Endpoint":   endpoint,
+			"StatusCode": statusCode,
+			"Step":       funcName(),
+			"Error":      err,
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	log.WithFields(log.Fields{
+		"IP":     s.ip,
+		"Model":  s.BmcType(),
+		"Serial": s.serial,
+	}).Info("Network config parameters applied.")
 	return err
 }
 
@@ -463,6 +543,11 @@ func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*
 		"IP":    s.ip,
 		"Model": s.BmcType(),
 	}).Info("Ldap config parameters applied.")
+	return err
+}
+
+//An example of a vendor specific configuration
+func (s *SupermicroX10) applyVendorSpecificConfig(cfg *cfgresources.Supermicro) (err error) {
 	return err
 }
 

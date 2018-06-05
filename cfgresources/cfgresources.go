@@ -1,13 +1,14 @@
 package cfgresources
 
 type ResourcesConfig struct {
-	Ldap      *Ldap        `yaml:"ldap"`
-	LdapGroup []*LdapGroup `yaml:"ldapGroup"`
-	Network   *Network     `yaml:"network"`
-	Ntp       *Ntp         `yaml:"ntp"`
-	Syslog    *Syslog      `yaml:"syslog"`
-	User      []*User      `yaml:"user"`
-	Ssl       *Ssl         `yaml:"ssl"`
+	Ldap       *Ldap        `yaml:"ldap"`
+	LdapGroup  []*LdapGroup `yaml:"ldapGroup"`
+	Network    *Network     `yaml:"network"`
+	Ntp        *Ntp         `yaml:"ntp"`
+	Syslog     *Syslog      `yaml:"syslog"`
+	User       []*User      `yaml:"user"`
+	Ssl        *Ssl         `yaml:"ssl"`
+	Supermicro *Supermicro  `yaml:"supermicro"` //supermicro specific config, example of issue #34
 }
 
 type User struct {
@@ -51,6 +52,11 @@ type Ssl struct {
 type Network struct {
 	Hostname    string `yaml:"hostname"`
 	DNSFromDHCP bool   `yaml:"dnsfromdhcp"`
+	SshEnable   bool   `yaml:"sshEnable"`
+	SshPort     int    `yaml:"sshPort"`
+	IpmiEnable  bool   `yaml:"ipmiEnable"`
+	DhcpEnable  bool   `yaml:"dhcpEnable"`
+	IpmiPort    int    `yaml:"ipmiPort"`
 }
 
 type Ntp struct {
