@@ -14,6 +14,9 @@ var (
 	mux                *http.ServeMux
 	server             *httptest.Server
 	dellChassisAnswers = map[string]map[string][]byte{
+		"/cgi-bin/webcgi/general": {
+			"default": []byte(`<input xmlns="" type="hidden" value="2a17b6d37baa526b75e06243d34763da" name="ST2" id="ST2" />`),
+		},
 		"/cgi-bin/webcgi/login": {
 			"default": []byte(``),
 		},
@@ -606,6 +609,22 @@ func TestChassisPsu(t *testing.T) {
 		if psu.Serial != expectedAnswer[pos].Serial || psu.CapacityKw != expectedAnswer[pos].CapacityKw || psu.PowerKw != expectedAnswer[pos].PowerKw || psu.Status != expectedAnswer[pos].Status {
 			t.Errorf("Expected answer %v: found %v", expectedAnswer[pos], psu)
 		}
+	}
+
+	tearDown()
+}
+
+func TestChassisBmcType(t *testing.T) {
+	expectedAnswer := "m1000e"
+
+	bmc, err := setup()
+	if err != nil {
+		t.Fatalf("Found errors during the test setup %v", err)
+	}
+
+	answer := bmc.BmcType()
+	if answer != expectedAnswer {
+		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
 
 	tearDown()
