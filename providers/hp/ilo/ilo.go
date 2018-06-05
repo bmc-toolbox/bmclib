@@ -23,17 +23,17 @@ import (
 )
 
 const (
-	// BMCModel defines the bmc model that is supported by this package
-	BMCModel = "iLO"
+	// BmcType defines the bmc model that is supported by this package
+	BmcType = "ilo"
 
 	// Ilo2 is the constant for Ilo2
-	Ilo2 = "iLO2"
+	Ilo2 = "ilo2"
 	// Ilo3 is the constant for iLO3
-	Ilo3 = "iLO3"
+	Ilo3 = "ilo3"
 	// Ilo4 is the constant for iLO4
-	Ilo4 = "iLO4"
+	Ilo4 = "ilo4"
 	// Ilo5 is the constant for iLO5
-	Ilo5 = "iLO5"
+	Ilo5 = "ilo5"
 )
 
 // Ilo holds the status and properties of a connection to an iLO device
@@ -113,7 +113,7 @@ func (i *Ilo) Login() (err error) {
 		log.WithFields(log.Fields{
 			"step":  "Login()",
 			"IP":    i.ip,
-			"Model": i.ModelId(),
+			"Model": i.BmcType(),
 		}).Warn("Expected sessionKey cookie value not found.")
 	}
 
@@ -242,24 +242,19 @@ func (i *Ilo) Model() (model string, err error) {
 	return i.rimpBlade.HSI.Spn, err
 }
 
-// ModelId returns the model id string - ilo4
-func (i *Ilo) ModelId() (model string) {
-	return "ilo"
-}
-
 // BmcType returns the type of bmc we are talking to
-func (i *Ilo) BmcType() (bmcType string, err error) {
+func (i *Ilo) BmcType() (bmcType string) {
 	switch i.rimpBlade.MP.Pn {
 	case "Integrated Lights-Out 2 (iLO 2)":
-		return Ilo2, err
+		return Ilo2
 	case "Integrated Lights-Out 3 (iLO 3)":
-		return Ilo3, err
+		return Ilo3
 	case "Integrated Lights-Out 4 (iLO 4)":
-		return Ilo4, err
+		return Ilo4
 	case "Integrated Lights-Out 5 (iLO 5)":
-		return Ilo5, err
+		return Ilo5
 	default:
-		return i.rimpBlade.MP.Pn, err
+		return i.rimpBlade.MP.Pn
 	}
 }
 
@@ -561,6 +556,7 @@ func (i *Ilo) Disks() (disks []*devices.Disk, err error) {
 				Status:    status,
 				Model:     strings.ToLower(physicalDrive.Model),
 				Size:      physicalDrive.Capacity,
+				Location:  physicalDrive.Location,
 				Type:      diskType,
 				FwVersion: strings.ToLower(physicalDrive.FwVersion),
 			}
@@ -616,7 +612,7 @@ func (i *Ilo) ServerSnapshot() (server interface{}, err error) {
 		blade := &devices.Blade{}
 		blade.Serial, _ = i.Serial()
 		blade.BmcAddress = i.ip
-		blade.BmcType, _ = i.BmcType()
+		blade.BmcType = i.BmcType()
 		blade.BmcVersion, _ = i.BmcVersion()
 		blade.Model, _ = i.Model()
 		blade.Nics, _ = i.Nics()
@@ -635,7 +631,7 @@ func (i *Ilo) ServerSnapshot() (server interface{}, err error) {
 		discrete := &devices.Discrete{}
 		discrete.Serial, _ = i.Serial()
 		discrete.BmcAddress = i.ip
-		discrete.BmcType, _ = i.BmcType()
+		discrete.BmcType = i.BmcType()
 		discrete.BmcVersion, _ = i.BmcVersion()
 		discrete.Model, _ = i.Model()
 		discrete.Nics, _ = i.Nics()

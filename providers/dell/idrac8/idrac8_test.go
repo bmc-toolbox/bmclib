@@ -13,7 +13,7 @@ import (
 var (
 	mux     *http.ServeMux
 	server  *httptest.Server
-	Answers = map[string][]byte{
+	answers = map[string][]byte{
 		"/sysmgmt/2012/server/inventory/hardware": []byte(`
 			<?xml version="1.0" ?>
 			<Inventory version="2.0">
@@ -5231,10 +5231,10 @@ func setup() (bmc *IDrac8, err error) {
 	username := "super"
 	password := "test"
 
-	for url := range Answers {
+	for url := range answers {
 		url := url
 		mux.HandleFunc(url, func(w http.ResponseWriter, r *http.Request) {
-			w.Write(Answers[url])
+			w.Write(answers[url])
 		})
 	}
 
@@ -5296,18 +5296,14 @@ func TestIDracModel(t *testing.T) {
 }
 
 func TestIDracBmcType(t *testing.T) {
-	expectedAnswer := "iDRAC8"
+	expectedAnswer := "idrac8"
 
 	bmc, err := setup()
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
 
-	answer, err := bmc.BmcType()
-	if err != nil {
-		t.Fatalf("Found errors calling bmc.BmcType %v", err)
-	}
-
+	answer := bmc.BmcType()
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
@@ -5619,6 +5615,7 @@ func TestDiskDisks(t *testing.T) {
 			Type:      "SSD",
 			Size:      "1490 GB",
 			Model:     "ssdsc2bb016t7r",
+			Location:  "Disk 0 in Backplane 1 of Integrated Storage Controller 1",
 			Status:    "OK",
 			FwVersion: "n201dl42",
 		},
@@ -5627,6 +5624,7 @@ func TestDiskDisks(t *testing.T) {
 			Type:      "SSD",
 			Size:      "1490 GB",
 			Model:     "ssdsc2bb016t7r",
+			Location:  "Disk 1 in Backplane 1 of Integrated Storage Controller 1",
 			Status:    "OK",
 			FwVersion: "n201dl42",
 		},
@@ -5647,7 +5645,13 @@ func TestDiskDisks(t *testing.T) {
 	}
 
 	for pos, disk := range disks {
-		if disk.Serial != expectedAnswer[pos].Serial || disk.Type != expectedAnswer[pos].Type || disk.Size != expectedAnswer[pos].Size || disk.Status != expectedAnswer[pos].Status || disk.Model != expectedAnswer[pos].Model || disk.FwVersion != expectedAnswer[pos].FwVersion {
+		if disk.Serial != expectedAnswer[pos].Serial ||
+			disk.Type != expectedAnswer[pos].Type ||
+			disk.Size != expectedAnswer[pos].Size ||
+			disk.Status != expectedAnswer[pos].Status ||
+			disk.Model != expectedAnswer[pos].Model ||
+			disk.FwVersion != expectedAnswer[pos].FwVersion ||
+			disk.Location != expectedAnswer[pos].Location {
 			t.Errorf("Expected answer %v: found %v", expectedAnswer[pos], disk)
 		}
 	}

@@ -3970,18 +3970,14 @@ func TestIDracModel(t *testing.T) {
 }
 
 func TestIDracBmcType(t *testing.T) {
-	expectedAnswer := "iDrac9"
+	expectedAnswer := "idrac9"
 
 	bmc, err := setup()
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
 
-	answer, err := bmc.BmcType()
-	if err != nil {
-		t.Fatalf("Found errors calling bmc.BmcType %v", err)
-	}
-
+	answer := bmc.BmcType()
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
@@ -4235,6 +4231,7 @@ func TestDiskDisks(t *testing.T) {
 			Type:      "SSD",
 			Size:      "3576 GB",
 			Model:     "mz7lm3t8hmlp0d3",
+			Location:  "Disk 0 in Backplane 1 of Integrated RAID Controller 1",
 			Status:    "OK",
 			FwVersion: "gc57",
 		},
@@ -4243,6 +4240,7 @@ func TestDiskDisks(t *testing.T) {
 			Type:      "SSD",
 			Size:      "3576 GB",
 			Model:     "mz7lm3t8hmlp0d3",
+			Location:  "Disk 1 in Backplane 1 of Integrated RAID Controller 1",
 			Status:    "OK",
 			FwVersion: "gc57",
 		},
@@ -4263,7 +4261,13 @@ func TestDiskDisks(t *testing.T) {
 	}
 
 	for pos, disk := range disks {
-		if disk.Serial != expectedAnswer[pos].Serial || disk.Type != expectedAnswer[pos].Type || disk.Size != expectedAnswer[pos].Size || disk.Status != expectedAnswer[pos].Status || disk.Model != expectedAnswer[pos].Model || disk.FwVersion != expectedAnswer[pos].FwVersion {
+		if disk.Serial != expectedAnswer[pos].Serial ||
+			disk.Type != expectedAnswer[pos].Type ||
+			disk.Size != expectedAnswer[pos].Size ||
+			disk.Status != expectedAnswer[pos].Status ||
+			disk.Model != expectedAnswer[pos].Model ||
+			disk.FwVersion != expectedAnswer[pos].FwVersion ||
+			disk.Location != expectedAnswer[pos].Location {
 			t.Errorf("Expected answer %v: found %v", expectedAnswer[pos], disk)
 		}
 	}

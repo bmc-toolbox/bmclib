@@ -217,18 +217,14 @@ func TestIloModel(t *testing.T) {
 }
 
 func TestIloBmcType(t *testing.T) {
-	expectedAnswer := "iLO4"
+	expectedAnswer := "ilo4"
 
 	bmc, err := setup()
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
 
-	answer, err := bmc.BmcType()
-	if err != nil {
-		t.Fatalf("Found errors calling bmc.BmcType %v", err)
-	}
-
+	answer := bmc.BmcType()
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
@@ -541,6 +537,7 @@ func TestIloDisks(t *testing.T) {
 			Type:      "HDD",
 			Size:      "1200 GB",
 			Model:     "eg1200jemda",
+			Location:  "Port 1I Box 1 Bay 1",
 			Status:    "OK",
 			FwVersion: "hpd6",
 		},
@@ -549,6 +546,7 @@ func TestIloDisks(t *testing.T) {
 			Type:      "HDD",
 			Size:      "1200 GB",
 			Model:     "eg1200jemda",
+			Location:  "Port 1I Box 1 Bay 2",
 			Status:    "OK",
 			FwVersion: "hpd6",
 		},
@@ -569,7 +567,13 @@ func TestIloDisks(t *testing.T) {
 	}
 
 	for pos, disk := range disks {
-		if disk.Serial != expectedAnswer[pos].Serial || disk.Type != expectedAnswer[pos].Type || disk.Size != expectedAnswer[pos].Size || disk.Status != expectedAnswer[pos].Status || disk.Model != expectedAnswer[pos].Model || disk.FwVersion != expectedAnswer[pos].FwVersion {
+		if disk.Serial != expectedAnswer[pos].Serial ||
+			disk.Type != expectedAnswer[pos].Type ||
+			disk.Size != expectedAnswer[pos].Size ||
+			disk.Status != expectedAnswer[pos].Status ||
+			disk.Model != expectedAnswer[pos].Model ||
+			disk.FwVersion != expectedAnswer[pos].FwVersion ||
+			disk.Location != expectedAnswer[pos].Location {
 			t.Errorf("Expected answer %v: found %v", expectedAnswer[pos], disk)
 		}
 	}

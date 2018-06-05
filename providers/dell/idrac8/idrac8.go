@@ -26,8 +26,8 @@ import (
 )
 
 const (
-	// BMCModel defines the bmc model that is supported by this package
-	BMCModel = "iDRAC8"
+	// BMCType defines the bmc model that is supported by this package
+	BMCType = "idrac8"
 )
 
 // IDrac8 holds the status and properties of a connection to an iDrac device
@@ -445,14 +445,9 @@ func (i *IDrac8) Model() (model string, err error) {
 	return model, err
 }
 
-// ModelId returns the model id string - idrac8
-func (c *IDrac8) ModelId() (model string) {
-	return "idrac8"
-}
-
 // BmcType returns the type of bmc we are talking to
-func (i *IDrac8) BmcType() (bmcType string, err error) {
-	return BMCModel, err
+func (i *IDrac8) BmcType() (bmcType string) {
+	return BMCType
 }
 
 // License returns the bmc license information
@@ -520,6 +515,8 @@ func (i *IDrac8) Disks() (disks []*devices.Disk, err error) {
 					} else {
 						disk.Type = property.DisplayValue
 					}
+				} else if property.Name == "DeviceDescription" {
+					disk.Location = property.DisplayValue
 				} else if property.Name == "PrimaryStatus" {
 					disk.Status = property.DisplayValue
 				} else if property.Name == "SizeInBytes" {
@@ -675,7 +672,7 @@ func (i *IDrac8) ServerSnapshot() (server interface{}, err error) {
 		blade := &devices.Blade{}
 		blade.Serial, _ = i.Serial()
 		blade.BmcAddress = i.ip
-		blade.BmcType, _ = i.BmcType()
+		blade.BmcType = i.BmcType()
 		blade.BmcVersion, _ = i.BmcVersion()
 		blade.Model, _ = i.Model()
 		blade.Vendor = i.Vendor()
@@ -694,7 +691,7 @@ func (i *IDrac8) ServerSnapshot() (server interface{}, err error) {
 		discrete := &devices.Discrete{}
 		discrete.Serial, _ = i.Serial()
 		discrete.BmcAddress = i.ip
-		discrete.BmcType, _ = i.BmcType()
+		discrete.BmcType = i.BmcType()
 		discrete.BmcVersion, _ = i.BmcVersion()
 		discrete.Model, _ = i.Model()
 		discrete.Vendor = i.Vendor()
