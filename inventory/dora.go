@@ -17,7 +17,7 @@ package inventory
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/joelrebel/bmcbutler/asset"
+	"github.com/bmc-toolbox/bmcbutler/asset"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"io/ioutil"

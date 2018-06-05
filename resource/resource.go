@@ -16,7 +16,7 @@ package resource
 
 import (
 	"fmt"
-	"github.com/ncode/bmclib/cfgresources"
+	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"

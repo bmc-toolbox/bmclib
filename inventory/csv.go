@@ -6,7 +6,7 @@ package inventory
 import (
 	"fmt"
 	"github.com/gocarina/gocsv"
-	"github.com/joelrebel/bmcbutler/asset"
+	"github.com/bmc-toolbox/bmcbutler/asset"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"os"
