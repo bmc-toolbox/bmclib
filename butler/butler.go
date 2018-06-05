@@ -16,15 +16,20 @@ package butler
 
 import (
 	"fmt"
+	"github.com/bmc-toolbox/bmcbutler/asset"
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/discover"
 	"github.com/bmc-toolbox/bmclib/logging"
-	"github.com/bmc-toolbox/bmcbutler/asset"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"sync"
 )
+
+func init() {
+	//set formatter for bmclib logger
+	logging.SetFormatter(&logrus.TextFormatter{})
+}
 
 type ButlerMsg struct {
 	Assets []asset.Asset
