@@ -16,10 +16,10 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/joelrebel/bmcbutler/asset"
-	"github.com/joelrebel/bmcbutler/butler"
-	"github.com/joelrebel/bmcbutler/inventory"
-	"github.com/joelrebel/bmcbutler/resource"
+	"github.com/bmc-toolbox/bmcbutler/asset"
+	"github.com/bmc-toolbox/bmcbutler/butler"
+	"github.com/bmc-toolbox/bmcbutler/inventory"
+	"github.com/bmc-toolbox/bmcbutler/resource"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"

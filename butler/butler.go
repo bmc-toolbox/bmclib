@@ -16,10 +16,11 @@ package butler
 
 import (
 	"fmt"
-	"github.com/joelrebel/bmcbutler/asset"
-	"github.com/ncode/bmclib/cfgresources"
-	"github.com/ncode/bmclib/devices"
-	"github.com/ncode/bmclib/discover"
+	"github.com/bmc-toolbox/bmclib/cfgresources"
+	"github.com/bmc-toolbox/bmclib/devices"
+	"github.com/bmc-toolbox/bmclib/discover"
+	"github.com/bmc-toolbox/bmclib/logging"
+	"github.com/bmc-toolbox/bmcbutler/asset"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"sync"

@@ -15,7 +15,7 @@
 package main
 
 import (
-	"github.com/joelrebel/bmcbutler/cmd"
+	"github.com/bmc-toolbox/bmcbutler/cmd"
 )
 
 func main() {
