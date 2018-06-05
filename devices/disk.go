@@ -7,5 +7,6 @@ type Disk struct {
 	Type      string
 	Size      string
 	Model     string
+	Location  string
 	FwVersion string
 }

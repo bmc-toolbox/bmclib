@@ -8,7 +8,7 @@ import (
 type Bmc interface {
 	ApplyCfg(*cfgresources.ResourcesConfig) error
 	BiosVersion() (string, error)
-	BmcType() (string, error)
+	BmcType() string
 	BmcVersion() (string, error)
 	CPU() (string, int, int, int, error)
 	Disks() ([]*Disk, error)
@@ -35,6 +35,7 @@ type Bmc interface {
 type BmcChassis interface {
 	ApplyCfg(*cfgresources.ResourcesConfig) error
 	Blades() ([]*Blade, error)
+	BmcType() string
 	FwVersion() (string, error)
 	Login() error
 	Logout() error
