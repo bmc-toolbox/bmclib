@@ -39,7 +39,7 @@ func wrapXML(element interface{}, sessionKey string) (doc Envelope) {
 	return doc
 }
 
-func (c *C7000) postXML(data []byte, debug bool) (statusCode int, body []byte, err error) {
+func (c *C7000) postXML(data []byte) (statusCode int, body []byte, err error) {
 
 	u, err := url.Parse(fmt.Sprintf("https://%s/hpoa", c.ip))
 	if err != nil {
@@ -53,10 +53,10 @@ func (c *C7000) postXML(data []byte, debug bool) (statusCode int, body []byte, e
 	//	req.Header.Add("Content-Type", "application/soap+xml; charset=utf-8")
 	req.Header.Add("Content-Type", "text/plain;charset=UTF-8")
 	if log.GetLevel() == log.DebugLevel {
-		fmt.Println(fmt.Sprintf("https://%s/hpoa", c.ip))
+		log.Println(fmt.Sprintf("https://%s/hpoa", c.ip))
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
-			fmt.Printf("%s\n\n", dump)
+			log.Printf("%s\n\n", dump)
 		}
 	}
 
@@ -69,7 +69,7 @@ func (c *C7000) postXML(data []byte, debug bool) (statusCode int, body []byte, e
 	if log.GetLevel() == log.DebugLevel {
 		dump, err := httputil.DumpResponse(resp, true)
 		if err == nil {
-			fmt.Printf("%s\n\n", dump)
+			log.Printf("%s\n\n", dump)
 		}
 	}
 
