@@ -18,7 +18,6 @@ type Bmc interface {
 	Logout() error
 	Memory() (int, error)
 	Model() (string, error)
-	ModelId() string
 	Name() (string, error)
 	Nics() ([]*Nic, error)
 	PowerKw() (float64, error)
@@ -40,7 +39,6 @@ type BmcChassis interface {
 	Login() error
 	Logout() error
 	Model() (string, error)
-	ModelId() string
 	Name() (string, error)
 	Nics() ([]*Nic, error)
 	PassThru() (string, error)
