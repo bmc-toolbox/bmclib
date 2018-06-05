@@ -21,8 +21,8 @@ import (
 )
 
 const (
-	// BMCModel defines the bmc model that is supported by this package
-	BMCModel = "SupermicroX10"
+	// BmcType defines the bmc model that is supported by this package
+	BmcType = "supermicrox10"
 )
 
 // SupermicroX10 holds the status and properties of a connection to a supermicro bmc
@@ -165,9 +165,9 @@ func (s *SupermicroX10) Serial() (serial string, err error) {
 	return strings.ToLower(serial), err
 }
 
-// ModelId returns just Model id string - supermicrox10
-func (s *SupermicroX10) ModelId() (model string) {
-	return "supermicrox10"
+// BmcType returns just Model id string - supermicrox10
+func (s *SupermicroX10) BmcType() (model string) {
+	return BmcType
 }
 
 // Model returns the device model
@@ -182,11 +182,6 @@ func (s *SupermicroX10) Model() (model string, err error) {
 	}
 
 	return model, err
-}
-
-// BmcType returns the type of bmc we are talking to
-func (s *SupermicroX10) BmcType() (bmcType string, err error) {
-	return "Supermicro", err
 }
 
 // BmcVersion returns the version of the bmc we are running
@@ -422,7 +417,7 @@ func (s *SupermicroX10) ServerSnapshot() (server interface{}, err error) {
 		blade := &devices.Blade{}
 		blade.Serial, _ = s.Serial()
 		blade.BmcAddress = s.ip
-		blade.BmcType, _ = s.BmcType()
+		blade.BmcType = s.BmcType()
 		blade.BmcVersion, _ = s.BmcVersion()
 		blade.Model, _ = s.Model()
 		blade.Vendor = s.Vendor()
@@ -440,7 +435,7 @@ func (s *SupermicroX10) ServerSnapshot() (server interface{}, err error) {
 		discrete := &devices.Discrete{}
 		discrete.Serial, _ = s.Serial()
 		discrete.BmcAddress = s.ip
-		discrete.BmcType, _ = s.BmcType()
+		discrete.BmcType = s.BmcType()
 		discrete.BmcVersion, _ = s.BmcVersion()
 		discrete.Model, _ = s.Model()
 		discrete.Vendor = s.Vendor()

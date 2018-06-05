@@ -191,18 +191,14 @@ func TestModel(t *testing.T) {
 }
 
 func TestBmcType(t *testing.T) {
-	expectedAnswer := "Supermicro"
+	expectedAnswer := "supermicrox10"
 
 	bmc, err := setup()
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
 
-	answer, err := bmc.BmcType()
-	if err != nil {
-		t.Fatalf("Found errors calling bmc.BmcType %v", err)
-	}
-
+	answer := bmc.BmcType()
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}

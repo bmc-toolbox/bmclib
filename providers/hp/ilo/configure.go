@@ -24,7 +24,7 @@ func (i *Ilo) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 		log.WithFields(log.Fields{
 			"step":  "Login()",
 			"IP":    i.ip,
-			"Model": i.ModelId(),
+			"Model": i.BmcType(),
 		}).Warn(msg)
 		return errors.New(msg)
 	}
@@ -48,7 +48,7 @@ func (i *Ilo) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 						"step":     "ApplyCfg",
 						"resource": cfg.Field(r).Kind(),
 						"IP":       i.ip,
-						"Model":    i.ModelId(),
+						"Model":    i.BmcType(),
 						"Error":    err,
 					}).Warn("Unable to set User config.")
 				}
@@ -61,7 +61,7 @@ func (i *Ilo) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 						"step":     "ApplyCfg",
 						"resource": cfg.Field(r).Kind(),
 						"IP":       i.ip,
-						"Model":    i.ModelId(),
+						"Model":    i.BmcType(),
 						"Error":    err,
 					}).Warn("Unable to set Syslog config.")
 				}
@@ -75,7 +75,7 @@ func (i *Ilo) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 						"step":     "ApplyCfg",
 						"resource": cfg.Field(r).Kind(),
 						"IP":       i.ip,
-						"Model":    i.ModelId(),
+						"Model":    i.BmcType(),
 						"Error":    err,
 					}).Warn("Unable to set NTP config.")
 				}
@@ -87,7 +87,7 @@ func (i *Ilo) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 						"step":     "applyLdapParams",
 						"resource": "Ldap",
 						"IP":       i.ip,
-						"Model":    i.ModelId(),
+						"Model":    i.BmcType(),
 						"Error":    err,
 					}).Warn("applyLdapGroupParams returned error.")
 				}
@@ -99,7 +99,7 @@ func (i *Ilo) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 						"step":     "applyLdapParams",
 						"resource": "Ldap",
 						"IP":       i.ip,
-						"Model":    i.ModelId(),
+						"Model":    i.BmcType(),
 						"Error":    err,
 					}).Warn("applyLdapGroupParams returned error.")
 				}
@@ -166,7 +166,7 @@ func (i *Ilo) applyUserParams(users []*cfgresources.User) (err error) {
 		log.WithFields(log.Fields{
 			"step":  "applyUserParams",
 			"IP":    i.ip,
-			"Model": i.ModelId(),
+			"Model": i.BmcType(),
 			"Error": err,
 		}).Warn(msg)
 		return errors.New(msg)
@@ -246,7 +246,7 @@ func (i *Ilo) applyUserParams(users []*cfgresources.User) (err error) {
 			userinfo.UserId = userinfo.Id
 			log.WithFields(log.Fields{
 				"IP":    i.ip,
-				"Model": i.ModelId(),
+				"Model": i.BmcType(),
 				"User":  user.Name,
 			}).Info("User disabled in config, will be removed.")
 			postPayload = true
@@ -257,7 +257,7 @@ func (i *Ilo) applyUserParams(users []*cfgresources.User) (err error) {
 			if err != nil {
 				log.WithFields(log.Fields{
 					"IP":    i.ip,
-					"Model": i.ModelId(),
+					"Model": i.BmcType(),
 					"step":  funcName(),
 					"User":  user.Name,
 					"Error": err,
@@ -270,7 +270,7 @@ func (i *Ilo) applyUserParams(users []*cfgresources.User) (err error) {
 			if err != nil || statusCode != 200 {
 				log.WithFields(log.Fields{
 					"IP":         i.ip,
-					"Model":      i.ModelId(),
+					"Model":      i.BmcType(),
 					"endpoint":   endpoint,
 					"step":       funcName(),
 					"User":       user.Name,
@@ -283,7 +283,7 @@ func (i *Ilo) applyUserParams(users []*cfgresources.User) (err error) {
 
 			log.WithFields(log.Fields{
 				"IP":    i.ip,
-				"Model": i.ModelId(),
+				"Model": i.BmcType(),
 				"User":  user.Name,
 			}).Info("User parameters applied.")
 
@@ -335,7 +335,7 @@ func (i *Ilo) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
 		msg := "Unable to marshal RemoteSyslog payload to set Syslog config."
 		log.WithFields(log.Fields{
 			"IP":    i.ip,
-			"Model": i.ModelId(),
+			"Model": i.BmcType(),
 			"step":  funcName(),
 			"Error": err,
 		}).Warn(msg)
@@ -348,7 +348,7 @@ func (i *Ilo) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
 		msg := "POST request to set User config returned error."
 		log.WithFields(log.Fields{
 			"IP":         i.ip,
-			"Model":      i.ModelId(),
+			"Model":      i.BmcType(),
 			"endpoint":   endpoint,
 			"step":       funcName(),
 			"StatusCode": statusCode,
@@ -360,7 +360,7 @@ func (i *Ilo) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
 
 	log.WithFields(log.Fields{
 		"IP":    i.ip,
-		"Model": i.ModelId(),
+		"Model": i.BmcType(),
 	}).Info("Syslog parameters applied.")
 
 	return err
@@ -408,7 +408,7 @@ func (i *Ilo) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 		log.WithFields(log.Fields{
 			"step":  funcName(),
 			"IP":    i.ip,
-			"Model": i.ModelId(),
+			"Model": i.BmcType(),
 			"Error": err,
 		}).Warn(msg)
 		return errors.New(msg)
@@ -440,7 +440,7 @@ func (i *Ilo) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 		msg := "Unable to marshal NetworkSntp payload to set NTP config."
 		log.WithFields(log.Fields{
 			"IP":    i.ip,
-			"Model": i.ModelId(),
+			"Model": i.BmcType(),
 			"step":  funcName(),
 			"Error": err,
 		}).Warn(msg)
@@ -453,7 +453,7 @@ func (i *Ilo) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 		msg := "POST request to set NTP config returned error."
 		log.WithFields(log.Fields{
 			"IP":         i.ip,
-			"Model":      i.ModelId(),
+			"Model":      i.BmcType(),
 			"endpoint":   endpoint,
 			"step":       funcName(),
 			"StatusCode": statusCode,
@@ -465,7 +465,7 @@ func (i *Ilo) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 
 	log.WithFields(log.Fields{
 		"IP":    i.ip,
-		"Model": i.ModelId(),
+		"Model": i.BmcType(),
 	}).Info("NTP parameters applied.")
 
 	return err
@@ -478,7 +478,7 @@ func (i *Ilo) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) {
 		msg := "Unable to query existing Ldap groups"
 		log.WithFields(log.Fields{
 			"IP":    i.ip,
-			"Model": i.ModelId(),
+			"Model": i.BmcType(),
 			"Step":  funcName(),
 			"Error": err,
 		}).Warn(msg)
@@ -491,7 +491,7 @@ func (i *Ilo) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) {
 		if group.Group == "" {
 			msg := "Ldap resource parameter Group required but not declared."
 			log.WithFields(log.Fields{
-				"Model":     i.ModelId(),
+				"Model":     i.BmcType(),
 				"step":      funcName,
 				"Ldap role": group.Role,
 			}).Warn(msg)
@@ -501,7 +501,7 @@ func (i *Ilo) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) {
 		if !i.isRoleValid(group.Role) {
 			msg := "Ldap resource Role must be a valid role: admin OR user."
 			log.WithFields(log.Fields{
-				"Model":     i.ModelId(),
+				"Model":     i.BmcType(),
 				"step":      funcName(),
 				"Ldap role": group.Role,
 			}).Warn(msg)
@@ -546,7 +546,7 @@ func (i *Ilo) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) {
 			directoryGroup.Method = "del_group"
 			log.WithFields(log.Fields{
 				"IP":    i.ip,
-				"Model": i.ModelId(),
+				"Model": i.BmcType(),
 				"User":  group.Group,
 			}).Info("Ldap role group disabled in config, will be removed.")
 			postPayload = true
@@ -557,7 +557,7 @@ func (i *Ilo) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) {
 			if err != nil {
 				log.WithFields(log.Fields{
 					"IP":    i.ip,
-					"Model": i.ModelId(),
+					"Model": i.BmcType(),
 					"Step":  funcName(),
 					"Group": group.Group,
 					"Error": err,
@@ -570,7 +570,7 @@ func (i *Ilo) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) {
 			if err != nil || statusCode != 200 {
 				log.WithFields(log.Fields{
 					"IP":         i.ip,
-					"Model":      i.ModelId(),
+					"Model":      i.BmcType(),
 					"endpoint":   endpoint,
 					"step":       funcName(),
 					"Group":      group.Group,
@@ -583,7 +583,7 @@ func (i *Ilo) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) {
 
 			log.WithFields(log.Fields{
 				"IP":    i.ip,
-				"Model": i.ModelId(),
+				"Model": i.BmcType(),
 				"User":  group.Group,
 			}).Info("LdapGroup parameters applied.")
 
@@ -599,7 +599,7 @@ func (i *Ilo) applyLdapParams(cfg *cfgresources.Ldap) (err error) {
 	if cfg.Server == "" {
 		msg := "Ldap resource parameter Server required but not declared."
 		log.WithFields(log.Fields{
-			"Model": i.ModelId(),
+			"Model": i.BmcType(),
 			"step":  funcName,
 		}).Warn(msg)
 		return errors.New(msg)
@@ -608,7 +608,7 @@ func (i *Ilo) applyLdapParams(cfg *cfgresources.Ldap) (err error) {
 	if cfg.Port == 0 {
 		msg := "Ldap resource parameter Port required but not declared."
 		log.WithFields(log.Fields{
-			"Model": i.ModelId(),
+			"Model": i.BmcType(),
 			"step":  funcName,
 		}).Warn(msg)
 		return errors.New(msg)
@@ -617,7 +617,7 @@ func (i *Ilo) applyLdapParams(cfg *cfgresources.Ldap) (err error) {
 	if cfg.BaseDn == "" {
 		msg := "Ldap resource parameter BaseDn required but not declared."
 		log.WithFields(log.Fields{
-			"Model": i.ModelId(),
+			"Model": i.BmcType(),
 			"step":  funcName,
 		}).Warn(msg)
 		return errors.New(msg)
@@ -647,7 +647,7 @@ func (i *Ilo) applyLdapParams(cfg *cfgresources.Ldap) (err error) {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"IP":    i.ip,
-			"Model": i.ModelId(),
+			"Model": i.BmcType(),
 			"Step":  funcName(),
 			"Error": err,
 		}).Warn("Unable to marshal directory payload to set Ldap config.")
@@ -660,7 +660,7 @@ func (i *Ilo) applyLdapParams(cfg *cfgresources.Ldap) (err error) {
 		msg := "POST request to set Ldap config returned error."
 		log.WithFields(log.Fields{
 			"IP":         i.ip,
-			"Model":      i.ModelId(),
+			"Model":      i.BmcType(),
 			"endpoint":   endpoint,
 			"step":       funcName(),
 			"StatusCode": statusCode,
@@ -672,7 +672,7 @@ func (i *Ilo) applyLdapParams(cfg *cfgresources.Ldap) (err error) {
 
 	log.WithFields(log.Fields{
 		"IP":    i.ip,
-		"Model": i.ModelId(),
+		"Model": i.BmcType(),
 	}).Info("Ldap parameters applied.")
 
 	return err

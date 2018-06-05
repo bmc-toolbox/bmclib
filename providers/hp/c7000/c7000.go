@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	// BMCModel defines the bmc model that is supported by this package
-	BMCModel = "c7000"
+	// BMCType defines the bmc model that is supported by this package
+	BMCType = "c7000"
 )
 
 // C7000 holds the status and properties of a connection to a BladeSystem device
@@ -111,9 +111,9 @@ func (c *C7000) Name() (name string, err error) {
 	return c.Rimp.Infra2.Encl, err
 }
 
-// ModelId returns the model id string - c7000
-func (c *C7000) ModelId() (model string) {
-	return "c7000"
+// BmcType returns the model id string - c7000
+func (c *C7000) BmcType() (model string) {
+	return BMCType
 }
 
 // Model returns the full device model string

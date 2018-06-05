@@ -2707,3 +2707,19 @@ func TestHpChassisInterface(t *testing.T) {
 	_ = devices.BmcChassis(chassis)
 	tearDown()
 }
+
+func TestHpChassisBmcType(t *testing.T) {
+	expectedAnswer := "c7000"
+
+	bmc, err := setup()
+	if err != nil {
+		t.Fatalf("Found errors during the test setup %v", err)
+	}
+
+	answer := bmc.BmcType()
+	if answer != expectedAnswer {
+		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+	}
+
+	tearDown()
+}

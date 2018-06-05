@@ -13,7 +13,7 @@ func (i *Ilo) queryDirectoryGroups() (directoryGroups []DirectoryGroups, err err
 	if err != nil {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
-			"Model":    i.ModelId(),
+			"Model":    i.BmcType(),
 			"endpoint": endpoint,
 			"step":     funcName(),
 			"Error":    err,
@@ -28,7 +28,7 @@ func (i *Ilo) queryDirectoryGroups() (directoryGroups []DirectoryGroups, err err
 		log.WithFields(log.Fields{
 			"IP":    i.ip,
 			"step":  funcName(),
-			"Model": i.ModelId(),
+			"Model": i.BmcType(),
 			"Error": err,
 		}).Warn("Unable to unmarshal payload.")
 		return directoryGroups, err
@@ -45,7 +45,7 @@ func (i *Ilo) queryUsers() (usersInfo []UserInfo, err error) {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
-			"Model":    i.ModelId(),
+			"Model":    i.BmcType(),
 			"endpoint": endpoint,
 			"step":     funcName(),
 			"Error":    err,
@@ -61,7 +61,7 @@ func (i *Ilo) queryUsers() (usersInfo []UserInfo, err error) {
 			"step":     "queryUserInfo",
 			"resource": "User",
 			"IP":       i.ip,
-			"Model":    i.ModelId(),
+			"Model":    i.BmcType(),
 			"Error":    err,
 		}).Warn("Unable to unmarshal payload.")
 		return usersInfo, err
@@ -78,7 +78,7 @@ func (i *Ilo) queryNetworkSntp() (networkSntp NetworkSntp, err error) {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
-			"Model":    i.ModelId(),
+			"Model":    i.BmcType(),
 			"endpoint": endpoint,
 			"step":     funcName(),
 			"Error":    err,
@@ -91,7 +91,7 @@ func (i *Ilo) queryNetworkSntp() (networkSntp NetworkSntp, err error) {
 		log.WithFields(log.Fields{
 			"IP":    i.ip,
 			"step":  funcName(),
-			"Model": i.ModelId(),
+			"Model": i.BmcType(),
 			"Error": err,
 		}).Warn("Unable to unmarshal payload.")
 		return networkSntp, err

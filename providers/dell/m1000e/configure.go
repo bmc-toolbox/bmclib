@@ -170,7 +170,7 @@ func (m *M1000e) applyDatetimeCfg(cfg DatetimeParams) (err error) {
 
 	log.WithFields(log.Fields{
 		"IP":    m.ip,
-		"Model": m.ModelId(),
+		"Model": m.BmcType(),
 	}).Info("DateTime config parameters applied.")
 	return err
 }
@@ -189,7 +189,7 @@ func (m *M1000e) applyDirectoryServicesCfg(cfg DirectoryServicesParams) (err err
 
 	log.WithFields(log.Fields{
 		"IP":    m.ip,
-		"Model": m.ModelId(),
+		"Model": m.BmcType(),
 	}).Info("Ldap config parameters applied.")
 	return err
 }
@@ -208,7 +208,7 @@ func (m *M1000e) applyLdapRoleCfg(cfg LdapArgParams, roleId int) (err error) {
 
 	log.WithFields(log.Fields{
 		"IP":    m.ip,
-		"Model": m.ModelId(),
+		"Model": m.BmcType(),
 	}).Info("Ldap Role group config parameters applied.")
 	return err
 }
@@ -225,7 +225,7 @@ func (m *M1000e) ApplySecurityCfg(cfg LoginSecurityParams) (err error) {
 
 	log.WithFields(log.Fields{
 		"IP":    m.ip,
-		"Model": m.ModelId(),
+		"Model": m.BmcType(),
 	}).Info("Security config parameters applied.")
 	return err
 
@@ -243,7 +243,7 @@ func (m *M1000e) applyInterfaceCfg(cfg InterfaceParams) (err error) {
 
 	log.WithFields(log.Fields{
 		"IP":    m.ip,
-		"Model": m.ModelId(),
+		"Model": m.BmcType(),
 	}).Info("Interface config parameters applied.")
 	return err
 }
@@ -262,7 +262,7 @@ func (m *M1000e) applyUserCfg(cfg UserParams, userId int) (err error) {
 
 	log.WithFields(log.Fields{
 		"IP":    m.ip,
-		"Model": m.ModelId(),
+		"Model": m.BmcType(),
 	}).Info("User account config parameters applied.")
 	return err
 }
@@ -287,7 +287,7 @@ func (m *M1000e) applySslCfg(ssl *cfgresources.Ssl) (err error) {
 
 	log.WithFields(log.Fields{
 		"IP":    m.ip,
-		"Model": m.ModelId(),
+		"Model": m.BmcType(),
 	}).Info("SSL certs uploaded.")
 	return err
 }

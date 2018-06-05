@@ -22,8 +22,8 @@ import (
 )
 
 const (
-	// BMCModel defines the bmc model that is supported by this package
-	BMCModel = "m1000e"
+	// BMCType defines the bmc model that is supported by this package
+	BMCType = "m1000e"
 )
 
 var (
@@ -204,9 +204,9 @@ func (m *M1000e) Name() (name string, err error) {
 	return m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.ChassisStatus.CHASSISName, err
 }
 
-// ModelId returns just Model id string - m1000e
-func (m *M1000e) ModelId() (model string) {
-	return "m1000e"
+// BmcType returns just Model id string - m1000e
+func (m *M1000e) BmcType() (model string) {
+	return BMCType
 }
 
 // Model returns the full device model string

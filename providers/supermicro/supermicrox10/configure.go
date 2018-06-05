@@ -83,7 +83,7 @@ func (s *SupermicroX10) ApplyCfg(config *cfgresources.ResourcesConfig) (err erro
 						"step":     "ApplyCfg",
 						"resource": cfg.Field(r).Kind(),
 						"IP":       s.ip,
-						"Model":    s.ModelId(),
+						"Model":    s.BmcType(),
 						"Error":    err,
 					}).Warn("Unable to set User config.")
 				}
@@ -96,7 +96,7 @@ func (s *SupermicroX10) ApplyCfg(config *cfgresources.ResourcesConfig) (err erro
 						"step":     "ApplyCfg",
 						"resource": cfg.Field(r).Kind(),
 						"IP":       s.ip,
-						"Model":    s.ModelId(),
+						"Model":    s.BmcType(),
 						"Error":    err,
 					}).Warn("Unable to set Syslog config.")
 				}
@@ -110,7 +110,7 @@ func (s *SupermicroX10) ApplyCfg(config *cfgresources.ResourcesConfig) (err erro
 						"step":     "ApplyCfg",
 						"resource": cfg.Field(r).Kind(),
 						"IP":       s.ip,
-						"Model":    s.ModelId(),
+						"Model":    s.BmcType(),
 						"Error":    err,
 					}).Warn("Unable to set NTP config.")
 				}
@@ -121,7 +121,7 @@ func (s *SupermicroX10) ApplyCfg(config *cfgresources.ResourcesConfig) (err erro
 						"step":     "applyLdapParams",
 						"resource": "Ldap",
 						"IP":       s.ip,
-						"Model":    s.ModelId(),
+						"Model":    s.BmcType(),
 						"Error":    err,
 					}).Warn("applyLdapParams returned error.")
 				}
@@ -156,7 +156,7 @@ func (s *SupermicroX10) applyUserParams(users []*cfgresources.User) (err error) 
 		msg := "Unable to query current user accounts."
 		log.WithFields(log.Fields{
 			"IP":    s.ip,
-			"Model": s.ModelId(),
+			"Model": s.BmcType(),
 			"Step":  funcName(),
 			"Error": err,
 		}).Warn(msg)
@@ -226,7 +226,7 @@ func (s *SupermicroX10) applyUserParams(users []*cfgresources.User) (err error) 
 			msg := "POST request to set User config returned error."
 			log.WithFields(log.Fields{
 				"IP":         s.ip,
-				"Model":      s.ModelId(),
+				"Model":      s.BmcType(),
 				"Endpoint":   endpoint,
 				"StatusCode": statusCode,
 				"Step":       funcName(),
@@ -237,7 +237,7 @@ func (s *SupermicroX10) applyUserParams(users []*cfgresources.User) (err error) 
 
 		log.WithFields(log.Fields{
 			"IP":    s.ip,
-			"Model": s.ModelId(),
+			"Model": s.BmcType(),
 			"User":  user.Name,
 		}).Info("User parameters applied.")
 
@@ -253,7 +253,7 @@ func (s *SupermicroX10) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 	if cfg.Server1 == "" {
 		log.WithFields(log.Fields{
 			"step":  "applyNtpParams",
-			"Model": s.ModelId(),
+			"Model": s.BmcType(),
 		}).Warn("NTP resource expects parameter: server1.")
 		return
 	}
@@ -261,7 +261,7 @@ func (s *SupermicroX10) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 	if cfg.Timezone == "" {
 		log.WithFields(log.Fields{
 			"step":  "applyNtpParams",
-			"Model": s.ModelId(),
+			"Model": s.BmcType(),
 		}).Warn("NTP resource expects parameter: timezone.")
 		return
 	}
@@ -270,7 +270,7 @@ func (s *SupermicroX10) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"step":              "applyNtpParams",
-			"Model":             s.ModelId(),
+			"Model":             s.BmcType(),
 			"Declared timezone": cfg.Timezone,
 			"Error":             err,
 		}).Warn("NTP resource declared parameter timezone invalid.")
@@ -283,7 +283,7 @@ func (s *SupermicroX10) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 		enable = "off"
 		log.WithFields(log.Fields{
 			"step":  "applyNtpParams",
-			"Model": s.ModelId(),
+			"Model": s.BmcType(),
 		}).Debug("Ntp resource declared with enable: false.")
 		return
 	} else {
@@ -324,7 +324,7 @@ func (s *SupermicroX10) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 		msg := "POST request to set Syslog config returned error."
 		log.WithFields(log.Fields{
 			"IP":         s.ip,
-			"Model":      s.ModelId(),
+			"Model":      s.BmcType(),
 			"Endpoint":   endpoint,
 			"StatusCode": statusCode,
 			"Step":       funcName(),
@@ -336,7 +336,7 @@ func (s *SupermicroX10) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 	//
 	log.WithFields(log.Fields{
 		"IP":    s.ip,
-		"Model": s.ModelId(),
+		"Model": s.BmcType(),
 	}).Info("NTP config parameters applied.")
 	return err
 }
@@ -351,7 +351,7 @@ func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*
 		msg := "Ldap resource parameter Server required but not declared."
 		log.WithFields(log.Fields{
 			"step":  funcName(),
-			"Model": s.ModelId(),
+			"Model": s.BmcType(),
 		}).Warn(msg)
 		return errors.New(msg)
 	}
@@ -361,7 +361,7 @@ func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*
 		msg := "Ldap resource parameter Port required but not declared"
 		log.WithFields(log.Fields{
 			"step":  funcName(),
-			"Model": s.ModelId(),
+			"Model": s.BmcType(),
 		}).Warn(msg)
 		errors.New(msg)
 	}
@@ -370,7 +370,7 @@ func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*
 		enable = "off"
 		log.WithFields(log.Fields{
 			"step":  funcName(),
-			"Model": s.ModelId(),
+			"Model": s.BmcType(),
 		}).Debug("Ldap resource declared with enable: false.")
 		return
 	} else {
@@ -382,7 +382,7 @@ func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*
 		msg := "Unable to lookup the IP for ldap server hostname."
 		log.WithFields(log.Fields{
 			"step":  funcName(),
-			"Model": s.ModelId(),
+			"Model": s.BmcType(),
 		}).Warn(msg)
 		return errors.New(msg)
 	}
@@ -449,7 +449,7 @@ func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*
 			msg := "POST request to set Ldap config returned error."
 			log.WithFields(log.Fields{
 				"IP":         s.ip,
-				"Model":      s.ModelId(),
+				"Model":      s.BmcType(),
 				"Endpoint":   endpoint,
 				"StatusCode": statusCode,
 				"Step":       funcName(),
@@ -461,7 +461,7 @@ func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*
 
 	log.WithFields(log.Fields{
 		"IP":    s.ip,
-		"Model": s.ModelId(),
+		"Model": s.BmcType(),
 	}).Info("Ldap config parameters applied.")
 	return err
 }
@@ -474,7 +474,7 @@ func (s *SupermicroX10) applySyslogParams(cfg *cfgresources.Syslog) (err error) 
 		msg := "Syslog resource expects parameter: Server."
 		log.WithFields(log.Fields{
 			"step":  funcName(),
-			"Model": s.ModelId(),
+			"Model": s.BmcType(),
 		}).Warn(msg)
 		return errors.New(msg)
 	}
@@ -482,7 +482,7 @@ func (s *SupermicroX10) applySyslogParams(cfg *cfgresources.Syslog) (err error) 
 	if cfg.Port == 0 {
 		log.WithFields(log.Fields{
 			"step":  funcName(),
-			"Model": s.ModelId(),
+			"Model": s.BmcType(),
 		}).Debug("Syslog resource port set to default: 514.")
 		port = 514
 	} else {
@@ -492,7 +492,7 @@ func (s *SupermicroX10) applySyslogParams(cfg *cfgresources.Syslog) (err error) 
 	if cfg.Enable != true {
 		log.WithFields(log.Fields{
 			"step":  funcName(),
-			"Model": s.ModelId(),
+			"Model": s.BmcType(),
 		}).Debug("Syslog resource declared with disable.")
 	}
 
@@ -501,7 +501,7 @@ func (s *SupermicroX10) applySyslogParams(cfg *cfgresources.Syslog) (err error) 
 		msg := "Unable to lookup IP for syslog server hostname, yes supermicros requires the Syslog server IP :|."
 		log.WithFields(log.Fields{
 			"step":  funcName(),
-			"Model": s.ModelId(),
+			"Model": s.BmcType(),
 		}).Warn(msg)
 		return errors.New(msg)
 	}
@@ -520,7 +520,7 @@ func (s *SupermicroX10) applySyslogParams(cfg *cfgresources.Syslog) (err error) 
 		msg := "POST request to set Syslog config returned error."
 		log.WithFields(log.Fields{
 			"IP":         s.ip,
-			"Model":      s.ModelId(),
+			"Model":      s.BmcType(),
 			"Endpoint":   endpoint,
 			"StatusCode": statusCode,
 			"step":       funcName(),
@@ -532,7 +532,7 @@ func (s *SupermicroX10) applySyslogParams(cfg *cfgresources.Syslog) (err error) 
 
 	log.WithFields(log.Fields{
 		"IP":    s.ip,
-		"Model": s.ModelId(),
+		"Model": s.BmcType(),
 	}).Info("Syslog config parameters applied.")
 	return err
 }

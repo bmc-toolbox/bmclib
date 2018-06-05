@@ -42,7 +42,7 @@ func (i *IDrac8) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 							"step":     "ApplyCfg",
 							"Resource": cfg.Field(r).Kind(),
 							"IP":       i.ip,
-							"Model":    i.ModelId(),
+							"Model":    i.BmcType(),
 							"Error":    err,
 						}).Warn("Unable to set user config.")
 					}
@@ -56,7 +56,7 @@ func (i *IDrac8) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 						"step":     "ApplyCfg",
 						"resource": cfg.Field(r).Kind(),
 						"IP":       i.ip,
-						"Model":    i.ModelId(),
+						"Model":    i.BmcType(),
 						"Error":    err,
 					}).Warn("Unable to set Syslog config.")
 				}
@@ -70,7 +70,7 @@ func (i *IDrac8) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 						"step":     "ApplyCfg",
 						"resource": cfg.Field(r).Kind(),
 						"IP":       i.ip,
-						"Model":    i.ModelId(),
+						"Model":    i.BmcType(),
 					}).Warn("Unable to set NTP config.")
 				}
 			case "Ldap":
@@ -84,7 +84,7 @@ func (i *IDrac8) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 						"step":     "applyLdapParams",
 						"resource": "Ldap",
 						"IP":       i.ip,
-						"Model":    i.ModelId(),
+						"Model":    i.BmcType(),
 						"Error":    err,
 					}).Warn("applyLdapGroupParams returned error.")
 				}
@@ -209,7 +209,7 @@ func (i *IDrac8) applyUserParams(cfg *cfgresources.User, Id int) (err error) {
 
 	log.WithFields(log.Fields{
 		"IP":    i.ip,
-		"Model": i.ModelId(),
+		"Model": i.BmcType(),
 		"User":  cfg.Name,
 	}).Info("User parameters applied.")
 
@@ -273,7 +273,7 @@ func (i *IDrac8) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
 
 	log.WithFields(log.Fields{
 		"IP":    i.ip,
-		"Model": i.ModelId(),
+		"Model": i.BmcType(),
 	}).Info("Syslog parameters applied.")
 
 	return err
@@ -330,7 +330,7 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
-			"Model":    i.ModelId(),
+			"Model":    i.BmcType(),
 			"endpoint": endpoint,
 			"step":     funcName(),
 			"response": string(response),
@@ -339,7 +339,7 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 
 	log.WithFields(log.Fields{
 		"IP":    i.ip,
-		"Model": i.ModelId(),
+		"Model": i.BmcType(),
 	}).Info("NTP servers param applied.")
 
 }
@@ -365,7 +365,7 @@ func (i *IDrac8) applyLdapParams(cfg *cfgresources.Ldap) {
 
 	log.WithFields(log.Fields{
 		"IP":    i.ip,
-		"Model": i.ModelId(),
+		"Model": i.BmcType(),
 	}).Info("Ldap config applied.")
 
 }
@@ -386,7 +386,7 @@ func (i *IDrac8) applyLdapServerParam(cfg *cfgresources.Ldap) int {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
-			"Model":    i.ModelId(),
+			"Model":    i.BmcType(),
 			"endpoint": endpoint,
 			"step":     funcName(),
 			"response": string(response),
@@ -396,7 +396,7 @@ func (i *IDrac8) applyLdapServerParam(cfg *cfgresources.Ldap) int {
 
 	log.WithFields(log.Fields{
 		"IP":    i.ip,
-		"Model": i.ModelId(),
+		"Model": i.BmcType(),
 	}).Info("Ldap server param set.")
 
 	return 0
@@ -417,7 +417,7 @@ func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) int {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
-			"Model":    i.ModelId(),
+			"Model":    i.BmcType(),
 			"endpoint": endpoint,
 			"step":     funcName(),
 			"response": string(response),
@@ -427,7 +427,7 @@ func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) int {
 
 	log.WithFields(log.Fields{
 		"IP":    i.ip,
-		"Model": i.ModelId(),
+		"Model": i.BmcType(),
 	}).Info("Ldap search filter param applied.")
 
 	return 0
@@ -527,7 +527,7 @@ func (i *IDrac8) applyLdapGroupParams(cfgGroup []*cfgresources.LdapGroup, cfgLda
 		if err != nil {
 			log.WithFields(log.Fields{
 				"IP":       i.ip,
-				"Model":    i.ModelId(),
+				"Model":    i.BmcType(),
 				"endpoint": endpoint,
 				"step":     "applyLdapGroupParams",
 				"response": string(response),
@@ -537,7 +537,7 @@ func (i *IDrac8) applyLdapGroupParams(cfgGroup []*cfgresources.LdapGroup, cfgLda
 
 		log.WithFields(log.Fields{
 			"IP":    i.ip,
-			"Model": i.ModelId(),
+			"Model": i.BmcType(),
 			"Role":  group.Role,
 		}).Info("Ldap GroupDN config applied.")
 
@@ -562,7 +562,7 @@ func (i *IDrac8) applyLdapGroupParams(cfgGroup []*cfgresources.LdapGroup, cfgLda
 	if err != nil {
 		log.WithFields(log.Fields{
 			"IP":    i.ip,
-			"Model": i.ModelId(),
+			"Model": i.BmcType(),
 			"step":  "applyLdapGroupParams",
 		}).Warn("Unable to set Ldap Role Group Privileges.")
 		return err
@@ -591,7 +591,7 @@ func (i *IDrac8) applyLdapRoleGroupPrivParam(cfg *cfgresources.Ldap, groupPrivil
 	if err != nil || responseCode != 200 {
 		log.WithFields(log.Fields{
 			"IP":           i.ip,
-			"Model":        i.ModelId(),
+			"Model":        i.BmcType(),
 			"endpoint":     endpoint,
 			"step":         funcName(),
 			"responseCode": responseCode,
@@ -602,7 +602,7 @@ func (i *IDrac8) applyLdapRoleGroupPrivParam(cfg *cfgresources.Ldap, groupPrivil
 
 	log.WithFields(log.Fields{
 		"IP":    i.ip,
-		"Model": i.ModelId(),
+		"Model": i.BmcType(),
 	}).Info("Ldap Group role privileges applied.")
 
 	return err
@@ -618,7 +618,7 @@ func (i *IDrac8) applyTimezoneParam(timezone string) {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
-			"Model":    i.ModelId(),
+			"Model":    i.BmcType(),
 			"endpoint": endpoint,
 			"step":     funcName(),
 			"response": string(response),
@@ -627,7 +627,7 @@ func (i *IDrac8) applyTimezoneParam(timezone string) {
 
 	log.WithFields(log.Fields{
 		"IP":    i.ip,
-		"Model": i.ModelId(),
+		"Model": i.BmcType(),
 	}).Info("Timezone param applied.")
 
 }
