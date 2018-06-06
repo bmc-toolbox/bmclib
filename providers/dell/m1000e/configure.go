@@ -439,7 +439,6 @@ func (m *M1000e) post(endpoint string, form *url.Values) (err error) {
 	//fmt.Printf("--> %+v\n", form.Encode())
 	//return err
 	resp, err := m.httpClient.Do(req)
-
 	if err != nil {
 		return err
 	}
