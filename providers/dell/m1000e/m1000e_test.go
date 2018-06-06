@@ -360,11 +360,6 @@ func setup() (r *M1000e, err error) {
 		return r, err
 	}
 
-	err = r.Login()
-	if err != nil {
-		return r, err
-	}
-
 	return r, err
 }
 

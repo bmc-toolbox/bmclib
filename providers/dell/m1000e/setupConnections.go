@@ -19,19 +19,16 @@ import (
 
 // retrieves ST2 which is required to submit form data
 func (m *M1000e) getSessionToken() (token string, err error) {
-	u := fmt.Sprintf("https://%s/cgi-bin/webcgi/general", m.ip)
-	data, err := m.get(u)
+	data, err := m.get("general")
 	if err != nil {
 		return token, err
 	}
-
 	//<input xmlns="" type="hidden" value="2a17b6d37baa526b75e06243d34763da" name="ST2" id="ST2" />
 	re := regexp.MustCompile("<input.*value=\\\"(\\w+)\\\" name=\"ST2\"")
 	match := re.FindSubmatch(data)
 	if len(match) == 0 {
 		return token, errors.ErrUnableToGetSessionToken
 	}
-
 	return string(match[1]), err
 }
 
@@ -74,7 +71,6 @@ func (m *M1000e) httpLogin() (err error) {
 	if m.httpClient != nil {
 		return
 	}
-
 	log.WithFields(log.Fields{"step": "chassis connection", "vendor": dell.VendorID, "ip": m.ip}).Debug("connecting to chassis")
 
 	form := url.Values{}

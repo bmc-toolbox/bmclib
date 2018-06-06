@@ -71,6 +71,11 @@ func (m *M1000e) Close() (err error) {
 }
 
 func (m *M1000e) get(endpoint string) (payload []byte, err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return payload, err
+	}
+
 	log.WithFields(log.Fields{"step": "chassis connection", "vendor": dell.VendorID, "ip": m.ip, "endpoint": endpoint}).Debug("retrieving data from chassis")
 
 	resp, err := m.httpClient.Get(fmt.Sprintf("https://%s/cgi-bin/webcgi/%s", m.ip, endpoint))
@@ -98,6 +103,10 @@ func (m *M1000e) get(endpoint string) (payload []byte, err error) {
 
 // Name returns the hostname of the machine
 func (m *M1000e) Name() (name string, err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return name, err
+	}
 	return m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.ChassisStatus.CHASSISName, err
 }
 
@@ -108,16 +117,28 @@ func (m *M1000e) BmcType() (model string) {
 
 // Model returns the full device model string
 func (m *M1000e) Model() (model string, err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return model, err
+	}
 	return strings.TrimSpace(m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.ChassisStatus.ROChassisProductname), err
 }
 
 // Serial returns the device serial
 func (m *M1000e) Serial() (serial string, err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return serial, err
+	}
 	return strings.ToLower(m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.ChassisStatus.ROChassisServiceTag), err
 }
 
 // PowerKw returns the current power usage in Kw
 func (m *M1000e) PowerKw() (power float64, err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return power, err
+	}
 	p, err := strconv.Atoi(strings.TrimRight(m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.PsuStatus.AcPower, " W"))
 	if err != nil {
 		return power, err
@@ -149,6 +170,10 @@ func (m *M1000e) TempC() (temp int, err error) {
 
 // Status returns health string status from the bmc
 func (m *M1000e) Status() (status string, err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return "", err
+	}
 	if m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.CMCStatus.CMCActiveError == "No Errors" {
 		status = "OK"
 	} else {
@@ -159,6 +184,10 @@ func (m *M1000e) Status() (status string, err error) {
 
 // FwVersion returns the current firmware version of the bmc
 func (m *M1000e) FwVersion() (version string, err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return "", err
+	}
 	return m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.ChassisStatus.ROCmcFwVersionString, err
 }
 
@@ -189,6 +218,10 @@ func (m *M1000e) IsActive() bool {
 
 // PassThru returns the type of switch we have for this chassis
 func (m *M1000e) PassThru() (passthru string, err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return passthru, err
+	}
 	passthru = "1G"
 	for _, dellBlade := range m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.Blades {
 		if dellBlade.BladePresent == 1 && dellBlade.IsStorageBlade == 0 {
