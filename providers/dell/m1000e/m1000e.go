@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -14,8 +13,9 @@ import (
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
+	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/providers/dell"
-	"golang.org/x/crypto/ssh"
+	multierror "github.com/hashicorp/go-multierror"
 
 	// this make possible to setup logging and properties at any stage
 	_ "github.com/bmc-toolbox/bmclib/logging"
@@ -38,7 +38,7 @@ type M1000e struct {
 	username     string
 	password     string
 	httpClient   *http.Client
-	sshClient    *ssh.Client
+	sshClient    *sshclient.SSHClient
 	cmcJSON      *dell.CMC
 	cmcTemp      *dell.CMCTemp
 	cmcWWN       *dell.CMCWWN
@@ -51,134 +51,22 @@ func New(ip string, username string, password string) (chassis *M1000e, err erro
 	return &M1000e{ip: ip, username: username, password: password}, err
 }
 
-// Login initiates the connection to a chassis device
-func (m *M1000e) Login() (err error) {
-	log.WithFields(log.Fields{"step": "chassis connection", "vendor": dell.VendorID, "ip": m.ip}).Debug("connecting to chassis")
-
-	form := url.Values{}
-	form.Add("user", m.username)
-	form.Add("password", m.password)
-
-	u, err := url.Parse(fmt.Sprintf("https://%s/cgi-bin/webcgi/login", m.ip))
-	if err != nil {
-		return err
+// Close closes the connection properly
+func (m *M1000e) Close() (err error) {
+	if m.httpClient != nil {
+		_, e := m.httpClient.Get(fmt.Sprintf("https://%s/cgi-bin/webcgi/logout", m.ip))
+		if e != nil {
+			err = multierror.Append(e, err)
+		}
 	}
 
-	req, err := http.NewRequest("POST", u.String(), strings.NewReader(form.Encode()))
-	if err != nil {
-		return err
-	}
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-	m.httpClient, err = httpclient.Build()
-	if err != nil {
-		return err
+	if m.sshClient != nil {
+		e := m.sshClient.Close()
+		if e != nil {
+			err = multierror.Append(e, err)
+		}
 	}
 
-	resp, err := m.httpClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	auth, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if strings.Contains(string(auth), "Try Again") {
-		return errors.ErrLoginFailed
-	}
-
-	if resp.StatusCode == 404 {
-		return errors.ErrPageNotFound
-	}
-
-	err = m.loadHwData()
-	if err != nil {
-		return err
-	}
-
-	// retrieve session token to set config params.
-	token, err := m.getSessionToken()
-	if err != nil {
-		return err
-	}
-	m.SessionToken = token
-
-	serial, err := m.Serial()
-	if err != nil {
-		return err
-	}
-	m.serial = serial
-
-	return err
-}
-
-// retrieves ST2 which is required to submit form data
-func (m *M1000e) getSessionToken() (token string, err error) {
-
-	u := fmt.Sprintf("https://%s/cgi-bin/webcgi/general", m.ip)
-	resp, err := m.httpClient.Get(u)
-
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return token, err
-	}
-
-	defer resp.Body.Close()
-
-	//<input xmlns="" type="hidden" value="2a17b6d37baa526b75e06243d34763da" name="ST2" id="ST2" />
-	reToken := "<input.*value=\\\"(\\w+)\\\" name=\"ST2\""
-	re := regexp.MustCompile(reToken)
-	match := re.FindSubmatch(data)
-	if len(match) == 0 {
-		return token, errors.ErrUnableToGetSessionToken
-	}
-
-	return string(match[1]), err
-}
-
-func (m *M1000e) loadHwData() (err error) {
-	url := "json?method=groupinfo"
-	payload, err := m.get(url)
-	if err != nil {
-		return err
-	}
-
-	m.cmcJSON = &dell.CMC{}
-	err = json.Unmarshal(payload, m.cmcJSON)
-	if err != nil {
-		httpclient.DumpInvalidPayload(url, m.ip, payload)
-		return err
-	}
-
-	if m.cmcJSON.Chassis == nil {
-		return errors.ErrUnableToReadData
-	}
-
-	url = "json?method=blades-wwn-info"
-	payload, err = m.get(url)
-	if err != nil {
-		return err
-	}
-
-	m.cmcWWN = &dell.CMCWWN{}
-	err = json.Unmarshal(payload, m.cmcWWN)
-	if err != nil {
-		httpclient.DumpInvalidPayload(url, m.ip, payload)
-		return err
-	}
-
-	return err
-}
-
-// Logout logs out and close the chassis connection
-func (m *M1000e) Logout() (err error) {
-	_, err = m.httpClient.Get(fmt.Sprintf("https://%s/cgi-bin/webcgi/logout", m.ip))
-	if err != nil {
-		return err
-	}
 	return err
 }
 
