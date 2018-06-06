@@ -38,6 +38,7 @@ type IDrac8 struct {
 	client         *http.Client
 	st1            string
 	st2            string
+	serial         string
 	iDracInventory *dell.IDracInventory
 }
 
@@ -98,6 +99,12 @@ func (i *IDrac8) Login() (err error) {
 		return err
 	}
 
+	serial, err := i.Serial()
+	if err != nil {
+		return err
+	}
+	i.serial = serial
+
 	return err
 }
 
@@ -126,7 +133,7 @@ func (i *IDrac8) loadHwData() (err error) {
 }
 
 // PUTs data
-func (i *IDrac8) put(endpoint string, payload []byte, debug bool) (response []byte, err error) {
+func (i *IDrac8) put(endpoint string, payload []byte) (response []byte, err error) {
 
 	bmcURL := fmt.Sprintf("https://%s", i.ip)
 
@@ -146,11 +153,14 @@ func (i *IDrac8) put(endpoint string, payload []byte, debug bool) (response []by
 			req.AddCookie(cookie)
 		}
 	}
-	if debug {
-		fmt.Println(fmt.Sprintf("%s/%s", bmcURL, endpoint))
+
+	if log.GetLevel() == log.DebugLevel {
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
-			fmt.Printf("%s\n\n", dump)
+			log.Println(fmt.Sprintf("[Request] %s/%s", bmcURL, endpoint))
+			log.Println(">>>>>>>>>>>>>>>")
+			log.Printf("%s\n\n", dump)
+			log.Println(">>>>>>>>>>>>>>>")
 		}
 	}
 
@@ -159,10 +169,14 @@ func (i *IDrac8) put(endpoint string, payload []byte, debug bool) (response []by
 		return response, err
 	}
 	defer resp.Body.Close()
-	if debug {
+
+	if log.GetLevel() == log.DebugLevel {
 		dump, err := httputil.DumpResponse(resp, true)
 		if err == nil {
-			fmt.Printf("%s\n\n", dump)
+			log.Println("[Response]")
+			log.Println("<<<<<<<<<<<<<<")
+			log.Printf("%s\n\n", dump)
+			log.Println("<<<<<<<<<<<<<<")
 		}
 	}
 
@@ -200,15 +214,30 @@ func (i *IDrac8) post(endpoint string, data []byte) (statusCode int, body []byte
 	req.Header.Add("ST2", i.st2)
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-	//XXX to debug
-	//fmt.Printf("--> %s\n", data)
-	//return 0, []byte{}, err
+	if log.GetLevel() == log.DebugLevel {
+		dump, err := httputil.DumpRequestOut(req, true)
+		if err == nil {
+			log.Println(fmt.Sprintf("[Request] https://%s/%s", i.ip, endpoint))
+			log.Println(">>>>>>>>>>>>>>>")
+			log.Printf("%s\n\n", dump)
+			log.Println(">>>>>>>>>>>>>>>")
+		}
+	}
 
 	resp, err := i.client.Do(req)
 	if err != nil {
 		return 0, []byte{}, err
 	}
 	defer resp.Body.Close()
+	if log.GetLevel() == log.DebugLevel {
+		dump, err := httputil.DumpResponse(resp, true)
+		if err == nil {
+			log.Println("[Response]")
+			log.Println("<<<<<<<<<<<<<<")
+			log.Printf("%s\n\n", dump)
+			log.Println("<<<<<<<<<<<<<<")
+		}
+	}
 
 	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -245,12 +274,30 @@ func (i *IDrac8) get(endpoint string, extraHeaders *map[string]string) (payload 
 			req.AddCookie(cookie)
 		}
 	}
+	if log.GetLevel() == log.DebugLevel {
+		dump, err := httputil.DumpRequestOut(req, true)
+		if err == nil {
+			log.Println(fmt.Sprintf("[Request] https://%s/%s", bmcURL, endpoint))
+			log.Println(">>>>>>>>>>>>>>>")
+			log.Printf("%s\n\n", dump)
+			log.Println(">>>>>>>>>>>>>>>")
+		}
+	}
 
 	resp, err := i.client.Do(req)
 	if err != nil {
 		return payload, err
 	}
 	defer resp.Body.Close()
+	if log.GetLevel() == log.DebugLevel {
+		dump, err := httputil.DumpResponse(resp, true)
+		if err == nil {
+			log.Println("[Response]")
+			log.Println("<<<<<<<<<<<<<<")
+			log.Printf("%s\n\n", dump)
+			log.Println("<<<<<<<<<<<<<<")
+		}
+	}
 
 	payload, err = ioutil.ReadAll(resp.Body)
 	if err != nil {

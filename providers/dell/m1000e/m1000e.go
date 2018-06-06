@@ -42,6 +42,7 @@ type M1000e struct {
 	cmcJSON      *dell.CMC
 	cmcTemp      *dell.CMCTemp
 	cmcWWN       *dell.CMCWWN
+	serial       string
 	SessionToken string //required to set config
 }
 
@@ -104,6 +105,12 @@ func (m *M1000e) Login() (err error) {
 		return err
 	}
 	m.SessionToken = token
+
+	serial, err := m.Serial()
+	if err != nil {
+		return err
+	}
+	m.serial = serial
 
 	return err
 }

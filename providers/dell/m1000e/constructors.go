@@ -272,9 +272,6 @@ func (m *M1000e) newInterfaceCfg(syslog *cfgresources.Syslog) InterfaceParams {
 // check for missing params
 func (m *M1000e) newUserCfg(user *cfgresources.User, userId int) UserParams {
 
-	// as of now we care to only set the admin role.
-	// this needs to be updated to support various roles.
-	validRole := "admin"
 	var cmcGroup, privilege int
 
 	if user.Name == "" {
@@ -289,9 +286,10 @@ func (m *M1000e) newUserCfg(user *cfgresources.User, userId int) UserParams {
 		}).Fatal("User resource expects parameter: Password.")
 	}
 
-	if user.Role != validRole {
+	if m.isRoleValid(user.Role) == false {
 		log.WithFields(log.Fields{
 			"step": "apply-user-cfg",
+			"role": user.Role,
 		}).Fatal("User resource Role must be declared and a valid role: admin.")
 	}
 

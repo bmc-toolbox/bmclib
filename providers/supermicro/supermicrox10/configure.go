@@ -3,8 +3,8 @@ package supermicrox10
 import (
 	"errors"
 	"fmt"
-	"github.com/google/go-querystring/query"
 	"github.com/bmc-toolbox/bmclib/cfgresources"
+	"github.com/google/go-querystring/query"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net"
@@ -84,6 +84,7 @@ func (s *SupermicroX10) ApplyCfg(config *cfgresources.ResourcesConfig) (err erro
 						"resource": cfg.Field(r).Kind(),
 						"IP":       s.ip,
 						"Model":    s.BmcType(),
+						"Serial":   s.serial,
 						"Error":    err,
 					}).Warn("Unable to set User config.")
 				}
@@ -97,11 +98,23 @@ func (s *SupermicroX10) ApplyCfg(config *cfgresources.ResourcesConfig) (err erro
 						"resource": cfg.Field(r).Kind(),
 						"IP":       s.ip,
 						"Model":    s.BmcType(),
+						"Serial":   s.serial,
 						"Error":    err,
 					}).Warn("Unable to set Syslog config.")
 				}
 			case "Network":
-				fmt.Printf("%s: %v : %s\n", resourceName, cfg.Field(r), cfg.Field(r).Kind())
+				networkCfg := cfg.Field(r).Interface().(*cfgresources.Network)
+				err := s.applyNetworkParams(networkCfg)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"step":     "ApplyCfg",
+						"resource": cfg.Field(r).Kind(),
+						"IP":       s.ip,
+						"Model":    s.BmcType(),
+						"Serial":   s.serial,
+						"Error":    err,
+					}).Warn("Unable to set Network config params.")
+				}
 			case "Ntp":
 				ntpCfg := cfg.Field(r).Interface().(*cfgresources.Ntp)
 				err := s.applyNtpParams(ntpCfg)
@@ -111,6 +124,7 @@ func (s *SupermicroX10) ApplyCfg(config *cfgresources.ResourcesConfig) (err erro
 						"resource": cfg.Field(r).Kind(),
 						"IP":       s.ip,
 						"Model":    s.BmcType(),
+						"Serial":   s.serial,
 						"Error":    err,
 					}).Warn("Unable to set NTP config.")
 				}
@@ -122,6 +136,7 @@ func (s *SupermicroX10) ApplyCfg(config *cfgresources.ResourcesConfig) (err erro
 						"resource": "Ldap",
 						"IP":       s.ip,
 						"Model":    s.BmcType(),
+						"Serial":   s.serial,
 						"Error":    err,
 					}).Warn("applyLdapParams returned error.")
 				}
@@ -132,6 +147,18 @@ func (s *SupermicroX10) ApplyCfg(config *cfgresources.ResourcesConfig) (err erro
 				continue
 			case "Ssl":
 				fmt.Printf("%s: %v : %s\n", resourceName, cfg.Field(r), cfg.Field(r).Kind())
+			case "Supermicro":
+				err := s.applyVendorSpecificConfig(config.Supermicro)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"step":     "applyVendorSpecificConfig",
+						"resource": "Supermicro",
+						"IP":       s.ip,
+						"Model":    s.BmcType(),
+						"Serial":   s.serial,
+						"Error":    err,
+					}).Warn("applyVendorSpecificConfig returned error.")
+				}
 			default:
 				log.WithFields(log.Fields{
 					"step":     "ApplyCfg",
@@ -155,10 +182,11 @@ func (s *SupermicroX10) applyUserParams(users []*cfgresources.User) (err error) 
 	if err != nil {
 		msg := "Unable to query current user accounts."
 		log.WithFields(log.Fields{
-			"IP":    s.ip,
-			"Model": s.BmcType(),
-			"Step":  funcName(),
-			"Error": err,
+			"IP":     s.ip,
+			"Model":  s.BmcType(),
+			"Serial": s.serial,
+			"Step":   funcName(),
+			"Error":  err,
 		}).Warn(msg)
 		return errors.New(msg)
 	}
@@ -221,12 +249,13 @@ func (s *SupermicroX10) applyUserParams(users []*cfgresources.User) (err error) 
 
 		endpoint := "config_user.cgi"
 		form, _ := query.Values(configUser)
-		statusCode, err := s.post(endpoint, &form, false)
+		statusCode, err := s.post(endpoint, &form)
 		if err != nil || statusCode != 200 {
 			msg := "POST request to set User config returned error."
 			log.WithFields(log.Fields{
 				"IP":         s.ip,
 				"Model":      s.BmcType(),
+				"Serial":     s.serial,
 				"Endpoint":   endpoint,
 				"StatusCode": statusCode,
 				"Step":       funcName(),
@@ -236,14 +265,71 @@ func (s *SupermicroX10) applyUserParams(users []*cfgresources.User) (err error) 
 		}
 
 		log.WithFields(log.Fields{
-			"IP":    s.ip,
-			"Model": s.BmcType(),
-			"User":  user.Name,
+			"IP":     s.ip,
+			"Model":  s.BmcType(),
+			"Serial": s.serial,
+			"User":   user.Name,
 		}).Info("User parameters applied.")
 
 		userId += 1
 	}
 
+	return err
+}
+
+func (s *SupermicroX10) applyNetworkParams(cfg *cfgresources.Network) (err error) {
+
+	sshPort := 22
+	ipmiPort := 623
+
+	if cfg.SshPort != 0 && cfg.SshPort != sshPort {
+		sshPort = cfg.SshPort
+	}
+	if cfg.IpmiPort != 0 && cfg.IpmiPort != ipmiPort {
+		ipmiPort = cfg.IpmiPort
+	}
+
+	configPort := ConfigPort{
+		Op:                "config_port",
+		HttpPort:          80,
+		HttpsPort:         443,
+		IkvmPort:          5900,
+		VmPort:            623,
+		SshPort:           sshPort,
+		WsmanPort:         5985,
+		SnmpPort:          161,
+		httpEnable:        true,
+		httpsEnable:       true,
+		IkvmEnable:        true,
+		VmEnable:          true,
+		SshEnable:         cfg.SshEnable,
+		SnmpEnable:        false,
+		WsmanEnable:       false,
+		SslRedirectEnable: true,
+	}
+
+	endpoint := fmt.Sprintf("op.cgi")
+	form, _ := query.Values(configPort)
+	statusCode, err := s.post(endpoint, &form)
+	if err != nil || statusCode != 200 {
+		msg := "POST request to set Port config returned error."
+		log.WithFields(log.Fields{
+			"IP":         s.ip,
+			"Model":      s.BmcType(),
+			"Serial":     s.serial,
+			"Endpoint":   endpoint,
+			"StatusCode": statusCode,
+			"Step":       funcName(),
+			"Error":      err,
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	log.WithFields(log.Fields{
+		"IP":     s.ip,
+		"Model":  s.BmcType(),
+		"Serial": s.serial,
+	}).Info("Network config parameters applied.")
 	return err
 }
 
@@ -319,12 +405,13 @@ func (s *SupermicroX10) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 
 	endpoint := fmt.Sprintf("op.cgi")
 	form, _ := query.Values(configDateTime)
-	statusCode, err := s.post(endpoint, &form, false)
+	statusCode, err := s.post(endpoint, &form)
 	if err != nil || statusCode != 200 {
 		msg := "POST request to set Syslog config returned error."
 		log.WithFields(log.Fields{
 			"IP":         s.ip,
 			"Model":      s.BmcType(),
+			"Serial":     s.serial,
 			"Endpoint":   endpoint,
 			"StatusCode": statusCode,
 			"Step":       funcName(),
@@ -335,8 +422,9 @@ func (s *SupermicroX10) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 
 	//
 	log.WithFields(log.Fields{
-		"IP":    s.ip,
-		"Model": s.BmcType(),
+		"IP":     s.ip,
+		"Model":  s.BmcType(),
+		"Serial": s.serial,
 	}).Info("NTP config parameters applied.")
 	return err
 }
@@ -444,12 +532,13 @@ func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*
 
 		endpoint := fmt.Sprintf("op.cgi")
 		form, _ := query.Values(configLdap)
-		statusCode, err := s.post(endpoint, &form, false)
+		statusCode, err := s.post(endpoint, &form)
 		if err != nil || statusCode != 200 {
 			msg := "POST request to set Ldap config returned error."
 			log.WithFields(log.Fields{
 				"IP":         s.ip,
 				"Model":      s.BmcType(),
+				"Serial":     s.serial,
 				"Endpoint":   endpoint,
 				"StatusCode": statusCode,
 				"Step":       funcName(),
@@ -463,6 +552,11 @@ func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*
 		"IP":    s.ip,
 		"Model": s.BmcType(),
 	}).Info("Ldap config parameters applied.")
+	return err
+}
+
+//An example of a vendor specific configuration
+func (s *SupermicroX10) applyVendorSpecificConfig(cfg *cfgresources.Supermicro) (err error) {
 	return err
 }
 
@@ -515,12 +609,13 @@ func (s *SupermicroX10) applySyslogParams(cfg *cfgresources.Syslog) (err error) 
 
 	endpoint := fmt.Sprintf("op.cgi")
 	form, _ := query.Values(configSyslog)
-	statusCode, err := s.post(endpoint, &form, false)
+	statusCode, err := s.post(endpoint, &form)
 	if err != nil || statusCode != 200 {
 		msg := "POST request to set Syslog config returned error."
 		log.WithFields(log.Fields{
 			"IP":         s.ip,
 			"Model":      s.BmcType(),
+			"Serial":     s.serial,
 			"Endpoint":   endpoint,
 			"StatusCode": statusCode,
 			"step":       funcName(),
@@ -531,14 +626,15 @@ func (s *SupermicroX10) applySyslogParams(cfg *cfgresources.Syslog) (err error) 
 	//returns okStarting Syslog daemon if successful
 
 	log.WithFields(log.Fields{
-		"IP":    s.ip,
-		"Model": s.BmcType(),
+		"IP":     s.ip,
+		"Model":  s.BmcType(),
+		"Serial": s.serial,
 	}).Info("Syslog config parameters applied.")
 	return err
 }
 
 // posts a urlencoded form to the given endpoint
-func (s *SupermicroX10) post(endpoint string, form *url.Values, debug bool) (statusCode int, err error) {
+func (s *SupermicroX10) post(endpoint string, form *url.Values) (statusCode int, err error) {
 
 	u, err := url.Parse(fmt.Sprintf("https://%s/cgi/%s", s.ip, endpoint))
 	if err != nil {
@@ -556,11 +652,14 @@ func (s *SupermicroX10) post(endpoint string, form *url.Values, debug bool) (sta
 		}
 	}
 
-	if debug {
+	if log.GetLevel() == log.DebugLevel {
 		fmt.Println(fmt.Sprintf("https://%s/cgi/%s", s.ip, endpoint))
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
-			fmt.Printf("%s\n\n", dump)
+			log.Println("[Request]")
+			log.Println(">>>>>>>>>>>>>>>")
+			log.Printf("%s\n\n", dump)
+			log.Println(">>>>>>>>>>>>>>>")
 		}
 	}
 
@@ -569,10 +668,14 @@ func (s *SupermicroX10) post(endpoint string, form *url.Values, debug bool) (sta
 		return statusCode, err
 	}
 	defer resp.Body.Close()
-	if debug {
+
+	if log.GetLevel() == log.DebugLevel {
 		dump, err := httputil.DumpResponse(resp, true)
 		if err == nil {
-			fmt.Printf("%s\n\n", dump)
+			log.Println("[Response]")
+			log.Println("<<<<<<<<<<<<<<")
+			log.Printf("%s\n\n", dump)
+			log.Println("<<<<<<<<<<<<<<")
 		}
 	}
 

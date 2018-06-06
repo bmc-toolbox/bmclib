@@ -43,6 +43,7 @@ type Ilo struct {
 	password   string
 	sessionKey string
 	client     *http.Client
+	serial     string
 	loginURL   *url.URL
 	rimpBlade  *hp.RimpBlade
 }
@@ -109,6 +110,16 @@ func (i *Ilo) Login() (err error) {
 		}
 	}
 
+	if log.GetLevel() == log.DebugLevel {
+		dump, err := httputil.DumpRequestOut(req, true)
+		if err == nil {
+			log.Println(fmt.Sprintf("[Request] %s", i.loginURL.String()))
+			log.Println(">>>>>>>>>>>>>>>")
+			log.Printf("%s\n\n", dump)
+			log.Println(">>>>>>>>>>>>>>>")
+		}
+	}
+
 	if i.sessionKey == "" {
 		log.WithFields(log.Fields{
 			"step":  "Login()",
@@ -126,10 +137,25 @@ func (i *Ilo) Login() (err error) {
 		return err
 	}
 	defer resp.Body.Close()
+	if log.GetLevel() == log.DebugLevel {
+		dump, err := httputil.DumpResponse(resp, true)
+		if err == nil {
+			log.Println("[Response]")
+			log.Println("<<<<<<<<<<<<<<")
+			log.Printf("%s\n\n", dump)
+			log.Println("<<<<<<<<<<<<<<")
+		}
+	}
 
 	if strings.Contains(string(payload), "Invalid login attempt") {
 		return errors.ErrLoginFailed
 	}
+
+	serial, err := i.Serial()
+	if err != nil {
+		return err
+	}
+	i.serial = serial
 
 	return err
 }
@@ -155,22 +181,30 @@ func (i *Ilo) get(endpoint string) (payload []byte, err error) {
 			req.AddCookie(cookie)
 		}
 	}
-
-	//fmt.Println(fmt.Sprintf("%s/%s", bmcURL, endpoint))
-	//dump, err := httputil.DumpRequestOut(req, true)
-	//if err == nil {
-	//	fmt.Printf("%s\n\n", dump)
-	//}
+	if log.GetLevel() == log.DebugLevel {
+		dump, err := httputil.DumpRequestOut(req, true)
+		if err == nil {
+			log.Println(fmt.Sprintf("[Request] %s/%s", bmcURL, endpoint))
+			log.Println(">>>>>>>>>>>>>>>")
+			log.Printf("%s\n\n", dump)
+			log.Println(">>>>>>>>>>>>>>>")
+		}
+	}
 
 	resp, err := i.client.Do(req)
 	if err != nil {
 		return payload, err
 	}
 	defer resp.Body.Close()
-	//dump, err = httputil.DumpResponse(resp, true)
-	//if err == nil {
-	//	fmt.Printf("%s\n\n", dump)
-	//}
+	if log.GetLevel() == log.DebugLevel {
+		dump, err := httputil.DumpResponse(resp, true)
+		if err == nil {
+			log.Println("[Response]")
+			log.Println("<<<<<<<<<<<<<<")
+			log.Printf("%s\n\n", dump)
+			log.Println("<<<<<<<<<<<<<<")
+		}
+	}
 
 	payload, err = ioutil.ReadAll(resp.Body)
 	if err != nil {

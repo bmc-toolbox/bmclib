@@ -28,6 +28,7 @@ type C7000 struct {
 	password string
 	XmlToken string //required to send SOAP XML payloads
 	client   *http.Client
+	serial   string
 	Rimp     *hp.Rimp
 }
 
@@ -97,6 +98,12 @@ func (c *C7000) Login() (err error) {
 	}
 
 	c.XmlToken = loginResponse.Body.UserLogInResponse.HpOaSessionKeyToken.OaSessionKey.Text
+
+	serial, err := c.Serial()
+	if err != nil {
+		return err
+	}
+	c.serial = serial
 
 	return err
 }
