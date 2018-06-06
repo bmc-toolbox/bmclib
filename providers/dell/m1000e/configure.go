@@ -3,9 +3,6 @@ package m1000e
 import (
 	"bytes"
 	"fmt"
-	"github.com/google/go-querystring/query"
-	"github.com/bmc-toolbox/bmclib/cfgresources"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -15,6 +12,10 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+
+	"github.com/bmc-toolbox/bmclib/cfgresources"
+	"github.com/google/go-querystring/query"
+	log "github.com/sirupsen/logrus"
 )
 
 func (m *M1000e) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
@@ -355,7 +356,7 @@ func (m *M1000e) NewSslMultipartUpload(endpoint string, params map[string]string
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	//fmt.Printf("--> %s", req.Body)
 
-	resp, err := m.client.Do(req)
+	resp, err := m.httpClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -386,7 +387,7 @@ func (m *M1000e) post(endpoint string, form *url.Values) (err error) {
 	//XXX to debug
 	//fmt.Printf("--> %+v\n", form.Encode())
 	//return err
-	resp, err := m.client.Do(req)
+	resp, err := m.httpClient.Do(req)
 	if err != nil {
 		return err
 	}

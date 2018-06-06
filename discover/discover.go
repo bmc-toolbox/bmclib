@@ -15,7 +15,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/providers/hp/c7000"
 
 	"github.com/bmc-toolbox/bmclib/devices"
-	"github.com/bmc-toolbox/bmclib/httpclient"
+	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/providers/hp/ilo"
 	"github.com/bmc-toolbox/bmclib/providers/supermicro/supermicrox10"
 

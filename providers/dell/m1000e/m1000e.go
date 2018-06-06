@@ -13,8 +13,9 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/errors"
-	"github.com/bmc-toolbox/bmclib/httpclient"
+	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/providers/dell"
+	"golang.org/x/crypto/ssh"
 
 	// this make possible to setup logging and properties at any stage
 	_ "github.com/bmc-toolbox/bmclib/logging"
@@ -36,7 +37,8 @@ type M1000e struct {
 	ip           string
 	username     string
 	password     string
-	client       *http.Client
+	httpClient   *http.Client
+	sshClient    *ssh.Client
 	cmcJSON      *dell.CMC
 	cmcTemp      *dell.CMCTemp
 	cmcWWN       *dell.CMCWWN
@@ -67,12 +69,12 @@ func (m *M1000e) Login() (err error) {
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-	m.client, err = httpclient.Build()
+	m.httpClient, err = httpclient.Build()
 	if err != nil {
 		return err
 	}
 
-	resp, err := m.client.Do(req)
+	resp, err := m.httpClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -110,7 +112,7 @@ func (m *M1000e) Login() (err error) {
 func (m *M1000e) getSessionToken() (token string, err error) {
 
 	u := fmt.Sprintf("https://%s/cgi-bin/webcgi/general", m.ip)
-	resp, err := m.client.Get(u)
+	resp, err := m.httpClient.Get(u)
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -166,7 +168,7 @@ func (m *M1000e) loadHwData() (err error) {
 
 // Logout logs out and close the chassis connection
 func (m *M1000e) Logout() (err error) {
-	_, err = m.client.Get(fmt.Sprintf("https://%s/cgi-bin/webcgi/logout", m.ip))
+	_, err = m.httpClient.Get(fmt.Sprintf("https://%s/cgi-bin/webcgi/logout", m.ip))
 	if err != nil {
 		return err
 	}
@@ -176,7 +178,7 @@ func (m *M1000e) Logout() (err error) {
 func (m *M1000e) get(endpoint string) (payload []byte, err error) {
 	log.WithFields(log.Fields{"step": "chassis connection", "vendor": dell.VendorID, "ip": m.ip, "endpoint": endpoint}).Debug("retrieving data from chassis")
 
-	resp, err := m.client.Get(fmt.Sprintf("https://%s/cgi-bin/webcgi/%s", m.ip, endpoint))
+	resp, err := m.httpClient.Get(fmt.Sprintf("https://%s/cgi-bin/webcgi/%s", m.ip, endpoint))
 	if err != nil {
 		return payload, err
 	}
