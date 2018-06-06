@@ -435,14 +435,11 @@ func (m *M1000e) post(endpoint string, form *url.Values) (err error) {
 		}
 	}
 
-<<<<<<< HEAD
 	//XXX to debug
 	//fmt.Printf("--> %+v\n", form.Encode())
 	//return err
 	resp, err := m.httpClient.Do(req)
-=======
-	resp, err := m.client.Do(req)
->>>>>>> 6cd38dcaf43458b4647383009923c3eb02268876
+
 	if err != nil {
 		return err
 	}
