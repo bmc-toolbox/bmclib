@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"strconv"
 	"strings"
@@ -31,6 +32,7 @@ type SupermicroX10 struct {
 	username string
 	password string
 	client   *http.Client
+	serial   string
 }
 
 // New returns a new SupermicroX10 instance ready to be used
@@ -72,6 +74,12 @@ func (s *SupermicroX10) Login() (err error) {
 		return errors.ErrLoginFailed
 	}
 
+	serial, err := s.Serial()
+	if err != nil {
+		return err
+	}
+
+	s.serial = serial
 	return err
 }
 
@@ -93,6 +101,16 @@ func (s *SupermicroX10) query(requestType string) (ipmi *supermicro.IPMI, err er
 			req.AddCookie(cookie)
 		}
 	}
+	if log.GetLevel() == log.DebugLevel {
+		log.Println(fmt.Sprintf("https://%s/cgi/%s", bmcURL, s.ip))
+		dump, err := httputil.DumpRequestOut(req, true)
+		if err == nil {
+			log.Println("[Request]")
+			log.Println(">>>>>>>>>>>>>>>")
+			log.Printf("%s\n\n", dump)
+			log.Println(">>>>>>>>>>>>>>>")
+		}
+	}
 
 	resp, err := s.client.Do(req)
 	if err != nil {
@@ -105,6 +123,16 @@ func (s *SupermicroX10) query(requestType string) (ipmi *supermicro.IPMI, err er
 		return ipmi, err
 	}
 	defer resp.Body.Close()
+	if log.GetLevel() == log.DebugLevel {
+		log.Println(fmt.Sprintf("https://%s/cgi/%s", bmcURL, s.ip))
+		dump, err := httputil.DumpRequestOut(req, true)
+		if err == nil {
+			log.Println("[Request]")
+			log.Println(">>>>>>>>>>>>>>>")
+			log.Printf("%s\n\n", dump)
+			log.Println(">>>>>>>>>>>>>>>")
+		}
+	}
 
 	ipmi = &supermicro.IPMI{}
 	err = xml.Unmarshal(payload, ipmi)
@@ -135,12 +163,32 @@ func (s *SupermicroX10) Logout() (err error) {
 			req.AddCookie(cookie)
 		}
 	}
+	if log.GetLevel() == log.DebugLevel {
+		log.Println(fmt.Sprintf("https://%s/cgi/%s", bmcURL, s.ip))
+		dump, err := httputil.DumpRequestOut(req, true)
+		if err == nil {
+			log.Println("[Request]")
+			log.Println(">>>>>>>>>>>>>>>")
+			log.Printf("%s\n\n", dump)
+			log.Println(">>>>>>>>>>>>>>>")
+		}
+	}
 
 	resp, err := s.client.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
+	if log.GetLevel() == log.DebugLevel {
+		log.Println(fmt.Sprintf("https://%s/cgi/%s", bmcURL, s.ip))
+		dump, err := httputil.DumpRequestOut(req, true)
+		if err == nil {
+			log.Println("[Request]")
+			log.Println(">>>>>>>>>>>>>>>")
+			log.Printf("%s\n\n", dump)
+			log.Println(">>>>>>>>>>>>>>>")
+		}
+	}
 
 	return err
 }
