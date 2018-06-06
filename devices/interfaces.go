@@ -36,8 +36,7 @@ type BmcChassis interface {
 	Blades() ([]*Blade, error)
 	BmcType() string
 	FwVersion() (string, error)
-	Login() error
-	Logout() error
+	Close() error
 	Model() (string, error)
 	Name() (string, error)
 	Nics() ([]*Nic, error)
