@@ -3,13 +3,14 @@ package m1000e
 import (
 	"bytes"
 	"fmt"
-	"github.com/google/go-querystring/query"
 	"github.com/bmc-toolbox/bmclib/cfgresources"
+	"github.com/google/go-querystring/query"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -46,6 +47,7 @@ func (m *M1000e) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 							"step":     "ApplyCfg",
 							"Resource": cfg.Field(r).Kind(),
 							"IP":       m.ip,
+							"Serial":   m.serial,
 						}).Warn("Unable to set user config.")
 					}
 
@@ -60,6 +62,8 @@ func (m *M1000e) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 						"step":     "ApplyCfg",
 						"resource": cfg.Field(r).Kind(),
 						"IP":       m.ip,
+						"Model":    m.BmcType(),
+						"Serial":   m.serial,
 					}).Warn("Unable to set Syslog config.")
 				}
 			case "Network":
@@ -72,6 +76,8 @@ func (m *M1000e) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 						"step":     "ApplyCfg",
 						"resource": cfg.Field(r).Kind(),
 						"IP":       m.ip,
+						"Model":    m.BmcType(),
+						"Serial":   m.serial,
 					}).Warn("Unable to set Ntp config.")
 				}
 
@@ -84,6 +90,8 @@ func (m *M1000e) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 						"step":     "ApplyCfg",
 						"resource": cfg.Field(r).Kind(),
 						"IP":       m.ip,
+						"Model":    m.BmcType(),
+						"Serial":   m.serial,
 					}).Warn("Unable to set Ldap config.")
 				}
 			case "LdapGroup":
@@ -94,6 +102,8 @@ func (m *M1000e) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 						"step":     "applyLdapParams",
 						"resource": "Ldap",
 						"IP":       m.ip,
+						"Model":    m.BmcType(),
+						"Serial":   m.serial,
 						"Error":    err,
 					}).Warn("applyLdapGroupParams returned error.")
 				}
@@ -104,6 +114,8 @@ func (m *M1000e) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 						"step":     "ApplyCfg",
 						"resource": cfg.Field(r).Kind(),
 						"IP":       m.ip,
+						"Model":    m.BmcType(),
+						"Serial":   m.serial,
 					}).Warn("Unable to set SSL config.")
 				}
 			default:
@@ -128,6 +140,8 @@ func (m *M1000e) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error)
 				"step":      "applyLdapGroupParams",
 				"Ldap role": group.Role,
 				"IP":        m.ip,
+				"Model":     m.BmcType(),
+				"Serial":    m.serial,
 				"Error":     err,
 			}).Warn("Unable to apply Ldap role group config.")
 			return err
@@ -139,15 +153,19 @@ func (m *M1000e) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error)
 				"step":      "applyLdapGroupParams",
 				"Ldap role": group.Role,
 				"IP":        m.ip,
+				"Model":     m.BmcType(),
+				"Serial":    m.serial,
 				"Error":     err,
 			}).Warn("Unable to apply Ldap role group config.")
 			return err
 		}
 
 		log.WithFields(log.Fields{
-			"IP":    m.ip,
-			"Role":  group.Role,
-			"Group": group.Group,
+			"IP":     m.ip,
+			"Model":  m.BmcType(),
+			"Serial": m.serial,
+			"Role":   group.Role,
+			"Group":  group.Group,
 		}).Info("Ldap group parameters applied.")
 
 		roleId += 1
@@ -169,8 +187,9 @@ func (m *M1000e) applyDatetimeCfg(cfg DatetimeParams) (err error) {
 	}
 
 	log.WithFields(log.Fields{
-		"IP":    m.ip,
-		"Model": m.BmcType(),
+		"IP":     m.ip,
+		"Model":  m.BmcType(),
+		"Serial": m.serial,
 	}).Info("DateTime config parameters applied.")
 	return err
 }
@@ -188,8 +207,9 @@ func (m *M1000e) applyDirectoryServicesCfg(cfg DirectoryServicesParams) (err err
 	}
 
 	log.WithFields(log.Fields{
-		"IP":    m.ip,
-		"Model": m.BmcType(),
+		"IP":     m.ip,
+		"Model":  m.BmcType(),
+		"Serial": m.serial,
 	}).Info("Ldap config parameters applied.")
 	return err
 }
@@ -207,8 +227,9 @@ func (m *M1000e) applyLdapRoleCfg(cfg LdapArgParams, roleId int) (err error) {
 	}
 
 	log.WithFields(log.Fields{
-		"IP":    m.ip,
-		"Model": m.BmcType(),
+		"IP":     m.ip,
+		"Model":  m.BmcType(),
+		"Serial": m.serial,
 	}).Info("Ldap Role group config parameters applied.")
 	return err
 }
@@ -224,8 +245,9 @@ func (m *M1000e) ApplySecurityCfg(cfg LoginSecurityParams) (err error) {
 	}
 
 	log.WithFields(log.Fields{
-		"IP":    m.ip,
-		"Model": m.BmcType(),
+		"IP":     m.ip,
+		"Model":  m.BmcType(),
+		"Serial": m.serial,
 	}).Info("Security config parameters applied.")
 	return err
 
@@ -242,8 +264,9 @@ func (m *M1000e) applyInterfaceCfg(cfg InterfaceParams) (err error) {
 	}
 
 	log.WithFields(log.Fields{
-		"IP":    m.ip,
-		"Model": m.BmcType(),
+		"IP":     m.ip,
+		"Model":  m.BmcType(),
+		"Serial": m.serial,
 	}).Info("Interface config parameters applied.")
 	return err
 }
@@ -261,8 +284,9 @@ func (m *M1000e) applyUserCfg(cfg UserParams, userId int) (err error) {
 	}
 
 	log.WithFields(log.Fields{
-		"IP":    m.ip,
-		"Model": m.BmcType(),
+		"IP":     m.ip,
+		"Model":  m.BmcType(),
+		"Serial": m.serial,
 	}).Info("User account config parameters applied.")
 	return err
 }
@@ -286,8 +310,9 @@ func (m *M1000e) applySslCfg(ssl *cfgresources.Ssl) (err error) {
 	}
 
 	log.WithFields(log.Fields{
-		"IP":    m.ip,
-		"Model": m.BmcType(),
+		"IP":     m.ip,
+		"Model":  m.BmcType(),
+		"Serial": m.serial,
 	}).Info("SSL certs uploaded.")
 	return err
 }
@@ -353,13 +378,30 @@ func (m *M1000e) NewSslMultipartUpload(endpoint string, params map[string]string
 	url := fmt.Sprintf("https://%s/cgi-bin/webcgi/%s", m.ip, endpoint)
 	req, err := http.NewRequest("POST", url, body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
-	//fmt.Printf("--> %s", req.Body)
+	if log.GetLevel() == log.DebugLevel {
+		dump, err := httputil.DumpRequestOut(req, true)
+		if err == nil {
+			log.Println(fmt.Sprintf("[Request] https://%s/cgi-bin/webcgi/%s", m.ip, endpoint))
+			log.Println(">>>>>>>>>>>>>>>")
+			log.Printf("%s\n\n", dump)
+			log.Println(">>>>>>>>>>>>>>>")
+		}
+	}
 
 	resp, err := m.client.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
+	if log.GetLevel() == log.DebugLevel {
+		dump, err := httputil.DumpResponse(resp, true)
+		if err == nil {
+			log.Println("[Response]")
+			log.Println("<<<<<<<<<<<<<<")
+			log.Printf("%s\n\n", dump)
+			log.Println("<<<<<<<<<<<<<<")
+		}
+	}
 
 	_, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -382,22 +424,36 @@ func (m *M1000e) post(endpoint string, form *url.Values) (err error) {
 		return err
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	if log.GetLevel() == log.DebugLevel {
+		dump, err := httputil.DumpRequestOut(req, true)
+		if err == nil {
+			log.Println(fmt.Sprintf("[Request] https://%s/cgi-bin/webcgi/%s", m.ip, endpoint))
+			log.Println(">>>>>>>>>>>>>>>")
+			log.Printf("%s\n\n", dump)
+			log.Println(">>>>>>>>>>>>>>>")
+		}
+	}
 
-	//XXX to debug
-	//fmt.Printf("--> %+v\n", form.Encode())
-	//return err
 	resp, err := m.client.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
+	if log.GetLevel() == log.DebugLevel {
+		dump, err := httputil.DumpResponse(resp, true)
+		if err == nil {
+			log.Println("[Response]")
+			log.Println("<<<<<<<<<<<<<<")
+			log.Printf("%s\n\n", dump)
+			log.Println("<<<<<<<<<<<<<<")
+		}
+	}
 
 	_, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
-	//fmt.Printf("-->> %d\n", resp.StatusCode)
-	//fmt.Printf("%s\n", body)
+
 	return err
 }
 
