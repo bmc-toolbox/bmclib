@@ -71,11 +71,6 @@ func (m *M1000e) Close() (err error) {
 }
 
 func (m *M1000e) get(endpoint string) (payload []byte, err error) {
-	err = m.httpLogin()
-	if err != nil {
-		return payload, err
-	}
-
 	log.WithFields(log.Fields{"step": "chassis connection", "vendor": dell.VendorID, "ip": m.ip, "endpoint": endpoint}).Debug("retrieving data from chassis")
 
 	resp, err := m.httpClient.Get(fmt.Sprintf("https://%s/cgi-bin/webcgi/%s", m.ip, endpoint))
@@ -148,6 +143,11 @@ func (m *M1000e) PowerKw() (power float64, err error) {
 
 // TempC returns the current temperature of the machine
 func (m *M1000e) TempC() (temp int, err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return temp, err
+	}
+
 	url := "json?method=temp-sensors"
 	payload, err := m.get(url)
 	if err != nil {
@@ -186,13 +186,18 @@ func (m *M1000e) Status() (status string, err error) {
 func (m *M1000e) FwVersion() (version string, err error) {
 	err = m.httpLogin()
 	if err != nil {
-		return "", err
+		return version, err
 	}
 	return m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.ChassisStatus.ROCmcFwVersionString, err
 }
 
 // Nics returns all found Nics in the device
 func (m *M1000e) Nics() (nics []*devices.Nic, err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return nics, err
+	}
+
 	payload, err := m.get("cmc_status?cat=C01&tab=T11&id=P31")
 	if err != nil {
 		return nics, err
@@ -240,7 +245,11 @@ func (m *M1000e) PassThru() (passthru string, err error) {
 
 // Psus returns a list of psus installed on the device
 func (m *M1000e) Psus() (psus []*devices.Psu, err error) {
-	serial, _ := m.Serial()
+	serial, err := m.Serial()
+	if err != nil {
+		return psus, err
+	}
+
 	for _, psu := range m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.PsuStatus.Psus {
 		if psu.PsuPresent == 0 {
 			continue
@@ -278,6 +287,10 @@ func (m *M1000e) Psus() (psus []*devices.Psu, err error) {
 
 // StorageBlades returns all StorageBlades found in this chassis
 func (m *M1000e) StorageBlades() (storageBlades []*devices.StorageBlade, err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return storageBlades, err
+	}
 	for _, dellBlade := range m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.Blades {
 		if dellBlade.BladePresent == 1 && dellBlade.IsStorageBlade == 1 {
 			storageBlade := devices.StorageBlade{}
@@ -306,6 +319,10 @@ func (m *M1000e) StorageBlades() (storageBlades []*devices.StorageBlade, err err
 
 // Blades returns all StorageBlades found in this chassis
 func (m *M1000e) Blades() (blades []*devices.Blade, err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return blades, err
+	}
 	for _, dellBlade := range m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.Blades {
 		if dellBlade.BladePresent == 1 && dellBlade.IsStorageBlade == 0 {
 			blade := devices.Blade{}
@@ -389,18 +406,55 @@ func (m *M1000e) ChassisSnapshot() (chassis *devices.Chassis, err error) {
 	chassis = &devices.Chassis{}
 	chassis.Vendor = m.Vendor()
 	chassis.BmcAddress = m.ip
-	chassis.Name, _ = m.Name()
-	chassis.Serial, _ = m.Serial()
-	chassis.Model, _ = m.Model()
-	chassis.PowerKw, _ = m.PowerKw()
-	chassis.TempC, _ = m.TempC()
-	chassis.Status, _ = m.Status()
-	chassis.FwVersion, _ = m.FwVersion()
-	chassis.PassThru, _ = m.PassThru()
-	chassis.Blades, _ = m.Blades()
-	chassis.StorageBlades, _ = m.StorageBlades()
-	chassis.Nics, _ = m.Nics()
-	chassis.Psus, _ = m.Psus()
+	chassis.Name, err = m.Name()
+	if err != nil {
+		return nil, err
+	}
+	chassis.Serial, err = m.Serial()
+	if err != nil {
+		return nil, err
+	}
+	chassis.Model, err = m.Model()
+	if err != nil {
+		return nil, err
+	}
+	chassis.PowerKw, err = m.PowerKw()
+	if err != nil {
+		return nil, err
+	}
+	chassis.TempC, err = m.TempC()
+	if err != nil {
+		return nil, err
+	}
+	chassis.Status, err = m.Status()
+	if err != nil {
+		return nil, err
+	}
+	chassis.FwVersion, err = m.FwVersion()
+	if err != nil {
+		return nil, err
+	}
+	chassis.PassThru, err = m.PassThru()
+	if err != nil {
+		return nil, err
+	}
+	chassis.Blades, err = m.Blades()
+	if err != nil {
+		return nil, err
+	}
+	chassis.StorageBlades, err = m.StorageBlades()
+	if err != nil {
+		return nil, err
+	}
+	chassis.Nics, err = m.Nics()
+	if err != nil {
+		return nil, err
+	}
+	chassis.Psus, err = m.Psus()
+	if err != nil {
+		return nil, err
+	}
+
 	return chassis, err
 }
 
