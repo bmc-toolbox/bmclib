@@ -70,9 +70,9 @@ func setup() {
 		os.Exit(1)
 	}
 
-	// Read in declared resources
+	// Read in declared resources for one time setup
 	resourceInstance := resource.Resource{Log: log}
-	config := resourceInstance.ReadResources()
+	config := resourceInstance.ReadResourcesSetup()
 
 	// Spawn butlers to work
 	butlerChan := make(chan butler.ButlerMsg, 10)
@@ -84,7 +84,7 @@ func setup() {
 
 	//over inventory channel and pass asset lists recieved to bmcbutlers
 	for asset := range inventoryChan {
-		butlerMsg := butler.ButlerMsg{Assets: asset, Config: config}
+		butlerMsg := butler.ButlerMsg{Assets: asset, Setup: config}
 		butlerChan <- butlerMsg
 	}
 

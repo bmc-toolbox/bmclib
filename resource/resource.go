@@ -28,15 +28,15 @@ type Resource struct {
 	Log *logrus.Logger
 }
 
-func (r *Resource) ReadResources() (config *cfgresources.ResourcesConfig) {
-	// returns an slice of resources to be applied,
-	// in the order they need to be applied
+func (r *Resource) ReadResourcesConfig() (config *cfgresources.ResourcesConfig) {
+	// returns a slice of configuration resources,
+	// configuration resources may be applied periodically
 
 	component := "resource"
 	log := r.Log
 
 	cfgDir := viper.GetString("bmcCfgDir")
-	cfgFile := fmt.Sprintf("%s/%s", cfgDir, "common.yml")
+	cfgFile := fmt.Sprintf("%s/%s", cfgDir, "configuration.yml")
 
 	_, err := os.Stat(cfgFile)
 	if err != nil {
@@ -72,5 +72,48 @@ func (r *Resource) ReadResources() (config *cfgresources.ResourcesConfig) {
 	//read in data from dc directories
 
 	//read in data from environment directories,
+	return config
+}
+
+func (r *Resource) ReadResourcesSetup() (config *cfgresources.ResourcesSetup) {
+	// returns a slice of setup resources to be applied,
+	// 'setup' is config that is applied just once,
+	// it may involve resetting/power cycling various dependencies,
+	//  - e.g blades in a chassis that need to be power cycled
+	//    if the flex addresses have been enabled/disabled.
+
+	component := "resource"
+	log := r.Log
+
+	cfgDir := viper.GetString("bmcCfgDir")
+	cfgFile := fmt.Sprintf("%s/%s", cfgDir, "setup.yml")
+
+	_, err := os.Stat(cfgFile)
+	if err != nil {
+		log.WithFields(logrus.Fields{
+			"component": component,
+			"cfgFile":   cfgFile,
+			"error":     err,
+		}).Fatal("Declared cfg file not found.")
+	}
+
+	yamlData, err := ioutil.ReadFile(cfgFile)
+	if err != nil {
+		log.WithFields(logrus.Fields{
+			"component": component,
+			"cfgFile":   cfgFile,
+			"error":     err,
+		}).Fatal("Unable to read bmc cfg yaml.")
+	}
+
+	//1. read in data from common.yaml
+	err = yaml.Unmarshal([]byte(yamlData), &config)
+	if err != nil {
+		log.WithFields(logrus.Fields{
+			"component": component,
+			"cfgFile":   cfgFile,
+			"error":     err,
+		}).Fatal("Unable to Unmarshal common.yml.")
+	}
 	return config
 }

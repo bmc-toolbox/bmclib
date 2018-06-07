@@ -72,9 +72,9 @@ func configure() {
 		os.Exit(1)
 	}
 
-	// Read in declared resources
+	// Read in declared resources for configuration
 	resourceInstance := resource.Resource{Log: log}
-	config := resourceInstance.ReadResources()
+	config := resourceInstance.ReadResourcesConfig()
 
 	// Spawn butlers to work
 	butlerChan := make(chan butler.ButlerMsg, 10)

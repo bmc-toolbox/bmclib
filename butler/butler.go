@@ -18,22 +18,17 @@ import (
 	"fmt"
 	"github.com/bmc-toolbox/bmcbutler/asset"
 	"github.com/bmc-toolbox/bmclib/cfgresources"
-	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/discover"
-	"github.com/bmc-toolbox/bmclib/logging"
+	bmclibLogger "github.com/bmc-toolbox/bmclib/logging"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"sync"
 )
 
-func init() {
-	//set formatter for bmclib logger
-	logging.SetFormatter(&logrus.TextFormatter{})
-}
-
 type ButlerMsg struct {
 	Assets []asset.Asset
 	Config *cfgresources.ResourcesConfig
+	Setup  *cfgresources.ResourcesSetup
 }
 
 type Butler struct {
@@ -87,6 +82,12 @@ func (b *Butler) butler(id int) {
 	component := "butler-worker"
 	defer b.SyncWG.Done()
 
+	//set bmclib logger params
+	bmclibLogger.SetFormatter(&logrus.TextFormatter{})
+	if log.Level == logrus.DebugLevel {
+		bmclibLogger.SetLevel(logrus.DebugLevel)
+	}
+
 	for {
 		msg, ok := <-b.Channel
 		if !ok {
@@ -120,16 +121,17 @@ func (b *Butler) butler(id int) {
 			log.WithFields(logrus.Fields{
 				"component": component,
 				"butler-id": id,
-				"AssetType": asset.Type,
 				"IP":        asset.IpAddress,
-				"Vendor":    asset.Vendor,
 				"Serial":    asset.Serial,
+				"AssetType": asset.Type,
+				"Vendor":    asset.Vendor,
 				"Location":  asset.Location,
 			}).Info("Configuring asset..")
 
 			//this asset needs to be setup
 			if asset.Setup == true {
-				b.setupAsset(id, msg.Config, &asset)
+				b.setupAsset(id, msg.Setup, &asset)
+				continue
 			}
 
 			b.applyConfig(id, msg.Config, &asset)
@@ -175,157 +177,5 @@ func (b *Butler) connectAsset(asset *asset.Asset, useDefaultLogin bool) (bmcConn
 	}
 
 	return bmcConnection, err
-
-}
-
-//runs one time setup actions.
-// TODO: read in resource config for needs setup from cfg dif
-func (b *Butler) setupAsset(id int, config *cfgresources.ResourcesConfig, asset *asset.Asset) {
-	fmt.Printf("--> Asset to setup : %+v", asset)
-}
-
-// applyConfig setups up the bmc connection,
-//
-// and iterates over the config to be applied.
-func (b *Butler) applyConfig(id int, config *cfgresources.ResourcesConfig, asset *asset.Asset) {
-
-	var useDefaultLogin bool
-	var err error
-	log := b.Log
-	component := "butler-apply-config"
-
-	//this bit is ugly, but I need a way to retry connecting and login,
-	//without having to pass around the specific bmc/chassis types (*m1000.M1000e etc..),
-	//maybe this can be done in bmclib instead.
-	client, err := b.connectAsset(asset, useDefaultLogin)
-	if err != nil {
-		return
-	}
-
-	switch deviceType := client.(type) {
-	case devices.Bmc:
-
-		bmc := client.(devices.Bmc)
-		asset.Model = bmc.ModelId()
-
-		err = bmc.Login()
-		//if the first attempt to login fails, try with default creds
-		if err != nil {
-			log.WithFields(logrus.Fields{
-				"component":         component,
-				"butler-id":         id,
-				"device-type":       deviceType,
-				"use-default-login": useDefaultLogin,
-				"Serial":            asset.Serial,
-				"IP":                asset.IpAddress,
-				"Vendor":            asset.Vendor,
-				"Model":             asset.Model,
-				"Type":              asset.Type,
-				"Error":             err,
-			}).Warn("Unable to login with current credentials, attempting default login..")
-
-			useDefaultLogin = true
-			client, err = b.connectAsset(asset, useDefaultLogin)
-			if err != nil {
-				return
-			}
-
-			bmc = client.(devices.Bmc)
-			err = bmc.Login()
-
-			//all attempts to login have failed.
-			if err != nil {
-				log.WithFields(logrus.Fields{
-					"component":         component,
-					"butler-id":         id,
-					"use-default-login": useDefaultLogin,
-					"Serial":            asset.Serial,
-					"IP":                asset.IpAddress,
-					"Vendor":            asset.Vendor,
-					"Model":             asset.Model,
-					"Type":              asset.Type,
-					"Error":             err,
-				}).Warn("Unable to login with default credentials.")
-				return
-			}
-
-		} else {
-			log.WithFields(logrus.Fields{
-				"component":         component,
-				"butler-id":         id,
-				"use-default-login": useDefaultLogin,
-				"Serial":            asset.Serial,
-				"IP":                asset.IpAddress,
-				"Vendor":            asset.Vendor,
-				"Model":             asset.Model,
-				"Type":              asset.Type,
-			}).Info("Logged into asset.")
-		}
-
-		bmc.ApplyCfg(config)
-		bmc.Logout()
-	case devices.BmcChassis:
-		chassis := client.(devices.BmcChassis)
-		asset.Model = chassis.ModelId()
-
-		err := chassis.Login()
-		//if the first attempt to login fails, try with default creds
-		if err != nil {
-			log.WithFields(logrus.Fields{
-				"component":         component,
-				"butler-id":         id,
-				"use-default-login": useDefaultLogin,
-				"Asset":             fmt.Sprintf("%+v", asset),
-				"Error":             err,
-			}).Warn("Unable to login to bmc with current credentials, trying default login..")
-
-			useDefaultLogin = true
-			client, err = b.connectAsset(asset, useDefaultLogin)
-			if err != nil {
-				return
-			}
-
-			chassis = client.(devices.BmcChassis)
-			err = chassis.Login()
-
-			//all attempts to login have failed.
-			if err != nil {
-				log.WithFields(logrus.Fields{
-					"component":         component,
-					"butler-id":         id,
-					"use-default-login": useDefaultLogin,
-					"Asset":             fmt.Sprintf("%+v", asset),
-					"Error":             err,
-				}).Warn("Unable to login to bmc with default credentials")
-				return
-			}
-
-		} else {
-			log.WithFields(logrus.Fields{
-				"component":         component,
-				"butler-id":         id,
-				"use-default-login": useDefaultLogin,
-				"Asset":             fmt.Sprintf("%+v", asset),
-			}).Info("Successfully logged into asset.")
-		}
-
-		chassis.ApplyCfg(config)
-		log.WithFields(logrus.Fields{
-			"component": component,
-			"butler-id": id,
-			"Asset":     fmt.Sprintf("%+v", asset),
-		}).Info("Config applied.")
-
-		chassis.Logout()
-	default:
-		log.WithFields(logrus.Fields{
-			"component": component,
-			"butler-id": id,
-			"Asset":     fmt.Sprintf("%+v", asset),
-		}).Warn("Unkown device type.")
-		return
-	}
-
-	return
 
 }
