@@ -10,7 +10,9 @@ import (
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
+	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/providers/hp"
+	multierror "github.com/hashicorp/go-multierror"
 
 	// this make possible to setup logging and properties at any stage
 	_ "github.com/bmc-toolbox/bmclib/logging"
@@ -23,13 +25,14 @@ const (
 
 // C7000 holds the status and properties of a connection to a BladeSystem device
 type C7000 struct {
-	ip       string
-	username string
-	password string
-	XmlToken string //required to send SOAP XML payloads
-	client   *http.Client
-	serial   string
-	Rimp     *hp.Rimp
+	ip         string
+	username   string
+	password   string
+	XMLToken   string //required to send SOAP XML payloads
+	httpClient *http.Client
+	sshClient  *sshclient.SSHClient
+	serial     string
+	Rimp       *hp.Rimp
 }
 
 // New returns a connection to C7000
@@ -61,55 +64,18 @@ func New(ip string, username string, password string) (chassis *C7000, err error
 		return chassis, errors.ErrUnableToReadData
 	}
 
-	return &C7000{ip: ip, username: username, password: password, Rimp: Rimp, client: client}, err
+	return &C7000{ip: ip, username: username, password: password, Rimp: Rimp, httpClient: client}, err
 }
 
-// Login initiates the connection to a chassis device
-func (c *C7000) Login() (err error) {
-
-	//setup the login payload
-	username := Username{Text: c.username}
-	password := Password{Text: c.password}
-	userlogin := UserLogIn{Username: username, Password: password}
-
-	//wrap the XML doc in the SOAP envelope
-	doc := wrapXML(userlogin, "")
-
-	output, err := xml.MarshalIndent(doc, "  ", "    ")
-	if err != nil {
-		return err
+// Close closes the connection properly
+func (c *C7000) Close() (err error) {
+	if c.sshClient != nil {
+		e := c.sshClient.Close()
+		if e != nil {
+			err = multierror.Append(e, err)
+		}
 	}
 
-	c.client, err = httpclient.Build()
-	if err != nil {
-		return err
-	}
-
-	statusCode, responseBody, err := c.postXML(output)
-
-	if err != nil || statusCode != 200 {
-		return errors.ErrLoginFailed
-	}
-
-	var loginResponse EnvelopeLoginResponse
-	err = xml.Unmarshal(responseBody, &loginResponse)
-	if err != nil {
-		return errors.ErrLoginFailed
-	}
-
-	c.XmlToken = loginResponse.Body.UserLogInResponse.HpOaSessionKeyToken.OaSessionKey.Text
-
-	serial, err := c.Serial()
-	if err != nil {
-		return err
-	}
-	c.serial = serial
-
-	return err
-}
-
-// Logout logs out and close the chassis connection
-func (c *C7000) Logout() (err error) {
 	return err
 }
 

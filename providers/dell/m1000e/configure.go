@@ -132,6 +132,10 @@ func (m *M1000e) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 }
 
 func (m *M1000e) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return err
+	}
 
 	roleId := 1
 	for _, group := range cfg {
@@ -178,6 +182,10 @@ func (m *M1000e) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error)
 //  /cgi-bin/webcgi/datetime
 // apply datetime payload
 func (m *M1000e) applyDatetimeCfg(cfg DatetimeParams) (err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return err
+	}
 
 	cfg.SessionToken = m.SessionToken
 	path := fmt.Sprintf("datetime")
@@ -198,6 +206,10 @@ func (m *M1000e) applyDatetimeCfg(cfg DatetimeParams) (err error) {
 //  /cgi-bin/webcgi/dirsvcs
 // apply directoryservices payload
 func (m *M1000e) applyDirectoryServicesCfg(cfg DirectoryServicesParams) (err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return err
+	}
 
 	cfg.SessionToken = m.SessionToken
 	path := fmt.Sprintf("dirsvcs")
@@ -218,6 +230,10 @@ func (m *M1000e) applyDirectoryServicesCfg(cfg DirectoryServicesParams) (err err
 // /cgi-bin/webcgi/ldaprg?index=1
 // apply ldap role payload
 func (m *M1000e) applyLdapRoleCfg(cfg LdapArgParams, roleId int) (err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return err
+	}
 
 	cfg.SessionToken = m.SessionToken
 	path := fmt.Sprintf("ldaprg?index=%d", roleId)
@@ -237,6 +253,10 @@ func (m *M1000e) applyLdapRoleCfg(cfg LdapArgParams, roleId int) (err error) {
 
 // Configures various interface params - syslog, snmp etc.
 func (m *M1000e) ApplySecurityCfg(cfg LoginSecurityParams) (err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return err
+	}
 
 	cfg.SessionToken = m.SessionToken
 	form, _ := query.Values(cfg)
@@ -256,6 +276,10 @@ func (m *M1000e) ApplySecurityCfg(cfg LoginSecurityParams) (err error) {
 
 // Configures various interface params - syslog, snmp etc.
 func (m *M1000e) applyInterfaceCfg(cfg InterfaceParams) (err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return err
+	}
 
 	cfg.SessionToken = m.SessionToken
 	form, _ := query.Values(cfg)
@@ -275,6 +299,10 @@ func (m *M1000e) applyInterfaceCfg(cfg InterfaceParams) (err error) {
 // call the cgi-bin/webcgi/user?id=<> endpoint
 // with the user account payload
 func (m *M1000e) applyUserCfg(cfg UserParams, userId int) (err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return err
+	}
 
 	cfg.SessionToken = m.SessionToken
 	path := fmt.Sprintf("user?id=%d", userId)
@@ -295,6 +323,10 @@ func (m *M1000e) applyUserCfg(cfg UserParams, userId int) (err error) {
 // call cgi-bin/webcgi/certuploadext
 // with the ssl cert payload
 func (m *M1000e) applySslCfg(ssl *cfgresources.Ssl) (err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return err
+	}
 
 	endpoint := fmt.Sprintf("certuploadext")
 
@@ -321,6 +353,10 @@ func (m *M1000e) applySslCfg(ssl *cfgresources.Ssl) (err error) {
 // setup a multipart form with the expected order of form parameters
 // for the payload format see  https://github.com/bmc-toolbox/bmclib/issues/3
 func (m *M1000e) NewSslMultipartUpload(endpoint string, params map[string]string, SslCert string, SslKey string) (err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return err
+	}
 
 	file, err := os.Open(SslKey)
 	if err != nil {
@@ -415,6 +451,10 @@ func (m *M1000e) NewSslMultipartUpload(endpoint string, params map[string]string
 
 // posts a urlencoded form to the given endpoint
 func (m *M1000e) post(endpoint string, form *url.Values) (err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return err
+	}
 
 	u, err := url.Parse(fmt.Sprintf("https://%s/cgi-bin/webcgi/%s", m.ip, endpoint))
 	if err != nil {
@@ -435,6 +475,9 @@ func (m *M1000e) post(endpoint string, form *url.Values) (err error) {
 		}
 	}
 
+	//XXX to debug
+	//fmt.Printf("--> %+v\n", form.Encode())
+	//return err
 	resp, err := m.httpClient.Do(req)
 	if err != nil {
 		return err

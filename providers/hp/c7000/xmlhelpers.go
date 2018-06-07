@@ -40,6 +40,10 @@ func wrapXML(element interface{}, sessionKey string) (doc Envelope) {
 }
 
 func (c *C7000) postXML(data []byte) (statusCode int, body []byte, err error) {
+	err = c.httpLogin()
+	if err != nil {
+		return statusCode, body, err
+	}
 
 	u, err := url.Parse(fmt.Sprintf("https://%s/hpoa", c.ip))
 	if err != nil {
@@ -60,7 +64,7 @@ func (c *C7000) postXML(data []byte) (statusCode int, body []byte, err error) {
 		}
 	}
 
-	resp, err := c.client.Do(req)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return 0, []byte{}, err
 	}

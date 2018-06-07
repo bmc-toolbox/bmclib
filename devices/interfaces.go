@@ -35,21 +35,32 @@ type BmcChassis interface {
 	ApplyCfg(*cfgresources.ResourcesConfig) error
 	Blades() ([]*Blade, error)
 	BmcType() string
+	ChassisSnapshot() (*Chassis, error)
+	Close() error
+	FindBladePosition(string) (int, error)
 	FwVersion() (string, error)
-	Login() error
-	Logout() error
+	IsActive() bool
+	IsOn() (bool, error)
+	IsOnBlade(int) (bool, error)
 	Model() (string, error)
 	Name() (string, error)
 	Nics() ([]*Nic, error)
 	PassThru() (string, error)
+	PowerCycle() (bool, error)
+	PowerCycleBlade(int) (bool, error)
+	PowerCycleBmcBlade(int) (bool, error)
 	PowerKw() (float64, error)
+	PowerOff() (bool, error)
+	PowerOffBlade(int) (bool, error)
+	PowerOn() (bool, error)
+	PowerOnBlade(int) (bool, error)
 	Psus() ([]*Psu, error)
+	PxeOnceBlade(int) (bool, error)
+	ReseatBlade(int) (bool, error)
 	Serial() (string, error)
 	Status() (string, error)
-	IsActive() bool
 	StorageBlades() ([]*StorageBlade, error)
 	TempC() (int, error)
-	Vendor() string
-	ChassisSnapshot() (*Chassis, error)
 	UpdateCredentials(string, string)
+	Vendor() string
 }
