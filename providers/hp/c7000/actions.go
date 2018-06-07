@@ -211,3 +211,9 @@ func (c *C7000) PxeOnceBlade(position int) (status bool, err error) {
 
 	return status, fmt.Errorf(output)
 }
+
+// Enable/Disable FlexAddress disables flex Addresses for blades
+// FlexAddress is a virtual addressing scheme
+func (c *C7000) SetFlexAddressState(position int, enable bool) (status bool, err error) {
+	return status, fmt.Errorf("Not implemented.")
+}
