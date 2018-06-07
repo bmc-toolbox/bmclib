@@ -242,3 +242,39 @@ func (m *M1000e) PxeOnceBlade(position int) (status bool, err error) {
 
 	return status, fmt.Errorf(output)
 }
+
+// Disable/Enable FlexAddress disables flex Addresses for blades
+// FlexAddress is a virtual addressing scheme
+func (m *M1000e) SetFlexAddressState(position int, enable bool) (status bool, err error) {
+	err = m.sshLogin()
+	if err != nil {
+		return status, err
+	}
+
+	isOn, err := m.IsOnBlade(position)
+	if err != nil {
+		return false, fmt.Errorf("Failed to validate blade %d power status is off, ", err)
+	}
+
+	if isOn == true {
+		return false, fmt.Errorf("Blade in position %d is currently powered on, it must be powered off before this action.", position)
+	}
+
+	var cmd string
+	if enable {
+		cmd = fmt.Sprintf("racadm setflexaddr -i %d 1", position)
+	} else {
+		cmd = fmt.Sprintf("racadm setflexaddr -i %d 0", position)
+	}
+
+	output, err := m.sshClient.Run(cmd)
+	if err != nil {
+		return false, fmt.Errorf(output)
+	}
+
+	if strings.Contains(output, "successful") {
+		return true, err
+	}
+
+	return status, fmt.Errorf(output)
+}

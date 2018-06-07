@@ -58,6 +58,7 @@ type BmcChassis interface {
 	PxeOnceBlade(int) (bool, error)
 	ReseatBlade(int) (bool, error)
 	Serial() (string, error)
+	SetFlexAddressState(int, bool) (bool, error)
 	Status() (string, error)
 	StorageBlades() ([]*StorageBlade, error)
 	TempC() (int, error)

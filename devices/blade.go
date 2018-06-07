@@ -26,4 +26,5 @@ type Blade struct {
 	ProcessorThreadCount int
 	StorageBlade         StorageBlade
 	Memory               int
+	FlexAddressEnabled   bool
 }

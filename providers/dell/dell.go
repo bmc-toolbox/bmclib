@@ -346,6 +346,7 @@ type CMCWWNBlade struct {
 	IsNotDoubleHeight struct {
 		IsInstalled string `json:"isInstalled"`
 		PortFMAC    string `json:"portFMAC"`
+		IsSelected  int    `json:"isSelected"` //flexaddress enabled/disabled
 	} `json:"is_not_double_height"`
 }
 

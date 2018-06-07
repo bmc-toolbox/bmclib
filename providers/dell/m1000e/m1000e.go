@@ -364,6 +364,11 @@ func (m *M1000e) Blades() (blades []*devices.Blade, err error) {
 					Name:       "bmc",
 					MacAddress: strings.ToLower(bmcData.IsNotDoubleHeight.PortFMAC),
 				}
+
+				if bmcData.IsNotDoubleHeight.IsSelected == 1 {
+					blade.FlexAddressEnabled = true
+				}
+
 				blade.Nics = append(blade.Nics, n)
 			}
 

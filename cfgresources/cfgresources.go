@@ -1,5 +1,9 @@
 package cfgresources
 
+type ResourcesSetup struct {
+	Chassis *chassis `yaml:"chassis"`
+}
+
 type ResourcesConfig struct {
 	Ldap       *Ldap        `yaml:"ldap"`
 	LdapGroup  []*LdapGroup `yaml:"ldapGroup"`
@@ -9,6 +13,10 @@ type ResourcesConfig struct {
 	User       []*User      `yaml:"user"`
 	Ssl        *Ssl         `yaml:"ssl"`
 	Supermicro *Supermicro  `yaml:"supermicro"` //supermicro specific config, example of issue #34
+}
+
+type chassis struct {
+	FlexAddressState string `yaml:"flexAddressState"`
 }
 
 type User struct {
