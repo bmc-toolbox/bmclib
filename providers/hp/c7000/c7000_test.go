@@ -2415,16 +2415,13 @@ func setup() (r *C7000, err error) {
 	for url := range answers {
 		url := url
 		mux.HandleFunc(url, func(w http.ResponseWriter, r *http.Request) {
+			cookie := http.Cookie{Name: "sessionKey", Value: "sessionKey_test"}
+			http.SetCookie(w, &cookie)
 			w.Write(answers[url])
 		})
 	}
 
 	r, err = New(ip, username, password)
-	if err != nil {
-		return r, err
-	}
-
-	err = r.Login()
 	if err != nil {
 		return r, err
 	}

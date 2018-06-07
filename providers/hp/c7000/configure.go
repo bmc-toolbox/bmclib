@@ -3,10 +3,11 @@ package c7000
 import (
 	"encoding/xml"
 	"fmt"
-	"github.com/bmc-toolbox/bmclib/cfgresources"
-	log "github.com/sirupsen/logrus"
 	"reflect"
 	"strings"
+
+	"github.com/bmc-toolbox/bmclib/cfgresources"
+	log "github.com/sirupsen/logrus"
 )
 
 func (c *C7000) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
@@ -200,7 +201,7 @@ func (c *C7000) applysetLdapInfo4(cfg *cfgresources.Ldap) (err error) {
 		SearchContexts:           searchcontexts,
 	}
 
-	doc := wrapXML(payload, c.XmlToken)
+	doc := wrapXML(payload, c.XMLToken)
 	output, err := xml.MarshalIndent(doc, "  ", "    ")
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -241,7 +242,7 @@ func (c *C7000) applysetLdapInfo4(cfg *cfgresources.Ldap) (err error) {
 func (c *C7000) applyEnableLdapAuth(enable bool) (err error) {
 
 	payload := enableLdapAuthentication{EnableLdap: enable, EnableLocalUsers: true}
-	doc := wrapXML(payload, c.XmlToken)
+	doc := wrapXML(payload, c.XMLToken)
 	output, err := xml.MarshalIndent(doc, "  ", "    ")
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -372,7 +373,7 @@ func (c *C7000) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) 
 func (c *C7000) applyAddLdapGroup(group string) (err error) {
 
 	payload := addLdapGroup{LdapGroup: ldapGroup{Text: group}}
-	doc := wrapXML(payload, c.XmlToken)
+	doc := wrapXML(payload, c.XMLToken)
 	output, err := xml.MarshalIndent(doc, "  ", "    ")
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -434,7 +435,7 @@ func (c *C7000) applyLdapGroupBayAcl(role string, group string) (err error) {
 
 	payload := setLdapGroupBayAcl{LdapGroup: ldapGroup{Text: group}, Acl: acl{Text: userAcl}}
 
-	doc := wrapXML(payload, c.XmlToken)
+	doc := wrapXML(payload, c.XMLToken)
 	output, err := xml.MarshalIndent(doc, "  ", "    ")
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -533,7 +534,7 @@ func (c *C7000) applyAddLdapGroupBayAccess(group string) (err error) {
 		Bays:      bayz,
 	}
 
-	doc := wrapXML(payload, c.XmlToken)
+	doc := wrapXML(payload, c.XMLToken)
 	output, err := xml.MarshalIndent(doc, "  ", "    ")
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -598,7 +599,7 @@ func (c *C7000) applyUserParams(cfg *cfgresources.User) (err error) {
 	adduser := AddUser{Username: username, Password: password}
 
 	//wrap the XML payload in the SOAP envelope
-	doc := wrapXML(adduser, c.XmlToken)
+	doc := wrapXML(adduser, c.XMLToken)
 	output, err := xml.MarshalIndent(doc, "  ", "    ")
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -651,7 +652,7 @@ func (c *C7000) setUserPassword(user string, password string) (err error) {
 	setuserpassword := SetUserPassword{Username: u, Password: p}
 
 	//wrap the XML payload in the SOAP envelope
-	doc := wrapXML(setuserpassword, c.XmlToken)
+	doc := wrapXML(setuserpassword, c.XMLToken)
 	output, err := xml.MarshalIndent(doc, "  ", "    ")
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -734,7 +735,7 @@ func (c *C7000) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 	ntp := configureNtp{NtpPrimary: primaryServer, NtpSecondary: secondaryServer, NtpPoll: ntppoll}
 
 	//wrap the XML payload in the SOAP envelope
-	doc := wrapXML(ntp, c.XmlToken)
+	doc := wrapXML(ntp, c.XMLToken)
 	output, err := xml.MarshalIndent(doc, "  ", "    ")
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -789,7 +790,7 @@ func (c *C7000) applyNtpTimezoneParam(timezone string) (err error) {
 	tz := setEnclosureTimeZone{Timezone: timeZone{Text: timezone}}
 
 	//wrap the XML payload in the SOAP envelope
-	doc := wrapXML(tz, c.XmlToken)
+	doc := wrapXML(tz, c.XMLToken)
 	output, err := xml.MarshalIndent(doc, "  ", "    ")
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -884,7 +885,7 @@ func (c *C7000) applySyslogServer(server string) {
 	payload := SetRemoteSyslogServer{Server: server}
 
 	//wrap the XML payload in the SOAP envelope
-	doc := wrapXML(payload, c.XmlToken)
+	doc := wrapXML(payload, c.XMLToken)
 	output, err := xml.MarshalIndent(doc, "  ", "    ")
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -926,7 +927,7 @@ func (c *C7000) applySyslogPort(port int) {
 	payload := SetRemoteSyslogPort{Port: port}
 
 	//wrap the XML payload in the SOAP envelope
-	doc := wrapXML(payload, c.XmlToken)
+	doc := wrapXML(payload, c.XMLToken)
 	output, err := xml.MarshalIndent(doc, "  ", "    ")
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -969,7 +970,7 @@ func (c *C7000) applySyslogEnabled(enabled bool) {
 	payload := SetRemoteSyslogEnabled{Enabled: enabled}
 
 	//wrap the XML payload in the SOAP envelope
-	doc := wrapXML(payload, c.XmlToken)
+	doc := wrapXML(payload, c.XMLToken)
 	output, err := xml.MarshalIndent(doc, "  ", "    ")
 	if err != nil {
 		log.WithFields(log.Fields{
