@@ -1,13 +1,17 @@
-locations: ['fra4', 'hkg1']
-bmcCfgDir: /etc/bmcbutler/cfg/
+locations: ['fra4', 'ams4'] 
+butlersToSpawn: 1
+bmcCfgDir: /etc/bmcbutler/cfg
 bmcUser: Administrator
-bmcPassword: foobar
+bmcPassword: ThisWaschangedHopefully
 inventory:
-  source: dora
-  dora:
-    apiUrl: http://dora.example.com/api
-  csv:
-    file: /etc/bmcbutler/inventory.csv
+  configure:
+    source: dora
+    dora:
+      apiUrl: http://dora.example.com/api
+    csv:
+      file: /etc/bmcbutler/inventory.csv
+  setup:
+    source: needSetup
 bmcDefaults:
   c7000:
     user: Administrator
@@ -15,3 +19,6 @@ bmcDefaults:
   m1000e:
     user: root
     password: calvin
+  supermicrox10:
+    user: ADMIN
+    password: ADMIN

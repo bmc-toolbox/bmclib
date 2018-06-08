@@ -1,0 +1,40 @@
+syslog:
+  server: ldaps.example.com
+  port: 514
+  enable: true #defaults to false if not specified
+
+user:
+  - name: Administrator
+    password: changeme
+    role: admin
+    enable: true
+  - name: foobar
+    password: changeme
+    role: user
+    enable: false
+
+ldap:
+  server: ldaps.example.com
+  port: 636
+  enable: true
+  baseDn: ou=People,dc=example,dc=com
+  userAttribute: uid
+  groupAttribute: memberUid
+  searchFilter: objectClass=posixAccount
+
+ldapGroup:
+  - role: admin
+    group: bmcAdmins #the group in ldap
+    groupBaseDn: ou=Group,dc=example,dc=com #the baseDn to lookup group in.
+    enable: true
+  - role: user
+    group: cn=bmcUsers #the group in ldap
+    groupBaseDn: ou=Group,dc=example,dc=com #the baseDn to lookup group in.
+    enable: false
+
+ntp:
+   enable: true
+   server1: ntp0.example.com
+   server2: ntp1.example.com
+   server3: ntp3.example.com
+   timezone: CET

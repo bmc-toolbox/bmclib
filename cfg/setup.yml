@@ -1,0 +1,3 @@
+chassis:
+   flexAddressState: disable //applies to all blades in a chassis
+   ipmiOverLan: true         //applies to all blades in a chassis
