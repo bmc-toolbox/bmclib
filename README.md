@@ -13,7 +13,7 @@ the butler configuration and the configuration for bmcs.
 The configuration bmcbutler requires to run.
 
 Add a config under /etc/bmcbutler/bmcbutler.yml
-[bmcbutler.yml sample](../blob/master/bmcbutler.yml.sample)
+[bmcbutler.yml sample](../master/bmcbutler.yml.sample)
 
 ###### bmc configuration
 The configuration to be applied to bmcs.
@@ -26,14 +26,14 @@ bmc configuration is split into two types,
 Create a directory /etc/bmcbutler/cfg/
 copy the yaml config definitions in there,
 
-[configuration.yml sample](../blob/master/cfg/configuration.yml)
-[setup.yml sample](../blob/master/cfg/setup.yml)
+[configuration.yml sample](../master/cfg/configuration.yml)
+[setup.yml sample](../master/cfg/setup.yml)
 
 ###### inventory
 bmcbutler was written with the intent of sourcing inventory assets and configuring their bmcs,
 a csv inventory example is provided to play with.
 
-[inventory.csv sample](../blob/master/inventory.csv.sample)
+[inventory.csv sample](../master/inventory.csv.sample)
 
 The config file points bmcbutler to the right inventory source.
 
