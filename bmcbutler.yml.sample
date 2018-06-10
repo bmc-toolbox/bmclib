@@ -5,7 +5,7 @@ bmcUser: Administrator
 bmcPassword: ThisWaschangedHopefully
 inventory:
   configure:
-    source: dora
+    source: csv
     dora:
       apiUrl: http://dora.example.com/api
     csv:
