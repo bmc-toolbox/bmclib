@@ -4,9 +4,8 @@ package inventory
 // to use this source, set source: csv in bmcbutler.yml
 
 import (
-	"fmt"
-	"github.com/gocarina/gocsv"
 	"github.com/bmc-toolbox/bmcbutler/asset"
+	"github.com/gocarina/gocsv"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"os"
@@ -27,22 +26,21 @@ type CsvAsset struct {
 	Type       string `csv:"type"`   //optional
 }
 
-func readCsv() []*CsvAsset {
+func (c *Csv) readCsv() []*CsvAsset {
 
+	log := c.Log
 	csvFile_ := viper.GetString("inventory.configure.csv.file")
 
 	var csvAssets []*CsvAsset
 	csvFile, err := os.Open(csvFile_)
 	if err != nil {
-		fmt.Println("Unable to read csv: ", csvFile)
-		fmt.Println(err)
+		log.Error("Error: ", err)
 		os.Exit(1)
 	}
 
 	err = gocsv.UnmarshalFile(csvFile, &csvAssets)
 	if err != nil {
-		fmt.Println("Unable to unmarshal data from: ", csvFile)
-		fmt.Println(err)
+		log.Error("Error: ", err)
 		os.Exit(1)
 	}
 
@@ -51,12 +49,15 @@ func readCsv() []*CsvAsset {
 
 func (c *Csv) AssetIterBySerial(serial string) {
 
+	log := c.Log
 	serials := strings.Split(serial, ",")
 
-	csvAssets := readCsv()
+	csvAssets := c.readCsv()
 
 	assets := make([]asset.Asset, 0)
 	for _, serial := range serials {
+
+		log.Debug("Fetching asset from csv by serial: ", serial)
 		for _, item := range csvAssets {
 			if item == nil {
 				continue
@@ -84,7 +85,7 @@ func (c *Csv) AssetIterBySerial(serial string) {
 func (c *Csv) AssetIter() {
 
 	//Asset needs to be an inventory asset
-	csvAssets := readCsv()
+	csvAssets := c.readCsv()
 
 	assets := make([]asset.Asset, 0)
 	for _, item := range csvAssets {
