@@ -81,33 +81,43 @@ func setupLogger() {
 			log.Out = logFile
 		}
 	} else {
-		log.Info("Unable to log to /var/log/bmcbutlter.log, using default stderr")
+		log.Debug("Unable to log to /var/log/bmcbutlter.log, using default stderr")
 	}
 }
 
 func validateArgs() {
-	if all == true && serial != "" {
-		fmt.Println("--all and --serial are mutually exclusive args.")
+
+	if all == false && serial == "" {
+		log.Error("Either --all or --serial expected.")
 		os.Exit(1)
 	}
 
+	if all == true && serial != "" {
+		log.Error("--all and --serial are mutually exclusive args.")
+		os.Exit(1)
+	}
+
+	if all == true {
+		return
+	}
+
 	if serial != "" && (isChassis == false && isBlade == false && isDiscrete == false) {
-		fmt.Println("--serial requires one of --chassis | --blade | -discrete")
+		log.Error("--serial requires one of --chassis | --blade | -discrete")
 		os.Exit(1)
 	}
 
 	if isChassis == true && isBlade == true {
-		fmt.Println("Either --chassis or --blade may be specified.")
+		log.Error("Either --chassis or --blade may be specified.")
 		os.Exit(1)
 	}
 
 	if isChassis == true && isDiscrete == true {
-		fmt.Println("Either --chassis or --discrete may be specified.")
+		log.Error("Either --chassis or --discrete may be specified.")
 		os.Exit(1)
 	}
 
 	if isDiscrete == true && isBlade == true {
-		fmt.Println("Either --discrete or --blade may be specified.")
+		log.Error("Either --discrete or --blade may be specified.")
 		os.Exit(1)
 	}
 
@@ -118,32 +128,37 @@ func validateArgs() {
 	} else if isDiscrete == true {
 		assetType = "discrete"
 	} else {
-		fmt.Println("Asset type not known, see --help.")
+		log.Error("Asset type not known, see --help.")
 		os.Exit(1)
 	}
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
+	var home = os.Getenv("HOME")
+	cfgFile = fmt.Sprintf("%s/.bmcbutler/bmcbutler.yml", home)
+
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose logging")
 	rootCmd.PersistentFlags().StringVarP(&serial, "serial", "", "", "Serial(s) of the asset to setup config (separated by commas - no spaces).")
 	rootCmd.PersistentFlags().BoolVarP(&isChassis, "chassis", "", false, "Use in conjuction with --serial, declare asset to be a chassis")
 	rootCmd.PersistentFlags().BoolVarP(&isBlade, "blade", "", false, "Use in conjuction with --serial, declare asset to be a blade")
 	rootCmd.PersistentFlags().BoolVarP(&isDiscrete, "discrete", "", false, "Use in conjuction with --serial, declare asset to be a discrete")
 	rootCmd.PersistentFlags().BoolVarP(&all, "all", "", false, "Runs configuration/setup on all assets")
+	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", cfgFile, "Configuration file for bmcbutler.")
+
+	cobra.OnInitialize(initConfig)
 
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-
-	cfgFile = "/etc/bmcbutler/bmcbutler.yml"
 	// Use config file from the flag.
 	viper.SetConfigFile(cfgFile)
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err != nil {
-		fmt.Println(err)
+		fmt.Println("Error reading config: ", err)
 		os.Exit(1)
 	}
+
+	//fmt.Println("Config: ", cfgFile)
 }
