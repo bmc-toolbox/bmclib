@@ -1,12 +1,11 @@
 ### bmcbutler - A BMC configuration tool
 
 Bmcbutler is a tool to configure BMCs using [bmclib](https://github.com/ncode/bmclib),
-asset are read from an inventory source defined in `bmcbutler.yml` configuration file.
+assets - BMCs to configure are read from an inventory source defined in `bmcbutler.yml` configuration file.
 
-Multiple butler processes are spawned to configure BMCs based on configuration declared in [configuration.yml sample](../master/cfg/configuration.yml), [setup.yml sample](../master/cfg/setup.yml).                                                               
+Multiple butler processes are spawned to configure BMCs based on configuration declared in [configuration.yml sample](../master/cfg/configuration.yml), [setup.yml sample](../master/cfg/setup.yml).
 
-
-For supported hardware see the bmclib page.
+For supported BMCs see the bmclib page.
 
 ##### Build
 `go get github.com/bmc-toolbox/bmcbutler`
@@ -66,7 +65,7 @@ Configure blade/chassis/discrete, this expects the csv file to be in place.
 #configure all assets in inventory
 bmcbutler configure --all
 
-#configure assets by serial
+#configure assets identified by serial
 bmcbutler configure --chassis --serial <serial> --verbose
 bmcbutler configure --blade --serial <serial> --verbose
 ```
