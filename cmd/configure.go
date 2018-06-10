@@ -23,6 +23,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"
+	"time"
 )
 
 // configureCmd represents the configure command
@@ -41,7 +42,7 @@ func init() {
 func configure() {
 
 	// A channel to recieve inventory assets
-	inventoryChan := make(chan []asset.Asset)
+	inventoryChan := make(chan []asset.Asset, 5)
 
 	inventorySource := viper.GetString("inventory.configure.source")
 	butlersToSpawn := viper.GetInt("butlersToSpawn")
@@ -53,7 +54,7 @@ func configure() {
 	switch inventorySource {
 	case "csv":
 		inventoryInstance := inventory.Csv{Log: log, Channel: inventoryChan}
-		if serial == "" {
+		if all {
 			go inventoryInstance.AssetIter()
 		} else {
 			go inventoryInstance.AssetIterBySerial(serial)
@@ -62,13 +63,13 @@ func configure() {
 		inventoryInstance := inventory.Dora{Log: log, BatchSize: 10, Channel: inventoryChan}
 		// Spawn a goroutine that returns a slice of assets over inventoryChan
 		// the number of assets in the slice is determined by the batch size.
-		if serial == "" {
+		if all {
 			go inventoryInstance.AssetIter()
 		} else {
 			go inventoryInstance.AssetIterBySerial(serial, assetType)
 		}
 	default:
-		fmt.Println("Unknown inventory source declared in cfg: ", inventorySource)
+		fmt.Println("Unknown/no inventory source declared in cfg: ", inventorySource)
 		os.Exit(1)
 	}
 
@@ -77,12 +78,14 @@ func configure() {
 	config := resourceInstance.ReadResourcesConfig()
 
 	// Spawn butlers to work
-	butlerChan := make(chan butler.ButlerMsg, 10)
+	butlerChan := make(chan butler.ButlerMsg, 5)
 	butlerInstance := butler.Butler{Log: log, SpawnCount: butlersToSpawn, Channel: butlerChan}
 	if serial != "" {
 		butlerInstance.IgnoreLocation = true
 	}
 	go butlerInstance.Spawn()
+	//give the butlers a second to spawn.
+	time.Sleep(1 * time.Second)
 
 	//over inventory channel and pass asset lists recieved to bmcbutlers
 	for asset := range inventoryChan {
