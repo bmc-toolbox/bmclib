@@ -26,7 +26,7 @@ import (
 )
 
 type ButlerMsg struct {
-	Assets []asset.Asset
+	Asset  asset.Asset
 	Config *cfgresources.ResourcesConfig
 	Setup  *cfgresources.ResourcesSetup
 }
@@ -45,7 +45,7 @@ func (b *Butler) Spawn() {
 	log := b.Log
 	component := "butler-spawn"
 
-	for i := 0; i <= b.SpawnCount; i++ {
+	for i := 1; i <= b.SpawnCount; i++ {
 		b.SyncWG.Add(1)
 		go b.butler(i)
 	}
@@ -98,45 +98,42 @@ func (b *Butler) butler(id int) {
 			return
 		}
 
-		for _, asset := range msg.Assets {
-
-			//if asset has no IPAddress, we can't do anything about it
-			if asset.IpAddress == "" {
-				log.WithFields(logrus.Fields{
-					"Asset": asset,
-				}).Warn("Ignored asset since no IpAddress was set.")
-				continue
-			}
-
-			//if asset has a location defined, we may want to filter it
-			if asset.Location != "" {
-				if !myLocation(asset.Location) && !b.IgnoreLocation {
-					log.WithFields(logrus.Fields{
-						"Asset": asset,
-					}).Info("Ignored asset since location did not match.")
-					continue
-				}
-			}
-
+		//if asset has no IPAddress, we can't do anything about it
+		if msg.Asset.IpAddress == "" {
 			log.WithFields(logrus.Fields{
-				"component": component,
-				"butler-id": id,
-				"IP":        asset.IpAddress,
-				"Serial":    asset.Serial,
-				"AssetType": asset.Type,
-				"Vendor":    asset.Vendor,
-				"Location":  asset.Location,
-			}).Info("Configuring asset..")
+				"Asset": msg.Asset,
+			}).Warn("Ignored asset since no IpAddress was set.")
+			continue
+		}
 
-			//this asset needs to be setup
-			if asset.Setup == true {
-				b.setupAsset(id, msg.Setup, &asset)
+		//if asset has a location defined, we may want to filter it
+		if msg.Asset.Location != "" {
+			if !myLocation(msg.Asset.Location) && !b.IgnoreLocation {
+				log.WithFields(logrus.Fields{
+					"Asset": msg.Asset,
+				}).Info("Ignored asset since location did not match.")
 				continue
 			}
-
-			b.applyConfig(id, msg.Config, &asset)
-
 		}
+
+		log.WithFields(logrus.Fields{
+			"component": component,
+			"butler-id": id,
+			"IP":        msg.Asset.IpAddress,
+			"Serial":    msg.Asset.Serial,
+			"AssetType": msg.Asset.Type,
+			"Vendor":    msg.Asset.Vendor,
+			"Location":  msg.Asset.Location,
+		}).Info("Configuring asset..")
+
+		//this asset needs to be setup
+		if msg.Asset.Setup == true {
+			b.setupAsset(id, msg.Setup, &msg.Asset)
+			continue
+		}
+
+		b.applyConfig(id, msg.Config, &msg.Asset)
+
 	}
 }
 

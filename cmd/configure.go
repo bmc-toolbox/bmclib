@@ -80,20 +80,25 @@ func configure() {
 	// Spawn butlers to work
 	butlerChan := make(chan butler.ButlerMsg, 5)
 	butlerInstance := butler.Butler{Log: log, SpawnCount: butlersToSpawn, Channel: butlerChan}
+
 	if serial != "" {
 		butlerInstance.IgnoreLocation = true
 	}
+
 	go butlerInstance.Spawn()
 	//give the butlers a second to spawn.
 	time.Sleep(1 * time.Second)
 
 	//over inventory channel and pass asset lists recieved to bmcbutlers
-	for asset := range inventoryChan {
-		butlerMsg := butler.ButlerMsg{Assets: asset, Config: config}
-		butlerChan <- butlerMsg
+	for assetList := range inventoryChan {
+		for _, asset := range assetList {
+			butlerMsg := butler.ButlerMsg{Asset: asset, Config: config}
+			butlerChan <- butlerMsg
+		}
 	}
 
 	close(butlerChan)
+
 	//wait until butlers are done.
 	butlerInstance.Wait()
 }

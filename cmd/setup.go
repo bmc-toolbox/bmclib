@@ -83,9 +83,11 @@ func setup() {
 	go butlerInstance.Spawn()
 
 	//over inventory channel and pass asset lists recieved to bmcbutlers
-	for asset := range inventoryChan {
-		butlerMsg := butler.ButlerMsg{Assets: asset, Setup: config}
-		butlerChan <- butlerMsg
+	for assetList := range inventoryChan {
+		for _, asset := range assetList {
+			butlerMsg := butler.ButlerMsg{Asset: asset, Setup: config}
+			butlerChan <- butlerMsg
+		}
 	}
 
 	close(butlerChan)
