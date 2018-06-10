@@ -1,50 +1,74 @@
-### bmcbutler - A BMC configuration tool, based on [bmclib](https://github.com/ncode/bmclib)
+### bmcbutler - A BMC configuration tool
+
+Bmcbutler is a tool to configure BMCs using [bmclib](https://github.com/ncode/bmclib),
+asset are read from an inventory source defined in `bmcbutler.yml` configuration file.
+
+Multiple butler processes are spawned to configure BMCs based on configuration declared in [configuration.yml sample](../master/cfg/configuration.yml), [setup.yml sample](../master/cfg/setup.yml).                                                               
+
 
 For supported hardware see the bmclib page.
 
 ##### Build
-go get github.com/bmc-toolbox/bmcbutler
+`go get github.com/bmc-toolbox/bmcbutler`
 
 ##### Setup
 Theres two parts to setting up configuration for bmcbutler,
-the butler configuration and the configuration for bmcs.
 
-###### bmcbutler configuration
-The configuration bmcbutler requires to run.
+* Bmcbutler configuration
+* Configuration for BMCs
 
-Add a config under /etc/bmcbutler/bmcbutler.yml
+This document assumes the Bmcbutler configuration directory is ~/.bmcbutler.
+
+###### Bmcbutler configuration
+Setup configuration Bmcbutler requires to run.
+
+```
+# create a configuration directory for ~/.bmcbutler
+mkdir ~/.bmcbutler/
+```
+
+Copy the sample config into ~/.bmcbutler/
 [bmcbutler.yml sample](../master/bmcbutler.yml.sample)
 
-###### bmc configuration
-The configuration to be applied to bmcs.
 
-bmc configuration is split into two types,
+###### BMC configuration
+Configuration to be applied to BMCs.
+
+BMC configuration is split into two types,
 
 * configuration - configuration to be applied periodically.
 * setup - one time setup configuration.
 
+```
+# create a directory for BMC config
+mkdir ~/.bmcbutler/cfg
+```
+
 Create a directory /etc/bmcbutler/cfg/
-copy the yaml config definitions in there,
+add the BMC yaml config definitions in there,
 
 [configuration.yml sample](../master/cfg/configuration.yml)
 [setup.yml sample](../master/cfg/setup.yml)
 
 ###### inventory
-bmcbutler was written with the intent of sourcing inventory assets and configuring their bmcs,
+Bmcbutler was written with the intent of sourcing inventory assets and configuring their bmcs,
 a csv inventory example is provided to play with.
 
 [inventory.csv sample](../master/inventory.csv.sample)
 
-The config file points bmcbutler to the right inventory source.
+The 'inventory' parameter points Bmcbutler to the inventory source.
 
 ##### Run
 
 Configure blade/chassis/discrete, this expects the csv file to be in place.
 
 ```
+#configure all assets in inventory
+bmcbutler configure --all
+
+#configure assets by serial
 bmcbutler configure --chassis --serial <serial> --verbose
 bmcbutler configure --blade --serial <serial> --verbose
-bmcbutler configure --discrete --serial <serial> --verbose
 ```
 
 #### Acknowledgment
