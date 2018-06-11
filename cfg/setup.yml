@@ -1,3 +1,7 @@
-chassis:
-   flexAddressState: disable //applies to all blades in a chassis
-   ipmiOverLan: true         //applies to all blades in a chassis
+ipmiOverLan:
+ enable: true         #applies to all blades in a chassis
+flexAddress:
+ enable: false        #applies to all blades in a chassis
+dynamicPower:
+ enable: false  #Dell (M1000e) calls this DPSE (dynamic PSU engagement)
+                #HP (C7000) Dynamic Power
