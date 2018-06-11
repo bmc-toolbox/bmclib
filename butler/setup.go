@@ -8,7 +8,6 @@ import (
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/sirupsen/logrus"
 	"reflect"
-	"strings"
 	"time"
 )
 
@@ -65,13 +64,17 @@ func (s *SetupAction) Chassis(chassis devices.BmcChassis) {
 	component := "setupChassis"
 	config := s.SetupConfig
 
-	cfg := reflect.ValueOf(config.Chassis).Elem()
+	fmt.Printf("--> %+v\n", config)
+	cfg := reflect.ValueOf(config).Elem()
 
 	for r := 0; r < cfg.NumField(); r++ {
+		if cfg.Field(r).Pointer() == 0 {
+			continue
+		}
 		resourceName := cfg.Type().Field(r).Name
 		switch resourceName {
 		case "FlexAddressState":
-			err := s.applyFlexAddressState(chassis, config.Chassis.FlexAddressState)
+			err := s.setFlexAddressState(chassis, config.FlexAddress.Enable)
 			if err != nil {
 				log.WithFields(logrus.Fields{
 					"component": component,
@@ -80,16 +83,26 @@ func (s *SetupAction) Chassis(chassis devices.BmcChassis) {
 					"Error":     err,
 				}).Warn("Failed to update FlexAddressState.")
 			}
-		case "IpmiOverLanState":
-			//err := s.applyIpmiOverLanState(chassis, config.Chassis.IpmiOverLanState)
-			//if err != nil {
-			//	log.WithFields(logrus.Fields{
-			//		"component": component,
-			//		"butler-id": s.Id,
-			//		"Asset":     fmt.Sprintf("%+v", s.Asset),
-			//		"Error":     err,
-			//	}).Warn("Failed to update IpmiOverLanState.")
-			//}
+		case "IpmiOverLan":
+			err := s.setIpmiOverLan(chassis, config.IpmiOverLan.Enable)
+			if err != nil {
+				log.WithFields(logrus.Fields{
+					"component": component,
+					"butler-id": s.Id,
+					"Asset":     fmt.Sprintf("%+v", s.Asset),
+					"Error":     err,
+				}).Warn("Failed to update IpmiOverLan state.")
+			}
+		case "DynamicPower":
+			err := s.setDynamicPower(chassis, config.DynamicPower.Enable)
+			if err != nil {
+				log.WithFields(logrus.Fields{
+					"component": component,
+					"butler-id": s.Id,
+					"Asset":     fmt.Sprintf("%+v", s.Asset),
+					"Error":     err,
+				}).Warn("Failed to update Dynamic Power state.")
+			}
 		case "hostname":
 		default:
 		}
@@ -97,53 +110,87 @@ func (s *SetupAction) Chassis(chassis devices.BmcChassis) {
 
 }
 
-//func (s *SetupAction) s.applyIpmiOverLanState(chassis devices.BmcChassis, status string) (err error) {
-//	log := s.Log
-//	component := "applyFlexAddressConfig"
-//
-//	status = strings.ToLower(status)
-//
-//	var enable bool
-//	if status == "enable" {
-//		enable = true
-//	} else if status == "disable" {
-//		enable = false
-//	} else {
-//		msg := "Invalid FlexAddressStatus parameter, expected enable/disable"
-//		log.WithFields(logrus.Fields{
-//			"component":   component,
-//			"butler-id":   s.Id,
-//			"Invalid arg": status,
-//		}).Error(msg)
-//		return errors.New(msg)
-//	}
-//
-//
-//}
-
-// Enables/ Disables FlexAddress status for each blade in a chassis.
-// Each blade is powered down, flex state updated, powered up
-func (s *SetupAction) applyFlexAddressState(chassis devices.BmcChassis, status string) (err error) {
-
+func (s *SetupAction) setDynamicPower(chassis devices.BmcChassis, enable bool) (err error) {
 	log := s.Log
-	component := "applyFlexAddressConfig"
-
-	status = strings.ToLower(status)
-
-	var enable bool
-	if status == "enable" {
-		enable = true
-	} else if status == "disable" {
-		enable = false
-	} else {
-		msg := "Invalid FlexAddressStatus parameter, expected enable/disable"
+	component := "setDynamicPower"
+	_, err = chassis.SetDynamicPower(enable)
+	if err != nil {
+		msg := "Unable to update Dynamic Power status."
 		log.WithFields(logrus.Fields{
-			"component":   component,
-			"butler-id":   s.Id,
-			"Invalid arg": status,
+			"component": component,
+			"butler-id": s.Id,
+			"Asset":     fmt.Sprintf("%+v", s.Asset),
+			"Error":     err,
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	log.WithFields(logrus.Fields{
+		"component": component,
+		"butler-id": s.Id,
+		"Asset":     fmt.Sprintf("%+v", s.Asset),
+	}).Info("Dynamic Power config applied successfully.")
+	return err
+
+}
+
+func (s *SetupAction) setIpmiOverLan(chassis devices.BmcChassis, enable bool) (err error) {
+	log := s.Log
+	component := "setIpmiOverLan"
+
+	//retrive list of blades in chassis
+	blades, err := chassis.Blades()
+	if err != nil {
+		msg := "Unable to list blades for chassis."
+		log.WithFields(logrus.Fields{
+			"component": component,
+			"butler-id": s.Id,
+			"Asset":     fmt.Sprintf("%+v", s.Asset),
+			"Error":     err,
 		}).Error(msg)
 		return errors.New(msg)
 	}
+
+	for _, blade := range blades {
+		log.WithFields(logrus.Fields{
+			"component":      component,
+			"butler-id":      s.Id,
+			"Blade Serial":   blade.Serial,
+			"Blade Position": blade.BladePosition,
+			"Enable":         enable,
+		}).Debug("Updating IpmiOverLan config.")
+
+		_, err = chassis.SetIpmiOverLan(blade.BladePosition, enable)
+		if err != nil {
+			msg := "Unable to update IpmiOverLan status."
+			log.WithFields(logrus.Fields{
+				"component":      component,
+				"butler-id":      s.Id,
+				"Blade Serial":   blade.Serial,
+				"Blade Position": blade.BladePosition,
+				"Asset":          fmt.Sprintf("%+v", s.Asset),
+				"Error":          err,
+			}).Warn(msg)
+			return errors.New(msg)
+		}
+	}
+
+	log.WithFields(logrus.Fields{
+		"component": component,
+		"butler-id": s.Id,
+		"Asset":     fmt.Sprintf("%+v", s.Asset),
+	}).Info("IpmiOverLan config applied successfully.")
+
+	return err
+
+}
+
+// Enables/ Disables FlexAddress status for each blade in a chassis.
+// Each blade is powered down, flex state updated, powered up
+func (s *SetupAction) setFlexAddressState(chassis devices.BmcChassis, enable bool) (err error) {
+
+	log := s.Log
+	component := "setFlexAddressState"
 
 	//retrive list of blades in chassis
 	blades, err := chassis.Blades()
