@@ -16,7 +16,9 @@ type ResourcesConfig struct {
 }
 
 type chassis struct {
-	FlexAddressState string `yaml:"flexAddressState"`
+	//these params are applied to all blades in a chassis
+	FlexAddressState string `yaml:"flexAddressState"` //enable/disable flexaddressing
+	IpmiOverLan      bool   `yaml:ipmiOverLan`        //enable/disable ipmiOverLan
 }
 
 type User struct {

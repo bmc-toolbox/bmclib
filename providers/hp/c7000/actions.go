@@ -217,3 +217,8 @@ func (c *C7000) PxeOnceBlade(position int) (status bool, err error) {
 func (c *C7000) SetFlexAddressState(position int, enable bool) (status bool, err error) {
 	return status, fmt.Errorf("Not implemented.")
 }
+
+// Enable/Disable IPMI over lan parameter per blade in chassis
+func (c *C7000) SetIpmiOverLan(position int, enable bool) (status bool, err error) {
+	return status, fmt.Errorf("Not implemented")
+}

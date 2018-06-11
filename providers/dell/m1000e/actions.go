@@ -243,6 +243,34 @@ func (m *M1000e) PxeOnceBlade(position int) (status bool, err error) {
 	return status, fmt.Errorf(output)
 }
 
+// Enable/Disable IPMI over lan parameter per blade in chassis
+func (m *M1000e) SetIpmiOverLan(position int, enable bool) (status bool, err error) {
+	err = m.sshLogin()
+	if err != nil {
+		return status, err
+	}
+
+	var state int
+	if enable {
+		state = 1
+	} else {
+		state = 0
+	}
+
+	cmd := fmt.Sprintf("config -g cfgServerInfo -o cfgServerIPMIOverLanEnable -i %d %d", position, state)
+	output, err := m.sshClient.Run(cmd)
+	if err != nil {
+		return false, fmt.Errorf(output)
+	}
+
+	if strings.Contains(output, "successful") {
+		return true, err
+	}
+
+	return status, fmt.Errorf(output)
+
+}
+
 // Disable/Enable FlexAddress disables flex Addresses for blades
 // FlexAddress is a virtual addressing scheme
 func (m *M1000e) SetFlexAddressState(position int, enable bool) (status bool, err error) {
