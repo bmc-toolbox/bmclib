@@ -1,7 +1,9 @@
 package cfgresources
 
 type ResourcesSetup struct {
-	Chassis *chassis `yaml:"chassis"`
+	FlexAddress  *flexAddress  `yaml:"flexAddress"`
+	IpmiOverLan  *ipmiOverLan  `yaml:"ipmiOverLan"`
+	DynamicPower *dynamicPower `yaml:"dynamicPower"`
 }
 
 type ResourcesConfig struct {
@@ -15,10 +17,22 @@ type ResourcesConfig struct {
 	Supermicro *Supermicro  `yaml:"supermicro"` //supermicro specific config, example of issue #34
 }
 
-type chassis struct {
-	//these params are applied to all blades in a chassis
-	FlexAddressState string `yaml:"flexAddressState"` //enable/disable flexaddressing
-	IpmiOverLan      bool   `yaml:ipmiOverLan`        //enable/disable ipmiOverLan
+//Enable/Disable Virtual Mac addresses for blades in a chassis.
+//FlexAddresses in M1000e jargon.
+//Virtual connect in HP C7000 jargon.
+type flexAddress struct {
+	Enable bool `yaml:"enable"`
+}
+
+//Enable/Disable ipmi over lan
+type ipmiOverLan struct {
+	Enable bool `yaml:"enable"`
+}
+
+//'Dynamic Power' in HP C7000 Jargon.
+//'DPSE' (dynamic PSU engagement) in M1000e Dell jargon.
+type dynamicPower struct {
+	Enable bool `yaml:"enable"`
 }
 
 type User struct {

@@ -271,6 +271,37 @@ func (m *M1000e) SetIpmiOverLan(position int, enable bool) (status bool, err err
 
 }
 
+// Enable/Disable Dynamic Power - Dynamic Power Supply Engagement (DPSE) in Dell jargon.
+// Dynamic Power Supply Engagement (DPSE) mode is disabled by default.
+// DPSE saves power by optimizing the power efficiency of the PSUs supplying power to the chassis.
+// This also increases the PSU life, and reduces heat generation.
+func (m *M1000e) SetDynamicPower(enable bool) (status bool, err error) {
+	err = m.sshLogin()
+	if err != nil {
+		return status, err
+	}
+
+	var state int
+	if enable {
+		state = 1
+	} else {
+		state = 0
+	}
+
+	cmd := fmt.Sprintf("config -g cfgChassisPower -o cfgChassisDynamicPSUEngagementEnable %d", state)
+	output, err := m.sshClient.Run(cmd)
+	if err != nil {
+		return false, fmt.Errorf(output)
+	}
+
+	if strings.Contains(output, "successful") {
+		return true, err
+	}
+
+	return status, fmt.Errorf(output)
+
+}
+
 // Disable/Enable FlexAddress disables flex Addresses for blades
 // FlexAddress is a virtual addressing scheme
 func (m *M1000e) SetFlexAddressState(position int, enable bool) (status bool, err error) {

@@ -212,6 +212,32 @@ func (c *C7000) PxeOnceBlade(position int) (status bool, err error) {
 	return status, fmt.Errorf(output)
 }
 
+func (c *C7000) SetDynamicPower(enable bool) (status bool, err error) {
+	err = c.sshLogin()
+	if err != nil {
+		return status, err
+	}
+
+	var state string
+	if enable {
+		state = "on"
+	} else {
+		state = "off"
+	}
+
+	cmd := fmt.Sprintf("set power savings %s", state)
+	output, err := c.sshClient.Run(cmd)
+	if err != nil {
+		return false, fmt.Errorf(output)
+	}
+
+	if strings.Contains(output, "Dynamic Power: Disabled") {
+		return true, err
+	}
+
+	return status, fmt.Errorf(output)
+}
+
 // Enable/Disable FlexAddress disables flex Addresses for blades
 // FlexAddress is a virtual addressing scheme
 func (c *C7000) SetFlexAddressState(position int, enable bool) (status bool, err error) {

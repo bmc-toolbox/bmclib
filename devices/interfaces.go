@@ -58,6 +58,7 @@ type BmcChassis interface {
 	PxeOnceBlade(int) (bool, error)
 	ReseatBlade(int) (bool, error)
 	Serial() (string, error)
+	SetDynamicPower(bool) (bool, error)
 	SetIpmiOverLan(int, bool) (bool, error)
 	SetFlexAddressState(int, bool) (bool, error)
 	Status() (string, error)
