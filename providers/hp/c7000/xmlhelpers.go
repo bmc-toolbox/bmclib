@@ -40,7 +40,6 @@ func wrapXML(element interface{}, sessionKey string) (doc Envelope) {
 }
 
 func (c *C7000) postXML(data []byte) (statusCode int, body []byte, err error) {
-	err = c.httpLogin()
 	if err != nil {
 		return statusCode, body, err
 	}
