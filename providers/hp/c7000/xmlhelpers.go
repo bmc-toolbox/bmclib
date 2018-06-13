@@ -2,11 +2,13 @@ package c7000
 
 import (
 	"bytes"
+	"encoding/xml"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -39,9 +41,22 @@ func wrapXML(element interface{}, sessionKey string) (doc Envelope) {
 	return doc
 }
 
-func (c *C7000) postXML(data []byte) (statusCode int, body []byte, err error) {
+func (c *C7000) postXML(data interface{}) (statusCode int, body []byte, err error) {
+
+	err = c.httpLogin()
 	if err != nil {
 		return statusCode, body, err
+	}
+
+	xmlBody := wrapXML(data, c.XMLToken)
+	xmlPayload, err := xml.MarshalIndent(xmlBody, "  ", "    ")
+	if err != nil {
+		return 0, []byte{}, err
+	}
+
+	// A hack to declare self closing xml tags, until https://github.com/golang/go/issues/21399 is fixed.
+	if strings.Contains(string(xmlPayload), "<hpoa:searchContext></hpoa:searchContext>") {
+		xmlPayload = []byte(strings.Replace(string(xmlPayload), "<hpoa:searchContext></hpoa:searchContext>", "<hpoa:searchContext/>", -1))
 	}
 
 	u, err := url.Parse(fmt.Sprintf("https://%s/hpoa", c.ip))
@@ -49,10 +64,11 @@ func (c *C7000) postXML(data []byte) (statusCode int, body []byte, err error) {
 		return 0, []byte{}, err
 	}
 
-	req, err := http.NewRequest("POST", u.String(), bytes.NewReader(data))
+	req, err := http.NewRequest("POST", u.String(), bytes.NewReader(xmlPayload))
 	if err != nil {
 		return 0, []byte{}, err
 	}
+
 	//	req.Header.Add("Content-Type", "application/soap+xml; charset=utf-8")
 	req.Header.Add("Content-Type", "text/plain;charset=UTF-8")
 	if log.GetLevel() == log.DebugLevel {
