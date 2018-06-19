@@ -101,8 +101,11 @@ func (b *Butler) butler(id int) {
 		//if asset has no IPAddress, we can't do anything about it
 		if msg.Asset.IpAddress == "" {
 			log.WithFields(logrus.Fields{
-				"Asset": msg.Asset,
-			}).Warn("Ignored asset since no IpAddress was set.")
+				"component": component,
+				"butler-id": id,
+				"Serial":    msg.Asset.Serial,
+				"AssetType": msg.Asset.Type,
+			}).Warn("Asset was retrieved without any IP address info, skipped.")
 			continue
 		}
 
