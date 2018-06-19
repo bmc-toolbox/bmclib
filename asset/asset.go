@@ -23,4 +23,6 @@ type Asset struct {
 	Location  string
 	Setup     bool //If setup is set, butlers will try to run setup config,
 	//by default they just configure.
+	Extra map[string]string //any extra params needed to be set in a asset.
+
 }
