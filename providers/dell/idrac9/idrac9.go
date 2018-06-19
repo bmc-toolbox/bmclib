@@ -120,6 +120,15 @@ func (i *IDrac9) loadHwData() (err error) {
 	return err
 }
 
+// Checks if we can login
+func (i *IDrac9) CheckCredentials() (err error) {
+	err = i.Login()
+	if err != nil {
+		return err
+	}
+	return err
+}
+
 // get calls a given json endpoint of the ilo and returns the data
 func (i *IDrac9) get(endpoint string, extraHeaders *map[string]string) (payload []byte, err error) {
 	log.WithFields(log.Fields{"step": "bmc connection", "vendor": dell.VendorID, "ip": i.ip, "endpoint": endpoint}).Debug("retrieving data from bmc")

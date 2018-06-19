@@ -160,6 +160,15 @@ func (i *Ilo) Login() (err error) {
 	return err
 }
 
+// Checks if we can login
+func (i *Ilo) CheckCredentials() (err error) {
+	err = i.Login()
+	if err != nil {
+		return err
+	}
+	return err
+}
+
 // get calls a given json endpoint of the ilo and returns the data
 func (i *Ilo) get(endpoint string) (payload []byte, err error) {
 

@@ -108,6 +108,15 @@ func (i *IDrac8) Login() (err error) {
 	return err
 }
 
+// Checks if we can login
+func (i *IDrac8) CheckCredentials() (err error) {
+	err = i.Login()
+	if err != nil {
+		return err
+	}
+	return err
+}
+
 // loadHwData load the full hardware information from the iDrac
 func (i *IDrac8) loadHwData() (err error) {
 	url := "sysmgmt/2012/server/inventory/hardware"

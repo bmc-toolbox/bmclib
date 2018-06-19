@@ -11,6 +11,7 @@ type Bmc interface {
 	BmcType() string
 	BmcVersion() (string, error)
 	CPU() (string, int, int, int, error)
+	CheckCredentials() error
 	Disks() ([]*Disk, error)
 	IsBlade() (bool, error)
 	License() (string, string, error)
@@ -36,6 +37,7 @@ type BmcChassis interface {
 	Blades() ([]*Blade, error)
 	BmcType() string
 	ChassisSnapshot() (*Chassis, error)
+	CheckCredentials() error
 	Close() error
 	FindBladePosition(string) (int, error)
 	FwVersion() (string, error)

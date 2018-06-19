@@ -67,6 +67,15 @@ func New(ip string, username string, password string) (chassis *C7000, err error
 	return &C7000{ip: ip, username: username, password: password, Rimp: Rimp, httpClient: client}, err
 }
 
+// Checks if we can login
+func (c *C7000) CheckCredentials() (err error) {
+	err = c.httpLogin()
+	if err != nil {
+		return err
+	}
+	return err
+}
+
 // Close closes the connection properly
 func (c *C7000) Close() (err error) {
 	if c.sshClient != nil {

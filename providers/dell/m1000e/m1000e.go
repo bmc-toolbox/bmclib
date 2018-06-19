@@ -70,6 +70,15 @@ func (m *M1000e) Close() (err error) {
 	return err
 }
 
+// Checks if we can login
+func (m *M1000e) CheckCredentials() (err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return err
+	}
+	return err
+}
+
 func (m *M1000e) get(endpoint string) (payload []byte, err error) {
 	log.WithFields(log.Fields{"step": "chassis connection", "vendor": dell.VendorID, "ip": m.ip, "endpoint": endpoint}).Debug("retrieving data from chassis")
 
