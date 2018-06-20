@@ -83,19 +83,10 @@ func (s *SetupAction) Chassis(chassis devices.BmcChassis) {
 					"Error":     err,
 				}).Warn("Failed to update FlexAddressState.")
 			}
-		case "IpmiOverLan":
-			err := s.setIpmiOverLan(chassis, config.IpmiOverLan.Enable)
-			if err != nil {
-				log.WithFields(logrus.Fields{
-					"component": component,
-					"butler-id": s.Id,
-					"Asset":     fmt.Sprintf("%+v", s.Asset),
-					"Error":     err,
-				}).Warn("Failed to update IpmiOverLan state.")
-			}
 		case "DynamicPower":
 			err := s.setDynamicPower(chassis, config.DynamicPower.Enable)
 			if err != nil {
+				configured = false
 				log.WithFields(logrus.Fields{
 					"component": component,
 					"butler-id": s.Id,
@@ -103,11 +94,23 @@ func (s *SetupAction) Chassis(chassis devices.BmcChassis) {
 					"Error":     err,
 				}).Warn("Failed to update Dynamic Power state.")
 			}
+		case "IpmiOverLan":
+			err := s.setIpmiOverLan(chassis, config.IpmiOverLan.Enable)
+			if err != nil {
+				configured = false
+				log.WithFields(logrus.Fields{
+					"component": component,
+					"butler-id": s.Id,
+					"Asset":     fmt.Sprintf("%+v", s.Asset),
+					"Error":     err,
+				}).Warn("Failed to update IpmiOverLan state.")
+			}
 		case "hostname":
 		default:
 		}
 	}
 
+	return configured
 }
 
 func (s *SetupAction) setDynamicPower(chassis devices.BmcChassis, enable bool) (err error) {
@@ -159,6 +162,25 @@ func (s *SetupAction) setIpmiOverLan(chassis devices.BmcChassis, enable bool) (e
 			"Blade Position": blade.BladePosition,
 			"Enable":         enable,
 		}).Debug("Updating IpmiOverLan config.")
+
+		//blade needs to be powered on to set this parameter
+		isPoweredOn, err := chassis.IsOnBlade(blade.BladePosition)
+		if isPoweredOn == false {
+			_, err = chassis.PowerOnBlade(blade.BladePosition)
+			if err != nil {
+				msg := "Unable to power up blade to enable IpmiOverLan."
+				log.WithFields(logrus.Fields{
+					"component": component,
+					"butler-id": s.Id,
+					"Asset":     fmt.Sprintf("%+v", s.Asset),
+					"Error":     err,
+				}).Warn(msg)
+				return errors.New(msg)
+			}
+
+			//give it a few seconds to power on
+			time.Sleep(20 * time.Second)
+		}
 
 		_, err = chassis.SetIpmiOverLan(blade.BladePosition, enable)
 		if err != nil {
