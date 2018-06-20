@@ -17,6 +17,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
+	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/providers/dell"
 
 	// this make possible to setup logging and properties at any stage
@@ -34,7 +35,8 @@ type IDrac8 struct {
 	ip             string
 	username       string
 	password       string
-	client         *http.Client
+	httpClient     *http.Client
+	sshClient      *sshclient.SSHClient
 	st1            string
 	st2            string
 	serial         string
@@ -57,7 +59,6 @@ func (i *IDrac8) CheckCredentials() (err error) {
 
 // PUTs data
 func (i *IDrac8) put(endpoint string, payload []byte) (response []byte, err error) {
-
 	bmcURL := fmt.Sprintf("https://%s", i.ip)
 
 	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/%s", bmcURL, endpoint), bytes.NewReader(payload))
@@ -71,7 +72,7 @@ func (i *IDrac8) put(endpoint string, payload []byte) (response []byte, err erro
 		return response, err
 	}
 
-	for _, cookie := range i.client.Jar.Cookies(u) {
+	for _, cookie := range i.httpClient.Jar.Cookies(u) {
 		if cookie.Name == "-http-session-" || cookie.Name == "tokenvalue" {
 			req.AddCookie(cookie)
 		}
@@ -87,7 +88,7 @@ func (i *IDrac8) put(endpoint string, payload []byte) (response []byte, err erro
 		}
 	}
 
-	resp, err := i.client.Do(req)
+	resp, err := i.httpClient.Do(req)
 	if err != nil {
 		return response, err
 	}
@@ -128,7 +129,7 @@ func (i *IDrac8) post(endpoint string, data []byte) (statusCode int, body []byte
 		return 0, []byte{}, err
 	}
 
-	for _, cookie := range i.client.Jar.Cookies(u) {
+	for _, cookie := range i.httpClient.Jar.Cookies(u) {
 		if cookie.Name == "-http-session-" || cookie.Name == "tokenvalue" {
 			req.AddCookie(cookie)
 		}
@@ -147,7 +148,7 @@ func (i *IDrac8) post(endpoint string, data []byte) (statusCode int, body []byte
 		}
 	}
 
-	resp, err := i.client.Do(req)
+	resp, err := i.httpClient.Do(req)
 	if err != nil {
 		return 0, []byte{}, err
 	}
@@ -192,7 +193,7 @@ func (i *IDrac8) get(endpoint string, extraHeaders *map[string]string) (payload 
 		return payload, err
 	}
 
-	for _, cookie := range i.client.Jar.Cookies(u) {
+	for _, cookie := range i.httpClient.Jar.Cookies(u) {
 		if cookie.Name == "-http-session-" {
 			req.AddCookie(cookie)
 		}
@@ -207,7 +208,7 @@ func (i *IDrac8) get(endpoint string, extraHeaders *map[string]string) (payload 
 		}
 	}
 
-	resp, err := i.client.Do(req)
+	resp, err := i.httpClient.Do(req)
 	if err != nil {
 		return payload, err
 	}

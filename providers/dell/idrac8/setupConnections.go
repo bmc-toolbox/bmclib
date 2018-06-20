@@ -11,7 +11,9 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
+	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/providers/dell"
+	multierror "github.com/hashicorp/go-multierror"
 
 	// this make possible to setup logging and properties at any stage
 	_ "github.com/bmc-toolbox/bmclib/logging"
@@ -21,7 +23,7 @@ import (
 func (i *IDrac8) httpLogin() (err error) {
 	if i.httpClient != nil {
 		return
-	}	
+	}
 
 	log.WithFields(log.Fields{"step": "bmc connection", "vendor": dell.VendorID, "ip": i.ip}).Debug("connecting to bmc")
 
@@ -33,7 +35,7 @@ func (i *IDrac8) httpLogin() (err error) {
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := i.client.Do(req)
+	resp, err := i.httpClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -103,12 +105,12 @@ func (i *IDrac8) loadHwData() (err error) {
 
 // sshLogin initiates the connection to a chassis device
 func (i *IDrac8) sshLogin() (err error) {
-	if m.sshClient != nil {
+	if i.sshClient != nil {
 		return
 	}
 
-	log.WithFields(log.Fields{"step": "chassis connection", "vendor": dell.VendorID, "ip": m.ip}).Debug("connecting to chassis")
-	m.sshClient, err = sshclient.New(m.ip, m.username, m.password)
+	log.WithFields(log.Fields{"step": "chassis connection", "vendor": dell.VendorID, "ip": i.ip}).Debug("connecting to chassis")
+	i.sshClient, err = sshclient.New(i.ip, i.username, i.password)
 	if err != nil {
 		return err
 	}
@@ -116,17 +118,27 @@ func (i *IDrac8) sshLogin() (err error) {
 	return err
 }
 
-
-// Close logs out and close the bmc connection
+// Close closes the connection properly
 func (i *IDrac8) Close() (err error) {
-	log.WithFields(log.Fields{"step": "bmc connection", "vendor": dell.VendorID, "ip": i.ip}).Debug("logout from bmc")
+	if i.httpClient != nil {
+		resp, e := i.httpClient.Get(fmt.Sprintf("https://%s/data/logout", i.ip))
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		io.Copy(ioutil.Discard, resp.Body)
 
-	resp, err := i.client.Get(fmt.Sprintf("https://%s/data/logout", i.ip))
-	if err != nil {
-		return err
+		if e != nil {
+			err = multierror.Append(e, err)
+		}
 	}
-	io.Copy(ioutil.Discard, resp.Body)
-	defer resp.Body.Close()
+
+	if i.sshClient != nil {
+		e := i.sshClient.Close()
+		if e != nil {
+			err = multierror.Append(e, err)
+		}
+	}
 
 	return err
 }
