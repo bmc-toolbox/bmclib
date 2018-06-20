@@ -6,7 +6,9 @@ import (
 	"github.com/bmc-toolbox/bmcbutler/asset"
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
+	"github.com/bmc-toolbox/bmclib/discover"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 	"reflect"
 	"time"
 )
@@ -23,13 +25,19 @@ func (b *Butler) setupAsset(id int, config *cfgresources.ResourcesSetup, asset *
 	log := b.Log
 	component := "setupAsset"
 
-	useDefaultLogin := false
-	client, err := b.connectAsset(asset, useDefaultLogin)
+	//DefaultbmcUser := viper.GetString(fmt.Sprintf("bmcDefaults.%s.user", asset.Model))
+	//DefaultbmcPassword := viper.GetString(fmt.Sprintf("bmcDefaults.%s.password", asset.Model))
+
+	bmcUser := viper.GetString("bmcUser")
+	bmcPassword := viper.GetString("bmcPassword")
+
+	client, err := discover.ScanAndConnect(asset.IpAddress, bmcUser, bmcPassword)
 	if err != nil {
 		log.WithFields(logrus.Fields{
-			"butler-id": id,
-			"Asset":     asset,
-		}).Error("Unable to connect to asset.")
+			"component": component,
+			"Asset":     fmt.Sprintf("%+v", asset),
+			"Error":     err,
+		}).Warn("Unable to connect to bmc.")
 		return
 	}
 
@@ -44,7 +52,11 @@ func (b *Butler) setupAsset(id int, config *cfgresources.ResourcesSetup, asset *
 		defer chassis.Close()
 
 		asset.Model = chassis.BmcType()
-		setup.Chassis(chassis)
+		//if a chassis was setup successfully,
+		//call some post setup actions.
+		if setup.Chassis(chassis) == true {
+			setup.Post(asset)
+		}
 	default:
 		log.WithFields(logrus.Fields{
 			"component":   component,
@@ -58,24 +70,30 @@ func (b *Butler) setupAsset(id int, config *cfgresources.ResourcesSetup, asset *
 	return
 }
 
-func (s *SetupAction) Chassis(chassis devices.BmcChassis) {
+func (s *SetupAction) Chassis(chassis devices.BmcChassis) (configured bool) {
 
 	log := s.Log
 	component := "setupChassis"
 	config := s.SetupConfig
+	configured = true
 
-	fmt.Printf("--> %+v\n", config)
+	log.WithFields(logrus.Fields{
+		"component": component,
+		"butler-id": s.Id,
+		"Asset":     fmt.Sprintf("%+v", s.Asset),
+	}).Info("Running setup actions on chassis..")
+
 	cfg := reflect.ValueOf(config).Elem()
-
 	for r := 0; r < cfg.NumField(); r++ {
 		if cfg.Field(r).Pointer() == 0 {
 			continue
 		}
 		resourceName := cfg.Type().Field(r).Name
 		switch resourceName {
-		case "FlexAddressState":
+		case "FlexAddress":
 			err := s.setFlexAddressState(chassis, config.FlexAddress.Enable)
 			if err != nil {
+				configured = false
 				log.WithFields(logrus.Fields{
 					"component": component,
 					"butler-id": s.Id,
