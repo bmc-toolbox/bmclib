@@ -25,6 +25,11 @@ func (i *IDrac8) httpLogin() (err error) {
 		return
 	}
 
+	i.httpClient, err = httpclient.Build()
+	if err != nil {
+		return err
+	}
+
 	log.WithFields(log.Fields{"step": "bmc connection", "vendor": dell.VendorID, "ip": i.ip}).Debug("connecting to bmc")
 
 	data := fmt.Sprintf("user=%s&password=%s", i.username, i.password)
