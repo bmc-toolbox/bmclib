@@ -17,9 +17,10 @@ package cmd
 import (
 	"fmt"
 	"github.com/sirupsen/logrus"
+	logrusSyslog "github.com/sirupsen/logrus/hooks/syslog"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"io"
+	"log/syslog"
 	"os"
 )
 
@@ -66,22 +67,17 @@ func setupLogger() {
 	log = logrus.New()
 	log.Out = os.Stdout
 
+	hook, err := logrusSyslog.NewSyslogHook("", "", syslog.LOG_INFO, "BMCbutler")
+	if err != nil {
+		log.Error("Unable to connect to local syslog daemon.")
+	} else {
+		log.AddHook(hook)
+	}
+
 	if verbose == true {
 		log.SetLevel(logrus.DebugLevel)
 	} else {
 		log.SetLevel(logrus.InfoLevel)
-	}
-
-	logFile, err := os.OpenFile("/var/log/bmcbutler.log", os.O_CREATE|os.O_WRONLY, 0666)
-	if err == nil {
-		if verbose == true {
-			m := io.MultiWriter(os.Stdout, logFile)
-			logrus.SetOutput(m)
-		} else {
-			log.Out = logFile
-		}
-	} else {
-		log.Debug("Unable to log to /var/log/bmcbutlter.log, using default stderr")
 	}
 }
 
