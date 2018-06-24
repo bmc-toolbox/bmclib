@@ -83,6 +83,15 @@ func (s *SupermicroX10) Login() (err error) {
 	return err
 }
 
+// Checks if we can login
+func (s *SupermicroX10) CheckCredentials() (err error) {
+	err = s.Login()
+	if err != nil {
+		return err
+	}
+	return err
+}
+
 func (s *SupermicroX10) query(requestType string) (ipmi *supermicro.IPMI, err error) {
 	bmcURL := fmt.Sprintf("https://%s/cgi/ipmi.cgi", s.ip)
 	log.WithFields(log.Fields{"step": "bmc connection", "vendor": supermicro.VendorID, "ip": s.ip}).Debug("retrieving data from bmc")
