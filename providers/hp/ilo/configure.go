@@ -526,7 +526,7 @@ func (i *Ilo) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) {
 			return errors.New(msg)
 		}
 
-		groupDn := fmt.Sprintf("cn=%s", group.Group)
+		groupDn := group.Group
 		directoryGroup, gexists := ldapGroupExists(groupDn, directoryGroups)
 
 		directoryGroup.Dn = groupDn
