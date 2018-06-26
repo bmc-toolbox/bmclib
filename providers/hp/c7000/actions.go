@@ -9,7 +9,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 )
 
-// PowerCycle reboots the machine via bmc
+// PowerCycle reboots the chassis
 func (c *C7000) PowerCycle() (status bool, err error) {
 	err = c.sshLogin()
 	if err != nil {
@@ -27,12 +27,12 @@ func (c *C7000) PowerCycle() (status bool, err error) {
 	return status, fmt.Errorf(output)
 }
 
-// PowerOn power on the machine via bmc
+// PowerOn power on the chassis
 func (c *C7000) PowerOn() (status bool, err error) {
 	return status, fmt.Errorf("Unsupported action")
 }
 
-// PowerOff power off the machine via bmc
+// PowerOff power off the chassis
 func (c *C7000) PowerOff() (status bool, err error) {
 	return status, fmt.Errorf("Unsupported action")
 }
@@ -240,14 +240,13 @@ func (c *C7000) SetDynamicPower(enable bool) (status bool, err error) {
 }
 
 // FirmwareVersion returns the chassis firmware version
-func (c *C7000) GetFirmwareVersion(version string, err error) {
+func (c *C7000) GetFirmwareVersion() (version string, err error) {
 	err = c.sshLogin()
 	if err != nil {
-		return err
+		return version, err
 	}
 
-	cmd := fmt.Sprintf("show oa info")
-	output, err := c.sshClient.Run(cmd)
+	output, err := c.sshClient.Run("show oa info")
 	if err != nil {
 		return version, fmt.Errorf(output)
 	}
@@ -256,8 +255,7 @@ func (c *C7000) GetFirmwareVersion(version string, err error) {
 	for scanner.Scan() {
 		line := scanner.Text()
 		if strings.Contains(line, "Firmware Ver") {
-			tmp := strings.SplitAfterN(line, ": ", 2)[1]
-			version = strings.Split(tmp, " ")[0]
+			version = strings.Fields(line)[3]
 		}
 	}
 
@@ -265,19 +263,40 @@ func (c *C7000) GetFirmwareVersion(version string, err error) {
 }
 
 // UpdateFirmware updates the chassis firmware
-func (c *C7000) UpdateFirmware(file string) (status bool, err error) {
+func (c *C7000) UpdateFirmware(host, filepath string) (status bool, err error) {
 	err = c.sshLogin()
 	if err != nil {
-		return err
+		return status, err
 	}
 
-	cmd := fmt.Sprintf("update image %s", file)
+	cmd := fmt.Sprintf("update image http://%s/%s", host, filepath)
 	output, err := c.sshClient.Run(cmd)
 	if err != nil {
 		return false, fmt.Errorf(output)
 	}
 
 	if strings.Contains(output, "Restarting Onboard Administrator") {
+		return true, err
+	}
+
+	return status, err
+}
+
+// UpdateFirmwareBmcBlade updates the blade BMC firmware
+func (c *C7000) UpdateFirmwareBmcBlade(position int, host, filepath string) (status bool, err error) {
+	err = c.sshLogin()
+	if err != nil {
+		return status, err
+	}
+
+	// XXX make protocol as argument instead of hardcoding
+	cmd := fmt.Sprintf("update ilo %d http://%s/%s", position, host, filepath)
+	output, err := c.sshClient.Run(cmd)
+	if err != nil {
+		return false, fmt.Errorf(output)
+	}
+
+	if strings.Contains(output, "Successful update") {
 		return true, err
 	}
 

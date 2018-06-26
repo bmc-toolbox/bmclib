@@ -588,31 +588,6 @@ func (i *Ilo) Disks() (disks []*devices.Disk, err error) {
 	return disks, err
 }
 
-<<<<<<< HEAD
-=======
-// Logout logs out and close the iLO connection
-func (i *Ilo) Logout() (err error) {
-	log.WithFields(log.Fields{"step": "bmc connection", "vendor": hp.VendorID, "ip": i.ip}).Debug("logout from bmc")
-
-	data := []byte(`{"method":"logout"}`)
-
-	req, err := http.NewRequest("POST", i.loginURL.String(), bytes.NewBuffer(data))
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := i.client.Do(req)
-	if err != nil {
-		return err
-	}
-	io.Copy(ioutil.Discard, resp.Body)
-	defer resp.Body.Close()
-
-	return err
-}
-
->>>>>>> master
 // IsBlade returns if the current hardware is a blade or not
 func (i *Ilo) IsBlade() (isBlade bool, err error) {
 	if i.rimpBlade.BladeSystem != nil {
