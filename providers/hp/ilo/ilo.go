@@ -26,7 +26,7 @@ const (
 	// BmcType defines the bmc model that is supported by this package
 	BmcType = "ilo"
 
-	// Ilo2 is the constant for Ilo2
+	// Ilo2 is the constant for iLO2
 	Ilo2 = "ilo2"
 	// Ilo3 is the constant for iLO3
 	Ilo3 = "ilo3"
@@ -169,7 +169,7 @@ func (i *Ilo) CheckCredentials() (err error) {
 	return err
 }
 
-// get calls a given json endpoint of the ilo and returns the data
+// get calls a given json endpoint of the iLO and returns the data
 func (i *Ilo) get(endpoint string) (payload []byte, err error) {
 
 	log.WithFields(log.Fields{"step": "bmc connection", "vendor": hp.VendorID, "ip": i.ip, "endpoint": endpoint}).Debug("retrieving data from bmc")
@@ -611,7 +611,7 @@ func (i *Ilo) Disks() (disks []*devices.Disk, err error) {
 	return disks, err
 }
 
-// Logout logs out and close the iLo connection
+// Logout logs out and close the iLO connection
 func (i *Ilo) Logout() (err error) {
 	log.WithFields(log.Fields{"step": "bmc connection", "vendor": hp.VendorID, "ip": i.ip}).Debug("logout from bmc")
 
