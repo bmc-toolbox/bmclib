@@ -9,10 +9,11 @@ import (
 	"net/http/httputil"
 	"net/url"
 
-	//"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/providers/hp"
+
+	multierror "github.com/hashicorp/go-multierror"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -110,6 +111,26 @@ func (c *C7000) sshLogin() (err error) {
 	c.sshClient, err = sshclient.New(c.ip, c.username, c.password)
 	if err != nil {
 		return err
+	}
+
+	return err
+}
+
+// Close closes the connection properly
+func (c *C7000) Close() (err error) {
+	if c.httpClient != nil {
+		payload := UserLogout{}
+		_, _, e := c.postXML(payload)
+		if e != nil {
+			err = multierror.Append(e, err)
+		}
+	}
+
+	if c.sshClient != nil {
+		e := c.sshClient.Close()
+		if e != nil {
+			err = multierror.Append(e, err)
+		}
 	}
 
 	return err

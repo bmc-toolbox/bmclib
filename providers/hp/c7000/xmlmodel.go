@@ -263,3 +263,8 @@ type SearchContext struct {
 
 //mark setup wizard complete - required if the chassis was reset.
 //<hpoa:setWizardComplete><hpoa:wizardStatus>WIZARD_SETUP_COMPLETE</hpoa:wizardStatus></hpoa:setWizardComplete>
+
+// UserLogout is requied to logout the session
+type UserLogout struct {
+	XMLName xml.Name `xml:"hpoa:userLogOut"`
+}

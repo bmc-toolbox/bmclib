@@ -12,7 +12,6 @@ import (
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/providers/hp"
-	multierror "github.com/hashicorp/go-multierror"
 
 	// this make possible to setup logging and properties at any stage
 	_ "github.com/bmc-toolbox/bmclib/logging"
@@ -73,18 +72,6 @@ func (c *C7000) CheckCredentials() (err error) {
 	if err != nil {
 		return err
 	}
-	return err
-}
-
-// Close closes the connection properly
-func (c *C7000) Close() (err error) {
-	if c.sshClient != nil {
-		e := c.sshClient.Close()
-		if e != nil {
-			err = multierror.Append(e, err)
-		}
-	}
-
 	return err
 }
 

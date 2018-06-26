@@ -42,7 +42,6 @@ func wrapXML(element interface{}, sessionKey string) (doc Envelope) {
 }
 
 func (c *C7000) postXML(data interface{}) (statusCode int, body []byte, err error) {
-
 	err = c.httpLogin()
 	if err != nil {
 		return statusCode, body, err
@@ -57,6 +56,10 @@ func (c *C7000) postXML(data interface{}) (statusCode int, body []byte, err erro
 	// A hack to declare self closing xml tags, until https://github.com/golang/go/issues/21399 is fixed.
 	if strings.Contains(string(xmlPayload), "<hpoa:searchContext></hpoa:searchContext>") {
 		xmlPayload = []byte(strings.Replace(string(xmlPayload), "<hpoa:searchContext></hpoa:searchContext>", "<hpoa:searchContext/>", -1))
+	}
+
+	if strings.Contains(string(xmlPayload), "<hpoa:userLogOut><hpoa:userLogOut/>") {
+		xmlPayload = []byte(strings.Replace(string(xmlPayload), "<hpoa:userLogOut><hpoa:userLogOut/>", "<hpoa:userLogOut/>", -1))
 	}
 
 	u, err := url.Parse(fmt.Sprintf("https://%s/hpoa", c.ip))
