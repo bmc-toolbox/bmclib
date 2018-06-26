@@ -1,6 +1,7 @@
 package c7000
 
 import (
+	"bufio"
 	"fmt"
 	"strconv"
 	"strings"
@@ -236,6 +237,51 @@ func (c *C7000) SetDynamicPower(enable bool) (status bool, err error) {
 	}
 
 	return status, fmt.Errorf(output)
+}
+
+// FirmwareVersion returns the chassis firmware version
+func (c *C7000) GetFirmwareVersion(version string, err error) {
+	err = c.sshLogin()
+	if err != nil {
+		return err
+	}
+
+	cmd := fmt.Sprintf("show oa info")
+	output, err := c.sshClient.Run(cmd)
+	if err != nil {
+		return version, fmt.Errorf(output)
+	}
+
+	scanner := bufio.NewScanner(strings.NewReader(output))
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Contains(line, "Firmware Ver") {
+			tmp := strings.SplitAfterN(line, ": ", 2)[1]
+			version = strings.Split(tmp, " ")[0]
+		}
+	}
+
+	return version, err
+}
+
+// UpdateFirmware updates the chassis firmware
+func (c *C7000) UpdateFirmware(file string) (status bool, err error) {
+	err = c.sshLogin()
+	if err != nil {
+		return err
+	}
+
+	cmd := fmt.Sprintf("update image %s", file)
+	output, err := c.sshClient.Run(cmd)
+	if err != nil {
+		return false, fmt.Errorf(output)
+	}
+
+	if strings.Contains(output, "Restarting Onboard Administrator") {
+		return true, err
+	}
+
+	return status, err
 }
 
 // Enable/Disable FlexAddress disables flex Addresses for blades
