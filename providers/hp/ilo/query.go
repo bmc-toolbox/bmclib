@@ -2,6 +2,8 @@ package ilo
 
 import (
 	"encoding/json"
+
+	"github.com/bmc-toolbox/bmclib/internal/helper"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -15,7 +17,7 @@ func (i *Ilo) queryDirectoryGroups() (directoryGroups []DirectoryGroups, err err
 			"IP":       i.ip,
 			"Model":    i.BmcType(),
 			"endpoint": endpoint,
-			"step":     funcName(),
+			"step":     helper.WhosCalling(),
 			"Error":    err,
 		}).Warn("GET request failed.")
 		return directoryGroups, err
@@ -27,7 +29,7 @@ func (i *Ilo) queryDirectoryGroups() (directoryGroups []DirectoryGroups, err err
 	if err != nil {
 		log.WithFields(log.Fields{
 			"IP":    i.ip,
-			"step":  funcName(),
+			"step":  helper.WhosCalling(),
 			"Model": i.BmcType(),
 			"Error": err,
 		}).Warn("Unable to unmarshal payload.")
@@ -47,7 +49,7 @@ func (i *Ilo) queryUsers() (usersInfo []UserInfo, err error) {
 			"IP":       i.ip,
 			"Model":    i.BmcType(),
 			"endpoint": endpoint,
-			"step":     funcName(),
+			"step":     helper.WhosCalling(),
 			"Error":    err,
 		}).Warn("GET request failed.")
 		return usersInfo, err
@@ -80,7 +82,7 @@ func (i *Ilo) queryNetworkSntp() (networkSntp NetworkSntp, err error) {
 			"IP":       i.ip,
 			"Model":    i.BmcType(),
 			"endpoint": endpoint,
-			"step":     funcName(),
+			"step":     helper.WhosCalling(),
 			"Error":    err,
 		}).Warn("GET request failed.")
 		return networkSntp, err
@@ -90,7 +92,7 @@ func (i *Ilo) queryNetworkSntp() (networkSntp NetworkSntp, err error) {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"IP":    i.ip,
-			"step":  funcName(),
+			"step":  helper.WhosCalling(),
 			"Model": i.BmcType(),
 			"Error": err,
 		}).Warn("Unable to unmarshal payload.")
