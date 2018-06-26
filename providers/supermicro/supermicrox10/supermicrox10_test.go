@@ -136,20 +136,6 @@ func tearDown() {
 	server.Close()
 }
 
-func TestLogin(t *testing.T) {
-	bmc, err := setup()
-	if err != nil {
-		t.Fatalf("Found errors during the test setup %v", err)
-	}
-
-	err = bmc.Login()
-	if err != nil {
-		t.Errorf("Unable to login: %v", err)
-	}
-
-	tearDown()
-}
-
 func TestSerial(t *testing.T) {
 	expectedAnswer := "a19627226a05569_vm158s009467"
 

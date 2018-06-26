@@ -15,8 +15,7 @@ type Bmc interface {
 	Disks() ([]*Disk, error)
 	IsBlade() (bool, error)
 	License() (string, string, error)
-	Login() error
-	Logout() error
+	Close() error
 	Memory() (int, error)
 	Model() (string, error)
 	Name() (string, error)

@@ -164,11 +164,6 @@ func setup() (bmc *Ilo, err error) {
 		return bmc, err
 	}
 
-	err = bmc.Login()
-	if err != nil {
-		return bmc, err
-	}
-
 	return bmc, err
 }
 

@@ -15,7 +15,6 @@ import (
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/providers/dell"
-	multierror "github.com/hashicorp/go-multierror"
 
 	// this make possible to setup logging and properties at any stage
 	_ "github.com/bmc-toolbox/bmclib/logging"
@@ -51,26 +50,7 @@ func New(ip string, username string, password string) (chassis *M1000e, err erro
 	return &M1000e{ip: ip, username: username, password: password}, err
 }
 
-// Close closes the connection properly
-func (m *M1000e) Close() (err error) {
-	if m.httpClient != nil {
-		_, e := m.httpClient.Get(fmt.Sprintf("https://%s/cgi-bin/webcgi/logout", m.ip))
-		if e != nil {
-			err = multierror.Append(e, err)
-		}
-	}
-
-	if m.sshClient != nil {
-		e := m.sshClient.Close()
-		if e != nil {
-			err = multierror.Append(e, err)
-		}
-	}
-
-	return err
-}
-
-// Checks if we can login
+// CheckCredentials verify whether the credentials are valid or not
 func (m *M1000e) CheckCredentials() (err error) {
 	err = m.httpLogin()
 	if err != nil {

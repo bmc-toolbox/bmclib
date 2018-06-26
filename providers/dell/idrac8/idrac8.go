@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
@@ -18,6 +17,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
+	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/providers/dell"
 
 	// this make possible to setup logging and properties at any stage
@@ -35,7 +35,8 @@ type IDrac8 struct {
 	ip             string
 	username       string
 	password       string
-	client         *http.Client
+	httpClient     *http.Client
+	sshClient      *sshclient.SSHClient
 	st1            string
 	st2            string
 	serial         string
@@ -44,106 +45,20 @@ type IDrac8 struct {
 
 // New returns a new IDrac8 ready to be used
 func New(ip string, username string, password string) (iDrac *IDrac8, err error) {
-	client, err := httpclient.Build()
-	if err != nil {
-		return iDrac, err
-	}
-
-	return &IDrac8{ip: ip, username: username, password: password, client: client}, err
+	return &IDrac8{ip: ip, username: username, password: password}, err
 }
 
-// Login initiates the connection to a bmc device
-func (i *IDrac8) Login() (err error) {
-	log.WithFields(log.Fields{"step": "bmc connection", "vendor": dell.VendorID, "ip": i.ip}).Debug("connecting to bmc")
-
-	data := fmt.Sprintf("user=%s&password=%s", i.username, i.password)
-	url := fmt.Sprintf("https://%s/data/login", i.ip)
-	req, err := http.NewRequest("POST", url, bytes.NewBufferString(data))
-	if err != nil {
-		return err
-	}
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-	resp, err := i.client.Do(req)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode == 404 {
-		return errors.ErrPageNotFound
-	}
-
-	payload, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	iDracAuth := &dell.IDracAuth{}
-	err = xml.Unmarshal(payload, iDracAuth)
-	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
-		return err
-	}
-
-	stTemp := strings.Split(iDracAuth.ForwardURL, ",")
-	if len(stTemp) != 2 {
-		return errors.ErrLoginFailed
-	}
-
-	i.st1 = strings.TrimLeft(stTemp[0], "index.html?ST1=")
-	i.st2 = strings.TrimLeft(stTemp[1], "ST2=")
-
-	err = i.loadHwData()
-	if err != nil {
-		return err
-	}
-
-	serial, err := i.Serial()
-	if err != nil {
-		return err
-	}
-	i.serial = serial
-
-	return err
-}
-
-// Checks if we can login
+// CheckCredentials verify whether the credentials are valid or not
 func (i *IDrac8) CheckCredentials() (err error) {
-	err = i.Login()
+	err = i.httpLogin()
 	if err != nil {
 		return err
 	}
-	return err
-}
-
-// loadHwData load the full hardware information from the iDrac
-func (i *IDrac8) loadHwData() (err error) {
-	url := "sysmgmt/2012/server/inventory/hardware"
-	payload, err := i.get(url, nil)
-	if err != nil {
-		return err
-	}
-
-	iDracInventory := &dell.IDracInventory{}
-	err = xml.Unmarshal(payload, iDracInventory)
-	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
-		return err
-	}
-
-	if iDracInventory == nil || iDracInventory.Component == nil {
-		return errors.ErrUnableToReadData
-	}
-
-	i.iDracInventory = iDracInventory
-
-	return err
+	return nil
 }
 
 // PUTs data
 func (i *IDrac8) put(endpoint string, payload []byte) (response []byte, err error) {
-
 	bmcURL := fmt.Sprintf("https://%s", i.ip)
 
 	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/%s", bmcURL, endpoint), bytes.NewReader(payload))
@@ -157,7 +72,7 @@ func (i *IDrac8) put(endpoint string, payload []byte) (response []byte, err erro
 		return response, err
 	}
 
-	for _, cookie := range i.client.Jar.Cookies(u) {
+	for _, cookie := range i.httpClient.Jar.Cookies(u) {
 		if cookie.Name == "-http-session-" || cookie.Name == "tokenvalue" {
 			req.AddCookie(cookie)
 		}
@@ -173,7 +88,7 @@ func (i *IDrac8) put(endpoint string, payload []byte) (response []byte, err erro
 		}
 	}
 
-	resp, err := i.client.Do(req)
+	resp, err := i.httpClient.Do(req)
 	if err != nil {
 		return response, err
 	}
@@ -214,7 +129,7 @@ func (i *IDrac8) post(endpoint string, data []byte) (statusCode int, body []byte
 		return 0, []byte{}, err
 	}
 
-	for _, cookie := range i.client.Jar.Cookies(u) {
+	for _, cookie := range i.httpClient.Jar.Cookies(u) {
 		if cookie.Name == "-http-session-" || cookie.Name == "tokenvalue" {
 			req.AddCookie(cookie)
 		}
@@ -233,7 +148,7 @@ func (i *IDrac8) post(endpoint string, data []byte) (statusCode int, body []byte
 		}
 	}
 
-	resp, err := i.client.Do(req)
+	resp, err := i.httpClient.Do(req)
 	if err != nil {
 		return 0, []byte{}, err
 	}
@@ -278,7 +193,7 @@ func (i *IDrac8) get(endpoint string, extraHeaders *map[string]string) (payload 
 		return payload, err
 	}
 
-	for _, cookie := range i.client.Jar.Cookies(u) {
+	for _, cookie := range i.httpClient.Jar.Cookies(u) {
 		if cookie.Name == "-http-session-" {
 			req.AddCookie(cookie)
 		}
@@ -293,7 +208,7 @@ func (i *IDrac8) get(endpoint string, extraHeaders *map[string]string) (payload 
 		}
 	}
 
-	resp, err := i.client.Do(req)
+	resp, err := i.httpClient.Do(req)
 	if err != nil {
 		return payload, err
 	}
@@ -322,6 +237,11 @@ func (i *IDrac8) get(endpoint string, extraHeaders *map[string]string) (payload 
 
 // Nics returns all found Nics in the device
 func (i *IDrac8) Nics() (nics []*devices.Nic, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return nics, err
+	}
+
 	for _, component := range i.iDracInventory.Component {
 		if component.Classname == "DCIM_NICView" {
 			for _, property := range component.Properties {
@@ -363,6 +283,11 @@ func (i *IDrac8) Nics() (nics []*devices.Nic, err error) {
 
 // Serial returns the device serial
 func (i *IDrac8) Serial() (serial string, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return serial, err
+	}
+
 	for _, component := range i.iDracInventory.Component {
 		if component.Classname == "DCIM_SystemView" {
 			for _, property := range component.Properties {
@@ -377,6 +302,11 @@ func (i *IDrac8) Serial() (serial string, err error) {
 
 // Status returns health string status from the bmc
 func (i *IDrac8) Status() (status string, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return status, err
+	}
+
 	extraHeaders := &map[string]string{
 		"X-SYSMGMT-OPTIMIZE": "true",
 	}
@@ -405,6 +335,11 @@ func (i *IDrac8) Status() (status string, err error) {
 
 // PowerKw returns the current power usage in Kw
 func (i *IDrac8) PowerKw() (power float64, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return power, err
+	}
+
 	url := "data?get=powermonitordata"
 	payload, err := i.get(url, nil)
 	if err != nil {
@@ -431,6 +366,11 @@ func (i *IDrac8) PowerKw() (power float64, err error) {
 
 // PowerState returns the current power state of the machine
 func (i *IDrac8) PowerState() (state string, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return state, err
+	}
+
 	for _, component := range i.iDracInventory.Component {
 		if component.Classname == "DCIM_SystemView" {
 			for _, property := range component.Properties {
@@ -445,6 +385,11 @@ func (i *IDrac8) PowerState() (state string, err error) {
 
 // BiosVersion returns the current version of the bios
 func (i *IDrac8) BiosVersion() (version string, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return version, err
+	}
+
 	for _, component := range i.iDracInventory.Component {
 		if component.Classname == "DCIM_SystemView" {
 			for _, property := range component.Properties {
@@ -460,6 +405,11 @@ func (i *IDrac8) BiosVersion() (version string, err error) {
 
 // Name returns the name of this server from the bmc point of view
 func (i *IDrac8) Name() (name string, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return name, err
+	}
+
 	for _, component := range i.iDracInventory.Component {
 		if component.Classname == "DCIM_SystemView" {
 			for _, property := range component.Properties {
@@ -475,6 +425,11 @@ func (i *IDrac8) Name() (name string, err error) {
 
 // BmcVersion returns the version of the bmc we are running
 func (i *IDrac8) BmcVersion() (bmcVersion string, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return bmcVersion, err
+	}
+
 	for _, component := range i.iDracInventory.Component {
 		if component.Classname == "DCIM_iDRACCardView" {
 			for _, property := range component.Properties {
@@ -489,6 +444,11 @@ func (i *IDrac8) BmcVersion() (bmcVersion string, err error) {
 
 // Model returns the device model
 func (i *IDrac8) Model() (model string, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return model, err
+	}
+
 	for _, component := range i.iDracInventory.Component {
 		if component.Classname == "DCIM_SystemView" {
 			for _, property := range component.Properties {
@@ -508,6 +468,11 @@ func (i *IDrac8) BmcType() (bmcType string) {
 
 // License returns the bmc license information
 func (i *IDrac8) License() (name string, licType string, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return name, licType, err
+	}
+
 	extraHeaders := &map[string]string{
 		"X_SYSMGMT_OPTIMIZE": "true",
 	}
@@ -533,6 +498,11 @@ func (i *IDrac8) License() (name string, licType string, err error) {
 
 // Memory return the total amount of memory of the server
 func (i *IDrac8) Memory() (mem int, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return mem, err
+	}
+
 	for _, component := range i.iDracInventory.Component {
 		if component.Classname == "DCIM_SystemView" {
 			for _, property := range component.Properties {
@@ -551,6 +521,11 @@ func (i *IDrac8) Memory() (mem int, err error) {
 
 // Disks returns a list of disks installed on the device
 func (i *IDrac8) Disks() (disks []*devices.Disk, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return disks, err
+	}
+
 	for _, component := range i.iDracInventory.Component {
 		if component.Classname == "DCIM_PhysicalDiskView" {
 			if disks == nil {
@@ -596,6 +571,11 @@ func (i *IDrac8) Disks() (disks []*devices.Disk, err error) {
 
 // TempC returns the current temperature of the machine
 func (i *IDrac8) TempC() (temp int, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return temp, err
+	}
+
 	extraHeaders := &map[string]string{
 		"X_SYSMGMT_OPTIMIZE": "true",
 	}
@@ -618,6 +598,11 @@ func (i *IDrac8) TempC() (temp int, err error) {
 
 // CPU return the cpu, cores and hyperthreads the server
 func (i *IDrac8) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCount int, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return cpu, cpuCount, coreCount, hyperthreadCount, err
+	}
+
 	extraHeaders := &map[string]string{
 		"X_SYSMGMT_OPTIMIZE": "true",
 	}
@@ -648,22 +633,13 @@ func (i *IDrac8) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCoun
 	return cpu, cpuCount, coreCount, hyperthreadCount, err
 }
 
-// Logout logs out and close the bmc connection
-func (i *IDrac8) Logout() (err error) {
-	log.WithFields(log.Fields{"step": "bmc connection", "vendor": dell.VendorID, "ip": i.ip}).Debug("logout from bmc")
-
-	resp, err := i.client.Get(fmt.Sprintf("https://%s/data/logout", i.ip))
-	if err != nil {
-		return err
-	}
-	io.Copy(ioutil.Discard, resp.Body)
-	defer resp.Body.Close()
-
-	return err
-}
-
 // IsBlade returns if the current hardware is a blade or not
 func (i *IDrac8) IsBlade() (isBlade bool, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return isBlade, err
+	}
+
 	model, err := i.Model()
 	if err != nil {
 		return isBlade, err
@@ -678,6 +654,11 @@ func (i *IDrac8) IsBlade() (isBlade bool, err error) {
 
 // Psus returns a list of psus installed on the device
 func (i *IDrac8) Psus() (psus []*devices.Psu, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return psus, err
+	}
+
 	url := "data?get=powerSupplies"
 	payload, err := i.get(url, nil)
 	if err != nil {
@@ -724,44 +705,132 @@ func (i *IDrac8) Vendor() (vendor string) {
 
 // ServerSnapshot do best effort to populate the server data and returns a blade or discrete
 func (i *IDrac8) ServerSnapshot() (server interface{}, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return server, err
+	}
+
 	if isBlade, _ := i.IsBlade(); isBlade {
 		blade := &devices.Blade{}
-		blade.Serial, _ = i.Serial()
+		blade.Vendor = i.Vendor()
 		blade.BmcAddress = i.ip
 		blade.BmcType = i.BmcType()
-		blade.BmcVersion, _ = i.BmcVersion()
-		blade.Model, _ = i.Model()
-		blade.Vendor = i.Vendor()
-		blade.Nics, _ = i.Nics()
-		blade.Disks, _ = i.Disks()
-		blade.BiosVersion, _ = i.BiosVersion()
-		blade.Processor, blade.ProcessorCount, blade.ProcessorCoreCount, blade.ProcessorThreadCount, _ = i.CPU()
-		blade.Memory, _ = i.Memory()
-		blade.Status, _ = i.Status()
-		blade.Name, _ = i.Name()
-		blade.TempC, _ = i.TempC()
-		blade.PowerKw, _ = i.PowerKw()
-		blade.BmcLicenceType, blade.BmcLicenceStatus, _ = i.License()
+
+		blade.Serial, _ = i.Serial()
+		if err != nil {
+			return nil, err
+		}
+		blade.BmcVersion, err = i.BmcVersion()
+		if err != nil {
+			return nil, err
+		}
+		blade.Model, err = i.Model()
+		if err != nil {
+			return nil, err
+		}
+		blade.Nics, err = i.Nics()
+		if err != nil {
+			return nil, err
+		}
+		blade.Disks, err = i.Disks()
+		if err != nil {
+			return nil, err
+		}
+		blade.BiosVersion, err = i.BiosVersion()
+		if err != nil {
+			return nil, err
+		}
+		blade.Processor, blade.ProcessorCount, blade.ProcessorCoreCount, blade.ProcessorThreadCount, err = i.CPU()
+		if err != nil {
+			return nil, err
+		}
+		blade.Memory, err = i.Memory()
+		if err != nil {
+			return nil, err
+		}
+		blade.Status, err = i.Status()
+		if err != nil {
+			return nil, err
+		}
+		blade.Name, err = i.Name()
+		if err != nil {
+			return nil, err
+		}
+		blade.TempC, err = i.TempC()
+		if err != nil {
+			return nil, err
+		}
+		blade.PowerKw, err = i.PowerKw()
+		if err != nil {
+			return nil, err
+		}
+		blade.BmcLicenceType, blade.BmcLicenceStatus, err = i.License()
+		if err != nil {
+			return nil, err
+		}
 		server = blade
 	} else {
 		discrete := &devices.Discrete{}
-		discrete.Serial, _ = i.Serial()
+		discrete.Vendor = i.Vendor()
 		discrete.BmcAddress = i.ip
 		discrete.BmcType = i.BmcType()
-		discrete.BmcVersion, _ = i.BmcVersion()
-		discrete.Model, _ = i.Model()
-		discrete.Vendor = i.Vendor()
-		discrete.Nics, _ = i.Nics()
-		discrete.Disks, _ = i.Disks()
-		discrete.BiosVersion, _ = i.BiosVersion()
-		discrete.Processor, discrete.ProcessorCount, discrete.ProcessorCoreCount, discrete.ProcessorThreadCount, _ = i.CPU()
-		discrete.Memory, _ = i.Memory()
-		discrete.Status, _ = i.Status()
-		discrete.Name, _ = i.Name()
-		discrete.TempC, _ = i.TempC()
-		discrete.PowerKw, _ = i.PowerKw()
-		discrete.BmcLicenceType, discrete.BmcLicenceStatus, _ = i.License()
-		discrete.Psus, _ = i.Psus()
+
+		discrete.Serial, err = i.Serial()
+		if err != nil {
+			return nil, err
+		}
+		discrete.BmcVersion, err = i.BmcVersion()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Model, err = i.Model()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Nics, err = i.Nics()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Disks, err = i.Disks()
+		if err != nil {
+			return nil, err
+		}
+		discrete.BiosVersion, err = i.BiosVersion()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Processor, discrete.ProcessorCount, discrete.ProcessorCoreCount, discrete.ProcessorThreadCount, err = i.CPU()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Memory, err = i.Memory()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Status, err = i.Status()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Name, err = i.Name()
+		if err != nil {
+			return nil, err
+		}
+		discrete.TempC, err = i.TempC()
+		if err != nil {
+			return nil, err
+		}
+		discrete.PowerKw, err = i.PowerKw()
+		if err != nil {
+			return nil, err
+		}
+		discrete.BmcLicenceType, discrete.BmcLicenceStatus, err = i.License()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Psus, err = i.Psus()
+		if err != nil {
+			return nil, err
+		}
 		server = discrete
 	}
 
