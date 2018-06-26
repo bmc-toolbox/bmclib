@@ -302,7 +302,7 @@ func (m *M1000e) SetDynamicPower(enable bool) (status bool, err error) {
 
 }
 
-// Disable/Enable FlexAddress disables flex Addresses for blades
+// SetFlexAddressState Disable/Enable FlexAddress disables flex Addresses for blades
 // FlexAddress is a virtual addressing scheme
 func (m *M1000e) SetFlexAddressState(position int, enable bool) (status bool, err error) {
 	err = m.sshLogin()
@@ -312,11 +312,11 @@ func (m *M1000e) SetFlexAddressState(position int, enable bool) (status bool, er
 
 	isOn, err := m.IsOnBlade(position)
 	if err != nil {
-		return false, fmt.Errorf("Failed to validate blade %d power status is off, ", err)
+		return false, fmt.Errorf("failed to validate blade %d power status is off, %v", position, err)
 	}
 
-	if isOn == true {
-		return false, fmt.Errorf("Blade in position %d is currently powered on, it must be powered off before this action.", position)
+	if isOn {
+		return false, fmt.Errorf("blade in position %d is currently powered on, it must be powered off before this action", position)
 	}
 
 	var cmd string
