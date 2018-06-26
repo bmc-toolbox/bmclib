@@ -26,7 +26,7 @@ const (
 	// BmcType defines the bmc model that is supported by this package
 	BmcType = "ilo"
 
-	// Ilo2 is the constant for Ilo2
+	// Ilo2 is the constant for iLO2
 	Ilo2 = "ilo2"
 	// Ilo3 is the constant for iLO3
 	Ilo3 = "ilo3"
@@ -92,7 +92,7 @@ func (i *Ilo) CheckCredentials() (err error) {
 	return err
 }
 
-// get calls a given json endpoint of the ilo and returns the data
+// get calls a given json endpoint of the iLO and returns the data
 func (i *Ilo) get(endpoint string) (payload []byte, err error) {
 	log.WithFields(log.Fields{"step": "bmc connection", "vendor": hp.VendorID, "ip": i.ip, "endpoint": endpoint}).Debug("retrieving data from bmc")
 
@@ -588,6 +588,31 @@ func (i *Ilo) Disks() (disks []*devices.Disk, err error) {
 	return disks, err
 }
 
+<<<<<<< HEAD
+=======
+// Logout logs out and close the iLO connection
+func (i *Ilo) Logout() (err error) {
+	log.WithFields(log.Fields{"step": "bmc connection", "vendor": hp.VendorID, "ip": i.ip}).Debug("logout from bmc")
+
+	data := []byte(`{"method":"logout"}`)
+
+	req, err := http.NewRequest("POST", i.loginURL.String(), bytes.NewBuffer(data))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := i.client.Do(req)
+	if err != nil {
+		return err
+	}
+	io.Copy(ioutil.Discard, resp.Body)
+	defer resp.Body.Close()
+
+	return err
+}
+
+>>>>>>> master
 // IsBlade returns if the current hardware is a blade or not
 func (i *Ilo) IsBlade() (isBlade bool, err error) {
 	if i.rimpBlade.BladeSystem != nil {
