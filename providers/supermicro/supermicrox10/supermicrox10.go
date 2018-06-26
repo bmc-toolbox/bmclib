@@ -14,6 +14,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
+
 	"github.com/bmc-toolbox/bmclib/providers/supermicro"
 
 	// this make possible to setup logging and properties at any stage
@@ -28,64 +29,21 @@ const (
 
 // SupermicroX10 holds the status and properties of a connection to a supermicro bmc
 type SupermicroX10 struct {
-	ip       string
-	username string
-	password string
-	client   *http.Client
-	serial   string
+	ip         string
+	username   string
+	password   string
+	httpClient *http.Client
+	serial     string
 }
 
 // New returns a new SupermicroX10 instance ready to be used
 func New(ip string, username string, password string) (sm *SupermicroX10, err error) {
-	client, err := httpclient.Build()
-	if err != nil {
-		return sm, err
-	}
-	return &SupermicroX10{ip: ip, username: username, password: password, client: client}, err
+	return &SupermicroX10{ip: ip, username: username, password: password}, err
 }
 
-// Login initiates the connection to an SupermicroX10 device
-func (s *SupermicroX10) Login() (err error) {
-	log.WithFields(log.Fields{"step": "bmc connection", "vendor": supermicro.VendorID, "ip": s.ip}).Debug("connecting to bmc")
-
-	data := fmt.Sprintf("name=%s&pwd=%s", s.username, s.password)
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/cgi/login.cgi", s.ip), bytes.NewBufferString(data))
-	if err != nil {
-		return err
-	}
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-	resp, err := s.client.Do(req)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode == 404 {
-		return errors.ErrPageNotFound
-	}
-
-	payload, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if !strings.Contains(string(payload), "../cgi/url_redirect.cgi?url_name=mainmenu") {
-		return errors.ErrLoginFailed
-	}
-
-	serial, err := s.Serial()
-	if err != nil {
-		return err
-	}
-
-	s.serial = serial
-	return err
-}
-
-// Checks if we can login
+// CheckCredentials verify whether the credentials are valid or not
 func (s *SupermicroX10) CheckCredentials() (err error) {
-	err = s.Login()
+	err = s.httpLogin()
 	if err != nil {
 		return err
 	}
@@ -93,6 +51,11 @@ func (s *SupermicroX10) CheckCredentials() (err error) {
 }
 
 func (s *SupermicroX10) query(requestType string) (ipmi *supermicro.IPMI, err error) {
+	err = s.httpLogin()
+	if err != nil {
+		return ipmi, err
+	}
+
 	bmcURL := fmt.Sprintf("https://%s/cgi/ipmi.cgi", s.ip)
 	log.WithFields(log.Fields{"step": "bmc connection", "vendor": supermicro.VendorID, "ip": s.ip}).Debug("retrieving data from bmc")
 
@@ -105,7 +68,7 @@ func (s *SupermicroX10) query(requestType string) (ipmi *supermicro.IPMI, err er
 	if err != nil {
 		return ipmi, err
 	}
-	for _, cookie := range s.client.Jar.Cookies(u) {
+	for _, cookie := range s.httpClient.Jar.Cookies(u) {
 		if cookie.Name == "SID" && cookie.Value != "" {
 			req.AddCookie(cookie)
 		}
@@ -121,7 +84,7 @@ func (s *SupermicroX10) query(requestType string) (ipmi *supermicro.IPMI, err er
 		}
 	}
 
-	resp, err := s.client.Do(req)
+	resp, err := s.httpClient.Do(req)
 	if err != nil {
 		return ipmi, err
 	}
@@ -151,55 +114,6 @@ func (s *SupermicroX10) query(requestType string) (ipmi *supermicro.IPMI, err er
 	}
 
 	return ipmi, err
-}
-
-// Logout logs out of the bmc
-func (s *SupermicroX10) Logout() (err error) {
-	bmcURL := fmt.Sprintf("https://%s/cgi/logout.cgi", s.ip)
-	log.WithFields(log.Fields{"step": "bmc connection", "vendor": supermicro.VendorID, "ip": s.ip}).Debug("logout from bmc")
-
-	req, err := http.NewRequest("POST", bmcURL, nil)
-	if err != nil {
-		return err
-	}
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	u, err := url.Parse(bmcURL)
-	if err != nil {
-		return err
-	}
-	for _, cookie := range s.client.Jar.Cookies(u) {
-		if cookie.Name == "SID" && cookie.Value != "" {
-			req.AddCookie(cookie)
-		}
-	}
-	if log.GetLevel() == log.DebugLevel {
-		log.Println(fmt.Sprintf("https://%s/cgi/%s", bmcURL, s.ip))
-		dump, err := httputil.DumpRequestOut(req, true)
-		if err == nil {
-			log.Println("[Request]")
-			log.Println(">>>>>>>>>>>>>>>")
-			log.Printf("%s\n\n", dump)
-			log.Println(">>>>>>>>>>>>>>>")
-		}
-	}
-
-	resp, err := s.client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	if log.GetLevel() == log.DebugLevel {
-		log.Println(fmt.Sprintf("https://%s/cgi/%s", bmcURL, s.ip))
-		dump, err := httputil.DumpRequestOut(req, true)
-		if err == nil {
-			log.Println("[Request]")
-			log.Println(">>>>>>>>>>>>>>>")
-			log.Printf("%s\n\n", dump)
-			log.Println(">>>>>>>>>>>>>>>")
-		}
-	}
-
-	return err
 }
 
 // Serial returns the device serial

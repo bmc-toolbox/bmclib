@@ -632,6 +632,10 @@ func (s *SupermicroX10) applySyslogParams(cfg *cfgresources.Syslog) (err error) 
 
 // posts a urlencoded form to the given endpoint
 func (s *SupermicroX10) post(endpoint string, form *url.Values) (statusCode int, err error) {
+	err = s.httpLogin()
+	if err != nil {
+		return statusCode, err
+	}
 
 	u, err := url.Parse(fmt.Sprintf("https://%s/cgi/%s", s.ip, endpoint))
 	if err != nil {
@@ -643,7 +647,7 @@ func (s *SupermicroX10) post(endpoint string, form *url.Values) (statusCode int,
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-	for _, cookie := range s.client.Jar.Cookies(u) {
+	for _, cookie := range s.httpClient.Jar.Cookies(u) {
 		if cookie.Name == "SID" && cookie.Value != "" {
 			req.AddCookie(cookie)
 		}
@@ -660,7 +664,7 @@ func (s *SupermicroX10) post(endpoint string, form *url.Values) (statusCode int,
 		}
 	}
 
-	resp, err := s.client.Do(req)
+	resp, err := s.httpClient.Do(req)
 	if err != nil {
 		return statusCode, err
 	}
