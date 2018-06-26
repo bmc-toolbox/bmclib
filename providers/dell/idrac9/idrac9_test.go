@@ -3917,11 +3917,6 @@ func setup() (bmc *IDrac9, err error) {
 		return bmc, err
 	}
 
-	err = bmc.Login()
-	if err != nil {
-		return bmc, err
-	}
-
 	return bmc, err
 }
 

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -16,6 +15,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
+	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/providers/dell"
 
 	// this make possible to setup logging and properties at any stage
@@ -34,95 +34,19 @@ type IDrac9 struct {
 	username       string
 	password       string
 	xsrfToken      string
-	client         *http.Client
+	httpClient     *http.Client
+	sshClient      *sshclient.SSHClient
 	iDracInventory *dell.IDracInventory
 }
 
 // New returns a new IDrac9 ready to be used
 func New(ip string, username string, password string) (iDrac *IDrac9, err error) {
-	client, err := httpclient.Build()
-	if err != nil {
-		return iDrac, err
-	}
-
-	return &IDrac9{ip: ip, username: username, password: password, client: client}, err
+	return &IDrac9{ip: ip, username: username, password: password}, err
 }
 
-// Login initiates the connection to a bmc device
-func (i *IDrac9) Login() (err error) {
-	log.WithFields(log.Fields{"step": "bmc connection", "vendor": dell.VendorID, "ip": i.ip}).Debug("connecting to bmc")
-
-	url := fmt.Sprintf("https://%s/sysmgmt/2015/bmc/session", i.ip)
-	req, err := http.NewRequest("POST", url, nil)
-	if err != nil {
-		return err
-	}
-	req.Header.Add("user", fmt.Sprintf("\"%s\"", i.username))
-	req.Header.Add("password", fmt.Sprintf("\"%s\"", i.password))
-
-	resp, err := i.client.Do(req)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode == 404 {
-		return errors.ErrPageNotFound
-	}
-
-	i.xsrfToken = resp.Header.Get("XSRF-TOKEN")
-
-	payload, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	iDracAuth := &dell.IDracAuth{}
-	err = json.Unmarshal(payload, iDracAuth)
-	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
-		return err
-	}
-
-	if iDracAuth.AuthResult != 0 {
-		return errors.ErrLoginFailed
-	}
-
-	err = i.loadHwData()
-	if err != nil {
-		return err
-	}
-
-	return err
-}
-
-// loadHwData load the full hardware information from the iDrac
-func (i *IDrac9) loadHwData() (err error) {
-	url := "sysmgmt/2012/server/inventory/hardware"
-	payload, err := i.get(url, nil)
-	if err != nil {
-		return err
-	}
-
-	iDracInventory := &dell.IDracInventory{}
-	err = xml.Unmarshal(payload, iDracInventory)
-	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
-		return err
-	}
-
-	if iDracInventory == nil || iDracInventory.Component == nil {
-		return errors.ErrUnableToReadData
-	}
-
-	i.iDracInventory = iDracInventory
-
-	return err
-}
-
-// Checks if we can login
+// CheckCredentials verify whether the credentials are valid or not
 func (i *IDrac9) CheckCredentials() (err error) {
-	err = i.Login()
+	err = i.httpLogin()
 	if err != nil {
 		return err
 	}
@@ -147,7 +71,7 @@ func (i *IDrac9) get(endpoint string, extraHeaders *map[string]string) (payload 
 		}
 	}
 
-	resp, err := i.client.Do(req)
+	resp, err := i.httpClient.Do(req)
 	if err != nil {
 		return payload, err
 	}
@@ -167,6 +91,11 @@ func (i *IDrac9) get(endpoint string, extraHeaders *map[string]string) (payload 
 
 // Nics returns all found Nics in the device
 func (i *IDrac9) Nics() (nics []*devices.Nic, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return nics, err
+	}
+
 	for _, component := range i.iDracInventory.Component {
 		if component.Classname == "DCIM_NICView" {
 			for _, property := range component.Properties {
@@ -208,6 +137,11 @@ func (i *IDrac9) Nics() (nics []*devices.Nic, err error) {
 
 // Serial returns the device serial
 func (i *IDrac9) Serial() (serial string, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return serial, err
+	}
+
 	for _, component := range i.iDracInventory.Component {
 		if component.Classname == "DCIM_SystemView" {
 			for _, property := range component.Properties {
@@ -222,6 +156,11 @@ func (i *IDrac9) Serial() (serial string, err error) {
 
 // Status returns health string status from the bmc
 func (i *IDrac9) Status() (status string, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return status, err
+	}
+
 	extraHeaders := &map[string]string{
 		"X-SYSMGMT-OPTIMIZE": "true",
 	}
@@ -250,6 +189,11 @@ func (i *IDrac9) Status() (status string, err error) {
 
 // PowerKw returns the current power usage in Kw
 func (i *IDrac9) PowerKw() (power float64, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return power, err
+	}
+
 	url := "sysmgmt/2015/server/sensor/power"
 	payload, err := i.get(url, nil)
 	if err != nil {
@@ -268,6 +212,11 @@ func (i *IDrac9) PowerKw() (power float64, err error) {
 
 // PowerState returns the current power state of the machine
 func (i *IDrac9) PowerState() (state string, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return state, err
+	}
+
 	for _, component := range i.iDracInventory.Component {
 		if component.Classname == "DCIM_SystemView" {
 			for _, property := range component.Properties {
@@ -282,6 +231,11 @@ func (i *IDrac9) PowerState() (state string, err error) {
 
 // BiosVersion returns the current version of the bios
 func (i *IDrac9) BiosVersion() (version string, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return version, err
+	}
+
 	for _, component := range i.iDracInventory.Component {
 		if component.Classname == "DCIM_SystemView" {
 			for _, property := range component.Properties {
@@ -297,6 +251,11 @@ func (i *IDrac9) BiosVersion() (version string, err error) {
 
 // Name returns the name of this server from the bmc point of view
 func (i *IDrac9) Name() (name string, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return name, err
+	}
+
 	for _, component := range i.iDracInventory.Component {
 		if component.Classname == "DCIM_SystemView" {
 			for _, property := range component.Properties {
@@ -312,6 +271,11 @@ func (i *IDrac9) Name() (name string, err error) {
 
 // BmcVersion returns the version of the bmc we are running
 func (i *IDrac9) BmcVersion() (bmcVersion string, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return bmcVersion, err
+	}
+
 	for _, component := range i.iDracInventory.Component {
 		if component.Classname == "DCIM_iDRACCardView" {
 			for _, property := range component.Properties {
@@ -326,6 +290,11 @@ func (i *IDrac9) BmcVersion() (bmcVersion string, err error) {
 
 // Model returns the device model
 func (i *IDrac9) Model() (model string, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return model, err
+	}
+
 	for _, component := range i.iDracInventory.Component {
 		if component.Classname == "DCIM_SystemView" {
 			for _, property := range component.Properties {
@@ -345,6 +314,11 @@ func (i *IDrac9) BmcType() (bmcType string) {
 
 // License returns the bmc license information
 func (i *IDrac9) License() (name string, licType string, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return name, licType, err
+	}
+
 	extraHeaders := &map[string]string{
 		"X_SYSMGMT_OPTIMIZE": "true",
 	}
@@ -370,6 +344,11 @@ func (i *IDrac9) License() (name string, licType string, err error) {
 
 // Memory return the total amount of memory of the server
 func (i *IDrac9) Memory() (mem int, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return mem, err
+	}
+
 	for _, component := range i.iDracInventory.Component {
 		if component.Classname == "DCIM_SystemView" {
 			for _, property := range component.Properties {
@@ -388,6 +367,11 @@ func (i *IDrac9) Memory() (mem int, err error) {
 
 // TempC returns the current temperature of the machine
 func (i *IDrac9) TempC() (temp int, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return temp, err
+	}
+
 	extraHeaders := &map[string]string{
 		"X-SYSMGMT-OPTIMIZE": "true",
 	}
@@ -410,6 +394,11 @@ func (i *IDrac9) TempC() (temp int, err error) {
 
 // CPU return the cpu, cores and hyperthreads the server
 func (i *IDrac9) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCount int, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return cpu, cpuCount, coreCount, hyperthreadCount, err
+	}
+
 	for _, component := range i.iDracInventory.Component {
 		if component.Classname == "DCIM_CPUView" {
 			cpuCount++
@@ -435,22 +424,13 @@ func (i *IDrac9) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCoun
 	return cpu, cpuCount, coreCount, hyperthreadCount, err
 }
 
-// Logout logs out and close the bmc connection
-func (i *IDrac9) Logout() (err error) {
-	log.WithFields(log.Fields{"step": "bmc connection", "vendor": dell.VendorID, "ip": i.ip}).Debug("logout from bmc")
-
-	resp, err := i.client.Get(fmt.Sprintf("https://%s/sysmgmt/2015/bmc/session/logout", i.ip))
-	if err != nil {
-		return err
-	}
-	io.Copy(ioutil.Discard, resp.Body)
-	defer resp.Body.Close()
-
-	return err
-}
-
 // IsBlade returns if the current hardware is a blade or not
 func (i *IDrac9) IsBlade() (isBlade bool, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return isBlade, err
+	}
+
 	model, err := i.Model()
 	if err != nil {
 		return isBlade, err
@@ -465,6 +445,11 @@ func (i *IDrac9) IsBlade() (isBlade bool, err error) {
 
 // Psus returns a list of psus installed on the device
 func (i *IDrac9) Psus() (psus []*devices.Psu, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return psus, err
+	}
+
 	url := "data?get=powerSupplies"
 	payload, err := i.get(url, nil)
 	if err != nil {
@@ -510,6 +495,11 @@ func (i *IDrac9) Vendor() (vendor string) {
 
 // ServerSnapshot do best effort to populate the server data and returns a blade or discrete
 func (i *IDrac9) ServerSnapshot() (server interface{}, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return server, err
+	}
+
 	if isBlade, _ := i.IsBlade(); isBlade {
 		blade := &devices.Blade{}
 		blade.Serial, _ = i.Serial()
@@ -556,6 +546,11 @@ func (i *IDrac9) ServerSnapshot() (server interface{}, err error) {
 
 // Disks returns a list of disks installed on the device
 func (i *IDrac9) Disks() (disks []*devices.Disk, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return disks, err
+	}
+
 	for _, component := range i.iDracInventory.Component {
 		if component.Classname == "DCIM_PhysicalDiskView" {
 			if disks == nil {
