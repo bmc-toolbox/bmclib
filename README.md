@@ -37,4 +37,4 @@ which the authors would like to express their gratitude.
 #### Authors
 - Juliano Martinez
 - Joel Rebello 
-
+- Guilherme M. Schroeder

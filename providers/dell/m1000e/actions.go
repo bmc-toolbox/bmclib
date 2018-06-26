@@ -1,6 +1,7 @@
 package m1000e
 
 import (
+	"bufio"
 	"fmt"
 	"strconv"
 	"strings"
@@ -8,7 +9,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 )
 
-// PowerCycle reboots the machine via bmc
+// PowerCycle reboots the chassis
 func (m *M1000e) PowerCycle() (status bool, err error) {
 	err = m.sshLogin()
 	if err != nil {
@@ -27,7 +28,7 @@ func (m *M1000e) PowerCycle() (status bool, err error) {
 	return status, fmt.Errorf(output)
 }
 
-// PowerOn power on the machine via bmc
+// PowerOn power on the chassis
 func (m *M1000e) PowerOn() (status bool, err error) {
 	err = m.sshLogin()
 	if err != nil {
@@ -45,7 +46,7 @@ func (m *M1000e) PowerOn() (status bool, err error) {
 	return status, fmt.Errorf(output)
 }
 
-// PowerOff power off the machine via bmc
+// PowerOff power off the chassis
 func (m *M1000e) PowerOff() (status bool, err error) {
 	err = m.sshLogin()
 	if err != nil {
@@ -336,4 +337,54 @@ func (m *M1000e) SetFlexAddressState(position int, enable bool) (status bool, er
 	}
 
 	return status, fmt.Errorf(output)
+}
+
+// FirmwareVersion returns the chassis firmware version
+func (m *M1000e) GetFirmwareVersion() (version string, err error) {
+	err = m.sshLogin()
+	if err != nil {
+		return version, err
+	}
+
+	output, err := m.sshClient.Run("getversion")
+	if err != nil {
+		return version, fmt.Errorf(output)
+	}
+
+	scanner := bufio.NewScanner(strings.NewReader(output))
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Contains(line, "cmc-1") {
+			version = strings.Fields(line)[1]
+		}
+	}
+
+	return version, err
+}
+
+// UpdateFirmware updates the chassis firmware
+func (m *M1000e) UpdateFirmware(host, filepath string) (status bool, err error) {
+	err = m.sshLogin()
+	if err != nil {
+		return status, err
+	}
+
+	// XXX make FTP user/pass as arguments intead of hardcoding
+	cmd := fmt.Sprintf("fwupdate -f %s anonymous anonymous -d %s -m cmc-active -m cmc-standby", host, filepath)
+	output, err := m.sshClient.Run(cmd)
+	if err != nil {
+		return false, fmt.Errorf(output)
+	}
+
+	if strings.Contains(output, "Firmware update has been initiated") {
+		return true, err
+	}
+
+	return status, err
+}
+
+// UpdateFirmwareBmcBlade updates the blade BMC firmware
+func (m *M1000e) UpdateFirmwareBmcBlade(position int, host, filepath string) (status bool, err error) {
+	// iDRAC 7 or later is not supported by fwupdate on the M1000e
+	return status, fmt.Errorf("Not implemented")
 }

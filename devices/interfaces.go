@@ -40,6 +40,7 @@ type BmcChassis interface {
 	Close() error
 	FindBladePosition(string) (int, error)
 	FwVersion() (string, error)
+	GetFirmwareVersion() (string, error)
 	IsActive() bool
 	IsOn() (bool, error)
 	IsOnBlade(int) (bool, error)
