@@ -502,42 +502,125 @@ func (i *IDrac9) ServerSnapshot() (server interface{}, err error) {
 
 	if isBlade, _ := i.IsBlade(); isBlade {
 		blade := &devices.Blade{}
-		blade.Serial, _ = i.Serial()
+		blade.Vendor = i.Vendor()
 		blade.BmcAddress = i.ip
 		blade.BmcType = i.BmcType()
-		blade.BmcVersion, _ = i.BmcVersion()
-		blade.Model, _ = i.Model()
-		blade.Vendor = i.Vendor()
-		blade.Nics, _ = i.Nics()
-		blade.Disks, _ = i.Disks()
-		blade.BiosVersion, _ = i.BiosVersion()
-		blade.Processor, blade.ProcessorCount, blade.ProcessorCoreCount, blade.ProcessorThreadCount, _ = i.CPU()
-		blade.Memory, _ = i.Memory()
-		blade.Status, _ = i.Status()
-		blade.Name, _ = i.Name()
-		blade.TempC, _ = i.TempC()
-		blade.PowerKw, _ = i.PowerKw()
-		blade.BmcLicenceType, blade.BmcLicenceStatus, _ = i.License()
+
+		blade.Serial, _ = i.Serial()
+		if err != nil {
+			return nil, err
+		}
+		blade.BmcVersion, err = i.BmcVersion()
+		if err != nil {
+			return nil, err
+		}
+		blade.Model, err = i.Model()
+		if err != nil {
+			return nil, err
+		}
+		blade.Nics, err = i.Nics()
+		if err != nil {
+			return nil, err
+		}
+		blade.Disks, err = i.Disks()
+		if err != nil {
+			return nil, err
+		}
+		blade.BiosVersion, err = i.BiosVersion()
+		if err != nil {
+			return nil, err
+		}
+		blade.Processor, blade.ProcessorCount, blade.ProcessorCoreCount, blade.ProcessorThreadCount, err = i.CPU()
+		if err != nil {
+			return nil, err
+		}
+		blade.Memory, err = i.Memory()
+		if err != nil {
+			return nil, err
+		}
+		blade.Status, err = i.Status()
+		if err != nil {
+			return nil, err
+		}
+		blade.Name, err = i.Name()
+		if err != nil {
+			return nil, err
+		}
+		blade.TempC, err = i.TempC()
+		if err != nil {
+			return nil, err
+		}
+		blade.PowerKw, err = i.PowerKw()
+		if err != nil {
+			return nil, err
+		}
+		blade.BmcLicenceType, blade.BmcLicenceStatus, err = i.License()
+		if err != nil {
+			return nil, err
+		}
 		server = blade
 	} else {
 		discrete := &devices.Discrete{}
-		discrete.Serial, _ = i.Serial()
+		discrete.Vendor = i.Vendor()
 		discrete.BmcAddress = i.ip
 		discrete.BmcType = i.BmcType()
-		discrete.BmcVersion, _ = i.BmcVersion()
-		discrete.Model, _ = i.Model()
-		discrete.Vendor = i.Vendor()
-		discrete.Nics, _ = i.Nics()
-		discrete.Disks, _ = i.Disks()
-		discrete.BiosVersion, _ = i.BiosVersion()
-		discrete.Processor, discrete.ProcessorCount, discrete.ProcessorCoreCount, discrete.ProcessorThreadCount, _ = i.CPU()
-		discrete.Memory, _ = i.Memory()
-		discrete.Status, _ = i.Status()
-		discrete.Name, _ = i.Name()
-		discrete.TempC, _ = i.TempC()
-		discrete.PowerKw, _ = i.PowerKw()
-		discrete.BmcLicenceType, discrete.BmcLicenceStatus, _ = i.License()
-		discrete.Psus, _ = i.Psus()
+
+		discrete.Serial, err = i.Serial()
+		if err != nil {
+			return nil, err
+		}
+		discrete.BmcVersion, err = i.BmcVersion()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Model, err = i.Model()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Nics, err = i.Nics()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Disks, err = i.Disks()
+		if err != nil {
+			return nil, err
+		}
+		discrete.BiosVersion, err = i.BiosVersion()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Processor, discrete.ProcessorCount, discrete.ProcessorCoreCount, discrete.ProcessorThreadCount, err = i.CPU()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Memory, err = i.Memory()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Status, err = i.Status()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Name, err = i.Name()
+		if err != nil {
+			return nil, err
+		}
+		discrete.TempC, err = i.TempC()
+		if err != nil {
+			return nil, err
+		}
+		discrete.PowerKw, err = i.PowerKw()
+		if err != nil {
+			return nil, err
+		}
+		discrete.BmcLicenceType, discrete.BmcLicenceStatus, err = i.License()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Psus, err = i.Psus()
+		if err != nil {
+			return nil, err
+		}
 		server = discrete
 	}
 
