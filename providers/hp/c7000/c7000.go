@@ -12,7 +12,6 @@ import (
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/providers/hp"
-	multierror "github.com/hashicorp/go-multierror"
 
 	// this make possible to setup logging and properties at any stage
 	_ "github.com/bmc-toolbox/bmclib/logging"
@@ -64,27 +63,15 @@ func New(ip string, username string, password string) (chassis *C7000, err error
 		return chassis, errors.ErrUnableToReadData
 	}
 
-	return &C7000{ip: ip, username: username, password: password, Rimp: Rimp, httpClient: client}, err
+	return &C7000{ip: ip, username: username, password: password, Rimp: Rimp}, err
 }
 
-// Checks if we can login
+// CheckCredentials verify whether the credentials are valid or not
 func (c *C7000) CheckCredentials() (err error) {
 	err = c.httpLogin()
 	if err != nil {
 		return err
 	}
-	return err
-}
-
-// Close closes the connection properly
-func (c *C7000) Close() (err error) {
-	if c.sshClient != nil {
-		e := c.sshClient.Close()
-		if e != nil {
-			err = multierror.Append(e, err)
-		}
-	}
-
 	return err
 }
 
