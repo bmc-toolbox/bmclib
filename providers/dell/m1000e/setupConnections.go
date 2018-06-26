@@ -133,7 +133,7 @@ func (m *M1000e) httpLogin() (err error) {
 	return err
 }
 
-// Login initiates the connection to a chassis device
+// sshLogin initiates the connection to a chassis device
 func (m *M1000e) sshLogin() (err error) {
 	if m.sshClient != nil {
 		return

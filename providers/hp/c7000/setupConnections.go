@@ -10,6 +10,7 @@ import (
 	"net/url"
 
 	//"github.com/bmc-toolbox/bmclib/errors"
+	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/providers/hp"
 	log "github.com/sirupsen/logrus"
@@ -17,6 +18,14 @@ import (
 
 // Login initiates the connection to a chassis device
 func (c *C7000) httpLogin() (err error) {
+	if c.httpClient != nil {
+		return
+	}
+
+	c.httpClient, err = httpclient.Build()
+	if err != nil {
+		return err
+	}
 
 	//If a token is already available, don't re-login.
 	if c.XMLToken != "" {

@@ -70,7 +70,7 @@ func (m *M1000e) Close() (err error) {
 	return err
 }
 
-// Checks if we can login
+// CheckCredentials verify whether the credentials are valid or not
 func (m *M1000e) CheckCredentials() (err error) {
 	err = m.httpLogin()
 	if err != nil {
