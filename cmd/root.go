@@ -37,6 +37,7 @@ var (
 	isBlade          bool
 	isDiscrete       bool
 	all              bool
+	ignoreLocation   bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -139,6 +140,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&isBlade, "blade", "", false, "Use in conjuction with --serial, declare asset to be a blade")
 	rootCmd.PersistentFlags().BoolVarP(&isDiscrete, "discrete", "", false, "Use in conjuction with --serial, declare asset to be a discrete")
 	rootCmd.PersistentFlags().BoolVarP(&all, "all", "", false, "Runs configuration/setup on all assets")
+	rootCmd.PersistentFlags().BoolVarP(&ignoreLocation, "ignorelocation", "", false, "Ignores location")
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", cfgFile, "Configuration file for bmcbutler.")
 
 	cobra.OnInitialize(initConfig)
