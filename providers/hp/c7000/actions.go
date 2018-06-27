@@ -20,7 +20,7 @@ func (c *C7000) PowerCycle() (status bool, err error) {
 	if err != nil {
 		return false, fmt.Errorf(output)
 	}
-	if strings.Contains(output, "successful") {
+	if strings.Contains(output, "Restarting Onboard Administrator") {
 		return true, err
 	}
 

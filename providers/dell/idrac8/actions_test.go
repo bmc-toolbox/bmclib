@@ -9,7 +9,6 @@ import (
 	"log"
 	"net"
 	"testing"
-	"time"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -73,13 +72,14 @@ func encodePrivateKeyToPEM(pk *rsa.PrivateKey) (payload []byte) {
 	return pem.EncodeToMemory(&block)
 }
 
-func runSSHServer(config *ssh.ServerConfig) {
+func runSSHServer(config *ssh.ServerConfig, loading chan interface{}) {
 	var err error
 	sshServer, err = net.Listen("tcp", "127.0.0.1:2200")
 	if err != nil {
 		log.Fatalf("Failed to listen on 2200 (%s)", err)
 	}
 
+	close(loading)
 	for {
 		conn, err := sshServer.Accept()
 		if err != nil {
@@ -95,40 +95,6 @@ func runSSHServer(config *ssh.ServerConfig) {
 		go ssh.DiscardRequests(reqs)
 		go handleChannels(chans)
 	}
-}
-
-func setupSSH() (bmc *IDrac8, err error) {
-	username := "super"
-	password := "test"
-
-	config := &ssh.ServerConfig{
-		PasswordCallback: func(c ssh.ConnMetadata, pass []byte) (*ssh.Permissions, error) {
-			return nil, nil
-		},
-	}
-
-	key, err := generatePrivateKey(2048)
-	if err != nil {
-		log.Fatal("Failed to load private key")
-	}
-
-	private, err := ssh.ParsePrivateKey(encodePrivateKeyToPEM(key))
-	if err != nil {
-		log.Fatal("Failed to parse private key")
-	}
-
-	config.AddHostKey(private)
-
-	// TODO: pass a channel as a holder and as soon as we load the listener the channel unblocks the client to connect
-	go runSSHServer(config)
-	time.Sleep(300 * time.Millisecond)
-
-	bmc, err = New("127.0.0.1:2200", username, password)
-	if err != nil {
-		return bmc, err
-	}
-
-	return bmc, err
 }
 
 func handleChannels(chans <-chan ssh.NewChannel) {
@@ -159,12 +125,26 @@ func handleChannel(newChannel ssh.NewChannel) {
 				if err := ssh.Unmarshal(req.Payload, &reqCmd); err != nil {
 					log.Printf("failed: %v\n", err)
 				}
-				channel.Write(sshAnswers[reqCmd.Text])
-				if req.WantReply {
-					req.Reply(true, nil)
-				}
-				if _, err := channel.SendRequest("exit-status", false, []byte{0, 0, 0, 0}); err != nil {
-					log.Printf("failed: %v\n", err)
+				if answer, ok := sshAnswers[reqCmd.Text]; ok {
+					if len(answer) == 0 {
+						channel.Stderr().Write([]byte(fmt.Sprintf("answer empty for %s", reqCmd.Text)))
+						req.Reply(req.WantReply, nil)
+						if _, err := channel.SendRequest("exit-status", false, []byte{0, 0, 0, 1}); err != nil {
+							log.Printf("failed: %v\n", err)
+						}
+					} else {
+						channel.Write(answer)
+						req.Reply(req.WantReply, nil)
+						if _, err := channel.SendRequest("exit-status", false, []byte{0, 0, 0, 0}); err != nil {
+							log.Printf("failed: %v\n", err)
+						}
+					}
+				} else {
+					channel.Stderr().Write([]byte(fmt.Sprintf("answer not found for %s", reqCmd.Text)))
+					req.Reply(req.WantReply, nil)
+					if _, err := channel.SendRequest("exit-status", false, []byte{0, 0, 0, 1}); err != nil {
+						log.Printf("failed: %v\n", err)
+					}
 				}
 				if err := channel.Close(); err != nil {
 					log.Printf("failed: %v\n", err)
@@ -174,6 +154,40 @@ func handleChannel(newChannel ssh.NewChannel) {
 			}
 		}
 	}()
+}
+
+func setupSSH() (bmc *IDrac8, err error) {
+	username := "super"
+	password := "test"
+
+	config := &ssh.ServerConfig{
+		PasswordCallback: func(c ssh.ConnMetadata, pass []byte) (*ssh.Permissions, error) {
+			return nil, nil
+		},
+	}
+
+	key, err := generatePrivateKey(2048)
+	if err != nil {
+		log.Fatal("Failed to load private key")
+	}
+
+	private, err := ssh.ParsePrivateKey(encodePrivateKeyToPEM(key))
+	if err != nil {
+		log.Fatal("Failed to parse private key")
+	}
+
+	config.AddHostKey(private)
+
+	loading := make(chan interface{})
+	go runSSHServer(config, loading)
+	<-loading
+
+	bmc, err = New("127.0.0.1:2200", username, password)
+	if err != nil {
+		return bmc, err
+	}
+
+	return bmc, err
 }
 
 func tearDownSSH() {
