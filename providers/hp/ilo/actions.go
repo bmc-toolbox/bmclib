@@ -9,6 +9,11 @@ import (
 
 // PowerCycle reboots the machine via bmc
 func (i *Ilo) PowerCycle() (status bool, err error) {
+	err = i.sshLogin()
+	if err != nil {
+		return status, err
+	}
+
 	output, err := i.sshClient.Run("power reset")
 	if err != nil {
 		return false, fmt.Errorf(output)
@@ -27,6 +32,11 @@ func (i *Ilo) PowerCycle() (status bool, err error) {
 
 // PowerCycleBmc reboots the bmc we are connected to
 func (i *Ilo) PowerCycleBmc() (status bool, err error) {
+	err = i.sshLogin()
+	if err != nil {
+		return status, err
+	}
+
 	output, err := i.sshClient.Run("reset /map1")
 	if err != nil && !strings.Contains(output, "Resetting iLO") {
 		return false, fmt.Errorf(output)
@@ -41,6 +51,11 @@ func (i *Ilo) PowerCycleBmc() (status bool, err error) {
 
 // PowerOn power on the machine via bmc
 func (i *Ilo) PowerOn() (status bool, err error) {
+	err = i.sshLogin()
+	if err != nil {
+		return status, err
+	}
+
 	output, err := i.sshClient.Run("power on")
 	if err != nil {
 		return false, fmt.Errorf(output)
@@ -54,6 +69,11 @@ func (i *Ilo) PowerOn() (status bool, err error) {
 
 // PowerOff power off the machine via bmc
 func (i *Ilo) PowerOff() (status bool, err error) {
+	err = i.sshLogin()
+	if err != nil {
+		return status, err
+	}
+
 	output, err := i.sshClient.Run("power off hard")
 	if err != nil {
 		return false, fmt.Errorf(output)
@@ -88,6 +108,11 @@ func (i *Ilo) PxeOnce() (status bool, err error) {
 
 // IsOn tells if a machine is currently powered on
 func (i *Ilo) IsOn() (status bool, err error) {
+	err = i.sshLogin()
+	if err != nil {
+		return status, err
+	}
+
 	output, err := i.sshClient.Run("power")
 	if err != nil {
 		return false, fmt.Errorf("%v: %v", err, output)

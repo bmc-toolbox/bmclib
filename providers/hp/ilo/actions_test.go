@@ -1,4 +1,4 @@
-package idrac8
+package ilo
 
 import (
 	"crypto/rand"
@@ -19,33 +19,11 @@ import (
 var (
 	sshServer  net.Listener
 	sshAnswers = map[string][]byte{
-		"racadm serveraction hardreset": []byte(`Server power operation successful`),
-		"racadm racreset hard": []byte(`RAC reset operation initiated successfully. It may take a few
-			minutes for the RAC to come online again.
-		   `),
-		"racadm serveraction powerup":     []byte(`Server power operation successful`),
-		"racadm serveraction powerdown":   []byte(`Server power operation successful`),
-		"racadm serveraction powerstatus": []byte(`Server power status: ON`),
-		"racadm config -g cfgServerInfo -o cfgServerBootOnce 1": []byte(`Object value modified successfully
-
-
-			RAC1169: The RACADM "config" command will be deprecated in a
-			future version of iDRAC firmware. Run the RACADM 
-			"racadm set" command to configure the iDRAC configuration parameters.
-			For more information on the set command, run the RACADM command
-			"racadm help set".
-			
-			`),
-		"racadm config -g cfgServerInfo -o cfgServerFirstBootDevice PXE": []byte(`Object value modified successfully
-
-
-			RAC1169: The RACADM "config" command will be deprecated in a
-			future version of iDRAC firmware. Run the RACADM 
-			"racadm set" command to configure the iDRAC configuration parameters.
-			For more information on the set command, run the RACADM command
-			"racadm help set".
-			
-			`),
+		"power reset":    []byte(`Server resetting .......`),
+		"reset /map1":    []byte(`Resetting iLO`),
+		"power on":       []byte(`Server powering on .......`),
+		"power off hard": []byte(`Forcing server power off .......`),
+		"power":          []byte(`power: server power is currently: On`),
 	}
 )
 
@@ -156,10 +134,7 @@ func handleChannel(newChannel ssh.NewChannel) {
 	}()
 }
 
-func setupSSH() (bmc *IDrac8, err error) {
-	username := "super"
-	password := "test"
-
+func setupSSH() (bmc *Ilo, err error) {
 	config := &ssh.ServerConfig{
 		PasswordCallback: func(c ssh.ConnMetadata, pass []byte) (*ssh.Permissions, error) {
 			return nil, nil
@@ -182,19 +157,21 @@ func setupSSH() (bmc *IDrac8, err error) {
 	go runSSHServer(config, loading)
 	<-loading
 
-	bmc, err = New("127.0.0.1:2200", username, password)
+	bmc, err = setup()
 	if err != nil {
 		return bmc, err
 	}
+	bmc.ip = "127.0.0.1:2200"
 
 	return bmc, err
 }
 
 func tearDownSSH() {
+	tearDown()
 	sshServer.Close()
 }
 
-func TestIDracPowerCycle(t *testing.T) {
+func TestIloPowerCycle(t *testing.T) {
 	expectedAnswer := true
 
 	bmc, err := setupSSH()
@@ -213,7 +190,7 @@ func TestIDracPowerCycle(t *testing.T) {
 	}
 }
 
-func TestIDracPowerCycleBmc(t *testing.T) {
+func TestIloPowerCycleBmc(t *testing.T) {
 	expectedAnswer := true
 
 	bmc, err := setupSSH()
@@ -232,7 +209,7 @@ func TestIDracPowerCycleBmc(t *testing.T) {
 	}
 }
 
-func TestIDracPowerOn(t *testing.T) {
+func TestIloPowerOn(t *testing.T) {
 	expectedAnswer := true
 
 	bmc, err := setupSSH()
@@ -251,7 +228,7 @@ func TestIDracPowerOn(t *testing.T) {
 	}
 }
 
-func TestIDracPowerOff(t *testing.T) {
+func TestIloPowerOff(t *testing.T) {
 	expectedAnswer := true
 
 	bmc, err := setupSSH()
@@ -270,26 +247,7 @@ func TestIDracPowerOff(t *testing.T) {
 	}
 }
 
-func TestIDracPxeOnce(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
-	if err != nil {
-		t.Fatalf("Found errors during the test setup %v", err)
-	}
-	defer tearDownSSH()
-
-	answer, err := bmc.PxeOnce()
-	if err != nil {
-		t.Fatalf("Found errors calling bmc.PxeOnce %v", err)
-	}
-
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
-	}
-}
-
-func TestIDracIsOn(t *testing.T) {
+func TestIloIsOn(t *testing.T) {
 	expectedAnswer := true
 
 	bmc, err := setupSSH()

@@ -1,4 +1,4 @@
-package m1000e
+package c7000
 
 import (
 	"crypto/rand"
@@ -19,100 +19,84 @@ import (
 var (
 	sshServer  net.Listener
 	sshAnswers = map[string][]byte{
-		"racadm racreset": []byte(`CMC reset operation initiated successfully. It may take up to a minute 
-			for the CMC to come back online again.
+		"RESTART OA ACTIVE": []byte(`Restarting Onboard Administrator in bay`),
+		"SHOW SERVER NAMES": []byte(`
+			Bay Server Name                                       Serial Number   Status   Power   UID Partner
+			--- ------------------------------------------------- --------------- -------- ------- --- -------
+			  1 fdi                                               CZXXXXXXEK      OK       On      Off 
+			  2 [Absent]                                       
+			  3 [Absent]                                        
+			  4 [Absent]                                        
+			  5 [Absent]                                         
+			  6 [Absent]                                          
+			  7 [Absent]                                          
+			  8 [Absent]                                          
+			  9 [Absent]                                          
+			 10 [Absent]                                          
+			 11 [Absent]                                          
+			 12 [Absent]                                          
+			 13 [Absent]                                          
+			 14 [Absent]                                          
+			 15 [Absent]                                          
+			 16 [Absent]                                          
+			Totals: 1 server blades installed, 1 powered on.
 			`),
-		"chassisaction powerup":   []byte(`Module power operation successful`),
-		"chassisaction powerdown": []byte(`Module power operation successful`),
-		"getsysinfo": []byte(`CMC Information:                         
-			CMC Date/Time             = Tue Jan 04 2000 22:35      
-			Primary CMC Location      = CMC-2      
-			Primary CMC Version       = 6.10                                                                    
-			Standby CMC Version       = 6.10                                                                           
-			Last Firmware Update      = Mon Jan 03 2000 23:13
-			Hardware Version          = A09                
-											
-			CMC Network Information:                                                                                  
-			NIC Enabled               = 1       
-			MAC Address               = 18:66:DA:9D:CD:CD        
-			Register DNS CMC Name     = 0                                         
-			DNS CMC Name              = cmc-5XXXXXX                                                                    
-			Current DNS Domain        =             
-			VLAN ID                   = 1
-			VLAN Priority             = 0                                                                             
-			VLAN Enabled              = 0         
-																													
-			CMC IPv4 Information:                                                                                      
-			IPv4 Enabled              = 1                     
-			Current IP Address        = 192.168.0.36
-			Current IP Gateway        = 192.168.0.1                                                            
-			Current IP Netmask        = 255.255.255.0                                                                  
-			DHCP Enabled              = 1                                                                              
-			Current DNS Server 1      = 0.0.0.0
-			Current DNS Server 2      = 0.0.0.0                                                                        
-			DNS Servers from DHCP     = 0     
-																													
-			CMC IPv6 Information:                                                                                     
-			IPv6 Enabled              = 0                                                                             
-			Autoconfiguration Enabled = 1                                                                             
-			Link Local Address        = ::                                                                            
-			Current IPv6 Address 1    = ::                                                                            
-			Current IPv6 Gateway      = ::                   
-			Current IPv6 DNS Server 1 = ::                                                                             
-			Current IPv6 DNS Server 2 = ::                           
-			DNS Servers from DHCPv6   = 1                                                                             
-																				
-			Chassis Information:                                 
-			System Model              = PowerEdge M1000e
-			System AssetTag           = 00000                                                                          
-			Service Tag               = 5XXXXXX      
-			Chassis Name              = CMC-5XXXXXX                
-			Chassis Location          = [UNDEFINED]
-			Chassis Midplane Version  = 1.1                                                                     
-			Power Status              = ON                                                                             
-			System ID                 = 1486                 
-	        `),
-		"getsvctag": []byte(`<Module>        <ServiceTag>
-			Chassis         5XXXXXX
-			Switch-1        0000000
-			Switch-2        N/A
-			Switch-3        N/A
-			Switch-4        N/A
-			Switch-5        N/A
-			Switch-6        N/A
-			Server-1        N/A
-			Server-2        74XXX72
-			Server-3        N/A
-			Server-4        N/A
-			Server-5        N/A
-			Server-6        N/A
-			Server-7        N/A
-			Server-8        N/A
-			Server-9        N/A
-			Server-10       N/A
-			Server-11       N/A
-			Server-12       N/A
-			Server-13       N/A
-			Server-14       N/A
-			Server-15       N/A
-			Server-16       N/A
+		"REBOOT SERVER 1 FORCE":   []byte(`Forcing reboot of Blade 1`),
+		"RESET SERVER 1":          []byte(`Successfully reset the E-Fuse for device bay 1.`),
+		"POWERON SERVER 1":        []byte(`Powering on blade 1.`),
+		"POWEROFF SERVER 1 FORCE": []byte(`Blade 1 is powering down.`),
+		"SHOW SERVER STATUS 1": []byte(`Blade #1 Status:
+			Power: On
+			Current Wattage used: 500
+			Health: OK
+			Unit Identification LED: Off
+			Virtual Fan: 0%
+			Diagnostic Status:
+					Internal Data                            OK
+					Management Processor                     OK
+					I/O Configuration                        OK
+					Power                                    OK
+					Cooling                                  OK
+					Device Failure                           OK
+					Device Degraded                          OK
+					iLO Network                              OK
+					Mezzanine Card                           OK
+        	`),
+		"RESET ILO 1":                []byte(`Bay 1: Successfully reset iLO through Hardware reset`),
+		"SET SERVER BOOT ONCE PXE 1": []byte(`Blade #1 boot order changed to PXE`),
+		"SET POWER SAVINGS OFF": []byte(`Power Settings were updated to:
+
+			Power Mode: Redundant
+			Dynamic Power: Disabled
+			Set Power Limit: Not Set
+			
+			Power Capacity:              5300 Watts DC
+			Power Available:             2767 Watts DC
+			Power Allocated:             2533 Watts DC
+			Present Power:                884 Watts AC
+			Power Limit:                 6445 Watts AC			
 			`),
-		"serveraction -m server-2 hardreset":   []byte(`Server power operation successful`),
-		"serveraction -m server-2 reseat -f":   []byte(`Server power operation successful`),
-		"serveraction -m server-2 powerup":     []byte(`Server power operation successful`),
-		"serveraction -m server-2 powerdown":   []byte(`Server power operation successful`),
-		"serveraction -m server-2 powerstatus": []byte(`ON`),
-		"serveraction -m server-1 powerstatus": []byte(`OFF`),
-		"racreset -m server-2": []byte(`RAC reset operation initiated successfully for server-2.
-			It may take up to a minute for the RAC(s) to come back online again.`),
-		"deploy -m server-2 -b PXE -o yes":                                    []byte(`The blade was deployed successfully.`),
-		"config -g cfgServerInfo -o cfgServerIPMIOverLanEnable -i 2 1":        []byte(`Object value modified successfully`),
-		"config -g cfgChassisPower -o cfgChassisDynamicPSUEngagementEnable 1": []byte(`Object value modified successfully`),
-		"racadm setflexaddr -i 1 0": []byte(`Slot 2 FlexAddress state set successfully.
-			This will force a reset on hardware affected by the Flex Address change.
-			Please wait for up to a few minutes before performing additional power
-			related actions (eg. reset, powerdown) on the affected hardware.
-			`),
+		"SHOW OA INFO": []byte(`Onboard Administrator #1 information:
+			Product Name  : BladeSystem c7000 DDR2 Onboard Administrator with KVM
+			Part Number   : XXXXXX-XXX
+			Spare Part No.: XXXXXX-XXX
+			Serial Number : OXXXXXXX74    
+			UUID          : 09OB2XXXXXXX4    
+			Manufacturer  : HP
+			Firmware Ver. : 4.80 Dec 13 2017
+			Hw Board Type : 2
+			Hw Version    : A1
+			Loader Version: U-Boot 1.2.0 (Aug 24 2011 - 14:22:07)
+			Serial Port:
+				Baud Rate   : 9600
+				Parity      : None
+				Data bits   : 8
+				Stop bits   : 1
+				Flow control: None
+	
+	`),
+		// "": []byte(``),
+		// "": []byte(``),
 	}
 )
 
@@ -223,9 +207,8 @@ func handleChannel(newChannel ssh.NewChannel) {
 	}()
 }
 
-func setupSSH() (bmc *M1000e, err error) {
-	username := "super"
-	password := "test"
+func setupSSH() (bmc *C7000, err error) {
+	setup()
 
 	config := &ssh.ServerConfig{
 		PasswordCallback: func(c ssh.ConnMetadata, pass []byte) (*ssh.Permissions, error) {
@@ -249,15 +232,17 @@ func setupSSH() (bmc *M1000e, err error) {
 	go runSSHServer(config, loading)
 	<-loading
 
-	bmc, err = New("127.0.0.1:2200", username, password)
+	bmc, err = setup()
 	if err != nil {
 		return bmc, err
 	}
+	bmc.ip = "127.0.0.1:2200"
 
 	return bmc, err
 }
 
 func tearDownSSH() {
+	tearDown()
 	sshServer.Close()
 }
 
@@ -273,44 +258,6 @@ func TestChassisPowerCycle(t *testing.T) {
 	answer, err := bmc.PowerCycle()
 	if err != nil {
 		t.Fatalf("Found errors calling bmc.PowerCycle %v", err)
-	}
-
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
-	}
-}
-
-func TestChassisPowerOn(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
-	if err != nil {
-		t.Fatalf("Found errors during the test setup %v", err)
-	}
-	defer tearDownSSH()
-
-	answer, err := bmc.PowerOn()
-	if err != nil {
-		t.Fatalf("Found errors calling bmc.PowerOn %v", err)
-	}
-
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
-	}
-}
-
-func TestChassisPowerOff(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
-	if err != nil {
-		t.Fatalf("Found errors during the test setup %v", err)
-	}
-	defer tearDownSSH()
-
-	answer, err := bmc.PowerOff()
-	if err != nil {
-		t.Fatalf("Found errors calling bmc.PowerOff %v", err)
 	}
 
 	if answer != expectedAnswer {
@@ -336,8 +283,9 @@ func TestChassisIsOn(t *testing.T) {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
 }
+
 func TestChassisFindBladePosition(t *testing.T) {
-	expectedAnswer := 2
+	expectedAnswer := 1
 
 	bmc, err := setupSSH()
 	if err != nil {
@@ -345,7 +293,7 @@ func TestChassisFindBladePosition(t *testing.T) {
 	}
 	defer tearDownSSH()
 
-	answer, err := bmc.FindBladePosition("74XXX72")
+	answer, err := bmc.FindBladePosition("CZXXXXXXEK")
 	if err != nil {
 		t.Fatalf("Found errors calling bmc.FindBladePosition %v", err)
 	}
@@ -364,7 +312,7 @@ func TestChassisPowerCycleBlade(t *testing.T) {
 	}
 	defer tearDownSSH()
 
-	answer, err := bmc.PowerCycleBlade(2)
+	answer, err := bmc.PowerCycleBlade(1)
 	if err != nil {
 		t.Fatalf("Found errors calling bmc.PowerCycleBlade %v", err)
 	}
@@ -383,7 +331,7 @@ func TestChassisReseatBlade(t *testing.T) {
 	}
 	defer tearDownSSH()
 
-	answer, err := bmc.ReseatBlade(2)
+	answer, err := bmc.ReseatBlade(1)
 	if err != nil {
 		t.Fatalf("Found errors calling bmc.ReseatBlade %v", err)
 	}
@@ -402,7 +350,7 @@ func TestChassisPowerOnBlade(t *testing.T) {
 	}
 	defer tearDownSSH()
 
-	answer, err := bmc.PowerOnBlade(2)
+	answer, err := bmc.PowerOnBlade(1)
 	if err != nil {
 		t.Fatalf("Found errors calling bmc.PowerOnBlade %v", err)
 	}
@@ -421,7 +369,7 @@ func TestChassisPowerOffBlade(t *testing.T) {
 	}
 	defer tearDownSSH()
 
-	answer, err := bmc.PowerOffBlade(2)
+	answer, err := bmc.PowerOffBlade(1)
 	if err != nil {
 		t.Fatalf("Found errors calling bmc.PowerOffBlade %v", err)
 	}
@@ -440,7 +388,7 @@ func TestChassisIsOnBlade(t *testing.T) {
 	}
 	defer tearDownSSH()
 
-	answer, err := bmc.IsOnBlade(2)
+	answer, err := bmc.IsOnBlade(1)
 	if err != nil {
 		t.Fatalf("Found errors calling bmc.IsOnBlade %v", err)
 	}
@@ -459,7 +407,7 @@ func TestChassisPowerCycleBmcBlade(t *testing.T) {
 	}
 	defer tearDownSSH()
 
-	answer, err := bmc.PowerCycleBmcBlade(2)
+	answer, err := bmc.PowerCycleBmcBlade(1)
 	if err != nil {
 		t.Fatalf("Found errors calling bmc.PowerCycleBmcBlade %v", err)
 	}
@@ -478,26 +426,7 @@ func TestChassisPxeOnceBlade(t *testing.T) {
 	}
 	defer tearDownSSH()
 
-	answer, err := bmc.PxeOnceBlade(2)
-	if err != nil {
-		t.Fatalf("Found errors calling bmc.PxeOnceBlade %v", err)
-	}
-
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
-	}
-}
-
-func TestChassisSetIpmiOverLan(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
-	if err != nil {
-		t.Fatalf("Found errors during the test setup %v", err)
-	}
-	defer tearDownSSH()
-
-	answer, err := bmc.SetIpmiOverLan(2, true)
+	answer, err := bmc.PxeOnceBlade(1)
 	if err != nil {
 		t.Fatalf("Found errors calling bmc.PxeOnceBlade %v", err)
 	}
@@ -516,28 +445,9 @@ func TestChassisSetDynamicPower(t *testing.T) {
 	}
 	defer tearDownSSH()
 
-	answer, err := bmc.SetDynamicPower(true)
+	answer, err := bmc.SetDynamicPower(false)
 	if err != nil {
 		t.Fatalf("Found errors calling bmc.SetDynamicPower %v", err)
-	}
-
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
-	}
-}
-
-func TestChassisSetFlexAddressState(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
-	if err != nil {
-		t.Fatalf("Found errors during the test setup %v", err)
-	}
-	defer tearDownSSH()
-
-	answer, err := bmc.SetFlexAddressState(1, false)
-	if err != nil {
-		t.Fatalf("Found errors calling bmc.SetFlexAddressState %v", err)
 	}
 
 	if answer != expectedAnswer {
