@@ -77,7 +77,7 @@ func setup() {
 	// Spawn butlers to work
 	butlerChan := make(chan butler.ButlerMsg, 10)
 	butlerInstance := butler.Butler{Log: log, SpawnCount: butlersToSpawn, Channel: butlerChan}
-	if serial != "" || IgnoreLocation {
+	if serial != "" || ignoreLocation {
 		butlerInstance.IgnoreLocation = true
 	}
 	go butlerInstance.Spawn()
