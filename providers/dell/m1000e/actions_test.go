@@ -268,6 +268,7 @@ func TestChassisPowerCycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
+	defer tearDownSSH()
 
 	answer, err := bmc.PowerCycle()
 	if err != nil {
@@ -277,8 +278,6 @@ func TestChassisPowerCycle(t *testing.T) {
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
-
-	tearDownSSH()
 }
 
 func TestChassisPowerOn(t *testing.T) {
@@ -288,6 +287,7 @@ func TestChassisPowerOn(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
+	defer tearDownSSH()
 
 	answer, err := bmc.PowerOn()
 	if err != nil {
@@ -297,8 +297,6 @@ func TestChassisPowerOn(t *testing.T) {
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
-
-	tearDownSSH()
 }
 
 func TestChassisPowerOff(t *testing.T) {
@@ -308,6 +306,7 @@ func TestChassisPowerOff(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
+	defer tearDownSSH()
 
 	answer, err := bmc.PowerOff()
 	if err != nil {
@@ -317,8 +316,6 @@ func TestChassisPowerOff(t *testing.T) {
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
-
-	tearDownSSH()
 }
 
 func TestChassisIsOn(t *testing.T) {
@@ -328,6 +325,7 @@ func TestChassisIsOn(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
+	defer tearDownSSH()
 
 	answer, err := bmc.IsOn()
 	if err != nil {
@@ -337,8 +335,6 @@ func TestChassisIsOn(t *testing.T) {
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
-
-	tearDownSSH()
 }
 func TestChassisFindBladePosition(t *testing.T) {
 	expectedAnswer := 2
@@ -347,6 +343,7 @@ func TestChassisFindBladePosition(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
+	defer tearDownSSH()
 
 	answer, err := bmc.FindBladePosition("74XXX72")
 	if err != nil {
@@ -356,8 +353,6 @@ func TestChassisFindBladePosition(t *testing.T) {
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
-
-	tearDownSSH()
 }
 
 func TestChassisPowerCycleBlade(t *testing.T) {
@@ -367,6 +362,7 @@ func TestChassisPowerCycleBlade(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
+	defer tearDownSSH()
 
 	answer, err := bmc.PowerCycleBlade(2)
 	if err != nil {
@@ -376,8 +372,6 @@ func TestChassisPowerCycleBlade(t *testing.T) {
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
-
-	tearDownSSH()
 }
 
 func TestChassisReseatBlade(t *testing.T) {
@@ -387,6 +381,7 @@ func TestChassisReseatBlade(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
+	defer tearDownSSH()
 
 	answer, err := bmc.ReseatBlade(2)
 	if err != nil {
@@ -396,8 +391,6 @@ func TestChassisReseatBlade(t *testing.T) {
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
-
-	tearDownSSH()
 }
 
 func TestChassisPowerOnBlade(t *testing.T) {
@@ -407,6 +400,7 @@ func TestChassisPowerOnBlade(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
+	defer tearDownSSH()
 
 	answer, err := bmc.PowerOnBlade(2)
 	if err != nil {
@@ -416,8 +410,6 @@ func TestChassisPowerOnBlade(t *testing.T) {
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
-
-	tearDownSSH()
 }
 
 func TestChassisPowerOffBlade(t *testing.T) {
@@ -427,6 +419,7 @@ func TestChassisPowerOffBlade(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
+	defer tearDownSSH()
 
 	answer, err := bmc.PowerOffBlade(2)
 	if err != nil {
@@ -436,8 +429,6 @@ func TestChassisPowerOffBlade(t *testing.T) {
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
-
-	tearDownSSH()
 }
 
 func TestChassisIsOnBlade(t *testing.T) {
@@ -447,6 +438,7 @@ func TestChassisIsOnBlade(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
+	defer tearDownSSH()
 
 	answer, err := bmc.IsOnBlade(2)
 	if err != nil {
@@ -456,8 +448,6 @@ func TestChassisIsOnBlade(t *testing.T) {
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
-
-	tearDownSSH()
 }
 
 func TestChassisPowerCycleBmcBlade(t *testing.T) {
@@ -467,6 +457,7 @@ func TestChassisPowerCycleBmcBlade(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
+	defer tearDownSSH()
 
 	answer, err := bmc.PowerCycleBmcBlade(2)
 	if err != nil {
@@ -476,8 +467,6 @@ func TestChassisPowerCycleBmcBlade(t *testing.T) {
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
-
-	tearDownSSH()
 }
 
 func TestChassisPxeOnceBlade(t *testing.T) {
@@ -487,6 +476,7 @@ func TestChassisPxeOnceBlade(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
+	defer tearDownSSH()
 
 	answer, err := bmc.PxeOnceBlade(2)
 	if err != nil {
@@ -496,8 +486,6 @@ func TestChassisPxeOnceBlade(t *testing.T) {
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
-
-	tearDownSSH()
 }
 
 func TestChassisSetIpmiOverLan(t *testing.T) {
@@ -507,6 +495,7 @@ func TestChassisSetIpmiOverLan(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
+	defer tearDownSSH()
 
 	answer, err := bmc.SetIpmiOverLan(2, true)
 	if err != nil {
@@ -516,8 +505,6 @@ func TestChassisSetIpmiOverLan(t *testing.T) {
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
-
-	tearDownSSH()
 }
 
 func TestChassisSetDynamicPower(t *testing.T) {
@@ -527,6 +514,7 @@ func TestChassisSetDynamicPower(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
+	defer tearDownSSH()
 
 	answer, err := bmc.SetDynamicPower(true)
 	if err != nil {
@@ -536,8 +524,6 @@ func TestChassisSetDynamicPower(t *testing.T) {
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
-
-	tearDownSSH()
 }
 
 func TestChassisSetFlexAddressState(t *testing.T) {
@@ -547,6 +533,7 @@ func TestChassisSetFlexAddressState(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
+	defer tearDownSSH()
 
 	answer, err := bmc.SetFlexAddressState(1, false)
 	if err != nil {
@@ -556,6 +543,4 @@ func TestChassisSetFlexAddressState(t *testing.T) {
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
-
-	tearDownSSH()
 }
