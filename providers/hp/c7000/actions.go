@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 )
 
@@ -16,7 +17,7 @@ func (c *C7000) PowerCycle() (status bool, err error) {
 		return status, err
 	}
 
-	output, err := c.sshClient.Run("restart oa active")
+	output, err := c.sshClient.Run("RESTART OA ACTIVE")
 	if err != nil {
 		return false, fmt.Errorf(output)
 	}
@@ -73,7 +74,7 @@ func (c *C7000) FindBladePosition(serial string) (position int, err error) {
 		}
 	}
 
-	return position, fmt.Errorf("Unable to find the blade in this chassis")
+	return position, fmt.Errorf("unable to find the blade in this chassis")
 }
 
 // PowerCycleBlade reboots the machine via bmc
@@ -221,12 +222,12 @@ func (c *C7000) SetDynamicPower(enable bool) (status bool, err error) {
 
 	var state string
 	if enable {
-		state = "on"
+		state = "ON"
 	} else {
-		state = "off"
+		state = "OFF"
 	}
 
-	cmd := fmt.Sprintf("set power savings %s", state)
+	cmd := fmt.Sprintf("SET POWER SAVINGS %s", state)
 	output, err := c.sshClient.Run(cmd)
 	if err != nil {
 		return false, fmt.Errorf(output)
@@ -239,14 +240,14 @@ func (c *C7000) SetDynamicPower(enable bool) (status bool, err error) {
 	return status, fmt.Errorf(output)
 }
 
-// FirmwareVersion returns the chassis firmware version
+// GetFirmwareVersion returns the chassis firmware version
 func (c *C7000) GetFirmwareVersion() (version string, err error) {
 	err = c.sshLogin()
 	if err != nil {
 		return version, err
 	}
 
-	output, err := c.sshClient.Run("show oa info")
+	output, err := c.sshClient.Run("SHOW OA INFO")
 	if err != nil {
 		return version, fmt.Errorf(output)
 	}
@@ -303,13 +304,13 @@ func (c *C7000) UpdateFirmwareBmcBlade(position int, host, filepath string) (sta
 	return status, err
 }
 
-// Enable/Disable FlexAddress disables flex Addresses for blades
+// SetFlexAddressState Enable/Disable FlexAddress disables flex Addresses for blades
 // FlexAddress is a virtual addressing scheme
 func (c *C7000) SetFlexAddressState(position int, enable bool) (status bool, err error) {
-	return status, fmt.Errorf("Not implemented.")
+	return status, errors.ErrNotImplemented
 }
 
-// Enable/Disable IPMI over lan parameter per blade in chassis
+// SetIpmiOverLan Enable/Disable IPMI over lan parameter per blade in chassis
 func (c *C7000) SetIpmiOverLan(position int, enable bool) (status bool, err error) {
-	return status, fmt.Errorf("Not implemented")
+	return status, errors.ErrNotImplemented
 }

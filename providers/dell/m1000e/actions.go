@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 )
 
@@ -386,5 +387,5 @@ func (m *M1000e) UpdateFirmware(host, filepath string) (status bool, err error) 
 // UpdateFirmwareBmcBlade updates the blade BMC firmware
 func (m *M1000e) UpdateFirmwareBmcBlade(position int, host, filepath string) (status bool, err error) {
 	// iDRAC 7 or later is not supported by fwupdate on the M1000e
-	return status, fmt.Errorf("Not implemented")
+	return status, errors.ErrNotImplemented
 }
