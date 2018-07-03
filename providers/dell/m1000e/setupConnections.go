@@ -89,12 +89,12 @@ func (m *M1000e) httpLogin() (err error) {
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-	m.httpClient, err = httpclient.Build()
+	httpClient, err := httpclient.Build()
 	if err != nil {
 		return err
 	}
 
-	resp, err := m.httpClient.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -112,6 +112,8 @@ func (m *M1000e) httpLogin() (err error) {
 	if resp.StatusCode == 404 {
 		return errors.ErrPageNotFound
 	}
+
+	m.httpClient = httpClient
 
 	err = m.loadHwData()
 	if err != nil {

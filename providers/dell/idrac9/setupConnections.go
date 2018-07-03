@@ -24,7 +24,7 @@ func (i *IDrac9) httpLogin() (err error) {
 		return
 	}
 
-	i.httpClient, err = httpclient.Build()
+	httpClient, err := httpclient.Build()
 	if err != nil {
 		return err
 	}
@@ -39,7 +39,7 @@ func (i *IDrac9) httpLogin() (err error) {
 	req.Header.Add("user", fmt.Sprintf("\"%s\"", i.username))
 	req.Header.Add("password", fmt.Sprintf("\"%s\"", i.password))
 
-	resp, err := i.httpClient.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -66,6 +66,8 @@ func (i *IDrac9) httpLogin() (err error) {
 	if iDracAuth.AuthResult != 0 {
 		return errors.ErrLoginFailed
 	}
+
+	i.httpClient = httpClient
 
 	err = i.loadHwData()
 	if err != nil {

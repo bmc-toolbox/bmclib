@@ -9,6 +9,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 
+	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/providers/hp"
@@ -23,7 +24,7 @@ func (c *C7000) httpLogin() (err error) {
 		return
 	}
 
-	c.httpClient, err = httpclient.Build()
+	httpClient, err := httpclient.Build()
 	if err != nil {
 		return err
 	}
@@ -66,7 +67,7 @@ func (c *C7000) httpLogin() (err error) {
 		}
 	}
 
-	resp, err := c.httpClient.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil || resp.StatusCode != 200 {
 		return err
 	}
@@ -91,6 +92,11 @@ func (c *C7000) httpLogin() (err error) {
 	}
 
 	c.XMLToken = loginResponse.Body.UserLogInResponse.HpOaSessionKeyToken.OaSessionKey.Text
+	if c.XMLToken == "" {
+		return errors.ErrLoginFailed
+	}
+
+	c.httpClient = httpClient
 
 	serial, err := c.Serial()
 	if err != nil {

@@ -25,7 +25,7 @@ func (i *IDrac8) httpLogin() (err error) {
 		return
 	}
 
-	i.httpClient, err = httpclient.Build()
+	httpClient, err := httpclient.Build()
 	if err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func (i *IDrac8) httpLogin() (err error) {
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := i.httpClient.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -66,6 +66,8 @@ func (i *IDrac8) httpLogin() (err error) {
 	if len(stTemp) != 2 {
 		return errors.ErrLoginFailed
 	}
+
+	i.httpClient = httpClient
 
 	i.st1 = strings.TrimLeft(stTemp[0], "index.html?ST1=")
 	i.st2 = strings.TrimLeft(stTemp[1], "ST2=")

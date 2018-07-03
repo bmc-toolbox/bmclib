@@ -25,7 +25,7 @@ func (i *Ilo) httpLogin() (err error) {
 		return
 	}
 
-	i.httpClient, err = httpclient.Build()
+	httpClient, err := httpclient.Build()
 	if err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func (i *Ilo) httpLogin() (err error) {
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := i.httpClient.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -50,7 +50,7 @@ func (i *Ilo) httpLogin() (err error) {
 		return err
 	}
 
-	for _, cookie := range i.httpClient.Jar.Cookies(u) {
+	for _, cookie := range httpClient.Jar.Cookies(u) {
 		if cookie.Name == "sessionKey" {
 			i.sessionKey = cookie.Value
 		}
@@ -96,6 +96,8 @@ func (i *Ilo) httpLogin() (err error) {
 	if strings.Contains(string(payload), "Invalid login attempt") {
 		return errors.ErrLoginFailed
 	}
+
+	i.httpClient = httpClient
 
 	serial, err := i.Serial()
 	if err != nil {
