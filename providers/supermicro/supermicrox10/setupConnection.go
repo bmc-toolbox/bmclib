@@ -21,7 +21,7 @@ func (s *SupermicroX10) httpLogin() (err error) {
 		return
 	}
 
-	s.httpClient, err = httpclient.Build()
+	httpClient, err := httpclient.Build()
 	if err != nil {
 		return err
 	}
@@ -35,7 +35,7 @@ func (s *SupermicroX10) httpLogin() (err error) {
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := s.httpClient.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -53,6 +53,8 @@ func (s *SupermicroX10) httpLogin() (err error) {
 	if !strings.Contains(string(payload), "../cgi/url_redirect.cgi?url_name=mainmenu") {
 		return errors.ErrLoginFailed
 	}
+
+	s.httpClient = httpClient
 
 	serial, err := s.Serial()
 	if err != nil {
