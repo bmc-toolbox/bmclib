@@ -3,10 +3,12 @@ package butler
 import (
 	"errors"
 	"fmt"
+
 	"github.com/bmc-toolbox/bmcbutler/asset"
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/discover"
+	bmcerros "github.com/bmc-toolbox/bmclib/errors"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -49,7 +51,7 @@ func (b *Butler) applyConfig(id int, config *cfgresources.ResourcesConfig, asset
 
 		//attempt to login with credentials
 		err := bmc.CheckCredentials()
-		if err != nil {
+		if err == bmcerros.ErrLoginFailed {
 			log.WithFields(logrus.Fields{
 				"component": component,
 				"Asset":     fmt.Sprintf("%+v", asset),
@@ -68,11 +70,52 @@ func (b *Butler) applyConfig(id int, config *cfgresources.ResourcesConfig, asset
 				}).Warn("Unable to login to bmc with default credentials.")
 				return err
 			}
+		} else if err != nil {
+			log.WithFields(logrus.Fields{
+				"component": component,
+				"Asset":     fmt.Sprintf("%+v", asset),
+				"Error":     err,
+			}).Warn("Something went wrong")
+			return err
 		}
 		bmc.ApplyCfg(config)
+		log.WithFields(logrus.Fields{
+			"component": component,
+			"butler-id": id,
+			"Asset":     fmt.Sprintf("%+v", asset),
+		}).Info("Config applied.")
 	case devices.BmcChassis:
 		chassis := client.(devices.BmcChassis)
 		asset.Model = chassis.BmcType()
+
+		err := chassis.CheckCredentials()
+		if err == bmcerros.ErrLoginFailed {
+			log.WithFields(logrus.Fields{
+				"component": component,
+				"Asset":     fmt.Sprintf("%+v", asset),
+				"Error":     err,
+			}).Warn("Unable to login to bmc, trying default credentials")
+
+			DefaultbmcUser := viper.GetString(fmt.Sprintf("bmcDefaults.%s.user", asset.Model))
+			DefaultbmcPassword := viper.GetString(fmt.Sprintf("bmcDefaults.%s.password", asset.Model))
+			chassis.UpdateCredentials(DefaultbmcUser, DefaultbmcPassword)
+			err := chassis.CheckCredentials()
+			if err != nil {
+				log.WithFields(logrus.Fields{
+					"component": component,
+					"Asset":     fmt.Sprintf("%+v", asset),
+					"Error":     err,
+				}).Warn("Unable to login to bmc with default credentials.")
+				return err
+			}
+		} else if err != nil {
+			log.WithFields(logrus.Fields{
+				"component": component,
+				"Asset":     fmt.Sprintf("%+v", asset),
+				"Error":     err,
+			}).Warn("Something went wrong")
+			return err
+		}
 		chassis.ApplyCfg(config)
 		log.WithFields(logrus.Fields{
 			"component": component,
@@ -89,5 +132,4 @@ func (b *Butler) applyConfig(id int, config *cfgresources.ResourcesConfig, asset
 	}
 
 	return err
-
 }
