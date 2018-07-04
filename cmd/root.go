@@ -16,12 +16,14 @@ package cmd
 
 import (
 	"fmt"
+	"log/syslog"
+	"os"
+
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 	logrusSyslog "github.com/sirupsen/logrus/hooks/syslog"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"log/syslog"
-	"os"
 )
 
 var (
@@ -131,9 +133,6 @@ func validateArgs() {
 }
 
 func init() {
-	var home = os.Getenv("HOME")
-	cfgFile = fmt.Sprintf("%s/.bmcbutler/bmcbutler.yml", home)
-
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose logging")
 	rootCmd.PersistentFlags().StringVarP(&serial, "serial", "", "", "Serial(s) of the asset to setup config (separated by commas - no spaces).")
 	rootCmd.PersistentFlags().BoolVarP(&isChassis, "chassis", "", false, "Use in conjuction with --serial, declare asset to be a chassis")
@@ -141,7 +140,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&isDiscrete, "discrete", "", false, "Use in conjuction with --serial, declare asset to be a discrete")
 	rootCmd.PersistentFlags().BoolVarP(&all, "all", "", false, "Runs configuration/setup on all assets")
 	rootCmd.PersistentFlags().BoolVarP(&ignoreLocation, "ignorelocation", "", false, "Ignores location")
-	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", cfgFile, "Configuration file for bmcbutler.")
+	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "Configuration file for bmcbutler (default: /etc/bmcbutler/bmcbutler.yml)")
 
 	cobra.OnInitialize(initConfig)
 
@@ -149,8 +148,21 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	// Use config file from the flag.
-	viper.SetConfigFile(cfgFile)
+	if cfgFile != "" {
+		// Use config file from the flag.
+		viper.SetConfigFile(cfgFile)
+	} else {
+		// Find home directory.
+		home, err := homedir.Dir()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		viper.SetConfigName("bmcbutler")
+		viper.AddConfigPath("/etc/bmcbutler")
+		viper.AddConfigPath(fmt.Sprintf("%s/.bmcbutler", home))
+	}
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err != nil {
