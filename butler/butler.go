@@ -16,13 +16,14 @@ package butler
 
 import (
 	"fmt"
+	"sync"
+
 	"github.com/bmc-toolbox/bmcbutler/asset"
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/discover"
 	bmclibLogger "github.com/bmc-toolbox/bmclib/logging"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"sync"
 )
 
 type ButlerMsg struct {
@@ -131,7 +132,16 @@ func (b *Butler) butler(id int) {
 
 		//this asset needs to be setup
 		if msg.Asset.Setup == true {
-			b.setupAsset(id, msg.Setup, &msg.Asset)
+			err = b.setupAsset(id, msg.Setup, &msg.Asset)
+			if err != nil {
+				log.WithFields(logrus.Fields{
+					"component": component,
+					"butler-id": id,
+					"Serial":    msg.Asset.Serial,
+					"AssetType": msg.Asset.Type,
+					"Error":     err,
+				}).Warn("Unable to setup asset.")
+			}
 			continue
 		}
 

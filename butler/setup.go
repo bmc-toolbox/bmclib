@@ -3,14 +3,16 @@ package butler
 import (
 	"errors"
 	"fmt"
+	"reflect"
+	"time"
+
 	"github.com/bmc-toolbox/bmcbutler/asset"
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/discover"
+	bmcerros "github.com/bmc-toolbox/bmclib/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"reflect"
-	"time"
 )
 
 type SetupAction struct {
@@ -20,25 +22,16 @@ type SetupAction struct {
 	SetupConfig *cfgresources.ResourcesSetup
 }
 
-func (b *Butler) setupAsset(id int, config *cfgresources.ResourcesSetup, asset *asset.Asset) {
-
+func (b *Butler) setupAsset(id int, config *cfgresources.ResourcesSetup, asset *asset.Asset) (err error) {
 	log := b.Log
 	component := "setupAsset"
-
-	//DefaultbmcUser := viper.GetString(fmt.Sprintf("bmcDefaults.%s.user", asset.Model))
-	//DefaultbmcPassword := viper.GetString(fmt.Sprintf("bmcDefaults.%s.password", asset.Model))
 
 	bmcUser := viper.GetString("bmcUser")
 	bmcPassword := viper.GetString("bmcPassword")
 
 	client, err := discover.ScanAndConnect(asset.IpAddress, bmcUser, bmcPassword)
 	if err != nil {
-		log.WithFields(logrus.Fields{
-			"component": component,
-			"Asset":     fmt.Sprintf("%+v", asset),
-			"Error":     err,
-		}).Warn("Unable to connect to bmc.")
-		return
+		return fmt.Errorf("unable to connect to bmc")
 	}
 
 	setup := SetupAction{Log: log, SetupConfig: config, Asset: asset, Id: id}
@@ -50,6 +43,23 @@ func (b *Butler) setupAsset(id int, config *cfgresources.ResourcesSetup, asset *
 
 		chassis := client.(devices.BmcChassis)
 		defer chassis.Close()
+
+		err := chassis.CheckCredentials()
+		if err == bmcerros.ErrLoginFailed {
+			log.WithFields(logrus.Fields{
+				"component": component,
+				"Asset":     fmt.Sprintf("%+v", asset),
+				"Error":     err,
+			}).Warn("unable to login to bmc, trying default credentials")
+
+			DefaultbmcUser := viper.GetString(fmt.Sprintf("bmcDefaults.%s.user", asset.Model))
+			DefaultbmcPassword := viper.GetString(fmt.Sprintf("bmcDefaults.%s.password", asset.Model))
+			chassis.UpdateCredentials(DefaultbmcUser, DefaultbmcPassword)
+			err := chassis.CheckCredentials()
+			if err != nil {
+				return fmt.Errorf("unable to login to bmc with default credentialsc")
+			}
+		}
 
 		asset.Model = chassis.BmcType()
 		//if a chassis was setup successfully,
