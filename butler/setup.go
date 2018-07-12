@@ -43,7 +43,7 @@ func (b *Butler) setupAsset(id int, config *cfgresources.ResourcesSetup, asset *
 		chassis := client.(devices.BmcChassis)
 		defer chassis.Close()
 
-		asset.Model = chassis.BmcType()z
+		asset.Model = chassis.BmcType()
 		err := chassis.CheckCredentials()
 		if err == bmcerros.ErrLoginFailed {
 			log.WithFields(logrus.Fields{
