@@ -40,10 +40,10 @@ func (b *Butler) setupAsset(id int, config *cfgresources.ResourcesSetup, asset *
 	case devices.Bmc:
 		log.Error("Setup not implemented for BMCs ", deviceType)
 	case devices.BmcChassis:
-
 		chassis := client.(devices.BmcChassis)
 		defer chassis.Close()
 
+		asset.Model = chassis.BmcType()z
 		err := chassis.CheckCredentials()
 		if err == bmcerros.ErrLoginFailed {
 			log.WithFields(logrus.Fields{
@@ -61,7 +61,6 @@ func (b *Butler) setupAsset(id int, config *cfgresources.ResourcesSetup, asset *
 			}
 		}
 
-		asset.Model = chassis.BmcType()
 		//if a chassis was setup successfully,
 		//call some post setup actions.
 		if setup.Chassis(chassis) == true {
