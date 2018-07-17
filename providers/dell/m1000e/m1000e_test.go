@@ -633,3 +633,22 @@ func TestChassisInterface(t *testing.T) {
 	_ = devices.BmcChassis(chassis)
 	tearDown()
 }
+
+func TestUpdateCredentials(t *testing.T) {
+	bmc, err := setup()
+	if err != nil {
+		t.Fatalf("Found errors during the test setup %v", err)
+	}
+
+	bmc.UpdateCredentials("newUsername", "newPassword")
+
+	if bmc.username != "newUsername" {
+		t.Fatalf("Expected username to be updated to 'newUsername' but is: %s", bmc.username)
+	}
+
+	if bmc.password != "newPassword" {
+		t.Fatalf("Expected password to be updated to 'newPassword' but is: %s", bmc.password)
+	}
+
+	tearDown()
+}
