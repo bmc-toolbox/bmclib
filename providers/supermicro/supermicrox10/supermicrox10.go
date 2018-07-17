@@ -432,7 +432,7 @@ func (s *SupermicroX10) Disks() (disks []*devices.Disk, err error) {
 }
 
 // UpdateCredentials updates login credentials
-func (s SupermicroX10) UpdateCredentials(username string, password string) {
+func (s *SupermicroX10) UpdateCredentials(username string, password string) {
 	s.username = username
 	s.password = password
 }
