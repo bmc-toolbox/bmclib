@@ -58,16 +58,23 @@ a csv inventory example is provided to play with.
 The 'inventory' parameter points Bmcbutler to the inventory source.
 
 ##### Run
+<<<<<<< HEAD
 
 Configure blade/chassis/discrete, this expects the csv file to be in place.
+=======
+Configure Blades/Chassis/Discretes
 
 ```
-#configure all assets in inventory
+#configure all BMCs in inventory
 bmcbutler configure --all
 
-#configure assets identified by serial
+#configure BMCs identified by IP(s)
+bmcbutler configure --iplist 192.168.0.1,192.168.0.2,192.168.0.2
+
+#configure BMCs identified by serial(s)
 bmcbutler configure --chassis --serial <serial> --verbose
-bmcbutler configure --blade --serial <serial> --verbose
+bmcbutler configure --blade --serial <serial1>,<serial2> --verbose
+bmcbutler configure --discrete --serial <serial> --verbose
 ```
 
 #### Acknowledgment

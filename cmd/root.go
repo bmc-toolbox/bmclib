@@ -35,6 +35,7 @@ var (
 	version          string
 	assetType        string
 	serial           string
+	ipList           string
 	isChassis        bool
 	isBlade          bool
 	isDiscrete       bool
@@ -86,17 +87,19 @@ func setupLogger() {
 
 func validateArgs() {
 
-	if all == false && serial == "" {
-		log.Error("Either --all or --serial expected.")
+	//one of these args are required
+	if all == false && serial == "" && ipList == "" {
+		log.Error("Either --all OR --serial OR --ip expected.")
 		os.Exit(1)
 	}
 
-	if all == true && serial != "" {
-		log.Error("--all and --serial are mutually exclusive args.")
+	if all == true && serial != "" && ipList != "" {
+		log.Error("--all, --serial, --ip are mutually exclusive args.")
 		os.Exit(1)
 	}
 
-	if all == true {
+	//if --all or --ipList was passed
+	if all == true || ipList != "" {
 		return
 	}
 
@@ -135,6 +138,7 @@ func validateArgs() {
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose logging")
 	rootCmd.PersistentFlags().StringVarP(&serial, "serial", "", "", "Serial(s) of the asset to setup config (separated by commas - no spaces).")
+	rootCmd.PersistentFlags().StringVarP(&ipList, "iplist", "", "", "IP Address(s) of the asset to setup config (separated by commas - no spaces).")
 	rootCmd.PersistentFlags().BoolVarP(&isChassis, "chassis", "", false, "Use in conjuction with --serial, declare asset to be a chassis")
 	rootCmd.PersistentFlags().BoolVarP(&isBlade, "blade", "", false, "Use in conjuction with --serial, declare asset to be a blade")
 	rootCmd.PersistentFlags().BoolVarP(&isDiscrete, "discrete", "", false, "Use in conjuction with --serial, declare asset to be a discrete")

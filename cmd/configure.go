@@ -44,11 +44,17 @@ func configure() {
 	// A channel to recieve inventory assets
 	inventoryChan := make(chan []asset.Asset, 5)
 
-	inventorySource := viper.GetString("inventory.configure.source")
 	butlersToSpawn := viper.GetInt("butlersToSpawn")
 
 	if butlersToSpawn == 0 {
 		butlersToSpawn = 5
+	}
+
+	inventorySource := viper.GetString("inventory.configure.source")
+
+	//if --iplist was passed, set inventorySource
+	if ipList != "" {
+		inventorySource = "iplist"
 	}
 
 	switch inventorySource {
@@ -68,6 +74,9 @@ func configure() {
 		} else {
 			go inventoryInstance.AssetIterBySerial(serial, assetType)
 		}
+	case "iplist":
+		inventoryInstance := inventory.IpList{Log: log, BatchSize: 1, Channel: inventoryChan}
+		go inventoryInstance.AssetIter(ipList)
 	default:
 		fmt.Println("Unknown/no inventory source declared in cfg: ", inventorySource)
 		os.Exit(1)
