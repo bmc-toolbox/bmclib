@@ -3,25 +3,22 @@ package supermicrox10
 import (
 	"errors"
 	"fmt"
-	"github.com/bmc-toolbox/bmclib/cfgresources"
-	"github.com/google/go-querystring/query"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"reflect"
-	"runtime"
 	"strings"
 	"time"
-)
 
-// returns the calling function.
-func funcName() string {
-	pc, _, _, _ := runtime.Caller(1)
-	return runtime.FuncForPC(pc).Name()
-}
+	log "github.com/sirupsen/logrus"
+
+	"github.com/bmc-toolbox/bmclib/cfgresources"
+	"github.com/bmc-toolbox/bmclib/internal/helper"
+
+	"github.com/google/go-querystring/query"
+)
 
 // Returns the UTC offset for a given timezone location
 func timezoneToUtcOffset(location *time.Location) (offset int) {
@@ -185,7 +182,7 @@ func (s *SupermicroX10) applyUserParams(users []*cfgresources.User) (err error) 
 			"IP":     s.ip,
 			"Model":  s.BmcType(),
 			"Serial": s.serial,
-			"Step":   funcName(),
+			"Step":   helper.WhosCalling(),
 			"Error":  err,
 		}).Warn(msg)
 		return errors.New(msg)
@@ -258,7 +255,7 @@ func (s *SupermicroX10) applyUserParams(users []*cfgresources.User) (err error) 
 				"Serial":     s.serial,
 				"Endpoint":   endpoint,
 				"StatusCode": statusCode,
-				"Step":       funcName(),
+				"Step":       helper.WhosCalling(),
 				"Error":      err,
 			}).Warn(msg)
 			return errors.New(msg)
@@ -319,7 +316,7 @@ func (s *SupermicroX10) applyNetworkParams(cfg *cfgresources.Network) (err error
 			"Serial":     s.serial,
 			"Endpoint":   endpoint,
 			"StatusCode": statusCode,
-			"Step":       funcName(),
+			"Step":       helper.WhosCalling(),
 			"Error":      err,
 		}).Warn(msg)
 		return errors.New(msg)
@@ -414,7 +411,7 @@ func (s *SupermicroX10) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 			"Serial":     s.serial,
 			"Endpoint":   endpoint,
 			"StatusCode": statusCode,
-			"Step":       funcName(),
+			"Step":       helper.WhosCalling(),
 			"Error":      err,
 		}).Warn(msg)
 		return errors.New(msg)
@@ -438,7 +435,7 @@ func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*
 	if cfgLdap.Server == "" {
 		msg := "Ldap resource parameter Server required but not declared."
 		log.WithFields(log.Fields{
-			"step":  funcName(),
+			"step":  helper.WhosCalling(),
 			"Model": s.BmcType(),
 		}).Warn(msg)
 		return errors.New(msg)
@@ -448,7 +445,7 @@ func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*
 	if cfgLdap.Port == 0 {
 		msg := "Ldap resource parameter Port required but not declared"
 		log.WithFields(log.Fields{
-			"step":  funcName(),
+			"step":  helper.WhosCalling(),
 			"Model": s.BmcType(),
 		}).Warn(msg)
 		errors.New(msg)
@@ -457,7 +454,7 @@ func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*
 	if cfgLdap.Enable != true {
 		enable = "off"
 		log.WithFields(log.Fields{
-			"step":  funcName(),
+			"step":  helper.WhosCalling(),
 			"Model": s.BmcType(),
 		}).Debug("Ldap resource declared with enable: false.")
 		return
@@ -469,7 +466,7 @@ func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*
 	if err != nil || serverIp == nil {
 		msg := "Unable to lookup the IP for ldap server hostname."
 		log.WithFields(log.Fields{
-			"step":  funcName(),
+			"step":  helper.WhosCalling(),
 			"Model": s.BmcType(),
 		}).Warn(msg)
 		return errors.New(msg)
@@ -483,7 +480,7 @@ func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*
 			msg := "Ldap resource parameter Role required but not declared."
 			log.WithFields(log.Fields{
 				"Role": group.Role,
-				"step": funcName(),
+				"step": helper.WhosCalling(),
 			}).Warn(msg)
 			continue
 		}
@@ -496,7 +493,7 @@ func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*
 			msg := "Ldap resource parameter Group required but not declared."
 			log.WithFields(log.Fields{
 				"Role": group.Role,
-				"step": funcName(),
+				"step": helper.WhosCalling(),
 			}).Warn(msg)
 			return errors.New(msg)
 		}
@@ -505,7 +502,7 @@ func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*
 			msg := "Ldap resource parameter GroupBaseDn required but not declared."
 			log.WithFields(log.Fields{
 				"Role": group.Role,
-				"step": funcName(),
+				"step": helper.WhosCalling(),
 			}).Warn(msg)
 			return errors.New(msg)
 		}
@@ -541,7 +538,7 @@ func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*
 				"Serial":     s.serial,
 				"Endpoint":   endpoint,
 				"StatusCode": statusCode,
-				"Step":       funcName(),
+				"Step":       helper.WhosCalling(),
 				"Error":      err,
 			}).Warn(msg)
 			return errors.New(msg)
@@ -567,7 +564,7 @@ func (s *SupermicroX10) applySyslogParams(cfg *cfgresources.Syslog) (err error) 
 	if cfg.Server == "" {
 		msg := "Syslog resource expects parameter: Server."
 		log.WithFields(log.Fields{
-			"step":  funcName(),
+			"step":  helper.WhosCalling(),
 			"Model": s.BmcType(),
 		}).Warn(msg)
 		return errors.New(msg)
@@ -575,7 +572,7 @@ func (s *SupermicroX10) applySyslogParams(cfg *cfgresources.Syslog) (err error) 
 
 	if cfg.Port == 0 {
 		log.WithFields(log.Fields{
-			"step":  funcName(),
+			"step":  helper.WhosCalling(),
 			"Model": s.BmcType(),
 		}).Debug("Syslog resource port set to default: 514.")
 		port = 514
@@ -585,7 +582,7 @@ func (s *SupermicroX10) applySyslogParams(cfg *cfgresources.Syslog) (err error) 
 
 	if cfg.Enable != true {
 		log.WithFields(log.Fields{
-			"step":  funcName(),
+			"step":  helper.WhosCalling(),
 			"Model": s.BmcType(),
 		}).Debug("Syslog resource declared with disable.")
 	}
@@ -594,7 +591,7 @@ func (s *SupermicroX10) applySyslogParams(cfg *cfgresources.Syslog) (err error) 
 	if err != nil || serverIp == nil {
 		msg := "Unable to lookup IP for syslog server hostname, yes supermicros requires the Syslog server IP :|."
 		log.WithFields(log.Fields{
-			"step":  funcName(),
+			"step":  helper.WhosCalling(),
 			"Model": s.BmcType(),
 		}).Warn(msg)
 		return errors.New(msg)
@@ -618,7 +615,7 @@ func (s *SupermicroX10) applySyslogParams(cfg *cfgresources.Syslog) (err error) 
 			"Serial":     s.serial,
 			"Endpoint":   endpoint,
 			"StatusCode": statusCode,
-			"step":       funcName(),
+			"step":       helper.WhosCalling(),
 			"Error":      err,
 		}).Warn(msg)
 		return errors.New(msg)
@@ -635,6 +632,10 @@ func (s *SupermicroX10) applySyslogParams(cfg *cfgresources.Syslog) (err error) 
 
 // posts a urlencoded form to the given endpoint
 func (s *SupermicroX10) post(endpoint string, form *url.Values) (statusCode int, err error) {
+	err = s.httpLogin()
+	if err != nil {
+		return statusCode, err
+	}
 
 	u, err := url.Parse(fmt.Sprintf("https://%s/cgi/%s", s.ip, endpoint))
 	if err != nil {
@@ -646,7 +647,7 @@ func (s *SupermicroX10) post(endpoint string, form *url.Values) (statusCode int,
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-	for _, cookie := range s.client.Jar.Cookies(u) {
+	for _, cookie := range s.httpClient.Jar.Cookies(u) {
 		if cookie.Name == "SID" && cookie.Value != "" {
 			req.AddCookie(cookie)
 		}
@@ -663,7 +664,7 @@ func (s *SupermicroX10) post(endpoint string, form *url.Values) (statusCode int,
 		}
 	}
 
-	resp, err := s.client.Do(req)
+	resp, err := s.httpClient.Do(req)
 	if err != nil {
 		return statusCode, err
 	}

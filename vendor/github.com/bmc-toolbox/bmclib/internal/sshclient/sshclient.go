@@ -69,9 +69,12 @@ func IsntLetterOrNumber(c rune) bool {
 
 // New returns a new configured ssh client
 func New(host string, username string, password string) (connection *SSHClient, err error) {
+	if !strings.Contains(host, ":") {
+		host = fmt.Sprintf("%s:22", host)
+	}
 	c, err := ssh.Dial(
 		"tcp",
-		fmt.Sprintf("%s:22", host),
+		host,
 		&ssh.ClientConfig{
 			User: username,
 			Auth: []ssh.AuthMethod{ssh.Password(password)},

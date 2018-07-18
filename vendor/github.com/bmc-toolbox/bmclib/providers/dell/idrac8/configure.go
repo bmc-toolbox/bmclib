@@ -4,18 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/bmc-toolbox/bmclib/cfgresources"
-	log "github.com/sirupsen/logrus"
 	"reflect"
-	"runtime"
 	"strconv"
-)
 
-// returns the calling function.
-func funcName() string {
-	pc, _, _, _ := runtime.Caller(1)
-	return runtime.FuncForPC(pc).Name()
-}
+	"github.com/bmc-toolbox/bmclib/cfgresources"
+	"github.com/bmc-toolbox/bmclib/internal/helper"
+	log "github.com/sirupsen/logrus"
+)
 
 func (i *IDrac8) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 	cfg := reflect.ValueOf(config).Elem()
@@ -195,7 +190,7 @@ func (i *IDrac8) applyUserParams(cfg *cfgresources.User, Id int) (err error) {
 	payload, err := json.Marshal(data)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"step": funcName(),
+			"step": helper.WhosCalling(),
 		}).Warn("Unable to marshal syslog payload.")
 		return err
 	}
@@ -205,7 +200,7 @@ func (i *IDrac8) applyUserParams(cfg *cfgresources.User, Id int) (err error) {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"endpoint": endpoint,
-			"step":     funcName(),
+			"step":     helper.WhosCalling(),
 			"response": string(response),
 		}).Warn("PUT request failed.")
 		return err
@@ -228,14 +223,14 @@ func (i *IDrac8) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
 
 	if cfg.Server == "" {
 		log.WithFields(log.Fields{
-			"step": funcName(),
+			"step": helper.WhosCalling(),
 		}).Warn("Syslog resource expects parameter: Server.")
 		return
 	}
 
 	if cfg.Port == 0 {
 		log.WithFields(log.Fields{
-			"step": funcName(),
+			"step": helper.WhosCalling(),
 		}).Debug("Syslog resource port set to default: 514.")
 		port = 514
 	} else {
@@ -245,7 +240,7 @@ func (i *IDrac8) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
 	if cfg.Enable != true {
 		enable = "Disabled"
 		log.WithFields(log.Fields{
-			"step": funcName(),
+			"step": helper.WhosCalling(),
 		}).Debug("Syslog resource declared with enable: false.")
 	}
 
@@ -260,7 +255,7 @@ func (i *IDrac8) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
 	payload, err := json.Marshal(data)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"step": funcName(),
+			"step": helper.WhosCalling(),
 		}).Warn("Unable to marshal syslog payload.")
 		return err
 	}
@@ -270,7 +265,7 @@ func (i *IDrac8) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"endpoint": endpoint,
-			"step":     funcName(),
+			"step":     helper.WhosCalling(),
 			"response": string(response),
 		}).Warn("PUT request failed.")
 		return err
@@ -312,7 +307,7 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 	var enable int
 	if cfg.Enable != true {
 		log.WithFields(log.Fields{
-			"step": funcName(),
+			"step": helper.WhosCalling(),
 		}).Debug("Ntp resource declared with enable: false.")
 		enable = 0
 	} else {
@@ -339,7 +334,7 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 			"Model":    i.BmcType(),
 			"Serial":   i.serial,
 			"endpoint": endpoint,
-			"step":     funcName(),
+			"step":     helper.WhosCalling(),
 			"response": string(response),
 		}).Warn("GET request failed.")
 	}
@@ -398,7 +393,7 @@ func (i *IDrac8) applyLdapServerParam(cfg *cfgresources.Ldap) int {
 			"Model":    i.BmcType(),
 			"Serial":   i.serial,
 			"endpoint": endpoint,
-			"step":     funcName(),
+			"step":     helper.WhosCalling(),
 			"response": string(response),
 		}).Warn("GET request failed.")
 		return 1
@@ -431,7 +426,7 @@ func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) int {
 			"Model":    i.BmcType(),
 			"Serial":   i.serial,
 			"endpoint": endpoint,
-			"step":     funcName(),
+			"step":     helper.WhosCalling(),
 			"response": string(response),
 		}).Warn("GET request failed.")
 		return 1
@@ -610,7 +605,7 @@ func (i *IDrac8) applyLdapRoleGroupPrivParam(cfg *cfgresources.Ldap, groupPrivil
 			"Model":        i.BmcType(),
 			"Serial":       i.serial,
 			"endpoint":     endpoint,
-			"step":         funcName(),
+			"step":         helper.WhosCalling(),
 			"responseCode": responseCode,
 			"response":     string(responseBody),
 		}).Warn("POST request failed.")
@@ -639,7 +634,7 @@ func (i *IDrac8) applyTimezoneParam(timezone string) {
 			"Model":    i.BmcType(),
 			"Serial":   i.serial,
 			"endpoint": endpoint,
-			"step":     funcName(),
+			"step":     helper.WhosCalling(),
 			"response": string(response),
 		}).Warn("GET request failed.")
 	}

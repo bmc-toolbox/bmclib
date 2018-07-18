@@ -1,16 +1,39 @@
 package c7000
 
 import (
+	"bytes"
 	"encoding/xml"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/http/httputil"
+	"net/url"
 
 	"github.com/bmc-toolbox/bmclib/errors"
+	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/providers/hp"
+
+	multierror "github.com/hashicorp/go-multierror"
 	log "github.com/sirupsen/logrus"
 )
 
 // Login initiates the connection to a chassis device
 func (c *C7000) httpLogin() (err error) {
+	if c.httpClient != nil {
+		return
+	}
+
+	httpClient, err := httpclient.Build()
+	if err != nil {
+		return err
+	}
+
+	//If a token is already available, don't re-login.
+	if c.XMLToken != "" {
+		return err
+	}
+
 	//setup the login payload
 	username := Username{Text: c.username}
 	password := Password{Text: c.password}
@@ -19,24 +42,61 @@ func (c *C7000) httpLogin() (err error) {
 	//wrap the XML doc in the SOAP envelope
 	doc := wrapXML(userlogin, "")
 
-	output, err := xml.MarshalIndent(doc, "  ", "    ")
+	payload, err := xml.MarshalIndent(doc, "  ", "    ")
 	if err != nil {
 		return err
 	}
 
-	statusCode, responseBody, err := c.postXML(output)
+	u, err := url.Parse(fmt.Sprintf("https://%s/hpoa", c.ip))
+	if err != nil {
+		return err
+	}
 
-	if err != nil || statusCode != 200 {
-		return errors.ErrLoginFailed
+	req, err := http.NewRequest("POST", u.String(), bytes.NewReader(payload))
+	if err != nil {
+		return err
+	}
+
+	//req.Header.Add("Content-Type", "application/soap+xml; charset=utf-8")
+	req.Header.Add("Content-Type", "text/plain;charset=UTF-8")
+	if log.GetLevel() == log.DebugLevel {
+		log.Println(fmt.Sprintf("https://%s/hpoa", c.ip))
+		dump, err := httputil.DumpRequestOut(req, true)
+		if err == nil {
+			log.Printf("%s\n\n", dump)
+		}
+	}
+
+	resp, err := httpClient.Do(req)
+	if err != nil || resp.StatusCode != 200 {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if log.GetLevel() == log.DebugLevel {
+		dump, err := httputil.DumpResponse(resp, true)
+		if err == nil {
+			log.Printf("%s\n\n", dump)
+		}
+	}
+
+	responseBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
 	}
 
 	var loginResponse EnvelopeLoginResponse
 	err = xml.Unmarshal(responseBody, &loginResponse)
 	if err != nil {
-		return errors.ErrLoginFailed
+		return err
 	}
 
 	c.XMLToken = loginResponse.Body.UserLogInResponse.HpOaSessionKeyToken.OaSessionKey.Text
+	if c.XMLToken == "" {
+		return errors.ErrLoginFailed
+	}
+
+	c.httpClient = httpClient
 
 	serial, err := c.Serial()
 	if err != nil {
@@ -57,6 +117,26 @@ func (c *C7000) sshLogin() (err error) {
 	c.sshClient, err = sshclient.New(c.ip, c.username, c.password)
 	if err != nil {
 		return err
+	}
+
+	return err
+}
+
+// Close closes the connection properly
+func (c *C7000) Close() (err error) {
+	if c.httpClient != nil {
+		payload := UserLogout{}
+		_, _, e := c.postXML(payload)
+		if e != nil {
+			err = multierror.Append(e, err)
+		}
+	}
+
+	if c.sshClient != nil {
+		e := c.sshClient.Close()
+		if e != nil {
+			err = multierror.Append(e, err)
+		}
 	}
 
 	return err

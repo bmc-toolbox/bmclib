@@ -1,10 +1,8 @@
 package c7000
 
 import (
-	"encoding/xml"
 	"fmt"
 	"reflect"
-	"strings"
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	log "github.com/sirupsen/logrus"
@@ -201,21 +199,7 @@ func (c *C7000) applysetLdapInfo4(cfg *cfgresources.Ldap) (err error) {
 		SearchContexts:           searchcontexts,
 	}
 
-	doc := wrapXML(payload, c.XMLToken)
-	output, err := xml.MarshalIndent(doc, "  ", "    ")
-	if err != nil {
-		log.WithFields(log.Fields{
-			"step":  "applysetLdapInfo4",
-			"IP":    c.ip,
-			"Model": c.BmcType(),
-			"Error": err,
-		}).Warn("Unable to marshal ldap payload.")
-		return err
-	}
-
-	// A hack to declare self closing xml tags, until https://github.com/golang/go/issues/21399 is fixed.
-	output = []byte(strings.Replace(string(output), "<hpoa:searchContext></hpoa:searchContext>", "<hpoa:searchContext/>", -1))
-	statusCode, _, err := c.postXML(output)
+	statusCode, _, err := c.postXML(payload)
 	if statusCode != 200 || err != nil {
 		log.WithFields(log.Fields{
 			"step":       "applysetLdapInfo4",
@@ -242,20 +226,7 @@ func (c *C7000) applysetLdapInfo4(cfg *cfgresources.Ldap) (err error) {
 func (c *C7000) applyEnableLdapAuth(enable bool) (err error) {
 
 	payload := enableLdapAuthentication{EnableLdap: enable, EnableLocalUsers: true}
-	doc := wrapXML(payload, c.XMLToken)
-	output, err := xml.MarshalIndent(doc, "  ", "    ")
-	if err != nil {
-		log.WithFields(log.Fields{
-			"step":   "applyEnableLdapAuth",
-			"IP":     c.ip,
-			"Model":  c.BmcType(),
-			"Serial": c.serial,
-			"Error":  err,
-		}).Warn("Unable to marshal ldap payload.")
-		return err
-	}
-
-	statusCode, _, err := c.postXML(output)
+	statusCode, _, err := c.postXML(payload)
 	if statusCode != 200 || err != nil {
 		log.WithFields(log.Fields{
 			"step":       "applyEnableLdapAuth",
@@ -373,20 +344,7 @@ func (c *C7000) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) 
 func (c *C7000) applyAddLdapGroup(group string) (err error) {
 
 	payload := addLdapGroup{LdapGroup: ldapGroup{Text: group}}
-	doc := wrapXML(payload, c.XMLToken)
-	output, err := xml.MarshalIndent(doc, "  ", "    ")
-	if err != nil {
-		log.WithFields(log.Fields{
-			"step":   "applyAddLdapGroup",
-			"IP":     c.ip,
-			"Model":  c.BmcType(),
-			"Serial": c.serial,
-			"Error":  err,
-		}).Warn("Unable to marshal ldap payload.")
-		return err
-	}
-
-	statusCode, _, err := c.postXML(output)
+	statusCode, _, err := c.postXML(payload)
 	if statusCode == 200 || statusCode == 500 { // 500 indicates the group exists.
 		log.WithFields(log.Fields{
 			"step":       "applyAddLdapGroup",
@@ -410,10 +368,8 @@ func (c *C7000) applyAddLdapGroup(group string) (err error) {
 	}
 
 	log.WithFields(log.Fields{
-		"IP":     c.ip,
-		"Model":  c.BmcType(),
-		"Serial": c.serial,
-		"Group":  group,
+		"IP":    c.ip,
+		"Model": c.BmcType(),
 	}).Info("Ldap group added.")
 	return nil
 }
@@ -434,20 +390,7 @@ func (c *C7000) applyLdapGroupBayAcl(role string, group string) (err error) {
 	}
 
 	payload := setLdapGroupBayAcl{LdapGroup: ldapGroup{Text: group}, Acl: acl{Text: userAcl}}
-
-	doc := wrapXML(payload, c.XMLToken)
-	output, err := xml.MarshalIndent(doc, "  ", "    ")
-	if err != nil {
-		log.WithFields(log.Fields{
-			"step":   "applyLdapGroupBayAcl",
-			"IP":     c.ip,
-			"Model":  c.BmcType(),
-			"Serial": c.serial,
-			"Error":  err,
-		}).Fatal("Unable to marshal ldap payload.")
-	}
-
-	statusCode, _, err := c.postXML(output)
+	statusCode, _, err := c.postXML(payload)
 	if statusCode != 200 || err != nil {
 		log.WithFields(log.Fields{
 			"step":       "applyLdapGroupBayAcl",
@@ -534,19 +477,7 @@ func (c *C7000) applyAddLdapGroupBayAccess(group string) (err error) {
 		Bays:      bayz,
 	}
 
-	doc := wrapXML(payload, c.XMLToken)
-	output, err := xml.MarshalIndent(doc, "  ", "    ")
-	if err != nil {
-		log.WithFields(log.Fields{
-			"step":   "applyAddLdapGroupBayAccess",
-			"IP":     c.ip,
-			"Model":  c.BmcType(),
-			"Serial": c.serial,
-			"Error":  err,
-		}).Fatal("Unable to marshal ldap payload.")
-	}
-
-	statusCode, _, err := c.postXML(output)
+	statusCode, _, err := c.postXML(payload)
 	if statusCode != 200 || err != nil {
 		log.WithFields(log.Fields{
 			"step":       "applyAddLdapGroupBayAccess",
@@ -596,24 +527,9 @@ func (c *C7000) applyUserParams(cfg *cfgresources.User) (err error) {
 
 	username := Username{Text: cfg.Name}
 	password := Password{Text: cfg.Password}
-	adduser := AddUser{Username: username, Password: password}
+	payload := AddUser{Username: username, Password: password}
 
-	//wrap the XML payload in the SOAP envelope
-	doc := wrapXML(adduser, c.XMLToken)
-	output, err := xml.MarshalIndent(doc, "  ", "    ")
-	if err != nil {
-		log.WithFields(log.Fields{
-			"step":   "applyUserParams",
-			"user":   cfg.Name,
-			"IP":     c.ip,
-			"Model":  c.BmcType(),
-			"Serial": c.serial,
-			"Error":  err,
-		}).Warn("Unable to marshal user payload.")
-		return err
-	}
-
-	statusCode, _, err := c.postXML(output)
+	statusCode, _, err := c.postXML(payload)
 	if err != nil {
 		return err
 	}
@@ -649,24 +565,9 @@ func (c *C7000) setUserPassword(user string, password string) (err error) {
 
 	u := Username{Text: user}
 	p := Password{Text: password}
-	setuserpassword := SetUserPassword{Username: u, Password: p}
+	payload := SetUserPassword{Username: u, Password: p}
 
-	//wrap the XML payload in the SOAP envelope
-	doc := wrapXML(setuserpassword, c.XMLToken)
-	output, err := xml.MarshalIndent(doc, "  ", "    ")
-	if err != nil {
-		log.WithFields(log.Fields{
-			"step":   "setUserPassword",
-			"user":   user,
-			"IP":     c.ip,
-			"Model":  c.BmcType(),
-			"Serial": c.serial,
-			"Error":  err,
-		}).Fatal("Unable to marshal payload.")
-	}
-
-	//fmt.Printf("-->> %d\n", statusCode)
-	statusCode, _, err := c.postXML(output)
+	statusCode, _, err := c.postXML(payload)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"step":        "setUserPassword",
@@ -732,24 +633,10 @@ func (c *C7000) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 	ntppoll := NtpPoll{Text: "720"} //default period to poll the NTP server
 	primaryServer := NtpPrimary{Text: cfg.Server1}
 	secondaryServer := NtpSecondary{Text: cfg.Server2}
-	ntp := configureNtp{NtpPrimary: primaryServer, NtpSecondary: secondaryServer, NtpPoll: ntppoll}
-
-	//wrap the XML payload in the SOAP envelope
-	doc := wrapXML(ntp, c.XMLToken)
-	output, err := xml.MarshalIndent(doc, "  ", "    ")
-	if err != nil {
-		log.WithFields(log.Fields{
-			"step":   "applyNtpParams",
-			"IP":     c.ip,
-			"Model":  c.BmcType(),
-			"Serial": c.serial,
-			"Error":  err,
-		}).Warn("Unable to marshal ntp payload.")
-		return err
-	}
+	payload := configureNtp{NtpPrimary: primaryServer, NtpSecondary: secondaryServer, NtpPoll: ntppoll}
 
 	//fmt.Printf("%s\n", output)
-	statusCode, _, err := c.postXML(output)
+	statusCode, _, err := c.postXML(payload)
 	if err != nil || statusCode != 200 {
 		log.WithFields(log.Fields{
 			"step":       "applyNtpParams",
@@ -787,24 +674,9 @@ func (c *C7000) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 func (c *C7000) applyNtpTimezoneParam(timezone string) (err error) {
 
 	//setup timezone XML payload
-	tz := setEnclosureTimeZone{Timezone: timeZone{Text: timezone}}
+	payload := setEnclosureTimeZone{Timezone: timeZone{Text: timezone}}
 
-	//wrap the XML payload in the SOAP envelope
-	doc := wrapXML(tz, c.XMLToken)
-	output, err := xml.MarshalIndent(doc, "  ", "    ")
-	if err != nil {
-		log.WithFields(log.Fields{
-			"step":   "applyNtpTimezoneParam",
-			"IP":     c.ip,
-			"Model":  c.BmcType(),
-			"Serial": c.serial,
-			"Error":  err,
-		}).Warn("Unable to marshal ntp timezone payload.")
-		return err
-	}
-
-	//fmt.Printf("%s\n", output)
-	statusCode, _, err := c.postXML(output)
+	statusCode, _, err := c.postXML(payload)
 	if err != nil || statusCode != 200 {
 		log.WithFields(log.Fields{
 			"step":       "applyNtpTimezoneParam",
@@ -883,22 +755,7 @@ func (c *C7000) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
 func (c *C7000) applySyslogServer(server string) {
 
 	payload := SetRemoteSyslogServer{Server: server}
-
-	//wrap the XML payload in the SOAP envelope
-	doc := wrapXML(payload, c.XMLToken)
-	output, err := xml.MarshalIndent(doc, "  ", "    ")
-	if err != nil {
-		log.WithFields(log.Fields{
-			"step":   "applySyslogServer",
-			"IP":     c.ip,
-			"Model":  c.BmcType(),
-			"Serial": c.serial,
-			"Error":  err,
-		}).Warn("Unable to marshal syslog payload.")
-		return
-	}
-
-	statusCode, _, err := c.postXML(output)
+	statusCode, _, err := c.postXML(payload)
 	if err != nil || statusCode != 200 {
 		log.WithFields(log.Fields{
 			"step":       "applySyslogServer",
@@ -925,22 +782,7 @@ func (c *C7000) applySyslogServer(server string) {
 // </hpoa:setRemoteSyslogPort>
 func (c *C7000) applySyslogPort(port int) {
 	payload := SetRemoteSyslogPort{Port: port}
-
-	//wrap the XML payload in the SOAP envelope
-	doc := wrapXML(payload, c.XMLToken)
-	output, err := xml.MarshalIndent(doc, "  ", "    ")
-	if err != nil {
-		log.WithFields(log.Fields{
-			"step":   "applySyslogPort",
-			"IP":     c.ip,
-			"Model":  c.BmcType(),
-			"Serial": c.serial,
-			"Error":  err,
-		}).Warn("Unable to marshal syslog payload.")
-		return
-	}
-
-	statusCode, _, err := c.postXML(output)
+	statusCode, _, err := c.postXML(payload)
 	if err != nil || statusCode != 200 {
 		log.WithFields(log.Fields{
 			"step":       "applySyslogPort",
@@ -968,22 +810,7 @@ func (c *C7000) applySyslogPort(port int) {
 func (c *C7000) applySyslogEnabled(enabled bool) {
 
 	payload := SetRemoteSyslogEnabled{Enabled: enabled}
-
-	//wrap the XML payload in the SOAP envelope
-	doc := wrapXML(payload, c.XMLToken)
-	output, err := xml.MarshalIndent(doc, "  ", "    ")
-	if err != nil {
-		log.WithFields(log.Fields{
-			"step":   "SetRemoteSyslogEnabled",
-			"IP":     c.ip,
-			"Model":  c.BmcType(),
-			"Serial": c.serial,
-			"Error":  err,
-		}).Warn("Unable to marshal syslog payload.")
-		return
-	}
-
-	statusCode, _, err := c.postXML(output)
+	statusCode, _, err := c.postXML(payload)
 	if err != nil || statusCode != 200 {
 		log.WithFields(log.Fields{
 			"step":       "SetRemoteSyslogEnabled",

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
@@ -15,6 +14,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
+	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/providers/hp"
 
 	// this make possible to setup logging and properties at any stage
@@ -26,7 +26,7 @@ const (
 	// BmcType defines the bmc model that is supported by this package
 	BmcType = "ilo"
 
-	// Ilo2 is the constant for Ilo2
+	// Ilo2 is the constant for iLO2
 	Ilo2 = "ilo2"
 	// Ilo3 is the constant for iLO3
 	Ilo3 = "ilo3"
@@ -42,7 +42,8 @@ type Ilo struct {
 	username   string
 	password   string
 	sessionKey string
-	client     *http.Client
+	httpClient *http.Client
+	sshClient  *sshclient.SSHClient
 	serial     string
 	loginURL   *url.URL
 	rimpBlade  *hp.RimpBlade
@@ -79,90 +80,20 @@ func New(ip string, username string, password string) (ilo *Ilo, err error) {
 		return ilo, err
 	}
 
-	return &Ilo{ip: ip, username: username, password: password, loginURL: loginURL, rimpBlade: rimpBlade, client: client}, err
+	return &Ilo{ip: ip, username: username, password: password, loginURL: loginURL, rimpBlade: rimpBlade}, err
 }
 
-// Login initiates the connection to an iLO device
-func (i *Ilo) Login() (err error) {
-	log.WithFields(log.Fields{"step": "bmc connection", "vendor": hp.VendorID, "ip": i.ip}).Debug("connecting to bmc")
-
-	data := fmt.Sprintf("{\"method\":\"login\", \"user_login\":\"%s\", \"password\":\"%s\" }", i.username, i.password)
-
-	req, err := http.NewRequest("POST", i.loginURL.String(), bytes.NewBufferString(data))
+// CheckCredentials verify whether the credentials are valid or not
+func (i *Ilo) CheckCredentials() (err error) {
+	err = i.httpLogin()
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := i.client.Do(req)
-	if err != nil {
-		return err
-	}
-
-	u, err := url.Parse(i.loginURL.String())
-	if err != nil {
-		return err
-	}
-
-	for _, cookie := range i.client.Jar.Cookies(u) {
-		if cookie.Name == "sessionKey" {
-			i.sessionKey = cookie.Value
-		}
-	}
-
-	if log.GetLevel() == log.DebugLevel {
-		dump, err := httputil.DumpRequestOut(req, true)
-		if err == nil {
-			log.Println(fmt.Sprintf("[Request] %s", i.loginURL.String()))
-			log.Println(">>>>>>>>>>>>>>>")
-			log.Printf("%s\n\n", dump)
-			log.Println(">>>>>>>>>>>>>>>")
-		}
-	}
-
-	if i.sessionKey == "" {
-		log.WithFields(log.Fields{
-			"step":  "Login()",
-			"IP":    i.ip,
-			"Model": i.BmcType(),
-		}).Warn("Expected sessionKey cookie value not found.")
-	}
-
-	if resp.StatusCode == 404 {
-		return errors.ErrPageNotFound
-	}
-
-	payload, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	if log.GetLevel() == log.DebugLevel {
-		dump, err := httputil.DumpResponse(resp, true)
-		if err == nil {
-			log.Println("[Response]")
-			log.Println("<<<<<<<<<<<<<<")
-			log.Printf("%s\n\n", dump)
-			log.Println("<<<<<<<<<<<<<<")
-		}
-	}
-
-	if strings.Contains(string(payload), "Invalid login attempt") {
-		return errors.ErrLoginFailed
-	}
-
-	serial, err := i.Serial()
-	if err != nil {
-		return err
-	}
-	i.serial = serial
-
 	return err
 }
 
-// get calls a given json endpoint of the ilo and returns the data
+// get calls a given json endpoint of the iLO and returns the data
 func (i *Ilo) get(endpoint string) (payload []byte, err error) {
-
 	log.WithFields(log.Fields{"step": "bmc connection", "vendor": hp.VendorID, "ip": i.ip, "endpoint": endpoint}).Debug("retrieving data from bmc")
 
 	bmcURL := fmt.Sprintf("https://%s", i.ip)
@@ -176,7 +107,7 @@ func (i *Ilo) get(endpoint string) (payload []byte, err error) {
 		return payload, err
 	}
 
-	for _, cookie := range i.client.Jar.Cookies(u) {
+	for _, cookie := range i.httpClient.Jar.Cookies(u) {
 		if cookie.Name == "sessionKey" {
 			req.AddCookie(cookie)
 		}
@@ -191,7 +122,7 @@ func (i *Ilo) get(endpoint string) (payload []byte, err error) {
 		}
 	}
 
-	resp, err := i.client.Do(req)
+	resp, err := i.httpClient.Do(req)
 	if err != nil {
 		return payload, err
 	}
@@ -231,7 +162,7 @@ func (i *Ilo) post(endpoint string, data []byte, debug bool) (statusCode int, bo
 		return 0, []byte{}, err
 	}
 
-	for _, cookie := range i.client.Jar.Cookies(u) {
+	for _, cookie := range i.httpClient.Jar.Cookies(u) {
 		if cookie.Name == "sessionKey" {
 			req.AddCookie(cookie)
 		}
@@ -245,7 +176,7 @@ func (i *Ilo) post(endpoint string, data []byte, debug bool) (statusCode int, bo
 		}
 	}
 
-	resp, err := i.client.Do(req)
+	resp, err := i.httpClient.Do(req)
 	if err != nil {
 		return 0, []byte{}, err
 	}
@@ -299,6 +230,11 @@ func (i *Ilo) BmcVersion() (bmcVersion string, err error) {
 
 // Name returns the name of this server from the iLO point of view
 func (i *Ilo) Name() (name string, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return name, err
+	}
+
 	url := "json/overview"
 	payload, err := i.get(url)
 	if err != nil {
@@ -317,6 +253,11 @@ func (i *Ilo) Name() (name string, err error) {
 
 // Status returns health string status from the bmc
 func (i *Ilo) Status() (health string, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return health, err
+	}
+
 	url := "json/overview"
 	payload, err := i.get(url)
 	if err != nil {
@@ -339,6 +280,11 @@ func (i *Ilo) Status() (health string, err error) {
 
 // Memory returns the total amount of memory of the server
 func (i *Ilo) Memory() (mem int, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return mem, err
+	}
+
 	url := "json/mem_info"
 	payload, err := i.get(url)
 	if err != nil {
@@ -365,6 +311,11 @@ func (i *Ilo) Memory() (mem int, err error) {
 
 // CPU returns the cpu, cores and hyperthreads of the server
 func (i *Ilo) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCount int, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return cpu, cpuCount, coreCount, hyperthreadCount, err
+	}
+
 	url := "json/proc_info"
 	payload, err := i.get(url)
 	if err != nil {
@@ -387,6 +338,11 @@ func (i *Ilo) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCount i
 
 // BiosVersion returns the current version of the bios
 func (i *Ilo) BiosVersion() (version string, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return version, err
+	}
+
 	url := "json/overview"
 	payload, err := i.get(url)
 	if err != nil {
@@ -409,6 +365,11 @@ func (i *Ilo) BiosVersion() (version string, err error) {
 
 // PowerKw returns the current power usage in Kw
 func (i *Ilo) PowerKw() (power float64, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return power, err
+	}
+
 	url := "json/power_summary"
 	payload, err := i.get(url)
 	if err != nil {
@@ -427,6 +388,11 @@ func (i *Ilo) PowerKw() (power float64, err error) {
 
 // PowerState returns the current power state of the machine
 func (i *Ilo) PowerState() (state string, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return state, err
+	}
+
 	url := "json/power_summary"
 	payload, err := i.get(url)
 	if err != nil {
@@ -445,6 +411,11 @@ func (i *Ilo) PowerState() (state string, err error) {
 
 // TempC returns the current temperature of the machine
 func (i *Ilo) TempC() (temp int, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return temp, err
+	}
+
 	url := "json/health_temperature"
 	payload, err := i.get(url)
 	if err != nil {
@@ -494,6 +465,11 @@ func (i *Ilo) Nics() (nics []*devices.Nic, err error) {
 
 // License returns the iLO's license information
 func (i *Ilo) License() (name string, licType string, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return name, licType, err
+	}
+
 	url := "json/license"
 	payload, err := i.get(url)
 	if err != nil {
@@ -512,6 +488,11 @@ func (i *Ilo) License() (name string, licType string, err error) {
 
 // Psus returns a list of psus installed on the device
 func (i *Ilo) Psus() (psus []*devices.Psu, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return psus, err
+	}
+
 	url := "json/power_supplies"
 	payload, err := i.get(url)
 	if err != nil {
@@ -551,6 +532,11 @@ func (i *Ilo) Psus() (psus []*devices.Psu, err error) {
 
 // Disks returns a list of disks installed on the device
 func (i *Ilo) Disks() (disks []*devices.Disk, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return disks, err
+	}
+
 	url := "json/health_phy_drives"
 	payload, err := i.get(url)
 	if err != nil {
@@ -602,28 +588,6 @@ func (i *Ilo) Disks() (disks []*devices.Disk, err error) {
 	return disks, err
 }
 
-// Logout logs out and close the iLo connection
-func (i *Ilo) Logout() (err error) {
-	log.WithFields(log.Fields{"step": "bmc connection", "vendor": hp.VendorID, "ip": i.ip}).Debug("logout from bmc")
-
-	data := []byte(`{"method":"logout"}`)
-
-	req, err := http.NewRequest("POST", i.loginURL.String(), bytes.NewBuffer(data))
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := i.client.Do(req)
-	if err != nil {
-		return err
-	}
-	io.Copy(ioutil.Discard, resp.Body)
-	defer resp.Body.Close()
-
-	return err
-}
-
 // IsBlade returns if the current hardware is a blade or not
 func (i *Ilo) IsBlade() (isBlade bool, err error) {
 	if i.rimpBlade.BladeSystem != nil {
@@ -642,44 +606,132 @@ func (i *Ilo) Vendor() (vendor string) {
 
 // ServerSnapshot do best effort to populate the server data and returns a blade or discrete
 func (i *Ilo) ServerSnapshot() (server interface{}, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return server, err
+	}
+
 	if isBlade, _ := i.IsBlade(); isBlade {
 		blade := &devices.Blade{}
-		blade.Serial, _ = i.Serial()
+		blade.Vendor = i.Vendor()
 		blade.BmcAddress = i.ip
 		blade.BmcType = i.BmcType()
-		blade.BmcVersion, _ = i.BmcVersion()
-		blade.Model, _ = i.Model()
-		blade.Nics, _ = i.Nics()
-		blade.BiosVersion, _ = i.BiosVersion()
-		blade.Vendor = i.Vendor()
-		blade.Disks, _ = i.Disks()
-		blade.Processor, blade.ProcessorCount, blade.ProcessorCoreCount, blade.ProcessorThreadCount, _ = i.CPU()
-		blade.Memory, _ = i.Memory()
-		blade.Status, _ = i.Status()
-		blade.Name, _ = i.Name()
-		blade.TempC, _ = i.TempC()
-		blade.PowerKw, _ = i.PowerKw()
-		blade.BmcLicenceType, blade.BmcLicenceStatus, _ = i.License()
+
+		blade.Serial, _ = i.Serial()
+		if err != nil {
+			return nil, err
+		}
+		blade.BmcVersion, err = i.BmcVersion()
+		if err != nil {
+			return nil, err
+		}
+		blade.Model, err = i.Model()
+		if err != nil {
+			return nil, err
+		}
+		blade.Nics, err = i.Nics()
+		if err != nil {
+			return nil, err
+		}
+		blade.Disks, err = i.Disks()
+		if err != nil {
+			return nil, err
+		}
+		blade.BiosVersion, err = i.BiosVersion()
+		if err != nil {
+			return nil, err
+		}
+		blade.Processor, blade.ProcessorCount, blade.ProcessorCoreCount, blade.ProcessorThreadCount, err = i.CPU()
+		if err != nil {
+			return nil, err
+		}
+		blade.Memory, err = i.Memory()
+		if err != nil {
+			return nil, err
+		}
+		blade.Status, err = i.Status()
+		if err != nil {
+			return nil, err
+		}
+		blade.Name, err = i.Name()
+		if err != nil {
+			return nil, err
+		}
+		blade.TempC, err = i.TempC()
+		if err != nil {
+			return nil, err
+		}
+		blade.PowerKw, err = i.PowerKw()
+		if err != nil {
+			return nil, err
+		}
+		blade.BmcLicenceType, blade.BmcLicenceStatus, err = i.License()
+		if err != nil {
+			return nil, err
+		}
 		server = blade
 	} else {
 		discrete := &devices.Discrete{}
-		discrete.Serial, _ = i.Serial()
+		discrete.Vendor = i.Vendor()
 		discrete.BmcAddress = i.ip
 		discrete.BmcType = i.BmcType()
-		discrete.BmcVersion, _ = i.BmcVersion()
-		discrete.Model, _ = i.Model()
-		discrete.Nics, _ = i.Nics()
-		discrete.BiosVersion, _ = i.BiosVersion()
-		discrete.Vendor = i.Vendor()
-		discrete.Disks, _ = i.Disks()
-		discrete.Processor, discrete.ProcessorCount, discrete.ProcessorCoreCount, discrete.ProcessorThreadCount, _ = i.CPU()
-		discrete.Memory, _ = i.Memory()
-		discrete.Status, _ = i.Status()
-		discrete.Name, _ = i.Name()
-		discrete.TempC, _ = i.TempC()
-		discrete.PowerKw, _ = i.PowerKw()
-		discrete.BmcLicenceType, discrete.BmcLicenceStatus, _ = i.License()
-		discrete.Psus, _ = i.Psus()
+
+		discrete.Serial, err = i.Serial()
+		if err != nil {
+			return nil, err
+		}
+		discrete.BmcVersion, err = i.BmcVersion()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Model, err = i.Model()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Nics, err = i.Nics()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Disks, err = i.Disks()
+		if err != nil {
+			return nil, err
+		}
+		discrete.BiosVersion, err = i.BiosVersion()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Processor, discrete.ProcessorCount, discrete.ProcessorCoreCount, discrete.ProcessorThreadCount, err = i.CPU()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Memory, err = i.Memory()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Status, err = i.Status()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Name, err = i.Name()
+		if err != nil {
+			return nil, err
+		}
+		discrete.TempC, err = i.TempC()
+		if err != nil {
+			return nil, err
+		}
+		discrete.PowerKw, err = i.PowerKw()
+		if err != nil {
+			return nil, err
+		}
+		discrete.BmcLicenceType, discrete.BmcLicenceStatus, err = i.License()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Psus, err = i.Psus()
+		if err != nil {
+			return nil, err
+		}
 		server = discrete
 	}
 

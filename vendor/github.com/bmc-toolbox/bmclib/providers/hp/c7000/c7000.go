@@ -12,7 +12,6 @@ import (
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/providers/hp"
-	multierror "github.com/hashicorp/go-multierror"
 
 	// this make possible to setup logging and properties at any stage
 	_ "github.com/bmc-toolbox/bmclib/logging"
@@ -64,18 +63,15 @@ func New(ip string, username string, password string) (chassis *C7000, err error
 		return chassis, errors.ErrUnableToReadData
 	}
 
-	return &C7000{ip: ip, username: username, password: password, Rimp: Rimp, httpClient: client}, err
+	return &C7000{ip: ip, username: username, password: password, Rimp: Rimp}, err
 }
 
-// Close closes the connection properly
-func (c *C7000) Close() (err error) {
-	if c.sshClient != nil {
-		e := c.sshClient.Close()
-		if e != nil {
-			err = multierror.Append(e, err)
-		}
+// CheckCredentials verify whether the credentials are valid or not
+func (c *C7000) CheckCredentials() (err error) {
+	err = c.httpLogin()
+	if err != nil {
+		return err
 	}
-
 	return err
 }
 
@@ -243,18 +239,55 @@ func (c *C7000) ChassisSnapshot() (chassis *devices.Chassis, err error) {
 	chassis = &devices.Chassis{}
 	chassis.Vendor = c.Vendor()
 	chassis.BmcAddress = c.ip
-	chassis.Name, _ = c.Name()
-	chassis.Serial, _ = c.Serial()
-	chassis.Model, _ = c.Model()
-	chassis.PowerKw, _ = c.PowerKw()
-	chassis.TempC, _ = c.TempC()
-	chassis.Status, _ = c.Status()
-	chassis.FwVersion, _ = c.FwVersion()
-	chassis.PassThru, _ = c.PassThru()
-	chassis.Blades, _ = c.Blades()
-	chassis.StorageBlades, _ = c.StorageBlades()
-	chassis.Nics, _ = c.Nics()
-	chassis.Psus, _ = c.Psus()
+	chassis.Name, err = c.Name()
+	if err != nil {
+		return nil, err
+	}
+	chassis.Serial, err = c.Serial()
+	if err != nil {
+		return nil, err
+	}
+	chassis.Model, err = c.Model()
+	if err != nil {
+		return nil, err
+	}
+	chassis.PowerKw, err = c.PowerKw()
+	if err != nil {
+		return nil, err
+	}
+	chassis.TempC, err = c.TempC()
+	if err != nil {
+		return nil, err
+	}
+	chassis.Status, err = c.Status()
+	if err != nil {
+		return nil, err
+	}
+	chassis.FwVersion, err = c.FwVersion()
+	if err != nil {
+		return nil, err
+	}
+	chassis.PassThru, err = c.PassThru()
+	if err != nil {
+		return nil, err
+	}
+	chassis.Blades, err = c.Blades()
+	if err != nil {
+		return nil, err
+	}
+	chassis.StorageBlades, err = c.StorageBlades()
+	if err != nil {
+		return nil, err
+	}
+	chassis.Nics, err = c.Nics()
+	if err != nil {
+		return nil, err
+	}
+	chassis.Psus, err = c.Psus()
+	if err != nil {
+		return nil, err
+	}
+
 	return chassis, err
 }
 

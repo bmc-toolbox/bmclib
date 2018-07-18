@@ -11,11 +11,11 @@ type Bmc interface {
 	BmcType() string
 	BmcVersion() (string, error)
 	CPU() (string, int, int, int, error)
+	CheckCredentials() error
 	Disks() ([]*Disk, error)
 	IsBlade() (bool, error)
 	License() (string, string, error)
-	Login() error
-	Logout() error
+	Close() error
 	Memory() (int, error)
 	Model() (string, error)
 	Name() (string, error)
@@ -36,9 +36,11 @@ type BmcChassis interface {
 	Blades() ([]*Blade, error)
 	BmcType() string
 	ChassisSnapshot() (*Chassis, error)
+	CheckCredentials() error
 	Close() error
 	FindBladePosition(string) (int, error)
 	FwVersion() (string, error)
+	GetFirmwareVersion() (string, error)
 	IsActive() bool
 	IsOn() (bool, error)
 	IsOnBlade(int) (bool, error)
@@ -58,6 +60,8 @@ type BmcChassis interface {
 	PxeOnceBlade(int) (bool, error)
 	ReseatBlade(int) (bool, error)
 	Serial() (string, error)
+	SetDynamicPower(bool) (bool, error)
+	SetIpmiOverLan(int, bool) (bool, error)
 	SetFlexAddressState(int, bool) (bool, error)
 	Status() (string, error)
 	StorageBlades() ([]*StorageBlade, error)

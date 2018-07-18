@@ -12,6 +12,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/internal/sshclient"
+	multierror "github.com/hashicorp/go-multierror"
 
 	"github.com/bmc-toolbox/bmclib/providers/dell"
 	log "github.com/sirupsen/logrus"
@@ -88,12 +89,12 @@ func (m *M1000e) httpLogin() (err error) {
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-	m.httpClient, err = httpclient.Build()
+	httpClient, err := httpclient.Build()
 	if err != nil {
 		return err
 	}
 
-	resp, err := m.httpClient.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -111,6 +112,8 @@ func (m *M1000e) httpLogin() (err error) {
 	if resp.StatusCode == 404 {
 		return errors.ErrPageNotFound
 	}
+
+	m.httpClient = httpClient
 
 	err = m.loadHwData()
 	if err != nil {
@@ -133,7 +136,7 @@ func (m *M1000e) httpLogin() (err error) {
 	return err
 }
 
-// Login initiates the connection to a chassis device
+// sshLogin initiates the connection to a chassis device
 func (m *M1000e) sshLogin() (err error) {
 	if m.sshClient != nil {
 		return
@@ -143,6 +146,25 @@ func (m *M1000e) sshLogin() (err error) {
 	m.sshClient, err = sshclient.New(m.ip, m.username, m.password)
 	if err != nil {
 		return err
+	}
+
+	return err
+}
+
+// Close closes the connection properly
+func (m *M1000e) Close() (err error) {
+	if m.httpClient != nil {
+		_, e := m.httpClient.Get(fmt.Sprintf("https://%s/cgi-bin/webcgi/logout", m.ip))
+		if e != nil {
+			err = multierror.Append(e, err)
+		}
+	}
+
+	if m.sshClient != nil {
+		e := m.sshClient.Close()
+		if e != nil {
+			err = multierror.Append(e, err)
+		}
 	}
 
 	return err
