@@ -58,10 +58,7 @@ a csv inventory example is provided to play with.
 The 'inventory' parameter points Bmcbutler to the inventory source.
 
 ##### Run
-<<<<<<< HEAD
 
-Configure blade/chassis/discrete, this expects the csv file to be in place.
-=======
 Configure Blades/Chassis/Discretes
 
 ```
