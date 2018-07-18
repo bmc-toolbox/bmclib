@@ -15,12 +15,10 @@
 package butler
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/bmc-toolbox/bmcbutler/asset"
 	"github.com/bmc-toolbox/bmclib/cfgresources"
-	"github.com/bmc-toolbox/bmclib/discover"
 	bmclibLogger "github.com/bmc-toolbox/bmclib/logging"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -79,6 +77,7 @@ func myLocation(location string) bool {
 // iterate over assets and apply config
 func (b *Butler) butler(id int) {
 
+	var err error
 	log := b.Log
 	component := "butler-worker"
 	defer b.SyncWG.Done()
@@ -114,8 +113,12 @@ func (b *Butler) butler(id int) {
 		if msg.Asset.Location != "" {
 			if !myLocation(msg.Asset.Location) && !b.IgnoreLocation {
 				log.WithFields(logrus.Fields{
-					"Asset": msg.Asset,
-				}).Info("Ignored asset since location did not match.")
+					"component":     component,
+					"butler-id":     id,
+					"Serial":        msg.Asset.Serial,
+					"AssetType":     msg.Asset.Type,
+					"AssetLocation": msg.Asset.Location,
+				}).Info("Butler wont manage asset based on its current location.")
 				continue
 			}
 		}
@@ -145,47 +148,16 @@ func (b *Butler) butler(id int) {
 			continue
 		}
 
-		b.applyConfig(id, msg.Config, &msg.Asset)
-
-	}
-}
-
-// connects to the asset and returns the bmc connection
-func (b *Butler) connectAsset(asset *asset.Asset, useDefaultLogin bool) (bmcConnection interface{}, err error) {
-
-	var bmcUser, bmcPassword string
-	log := b.Log
-	component := "butler-connect-asset"
-
-	if useDefaultLogin {
-		if asset.Model == "" {
+		err = b.applyConfig(id, msg.Config, &msg.Asset)
+		if err != nil {
 			log.WithFields(logrus.Fields{
-				"component":     component,
-				"default-login": useDefaultLogin,
-				"Asset":         fmt.Sprintf("%+v", asset),
-				"Error":         err,
-			}).Warn("Unable to use default credentials to connect since asset.Model is unknown.")
-			return
+				"component": component,
+				"butler-id": id,
+				"Serial":    msg.Asset.Serial,
+				"AssetType": msg.Asset.Type,
+				"Error":     err,
+			}).Warn("Unable to configure asset.")
 		}
 
-		bmcUser = viper.GetString(fmt.Sprintf("bmcDefaults.%s.user", asset.Model))
-		bmcPassword = viper.GetString(fmt.Sprintf("bmcDefaults.%s.password", asset.Model))
-	} else {
-		bmcUser = viper.GetString("bmcUser")
-		bmcPassword = viper.GetString("bmcPassword")
 	}
-
-	bmcConnection, err = discover.ScanAndConnect(asset.IpAddress, bmcUser, bmcPassword)
-	if err != nil {
-		log.WithFields(logrus.Fields{
-			"component":     component,
-			"default-login": useDefaultLogin,
-			"Asset":         fmt.Sprintf("%+v", asset),
-			"Error":         err,
-		}).Warn("Unable to connect to bmc.")
-		return bmcConnection, err
-	}
-
-	return bmcConnection, err
-
 }
