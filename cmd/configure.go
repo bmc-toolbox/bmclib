@@ -76,7 +76,11 @@ func configure() {
 		}
 	case "iplist":
 		inventoryInstance := inventory.IpList{Log: log, BatchSize: 1, Channel: inventoryChan}
-		go inventoryInstance.AssetIter(ipList)
+
+		// invoke goroutine that passes assets by IP to spawned butlers,
+		// here we declare setup = false since this is a configure action.
+		go inventoryInstance.AssetIter(ipList, false)
+
 	default:
 		fmt.Println("Unknown/no inventory source declared in cfg: ", inventorySource)
 		os.Exit(1)

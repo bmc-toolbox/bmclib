@@ -48,11 +48,17 @@ func setup() {
 	// A channel to recieve inventory assets
 	inventoryChan := make(chan []asset.Asset)
 
-	inventorySource := viper.GetString("inventory.setup.source")
 	butlersToSpawn := viper.GetInt("butlersToSpawn")
 
 	if butlersToSpawn == 0 {
 		butlersToSpawn = 5
+	}
+
+	inventorySource := viper.GetString("inventory.setup.source")
+
+	//if --iplist was passed, set inventorySource
+	if ipList != "" {
+		inventorySource = "iplist"
 	}
 
 	switch inventorySource {
@@ -65,6 +71,12 @@ func setup() {
 		} else {
 			go inventoryInstance.AssetIterBySerial(serial, assetType)
 		}
+	case "iplist":
+		inventoryInstance := inventory.IpList{Log: log, BatchSize: 1, Channel: inventoryChan}
+
+		// invoke goroutine that passes assets by IP to the butler,
+		// here we declare setup = true since this is a setup action.
+		go inventoryInstance.AssetIter(ipList, true)
 	default:
 		fmt.Println("Unknown inventory source declared in cfg: ", inventorySource)
 		os.Exit(1)
@@ -77,9 +89,12 @@ func setup() {
 	// Spawn butlers to work
 	butlerChan := make(chan butler.ButlerMsg, 10)
 	butlerInstance := butler.Butler{Log: log, SpawnCount: butlersToSpawn, Channel: butlerChan}
-	if serial != "" || ignoreLocation {
+
+	// let butler run from any location on any given BMC
+	if serial != "" || ipList != "" || ignoreLocation {
 		butlerInstance.IgnoreLocation = true
 	}
+
 	go butlerInstance.Spawn()
 
 	//over inventory channel and pass asset lists recieved to bmcbutlers
