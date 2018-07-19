@@ -321,6 +321,7 @@ func (s *SupermicroX10) Nics() (nics []*devices.Nic, err error) {
 		return nics, err
 	}
 
+	// TODO: (ncode) This needs to become dinamic somehow
 	if ipmi.PlatformInfo != nil {
 		if ipmi.PlatformInfo.MbMacAddr1 != "" {
 			bmcNic := &devices.Nic{
@@ -386,40 +387,121 @@ func (s *SupermicroX10) Vendor() (vendor string) {
 func (s *SupermicroX10) ServerSnapshot() (server interface{}, err error) {
 	if isBlade, _ := s.IsBlade(); isBlade {
 		blade := &devices.Blade{}
-		blade.Serial, _ = s.Serial()
+		blade.Vendor = s.Vendor()
 		blade.BmcAddress = s.ip
 		blade.BmcType = s.BmcType()
-		blade.BmcVersion, _ = s.BmcVersion()
-		blade.Model, _ = s.Model()
-		blade.Vendor = s.Vendor()
-		blade.Nics, _ = s.Nics()
-		blade.BiosVersion, _ = s.BiosVersion()
-		blade.Processor, blade.ProcessorCount, blade.ProcessorCoreCount, blade.ProcessorThreadCount, _ = s.CPU()
-		blade.Memory, _ = s.Memory()
-		blade.Status, _ = s.Status()
-		blade.Name, _ = s.Name()
-		blade.TempC, _ = s.TempC()
-		blade.PowerKw, _ = s.PowerKw()
-		blade.BmcLicenceType, blade.BmcLicenceStatus, _ = s.License()
+
+		blade.Serial, _ = s.Serial()
+		if err != nil {
+			return nil, err
+		}
+		blade.BmcVersion, err = s.BmcVersion()
+		if err != nil {
+			return nil, err
+		}
+		blade.Model, err = s.Model()
+		if err != nil {
+			return nil, err
+		}
+		blade.Nics, err = s.Nics()
+		if err != nil {
+			return nil, err
+		}
+		blade.Disks, err = s.Disks()
+		if err != nil {
+			return nil, err
+		}
+		blade.BiosVersion, err = s.BiosVersion()
+		if err != nil {
+			return nil, err
+		}
+		blade.Processor, blade.ProcessorCount, blade.ProcessorCoreCount, blade.ProcessorThreadCount, err = s.CPU()
+		if err != nil {
+			return nil, err
+		}
+		blade.Memory, err = s.Memory()
+		if err != nil {
+			return nil, err
+		}
+		blade.Status, err = s.Status()
+		if err != nil {
+			return nil, err
+		}
+		blade.Name, err = s.Name()
+		if err != nil {
+			return nil, err
+		}
+		blade.TempC, err = s.TempC()
+		if err != nil {
+			return nil, err
+		}
+		blade.PowerKw, err = s.PowerKw()
+		if err != nil {
+			return nil, err
+		}
+		blade.BmcLicenceType, blade.BmcLicenceStatus, err = s.License()
+		if err != nil {
+			return nil, err
+		}
 		server = blade
 	} else {
 		discrete := &devices.Discrete{}
-		discrete.Serial, _ = s.Serial()
+		discrete.Vendor = s.Vendor()
 		discrete.BmcAddress = s.ip
 		discrete.BmcType = s.BmcType()
-		discrete.BmcVersion, _ = s.BmcVersion()
-		discrete.Model, _ = s.Model()
-		discrete.Vendor = s.Vendor()
-		discrete.Nics, _ = s.Nics()
-		discrete.BiosVersion, _ = s.BiosVersion()
-		discrete.Processor, discrete.ProcessorCount, discrete.ProcessorCoreCount, discrete.ProcessorThreadCount, _ = s.CPU()
-		discrete.Memory, _ = s.Memory()
-		discrete.Status, _ = s.Status()
-		discrete.Name, _ = s.Name()
-		discrete.TempC, _ = s.TempC()
-		discrete.PowerKw, _ = s.PowerKw()
-		discrete.BmcLicenceType, discrete.BmcLicenceStatus, _ = s.License()
-		// discrete.Psus, _ = s.Psus()
+
+		discrete.Serial, err = s.Serial()
+		if err != nil {
+			return nil, err
+		}
+		discrete.BmcVersion, err = s.BmcVersion()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Model, err = s.Model()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Nics, err = s.Nics()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Disks, err = s.Disks()
+		if err != nil {
+			return nil, err
+		}
+		discrete.BiosVersion, err = s.BiosVersion()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Processor, discrete.ProcessorCount, discrete.ProcessorCoreCount, discrete.ProcessorThreadCount, err = s.CPU()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Memory, err = s.Memory()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Status, err = s.Status()
+		if err != nil {
+			return nil, err
+		}
+		discrete.Name, err = s.Name()
+		if err != nil {
+			return nil, err
+		}
+		discrete.TempC, err = s.TempC()
+		if err != nil {
+			return nil, err
+		}
+		discrete.PowerKw, err = s.PowerKw()
+		if err != nil {
+			return nil, err
+		}
+		discrete.BmcLicenceType, discrete.BmcLicenceStatus, err = s.License()
+		if err != nil {
+			return nil, err
+		}
 		server = discrete
 	}
 
