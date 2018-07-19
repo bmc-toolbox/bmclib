@@ -554,6 +554,10 @@ func (i *IDrac9) ServerSnapshot() (server interface{}, err error) {
 		if err != nil {
 			return nil, err
 		}
+		blade.PowerState, err = i.PowerState()
+		if err != nil {
+			return nil, err
+		}
 		blade.BmcLicenceType, blade.BmcLicenceStatus, err = i.License()
 		if err != nil {
 			return nil, err
@@ -610,6 +614,10 @@ func (i *IDrac9) ServerSnapshot() (server interface{}, err error) {
 			return nil, err
 		}
 		discrete.PowerKw, err = i.PowerKw()
+		if err != nil {
+			return nil, err
+		}
+		discrete.PowerState, err = i.PowerState()
 		if err != nil {
 			return nil, err
 		}

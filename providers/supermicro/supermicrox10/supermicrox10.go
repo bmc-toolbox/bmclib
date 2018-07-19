@@ -439,6 +439,10 @@ func (s *SupermicroX10) ServerSnapshot() (server interface{}, err error) {
 		if err != nil {
 			return nil, err
 		}
+		blade.PowerState, err = s.PowerState()
+		if err != nil {
+			return nil, err
+		}
 		blade.BmcLicenceType, blade.BmcLicenceStatus, err = s.License()
 		if err != nil {
 			return nil, err
@@ -495,6 +499,10 @@ func (s *SupermicroX10) ServerSnapshot() (server interface{}, err error) {
 			return nil, err
 		}
 		discrete.PowerKw, err = s.PowerKw()
+		if err != nil {
+			return nil, err
+		}
+		discrete.PowerState, err = s.PowerState()
 		if err != nil {
 			return nil, err
 		}
