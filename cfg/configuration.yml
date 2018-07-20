@@ -24,11 +24,11 @@ ldap:
 
 ldapGroup:
   - role: admin
-    group: bmcAdmins #the group in ldap
+    group: cn=<%= vendor %>,cn=bmcAdmins
     groupBaseDn: ou=Group,dc=example,dc=com #the baseDn to lookup group in.
     enable: true
   - role: user
-    group: cn=bmcUsers #the group in ldap
+    group: cn=<%= vendor%>,cn=bmcUsers #the group in ldap
     groupBaseDn: ou=Group,dc=example,dc=com #the baseDn to lookup group in.
     enable: false
 
