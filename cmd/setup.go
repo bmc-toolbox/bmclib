@@ -82,10 +82,6 @@ func setup() {
 		os.Exit(1)
 	}
 
-	// Read in declared resources for one time setup
-	resourceInstance := resource.Resource{Log: log}
-	config := resourceInstance.ReadResourcesSetup()
-
 	// Spawn butlers to work
 	butlerChan := make(chan butler.ButlerMsg, 10)
 	butlerInstance := butler.Butler{Log: log, SpawnCount: butlersToSpawn, Channel: butlerChan}
@@ -96,6 +92,18 @@ func setup() {
 	}
 
 	go butlerInstance.Spawn()
+
+	//Read in BMC configuration data
+	configDir := viper.GetString("bmcCfgDir")
+	configFile := fmt.Sprintf("%s/%s", configDir, "setup.yml")
+
+	//returns the file read as a slice of bytes
+	//config may contain templated values.
+	config, err := resource.ReadYamlTemplate(configFile)
+	if err != nil {
+		log.Fatal("Unable to read BMC setup configuration: ", configFile, " Error: ", err)
+		os.Exit(1)
+	}
 
 	//over inventory channel and pass asset lists recieved to bmcbutlers
 	for assetList := range inventoryChan {

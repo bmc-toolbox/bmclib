@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bmc-toolbox/bmcbutler/asset"
+	"github.com/bmc-toolbox/bmcbutler/resource"
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/discover"
@@ -16,13 +17,12 @@ import (
 )
 
 type SetupAction struct {
-	Asset       *asset.Asset
-	Id          int
-	Log         *logrus.Logger
-	SetupConfig *cfgresources.ResourcesSetup
+	Asset *asset.Asset
+	Id    int
+	Log   *logrus.Logger
 }
 
-func (b *Butler) setupAsset(id int, config *cfgresources.ResourcesSetup, asset *asset.Asset) (err error) {
+func (b *Butler) setupAsset(id int, config []byte, asset *asset.Asset) (err error) {
 	log := b.Log
 	component := "setupAsset"
 
@@ -34,7 +34,7 @@ func (b *Butler) setupAsset(id int, config *cfgresources.ResourcesSetup, asset *
 		return fmt.Errorf("unable to connect to bmc")
 	}
 
-	setup := SetupAction{Log: log, SetupConfig: config, Asset: asset, Id: id}
+	setup := SetupAction{Log: log, Asset: asset, Id: id}
 
 	switch deviceType := client.(type) {
 	case devices.Bmc:
@@ -61,9 +61,20 @@ func (b *Butler) setupAsset(id int, config *cfgresources.ResourcesSetup, asset *
 			}
 		}
 
+		//login successful
+		//At this point bmc lib can tell us the vendor.
+		asset.Vendor = chassis.Vendor()
+
+		//Setup a resource instance
+		//Get any templated values in the config rendered
+		resourceInstance := resource.Resource{Log: log, Vendor: asset.Vendor}
+
+		//rendered config is a *cfgresources.ResourcesSetup type
+		renderedConfig := resourceInstance.LoadSetupResources(config)
+
 		//if a chassis was setup successfully,
 		//call some post setup actions.
-		if setup.Chassis(chassis) == true {
+		if setup.Chassis(chassis, renderedConfig) == true {
 			setup.Post(asset)
 		}
 	default:
@@ -79,11 +90,10 @@ func (b *Butler) setupAsset(id int, config *cfgresources.ResourcesSetup, asset *
 	return
 }
 
-func (s *SetupAction) Chassis(chassis devices.BmcChassis) (configured bool) {
+func (s *SetupAction) Chassis(chassis devices.BmcChassis, config *cfgresources.ResourcesSetup) (configured bool) {
 
 	log := s.Log
 	component := "setupChassis"
-	config := s.SetupConfig
 	configured = true
 
 	log.WithFields(logrus.Fields{

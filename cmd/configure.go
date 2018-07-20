@@ -16,14 +16,15 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/bmc-toolbox/bmcbutler/asset"
-	"github.com/bmc-toolbox/bmcbutler/butler"
-	"github.com/bmc-toolbox/bmcbutler/inventory"
-	"github.com/bmc-toolbox/bmcbutler/resource"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"
 	"time"
+
+	"github.com/bmc-toolbox/bmcbutler/asset"
+	"github.com/bmc-toolbox/bmcbutler/butler"
+	"github.com/bmc-toolbox/bmcbutler/inventory"
+	"github.com/bmc-toolbox/bmcbutler/resource"
 )
 
 // configureCmd represents the configure command
@@ -86,10 +87,6 @@ func configure() {
 		os.Exit(1)
 	}
 
-	// Read in declared resources for configuration
-	resourceInstance := resource.Resource{Log: log}
-	config := resourceInstance.ReadResourcesConfig()
-
 	// Spawn butlers to work
 	butlerChan := make(chan butler.ButlerMsg, 5)
 	butlerInstance := butler.Butler{Log: log, SpawnCount: butlersToSpawn, Channel: butlerChan}
@@ -99,10 +96,25 @@ func configure() {
 	}
 
 	go butlerInstance.Spawn()
+
 	//give the butlers a second to spawn.
 	time.Sleep(1 * time.Second)
 
-	//over inventory channel and pass asset lists recieved to bmcbutlers
+	//Read in BMC configuration data
+	configDir := viper.GetString("bmcCfgDir")
+	configFile := fmt.Sprintf("%s/%s", configDir, "configuration.yml")
+
+	//returns the file read as a slice of bytes
+	//config may contain templated values.
+	config, err := resource.ReadYamlTemplate(configFile)
+	if err != nil {
+		log.Fatal("Unable to read BMC configuration: ", configFile, " Error: ", err)
+		os.Exit(1)
+	}
+
+	//iterate over the inventory channel for assets,
+	//create a butler message for each asset along with the configuration,
+	//at this point templated values in the config are not yet rendered.
 	for assetList := range inventoryChan {
 		for _, asset := range assetList {
 			butlerMsg := butler.ButlerMsg{Asset: asset, Config: config}

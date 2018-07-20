@@ -18,16 +18,15 @@ import (
 	"sync"
 
 	"github.com/bmc-toolbox/bmcbutler/asset"
-	"github.com/bmc-toolbox/bmclib/cfgresources"
 	bmclibLogger "github.com/bmc-toolbox/bmclib/logging"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
 type ButlerMsg struct {
-	Asset  asset.Asset
-	Config *cfgresources.ResourcesConfig
-	Setup  *cfgresources.ResourcesSetup
+	Asset  asset.Asset //Asset to be configured
+	Config []byte      //The BMC configuration read in from configuration.yml
+	Setup  []byte      //The One time setup configuration read from setup.yml
 }
 
 type Butler struct {
@@ -129,7 +128,7 @@ func (b *Butler) butler(id int) {
 			"IP":        msg.Asset.IpAddress,
 			"Serial":    msg.Asset.Serial,
 			"AssetType": msg.Asset.Type,
-			"Vendor":    msg.Asset.Vendor,
+			"Vendor":    msg.Asset.Vendor, //at this point the vendor may or may not be known.
 			"Location":  msg.Asset.Location,
 		}).Info("Configuring asset..")
 
