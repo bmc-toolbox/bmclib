@@ -15,105 +15,103 @@
 package resource
 
 import (
-	"fmt"
-	"github.com/bmc-toolbox/bmclib/cfgresources"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
+	"strings"
+
+	"github.com/bmc-toolbox/bmclib/cfgresources"
+	"github.com/gobuffalo/plush"
+	"github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
 )
 
 type Resource struct {
-	Log *logrus.Logger
+	Log    *logrus.Logger
+	Vendor string
 }
 
-func (r *Resource) ReadResourcesConfig() (config *cfgresources.ResourcesConfig) {
-	// returns a slice of configuration resources,
-	// configuration resources may be applied periodically
+// Reads the given config .yml file, returns it as a slice of bytes.
+func ReadYamlTemplate(yamlFile string) (yamlTemplate []byte, err error) {
 
-	component := "resource"
+	//check file exists
+	_, err = os.Stat(yamlFile)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	//read in file
+	yamlTemplate, err = ioutil.ReadFile(yamlFile)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	return yamlTemplate, nil
+}
+
+// Renders templated values in the given config .yml, returns it as a slice of bytes.
+func (r *Resource) RenderYamlTemplate(yamlTemplate []byte) (yamlData []byte) {
+
+	log := r.Log
+	component := "RenderYamlTemplate"
+
+	//render any templated data
+	ctx := plush.NewContext()
+
+	//assign variables that may be used in the template.
+	ctx.Set("vendor", strings.ToLower(r.Vendor))
+
+	//render, plush is awesome!
+	s, err := plush.Render(string(yamlTemplate), ctx)
+	if err != nil {
+		log.WithFields(logrus.Fields{
+			"component":    component,
+			"yamlTemplate": yamlTemplate,
+			"error":        err,
+		}).Fatal("Error rendering yaml template.")
+	}
+
+	return []byte(s)
+}
+
+// Config resources are configuration parameters applied periodically,
+// Given a yaml template this method gets the template rendered and returns Unmarshalled yaml.
+func (r *Resource) LoadConfigResources(yamlTemplate []byte) (config *cfgresources.ResourcesConfig) {
+
+	component := "LoadConfigResources"
 	log := r.Log
 
-	cfgDir := viper.GetString("bmcCfgDir")
-	cfgFile := fmt.Sprintf("%s/%s", cfgDir, "configuration.yml")
+	yamlData := r.RenderYamlTemplate(yamlTemplate)
 
-	_, err := os.Stat(cfgFile)
+	err := yaml.Unmarshal(yamlData, &config)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"cfgFile":   cfgFile,
 			"error":     err,
-		}).Fatal("Declared cfg file not found.")
+		}).Fatal("Unable to Unmarshal config resources template.")
 	}
 
-	yamlData, err := ioutil.ReadFile(cfgFile)
-	if err != nil {
-		log.WithFields(logrus.Fields{
-			"component": component,
-			"cfgFile":   cfgFile,
-			"error":     err,
-		}).Fatal("Unable to read bmc cfg yaml.")
-	}
-
-	//1. read in data from common.yaml
-	err = yaml.Unmarshal([]byte(yamlData), &config)
-	if err != nil {
-		log.WithFields(logrus.Fields{
-			"component": component,
-			"cfgFile":   cfgFile,
-			"error":     err,
-		}).Fatal("Unable to Unmarshal common.yml.")
-	}
-
-	//read in data from vendor directories,
-	//update config
-
-	//read in data from dc directories
-
-	//read in data from environment directories,
 	return config
 }
 
-func (r *Resource) ReadResourcesSetup() (config *cfgresources.ResourcesSetup) {
-	// returns a slice of setup resources to be applied,
-	// 'setup' is config that is applied just once,
-	// it may involve resetting/power cycling various dependencies,
-	//  - e.g blades in a chassis that need to be power cycled
-	//    if the flex addresses have been enabled/disabled.
+// Setup resources are one time setup parameters,
+// it may involve resetting/power cycling various dependencies,
+//  - e.g blades in a chassis that need to be power cycled
+//    if the flex addresses have been enabled/disabled.
+// Given a yaml template this method gets the template rendered and returns Unmarshalled yaml.
+func (r *Resource) LoadSetupResources(yamlTemplate []byte) (config *cfgresources.ResourcesSetup) {
 
-	component := "resource"
+	component := "LoadSetupResources"
 	log := r.Log
 
-	cfgDir := viper.GetString("bmcCfgDir")
-	cfgFile := fmt.Sprintf("%s/%s", cfgDir, "setup.yml")
+	yamlData := r.RenderYamlTemplate(yamlTemplate)
 
-	_, err := os.Stat(cfgFile)
+	err := yaml.Unmarshal(yamlData, &config)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"cfgFile":   cfgFile,
 			"error":     err,
-		}).Fatal("Declared cfg file not found.")
+		}).Fatal("Unable to Unmarshal setup resources template.")
 	}
 
-	yamlData, err := ioutil.ReadFile(cfgFile)
-	if err != nil {
-		log.WithFields(logrus.Fields{
-			"component": component,
-			"cfgFile":   cfgFile,
-			"error":     err,
-		}).Fatal("Unable to read bmc cfg yaml.")
-	}
-
-	//1. read in data from common.yaml
-	err = yaml.Unmarshal([]byte(yamlData), &config)
-	if err != nil {
-		log.WithFields(logrus.Fields{
-			"component": component,
-			"cfgFile":   cfgFile,
-			"error":     err,
-		}).Fatal("Unable to Unmarshal common.yml.")
-	}
 	return config
 }
