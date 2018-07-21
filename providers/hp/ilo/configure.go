@@ -270,7 +270,7 @@ func (i *Ilo) applyUserParams(users []*cfgresources.User) (err error) {
 			}
 
 			endpoint := "json/user_info"
-			statusCode, response, err := i.post(endpoint, payload, false)
+			statusCode, response, err := i.post(endpoint, payload)
 			if err != nil || statusCode != 200 {
 				log.WithFields(log.Fields{
 					"IP":         i.ip,
@@ -350,7 +350,7 @@ func (i *Ilo) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
 	}
 
 	endpoint := "json/remote_syslog"
-	statusCode, response, err := i.post(endpoint, payload, false)
+	statusCode, response, err := i.post(endpoint, payload)
 	if err != nil || statusCode != 200 {
 		msg := "POST request to set User config returned error."
 		log.WithFields(log.Fields{
@@ -459,7 +459,7 @@ func (i *Ilo) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 	}
 
 	endpoint := "json/network_sntp"
-	statusCode, response, err := i.post(endpoint, payload, false)
+	statusCode, response, err := i.post(endpoint, payload)
 	if err != nil || statusCode != 200 {
 		msg := "POST request to set NTP config returned error."
 		log.WithFields(log.Fields{
@@ -581,7 +581,7 @@ func (i *Ilo) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) {
 			}
 
 			endpoint := "json/directory_groups"
-			statusCode, response, err := i.post(endpoint, payload, false)
+			statusCode, response, err := i.post(endpoint, payload)
 			if err != nil || statusCode != 200 {
 				log.WithFields(log.Fields{
 					"IP":         i.ip,
@@ -673,7 +673,7 @@ func (i *Ilo) applyLdapParams(cfg *cfgresources.Ldap) (err error) {
 	}
 
 	endpoint := "json/directory"
-	statusCode, response, err := i.post(endpoint, payload, false)
+	statusCode, response, err := i.post(endpoint, payload)
 	if err != nil || statusCode != 200 {
 		msg := "POST request to set Ldap config returned error."
 		log.WithFields(log.Fields{
