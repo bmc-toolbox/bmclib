@@ -592,7 +592,16 @@ func (i *IDrac8) applyLdapRoleGroupPrivParam(cfg *cfgresources.Ldap, groupPrivil
 	payload += fmt.Sprintf("xGLBaseDN:%s,", baseDn)
 	payload += fmt.Sprintf("xGLUserLogin:%s,", cfg.UserAttribute)
 	payload += fmt.Sprintf("xGLGroupMem:%s,", cfg.GroupAttribute)
-	payload += "xGLBindDN:,xGLCertValidationEnabled:1," //we may want to be able to set this from config
+
+	//if bindDn was declared, we set it.
+	if cfg.BindDn != "" {
+		bindDn := escapeLdapString(cfg.BindDn)
+		payload += fmt.Sprintf("xGLBindDN:%s,", bindDn)
+	} else {
+		payload += "xGLBindDN:,"
+	}
+
+	payload += "xGLCertValidationEnabled:1," //we may want to be able to set this from config
 	payload += groupPrivilegeParam
 	payload += "xGLServerPort:636"
 

@@ -178,7 +178,7 @@ func (c *C7000) applysetLdapInfo4(cfg *cfgresources.Ldap) (err error) {
 	if cfg.BaseDn == "" {
 		log.WithFields(log.Fields{
 			"step": "applysetLdapInfo4",
-		}).Warn("Ldap resource parameter GroupBaseDn required but not declared.")
+		}).Warn("Ldap resource parameter BaseDn required but not declared.")
 		return err
 	}
 
