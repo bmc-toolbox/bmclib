@@ -527,7 +527,7 @@ func (i *IDrac8) applyLdapGroupParams(cfgGroup []*cfgresources.LdapGroup, cfgLda
 			return errors.New(msg)
 		}
 
-		groupDn := fmt.Sprintf("cn=%s,%s", group.Group, group.GroupBaseDn)
+		groupDn := fmt.Sprintf("%s,%s", group.Group, group.GroupBaseDn)
 		groupDn = escapeLdapString(groupDn)
 
 		endpoint := fmt.Sprintf("data?set=xGLGroup%dName:%s", groupId, groupDn)
@@ -601,9 +601,9 @@ func (i *IDrac8) applyLdapRoleGroupPrivParam(cfg *cfgresources.Ldap, groupPrivil
 		payload += "xGLBindDN:,"
 	}
 
-	payload += "xGLCertValidationEnabled:1," //we may want to be able to set this from config
+	payload += "xGLCertValidationEnabled:0," //we may want to be able to set this from config
 	payload += groupPrivilegeParam
-	payload += "xGLServerPort:636"
+	payload += fmt.Sprintf("xGLServerPort:%d", cfg.Port)
 
 	//fmt.Println(payload)
 	endpoint := "postset?ldapconf"
