@@ -53,7 +53,8 @@ type Ldap struct {
 	Port           int    `yaml:"port"`
 	Enable         bool   `yaml:"enable"`
 	Role           string `yaml:"role"`
-	BaseDn         string `yaml:"baseDn"`
+	BaseDn         string `yaml:"baseDn"` //BaseDN is the starting point of the LDAP tree search.
+	BindDn         string `yaml:"bindDn"` //BindDN is used to gain access to the LDAP tree.
 	Group          string `yaml:"group"`
 	GroupBaseDn    string `yaml:"groupBaseDn"`
 	UserAttribute  string `yaml:"userAttribute"`

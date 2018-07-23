@@ -150,7 +150,7 @@ func (i *Ilo) get(endpoint string) (payload []byte, err error) {
 }
 
 // posts the payload to the given endpoint
-func (i *Ilo) post(endpoint string, data []byte, debug bool) (statusCode int, body []byte, err error) {
+func (i *Ilo) post(endpoint string, data []byte) (statusCode int, body []byte, err error) {
 
 	u, err := url.Parse(fmt.Sprintf("https://%s/%s", i.ip, endpoint))
 	if err != nil {
@@ -168,11 +168,13 @@ func (i *Ilo) post(endpoint string, data []byte, debug bool) (statusCode int, bo
 		}
 	}
 
-	if debug {
-		fmt.Println(fmt.Sprintf("%s/%s", i.ip, endpoint))
+	if log.GetLevel() == log.DebugLevel {
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
-			fmt.Printf("%s\n\n", dump)
+			log.Println(fmt.Sprintf("[Request] %s/%s", i.ip, endpoint))
+			log.Println(">>>>>>>>>>>>>>>")
+			log.Printf("%s\n\n", dump)
+			log.Println(">>>>>>>>>>>>>>>")
 		}
 	}
 
@@ -181,10 +183,13 @@ func (i *Ilo) post(endpoint string, data []byte, debug bool) (statusCode int, bo
 		return 0, []byte{}, err
 	}
 	defer resp.Body.Close()
-	if debug {
+	if log.GetLevel() == log.DebugLevel {
 		dump, err := httputil.DumpResponse(resp, true)
 		if err == nil {
-			fmt.Printf("%s\n\n", dump)
+			log.Println("[Response]")
+			log.Println("<<<<<<<<<<<<<<")
+			log.Printf("%s\n\n", dump)
+			log.Println("<<<<<<<<<<<<<<")
 		}
 	}
 
@@ -193,7 +198,6 @@ func (i *Ilo) post(endpoint string, data []byte, debug bool) (statusCode int, bo
 		return 0, []byte{}, err
 	}
 
-	//fmt.Printf("%s\n", body)
 	return resp.StatusCode, body, err
 }
 

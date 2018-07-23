@@ -462,6 +462,15 @@ func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*
 		enable = "on"
 	}
 
+	if cfgLdap.BaseDn == "" {
+		msg := "Ldap resource parameter BaseDn required but not declared."
+		log.WithFields(log.Fields{
+			"step":  helper.WhosCalling(),
+			"Model": s.BmcType(),
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
 	serverIp, err := net.LookupIP(cfgLdap.Server)
 	if err != nil || serverIp == nil {
 		msg := "Unable to lookup the IP for ldap server hostname."
@@ -523,8 +532,8 @@ func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*
 			LdapIp:       fmt.Sprintf("%s", serverIp[0]),
 			BaseDn:       group.Group,
 			LdapPort:     cfgLdap.Port,
-			BindDn:       "undefined", //default value
-			BindPassword: "********",  //default value
+			BindDn:       cfgLdap.BindDn,
+			BindPassword: "********", //default value
 		}
 
 		endpoint := fmt.Sprintf("op.cgi")
