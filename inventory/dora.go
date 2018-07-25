@@ -103,17 +103,15 @@ func (d *Dora) setLocation(doraInventoryAssets []asset.Asset) {
 	}
 }
 
-func (d *Dora) AssetIterBySerial(serial string, assetType string) {
+func (d *Dora) AssetIterBySerial(serials string, assetType string) {
+
+	var path string
 
 	//assetTypes := []string{"blade", "chassis", "discrete"}
 	component := "inventory"
 	log := d.Log
 
 	apiUrl := viper.GetString("inventory.configure.dora.apiUrl")
-
-	var path string
-	assets := make([]asset.Asset, 0)
-	serials := strings.Split(serial, ",")
 
 	if assetType == "blade" {
 		path = "blades"
@@ -123,62 +121,62 @@ func (d *Dora) AssetIterBySerial(serial string, assetType string) {
 		path = assetType
 	}
 
-	for _, s := range serials {
+	queryUrl := fmt.Sprintf("%s/v1/%s?filter[serial]=", apiUrl, path)
+	queryUrl += strings.ToLower(serials)
 
-		queryUrl := fmt.Sprintf("%s/v1/%s?filter[serial]=%s", apiUrl, path, strings.ToLower(s))
-		resp, err := http.Get(queryUrl)
-		if err != nil {
+	assets := make([]asset.Asset, 0)
+
+	resp, err := http.Get(queryUrl)
+	if err != nil {
+		log.WithFields(logrus.Fields{
+			"component": component,
+			"url":       queryUrl,
+			"error":     err,
+		}).Fatal("Failed to query dora for serial(s).")
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+
+	//dora returns a list of assets
+	var doraAssets DoraAsset
+	err = json.Unmarshal(body, &doraAssets)
+	if err != nil {
+		log.WithFields(logrus.Fields{
+			"component": component,
+			"url":       queryUrl,
+			"error":     err,
+		}).Fatal("Unable to unmarshal data returned from dora.")
+	}
+
+	if len(doraAssets.Data) == 0 {
+		log.WithFields(logrus.Fields{
+			"component": component,
+		}).Warn("No data for serial(s) in dora.")
+		return
+	}
+
+	for _, item := range doraAssets.Data {
+		if item.Attributes.BmcAddress == "" {
 			log.WithFields(logrus.Fields{
 				"component": component,
-				"url":       queryUrl,
-				"serial":    s,
-				"error":     err,
-			}).Fatal("Failed to query dora for serial.")
-		}
-
-		body, err := ioutil.ReadAll(resp.Body)
-		resp.Body.Close()
-
-		//dora returns a list of assets
-		var doraAssets DoraAsset
-		err = json.Unmarshal(body, &doraAssets)
-		if err != nil {
-			log.WithFields(logrus.Fields{
-				"component": component,
-				"url":       queryUrl,
-				"error":     err,
-			}).Fatal("Unable to unmarshal data returned from dora.")
-		}
-
-		if len(doraAssets.Data) == 0 {
-			log.WithFields(logrus.Fields{
-				"component": component,
-				"serial":    s,
-			}).Warn("No data for asset in dora.")
+				"DoraAsset": fmt.Sprintf("%+v", item),
+			}).Warn("Asset location could not be determined, since the asset has no IP.")
 			continue
 		}
 
-		for _, item := range doraAssets.Data {
-			if item.Attributes.BmcAddress == "" {
-				log.WithFields(logrus.Fields{
-					"component": component,
-					"DoraAsset": fmt.Sprintf("%+v", item),
-				}).Warn("Asset location could not be determined, since the asset has no IP.")
-				continue
-			}
+		assets = append(assets, asset.Asset{IpAddress: item.Attributes.BmcAddress,
+			Serial: item.Attributes.Serial,
+			Vendor: item.Attributes.Vendor,
+			Type:   assetType})
 
-			assets = append(assets, asset.Asset{IpAddress: item.Attributes.BmcAddress,
-				Serial: item.Attributes.Serial,
-				Vendor: item.Attributes.Vendor,
-				Type:   assetType})
-
-			//set the location for the assets
-			d.setLocation(assets)
-
-			//pass the asset to the channel
-			d.Channel <- assets
-		}
 	}
+
+	//set the location for the assets
+	d.setLocation(assets)
+
+	//pass the asset to the channel
+	d.Channel <- assets
 
 	defer close(d.Channel)
 
