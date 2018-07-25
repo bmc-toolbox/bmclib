@@ -89,6 +89,8 @@ func (b *Butler) applyConfig(id int, config []byte, asset *asset.Asset) (err err
 			"Asset":     fmt.Sprintf("%+v", asset),
 		}).Info("Config applied.")
 
+		bmc.Close()
+
 	case devices.BmcChassis:
 		chassis := client.(devices.BmcChassis)
 		asset.Model = chassis.BmcType()
@@ -137,6 +139,8 @@ func (b *Butler) applyConfig(id int, config []byte, asset *asset.Asset) (err err
 			"butler-id": id,
 			"Asset":     fmt.Sprintf("%+v", asset),
 		}).Info("Config applied.")
+
+		chassis.Close()
 	default:
 		log.WithFields(logrus.Fields{
 			"component": component,

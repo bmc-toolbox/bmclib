@@ -77,6 +77,8 @@ func (b *Butler) setupAsset(id int, config []byte, asset *asset.Asset) (err erro
 		if setup.Chassis(chassis, renderedConfig) == true {
 			setup.Post(asset)
 		}
+
+		chassis.Close()
 	default:
 		log.WithFields(logrus.Fields{
 			"component":   component,

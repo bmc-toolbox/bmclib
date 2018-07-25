@@ -15,12 +15,11 @@
 package butler
 
 import (
-	"sync"
-
 	"github.com/bmc-toolbox/bmcbutler/asset"
 	bmclibLogger "github.com/bmc-toolbox/bmclib/logging"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"sync"
 )
 
 type ButlerMsg struct {
