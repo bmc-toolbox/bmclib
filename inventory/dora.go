@@ -196,12 +196,16 @@ func (d *Dora) AssetIter() {
 
 	apiUrl := viper.GetString("inventory.configure.dora.apiUrl")
 
+	defer close(d.Channel)
+
 	for _, assetType := range assetTypes {
 		var path string
 
 		//since this asset type in dora is plural.
 		if assetType == "blade" {
 			path = "blades"
+		} else if assetType == "discrete" {
+			path = "discretes"
 		} else {
 			path = assetType
 		}
@@ -265,16 +269,12 @@ func (d *Dora) AssetIter() {
 					"component": component,
 					"url":       queryUrl,
 				}).Info("Reached end of assets in dora")
-				close(d.Channel)
 				break
 			}
 
 			// next url to query
 			queryUrl = fmt.Sprintf("%s%s", apiUrl, doraAssets.Links.Next)
 			//fmt.Printf("--> %s\n", queryUrl)
-
 		}
-
 	}
-
 }
