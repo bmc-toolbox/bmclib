@@ -3,6 +3,7 @@ package supermicrox10
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
@@ -100,7 +101,10 @@ func (s *SupermicroX10) Close() (err error) {
 		if err != nil {
 			return err
 		}
+
 		defer resp.Body.Close()
+		defer io.Copy(ioutil.Discard, resp.Body)
+
 		if log.GetLevel() == log.DebugLevel {
 			log.Println(fmt.Sprintf("https://%s/cgi/%s", bmcURL, s.ip))
 			dump, err := httputil.DumpRequestOut(req, true)

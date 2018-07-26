@@ -100,7 +100,7 @@ func (m *M1000e) newDirectoryServicesCfg(ldap *cfgresources.Ldap) DirectoryServi
 		GenLdapGroupAttributeIsDn:    true,
 		GenLdapCertValidateEnableCk:  true,
 		GenLdapCertValidateEnable:    false,
-		GenLdapBindDn:                "",
+		GenLdapBindDn:                ldap.BindDn,
 		GenLdapBindPasswd:            "PASSWORD", //we
 		GenLdapBindPasswdChanged:     false,
 		GenLdapBaseDn:                ldap.BaseDn,

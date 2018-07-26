@@ -3,112 +3,112 @@
 	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "HUsfiTY/vByQD5pYDzip9UvprBc=",
+			"checksumSHA1": "2H9m6rvqImZIqQgjWsejhRBGQwg=",
 			"path": "github.com/bmc-toolbox/bmclib/cfgresources",
-			"revision": "5136237a13b0b3e83d2a43917aea4f584363cd9f",
-			"revisionTime": "2018-07-17T11:59:03Z"
+			"revision": "cde0ff73a67f95308e9185d170406a48bb643401",
+			"revisionTime": "2018-07-26T09:53:18Z"
 		},
 		{
 			"checksumSHA1": "dDFkVpFqkrY3ZwcmX1hKE+gHFmA=",
 			"path": "github.com/bmc-toolbox/bmclib/devices",
-			"revision": "5136237a13b0b3e83d2a43917aea4f584363cd9f",
-			"revisionTime": "2018-07-17T11:59:03Z"
+			"revision": "cde0ff73a67f95308e9185d170406a48bb643401",
+			"revisionTime": "2018-07-26T09:53:18Z"
 		},
 		{
 			"checksumSHA1": "Om6NyNkr7P4oeHCIjD2tXS3b1H8=",
 			"path": "github.com/bmc-toolbox/bmclib/discover",
-			"revision": "5136237a13b0b3e83d2a43917aea4f584363cd9f",
-			"revisionTime": "2018-07-17T11:59:03Z"
+			"revision": "cde0ff73a67f95308e9185d170406a48bb643401",
+			"revisionTime": "2018-07-26T09:53:18Z"
 		},
 		{
 			"checksumSHA1": "5rDuyM7NKgRWJe/GEtGWp1Z1W7k=",
 			"path": "github.com/bmc-toolbox/bmclib/errors",
-			"revision": "5136237a13b0b3e83d2a43917aea4f584363cd9f",
-			"revisionTime": "2018-07-17T11:59:03Z"
+			"revision": "cde0ff73a67f95308e9185d170406a48bb643401",
+			"revisionTime": "2018-07-26T09:53:18Z"
 		},
 		{
 			"checksumSHA1": "VqpKB+pp2Ub7o3M0kS9WKWQtSdY=",
 			"path": "github.com/bmc-toolbox/bmclib/internal/helper",
-			"revision": "5136237a13b0b3e83d2a43917aea4f584363cd9f",
-			"revisionTime": "2018-07-17T11:59:03Z"
+			"revision": "cde0ff73a67f95308e9185d170406a48bb643401",
+			"revisionTime": "2018-07-26T09:53:18Z"
 		},
 		{
 			"checksumSHA1": "h73TlPFYM58+D1qRQIBKaZ0Bp+I=",
 			"path": "github.com/bmc-toolbox/bmclib/internal/httpclient",
-			"revision": "5136237a13b0b3e83d2a43917aea4f584363cd9f",
-			"revisionTime": "2018-07-17T11:59:03Z"
+			"revision": "cde0ff73a67f95308e9185d170406a48bb643401",
+			"revisionTime": "2018-07-26T09:53:18Z"
 		},
 		{
 			"checksumSHA1": "NyRI2YcZJkVw+LLMvmSwqHwPk8E=",
 			"path": "github.com/bmc-toolbox/bmclib/internal/ipmi",
-			"revision": "5136237a13b0b3e83d2a43917aea4f584363cd9f",
-			"revisionTime": "2018-07-17T11:59:03Z"
+			"revision": "cde0ff73a67f95308e9185d170406a48bb643401",
+			"revisionTime": "2018-07-26T09:53:18Z"
 		},
 		{
 			"checksumSHA1": "MujZilmUdhJYyWWHiFrgbyHtTa4=",
 			"path": "github.com/bmc-toolbox/bmclib/internal/sshclient",
-			"revision": "5136237a13b0b3e83d2a43917aea4f584363cd9f",
-			"revisionTime": "2018-07-17T11:59:03Z"
+			"revision": "cde0ff73a67f95308e9185d170406a48bb643401",
+			"revisionTime": "2018-07-26T09:53:18Z"
 		},
 		{
 			"checksumSHA1": "mNILaVea4KJc5PNxSyoSdqQ6F/g=",
 			"path": "github.com/bmc-toolbox/bmclib/logging",
-			"revision": "5136237a13b0b3e83d2a43917aea4f584363cd9f",
-			"revisionTime": "2018-07-17T11:59:03Z"
+			"revision": "cde0ff73a67f95308e9185d170406a48bb643401",
+			"revisionTime": "2018-07-26T09:53:18Z"
 		},
 		{
 			"checksumSHA1": "Ce3RMxW6sDFW6cwpMmkKmGxg8Lc=",
 			"path": "github.com/bmc-toolbox/bmclib/providers/dell",
-			"revision": "5136237a13b0b3e83d2a43917aea4f584363cd9f",
-			"revisionTime": "2018-07-17T11:59:03Z"
+			"revision": "cde0ff73a67f95308e9185d170406a48bb643401",
+			"revisionTime": "2018-07-26T09:53:18Z"
 		},
 		{
-			"checksumSHA1": "wiXV3piwdjxQ1JpkyUv3+PjQ3EU=",
+			"checksumSHA1": "sxN/nIfwPDWqLJSb63lGEu3r0Qk=",
 			"path": "github.com/bmc-toolbox/bmclib/providers/dell/idrac8",
-			"revision": "5136237a13b0b3e83d2a43917aea4f584363cd9f",
-			"revisionTime": "2018-07-17T11:59:03Z"
+			"revision": "cde0ff73a67f95308e9185d170406a48bb643401",
+			"revisionTime": "2018-07-26T09:53:18Z"
 		},
 		{
 			"checksumSHA1": "xuixQIMEfSBLPxnEJUViQEUwOII=",
 			"path": "github.com/bmc-toolbox/bmclib/providers/dell/idrac9",
-			"revision": "5136237a13b0b3e83d2a43917aea4f584363cd9f",
-			"revisionTime": "2018-07-17T11:59:03Z"
+			"revision": "cde0ff73a67f95308e9185d170406a48bb643401",
+			"revisionTime": "2018-07-26T09:53:18Z"
 		},
 		{
-			"checksumSHA1": "1kfrabnl1QC8HVCVFVhbX9cVXmw=",
+			"checksumSHA1": "CAcVRqMhxdXRVc7uAV5rXZ25HHw=",
 			"path": "github.com/bmc-toolbox/bmclib/providers/dell/m1000e",
-			"revision": "5136237a13b0b3e83d2a43917aea4f584363cd9f",
-			"revisionTime": "2018-07-17T11:59:03Z"
+			"revision": "cde0ff73a67f95308e9185d170406a48bb643401",
+			"revisionTime": "2018-07-26T09:53:18Z"
 		},
 		{
 			"checksumSHA1": "sGYzYB11bfvyT46e+GQMHvmTl5k=",
 			"path": "github.com/bmc-toolbox/bmclib/providers/hp",
-			"revision": "5136237a13b0b3e83d2a43917aea4f584363cd9f",
-			"revisionTime": "2018-07-17T11:59:03Z"
+			"revision": "cde0ff73a67f95308e9185d170406a48bb643401",
+			"revisionTime": "2018-07-26T09:53:18Z"
 		},
 		{
-			"checksumSHA1": "Ww9qhaI21aaCW+li4LgYHUMJHso=",
+			"checksumSHA1": "Pftcsop5iLdMnI58RBfijLY5ZS0=",
 			"path": "github.com/bmc-toolbox/bmclib/providers/hp/c7000",
-			"revision": "5136237a13b0b3e83d2a43917aea4f584363cd9f",
-			"revisionTime": "2018-07-17T11:59:03Z"
+			"revision": "cde0ff73a67f95308e9185d170406a48bb643401",
+			"revisionTime": "2018-07-26T09:53:18Z"
 		},
 		{
-			"checksumSHA1": "SVjtrTwhjIo9/9K8h2CrODkRn+8=",
+			"checksumSHA1": "gMm2TCnQTETlDD36Ah8YKar5bjo=",
 			"path": "github.com/bmc-toolbox/bmclib/providers/hp/ilo",
-			"revision": "5136237a13b0b3e83d2a43917aea4f584363cd9f",
-			"revisionTime": "2018-07-17T11:59:03Z"
+			"revision": "cde0ff73a67f95308e9185d170406a48bb643401",
+			"revisionTime": "2018-07-26T09:53:18Z"
 		},
 		{
 			"checksumSHA1": "yqCKz1tkSCuaCkZ0ccl+T1pP/+w=",
 			"path": "github.com/bmc-toolbox/bmclib/providers/supermicro",
-			"revision": "5136237a13b0b3e83d2a43917aea4f584363cd9f",
-			"revisionTime": "2018-07-17T11:59:03Z"
+			"revision": "cde0ff73a67f95308e9185d170406a48bb643401",
+			"revisionTime": "2018-07-26T09:53:18Z"
 		},
 		{
-			"checksumSHA1": "C0CEjkvn2YL/sz115JqsRzppUs8=",
+			"checksumSHA1": "VR/fgRUjAXn1EAcz520ylUBPx0I=",
 			"path": "github.com/bmc-toolbox/bmclib/providers/supermicro/supermicrox10",
-			"revision": "5136237a13b0b3e83d2a43917aea4f584363cd9f",
-			"revisionTime": "2018-07-17T11:59:03Z"
+			"revision": "cde0ff73a67f95308e9185d170406a48bb643401",
+			"revisionTime": "2018-07-26T09:53:18Z"
 		},
 		{
 			"checksumSHA1": "LrOnRW6KCAcKDnKPs+Hibtb7Duk=",
@@ -117,10 +117,88 @@
 			"revisionTime": "2017-06-29T03:54:44Z"
 		},
 		{
+			"checksumSHA1": "5BP5xofo0GoFi6FtgqFFbmHyUKI=",
+			"path": "github.com/fatih/structs",
+			"revision": "ebf56d35bba727c68ac77f56f2fcf90b181851aa",
+			"revisionTime": "2018-01-23T06:50:59Z"
+		},
+		{
 			"checksumSHA1": "7NP1qUMF8Kx1y0zANxx0e+oq9Oo=",
 			"path": "github.com/fsnotify/fsnotify",
 			"revision": "c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9",
 			"revisionTime": "2018-01-10T05:33:47Z"
+		},
+		{
+			"checksumSHA1": "0ZDo5iQqX226/dN6JBxqgxQK6S8=",
+			"path": "github.com/gobuffalo/envy",
+			"revision": "2d0f467653f3d961ce9ada4d32a230bdcb3bfe11",
+			"revisionTime": "2018-06-13T12:32:24Z"
+		},
+		{
+			"checksumSHA1": "yfMGVasmA1dX190Fc8tNleGZw9I=",
+			"path": "github.com/gobuffalo/plush",
+			"revision": "2ec029f415ed9a8a1448a5bb389d79084d606035",
+			"revisionTime": "2018-06-19T22:04:12Z"
+		},
+		{
+			"checksumSHA1": "9QuC6KaZyrROQ5gRwOUlOmdvVAM=",
+			"path": "github.com/gobuffalo/plush/ast",
+			"revision": "2ec029f415ed9a8a1448a5bb389d79084d606035",
+			"revisionTime": "2018-06-19T22:04:12Z"
+		},
+		{
+			"checksumSHA1": "68oWWoG1Zv8o6ixVEq6LomMUpEw=",
+			"path": "github.com/gobuffalo/plush/lexer",
+			"revision": "2ec029f415ed9a8a1448a5bb389d79084d606035",
+			"revisionTime": "2018-06-19T22:04:12Z"
+		},
+		{
+			"checksumSHA1": "yeZIfowB25AMkENP0qZ7Sb0iubE=",
+			"path": "github.com/gobuffalo/plush/parser",
+			"revision": "2ec029f415ed9a8a1448a5bb389d79084d606035",
+			"revisionTime": "2018-06-19T22:04:12Z"
+		},
+		{
+			"checksumSHA1": "QcW90/z9LFO1ZQYd/ouUeoWtFAY=",
+			"path": "github.com/gobuffalo/plush/token",
+			"revision": "2ec029f415ed9a8a1448a5bb389d79084d606035",
+			"revisionTime": "2018-06-19T22:04:12Z"
+		},
+		{
+			"checksumSHA1": "8n8s+DqaTUGYwb4ZizDZCvxWleQ=",
+			"path": "github.com/gobuffalo/tags",
+			"revision": "96c7cdfcadcb28eb1b42b9080ba7f93936ffc5c5",
+			"revisionTime": "2018-07-02T17:40:34Z"
+		},
+		{
+			"checksumSHA1": "1nBmITtNWk5HabjaOiEd7mCuT6o=",
+			"path": "github.com/gobuffalo/tags/form",
+			"revision": "96c7cdfcadcb28eb1b42b9080ba7f93936ffc5c5",
+			"revisionTime": "2018-07-02T17:40:34Z"
+		},
+		{
+			"checksumSHA1": "hVTRcDLLjx2JILK8pk58b76Til0=",
+			"path": "github.com/gobuffalo/tags/form/bootstrap",
+			"revision": "96c7cdfcadcb28eb1b42b9080ba7f93936ffc5c5",
+			"revisionTime": "2018-07-02T17:40:34Z"
+		},
+		{
+			"checksumSHA1": "eQ79FnFBYe0iWL48k/x6TGZP5fs=",
+			"path": "github.com/gobuffalo/uuid",
+			"revision": "4bf3ef4efa68dd27ea50c4c1f49caafe243da8bf",
+			"revisionTime": "2018-06-16T21:30:41Z"
+		},
+		{
+			"checksumSHA1": "AYwNaNRgGKRZLgE66ZUhYUqaFg0=",
+			"path": "github.com/gobuffalo/validate",
+			"revision": "42f3a620af958a589a374421f185f2dc42ed1e20",
+			"revisionTime": "2018-07-18T18:27:59Z"
+		},
+		{
+			"checksumSHA1": "zEdXrpaLlXK5TzZ6sffyhYdsKDA=",
+			"path": "github.com/gobuffalo/validate/validators",
+			"revision": "42f3a620af958a589a374421f185f2dc42ed1e20",
+			"revisionTime": "2018-07-18T18:27:59Z"
 		},
 		{
 			"checksumSHA1": "rOnq4QOhIS8mkoUW0/YyS69WU2E=",
@@ -208,10 +286,40 @@
 			"revisionTime": "2017-10-17T18:19:29Z"
 		},
 		{
+			"checksumSHA1": "o0+6uQDysjh6+RsudtQDW3AOwec=",
+			"path": "github.com/joho/godotenv",
+			"revision": "1709ab122c988931ad53508747b3c061400c2984",
+			"revisionTime": "2018-04-05T05:36:34Z"
+		},
+		{
 			"checksumSHA1": "RfDW05IB7Bij4TVZ+vIRuTlTIlM=",
 			"path": "github.com/magiconair/properties",
 			"revision": "50a685e9bc1f5bf289dc4d048cb48ec4c85514c7",
 			"revisionTime": "2018-02-13T21:28:11Z"
+		},
+		{
+			"checksumSHA1": "U0fkkZk1icuixqwJmU3wBIqT4fw=",
+			"path": "github.com/markbates/going/defaults",
+			"revision": "0576708c56cea02331f864fe6e157ac7841923e4",
+			"revisionTime": "2017-01-13T21:44:12Z"
+		},
+		{
+			"checksumSHA1": "UkGygrj3s1KtwFGenrsGAMHAAFA=",
+			"path": "github.com/markbates/going/wait",
+			"revision": "0576708c56cea02331f864fe6e157ac7841923e4",
+			"revisionTime": "2017-01-13T21:44:12Z"
+		},
+		{
+			"checksumSHA1": "QVUTA+uqW4oEFBN4N6wMD6JZj/U=",
+			"path": "github.com/markbates/inflect",
+			"revision": "84854b5b4c0dbb0c107480d480a71f7db1fc7dae",
+			"revisionTime": "2018-06-16T15:05:58Z"
+		},
+		{
+			"checksumSHA1": "iYJhGgmnDwiMBZ4lYVpsXKu39Qo=",
+			"path": "github.com/microcosm-cc/bluemonday",
+			"revision": "dafebb5b6ff2861a0d69af64991e10866c19be85",
+			"revisionTime": "2018-07-15T16:30:49Z"
 		},
 		{
 			"checksumSHA1": "V/quM7+em2ByJbWBLOsEwnY3j/Q=",
@@ -232,6 +340,60 @@
 			"revisionTime": "2018-01-18T22:54:55Z"
 		},
 		{
+			"checksumSHA1": "rJab1YdNhQooDiBWNnt7TLWPyBU=",
+			"path": "github.com/pkg/errors",
+			"revision": "f15c970de5b76fac0b59abb32d62c17cc7bed265",
+			"revisionTime": "2017-10-18T19:55:50Z"
+		},
+		{
+			"checksumSHA1": "Ne3D+KJs1TU2trnDy1UCSwlXbAE=",
+			"path": "github.com/russross/blackfriday",
+			"revision": "11635eb403ff09dbc3a6b5a007ab5ab09151c229",
+			"revisionTime": "2018-04-28T10:25:19Z"
+		},
+		{
+			"checksumSHA1": "JsNjjF/Ydj4kev7QxNab9WrPm3Y=",
+			"path": "github.com/serenize/snaker",
+			"revision": "a683aaf2d516deecd70cad0c72e3ca773ecfcef0",
+			"revisionTime": "2017-12-04T20:57:17Z"
+		},
+		{
+			"checksumSHA1": "QxBGuFiDP7AZx9/QOwJVVDlHjLM=",
+			"path": "github.com/sergi/go-diff/diffmatchpatch",
+			"revision": "da645544ed44df016359bd4c0e3dc60ee3a0da43",
+			"revisionTime": "2018-02-05T16:33:09Z"
+		},
+		{
+			"checksumSHA1": "yr5yl3uUOMrY6styu+bcorYOBB8=",
+			"path": "github.com/shurcooL/github_flavored_markdown",
+			"revision": "8913699a52e3aa02aa96387098e0004bb84aacf0",
+			"revisionTime": "2018-06-02T23:31:35Z"
+		},
+		{
+			"checksumSHA1": "grgQLMEZqYe+xJpTWG2RKgFXUZ4=",
+			"path": "github.com/shurcooL/highlight_diff",
+			"revision": "09bb4053de1b1d872a9f25dc21378fa71dca4e4e",
+			"revisionTime": "2017-05-15T01:30:08Z"
+		},
+		{
+			"checksumSHA1": "G8O4iv2LCjVxKUH+PiykFpCcqK8=",
+			"path": "github.com/shurcooL/highlight_go",
+			"revision": "78fb10f4a5f89e812a5e26ab723b954a51226086",
+			"revisionTime": "2017-05-15T01:31:02Z"
+		},
+		{
+			"checksumSHA1": "xGekjMwi4ur8AHrdRxI/cPIjnBg=",
+			"path": "github.com/shurcooL/octicon",
+			"revision": "c42b0e3b24d96976ecac81ef691662777b39ef64",
+			"revisionTime": "2018-06-02T23:02:21Z"
+		},
+		{
+			"checksumSHA1": "HkNUuhYSk5C2fTMa536jBiORq44=",
+			"path": "github.com/shurcooL/sanitized_anchor_name",
+			"revision": "86672fcb3f950f35f2e675df2240550f2a50762f",
+			"revisionTime": "2017-09-05T02:47:45Z"
+		},
+		{
 			"checksumSHA1": "9ZSqjmvF/JE6Qj/5xOoCAmUgXz8=",
 			"path": "github.com/sirupsen/logrus",
 			"revision": "778f2e774c725116edbc3d039dc0dfc1cc62aae8",
@@ -242,6 +404,18 @@
 			"path": "github.com/sirupsen/logrus/hooks/syslog",
 			"revision": "778f2e774c725116edbc3d039dc0dfc1cc62aae8",
 			"revisionTime": "2018-03-29T22:59:52Z"
+		},
+		{
+			"checksumSHA1": "hg5j4kdVPNACc4G8nsb1MX/U7KE=",
+			"path": "github.com/sourcegraph/annotate",
+			"revision": "f4cad6c6324d3f584e1743d8b3e0e017a5f3a636",
+			"revisionTime": "2016-01-23T01:39:49Z"
+		},
+		{
+			"checksumSHA1": "XoUO4WpqMYyhT8Qb1BpOE1HdN8Q=",
+			"path": "github.com/sourcegraph/syntaxhighlight",
+			"revision": "bd320f5d308e1a3c4314c678d8227a0d72574ae7",
+			"revisionTime": "2017-05-31T22:18:38Z"
 		},
 		{
 			"checksumSHA1": "F3JU4T4XXvZTRAcv6rhTao4QGos=",
@@ -320,6 +494,18 @@
 			"path": "golang.org/x/crypto/ssh/terminal",
 			"revision": "b080dc9a8c480b08e698fb1219160d598526310f",
 			"revisionTime": "2017-11-22T09:46:40Z"
+		},
+		{
+			"checksumSHA1": "L68uqaYKEOxkq2xwnNV2bRP7yO4=",
+			"path": "golang.org/x/net/html",
+			"revision": "61147c48b25b599e5b561d2e9c4f3e1ef489ca41",
+			"revisionTime": "2017-03-19T02:15:06Z"
+		},
+		{
+			"checksumSHA1": "RLqClvtTLYRcgfKnfLcCnHNvv2Y=",
+			"path": "golang.org/x/net/html/atom",
+			"revision": "61147c48b25b599e5b561d2e9c4f3e1ef489ca41",
+			"revisionTime": "2017-03-19T02:15:06Z"
 		},
 		{
 			"checksumSHA1": "ZSIQuoAzHbZEPMSJFXNyjz0YC6g=",

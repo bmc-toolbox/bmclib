@@ -65,7 +65,7 @@ type NetworkSntp struct {
 type Directory struct {
 	ServerAddress         string   `json:"server_address"`
 	ServerPort            int      `json:"server_port"`
-	UserContexts          []string `json;"user_contexts"`
+	UserContexts          []string `json:"user_contexts"`
 	AuthenticationEnabled int      `json:"authentication_enabled"`
 	LocalUserAcct         int      `json:"local_user_acct"` //enable local user accounts
 	EnableGroupAccount    int      `json:"enable_group_acct"`
