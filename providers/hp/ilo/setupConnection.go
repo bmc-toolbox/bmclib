@@ -137,11 +137,12 @@ func (i *Ilo) Close() (err error) {
 			req.Header.Set("Content-Type", "application/json")
 
 			resp, e := i.httpClient.Do(req)
-			if err != nil {
+			if e != nil {
 				err = multierror.Append(e, err)
+			} else {
+				defer resp.Body.Close()
+				defer io.Copy(ioutil.Discard, resp.Body)
 			}
-			io.Copy(ioutil.Discard, resp.Body)
-			defer resp.Body.Close()
 		}
 	}
 

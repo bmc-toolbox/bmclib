@@ -129,11 +129,12 @@ func (i *IDrac8) sshLogin() (err error) {
 func (i *IDrac8) Close() (err error) {
 	if i.httpClient != nil {
 		resp, e := i.httpClient.Get(fmt.Sprintf("https://%s/data/logout", i.ip))
-		if err != nil {
+		if e != nil {
 			err = multierror.Append(e, err)
+		} else {
+			defer resp.Body.Close()
+			defer io.Copy(ioutil.Discard, resp.Body)
 		}
-		defer resp.Body.Close()
-		io.Copy(ioutil.Discard, resp.Body)
 	}
 
 	if i.sshClient != nil {
