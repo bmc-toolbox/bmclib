@@ -2,6 +2,7 @@ package c7000
 
 import (
 	"bytes"
+	"context"
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
@@ -9,6 +10,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -71,6 +73,13 @@ func (c *C7000) postXML(data interface{}) (statusCode int, body []byte, err erro
 	if err != nil {
 		return 0, []byte{}, err
 	}
+
+	//Setup a context to cancel the request if it takes long,
+	//this prevents the http.Client.Timeout Deadline from kicking in and causing a panic.
+	ctx, cancel := context.WithTimeout(req.Context(), 10*time.Second)
+	defer cancel()
+
+	req = req.WithContext(ctx)
 
 	//	req.Header.Add("Content-Type", "application/soap+xml; charset=utf-8")
 	req.Header.Add("Content-Type", "text/plain;charset=UTF-8")
