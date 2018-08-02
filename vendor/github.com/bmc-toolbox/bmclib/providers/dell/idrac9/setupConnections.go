@@ -100,13 +100,13 @@ func (i *IDrac9) loadHwData() (err error) {
 	return err
 }
 
-// sshLogin initiates the connection to a chassis device
+// sshLogin initiates the connection to a bmc device
 func (i *IDrac9) sshLogin() (err error) {
 	if i.sshClient != nil {
 		return
 	}
 
-	log.WithFields(log.Fields{"step": "chassis connection", "vendor": dell.VendorID, "ip": i.ip}).Debug("connecting to chassis")
+	log.WithFields(log.Fields{"step": "bmc connection", "vendor": dell.VendorID, "ip": i.ip}).Debug("connecting to bmc")
 	i.sshClient, err = sshclient.New(i.ip, i.username, i.password)
 	if err != nil {
 		return err
