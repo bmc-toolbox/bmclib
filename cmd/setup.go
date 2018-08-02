@@ -84,14 +84,14 @@ func setup() {
 
 	// Spawn butlers to work
 	butlerChan := make(chan butler.ButlerMsg, 10)
-	butlerInstance := butler.Butler{Log: log, SpawnCount: butlersToSpawn, Channel: butlerChan}
+	butlerManager := butler.ButlerManager{Log: log, SpawnCount: butlersToSpawn, Channel: butlerChan}
 
 	// let butler run from any location on any given BMC
 	if serial != "" || ipList != "" || ignoreLocation {
-		butlerInstance.IgnoreLocation = true
+		butlerManager.IgnoreLocation = true
 	}
 
-	go butlerInstance.Spawn()
+	go butlerManager.SpawnButlers()
 
 	//Read in BMC configuration data
 	configDir := viper.GetString("bmcCfgDir")

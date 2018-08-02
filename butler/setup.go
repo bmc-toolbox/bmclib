@@ -82,7 +82,7 @@ func (b *Butler) setupAsset(id int, config []byte, asset *asset.Asset) (err erro
 	default:
 		log.WithFields(logrus.Fields{
 			"component":   component,
-			"butler-id":   id,
+			"butler-id":   b.id,
 			"Device type": fmt.Sprintf("%T", client),
 			"Asset":       fmt.Sprintf("%+v", asset),
 		}).Error("Unknown device type.")

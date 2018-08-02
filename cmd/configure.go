@@ -89,13 +89,13 @@ func configure() {
 
 	// Spawn butlers to work
 	butlerChan := make(chan butler.ButlerMsg, 5)
-	butlerInstance := butler.Butler{Log: log, SpawnCount: butlersToSpawn, Channel: butlerChan}
+	butlerManager := butler.ButlerManager{Log: log, SpawnCount: butlersToSpawn, Channel: butlerChan}
 
 	if serial != "" {
-		butlerInstance.IgnoreLocation = true
+		butlerManager.IgnoreLocation = true
 	}
 
-	go butlerInstance.Spawn()
+	go butlerManager.SpawnButlers()
 
 	//give the butlers a second to spawn.
 	time.Sleep(1 * time.Second)
@@ -126,5 +126,5 @@ func configure() {
 	close(butlerChan)
 
 	//wait until butlers are done.
-	butlerInstance.Wait()
+	butlerManager.Wait()
 }

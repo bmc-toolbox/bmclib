@@ -136,7 +136,7 @@ func (b *Butler) applyConfig(id int, config []byte, asset *asset.Asset) (err err
 		chassis.ApplyCfg(renderedConfig)
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"butler-id": id,
+			"butler-id": b.id,
 			"Asset":     fmt.Sprintf("%+v", asset),
 		}).Info("Config applied.")
 
@@ -144,7 +144,7 @@ func (b *Butler) applyConfig(id int, config []byte, asset *asset.Asset) (err err
 	default:
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"butler-id": id,
+			"butler-id": b.id,
 			"Asset":     fmt.Sprintf("%+v", asset),
 		}).Warn("Unkown device type.")
 		return errors.New("Unknown asset type.")

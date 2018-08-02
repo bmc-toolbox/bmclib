@@ -16,19 +16,29 @@ package butler
 
 import (
 	"github.com/bmc-toolbox/bmcbutler/asset"
+	"github.com/bmc-toolbox/bmclib/devices"
+	"github.com/bmc-toolbox/bmclib/discover"
+	bmcerros "github.com/bmc-toolbox/bmclib/errors"
 	bmclibLogger "github.com/bmc-toolbox/bmclib/logging"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+
+	"errors"
+	"fmt"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 )
 
 type ButlerMsg struct {
-	Asset  asset.Asset //Asset to be configured
-	Config []byte      //The BMC configuration read in from configuration.yml
-	Setup  []byte      //The One time setup configuration read from setup.yml
+	Asset   asset.Asset //Asset to be configured
+	Config  []byte      //The BMC configuration read in from configuration.yml
+	Setup   []byte      //The One time setup configuration read from setup.yml
+	Execute string      //Commands to be executed on the BMC
 }
 
-type Butler struct {
+type ButlerManager struct {
 	Log            *logrus.Logger
 	SpawnCount     int
 	SyncWG         sync.WaitGroup
@@ -37,27 +47,35 @@ type Butler struct {
 }
 
 // spawn a pool of butlers
-func (b *Butler) Spawn() {
+func (bm *ButlerManager) SpawnButlers() {
 
-	log := b.Log
-	component := "butler-spawn"
+	log := bm.Log
+	component := "SpawnButlers"
 
-	for i := 1; i <= b.SpawnCount; i++ {
-		b.SyncWG.Add(1)
-		go b.butler(i)
+	for i := 1; i <= bm.SpawnCount; i++ {
+		bm.SyncWG.Add(1)
+		butlerInstance := Butler{id: i, log: bm.Log, syncWG: &bm.SyncWG, channel: bm.Channel, ignoreLocation: bm.IgnoreLocation}
+		go butlerInstance.Run()
 	}
 
 	log.WithFields(logrus.Fields{
 		"component": component,
-		"count":     b.SpawnCount,
+		"count":     bm.SpawnCount,
 	}).Info("Spawned butlers.")
 
 	//runtime.Goexit()
-
 }
 
-func (b *Butler) Wait() {
-	b.SyncWG.Wait()
+func (bm *ButlerManager) Wait() {
+	bm.SyncWG.Wait()
+}
+
+type Butler struct {
+	id             int
+	log            *logrus.Logger
+	syncWG         *sync.WaitGroup
+	channel        <-chan ButlerMsg
+	ignoreLocation bool
 }
 
 func myLocation(location string) bool {
