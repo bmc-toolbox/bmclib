@@ -74,11 +74,10 @@ func (d *Dora) setLocation(doraInventoryAssets []asset.Asset) (err error) {
 	resp, err := http.Get(queryUrl)
 	if err != nil || resp.StatusCode != 200 {
 		log.WithFields(logrus.Fields{
-			"component":     component,
-			"url":           queryUrl,
-			"error":         err,
-			"Status code":   resp.StatusCode,
-			"Response body": resp.Body,
+			"component":   component,
+			"url":         queryUrl,
+			"error":       err,
+			"Status code": resp.StatusCode,
 		}).Warn("Unable to query Dora for IP location info.")
 		return err
 	}
