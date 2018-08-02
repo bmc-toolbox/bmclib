@@ -20,13 +20,13 @@ type IpListAsset struct {
 	Type       string `csv:"type"`   //optional
 }
 
-func (i *IpList) AssetIter(ipList string, setup bool) {
+func (i *IpList) AssetIter(ipList string) {
 
 	ips := strings.Split(ipList, ",")
 
 	assets := make([]asset.Asset, 0)
 	for _, ip := range ips {
-		assets = append(assets, asset.Asset{IpAddress: ip, Setup: setup})
+		assets = append(assets, asset.Asset{IpAddress: ip})
 	}
 
 	//pass the asset to the channel

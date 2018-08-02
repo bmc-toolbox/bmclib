@@ -55,7 +55,7 @@ type DoraAsset struct {
 }
 
 // for a list of assets, update its location value
-func (d *Dora) setLocation(doraInventoryAssets []asset.Asset) {
+func (d *Dora) setLocation(doraInventoryAssets []asset.Asset) (err error) {
 
 	component := "inventory"
 	log := d.Log
@@ -72,12 +72,15 @@ func (d *Dora) setLocation(doraInventoryAssets []asset.Asset) {
 
 	queryUrl += strings.Join(ips, ",")
 	resp, err := http.Get(queryUrl)
-	if err != nil {
+	if err != nil || resp.StatusCode != 200 {
 		log.WithFields(logrus.Fields{
-			"component": component,
-			"url":       queryUrl,
-			"error":     err,
-		}).Fatal("Failed to query dora for networks.")
+			"component":     component,
+			"url":           queryUrl,
+			"error":         err,
+			"Status code":   resp.StatusCode,
+			"Response body": resp.Body,
+		}).Warn("Unable to query Dora for IP location info.")
+		return err
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
@@ -90,7 +93,8 @@ func (d *Dora) setLocation(doraInventoryAssets []asset.Asset) {
 			"component": component,
 			"url":       queryUrl,
 			"error":     err,
-		}).Fatal("Unable to unmarshal data returned from dora.")
+		}).Warn("Unable to unmarshal Dora scanned IP info.")
+		return err
 	}
 
 	// for each scanned IP update respective asset Location
@@ -101,6 +105,8 @@ func (d *Dora) setLocation(doraInventoryAssets []asset.Asset) {
 			}
 		}
 	}
+
+	return err
 }
 
 func (d *Dora) AssetIterBySerial(serials string, assetType string) {
@@ -173,7 +179,14 @@ func (d *Dora) AssetIterBySerial(serials string, assetType string) {
 	}
 
 	//set the location for the assets
-	d.setLocation(assets)
+	err = d.setLocation(assets)
+	if err != nil {
+		log.WithFields(logrus.Fields{
+			"component": component,
+			"Error":     err,
+		}).Warn("Unable to determine location of assets.")
+		return
+	}
 
 	//pass the asset to the channel
 	d.Channel <- assets
@@ -215,12 +228,13 @@ func (d *Dora) AssetIter() {
 			assets := make([]asset.Asset, 0)
 
 			resp, err := http.Get(queryUrl)
-			if err != nil {
+			if err != nil || resp.StatusCode != 200 {
 				log.WithFields(logrus.Fields{
-					"component": component,
-					"url":       queryUrl,
-					"error":     err,
-				}).Fatal("Failed to query dora for assets.")
+					"component":   component,
+					"url":         queryUrl,
+					"error":       err,
+					"Status Code": resp.StatusCode,
+				}).Fatal("Error querying Dora for assets.")
 			}
 
 			body, err := ioutil.ReadAll(resp.Body)
@@ -233,7 +247,7 @@ func (d *Dora) AssetIter() {
 					"component": component,
 					"url":       queryUrl,
 					"error":     err,
-				}).Fatal("Unable to unmarshal data returned from dora.")
+				}).Fatal("Error unmarshaling data returned from Dora.")
 			}
 
 			// for each asset, get its location
@@ -258,7 +272,15 @@ func (d *Dora) AssetIter() {
 			}
 
 			//set the location for the assets
-			d.setLocation(assets)
+			err = d.setLocation(assets)
+			if err != nil {
+				log.WithFields(logrus.Fields{
+					"component": component,
+					"Error":     err,
+					"Assets":    fmt.Sprintf("%+v", assets),
+				}).Warn("Asset location could not be determined, ignoring assets")
+				continue
+			}
 
 			//pass the asset to the channel
 			d.Channel <- assets
@@ -277,4 +299,6 @@ func (d *Dora) AssetIter() {
 			//fmt.Printf("--> %s\n", queryUrl)
 		}
 	}
+
+	close(d.Channel)
 }

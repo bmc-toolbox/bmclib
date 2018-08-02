@@ -76,7 +76,7 @@ func setup() {
 
 		// invoke goroutine that passes assets by IP to the butler,
 		// here we declare setup = true since this is a setup action.
-		go inventoryInstance.AssetIter(ipList, true)
+		go inventoryInstance.AssetIter(ipList)
 	default:
 		fmt.Println("Unknown inventory source declared in cfg: ", inventorySource)
 		os.Exit(1)
