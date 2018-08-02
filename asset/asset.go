@@ -21,8 +21,9 @@ type Asset struct {
 	Model     string
 	Type      string //blade or chassis
 	Location  string
-	Setup     bool //If setup is set, butlers will try to run setup config,
-	//by default they just configure.
-	Extra map[string]string //any extra params needed to be set in a asset.
+	Setup     bool              //If setup is set, butlers will setup the asset.
+	Configure bool              //If setup is set, butlers will configure the asset.
+	Execute   bool              //If execute is set, butlers will execute given command(s) on the asset.
+	Extra     map[string]string //any extra params needed to be set in a asset.
 
 }

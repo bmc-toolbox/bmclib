@@ -108,12 +108,14 @@ func setup() {
 	//over inventory channel and pass asset lists recieved to bmcbutlers
 	for assetList := range inventoryChan {
 		for _, asset := range assetList {
+			asset.Setup = true
 			butlerMsg := butler.ButlerMsg{Asset: asset, Setup: config}
 			butlerChan <- butlerMsg
 		}
 	}
 
 	close(butlerChan)
+
 	//wait until butlers are done.
-	butlerInstance.Wait()
+	butlerManager.Wait()
 }

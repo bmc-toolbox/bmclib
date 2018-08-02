@@ -24,23 +24,22 @@ import (
 	"github.com/bmc-toolbox/bmcbutler/asset"
 	"github.com/bmc-toolbox/bmcbutler/butler"
 	"github.com/bmc-toolbox/bmcbutler/inventory"
-	"github.com/bmc-toolbox/bmcbutler/resource"
 )
 
 // configureCmd represents the configure command
-var configureCmd = &cobra.Command{
-	Use:   "configure",
-	Short: "Apply config to bmcs.",
+var executeCmd = &cobra.Command{
+	Use:   "execute",
+	Short: "Execute actions on bmcs.",
 	Run: func(cmd *cobra.Command, args []string) {
-		configure()
+		execute()
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(configureCmd)
+	rootCmd.AddCommand(executeCmd)
 }
 
-func configure() {
+func execute() {
 
 	// A channel to recieve inventory assets
 	inventoryChan := make(chan []asset.Asset, 5)
@@ -80,7 +79,7 @@ func configure() {
 
 		// invoke goroutine that passes assets by IP to spawned butlers,
 		// here we declare setup = false since this is a configure action.
-		go inventoryInstance.AssetIter(ipList, false)
+		go inventoryInstance.AssetIter(ipList)
 
 	default:
 		fmt.Println("Unknown/no inventory source declared in cfg: ", inventorySource)
@@ -89,36 +88,24 @@ func configure() {
 
 	// Spawn butlers to work
 	butlerChan := make(chan butler.ButlerMsg, 5)
-	butlerInstance := butler.Butler{Log: log, SpawnCount: butlersToSpawn, Channel: butlerChan}
+	butlerManager := butler.ButlerManager{Log: log, SpawnCount: butlersToSpawn, Channel: butlerChan}
 
 	if serial != "" {
-		butlerInstance.IgnoreLocation = true
+		butlerManager.IgnoreLocation = true
 	}
 
-	go butlerInstance.Spawn()
+	go butlerManager.SpawnButlers()
 
 	//give the butlers a second to spawn.
 	time.Sleep(1 * time.Second)
-
-	//Read in BMC configuration data
-	configDir := viper.GetString("bmcCfgDir")
-	configFile := fmt.Sprintf("%s/%s", configDir, "configuration.yml")
-
-	//returns the file read as a slice of bytes
-	//config may contain templated values.
-	config, err := resource.ReadYamlTemplate(configFile)
-	if err != nil {
-		log.Fatal("Unable to read BMC configuration: ", configFile, " Error: ", err)
-		os.Exit(1)
-	}
 
 	//iterate over the inventory channel for assets,
 	//create a butler message for each asset along with the configuration,
 	//at this point templated values in the config are not yet rendered.
 	for assetList := range inventoryChan {
 		for _, asset := range assetList {
-			asset.Configure = true
-			butlerMsg := butler.ButlerMsg{Asset: asset, Config: config}
+			asset.Execute = true
+			butlerMsg := butler.ButlerMsg{Asset: asset, Execute: execCommand}
 			butlerChan <- butlerMsg
 		}
 	}
@@ -126,5 +113,5 @@ func configure() {
 	close(butlerChan)
 
 	//wait until butlers are done.
-	butlerInstance.Wait()
+	butlerManager.Wait()
 }

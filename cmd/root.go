@@ -35,6 +35,7 @@ var (
 	version          string
 	assetType        string
 	serial           string
+	execCommand      string
 	ipList           string
 	isChassis        bool
 	isBlade          bool
@@ -139,6 +140,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose logging")
 	rootCmd.PersistentFlags().StringVarP(&serial, "serial", "", "", "Serial(s) of the asset to setup config (separated by commas - no spaces).")
 	rootCmd.PersistentFlags().StringVarP(&ipList, "iplist", "", "", "IP Address(s) of the asset to setup config (separated by commas - no spaces).")
+	rootCmd.PersistentFlags().StringVarP(&execCommand, "command", "", "", "Command to execute on BMCs.")
 	rootCmd.PersistentFlags().BoolVarP(&isChassis, "chassis", "", false, "Use in conjuction with --serial, declare asset to be a chassis")
 	rootCmd.PersistentFlags().BoolVarP(&isBlade, "blade", "", false, "Use in conjuction with --serial, declare asset to be a blade")
 	rootCmd.PersistentFlags().BoolVarP(&isDiscrete, "discrete", "", false, "Use in conjuction with --serial, declare asset to be a discrete")
