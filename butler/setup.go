@@ -10,10 +10,7 @@ import (
 	"github.com/bmc-toolbox/bmcbutler/resource"
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
-	"github.com/bmc-toolbox/bmclib/discover"
-	bmcerros "github.com/bmc-toolbox/bmclib/errors"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 )
 
 type SetupAction struct {
@@ -22,49 +19,23 @@ type SetupAction struct {
 	Log   *logrus.Logger
 }
 
-func (b *Butler) setupAsset(id int, config []byte, asset *asset.Asset) (err error) {
-	log := b.Log
+func (b *Butler) setupAsset(config []byte, asset *asset.Asset) (err error) {
+	log := b.log
 	component := "setupAsset"
 
-	bmcUser := viper.GetString("bmcUser")
-	bmcPassword := viper.GetString("bmcPassword")
+	setup := SetupAction{Log: log, Asset: asset, Id: b.id}
 
-	client, err := discover.ScanAndConnect(asset.IpAddress, bmcUser, bmcPassword)
+	//connect to the bmc/chassis bmc
+	client, err := b.setupConnection(asset, false)
 	if err != nil {
-		return fmt.Errorf("unable to connect to bmc")
+		return err
 	}
-
-	setup := SetupAction{Log: log, Asset: asset, Id: id}
 
 	switch deviceType := client.(type) {
 	case devices.Bmc:
 		log.Error("Setup not implemented for BMCs ", deviceType)
 	case devices.BmcChassis:
 		chassis := client.(devices.BmcChassis)
-		defer chassis.Close()
-
-		asset.Model = chassis.BmcType()
-		err := chassis.CheckCredentials()
-		if err == bmcerros.ErrLoginFailed {
-			log.WithFields(logrus.Fields{
-				"component": component,
-				"Asset":     fmt.Sprintf("%+v", asset),
-				"Error":     err,
-			}).Warn("unable to login to bmc, trying default credentials")
-
-			DefaultbmcUser := viper.GetString(fmt.Sprintf("bmcDefaults.%s.user", asset.Model))
-			DefaultbmcPassword := viper.GetString(fmt.Sprintf("bmcDefaults.%s.password", asset.Model))
-			chassis.UpdateCredentials(DefaultbmcUser, DefaultbmcPassword)
-			err := chassis.CheckCredentials()
-			if err != nil {
-				return fmt.Errorf("unable to login to bmc with default credentialsc")
-			}
-		}
-
-		//login successful
-		//At this point bmc lib can tell us the vendor.
-		asset.Vendor = chassis.Vendor()
-
 		//Setup a resource instance
 		//Get any templated values in the config rendered
 		resourceInstance := resource.Resource{Log: log, Vendor: asset.Vendor}

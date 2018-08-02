@@ -141,62 +141,208 @@ func (b *Butler) Run() {
 		if msg.Asset.IpAddress == "" {
 			log.WithFields(logrus.Fields{
 				"component": component,
-				"butler-id": id,
+				"butler-id": b.id,
 				"Serial":    msg.Asset.Serial,
 				"AssetType": msg.Asset.Type,
-			}).Warn("Asset was retrieved without any IP address info, skipped.")
+			}).Debug("Asset was retrieved without any IP address info, skipped.")
 			continue
 		}
 
 		//if asset has a location defined, we may want to filter it
 		if msg.Asset.Location != "" {
-			if !myLocation(msg.Asset.Location) && !b.IgnoreLocation {
+			if !myLocation(msg.Asset.Location) && !b.ignoreLocation {
 				log.WithFields(logrus.Fields{
 					"component":     component,
-					"butler-id":     id,
+					"butler-id":     b.id,
 					"Serial":        msg.Asset.Serial,
 					"AssetType":     msg.Asset.Type,
 					"AssetLocation": msg.Asset.Location,
-				}).Info("Butler wont manage asset based on its current location.")
+				}).Debug("Butler wont manage asset based on its current location.")
 				continue
 			}
 		}
 
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"butler-id": id,
+			"butler-id": b.id,
 			"IP":        msg.Asset.IpAddress,
 			"Serial":    msg.Asset.Serial,
 			"AssetType": msg.Asset.Type,
 			"Vendor":    msg.Asset.Vendor, //at this point the vendor may or may not be known.
 			"Location":  msg.Asset.Location,
-		}).Info("Configuring asset..")
+		}).Info("Connecting to asset..")
 
-		//this asset needs to be setup
-		if msg.Asset.Setup == true {
-			err = b.setupAsset(id, msg.Setup, &msg.Asset)
+		switch {
+		case msg.Asset.Setup == true:
+			err = b.setupAsset(msg.Setup, &msg.Asset)
 			if err != nil {
 				log.WithFields(logrus.Fields{
 					"component": component,
-					"butler-id": id,
+					"butler-id": b.id,
 					"Serial":    msg.Asset.Serial,
 					"AssetType": msg.Asset.Type,
+					"Vendor":    msg.Asset.Vendor, //at this point the vendor may or may not be known.
+					"Location":  msg.Asset.Location,
 					"Error":     err,
 				}).Warn("Unable to setup asset.")
 			}
 			continue
-		}
-
-		err = b.applyConfig(id, msg.Config, &msg.Asset)
-		if err != nil {
+		case msg.Asset.Execute == true:
+			err = b.executeCommand(msg.Execute, &msg.Asset)
+			if err != nil {
+				log.WithFields(logrus.Fields{
+					"component": component,
+					"butler-id": b.id,
+					"Serial":    msg.Asset.Serial,
+					"AssetType": msg.Asset.Type,
+					"Vendor":    msg.Asset.Vendor, //at this point the vendor may or may not be known.
+					"Location":  msg.Asset.Location,
+					"Error":     err,
+				}).Warn("Unable Execute command(s) on asset.")
+			}
+			continue
+		case msg.Asset.Configure == true:
+			err = b.configureAsset(msg.Config, &msg.Asset)
+			if err != nil {
+				log.WithFields(logrus.Fields{
+					"component": component,
+					"butler-id": b.id,
+					"Serial":    msg.Asset.Serial,
+					"AssetType": msg.Asset.Type,
+					"Vendor":    msg.Asset.Vendor, //at this point the vendor may or may not be known.
+					"Location":  msg.Asset.Location,
+					"Error":     err,
+				}).Warn("Unable to configure asset.")
+			}
+		default:
 			log.WithFields(logrus.Fields{
 				"component": component,
-				"butler-id": id,
+				"butler-id": b.id,
 				"Serial":    msg.Asset.Serial,
 				"AssetType": msg.Asset.Type,
+				"Vendor":    msg.Asset.Vendor, //at this point the vendor may or may not be known.
+				"Location":  msg.Asset.Location,
+			}).Warn("Unknown action request on asset.")
+		} //switch
+	} //for
+}
+
+// Sets up the connection to the asset
+// Attempts login with current, if that fails tries with default passwords.
+// Returns a connection interface that can be type cast to devices.Bmc or devices.BmcChassis
+func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) (connection interface{}, err error) {
+
+	log := b.log
+	component := "setupConnection"
+
+	bmcUser := viper.GetString("bmcUser")
+	bmcPassword := viper.GetString("bmcPassword")
+
+	client, err := discover.ScanAndConnect(asset.IpAddress, bmcUser, bmcPassword)
+	if err != nil {
+		log.WithFields(logrus.Fields{
+			"component": component,
+			"IP":        asset.IpAddress,
+			"butler-id": b.id,
+			"Error":     err,
+		}).Warn("Unable to connect to bmc.")
+		return connection, err
+	}
+
+	switch client.(type) {
+	case devices.Bmc:
+
+		bmc := client.(devices.Bmc)
+		asset.Model = bmc.BmcType()
+
+		if !dontCheckCredentials {
+			//attempt to login with credentials
+			err := bmc.CheckCredentials()
+			if err == bmcerros.ErrLoginFailed {
+				log.WithFields(logrus.Fields{
+					"component": component,
+					"butler-id": b.id,
+					"Asset":     fmt.Sprintf("%+v", asset),
+					"Error":     err,
+				}).Warn("Unable to login to bmc, trying default credentials")
+
+				DefaultbmcUser := viper.GetString(fmt.Sprintf("bmcDefaults.%s.user", asset.Model))
+				DefaultbmcPassword := viper.GetString(fmt.Sprintf("bmcDefaults.%s.password", asset.Model))
+				bmc.UpdateCredentials(DefaultbmcUser, DefaultbmcPassword)
+				err := bmc.CheckCredentials()
+				if err != nil {
+					log.WithFields(logrus.Fields{
+						"component": component,
+						"butler-id": b.id,
+						"Asset":     fmt.Sprintf("%+v", asset),
+						"Error":     err,
+					}).Warn("Unable to login to bmc with default credentials.")
+					return bmc, err
+				}
+			} else if err != nil {
+				log.WithFields(logrus.Fields{
+					"component": component,
+					"butler-id": b.id,
+					"Asset":     fmt.Sprintf("%+v", asset),
+					"Error":     err,
+				}).Warn("Failed to login to bmc.")
+				return bmc, err
+			}
+
+			//login successful
+			//At this point bmc lib can tell us the vendor.
+			asset.Vendor = bmc.Vendor()
+		}
+		return bmc, err
+
+	case devices.BmcChassis:
+		chassis := client.(devices.BmcChassis)
+		asset.Model = chassis.BmcType()
+
+		err := chassis.CheckCredentials()
+		if err == bmcerros.ErrLoginFailed {
+			log.WithFields(logrus.Fields{
+				"component": component,
+				"butler-id": b.id,
+				"Asset":     fmt.Sprintf("%+v", asset),
 				"Error":     err,
-			}).Warn("Unable to configure asset.")
+			}).Warn("Unable to login to bmc, trying default credentials")
+
+			DefaultbmcUser := viper.GetString(fmt.Sprintf("bmcDefaults.%s.user", asset.Model))
+			DefaultbmcPassword := viper.GetString(fmt.Sprintf("bmcDefaults.%s.password", asset.Model))
+			chassis.UpdateCredentials(DefaultbmcUser, DefaultbmcPassword)
+			err := chassis.CheckCredentials()
+			if err != nil {
+				log.WithFields(logrus.Fields{
+					"component": component,
+					"butler-id": b.id,
+					"Asset":     fmt.Sprintf("%+v", asset),
+					"Error":     err,
+				}).Warn("Unable to login to bmc with default credentials.")
+				return chassis, err
+			}
+		} else if err != nil {
+			log.WithFields(logrus.Fields{
+				"component": component,
+				"butler-id": b.id,
+				"Asset":     fmt.Sprintf("%+v", asset),
+				"Error":     err,
+			}).Warn("failed to login to bmc chassis.")
+			return chassis, err
 		}
 
+		//login successful
+		//At this point we know the vendor.
+		asset.Vendor = chassis.Vendor()
+		return chassis, err
+	default:
+		log.WithFields(logrus.Fields{
+			"component": component,
+			"butler-id": b.id,
+			"Asset":     fmt.Sprintf("%+v", asset),
+		}).Warn("Unkown device type.")
+		return connection, errors.New("Unknown asset type.")
 	}
+
+	return connection, err
 }
