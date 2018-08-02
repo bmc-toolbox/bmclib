@@ -25,7 +25,8 @@ func Build() (client *http.Client, err error) {
 			Timeout:   30 * time.Second,
 			KeepAlive: 30 * time.Second,
 		}).Dial,
-		TLSHandshakeTimeout: 30 * time.Second,
+		TLSHandshakeTimeout:   30 * time.Second,
+		ResponseHeaderTimeout: 30 * time.Second,
 	}
 
 	jar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
@@ -34,7 +35,7 @@ func Build() (client *http.Client, err error) {
 	}
 
 	client = &http.Client{
-		Timeout:   time.Second * 60,
+		Timeout:   time.Second * 30,
 		Transport: tr,
 		Jar:       jar,
 	}

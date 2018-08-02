@@ -29,11 +29,6 @@ func (c *C7000) httpLogin() (err error) {
 		return err
 	}
 
-	//If a token is already available, don't re-login.
-	if c.XMLToken != "" {
-		return err
-	}
-
 	//setup the login payload
 	username := Username{Text: c.username}
 	password := Password{Text: c.password}
