@@ -91,12 +91,17 @@ func myLocation(location string) bool {
 
 // butler recieves config, assets over channel
 // iterate over assets and apply config
-func (b *Butler) butler(id int) {
+func (b *Butler) Run() {
 
 	var err error
-	log := b.Log
-	component := "butler-worker"
-	defer b.SyncWG.Done()
+	log := b.log
+	component := "Run"
+	defer b.syncWG.Done()
+
+	var exitFlag bool
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	//set bmclib logger params
 	bmclibLogger.SetFormatter(&logrus.TextFormatter{})
@@ -104,13 +109,31 @@ func (b *Butler) butler(id int) {
 		bmclibLogger.SetLevel(logrus.DebugLevel)
 	}
 
+	go func() {
+		_ = <-sigChan
+		exitFlag = true
+
+		log.WithFields(logrus.Fields{
+			"component": component,
+			"butler-id": b.id,
+		}).Warn("Interrupt SIGINT/SIGTERM recieved, butlers will exit gracefully.")
+	}()
+
 	for {
-		msg, ok := <-b.Channel
+		msg, ok := <-b.channel
 		if !ok {
 			log.WithFields(logrus.Fields{
 				"component": component,
-				"butler-id": id,
-			}).Debug("butler msg channel was closed, goodbye.")
+				"butler-id": b.id,
+			}).Debug("Butler message channel closed, goodbye.")
+			return
+		}
+
+		if exitFlag {
+			log.WithFields(logrus.Fields{
+				"component": component,
+				"butler-id": b.id,
+			}).Debug("Butler exited.")
 			return
 		}
 
