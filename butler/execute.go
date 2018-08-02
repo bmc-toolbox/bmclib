@@ -39,6 +39,18 @@ func (b *Butler) executeCommand(command string, asset *asset.Asset) (err error) 
 				"Command successful": success,
 				"Error":              err,
 			}).Warn("Command execute returned error.")
+		} else {
+			log.WithFields(logrus.Fields{
+				"component":          component,
+				"butler-id":          b.id,
+				"Serial":             asset.Serial,
+				"AssetType":          asset.Type,
+				"Vendor":             asset.Vendor,
+				"Location":           asset.Location,
+				"Command":            command,
+				"Command successful": success,
+			}).Debug("Command executed.")
+
 		}
 		bmc.Close()
 	case devices.BmcChassis:
