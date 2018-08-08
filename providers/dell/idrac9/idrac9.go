@@ -882,11 +882,6 @@ func (i *IDrac9) Disks() (disks []*devices.Disk, err error) {
 	return disks, err
 }
 
-// ApplyCfg applies the configuration on the bmc
-func (i *IDrac9) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
-	return errors.ErrNotImplemented
-}
-
 // UpdateCredentials updates login credentials
 func (i *IDrac9) UpdateCredentials(username string, password string) {
 	i.username = username
