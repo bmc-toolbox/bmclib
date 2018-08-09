@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/internal/helper"
@@ -36,8 +37,31 @@ func (i *IDrac9) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 					}).Warn("Unable to apply User config.")
 				}
 			case "Syslog":
+				syslogCfg := cfg.Field(r).Interface().(*cfgresources.Syslog)
+				err := i.applySyslogParams(syslogCfg)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"step":     "ApplyCfg",
+						"resource": cfg.Field(r).Kind(),
+						"IP":       i.ip,
+						"Model":    i.BmcType(),
+						"Serial":   i.Serial,
+						"Error":    err,
+					}).Warn("Unable to set Syslog config.")
+				}
 			case "Network":
 			case "Ntp":
+				ntpCfg := cfg.Field(r).Interface().(*cfgresources.Ntp)
+				err := i.applyNtpParams(ntpCfg)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"step":     "ApplyCfg",
+						"resource": cfg.Field(r).Kind(),
+						"IP":       i.ip,
+						"Model":    i.BmcType(),
+						"Serial":   i.Serial,
+					}).Warn("Unable to set NTP config.")
+				}
 			case "Ldap":
 				ldapCfg := cfg.Field(r).Interface().(*cfgresources.Ldap)
 				err := i.applyLdapServerParams(ldapCfg)
@@ -289,7 +313,6 @@ func (i *IDrac9) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error)
 	//for each configuration ldap role group
 	for _, cfgRole := range cfg {
 		roleId, role, rExists := ldapRoleGroupInIdrac(cfgRole.Group, idracLdapRoleGroups)
-		fmt.Printf("%+v <-> %+v <-> %+v", roleId, role, rExists)
 
 		//role to be added/updated
 		if cfgRole.Enable {
@@ -360,10 +383,156 @@ func (i *IDrac9) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error)
 			"IP":              i.ip,
 			"Model":           i.BmcType(),
 			"Serial":          i.Serial,
+			"Step":            helper.WhosCalling(),
 			"Ldap Role Group": cfgRole.Role,
+			"Role Group DN":   cfgRole.Role,
 		}).Info("Ldap Role Group parameters applied.")
 
 	}
 
+	return err
+}
+
+func (i *IDrac9) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
+
+	var enable string
+
+	if cfg.Enable {
+		enable = "Enabled"
+	} else {
+		enable = "Disabled"
+	}
+
+	if cfg.Server1 == "" {
+		msg := "NTP resource expects parameter: server1."
+		log.WithFields(log.Fields{
+			"IP":     i.ip,
+			"Model":  i.BmcType(),
+			"Serial": i.Serial,
+			"Step":   helper.WhosCalling(),
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	if cfg.Timezone == "" {
+		msg := "NTP resource expects parameter: timezone."
+		log.WithFields(log.Fields{
+			"IP":     i.ip,
+			"Model":  i.BmcType(),
+			"Serial": i.Serial,
+			"Step":   helper.WhosCalling(),
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	_, validTimezone := Timezones[cfg.Timezone]
+	if !validTimezone {
+		msg := "NTP resource a valid timezone parameter, for valid timezones see dell/idrac9/model.go"
+		log.WithFields(log.Fields{
+			"IP":               i.ip,
+			"Model":            i.BmcType(),
+			"Serial":           i.Serial,
+			"step":             helper.WhosCalling(),
+			"Unknown Timezone": cfg.Timezone,
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	err = i.putTimezone(Timezone{Timezone: cfg.Timezone})
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IP":       i.ip,
+			"Model":    i.BmcType(),
+			"Serial":   i.Serial,
+			"step":     helper.WhosCalling(),
+			"Timezone": cfg.Timezone,
+			"Error":    err,
+		}).Warn("PUT timezone request failed.")
+		return err
+	}
+
+	payload := NtpConfig{
+		Enable: enable,
+		NTP1:   cfg.Server1,
+		NTP2:   cfg.Server2,
+		NTP3:   cfg.Server3,
+	}
+
+	err = i.putNtpConfig(payload)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IP":     i.ip,
+			"Model":  i.BmcType(),
+			"Serial": i.Serial,
+			"step":   helper.WhosCalling(),
+			"Error":  err,
+		}).Warn("PUT Ntp  request failed.")
+		return err
+	}
+
+	log.WithFields(log.Fields{
+		"IP":     i.ip,
+		"Model":  i.BmcType(),
+		"Serial": i.Serial,
+	}).Info("NTP servers param applied.")
+
+	return err
+}
+
+func (i *IDrac9) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
+
+	var port int
+	enable := "Enabled"
+
+	if cfg.Server == "" {
+		log.WithFields(log.Fields{
+			"IP":     i.ip,
+			"Model":  i.BmcType(),
+			"Serial": i.Serial,
+			"step":   helper.WhosCalling(),
+		}).Warn("Syslog resource expects parameter: Server.")
+		return
+	}
+
+	if cfg.Port == 0 {
+		log.WithFields(log.Fields{
+			"step": helper.WhosCalling(),
+		}).Debug("Syslog resource port set to default: 514.")
+		port = 514
+	} else {
+		port = cfg.Port
+	}
+
+	if cfg.Enable != true {
+		enable = "Disabled"
+		log.WithFields(log.Fields{
+			"step": helper.WhosCalling(),
+		}).Debug("Syslog resource declared with enable: false.")
+	}
+
+	payload := Syslog{
+		Port:    strconv.Itoa(port),
+		Server1: cfg.Server,
+		Server2: "",
+		Server3: "",
+		Enable:  enable,
+	}
+	err = i.putSyslog(payload)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IP":     i.ip,
+			"Model":  i.BmcType(),
+			"Serial": i.Serial,
+			"step":   helper.WhosCalling(),
+			"Error":  err,
+		}).Warn("PUT Syslog request failed.")
+		return err
+	}
+
+	log.WithFields(log.Fields{
+		"IP":     i.ip,
+		"Model":  i.BmcType(),
+		"Serial": i.Serial,
+	}).Info("Syslog parameters applied.")
 	return err
 }

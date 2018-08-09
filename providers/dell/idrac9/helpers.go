@@ -150,7 +150,7 @@ func (i *IDrac9) putLdapRoleGroup(roleId string, ldapRoleGroup LdapRoleGroup) (e
 
 	payload, err := json.Marshal(idracPayload)
 	if err != nil {
-		msg := fmt.Sprintf("Error unmarshalling Ldap Role Group payload: %s", err)
+		msg := fmt.Sprintf("Error marshalling Ldap Role Group payload: %s", err)
 		return errors.New(msg)
 	}
 
@@ -158,6 +158,72 @@ func (i *IDrac9) putLdapRoleGroup(roleId string, ldapRoleGroup LdapRoleGroup) (e
 	statusCode, _, err := i.put(endpoint, payload)
 	if err != nil || statusCode != 200 {
 		msg := fmt.Sprintf("PUT request to set Ldap Role Group config returned error, return code: %d", statusCode)
+		return errors.New(msg)
+	}
+
+	return err
+}
+
+// PUTs timezone config
+func (i *IDrac9) putTimezone(timezone Timezone) (err error) {
+
+	idracPayload := make(map[string]Timezone)
+	idracPayload["iDRAC.Time"] = timezone
+
+	payload, err := json.Marshal(idracPayload)
+	if err != nil {
+		msg := fmt.Sprintf("Error marshalling Timezone payload: %s", err)
+		return errors.New(msg)
+	}
+
+	endpoint := fmt.Sprintf("sysmgmt/2012/server/configgroup/iDRAC.Time")
+	statusCode, _, err := i.put(endpoint, payload)
+	if err != nil || statusCode != 200 {
+		msg := fmt.Sprintf("PUT request to set Timezone config returned error, return code: %d", statusCode)
+		return errors.New(msg)
+	}
+
+	return err
+}
+
+// PUTs NTP config
+func (i *IDrac9) putNtpConfig(ntpConfig NtpConfig) (err error) {
+
+	idracPayload := make(map[string]NtpConfig)
+	idracPayload["iDRAC.NTPConfigGroup"] = ntpConfig
+
+	payload, err := json.Marshal(idracPayload)
+	if err != nil {
+		msg := fmt.Sprintf("Error marshalling NTP payload: %s", err)
+		return errors.New(msg)
+	}
+
+	endpoint := fmt.Sprintf("sysmgmt/2012/server/configgroup/iDRAC.NTPConfigGroup")
+	statusCode, _, err := i.put(endpoint, payload)
+	if err != nil || statusCode != 200 {
+		msg := fmt.Sprintf("PUT request to set Timezone config returned error, return code: %d", statusCode)
+		return errors.New(msg)
+	}
+
+	return err
+}
+
+// PUTs NTP config
+func (i *IDrac9) putSyslog(syslog Syslog) (err error) {
+
+	idracPayload := make(map[string]Syslog)
+	idracPayload["iDRAC.SysLog"] = syslog
+
+	payload, err := json.Marshal(idracPayload)
+	if err != nil {
+		msg := fmt.Sprintf("Error marshalling Syslog payload: %s", err)
+		return errors.New(msg)
+	}
+
+	endpoint := fmt.Sprintf("sysmgmt/2012/server/configgroup/iDRAC.Syslog")
+	statusCode, _, err := i.put(endpoint, payload)
+	if err != nil || statusCode != 200 {
+		msg := fmt.Sprintf("PUT request to set Syslog config returned error, return code: %d", statusCode)
 		return errors.New(msg)
 	}
 
