@@ -2,6 +2,7 @@ package idrac9
 
 import (
 	"encoding/json"
+
 	"github.com/bmc-toolbox/bmclib/internal/helper"
 	log "github.com/sirupsen/logrus"
 )
