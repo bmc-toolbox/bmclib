@@ -37,3 +37,35 @@ func (i *IDrac9) queryUsers() (users map[int]User, err error) {
 
 	return userData["iDRAC.Users"], err
 }
+
+func (i *IDrac9) queryLdapRoleGroups() (ldapRoleGroups LdapRoleGroups, err error) {
+
+	endpoint := "sysmgmt/2012/server/configgroup/iDRAC.LDAPRoleGroup"
+
+	data, err := i.get(endpoint, &map[string]string{})
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IP":       i.ip,
+			"Model":    i.BmcType(),
+			"endpoint": endpoint,
+			"step":     helper.WhosCalling(),
+			"Error":    err,
+		}).Warn("GET request failed.")
+		return ldapRoleGroups, err
+	}
+
+	idracLdapRoleGroups := make(idracLdapRoleGroups)
+	err = json.Unmarshal(data, &idracLdapRoleGroups)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"step":     "queryUserInfo",
+			"resource": "User",
+			"IP":       i.ip,
+			"Model":    i.BmcType(),
+			"Error":    err,
+		}).Warn("Unable to unmarshal payload.")
+		return ldapRoleGroups, err
+	}
+
+	return idracLdapRoleGroups["iDRAC.LDAPRoleGroup"], err
+}

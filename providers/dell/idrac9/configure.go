@@ -1,7 +1,6 @@
 package idrac9
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
@@ -40,7 +39,31 @@ func (i *IDrac9) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 			case "Network":
 			case "Ntp":
 			case "Ldap":
+				ldapCfg := cfg.Field(r).Interface().(*cfgresources.Ldap)
+				err := i.applyLdapServerParams(ldapCfg)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"step":     "applyLdapParams",
+						"resource": "Ldap",
+						"IP":       i.ip,
+						"Model":    i.BmcType(),
+						"Serial":   i.Serial,
+						"Error":    err,
+					}).Warn("applyLdapServerParams returned error.")
+				}
 			case "LdapGroup":
+				ldapGroupCfg := cfg.Field(r).Interface().([]*cfgresources.LdapGroup)
+				err := i.applyLdapGroupParams(ldapGroupCfg)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"step":     "applyLdapParams",
+						"resource": "Ldap",
+						"IP":       i.ip,
+						"Model":    i.BmcType(),
+						"Serial":   i.Serial,
+						"Error":    err,
+					}).Warn("applyLdapGroupParams returned error.")
+				}
 			case "Ssl":
 			default:
 				log.WithFields(log.Fields{
@@ -246,6 +269,185 @@ func (i *IDrac9) applyUserParams(cfgUsers []*cfgresources.User) (err error) {
 			"Serial": i.Serial,
 			"User":   cfgUser.Name,
 		}).Info("User parameters applied.")
+
+	}
+
+	return err
+}
+
+// Applies LDAP server params
+func (i *IDrac9) applyLdapServerParams(cfg *cfgresources.Ldap) (err error) {
+	params := map[string]string{
+		"Enable":               "Disabled",
+		"Port":                 "636",
+		"UserAttribute":        "uid",
+		"GroupAttribute":       "memberUid",
+		"GroupAttributeIsDN":   "Enabled",
+		"CertValidationEnable": "Disabled",
+		"SearchFilter":         "objectClass=posixAccount",
+	}
+
+	if cfg.Server == "" {
+		msg := "Ldap resource parameter Server required but not declared."
+		log.WithFields(log.Fields{
+			"IP":     i.ip,
+			"Model":  i.BmcType(),
+			"Serial": i.Serial,
+			"step":   helper.WhosCalling,
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	if cfg.BaseDn == "" {
+		msg := "Ldap resource parameter BaseDn required but not declared."
+		log.WithFields(log.Fields{
+			"Model": i.BmcType(),
+			"step":  helper.WhosCalling,
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	if cfg.Enable {
+		params["Enable"] = "Enabled"
+	}
+
+	if cfg.Port == 0 {
+		params["Port"] = string(cfg.Port)
+	}
+
+	if cfg.UserAttribute != "" {
+		params["UserAttribute"] = cfg.UserAttribute
+	}
+
+	if cfg.GroupAttribute != "" {
+		params["GroupAttribute"] = cfg.GroupAttribute
+	}
+
+	if cfg.SearchFilter != "" {
+		params["SearchFilter"] = cfg.SearchFilter
+	}
+
+	payload := Ldap{
+		BaseDN:               cfg.BaseDn,
+		BindDN:               cfg.BindDn,
+		CertValidationEnable: params["CertValidationEnable"],
+		Enable:               params["Enable"],
+		GroupAttribute:       params["GroupAttribute"],
+		GroupAttributeIsDN:   params["GroupAttributeIsDN"],
+		Port:                 params["Port"],
+		SearchFilter:         params["SearchFilter"],
+		Server:               cfg.Server,
+		UserAttribute:        params["UserAttribute"],
+	}
+
+	err = i.putLdap(payload)
+	if err != nil {
+		msg := "Ldap params PUT request failed."
+		log.WithFields(log.Fields{
+			"IP":     i.ip,
+			"Model":  i.BmcType(),
+			"Serial": i.Serial,
+			"step":   helper.WhosCalling(),
+			"Error":  err,
+		}).Warn(msg)
+		return errors.New("Ldap params put request failed.")
+	}
+
+	return err
+}
+
+// Iterates over iDrac Ldap role groups and adds/removes/modifies ldap role groups
+func (i *IDrac9) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) {
+
+	idracLdapRoleGroups, err := i.queryLdapRoleGroups()
+	if err != nil {
+		msg := "Unable to query existing users"
+		log.WithFields(log.Fields{
+			"step":   "applyUserParams",
+			"IP":     i.ip,
+			"Model":  i.BmcType(),
+			"Serial": i.Serial,
+			"Error":  err,
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	//for each configuration ldap role group
+	for _, cfgRole := range cfg {
+		roleId, role, rExists := ldapRoleGroupInIdrac(cfgRole.Group, idracLdapRoleGroups)
+		fmt.Printf("%+v <-> %+v <-> %+v", roleId, role, rExists)
+
+		//role to be added/updated
+		if cfgRole.Enable {
+
+			//new role to be added
+			if rExists == false {
+				roleId, role, err = getEmptyLdapRoleGroupSlot(idracLdapRoleGroups)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"IP":              i.ip,
+						"Model":           i.BmcType(),
+						"Serial":          i.Serial,
+						"step":            helper.WhosCalling(),
+						"Ldap Role Group": cfgRole.Group,
+						"Role Group DN":   cfgRole.Role,
+						"Error":           err,
+					}).Warn("Unable to add new Ldap Role Group.")
+					continue
+				}
+			}
+
+			role.DN = cfgRole.Group
+
+			//set appropriate privileges
+			if cfgRole.Role == "admin" {
+				role.Privilege = "511"
+			} else {
+				role.Privilege = "499"
+			}
+
+			err = i.putLdapRoleGroup(roleId, role)
+			if err != nil {
+				log.WithFields(log.Fields{
+					"IP":              i.ip,
+					"Model":           i.BmcType(),
+					"Serial":          i.Serial,
+					"step":            helper.WhosCalling(),
+					"Ldap Role Group": cfgRole.Group,
+					"Role Group DN":   cfgRole.Role,
+					"Error":           err,
+				}).Warn("Add/Update LDAP Role Group request failed.")
+				continue
+			}
+
+		} // end if cfgUser.Enable
+
+		//if the role exists but is disabled in our config, remove the role
+		if cfgRole.Enable == false && rExists == true {
+
+			role.DN = ""
+			role.Privilege = "0"
+			err = i.putLdapRoleGroup(roleId, role)
+			if err != nil {
+				log.WithFields(log.Fields{
+					"IP":              i.ip,
+					"Model":           i.BmcType(),
+					"Serial":          i.Serial,
+					"step":            helper.WhosCalling(),
+					"Ldap Role Group": cfgRole.Group,
+					"Role Group DN":   cfgRole.Role,
+					"Error":           err,
+				}).Warn("Remove LDAP Role Group request failed.")
+				continue
+			}
+		}
+
+		log.WithFields(log.Fields{
+			"IP":              i.ip,
+			"Model":           i.BmcType(),
+			"Serial":          i.Serial,
+			"Ldap Role Group": cfgRole.Role,
+		}).Info("Ldap Role Group parameters applied.")
 
 	}
 
