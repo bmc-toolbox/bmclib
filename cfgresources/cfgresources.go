@@ -79,6 +79,7 @@ type Network struct {
 	DNSFromDHCP bool   `yaml:"dnsfromdhcp"`
 	SshEnable   bool   `yaml:"sshEnable"`
 	SshPort     int    `yaml:"sshPort"`
+	SolEnable   bool   `yaml:"solEnable"` //Serial over lan
 	IpmiEnable  bool   `yaml:"ipmiEnable"`
 	DhcpEnable  bool   `yaml:"dhcpEnable"`
 	IpmiPort    int    `yaml:"ipmiPort"`
