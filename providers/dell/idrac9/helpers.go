@@ -229,3 +229,91 @@ func (i *IDrac9) putSyslog(syslog Syslog) (err error) {
 
 	return err
 }
+
+// PUTs IPv4 config
+func (i *IDrac9) putIPv4(ipv4 Ipv4) (err error) {
+
+	idracPayload := make(map[string]Ipv4)
+	idracPayload["iDRAC.IPv4"] = ipv4
+
+	payload, err := json.Marshal(idracPayload)
+	if err != nil {
+		msg := fmt.Sprintf("Error marshalling Ipv4 payload: %s", err)
+		return errors.New(msg)
+	}
+
+	endpoint := fmt.Sprintf("sysmgmt/2012/server/configgroup/iDRAC.IPv4")
+	statusCode, _, err := i.put(endpoint, payload)
+	if err != nil || statusCode != 200 {
+		msg := fmt.Sprintf("PUT request to set IPv4 config returned error, return code: %d", statusCode)
+		return errors.New(msg)
+	}
+
+	return err
+}
+
+// PUTs SerialOverLan config
+func (i *IDrac9) putSerialOverLan(serialOverLan SerialOverLan) (err error) {
+
+	idracPayload := make(map[string]SerialOverLan)
+	idracPayload["iDRAC.IPMISOL"] = serialOverLan
+
+	payload, err := json.Marshal(idracPayload)
+	if err != nil {
+		msg := fmt.Sprintf("Error marshalling SerialOverLan payload: %s", err)
+		return errors.New(msg)
+	}
+
+	endpoint := fmt.Sprintf("sysmgmt/2012/server/configgroup/iDRAC.IPMISOL")
+	statusCode, _, err := i.put(endpoint, payload)
+	if err != nil || statusCode != 200 {
+		msg := fmt.Sprintf("PUT request to set SerialOverLan config returned error, return code: %d", statusCode)
+		return errors.New(msg)
+	}
+
+	return err
+}
+
+// PUTs SerialRedirection config
+func (i *IDrac9) putSerialRedirection(serialRedirection SerialRedirection) (err error) {
+
+	idracPayload := make(map[string]SerialRedirection)
+	idracPayload["iDRAC.SerialRedirection"] = serialRedirection
+
+	payload, err := json.Marshal(idracPayload)
+	if err != nil {
+		msg := fmt.Sprintf("Error marshalling serialRedirection payload: %s", err)
+		return errors.New(msg)
+	}
+
+	endpoint := fmt.Sprintf("sysmgmt/2012/server/configgroup/iDRAC.SerialRedirection")
+	statusCode, _, err := i.put(endpoint, payload)
+	if err != nil || statusCode != 200 {
+		msg := fmt.Sprintf("PUT request to set serialRedirection config returned error, return code: %d", statusCode)
+		return errors.New(msg)
+	}
+
+	return err
+}
+
+// PUTs IpmiOverLan config
+func (i *IDrac9) putIpmiOverLan(ipmiOverLan IpmiOverLan) (err error) {
+
+	idracPayload := make(map[string]IpmiOverLan)
+	idracPayload["iDRAC.IPMILan"] = ipmiOverLan
+
+	payload, err := json.Marshal(idracPayload)
+	if err != nil {
+		msg := fmt.Sprintf("Error marshalling ipmiOverLan payload: %s", err)
+		return errors.New(msg)
+	}
+
+	endpoint := fmt.Sprintf("sysmgmt/2012/server/configgroup/iDRAC.IPMILAN")
+	statusCode, _, err := i.put(endpoint, payload)
+	if err != nil || statusCode != 200 {
+		msg := fmt.Sprintf("PUT request to set IpmiOverLan config returned error, return code: %d", statusCode)
+		return errors.New(msg)
+	}
+
+	return err
+}

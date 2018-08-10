@@ -50,6 +50,18 @@ func (i *IDrac9) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 					}).Warn("Unable to set Syslog config.")
 				}
 			case "Network":
+				networkCfg := cfg.Field(r).Interface().(*cfgresources.Network)
+				err := i.applyNetworkParams(networkCfg)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"step":     "ApplyCfg",
+						"resource": cfg.Field(r).Kind(),
+						"IP":       i.ip,
+						"Model":    i.BmcType(),
+						"Serial":   i.Serial,
+						"Error":    err,
+					}).Warn("Unable to set Network config params.")
+				}
 			case "Ntp":
 				ntpCfg := cfg.Field(r).Interface().(*cfgresources.Ntp)
 				err := i.applyNtpParams(ntpCfg)
@@ -534,5 +546,104 @@ func (i *IDrac9) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
 		"Model":  i.BmcType(),
 		"Serial": i.Serial,
 	}).Info("Syslog parameters applied.")
+	return err
+}
+
+func (i *IDrac9) applyNetworkParams(cfg *cfgresources.Network) (err error) {
+
+	params := map[string]string{
+		"EnableIPv4":              "Enabled",
+		"DHCPEnable":              "Enabled",
+		"DNSFromDHCP":             "Enabled",
+		"EnableSerialOverLan":     "Enabled",
+		"EnableSerialRedirection": "Enabled",
+		"EnableIpmiOverLan":       "Enabled",
+	}
+
+	if cfg.DNSFromDHCP == false {
+		params["DNSFromDHCP"] = "Disabled"
+	}
+
+	if cfg.SolEnable == false {
+		params["EnableSerialOverLan"] = "Disabled"
+		params["EnableSerialRedirection"] = "Disabled"
+	}
+
+	if cfg.IpmiEnable == false {
+		params["EnableIpmiOverLan"] = "Disabled"
+	}
+
+	ipv4 := Ipv4{
+		Enable:      params["EnableIPv4"],
+		DHCPEnable:  params["DHCPEnable"],
+		DNSFromDHCP: params["DNSFromDHCP"],
+	}
+
+	serialOverLan := SerialOverLan{
+		Enable:       params["EnableSerialOverLan"],
+		BaudRate:     "115200",
+		MinPrivilege: "Administrator",
+	}
+
+	serialRedirection := SerialRedirection{
+		Enable:  params["EnableSerialRedirection"],
+		QuitKey: "^\\",
+	}
+
+	ipmiOverLan := IpmiOverLan{
+		Enable:        params["EnableIpmiOverLan"],
+		PrivLimit:     "Administrator",
+		EncryptionKey: "0000000000000000000000000000000000000000",
+	}
+
+	err = i.putIPv4(ipv4)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IP":     i.ip,
+			"Model":  i.BmcType(),
+			"Serial": i.Serial,
+			"step":   helper.WhosCalling(),
+			"Error":  err,
+		}).Warn("PUT IPv4 request failed.")
+	}
+
+	err = i.putSerialOverLan(serialOverLan)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IP":     i.ip,
+			"Model":  i.BmcType(),
+			"Serial": i.Serial,
+			"step":   helper.WhosCalling(),
+			"Error":  err,
+		}).Warn("PUT SerialOverLan request failed.")
+	}
+
+	err = i.putSerialRedirection(serialRedirection)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IP":     i.ip,
+			"Model":  i.BmcType(),
+			"Serial": i.Serial,
+			"step":   helper.WhosCalling(),
+			"Error":  err,
+		}).Warn("PUT SerialRedirection request failed.")
+	}
+
+	err = i.putIpmiOverLan(ipmiOverLan)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IP":     i.ip,
+			"Model":  i.BmcType(),
+			"Serial": i.Serial,
+			"step":   helper.WhosCalling(),
+			"Error":  err,
+		}).Warn("PUT IpmiOverLan request failed.")
+	}
+
+	log.WithFields(log.Fields{
+		"IP":     i.ip,
+		"Model":  i.BmcType(),
+		"Serial": i.Serial,
+	}).Info("Network config parameters applied.")
 	return err
 }

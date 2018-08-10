@@ -51,6 +51,29 @@ type NtpConfig struct {
 	NTP3   string `json:"NTP3"`      //example2.ntp.com
 }
 
+type Ipv4 struct {
+	Enable      string `json:"Enable"`      //Enabled
+	DHCPEnable  string `json:"DHCPEnable"`  //Enabled
+	DNSFromDHCP string `json:"DNSFromDHCP"` //Enabled
+}
+
+type IpmiOverLan struct {
+	Enable        string `json:"Enable"`        //Enabled
+	PrivLimit     string `json:"PrivLimit"`     //Administrator
+	EncryptionKey string `json:"EncryptionKey"` //0000000000000000000000000000000000000000
+}
+
+type SerialRedirection struct {
+	Enable  string `json:"Enable"`  //Enabled
+	QuitKey string `json:"QuitKey"` //^\\
+}
+
+type SerialOverLan struct {
+	Enable       string `json:"Enable"`       //Enabled
+	BaudRate     string `json:"BaudRate"`     //115200
+	MinPrivilege string `json:"MinPrivilege"` //Administrator
+}
+
 type Timezone struct {
 	Timezone string `json:"Timezone"` //CET
 }
