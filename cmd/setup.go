@@ -84,7 +84,7 @@ func setup() {
 
 	// Spawn butlers to work
 	butlerChan := make(chan butler.ButlerMsg, 10)
-	butlerManager := butler.ButlerManager{Log: log, SpawnCount: butlersToSpawn, Channel: butlerChan}
+	butlerManager := butler.ButlerManager{Log: log, SpawnCount: butlersToSpawn, ButlerChan: butlerChan}
 
 	// let butler run from any location on any given BMC
 	if serial != "" || ipList != "" || ignoreLocation {

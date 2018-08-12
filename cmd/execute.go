@@ -88,7 +88,7 @@ func execute() {
 
 	// Spawn butlers to work
 	butlerChan := make(chan butler.ButlerMsg, 5)
-	butlerManager := butler.ButlerManager{Log: log, SpawnCount: butlersToSpawn, Channel: butlerChan}
+	butlerManager := butler.ButlerManager{Log: log, SpawnCount: butlersToSpawn, ButlerChan: butlerChan}
 
 	if serial != "" {
 		butlerManager.IgnoreLocation = true
