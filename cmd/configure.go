@@ -19,11 +19,13 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/bmc-toolbox/bmcbutler/asset"
 	"github.com/bmc-toolbox/bmcbutler/butler"
 	"github.com/bmc-toolbox/bmcbutler/inventory"
+	"github.com/bmc-toolbox/bmcbutler/metrics"
 	"github.com/bmc-toolbox/bmcbutler/resource"
 )
 
@@ -41,6 +43,8 @@ func init() {
 }
 
 func configure() {
+
+	var configureWG sync.WaitGroup
 
 	// A channel to recieve inventory assets
 	inventoryChan := make(chan []asset.Asset, 5)
@@ -87,9 +91,28 @@ func configure() {
 		os.Exit(1)
 	}
 
+	// A channel butlers sends metrics to the metrics sender
+	metricsChan := make(chan []metrics.MetricsMsg, 5)
+	configureWG.Add(1)
+
+	//the metrics sender
+	metricsSender := metrics.Metrics{
+		Logger:  log,
+		Channel: metricsChan,
+		SyncWG:  &configureWG,
+	}
+
+	//spawm metrics sender
+	go metricsSender.Run()
+
 	// Spawn butlers to work
 	butlerChan := make(chan butler.ButlerMsg, 5)
-	butlerManager := butler.ButlerManager{Log: log, SpawnCount: butlersToSpawn, Channel: butlerChan}
+	butlerManager := butler.ButlerManager{
+		Log:         log,
+		SpawnCount:  butlersToSpawn,
+		ButlerChan:  butlerChan,
+		MetricsChan: metricsChan,
+	}
 
 	if serial != "" {
 		butlerManager.IgnoreLocation = true
@@ -127,4 +150,8 @@ func configure() {
 
 	//wait until butlers are done.
 	butlerManager.Wait()
+
+	close(metricsChan)
+	configureWG.Wait()
+
 }
