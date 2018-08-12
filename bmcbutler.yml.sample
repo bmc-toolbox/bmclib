@@ -3,6 +3,13 @@ butlersToSpawn: 1
 bmcCfgDir: /etc/bmcbutler/cfg
 bmcUser: Administrator
 bmcPassword: ThisWaschangedHopefully
+metrics:
+  receiver:
+    target: graphite
+    graphite:
+      host: graphite.example.foo
+      port: 3002
+      prefix: foo.bar.bmc.butler
 inventory:
   configure:
     source: csv
