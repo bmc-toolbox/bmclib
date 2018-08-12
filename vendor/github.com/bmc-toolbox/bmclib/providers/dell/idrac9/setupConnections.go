@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 
@@ -118,12 +117,10 @@ func (i *IDrac9) sshLogin() (err error) {
 // Close closes the connection properly
 func (i *IDrac9) Close() (err error) {
 	if i.httpClient != nil {
-		resp, e := i.httpClient.Get(fmt.Sprintf("https://%s/data/logout", i.ip))
+		_, _, e := i.delete_("sysmgmt/2015/bmc/session")
 		if e != nil {
 			err = multierror.Append(e, err)
 		}
-		defer resp.Body.Close()
-		io.Copy(ioutil.Discard, resp.Body)
 	}
 
 	if i.sshClient != nil {

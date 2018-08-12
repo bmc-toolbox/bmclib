@@ -249,6 +249,8 @@ func (i *IDrac8) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
 	data["iDRAC.SysLog"] = Syslog{
 		Port:    strconv.Itoa(port),
 		Server1: cfg.Server,
+		Server2: "",
+		Server3: "",
 		Enable:  enable,
 	}
 

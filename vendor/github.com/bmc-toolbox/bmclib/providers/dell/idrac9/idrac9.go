@@ -1,17 +1,19 @@
 package idrac9
 
 import (
+	"bytes"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"strconv"
 	"strings"
 
 	multierror "github.com/hashicorp/go-multierror"
 
-	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
@@ -71,11 +73,31 @@ func (i *IDrac9) get(endpoint string, extraHeaders *map[string]string) (payload 
 		}
 	}
 
+	if log.GetLevel() == log.DebugLevel {
+		dump, err := httputil.DumpRequestOut(req, true)
+		if err == nil {
+			log.Println(fmt.Sprintf("[Request] %s/%s", bmcURL, endpoint))
+			log.Println(">>>>>>>>>>>>>>>")
+			log.Printf("%s\n\n", dump)
+			log.Println(">>>>>>>>>>>>>>>")
+		}
+	}
+
 	resp, err := i.httpClient.Do(req)
 	if err != nil {
 		return payload, err
 	}
 	defer resp.Body.Close()
+
+	if log.GetLevel() == log.DebugLevel {
+		dump, err := httputil.DumpResponse(resp, true)
+		if err == nil {
+			log.Println("[Response]")
+			log.Println("<<<<<<<<<<<<<<")
+			log.Printf("%s\n\n", dump)
+			log.Println("<<<<<<<<<<<<<<")
+		}
+	}
 
 	payload, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -87,6 +109,181 @@ func (i *IDrac9) get(endpoint string, extraHeaders *map[string]string) (payload 
 	}
 
 	return payload, err
+}
+
+// PUTs data
+func (i *IDrac9) put(endpoint string, payload []byte) (statusCode int, response []byte, err error) {
+	bmcURL := fmt.Sprintf("https://%s", i.ip)
+
+	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/%s", bmcURL, endpoint), bytes.NewReader(payload))
+	if err != nil {
+		return statusCode, response, err
+	}
+
+	req.Header.Add("XSRF-TOKEN", i.xsrfToken)
+
+	u, err := url.Parse(bmcURL)
+	if err != nil {
+		return statusCode, response, err
+	}
+
+	for _, cookie := range i.httpClient.Jar.Cookies(u) {
+		if cookie.Name == "-http-session-" || cookie.Name == "tokenvalue" {
+			req.AddCookie(cookie)
+		}
+	}
+
+	if log.GetLevel() == log.DebugLevel {
+		dump, err := httputil.DumpRequestOut(req, true)
+		if err == nil {
+			log.Println(fmt.Sprintf("[Request] %s/%s", bmcURL, endpoint))
+			log.Println(">>>>>>>>>>>>>>>")
+			log.Printf("%s\n\n", dump)
+			log.Println(">>>>>>>>>>>>>>>")
+		}
+	}
+
+	resp, err := i.httpClient.Do(req)
+	if err != nil {
+		return statusCode, response, err
+	}
+	defer resp.Body.Close()
+
+	if log.GetLevel() == log.DebugLevel {
+		dump, err := httputil.DumpResponse(resp, true)
+		if err == nil {
+			log.Println("[Response]")
+			log.Println("<<<<<<<<<<<<<<")
+			log.Printf("%s\n\n", dump)
+			log.Println("<<<<<<<<<<<<<<")
+		}
+	}
+
+	response, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return statusCode, response, err
+	}
+
+	if resp.StatusCode == 500 {
+		return resp.StatusCode, response, errors.Err500
+	}
+
+	return resp.StatusCode, response, err
+}
+
+// posts the payload to the given endpoint
+func (i *IDrac9) post(endpoint string, data []byte) (statusCode int, body []byte, err error) {
+
+	bmcURL := fmt.Sprintf("https://%s", i.ip)
+
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/%s", bmcURL, endpoint), bytes.NewReader(data))
+	if err != nil {
+		return 0, []byte{}, err
+	}
+
+	u, err := url.Parse(bmcURL)
+	if err != nil {
+		return 0, []byte{}, err
+	}
+
+	for _, cookie := range i.httpClient.Jar.Cookies(u) {
+		if cookie.Name == "-http-session-" || cookie.Name == "tokenvalue" {
+			req.AddCookie(cookie)
+		}
+	}
+
+	req.Header.Add("XSRF-TOKEN", i.xsrfToken)
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	if log.GetLevel() == log.DebugLevel {
+		dump, err := httputil.DumpRequestOut(req, true)
+		if err == nil {
+			log.Println(fmt.Sprintf("[Request] https://%s/%s", i.ip, endpoint))
+			log.Println(">>>>>>>>>>>>>>>")
+			log.Printf("%s\n\n", dump)
+			log.Println(">>>>>>>>>>>>>>>")
+		}
+	}
+
+	resp, err := i.httpClient.Do(req)
+	if err != nil {
+		return 0, []byte{}, err
+	}
+	defer resp.Body.Close()
+	if log.GetLevel() == log.DebugLevel {
+		dump, err := httputil.DumpResponse(resp, true)
+		if err == nil {
+			log.Println("[Response]")
+			log.Println("<<<<<<<<<<<<<<")
+			log.Printf("%s\n\n", dump)
+			log.Println("<<<<<<<<<<<<<<")
+		}
+	}
+
+	body, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return 0, []byte{}, err
+	}
+
+	//fmt.Printf("%s\n", body)
+	return resp.StatusCode, body, err
+}
+
+// calls delete on the given endpoint
+func (i *IDrac9) delete_(endpoint string) (statusCode int, payload []byte, err error) {
+
+	bmcURL := fmt.Sprintf("https://%s", i.ip)
+
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/%s", bmcURL, endpoint), nil)
+	if err != nil {
+		return 0, []byte{}, err
+	}
+
+	u, err := url.Parse(bmcURL)
+	if err != nil {
+		return 0, []byte{}, err
+	}
+
+	for _, cookie := range i.httpClient.Jar.Cookies(u) {
+		if cookie.Name == "-http-session-" || cookie.Name == "tokenvalue" {
+			req.AddCookie(cookie)
+		}
+	}
+
+	req.Header.Add("XSRF-TOKEN", i.xsrfToken)
+
+	if log.GetLevel() == log.DebugLevel {
+		dump, err := httputil.DumpRequestOut(req, true)
+		if err == nil {
+			log.Println(fmt.Sprintf("[Request] %s", fmt.Sprintf("%s/%s", bmcURL, endpoint)))
+			log.Println(">>>>>>>>>>>>>>>")
+			log.Printf("%s\n\n", dump)
+			log.Println(">>>>>>>>>>>>>>>")
+		}
+	}
+
+	resp, err := i.httpClient.Do(req)
+	if err != nil {
+		return statusCode, payload, err
+	}
+	defer resp.Body.Close()
+
+	if log.GetLevel() == log.DebugLevel {
+		dump, err := httputil.DumpResponse(resp, true)
+		if err == nil {
+			log.Println("[Response]")
+			log.Println("<<<<<<<<<<<<<<")
+			log.Printf("%s\n\n", dump)
+			log.Println("<<<<<<<<<<<<<<")
+		}
+	}
+
+	payload, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return resp.StatusCode, payload, err
+	}
+
+	return resp.StatusCode, payload, err
 }
 
 // Nics returns all found Nics in the device
@@ -683,11 +880,6 @@ func (i *IDrac9) Disks() (disks []*devices.Disk, err error) {
 		}
 	}
 	return disks, err
-}
-
-// ApplyCfg applies the configuration on the bmc
-func (i *IDrac9) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
-	return errors.ErrNotImplemented
 }
 
 // UpdateCredentials updates login credentials
