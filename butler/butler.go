@@ -16,10 +16,13 @@ package butler
 
 import (
 	"github.com/bmc-toolbox/bmcbutler/asset"
+	"github.com/bmc-toolbox/bmcbutler/metrics"
+
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/discover"
 	bmcerros "github.com/bmc-toolbox/bmclib/errors"
 	bmclibLogger "github.com/bmc-toolbox/bmclib/logging"
+
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
@@ -42,7 +45,8 @@ type ButlerManager struct {
 	Log            *logrus.Logger
 	SpawnCount     int
 	SyncWG         sync.WaitGroup
-	Channel        <-chan ButlerMsg
+	ButlerChan     <-chan ButlerMsg
+	MetricsChan    chan []metrics.MetricsMsg
 	IgnoreLocation bool
 }
 
@@ -54,7 +58,14 @@ func (bm *ButlerManager) SpawnButlers() {
 
 	for i := 1; i <= bm.SpawnCount; i++ {
 		bm.SyncWG.Add(1)
-		butlerInstance := Butler{id: i, log: bm.Log, syncWG: &bm.SyncWG, channel: bm.Channel, ignoreLocation: bm.IgnoreLocation}
+		butlerInstance := Butler{
+			id:             i,
+			log:            bm.Log,
+			syncWG:         &bm.SyncWG,
+			butlerChan:     bm.ButlerChan,
+			metricsChan:    bm.MetricsChan,
+			ignoreLocation: bm.IgnoreLocation,
+		}
 		go butlerInstance.Run()
 	}
 
@@ -63,7 +74,6 @@ func (bm *ButlerManager) SpawnButlers() {
 		"count":     bm.SpawnCount,
 	}).Info("Spawned butlers.")
 
-	//runtime.Goexit()
 }
 
 func (bm *ButlerManager) Wait() {
@@ -74,7 +84,8 @@ type Butler struct {
 	id             int
 	log            *logrus.Logger
 	syncWG         *sync.WaitGroup
-	channel        <-chan ButlerMsg
+	butlerChan     <-chan ButlerMsg
+	metricsChan    chan<- []metrics.MetricsMsg
 	ignoreLocation bool
 }
 
@@ -120,7 +131,7 @@ func (b *Butler) Run() {
 	}()
 
 	for {
-		msg, ok := <-b.channel
+		msg, ok := <-b.butlerChan
 		if !ok {
 			log.WithFields(logrus.Fields{
 				"component": component,
@@ -214,6 +225,7 @@ func (b *Butler) Run() {
 					"Error":     err,
 				}).Warn("Unable to configure asset.")
 			}
+
 		default:
 			log.WithFields(logrus.Fields{
 				"component": component,
