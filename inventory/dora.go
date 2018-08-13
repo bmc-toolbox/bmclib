@@ -325,8 +325,6 @@ func (d *Dora) AssetIter() {
 
 			// next url to query
 			queryUrl = fmt.Sprintf("%s%s", apiUrl, doraAssets.Links.Next)
-			break
-
 		}
 
 		d.MetricsEmitter.EmitMetricMap(metricsData)
