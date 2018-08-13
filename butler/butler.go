@@ -56,7 +56,6 @@ func (bm *ButlerManager) SpawnButlers() {
 	component := "SpawnButlers"
 
 	for i := 1; i <= bm.SpawnCount; i++ {
-		bm.SyncWG.Add(1)
 		butlerInstance := Butler{
 			id:             i,
 			log:            bm.Log,
@@ -66,13 +65,13 @@ func (bm *ButlerManager) SpawnButlers() {
 			ignoreLocation: bm.IgnoreLocation,
 		}
 		go butlerInstance.Run()
+		bm.SyncWG.Add(1)
 	}
 
 	log.WithFields(logrus.Fields{
 		"component": component,
-		"count":     bm.SpawnCount,
+		"Count":     bm.SpawnCount,
 	}).Info("Spawned butlers.")
-
 }
 
 func (bm *ButlerManager) Wait() {
@@ -105,13 +104,19 @@ func (b *Butler) Run() {
 
 	var err error
 	log := b.log
-	component := "Run"
+	component := "ButlerRun"
 	defer b.syncWG.Done()
 
+	//flag when a signal is received
 	var exitFlag bool
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	log.WithFields(logrus.Fields{
+		"component": component,
+		"Butler Id": b.id,
+	}).Info("Spawned.")
 
 	//set bmclib logger params
 	bmclibLogger.SetFormatter(&logrus.TextFormatter{})
