@@ -19,7 +19,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/bmc-toolbox/bmcbutler/asset"
@@ -44,6 +46,18 @@ func init() {
 
 func configure() {
 
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	//flag when its time to exit.
+	var exitFlag bool
+
+	go func() {
+		_ = <-sigChan
+		exitFlag = true
+	}()
+
+	//A sync waitgroup for routines spawned here.
 	var configureWG sync.WaitGroup
 
 	// A channel to recieve inventory assets
@@ -140,9 +154,25 @@ func configure() {
 	//at this point templated values in the config are not yet rendered.
 	for assetList := range inventoryChan {
 		for _, asset := range assetList {
+
+			//if signal was received, break out.
+			if exitFlag {
+				break
+			}
+
 			asset.Configure = true
+
+			//NOTE: if all butlers exit, and we're trying to write to butlerChan
+			//      this loop is going to be stuck waiting for the butlerMsg to be read,
+			//      make sure to break out of this loop or have butlerChan closed in such a case,
+			//      for now, we fix this by setting exitFlag to break out of the loop.
 			butlerMsg := butler.ButlerMsg{Asset: asset, Config: config}
 			butlerChan <- butlerMsg
+		}
+
+		//if sigterm is received, break out.
+		if exitFlag {
+			break
 		}
 	}
 
@@ -150,6 +180,7 @@ func configure() {
 
 	//wait until butlers are done.
 	butlerManager.Wait()
+	log.Debug("All butlers have exited.")
 
 	close(metricsChan)
 	configureWG.Wait()
