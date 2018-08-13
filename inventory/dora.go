@@ -17,18 +17,23 @@ package inventory
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/bmc-toolbox/bmcbutler/asset"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
+
+	"github.com/bmc-toolbox/bmcbutler/asset"
+	"github.com/bmc-toolbox/bmcbutler/metrics"
+
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 type Dora struct {
-	Log       *logrus.Logger
-	BatchSize int
-	Channel   chan<- []asset.Asset
+	Log            *logrus.Logger
+	BatchSize      int
+	AssetsChan     chan<- []asset.Asset
+	MetricsEmitter metrics.Emitter
 }
 
 type DoraAssetAttributes struct {
@@ -115,6 +120,7 @@ func (d *Dora) AssetIterBySerial(serials string, assetType string) {
 	//assetTypes := []string{"blade", "chassis", "discrete"}
 	component := "inventory"
 	log := d.Log
+	defer close(d.AssetsChan)
 
 	apiUrl := viper.GetString("inventory.configure.dora.apiUrl")
 
@@ -188,9 +194,7 @@ func (d *Dora) AssetIterBySerial(serials string, assetType string) {
 	}
 
 	//pass the asset to the channel
-	d.Channel <- assets
-
-	defer close(d.Channel)
+	d.AssetsChan <- assets
 
 }
 
@@ -200,18 +204,36 @@ func (d *Dora) AssetIter() {
 	//Asset needs to be an inventory asset
 	//Iter stuffs assets into an array of Assets
 	//Iter writes the assets array to the channel
-	// split out dora code into dora.go
+
+	component := "retrieveInventoryAssetsDora"
+
+	//setup metrics related things
+
+	metricsData := make(map[string]int)
+
+	defer close(d.AssetsChan)
+	defer d.MetricsEmitter.MeasureRunTime(
+		time.Now().Unix(), fmt.Sprintf("assets.dora.%s", component))
 
 	assetTypes := []string{"blade", "chassis", "discrete"}
-	component := "inventory"
 	log := d.Log
-
 	apiUrl := viper.GetString("inventory.configure.dora.apiUrl")
-
-	defer close(d.Channel)
 
 	for _, assetType := range assetTypes {
 		var path string
+
+		//setup default metric values
+		metricTotalAssets := fmt.Sprintf("assets.dora.%s.total", assetType)
+		metricsData[metricTotalAssets] = 0
+
+		metricNoIp := fmt.Sprintf("assets.dora.%s.noip", assetType)
+		metricsData[metricNoIp] = 0
+
+		metricNoLocation := fmt.Sprintf("assets.dora.%s.nolocation", assetType)
+		metricsData[metricNoLocation] = 0
+
+		metricAssetsToConfigure := fmt.Sprintf("assets.dora.%s.configure", assetType)
+		metricsData[metricAssetsToConfigure] = 0
 
 		//since this asset type in dora is plural.
 		if assetType == "blade" {
@@ -249,6 +271,8 @@ func (d *Dora) AssetIter() {
 				}).Fatal("Error unmarshaling data returned from Dora.")
 			}
 
+			metricsData[metricTotalAssets] += len(doraAssets.Data)
+
 			// for each asset, get its location
 			// store in the assets slice
 			// if an asset has no bmcAddress we log and skip it.
@@ -259,6 +283,8 @@ func (d *Dora) AssetIter() {
 						"component": component,
 						"DoraAsset": fmt.Sprintf("%+v", item),
 					}).Warn("Asset location could not be determined, since the asset has no IP.")
+
+					metricsData[metricNoIp] += 1
 					continue
 				}
 
@@ -278,11 +304,15 @@ func (d *Dora) AssetIter() {
 					"Error":     err,
 					"Assets":    fmt.Sprintf("%+v", assets),
 				}).Warn("Asset location could not be determined, ignoring assets")
+
+				metricsData[metricNoLocation] += 1
 				continue
 			}
 
+			metricsData[metricAssetsToConfigure] += len(assets)
+
 			//pass the asset to the channel
-			d.Channel <- assets
+			d.AssetsChan <- assets
 
 			// if we reached the end of dora assets
 			if doraAssets.Links.Next == "" {
@@ -295,9 +325,11 @@ func (d *Dora) AssetIter() {
 
 			// next url to query
 			queryUrl = fmt.Sprintf("%s%s", apiUrl, doraAssets.Links.Next)
-			//fmt.Printf("--> %s\n", queryUrl)
+			break
+
 		}
+
+		d.MetricsEmitter.EmitMetricMap(metricsData)
 	}
 
-	close(d.Channel)
 }

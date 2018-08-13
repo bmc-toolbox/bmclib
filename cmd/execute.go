@@ -66,7 +66,7 @@ func execute() {
 			go inventoryInstance.AssetIterBySerial(serial)
 		}
 	case "dora":
-		inventoryInstance := inventory.Dora{Log: log, BatchSize: 10, Channel: inventoryChan}
+		inventoryInstance := inventory.Dora{Log: log, BatchSize: 10, AssetsChan: inventoryChan}
 		// Spawn a goroutine that returns a slice of assets over inventoryChan
 		// the number of assets in the slice is determined by the batch size.
 		if all {
