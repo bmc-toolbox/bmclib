@@ -60,6 +60,23 @@ func configure() {
 	//A sync waitgroup for routines spawned here.
 	var configureWG sync.WaitGroup
 
+	// A channel butlers sends metrics to the metrics sender
+	metricsChan := make(chan []metrics.MetricsMsg, 5)
+
+	//the metrics forwarder routine
+	metricsForwarder := metrics.Metrics{
+		Logger:  log,
+		Channel: metricsChan,
+		SyncWG:  &configureWG,
+	}
+
+	//metrics emitter instance, used by methods to emit metrics to the forwarder.
+	metricsEmitter := metrics.Emitter{Channel: metricsChan}
+
+	//spawn metrics forwarder routine
+	go metricsForwarder.Run()
+	configureWG.Add(1)
+
 	// A channel to recieve inventory assets
 	inventoryChan := make(chan []asset.Asset, 5)
 
@@ -85,7 +102,13 @@ func configure() {
 			go inventoryInstance.AssetIterBySerial(serial)
 		}
 	case "dora":
-		inventoryInstance := inventory.Dora{Log: log, BatchSize: 10, Channel: inventoryChan}
+		inventoryInstance := inventory.Dora{
+			Log:            log,
+			BatchSize:      10,
+			AssetsChan:     inventoryChan,
+			MetricsEmitter: metricsEmitter,
+		}
+
 		// Spawn a goroutine that returns a slice of assets over inventoryChan
 		// the number of assets in the slice is determined by the batch size.
 		if all {
@@ -104,20 +127,6 @@ func configure() {
 		fmt.Println("Unknown/no inventory source declared in cfg: ", inventorySource)
 		os.Exit(1)
 	}
-
-	// A channel butlers sends metrics to the metrics sender
-	metricsChan := make(chan []metrics.MetricsMsg, 5)
-	configureWG.Add(1)
-
-	//the metrics sender
-	metricsSender := metrics.Metrics{
-		Logger:  log,
-		Channel: metricsChan,
-		SyncWG:  &configureWG,
-	}
-
-	//spawm metrics sender
-	go metricsSender.Run()
 
 	// Spawn butlers to work
 	butlerChan := make(chan butler.ButlerMsg, 5)
