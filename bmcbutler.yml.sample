@@ -1,8 +1,10 @@
 locations: ['fra4', 'ams4'] 
 butlersToSpawn: 1
 bmcCfgDir: /etc/bmcbutler/cfg
-bmcUser: Administrator
-bmcPassword: ThisWaschangedHopefully
+bmcPrimaryUser: Administrator
+bmcPrimaryPassword: ThisWaschangedHopefully
+bmcSecondaryUser: AnotherAdmin
+bmcSecondaryPassword: AnotherAdminPass
 metrics:
   receiver:
     target: graphite

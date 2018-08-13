@@ -26,7 +26,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
-	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -247,10 +246,10 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 	log := b.log
 	component := "setupConnection"
 
-	bmcUser := viper.GetString("bmcUser")
-	bmcPassword := viper.GetString("bmcPassword")
+	bmcPrimaryUser := viper.GetString("bmcPrimaryUser")
+	bmcPrimaryPassword := viper.GetString("bmcPrimaryPassword")
 
-	client, err := discover.ScanAndConnect(asset.IpAddress, bmcUser, bmcPassword)
+	client, err := discover.ScanAndConnect(asset.IpAddress, bmcPrimaryUser, bmcPrimaryPassword)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"component": component,
@@ -267,29 +266,77 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 		bmc := client.(devices.Bmc)
 		asset.Model = bmc.BmcType()
 
+		//we don't check credentials if its an ssh based connection
 		if !dontCheckCredentials {
-			//attempt to login with credentials
+
+			//attempt to login with Primary user account
 			err := bmc.CheckCredentials()
 			if err == bmcerros.ErrLoginFailed {
 				log.WithFields(logrus.Fields{
-					"component": component,
-					"butler-id": b.id,
-					"Asset":     fmt.Sprintf("%+v", asset),
-					"Error":     err,
-				}).Warn("Unable to login to bmc, trying default credentials")
+					"component":    component,
+					"butler-id":    b.id,
+					"Asset":        fmt.Sprintf("%+v", asset),
+					"Primary user": bmcPrimaryUser,
+					"Error":        err,
+				}).Warn("Unable to login to bmc with Primary user, trying Secondary/Default user account.")
 
-				DefaultbmcUser := viper.GetString(fmt.Sprintf("bmcDefaults.%s.user", asset.Model))
-				DefaultbmcPassword := viper.GetString(fmt.Sprintf("bmcDefaults.%s.password", asset.Model))
-				bmc.UpdateCredentials(DefaultbmcUser, DefaultbmcPassword)
+				//attempt to login with Secondary user account
+				bmcSecondaryUser := viper.GetString("bmcSecondaryUser")
+				if bmcSecondaryUser != "" {
+					bmcSecondaryPassword := viper.GetString("bmcSecondaryPassword")
+					bmc.UpdateCredentials(bmcSecondaryUser, bmcSecondaryPassword)
+
+					err := bmc.CheckCredentials()
+					if err != nil {
+						log.WithFields(logrus.Fields{
+							"component":      component,
+							"butler-id":      b.id,
+							"Asset":          fmt.Sprintf("%+v", asset),
+							"Secondary user": bmcSecondaryUser,
+							"Error":          err,
+						}).Warn("Unable to login to bmc with Secondary user, will attempt to login with vendor default credentials.")
+						return bmc, err
+					}
+
+					//successful login with Secondary user
+					log.WithFields(logrus.Fields{
+						"component":      component,
+						"butler-id":      b.id,
+						"Asset":          fmt.Sprintf("%+v", asset),
+						"Secondary user": bmcSecondaryUser,
+					}).Debug("Successful login with Secondary user.")
+
+					asset.Vendor = bmc.Vendor()
+					return bmc, err
+				}
+
+				//attempt to login with vendor Default user account
+				bmcDefaultUser := viper.GetString(fmt.Sprintf("bmcDefaults.%s.user", asset.Model))
+				bmcDefaultPassword := viper.GetString(fmt.Sprintf("bmcDefaults.%s.password", asset.Model))
+				bmc.UpdateCredentials(bmcDefaultUser, bmcDefaultPassword)
 				err := bmc.CheckCredentials()
 				if err != nil {
 					log.WithFields(logrus.Fields{
-						"component": component,
-						"butler-id": b.id,
-						"Asset":     fmt.Sprintf("%+v", asset),
-						"Error":     err,
+						"component":    component,
+						"butler-id":    b.id,
+						"Asset":        fmt.Sprintf("%+v", asset),
+						"Default user": bmcDefaultUser,
+						"Error":        err,
 					}).Warn("Unable to login to bmc with default credentials.")
 					return bmc, err
+				} else {
+
+					//successful login - with default credentials
+					log.WithFields(logrus.Fields{
+						"component":    component,
+						"butler-id":    b.id,
+						"Asset":        fmt.Sprintf("%+v", asset),
+						"Default user": bmcDefaultUser,
+					}).Debug("Successful login with vendor default user.")
+
+					asset.Vendor = bmc.Vendor()
+					return bmc, err
+
 				}
 			} else if err != nil {
 				log.WithFields(logrus.Fields{
@@ -297,63 +344,121 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 					"butler-id": b.id,
 					"Asset":     fmt.Sprintf("%+v", asset),
 					"Error":     err,
-				}).Warn("Failed to login to bmc.")
+				}).Warn("Unable to connect to BMC.")
+				return bmc, err
+			} else {
+
+				//successful login - Primary user
+				log.WithFields(logrus.Fields{
+					"component":    component,
+					"butler-id":    b.id,
+					"Asset":        fmt.Sprintf("%+v", asset),
+					"Primary user": bmcPrimaryUser,
+				}).Debug("Successful login with Primary user.")
+				asset.Vendor = bmc.Vendor()
 				return bmc, err
 			}
-
-			//login successful
-			//At this point bmc lib can tell us the vendor.
-			asset.Vendor = bmc.Vendor()
 		}
+
 		return bmc, err
 
 	case devices.BmcChassis:
-		chassis := client.(devices.BmcChassis)
-		asset.Model = chassis.BmcType()
+		bmc := client.(devices.BmcChassis)
+		asset.Model = bmc.BmcType()
 
-		err := chassis.CheckCredentials()
-		if err == bmcerros.ErrLoginFailed {
-			log.WithFields(logrus.Fields{
-				"component": component,
-				"butler-id": b.id,
-				"Asset":     fmt.Sprintf("%+v", asset),
-				"Error":     err,
-			}).Warn("Unable to login to bmc, trying default credentials")
+		//we don't check credentials if its an ssh based connection
+		if !dontCheckCredentials {
 
-			DefaultbmcUser := viper.GetString(fmt.Sprintf("bmcDefaults.%s.user", asset.Model))
-			DefaultbmcPassword := viper.GetString(fmt.Sprintf("bmcDefaults.%s.password", asset.Model))
-			chassis.UpdateCredentials(DefaultbmcUser, DefaultbmcPassword)
-			err := chassis.CheckCredentials()
-			if err != nil {
+			//attempt to login with Primary user account
+			err := bmc.CheckCredentials()
+			if err == bmcerros.ErrLoginFailed {
+				log.WithFields(logrus.Fields{
+					"component":    component,
+					"butler-id":    b.id,
+					"Asset":        fmt.Sprintf("%+v", asset),
+					"Primary user": bmcPrimaryUser,
+					"Error":        err,
+				}).Warn("Unable to login to bmc with Primary user, trying Secondary/Default user account.")
+
+				//attempt to login with Secondary user account
+				bmcSecondaryUser := viper.GetString("bmcSecondaryUser")
+				if bmcSecondaryUser != "" {
+					bmcSecondaryPassword := viper.GetString("bmcSecondaryPassword")
+					bmc.UpdateCredentials(bmcSecondaryUser, bmcSecondaryPassword)
+
+					err := bmc.CheckCredentials()
+					if err != nil {
+						log.WithFields(logrus.Fields{
+							"component":      component,
+							"butler-id":      b.id,
+							"Asset":          fmt.Sprintf("%+v", asset),
+							"Secondary user": bmcSecondaryUser,
+							"Error":          err,
+						}).Warn("Unable to login to bmc with Secondary user, will attempt to login with vendor default credentials.")
+						return bmc, err
+					}
+
+					//successful login with Secondary user
+					log.WithFields(logrus.Fields{
+						"component":      component,
+						"butler-id":      b.id,
+						"Asset":          fmt.Sprintf("%+v", asset),
+						"Secondary user": bmcSecondaryUser,
+					}).Debug("Successful login with Secondary user.")
+
+					asset.Vendor = bmc.Vendor()
+					return bmc, err
+				}
+
+				//attempt to login with vendor Default user account
+				bmcDefaultUser := viper.GetString(fmt.Sprintf("bmcDefaults.%s.user", asset.Model))
+				bmcDefaultPassword := viper.GetString(fmt.Sprintf("bmcDefaults.%s.password", asset.Model))
+				bmc.UpdateCredentials(bmcDefaultUser, bmcDefaultPassword)
+				err := bmc.CheckCredentials()
+				if err != nil {
+					log.WithFields(logrus.Fields{
+						"component":    component,
+						"butler-id":    b.id,
+						"Asset":        fmt.Sprintf("%+v", asset),
+						"Default user": bmcDefaultUser,
+						"Error":        err,
+					}).Warn("Unable to login to bmc with default credentials.")
+					return bmc, err
+				} else {
+
+					//successful login - with default credentials
+					log.WithFields(logrus.Fields{
+						"component":    component,
+						"butler-id":    b.id,
+						"Asset":        fmt.Sprintf("%+v", asset),
+						"Default user": bmcDefaultUser,
+					}).Debug("Successful login with vendor default user.")
+
+					asset.Vendor = bmc.Vendor()
+					return bmc, err
+
+				}
+			} else if err != nil {
 				log.WithFields(logrus.Fields{
 					"component": component,
 					"butler-id": b.id,
 					"Asset":     fmt.Sprintf("%+v", asset),
 					"Error":     err,
-				}).Warn("Unable to login to bmc with default credentials.")
-				return chassis, err
-			}
-		} else if err != nil {
-			log.WithFields(logrus.Fields{
-				"component": component,
-				"butler-id": b.id,
-				"Asset":     fmt.Sprintf("%+v", asset),
-				"Error":     err,
-			}).Warn("failed to login to bmc chassis.")
-			return chassis, err
-		}
+				}).Warn("Unable to connect to BMC.")
+				return bmc, err
+			} else {
 
-		//login successful
-		//At this point we know the vendor.
-		asset.Vendor = chassis.Vendor()
-		return chassis, err
-	default:
-		log.WithFields(logrus.Fields{
-			"component": component,
-			"butler-id": b.id,
-			"Asset":     fmt.Sprintf("%+v", asset),
-		}).Warn("Unkown device type.")
-		return connection, errors.New("Unknown asset type.")
+				//successful login - Primary user
+				log.WithFields(logrus.Fields{
+					"component":    component,
+					"butler-id":    b.id,
+					"Asset":        fmt.Sprintf("%+v", asset),
+					"Primary user": bmcPrimaryUser,
+				}).Debug("Successful login with Primary user.")
+				asset.Vendor = bmc.Vendor()
+				return bmc, err
+			}
+		}
 	}
 
 	return connection, err
