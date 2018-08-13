@@ -75,7 +75,7 @@ func (m *Metrics) Run() {
 		"Metrics target": metricsTarget,
 		"Server":         server,
 		"Port":           port,
-	}).Info("Metrics sender spawned.")
+	}).Info("Spawned metrics forwarder.")
 
 	for metrics := range m.Channel {
 		switch metricsTarget {
@@ -124,15 +124,15 @@ func graphiteSend(client *graphite.Graphite, metrics []MetricsMsg, logger *logru
 	logger.WithFields(logrus.Fields{
 		"component": component,
 		"Metric":    fmt.Sprintf("%+v", gMetrics),
-	}).Debug("Unable to send metrics.")
+	}).Debug("Sending metrics...")
 
-	//err := client.SendMetrics(gMetrics)
-	//if err != nil {
-	//	logger.WithFields(logrus.Fields{
-	//		"component": component,
-	//		"Error":     err,
-	//	}).Debug("Unable to send metrics.")
-	//}
+	err := client.SendMetrics(gMetrics)
+	if err != nil {
+		logger.WithFields(logrus.Fields{
+			"component": component,
+			"Error":     err,
+		}).Debug("Unable to send metrics.")
+	}
 
 	return
 }
