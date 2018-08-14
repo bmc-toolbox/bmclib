@@ -15,22 +15,25 @@
 package butler
 
 import (
-	"github.com/bmc-toolbox/bmcbutler/asset"
-	"github.com/bmc-toolbox/bmcbutler/metrics"
-
-	"github.com/bmc-toolbox/bmclib/devices"
-	"github.com/bmc-toolbox/bmclib/discover"
-	bmcerros "github.com/bmc-toolbox/bmclib/errors"
-	bmclibLogger "github.com/bmc-toolbox/bmclib/logging"
-
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
-
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
+
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
+
+	"github.com/bmc-toolbox/bmcbutler/asset"
+	"github.com/bmc-toolbox/bmcbutler/metrics"
+
+	bmclibLogger "github.com/bmc-toolbox/bmclib/logging"
+)
+
+var (
+	ErrBmcConnectionFail = errors.New("Unable to login to bmc") //could be a timeout or just bad credentials.
+	ErrUnkownAsset       = errors.New("Unknown asset type")
 )
 
 type ButlerMsg struct {
@@ -45,7 +48,7 @@ type ButlerManager struct {
 	SpawnCount     int
 	SyncWG         sync.WaitGroup
 	ButlerChan     <-chan ButlerMsg
-	MetricsChan    chan []metrics.MetricsMsg
+	MetricsEmitter metrics.Emitter
 	IgnoreLocation bool
 }
 
@@ -61,7 +64,7 @@ func (bm *ButlerManager) SpawnButlers() {
 			log:            bm.Log,
 			syncWG:         &bm.SyncWG,
 			butlerChan:     bm.ButlerChan,
-			metricsChan:    bm.MetricsChan,
+			metricsEmitter: bm.MetricsEmitter,
 			ignoreLocation: bm.IgnoreLocation,
 		}
 		go butlerInstance.Run()
@@ -83,7 +86,7 @@ type Butler struct {
 	log            *logrus.Logger
 	syncWG         *sync.WaitGroup
 	butlerChan     <-chan ButlerMsg
-	metricsChan    chan<- []metrics.MetricsMsg
+	metricsEmitter metrics.Emitter
 	ignoreLocation bool
 }
 
@@ -103,12 +106,13 @@ func myLocation(location string) bool {
 func (b *Butler) Run() {
 
 	var err error
-	log := b.log
-	component := "ButlerRun"
-	defer b.syncWG.Done()
-
 	//flag when a signal is received
 	var exitFlag bool
+
+	var metricPrefix string
+
+	log := b.log
+	component := "ButlerRun"
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
@@ -129,6 +133,7 @@ func (b *Butler) Run() {
 		}).Warn("Interrupt SIGINT/SIGTERM recieved, butlers will exit gracefully.")
 	}()
 
+	defer b.syncWG.Done()
 	for {
 		msg, ok := <-b.butlerChan
 		if !ok {
@@ -146,6 +151,11 @@ func (b *Butler) Run() {
 			}).Debug("Butler exited.")
 			return
 		}
+
+		//metrics to be sent out are prefixed with this string
+		// location.vendor.assetType.configure.connfail
+		// e.g: lhr4.dell.bmc.configure.success
+		metricPrefix = fmt.Sprintf("%s.%s.%s", msg.Asset.Location, msg.Asset.Vendor, msg.Asset.Type)
 
 		//if asset has no IPAddress, we can't do anything about it
 		if msg.Asset.IpAddress == "" {
@@ -223,8 +233,14 @@ func (b *Butler) Run() {
 					"Location":  msg.Asset.Location,
 					"Error":     err,
 				}).Warn("Unable to configure asset.")
+
+				//TODO - check for error types, to differentiate between timeouts, auth failures
+				metricPrefix += ".configure.connfail"
+			} else {
+				metricPrefix += ".configure.success"
 			}
 
+			b.metricsEmitter.Emit(metricPrefix, 1)
 		default:
 			log.WithFields(logrus.Fields{
 				"component": component,
@@ -236,230 +252,4 @@ func (b *Butler) Run() {
 			}).Warn("Unknown action request on asset.")
 		} //switch
 	} //for
-}
-
-// Sets up the connection to the asset
-// Attempts login with current, if that fails tries with default passwords.
-// Returns a connection interface that can be type cast to devices.Bmc or devices.BmcChassis
-func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) (connection interface{}, err error) {
-
-	log := b.log
-	component := "setupConnection"
-
-	bmcPrimaryUser := viper.GetString("bmcPrimaryUser")
-	bmcPrimaryPassword := viper.GetString("bmcPrimaryPassword")
-
-	client, err := discover.ScanAndConnect(asset.IpAddress, bmcPrimaryUser, bmcPrimaryPassword)
-	if err != nil {
-		log.WithFields(logrus.Fields{
-			"component": component,
-			"IP":        asset.IpAddress,
-			"butler-id": b.id,
-			"Error":     err,
-		}).Warn("Unable to connect to bmc.")
-		return connection, err
-	}
-
-	switch client.(type) {
-	case devices.Bmc:
-
-		bmc := client.(devices.Bmc)
-		asset.Model = bmc.BmcType()
-
-		//we don't check credentials if its an ssh based connection
-		if !dontCheckCredentials {
-
-			//attempt to login with Primary user account
-			err := bmc.CheckCredentials()
-			if err == bmcerros.ErrLoginFailed {
-				log.WithFields(logrus.Fields{
-					"component":    component,
-					"butler-id":    b.id,
-					"Asset":        fmt.Sprintf("%+v", asset),
-					"Primary user": bmcPrimaryUser,
-					"Error":        err,
-				}).Warn("Unable to login to bmc with Primary user, trying Secondary/Default user account.")
-
-				//attempt to login with Secondary user account
-				bmcSecondaryUser := viper.GetString("bmcSecondaryUser")
-				if bmcSecondaryUser != "" {
-					bmcSecondaryPassword := viper.GetString("bmcSecondaryPassword")
-					bmc.UpdateCredentials(bmcSecondaryUser, bmcSecondaryPassword)
-
-					err := bmc.CheckCredentials()
-					if err != nil {
-						log.WithFields(logrus.Fields{
-							"component":      component,
-							"butler-id":      b.id,
-							"Asset":          fmt.Sprintf("%+v", asset),
-							"Secondary user": bmcSecondaryUser,
-							"Error":          err,
-						}).Warn("Unable to login to bmc with Secondary user, will attempt to login with vendor default credentials.")
-						return bmc, err
-					}
-
-					//successful login with Secondary user
-					log.WithFields(logrus.Fields{
-						"component":      component,
-						"butler-id":      b.id,
-						"Asset":          fmt.Sprintf("%+v", asset),
-						"Secondary user": bmcSecondaryUser,
-					}).Debug("Successful login with Secondary user.")
-
-					asset.Vendor = bmc.Vendor()
-					return bmc, err
-				}
-
-				//attempt to login with vendor Default user account
-				bmcDefaultUser := viper.GetString(fmt.Sprintf("bmcDefaults.%s.user", asset.Model))
-				bmcDefaultPassword := viper.GetString(fmt.Sprintf("bmcDefaults.%s.password", asset.Model))
-				bmc.UpdateCredentials(bmcDefaultUser, bmcDefaultPassword)
-				err := bmc.CheckCredentials()
-				if err != nil {
-					log.WithFields(logrus.Fields{
-						"component":    component,
-						"butler-id":    b.id,
-						"Asset":        fmt.Sprintf("%+v", asset),
-						"Default user": bmcDefaultUser,
-						"Error":        err,
-					}).Warn("Unable to login to bmc with default credentials.")
-					return bmc, err
-				} else {
-
-					//successful login - with default credentials
-					log.WithFields(logrus.Fields{
-						"component":    component,
-						"butler-id":    b.id,
-						"Asset":        fmt.Sprintf("%+v", asset),
-						"Default user": bmcDefaultUser,
-					}).Debug("Successful login with vendor default user.")
-
-					asset.Vendor = bmc.Vendor()
-					return bmc, err
-
-				}
-			} else if err != nil {
-				log.WithFields(logrus.Fields{
-					"component": component,
-					"butler-id": b.id,
-					"Asset":     fmt.Sprintf("%+v", asset),
-					"Error":     err,
-				}).Warn("Unable to connect to BMC.")
-				return bmc, err
-			} else {
-
-				//successful login - Primary user
-				log.WithFields(logrus.Fields{
-					"component":    component,
-					"butler-id":    b.id,
-					"Asset":        fmt.Sprintf("%+v", asset),
-					"Primary user": bmcPrimaryUser,
-				}).Debug("Successful login with Primary user.")
-				asset.Vendor = bmc.Vendor()
-				return bmc, err
-			}
-		}
-
-		return bmc, err
-
-	case devices.BmcChassis:
-		bmc := client.(devices.BmcChassis)
-		asset.Model = bmc.BmcType()
-
-		//we don't check credentials if its an ssh based connection
-		if !dontCheckCredentials {
-
-			//attempt to login with Primary user account
-			err := bmc.CheckCredentials()
-			if err == bmcerros.ErrLoginFailed {
-				log.WithFields(logrus.Fields{
-					"component":    component,
-					"butler-id":    b.id,
-					"Asset":        fmt.Sprintf("%+v", asset),
-					"Primary user": bmcPrimaryUser,
-					"Error":        err,
-				}).Warn("Unable to login to bmc with Primary user, trying Secondary/Default user account.")
-
-				//attempt to login with Secondary user account
-				bmcSecondaryUser := viper.GetString("bmcSecondaryUser")
-				if bmcSecondaryUser != "" {
-					bmcSecondaryPassword := viper.GetString("bmcSecondaryPassword")
-					bmc.UpdateCredentials(bmcSecondaryUser, bmcSecondaryPassword)
-
-					err := bmc.CheckCredentials()
-					if err != nil {
-						log.WithFields(logrus.Fields{
-							"component":      component,
-							"butler-id":      b.id,
-							"Asset":          fmt.Sprintf("%+v", asset),
-							"Secondary user": bmcSecondaryUser,
-							"Error":          err,
-						}).Warn("Unable to login to bmc with Secondary user, will attempt to login with vendor default credentials.")
-						return bmc, err
-					}
-
-					//successful login with Secondary user
-					log.WithFields(logrus.Fields{
-						"component":      component,
-						"butler-id":      b.id,
-						"Asset":          fmt.Sprintf("%+v", asset),
-						"Secondary user": bmcSecondaryUser,
-					}).Debug("Successful login with Secondary user.")
-
-					asset.Vendor = bmc.Vendor()
-					return bmc, err
-				}
-
-				//attempt to login with vendor Default user account
-				bmcDefaultUser := viper.GetString(fmt.Sprintf("bmcDefaults.%s.user", asset.Model))
-				bmcDefaultPassword := viper.GetString(fmt.Sprintf("bmcDefaults.%s.password", asset.Model))
-				bmc.UpdateCredentials(bmcDefaultUser, bmcDefaultPassword)
-				err := bmc.CheckCredentials()
-				if err != nil {
-					log.WithFields(logrus.Fields{
-						"component":    component,
-						"butler-id":    b.id,
-						"Asset":        fmt.Sprintf("%+v", asset),
-						"Default user": bmcDefaultUser,
-						"Error":        err,
-					}).Warn("Unable to login to bmc with default credentials.")
-					return bmc, err
-				} else {
-
-					//successful login - with default credentials
-					log.WithFields(logrus.Fields{
-						"component":    component,
-						"butler-id":    b.id,
-						"Asset":        fmt.Sprintf("%+v", asset),
-						"Default user": bmcDefaultUser,
-					}).Debug("Successful login with vendor default user.")
-
-					asset.Vendor = bmc.Vendor()
-					return bmc, err
-
-				}
-			} else if err != nil {
-				log.WithFields(logrus.Fields{
-					"component": component,
-					"butler-id": b.id,
-					"Asset":     fmt.Sprintf("%+v", asset),
-					"Error":     err,
-				}).Warn("Unable to connect to BMC.")
-				return bmc, err
-			} else {
-
-				//successful login - Primary user
-				log.WithFields(logrus.Fields{
-					"component":    component,
-					"butler-id":    b.id,
-					"Asset":        fmt.Sprintf("%+v", asset),
-					"Primary user": bmcPrimaryUser,
-				}).Debug("Successful login with Primary user.")
-				asset.Vendor = bmc.Vendor()
-				return bmc, err
-			}
-		}
-	}
-
-	return connection, err
 }
