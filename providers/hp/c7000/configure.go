@@ -389,7 +389,7 @@ func (c *C7000) applyLdapGroupBayAcl(role string, group string) (err error) {
 		userAcl = "USER"
 	}
 
-	payload := setLdapGroupBayAcl{LdapGroup: ldapGroup{Text: group}, Acl: acl{Text: userAcl}}
+	payload := setLdapGroupBayAcl{LdapGroup: ldapGroup{Text: group}, Acl: Acl{Text: userAcl}}
 	statusCode, _, err := c.postXML(payload)
 	if statusCode != 200 || err != nil {
 		log.WithFields(log.Fields{
@@ -527,8 +527,29 @@ func (c *C7000) applyUserParams(cfg *cfgresources.User) (err error) {
 
 	username := Username{Text: cfg.Name}
 	password := Password{Text: cfg.Password}
-	payload := AddUser{Username: username, Password: password}
 
+	//if user account is disabled, remove the user
+	if cfg.Enable == false {
+		payload := RemoveUser{Username: username}
+		statusCode, _, _ := c.postXML(payload)
+
+		//user doesn't exist
+		if statusCode != 400 {
+			return err
+		}
+
+		log.WithFields(log.Fields{
+			"IP":     c.ip,
+			"Model":  c.BmcType(),
+			"Serial": c.serial,
+			"User":   cfg.Name,
+		}).Info("User removed.")
+
+		//user exists and was removed.
+		return err
+	}
+
+	payload := AddUser{Username: username, Password: password}
 	statusCode, _, err := c.postXML(payload)
 	if err != nil {
 		return err
@@ -550,6 +571,19 @@ func (c *C7000) applyUserParams(cfg *cfgresources.User) (err error) {
 		if err != nil {
 			return err
 		}
+
+		//update user acl
+		err = c.setUserAcl(cfg.Name, cfg.Role)
+		if err != nil {
+			return err
+		}
+
+		//updates user blade bay access acls
+		err = c.applyAddUserBayAccess(cfg.Name)
+		if err != nil {
+			return err
+		}
+
 	}
 
 	log.WithFields(log.Fields{
@@ -587,6 +621,103 @@ func (c *C7000) setUserPassword(user string, password string) (err error) {
 		"Serial": c.serial,
 		"user":   user,
 	}).Info("User password set.")
+	return err
+}
+
+func (c *C7000) setUserAcl(user string, role string) (err error) {
+
+	var aclRole string
+	if role == "admin" {
+		aclRole = "ADMINISTRATOR"
+	} else {
+		aclRole = "OPERATOR"
+	}
+
+	u := Username{Text: user}
+	a := Acl{Text: aclRole}
+
+	payload := SetUserBayAcl{Username: u, Acl: a}
+
+	statusCode, _, err := c.postXML(payload)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"step":        "setUserAcl",
+			"user":        user,
+			"Acl":         role,
+			"IP":          c.ip,
+			"Model":       c.BmcType(),
+			"Serial":      c.serial,
+			"return code": statusCode,
+			"Error":       err,
+		}).Warn("Unable to set user Acl.")
+		return err
+	}
+
+	log.WithFields(log.Fields{
+		"IP":     c.ip,
+		"Model":  c.BmcType(),
+		"Serial": c.serial,
+		"User":   user,
+		"Acl":    role,
+	}).Info("User ACL set.")
+	return err
+}
+
+// Applies user bay access to each blade, interconnect,
+// see applyAddLdapGroupBayAccess() for details.
+func (c *C7000) applyAddUserBayAccess(user string) (err error) {
+
+	//setup blade bays payload
+	bladebays := bladeBays{}
+	for b := 1; b <= 16; b++ {
+		baynumber := bayNumber{Text: b}
+		access := access{Text: true}
+		blade := blade{Hpoa: "hpoa.xsd", BayNumber: baynumber, Access: access}
+		bladebays.Blade = append(bladebays.Blade, blade)
+	}
+
+	//setup interconnect tray bays payload
+	interconnecttraybays := interconnectTrayBays{}
+	for t := 1; t <= 8; t++ {
+		access := access{Text: true}
+		baynumber := bayNumber{Text: t}
+		interconnecttray := interconnectTray{Hpoa: "hpoa.xsd", Access: access, BayNumber: baynumber}
+		interconnecttraybays.InterconnectTray = append(interconnecttraybays.InterconnectTray, interconnecttray)
+	}
+
+	//setup the bays payload
+	bayz := bays{
+		Hpoa:                 "hpoa.xsd",
+		OaAccess:             oaAccess{Text: true},
+		BladeBays:            bladebays,
+		InterconnectTrayBays: interconnecttraybays,
+	}
+
+	payload := addUserBayAccess{
+		Username: Username{Text: user},
+		Bays:     bayz,
+	}
+
+	statusCode, _, err := c.postXML(payload)
+	if statusCode != 200 || err != nil {
+		log.WithFields(log.Fields{
+			"step":       "applyAddUserBayAccess",
+			"IP":         c.ip,
+			"Model":      c.BmcType(),
+			"Serial":     c.serial,
+			"statusCode": statusCode,
+			"Error":      err,
+		}).Warn("LDAP applyAddUserBayAccess apply request returned non 200.")
+		return err
+	}
+
+	log.WithFields(log.Fields{
+		"step":   "applyAddUserBayAccess",
+		"IP":     c.ip,
+		"Model":  c.BmcType(),
+		"Serial": c.serial,
+		"user":   user,
+	}).Info("User account related interconnect and bay ACLs added.")
 	return err
 }
 
