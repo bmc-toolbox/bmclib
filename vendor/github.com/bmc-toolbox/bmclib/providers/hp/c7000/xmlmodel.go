@@ -122,6 +122,24 @@ type SetUserPassword struct {
 	Password Password
 }
 
+// <hpoa:setUserBayAcl>
+//   <hpoa:username>psm</hpoa:username>
+//     <hpoa:acl>ADMINISTRATOR</hpoa:acl>
+//   </hpoa:setUserBayAcl>
+type SetUserBayAcl struct {
+	XMLName  xml.Name `xml:"hpoa:setUserBayAcl"`
+	Username Username
+	Acl      Acl
+}
+
+// <hpoa:removeUser>
+//   <hpoa:username>psm</hpoa:username>
+// </hpoa:removeUser>
+type RemoveUser struct {
+	XMLName  xml.Name `xml:"hpoa:removeUser"`
+	Username Username
+}
+
 // Ntp payload - minus the body, envelope
 type configureNtp struct {
 	XMLName      xml.Name `xml:"hpoa:configureNtp"`
@@ -168,12 +186,18 @@ type ldapGroup struct {
 type setLdapGroupBayAcl struct {
 	XMLName   xml.Name `xml:"hpoa:setLdapGroupBayAcl"`
 	LdapGroup ldapGroup
-	Acl       acl
+	Acl       Acl
 }
 
-type acl struct {
+type Acl struct {
 	XMLName xml.Name `xml:"hpoa:acl"`
 	Text    string   `xml:",chardata"`
+}
+
+type addUserBayAccess struct {
+	XMLName  xml.Name `xml:"hpoa:addUserBayAccess"`
+	Username Username
+	Bays     bays
 }
 
 type addLdapGroupBayAccess struct {
