@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/bmc-toolbox/bmcbutler/asset"
-	"github.com/bmc-toolbox/bmcbutler/metrics"
 	"github.com/bmc-toolbox/bmcbutler/resource"
 	"github.com/bmc-toolbox/bmclib/devices"
-
-	"github.com/sirupsen/logrus"
 )
 
 // applyConfig setups up the bmc connection
@@ -24,17 +23,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 	//connect to the bmc/chassis bmc
 	client, err := b.setupConnection(asset, false)
 	if err != nil {
-		//location.vendor.assetType.configure.connfail
-		//e.g: lhr4.dell.bmc.configure.connfail
-		mPrefix := fmt.Sprintf("%s.%s.%s.configure.connfail", asset.Location, asset.Vendor, asset.Type)
-		metric := metrics.MetricsMsg{
-			Name:      mPrefix,
-			Value:     "1",
-			Timestamp: time.Now().Unix(),
-		}
-
-		b.metricsChan <- []metrics.MetricsMsg{metric}
-		return err
+		return ErrBmcConnectionFail
 	}
 
 	switch client.(type) {
@@ -47,6 +36,11 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		resourceInstance := resource.Resource{Log: log, Vendor: asset.Vendor}
 		//rendered config is a *cfgresources.ResourcesConfig type
 		renderedConfig := resourceInstance.LoadConfigResources(config)
+
+		//time how long it takes to run configure
+		metricPrefix := fmt.Sprintf("%s.%s.%s", asset.Location, asset.Vendor, asset.Type)
+		defer b.metricsEmitter.MeasureRunTime(
+			time.Now().Unix(), fmt.Sprintf("%s.%s", metricPrefix, component))
 
 		// Apply configuration
 		bmc.ApplyCfg(renderedConfig)
@@ -81,16 +75,6 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		}).Warn("Unkown device type.")
 		return errors.New("Unknown asset type.")
 	}
-
-	//send metric
-	mPrefix := fmt.Sprintf("%s.%s.%s.configure.success", asset.Location, asset.Vendor, asset.Type)
-	metric := metrics.MetricsMsg{
-		Name:      mPrefix,
-		Value:     "1",
-		Timestamp: time.Now().Unix(),
-	}
-
-	b.metricsChan <- []metrics.MetricsMsg{metric}
 
 	return err
 }

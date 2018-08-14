@@ -131,10 +131,10 @@ func configure() {
 	// Spawn butlers to work
 	butlerChan := make(chan butler.ButlerMsg, 5)
 	butlerManager := butler.ButlerManager{
-		Log:         log,
-		SpawnCount:  butlersToSpawn,
-		ButlerChan:  butlerChan,
-		MetricsChan: metricsChan,
+		Log:            log,
+		SpawnCount:     butlersToSpawn,
+		ButlerChan:     butlerChan,
+		MetricsEmitter: metricsEmitter,
 	}
 
 	if serial != "" {
