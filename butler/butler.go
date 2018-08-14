@@ -71,7 +71,7 @@ func (bm *ButlerManager) SpawnButlers() {
 	log.WithFields(logrus.Fields{
 		"component": component,
 		"Count":     bm.SpawnCount,
-	}).Info("Spawned butlers.")
+	}).Debug("Spawned butlers.")
 }
 
 func (bm *ButlerManager) Wait() {
@@ -112,11 +112,6 @@ func (b *Butler) Run() {
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-
-	log.WithFields(logrus.Fields{
-		"component": component,
-		"Butler Id": b.id,
-	}).Info("Spawned.")
 
 	//set bmclib logger params
 	bmclibLogger.SetFormatter(&logrus.TextFormatter{})
