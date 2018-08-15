@@ -101,6 +101,10 @@ func graphiteSend(client *graphite.Graphite, metrics []MetricsMsg, logger *logru
 
 	defer wg.Done()
 
+	if len(metrics) < 1 {
+		return
+	}
+
 	for _, metric := range metrics {
 
 		//if a metric starts with '.' or has '..' its invalid, ignore.
