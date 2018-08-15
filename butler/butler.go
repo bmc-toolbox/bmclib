@@ -64,6 +64,7 @@ func (bm *ButlerManager) SpawnButlers() {
 			log:            bm.Log,
 			syncWG:         &bm.SyncWG,
 			butlerChan:     bm.ButlerChan,
+			metricsData:    make(map[string]int),
 			metricsEmitter: bm.MetricsEmitter,
 			ignoreLocation: bm.IgnoreLocation,
 		}
@@ -86,6 +87,7 @@ type Butler struct {
 	log            *logrus.Logger
 	syncWG         *sync.WaitGroup
 	butlerChan     <-chan ButlerMsg
+	metricsData    map[string]int
 	metricsEmitter metrics.Emitter
 	ignoreLocation bool
 }
@@ -109,7 +111,9 @@ func (b *Butler) Run() {
 	//flag when a signal is received
 	var exitFlag bool
 
-	var metricPrefix string
+	var metricPrefix, successMetric string
+
+	defer b.metricsEmitter.EmitMetricMap(b.metricsData)
 
 	log := b.log
 	component := "ButlerRun"
@@ -152,11 +156,6 @@ func (b *Butler) Run() {
 			return
 		}
 
-		//metrics to be sent out are prefixed with this string
-		// location.vendor.assetType.configure.connfail
-		// e.g: lhr4.dell.bmc.configure.success
-		metricPrefix = fmt.Sprintf("%s.%s.%s", msg.Asset.Location, msg.Asset.Vendor, msg.Asset.Type)
-
 		//if asset has no IPAddress, we can't do anything about it
 		if msg.Asset.IpAddress == "" {
 			log.WithFields(logrus.Fields{
@@ -181,6 +180,12 @@ func (b *Butler) Run() {
 				continue
 			}
 		}
+
+		//metrics to be sent out are prefixed with this string
+		// location.vendor.assetType.configure.connfail
+		// e.g: lhr4.dell.bmc.configure.success
+		metricPrefix = fmt.Sprintf("%s.%s.%s.configure", msg.Asset.Location, msg.Asset.Vendor, msg.Asset.Type)
+		successMetric = fmt.Sprintf("%s.%s", metricPrefix, "success")
 
 		log.WithFields(logrus.Fields{
 			"component": component,
@@ -233,14 +238,9 @@ func (b *Butler) Run() {
 					"Location":  msg.Asset.Location,
 					"Error":     err,
 				}).Warn("Unable to configure asset.")
-
-				//TODO - check for error types, to differentiate between timeouts, auth failures
-				metricPrefix += ".configure.connfail"
-			} else {
-				metricPrefix += ".configure.success"
 			}
 
-			b.metricsEmitter.Emit(metricPrefix, 1)
+			b.metricsData[successMetric] += 1
 		default:
 			log.WithFields(logrus.Fields{
 				"component": component,
@@ -252,4 +252,5 @@ func (b *Butler) Run() {
 			}).Warn("Unknown action request on asset.")
 		} //switch
 	} //for
+
 }
