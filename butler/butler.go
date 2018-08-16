@@ -21,6 +21,7 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -108,18 +109,12 @@ func myLocation(location string) bool {
 func (b *Butler) Run() {
 
 	var err error
+
 	//flag when a signal is received
 	var exitFlag bool
 
-	var metricPrefix, successMetric string
-
-	defer b.metricsEmitter.EmitMetricMap(b.metricsData)
-
 	log := b.log
 	component := "ButlerRun"
-
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	//set bmclib logger params
 	bmclibLogger.SetFormatter(&logrus.TextFormatter{})
@@ -127,6 +122,23 @@ func (b *Butler) Run() {
 		bmclibLogger.SetLevel(logrus.DebugLevel)
 	}
 
+	//set metrics send ticker
+	var metricPrefix, successMetric string
+	metricsSendTicker := time.NewTicker(30 * time.Second)
+	go func() {
+		for _ = range metricsSendTicker.C {
+			b.metricsEmitter.EmitMetricMap(b.metricsData)
+			for k, _ := range b.metricsData {
+				b.metricsData[k] = 0
+			}
+		}
+	}()
+	defer metricsSendTicker.Stop()
+	defer b.metricsEmitter.EmitMetricMap(b.metricsData)
+
+	//set signal handlers
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		_ = <-sigChan
 		exitFlag = true
