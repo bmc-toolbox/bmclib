@@ -46,14 +46,13 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 	bmcPrimaryPassword := viper.GetString("bmcPrimaryPassword")
 
 	client, err := discover.ScanAndConnect(asset.IpAddress, bmcPrimaryUser, bmcPrimaryPassword)
-	if err != nil {
+	if err == bmcerros.ErrUnableToReadData {
 		log.WithFields(logrus.Fields{
 			"component": component,
 			"IP":        asset.IpAddress,
 			"butler-id": b.id,
 			"Error":     err,
-		}).Warn("Unable to connect to bmc.")
-
+		}).Warn("Error connecting to bmc.")
 		return connection, err
 	}
 
