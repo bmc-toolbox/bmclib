@@ -64,7 +64,7 @@ func (c *C7000) httpLogin() (err error) {
 
 	resp, err := httpClient.Do(req)
 	if err != nil || resp.StatusCode != 200 {
-		return err
+		return errors.ErrLoginFailed
 	}
 	defer resp.Body.Close()
 
