@@ -23,7 +23,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 	//connect to the bmc/chassis bmc
 	client, err := b.setupConnection(asset, false)
 	if err != nil {
-		return ErrBmcConnectionFail
+		return err
 	}
 
 	switch client.(type) {
