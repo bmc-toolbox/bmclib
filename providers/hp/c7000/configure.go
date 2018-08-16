@@ -48,6 +48,7 @@ func (c *C7000) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 						"Serial":   c.serial,
 						"Error":    err,
 					}).Warn("Unable to set Syslog config.")
+					return err
 				}
 			case "Network":
 				fmt.Printf("%s: %v : %s\n", resourceName, cfg.Field(r), cfg.Field(r).Kind())
@@ -63,10 +64,25 @@ func (c *C7000) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 						"Serial":   c.serial,
 						"Error":    err,
 					}).Warn("Unable to set NTP config.")
+					return err
 				}
 			case "LdapGroup":
 				ldapGroups := cfg.Field(r).Interface()
 				err := c.applyLdapGroupParams(ldapGroups.([]*cfgresources.LdapGroup))
+				if err != nil {
+					log.WithFields(log.Fields{
+						"step":     "applyLdapParams",
+						"resource": "LdapGroup",
+						"IP":       c.ip,
+						"Model":    c.BmcType(),
+						"Serial":   c.serial,
+						"Error":    err,
+					}).Warn("applyLdapGroupParams returned error.")
+					return err
+				}
+			case "Ldap":
+				ldapCfg := cfg.Field(r).Interface().(*cfgresources.Ldap)
+				err := c.applyLdapParams(ldapCfg)
 				if err != nil {
 					log.WithFields(log.Fields{
 						"step":     "applyLdapParams",
@@ -75,11 +91,9 @@ func (c *C7000) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 						"Model":    c.BmcType(),
 						"Serial":   c.serial,
 						"Error":    err,
-					}).Warn("applyLdapGroupParams returned error.")
+					}).Warn("applyLdapParams returned error.")
+					return err
 				}
-			case "Ldap":
-				ldapCfg := cfg.Field(r).Interface().(*cfgresources.Ldap)
-				c.applyLdapParams(ldapCfg)
 			case "Ssl":
 				fmt.Printf("%s: %v : %s\n", resourceName, cfg.Field(r), cfg.Field(r).Kind())
 			default:
@@ -111,7 +125,7 @@ func (c *C7000) isRoleValid(role string) bool {
 //1. apply ldap group params
 //2. enable ldap auth
 //3. apply ldap server params
-func (c *C7000) applyLdapParams(cfg *cfgresources.Ldap) {
+func (c *C7000) applyLdapParams(cfg *cfgresources.Ldap) error {
 
 	err := c.applysetLdapInfo4(cfg)
 	if err != nil {
@@ -123,7 +137,7 @@ func (c *C7000) applyLdapParams(cfg *cfgresources.Ldap) {
 			"Serial":   c.serial,
 			"Error":    err,
 		}).Warn("applyLdapParams returned error.")
-		return
+		return err
 	}
 
 	err = c.applyEnableLdapAuth(cfg.Enable)
@@ -136,8 +150,10 @@ func (c *C7000) applyLdapParams(cfg *cfgresources.Ldap) {
 			"Serial":   c.serial,
 			"Error":    err,
 		}).Warn("applyLdapParams returned error.")
-		return
+		return err
 	}
+
+	return err
 }
 
 // Apply Ldap server config params
