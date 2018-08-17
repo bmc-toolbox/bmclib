@@ -31,6 +31,8 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 
 		bmc := client.(devices.Bmc)
 
+		asset.Model = bmc.BmcType()
+
 		//Setup a resource instance
 		//Get any templated values in the config rendered
 		resourceInstance := resource.Resource{Log: log, Vendor: asset.Vendor}
@@ -54,6 +56,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 	case devices.BmcChassis:
 		chassis := client.(devices.BmcChassis)
 
+		asset.Model = chassis.BmcType()
 		//Setup a resource instance
 		//Get any templated values in the config rendered
 		resourceInstance := resource.Resource{Log: log, Vendor: asset.Vendor}

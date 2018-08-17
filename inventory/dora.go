@@ -251,10 +251,9 @@ func (d *Dora) AssetIter() {
 			resp, err := http.Get(queryUrl)
 			if err != nil || resp.StatusCode != 200 {
 				log.WithFields(logrus.Fields{
-					"component":   component,
-					"url":         queryUrl,
-					"error":       err,
-					"Status Code": resp.StatusCode,
+					"component": component,
+					"url":       queryUrl,
+					"error":     err,
 				}).Fatal("Error querying Dora for assets.")
 			}
 
