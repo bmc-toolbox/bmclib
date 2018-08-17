@@ -288,7 +288,7 @@ func (i *IDrac8) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
 		"IP":     i.ip,
 		"Model":  i.BmcType(),
 		"Serial": i.serial,
-	}).Info("Syslog parameters applied.")
+	}).Debug("Syslog parameters applied.")
 
 	return err
 }
@@ -356,7 +356,7 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 		"IP":     i.ip,
 		"Model":  i.BmcType(),
 		"Serial": i.serial,
-	}).Info("NTP servers param applied.")
+	}).Debug("NTP servers param applied.")
 
 }
 
@@ -383,7 +383,7 @@ func (i *IDrac8) applyLdapParams(cfg *cfgresources.Ldap) {
 		"IP":     i.ip,
 		"Model":  i.BmcType(),
 		"Serial": i.serial,
-	}).Info("Ldap config applied.")
+	}).Debug("Ldap config applied.")
 
 }
 
@@ -416,7 +416,7 @@ func (i *IDrac8) applyLdapServerParam(cfg *cfgresources.Ldap) int {
 		"IP":     i.ip,
 		"Model":  i.BmcType(),
 		"Serial": i.serial,
-	}).Info("Ldap server param set.")
+	}).Debug("Ldap server param set.")
 
 	return 0
 }
@@ -449,7 +449,7 @@ func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) int {
 		"IP":     i.ip,
 		"Model":  i.BmcType(),
 		"Serial": i.serial,
-	}).Info("Ldap search filter param applied.")
+	}).Debug("Ldap search filter param applied.")
 
 	return 0
 }
@@ -562,7 +562,7 @@ func (i *IDrac8) applyLdapGroupParams(cfgGroup []*cfgresources.LdapGroup, cfgLda
 			"Model":  i.BmcType(),
 			"Serial": i.serial,
 			"Role":   group.Role,
-		}).Info("Ldap GroupDN config applied.")
+		}).Debug("Ldap GroupDN config applied.")
 
 		switch group.Role {
 		case "user":
@@ -638,7 +638,7 @@ func (i *IDrac8) applyLdapRoleGroupPrivParam(cfg *cfgresources.Ldap, groupPrivil
 		"IP":     i.ip,
 		"Model":  i.BmcType(),
 		"Serial": i.serial,
-	}).Info("Ldap Group role privileges applied.")
+	}).Debug("Ldap Group role privileges applied.")
 
 	return err
 }
