@@ -16,13 +16,19 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
 	"github.com/bmc-toolbox/bmcbutler/asset"
 	"github.com/bmc-toolbox/bmcbutler/butler"
 	"github.com/bmc-toolbox/bmcbutler/inventory"
+	"github.com/bmc-toolbox/bmcbutler/metrics"
 	"github.com/bmc-toolbox/bmcbutler/resource"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"os"
 )
 
 // setupCmd represents the setup command
@@ -44,6 +50,37 @@ func init() {
 }
 
 func setup() {
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	//flag when its time to exit.
+	var exitFlag bool
+
+	go func() {
+		_ = <-sigChan
+		exitFlag = true
+	}()
+
+	//A sync waitgroup for routines spawned here.
+	var setupWG sync.WaitGroup
+
+	// A channel butlers sends metrics to the metrics sender
+	metricsChan := make(chan []metrics.MetricsMsg, 5)
+
+	//the metrics forwarder routine
+	metricsForwarder := metrics.Metrics{
+		Logger:  log,
+		Channel: metricsChan,
+		SyncWG:  &setupWG,
+	}
+
+	//metrics emitter instance, used by methods to emit metrics to the forwarder.
+	metricsEmitter := metrics.Emitter{Channel: metricsChan}
+
+	//spawn metrics forwarder routine
+	go metricsForwarder.Run()
+	setupWG.Add(1)
 
 	// A channel to recieve inventory assets
 	inventoryChan := make(chan []asset.Asset)
@@ -84,7 +121,12 @@ func setup() {
 
 	// Spawn butlers to work
 	butlerChan := make(chan butler.ButlerMsg, 10)
-	butlerManager := butler.ButlerManager{Log: log, SpawnCount: butlersToSpawn, ButlerChan: butlerChan}
+	butlerManager := butler.ButlerManager{
+		Log:            log,
+		SpawnCount:     butlersToSpawn,
+		ButlerChan:     butlerChan,
+		MetricsEmitter: metricsEmitter,
+	}
 
 	// let butler run from any location on any given BMC
 	if serial != "" || ipList != "" || ignoreLocation {
@@ -108,9 +150,25 @@ func setup() {
 	//over inventory channel and pass asset lists recieved to bmcbutlers
 	for assetList := range inventoryChan {
 		for _, asset := range assetList {
+			//if signal was received, break out.
+			if exitFlag {
+				break
+			}
+
 			asset.Setup = true
+
+			//NOTE: if all butlers exit, and we're trying to write to butlerChan
+			//      this loop is going to be stuck waiting for the butlerMsg to be read,
+			//      make sure to break out of this loop or have butlerChan closed in such a case,
+			//      for now, we fix this by setting exitFlag to break out of the loop.
+
 			butlerMsg := butler.ButlerMsg{Asset: asset, Setup: config}
 			butlerChan <- butlerMsg
+		}
+
+		//if sigterm is received, break out.
+		if exitFlag {
+			break
 		}
 	}
 
@@ -118,4 +176,7 @@ func setup() {
 
 	//wait until butlers are done.
 	butlerManager.Wait()
+
+	close(metricsChan)
+	setupWG.Wait()
 }

@@ -43,6 +43,11 @@ func (b *Butler) setupAsset(config []byte, asset *asset.Asset) (err error) {
 		//rendered config is a *cfgresources.ResourcesSetup type
 		renderedConfig := resourceInstance.LoadSetupResources(config)
 
+		//time how long it takes to run configure
+		metricPrefix := fmt.Sprintf("%s.%s.%s", asset.Location, asset.Vendor, asset.Type)
+		defer b.metricsEmitter.MeasureRunTime(
+			time.Now().Unix(), fmt.Sprintf("%s.%s", metricPrefix, component))
+
 		//if a chassis was setup successfully,
 		//call some post setup actions.
 		if setup.Chassis(chassis, renderedConfig) == true {
