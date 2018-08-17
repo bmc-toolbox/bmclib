@@ -123,8 +123,8 @@ func (b *Butler) Run() {
 	}
 
 	//set metrics send ticker
-	var metricPrefix, successMetric string
-	metricsSendTicker := time.NewTicker(30 * time.Second)
+	var metricPrefix, successMetric, failMetric string
+	metricsSendTicker := time.NewTicker(60 * time.Second)
 	go func() {
 		for _ = range metricsSendTicker.C {
 			b.metricsEmitter.EmitMetricMap(b.metricsData)
@@ -198,6 +198,7 @@ func (b *Butler) Run() {
 		// e.g: lhr4.dell.bmc.configure.success
 		metricPrefix = fmt.Sprintf("%s.%s.%s.configure", msg.Asset.Location, msg.Asset.Vendor, msg.Asset.Type)
 		successMetric = fmt.Sprintf("%s.%s", metricPrefix, "success")
+		failMetric = fmt.Sprintf("%s.%s", metricPrefix, "fail")
 
 		log.WithFields(logrus.Fields{
 			"component": component,
@@ -250,9 +251,13 @@ func (b *Butler) Run() {
 					"Location":  msg.Asset.Location,
 					"Error":     err,
 				}).Warn("Unable to configure asset.")
+
+				b.metricsData[failMetric] += 1
+				continue
 			}
 
 			b.metricsData[successMetric] += 1
+			continue
 		default:
 			log.WithFields(logrus.Fields{
 				"component": component,
