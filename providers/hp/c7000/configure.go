@@ -231,7 +231,7 @@ func (c *C7000) applysetLdapInfo4(cfg *cfgresources.Ldap) (err error) {
 	log.WithFields(log.Fields{
 		"IP":    c.ip,
 		"Model": c.BmcType(),
-	}).Info("Ldap Server parameters applied.")
+	}).Debug("Ldap Server parameters applied.")
 	return err
 }
 
@@ -259,7 +259,7 @@ func (c *C7000) applyEnableLdapAuth(enable bool) (err error) {
 		"IP":     c.ip,
 		"Model":  c.BmcType(),
 		"Serial": c.serial,
-	}).Info("Ldap Enabled.")
+	}).Debug("Ldap Enabled.")
 	return err
 }
 
@@ -349,7 +349,7 @@ func (c *C7000) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) 
 		"IP":     c.ip,
 		"Model":  c.BmcType(),
 		"Serial": c.serial,
-	}).Info("Ldap config applied")
+	}).Debug("Ldap config applied")
 	return
 }
 
@@ -386,7 +386,7 @@ func (c *C7000) applyAddLdapGroup(group string) (err error) {
 	log.WithFields(log.Fields{
 		"IP":    c.ip,
 		"Model": c.BmcType(),
-	}).Info("Ldap group added.")
+	}).Debug("Ldap group added.")
 	return nil
 }
 
@@ -425,7 +425,7 @@ func (c *C7000) applyLdapGroupBayAcl(role string, group string) (err error) {
 		"Serial": c.serial,
 		"Role":   role,
 		"Group":  group,
-	}).Info("Ldap group ACL added.")
+	}).Debug("Ldap group ACL added.")
 	return err
 }
 
@@ -511,7 +511,7 @@ func (c *C7000) applyAddLdapGroupBayAccess(group string) (err error) {
 		"Model":  c.BmcType(),
 		"Serial": c.serial,
 		"Group":  group,
-	}).Info("Ldap interconnect and bay ACLs added.")
+	}).Debug("Ldap interconnect and bay ACLs added.")
 	return err
 }
 
@@ -559,7 +559,7 @@ func (c *C7000) applyUserParams(cfg *cfgresources.User) (err error) {
 			"Model":  c.BmcType(),
 			"Serial": c.serial,
 			"User":   cfg.Name,
-		}).Info("User removed.")
+		}).Debug("User removed.")
 
 		//user exists and was removed.
 		return err
@@ -636,7 +636,7 @@ func (c *C7000) setUserPassword(user string, password string) (err error) {
 		"Model":  c.BmcType(),
 		"Serial": c.serial,
 		"user":   user,
-	}).Info("User password set.")
+	}).Debug("User password set.")
 	return err
 }
 
@@ -675,7 +675,7 @@ func (c *C7000) setUserAcl(user string, role string) (err error) {
 		"Serial": c.serial,
 		"User":   user,
 		"Acl":    role,
-	}).Info("User ACL set.")
+	}).Debug("User ACL set.")
 	return err
 }
 
@@ -733,7 +733,7 @@ func (c *C7000) applyAddUserBayAccess(user string) (err error) {
 		"Model":  c.BmcType(),
 		"Serial": c.serial,
 		"user":   user,
-	}).Info("User account related interconnect and bay ACLs added.")
+	}).Debug("User account related interconnect and bay ACLs added.")
 	return err
 }
 
@@ -812,7 +812,7 @@ func (c *C7000) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 		"IP":     c.ip,
 		"Model":  c.BmcType(),
 		"Serial": c.serial,
-	}).Info("Date and time config applied.")
+	}).Debug("Date and time config applied.")
 	return err
 }
 
@@ -840,7 +840,7 @@ func (c *C7000) applyNtpTimezoneParam(timezone string) (err error) {
 		"IP":     c.ip,
 		"Model":  c.BmcType(),
 		"Serial": c.serial,
-	}).Info("Timezone config applied.")
+	}).Debug("Timezone config applied.")
 	return err
 }
 
@@ -891,7 +891,7 @@ func (c *C7000) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
 		"IP":     c.ip,
 		"Model":  c.BmcType(),
 		"Serial": c.serial,
-	}).Info("Syslog config applied.")
+	}).Debug("Syslog config applied.")
 	return err
 }
 
@@ -919,7 +919,7 @@ func (c *C7000) applySyslogServer(server string) {
 		"IP":     c.ip,
 		"Model":  c.BmcType(),
 		"Serial": c.serial,
-	}).Info("Syslog server set.")
+	}).Debug("Syslog server set.")
 	return
 }
 
@@ -946,7 +946,7 @@ func (c *C7000) applySyslogPort(port int) {
 		"IP":     c.ip,
 		"Model":  c.BmcType(),
 		"Serial": c.serial,
-	}).Info("Syslog port set.")
+	}).Debug("Syslog port set.")
 	return
 }
 
@@ -974,7 +974,7 @@ func (c *C7000) applySyslogEnabled(enabled bool) {
 		"IP":     c.ip,
 		"Model":  c.BmcType(),
 		"Serial": c.serial,
-	}).Info("Syslog enabled.")
+	}).Debug("Syslog enabled.")
 	return
 
 }

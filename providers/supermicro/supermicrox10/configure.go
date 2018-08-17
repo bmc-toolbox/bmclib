@@ -266,7 +266,7 @@ func (s *SupermicroX10) applyUserParams(users []*cfgresources.User) (err error) 
 			"Model":  s.BmcType(),
 			"Serial": s.serial,
 			"User":   user.Name,
-		}).Info("User parameters applied.")
+		}).Debug("User parameters applied.")
 
 		userId += 1
 	}
@@ -326,7 +326,7 @@ func (s *SupermicroX10) applyNetworkParams(cfg *cfgresources.Network) (err error
 		"IP":     s.ip,
 		"Model":  s.BmcType(),
 		"Serial": s.serial,
-	}).Info("Network config parameters applied.")
+	}).Debug("Network config parameters applied.")
 	return err
 }
 
@@ -422,7 +422,7 @@ func (s *SupermicroX10) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 		"IP":     s.ip,
 		"Model":  s.BmcType(),
 		"Serial": s.serial,
-	}).Info("NTP config parameters applied.")
+	}).Debug("NTP config parameters applied.")
 	return err
 }
 
@@ -557,7 +557,7 @@ func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*
 	log.WithFields(log.Fields{
 		"IP":    s.ip,
 		"Model": s.BmcType(),
-	}).Info("Ldap config parameters applied.")
+	}).Debug("Ldap config parameters applied.")
 	return err
 }
 
@@ -635,7 +635,7 @@ func (s *SupermicroX10) applySyslogParams(cfg *cfgresources.Syslog) (err error) 
 		"IP":     s.ip,
 		"Model":  s.BmcType(),
 		"Serial": s.serial,
-	}).Info("Syslog config parameters applied.")
+	}).Debug("Syslog config parameters applied.")
 	return err
 }
 

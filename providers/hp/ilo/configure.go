@@ -251,7 +251,7 @@ func (i *Ilo) applyUserParams(users []*cfgresources.User) (err error) {
 				"Model":  i.BmcType(),
 				"Serial": i.serial,
 				"User":   user.Name,
-			}).Info("User disabled in config, will be removed.")
+			}).Debug("User disabled in config, will be removed.")
 			postPayload = true
 		}
 
@@ -291,7 +291,7 @@ func (i *Ilo) applyUserParams(users []*cfgresources.User) (err error) {
 				"Model":  i.BmcType(),
 				"Serial": i.serial,
 				"User":   user.Name,
-			}).Info("User parameters applied.")
+			}).Debug("User parameters applied.")
 
 		}
 	}
@@ -370,7 +370,7 @@ func (i *Ilo) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
 		"IP":     i.ip,
 		"Model":  i.BmcType(),
 		"Serial": i.serial,
-	}).Info("Syslog parameters applied.")
+	}).Debug("Syslog parameters applied.")
 
 	return err
 }
@@ -478,7 +478,7 @@ func (i *Ilo) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 	log.WithFields(log.Fields{
 		"IP":    i.ip,
 		"Model": i.BmcType(),
-	}).Info("NTP parameters applied.")
+	}).Debug("NTP parameters applied.")
 
 	return err
 }
@@ -562,7 +562,7 @@ func (i *Ilo) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) {
 				"Model":  i.BmcType(),
 				"Serial": i.serial,
 				"User":   group.Group,
-			}).Info("Ldap role group disabled in config, will be removed.")
+			}).Debug("Ldap role group disabled in config, will be removed.")
 			postPayload = true
 		}
 
@@ -602,7 +602,7 @@ func (i *Ilo) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) {
 				"Model":  i.BmcType(),
 				"Serial": i.serial,
 				"User":   group.Group,
-			}).Info("LdapGroup parameters applied.")
+			}).Debug("LdapGroup parameters applied.")
 
 		}
 
@@ -693,7 +693,7 @@ func (i *Ilo) applyLdapParams(cfg *cfgresources.Ldap) (err error) {
 		"IP":     i.ip,
 		"Model":  i.BmcType(),
 		"Serial": i.serial,
-	}).Info("Ldap parameters applied.")
+	}).Debug("Ldap parameters applied.")
 
 	return err
 

@@ -218,7 +218,7 @@ func (i *IDrac9) applyUserParams(cfgUsers []*cfgresources.User) (err error) {
 			"Model":  i.BmcType(),
 			"Serial": i.Serial,
 			"User":   cfgUser.Name,
-		}).Info("User parameters applied.")
+		}).Debug("User parameters applied.")
 
 	}
 
@@ -398,7 +398,7 @@ func (i *IDrac9) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error)
 			"Step":            helper.WhosCalling(),
 			"Ldap Role Group": cfgRole.Role,
 			"Role Group DN":   cfgRole.Role,
-		}).Info("Ldap Role Group parameters applied.")
+		}).Debug("Ldap Role Group parameters applied.")
 
 	}
 
@@ -486,7 +486,7 @@ func (i *IDrac9) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 		"IP":     i.ip,
 		"Model":  i.BmcType(),
 		"Serial": i.Serial,
-	}).Info("NTP servers param applied.")
+	}).Debug("NTP servers param applied.")
 
 	return err
 }
@@ -545,7 +545,7 @@ func (i *IDrac9) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
 		"IP":     i.ip,
 		"Model":  i.BmcType(),
 		"Serial": i.Serial,
-	}).Info("Syslog parameters applied.")
+	}).Debug("Syslog parameters applied.")
 	return err
 }
 
@@ -644,6 +644,6 @@ func (i *IDrac9) applyNetworkParams(cfg *cfgresources.Network) (err error) {
 		"IP":     i.ip,
 		"Model":  i.BmcType(),
 		"Serial": i.Serial,
-	}).Info("Network config parameters applied.")
+	}).Debug("Network config parameters applied.")
 	return err
 }
