@@ -62,7 +62,6 @@ func (m *Metrics) Run() {
 				"component": component,
 				"Error":     err,
 			}).Warn("Unable to spawn graphite sender.")
-			return
 		}
 	default:
 		log.WithFields(logrus.Fields{
@@ -101,7 +100,8 @@ func graphiteSend(client *graphite.Graphite, metrics []MetricsMsg, logger *logru
 
 	defer wg.Done()
 
-	if len(metrics) < 1 {
+	//if there are no metrics to send / no connection to graphite
+	if len(metrics) < 1 || client == nil {
 		return
 	}
 
