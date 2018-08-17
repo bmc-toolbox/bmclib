@@ -76,7 +76,7 @@ type Ssl struct {
 
 type Network struct {
 	Hostname    string `yaml:"hostname"`
-	DNSFromDHCP bool   `yaml:"dnsfromdhcp"`
+	DNSFromDHCP bool   `yaml:"dnsFromDhcp"`
 	SshEnable   bool   `yaml:"sshEnable"`
 	SshPort     int    `yaml:"sshPort"`
 	SolEnable   bool   `yaml:"solEnable"` //Serial over lan
