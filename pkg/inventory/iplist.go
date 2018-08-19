@@ -1,9 +1,11 @@
 package inventory
 
 import (
-	"github.com/bmc-toolbox/bmcbutler/asset"
-	"github.com/sirupsen/logrus"
 	"strings"
+
+	"github.com/sirupsen/logrus"
+
+	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
 )
 
 // A inventory source is required to have a type with these fields

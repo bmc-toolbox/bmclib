@@ -7,8 +7,8 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/bmc-toolbox/bmcbutler/asset"
-	"github.com/bmc-toolbox/bmcbutler/resource"
+	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
+	"github.com/bmc-toolbox/bmcbutler/pkg/resource"
 	"github.com/bmc-toolbox/bmclib/devices"
 )
 

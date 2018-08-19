@@ -4,7 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/bmc-toolbox/bmcbutler/asset"
+	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
+
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/sirupsen/logrus"
 )

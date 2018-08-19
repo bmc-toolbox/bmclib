@@ -4,12 +4,14 @@ package inventory
 // to use this source, set source: csv in bmcbutler.yml
 
 import (
-	"github.com/bmc-toolbox/bmcbutler/asset"
+	"os"
+	"strings"
+
 	"github.com/gocarina/gocsv"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"os"
-	"strings"
+
+	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
 )
 
 // A inventory source is required to have a type with these fields

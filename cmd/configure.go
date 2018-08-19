@@ -25,11 +25,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/bmc-toolbox/bmcbutler/asset"
-	"github.com/bmc-toolbox/bmcbutler/butler"
-	"github.com/bmc-toolbox/bmcbutler/inventory"
-	"github.com/bmc-toolbox/bmcbutler/metrics"
-	"github.com/bmc-toolbox/bmcbutler/resource"
+	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
+	"github.com/bmc-toolbox/bmcbutler/pkg/butler"
+	"github.com/bmc-toolbox/bmcbutler/pkg/inventory"
+	"github.com/bmc-toolbox/bmcbutler/pkg/metrics"
+	"github.com/bmc-toolbox/bmcbutler/pkg/resource"
 )
 
 // configureCmd represents the configure command

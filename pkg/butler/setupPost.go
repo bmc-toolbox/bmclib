@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/bmc-toolbox/bmcbutler/asset"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+
+	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
 	"/jrebello/go-serverdb/serverdb"
 )
 

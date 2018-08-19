@@ -26,8 +26,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
-	"github.com/bmc-toolbox/bmcbutler/asset"
-	"github.com/bmc-toolbox/bmcbutler/metrics"
+	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
+	"github.com/bmc-toolbox/bmcbutler/pkg/metrics"
 
 	bmclibLogger "github.com/bmc-toolbox/bmclib/logging"
 )
