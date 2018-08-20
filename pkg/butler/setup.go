@@ -110,17 +110,6 @@ func (s *SetupAction) Chassis(chassis devices.BmcChassis, config *cfgresources.R
 					"Error":     err,
 				}).Warn("Failed to update Dynamic Power state.")
 			}
-		case "IpmiOverLan":
-			err := s.setIpmiOverLan(chassis, config.IpmiOverLan.Enable)
-			if err != nil {
-				configured = false
-				log.WithFields(logrus.Fields{
-					"component": component,
-					"butler-id": s.Id,
-					"Asset":     fmt.Sprintf("%+v", s.Asset),
-					"Error":     err,
-				}).Warn("Failed to update IpmiOverLan state.")
-			}
 		case "hostname":
 		default:
 		}
