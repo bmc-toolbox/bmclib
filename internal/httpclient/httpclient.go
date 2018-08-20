@@ -25,7 +25,7 @@ func Build() (client *http.Client, err error) {
 			Timeout:   30 * time.Second,
 			KeepAlive: 30 * time.Second,
 		}).Dial,
-		TLSHandshakeTimeout:   30 * time.Second,
+		TLSHandshakeTimeout:   60 * time.Second,
 		ResponseHeaderTimeout: 60 * time.Second,
 	}
 

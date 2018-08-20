@@ -58,7 +58,18 @@ func (i *IDrac8) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 					}).Warn("Unable to set Syslog config.")
 				}
 			case "Network":
-				fmt.Printf("%s: %v : %s\n", resourceName, cfg.Field(r), cfg.Field(r).Kind())
+				networkCfg := cfg.Field(r).Interface().(*cfgresources.Network)
+				err := i.applyNetworkParams(networkCfg)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"step":     "ApplyCfg",
+						"resource": cfg.Field(r).Kind(),
+						"IP":       i.ip,
+						"Model":    i.BmcType(),
+						"Serial":   i.serial,
+						"Error":    err,
+					}).Warn("Unable to set Network config.")
+				}
 			case "Ntp":
 				ntpCfg := cfg.Field(r).Interface().(*cfgresources.Ntp)
 				err := i.applyNtpParams(ntpCfg)
@@ -211,7 +222,7 @@ func (i *IDrac8) applyUserParams(cfg *cfgresources.User, Id int) (err error) {
 		"Model":  i.BmcType(),
 		"Serial": i.serial,
 		"User":   cfg.Name,
-	}).Info("User parameters applied.")
+	}).Debug("User parameters applied.")
 
 	return err
 }
@@ -277,7 +288,7 @@ func (i *IDrac8) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
 		"IP":     i.ip,
 		"Model":  i.BmcType(),
 		"Serial": i.serial,
-	}).Info("Syslog parameters applied.")
+	}).Debug("Syslog parameters applied.")
 
 	return err
 }
@@ -345,7 +356,7 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 		"IP":     i.ip,
 		"Model":  i.BmcType(),
 		"Serial": i.serial,
-	}).Info("NTP servers param applied.")
+	}).Debug("NTP servers param applied.")
 
 }
 
@@ -372,7 +383,7 @@ func (i *IDrac8) applyLdapParams(cfg *cfgresources.Ldap) {
 		"IP":     i.ip,
 		"Model":  i.BmcType(),
 		"Serial": i.serial,
-	}).Info("Ldap config applied.")
+	}).Debug("Ldap config applied.")
 
 }
 
@@ -405,7 +416,7 @@ func (i *IDrac8) applyLdapServerParam(cfg *cfgresources.Ldap) int {
 		"IP":     i.ip,
 		"Model":  i.BmcType(),
 		"Serial": i.serial,
-	}).Info("Ldap server param set.")
+	}).Debug("Ldap server param set.")
 
 	return 0
 }
@@ -438,7 +449,7 @@ func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) int {
 		"IP":     i.ip,
 		"Model":  i.BmcType(),
 		"Serial": i.serial,
-	}).Info("Ldap search filter param applied.")
+	}).Debug("Ldap search filter param applied.")
 
 	return 0
 }
@@ -551,7 +562,7 @@ func (i *IDrac8) applyLdapGroupParams(cfgGroup []*cfgresources.LdapGroup, cfgLda
 			"Model":  i.BmcType(),
 			"Serial": i.serial,
 			"Role":   group.Role,
-		}).Info("Ldap GroupDN config applied.")
+		}).Debug("Ldap GroupDN config applied.")
 
 		switch group.Role {
 		case "user":
@@ -627,7 +638,7 @@ func (i *IDrac8) applyLdapRoleGroupPrivParam(cfg *cfgresources.Ldap, groupPrivil
 		"IP":     i.ip,
 		"Model":  i.BmcType(),
 		"Serial": i.serial,
-	}).Info("Ldap Group role privileges applied.")
+	}).Debug("Ldap Group role privileges applied.")
 
 	return err
 }
@@ -654,6 +665,61 @@ func (i *IDrac8) applyTimezoneParam(timezone string) {
 		"IP":     i.ip,
 		"Model":  i.BmcType(),
 		"Serial": i.serial,
-	}).Info("Timezone param applied.")
+	}).Debug("Timezone param applied.")
 
+}
+
+func (i *IDrac8) applyNetworkParams(cfg *cfgresources.Network) (err error) {
+
+	params := map[string]int{
+		"EnableIPv4":              1,
+		"DHCPEnable":              1,
+		"DNSFromDHCP":             1,
+		"EnableSerialOverLan":     1,
+		"EnableSerialRedirection": 1,
+		"EnableIpmiOverLan":       1,
+	}
+
+	if !cfg.DNSFromDHCP {
+		params["DNSFromDHCP"] = 0
+	}
+
+	if !cfg.IpmiEnable {
+		params["EnableIpmiOverLan"] = 0
+	}
+
+	if !cfg.SolEnable {
+		params["EnableSerialOverLan"] = 0
+		params["EnableSerialRedirection"] = 0
+	}
+
+	endpoint := "data?set"
+	payload := fmt.Sprintf("dhcpForDNSDomain:%d,", params["DNSFromDHCP"])
+	payload += fmt.Sprintf("ipmiLAN:%d,", params["EnableIpmiOverLan"])
+	payload += fmt.Sprintf("serialOverLanEnabled:%d,", params["EnableSerialOverLan"])
+	payload += fmt.Sprintf("serialOverLanBaud:3,") //115.2 kbps
+	payload += fmt.Sprintf("serialOverLanPriv:0,") //Administrator
+	payload += fmt.Sprintf("racRedirectEna:%d,", params["EnableSerialRedirection"])
+	payload += fmt.Sprintf("racEscKey:^\\\\")
+
+	responseCode, responseBody, err := i.post(endpoint, []byte(payload))
+	if err != nil || responseCode != 200 {
+		log.WithFields(log.Fields{
+			"IP":           i.ip,
+			"Model":        i.BmcType(),
+			"Serial":       i.serial,
+			"endpoint":     endpoint,
+			"step":         helper.WhosCalling(),
+			"responseCode": responseCode,
+			"response":     string(responseBody),
+		}).Warn("POST request to set Network params failed.")
+		return err
+	}
+
+	log.WithFields(log.Fields{
+		"IP":     i.ip,
+		"Model":  i.BmcType(),
+		"Serial": i.Serial,
+	}).Debug("Network config parameters applied.")
+	return err
 }

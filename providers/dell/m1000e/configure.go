@@ -171,7 +171,7 @@ func (m *M1000e) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error)
 			"Serial": m.serial,
 			"Role":   group.Role,
 			"Group":  group.Group,
-		}).Info("Ldap group parameters applied.")
+		}).Debug("Ldap group parameters applied.")
 
 		roleId += 1
 	}
@@ -199,7 +199,7 @@ func (m *M1000e) applyDatetimeCfg(cfg DatetimeParams) (err error) {
 		"IP":     m.ip,
 		"Model":  m.BmcType(),
 		"Serial": m.serial,
-	}).Info("DateTime config parameters applied.")
+	}).Debug("DateTime config parameters applied.")
 	return err
 }
 
@@ -223,7 +223,7 @@ func (m *M1000e) applyDirectoryServicesCfg(cfg DirectoryServicesParams) (err err
 		"IP":     m.ip,
 		"Model":  m.BmcType(),
 		"Serial": m.serial,
-	}).Info("Ldap config parameters applied.")
+	}).Debug("Ldap config parameters applied.")
 	return err
 }
 
@@ -247,7 +247,7 @@ func (m *M1000e) applyLdapRoleCfg(cfg LdapArgParams, roleId int) (err error) {
 		"IP":     m.ip,
 		"Model":  m.BmcType(),
 		"Serial": m.serial,
-	}).Info("Ldap Role group config parameters applied.")
+	}).Debug("Ldap Role group config parameters applied.")
 	return err
 }
 
@@ -269,7 +269,7 @@ func (m *M1000e) ApplySecurityCfg(cfg LoginSecurityParams) (err error) {
 		"IP":     m.ip,
 		"Model":  m.BmcType(),
 		"Serial": m.serial,
-	}).Info("Security config parameters applied.")
+	}).Debug("Security config parameters applied.")
 	return err
 
 }
@@ -292,7 +292,7 @@ func (m *M1000e) applyInterfaceCfg(cfg InterfaceParams) (err error) {
 		"IP":     m.ip,
 		"Model":  m.BmcType(),
 		"Serial": m.serial,
-	}).Info("Interface config parameters applied.")
+	}).Debug("Interface config parameters applied.")
 	return err
 }
 
@@ -316,7 +316,7 @@ func (m *M1000e) applyUserCfg(cfg UserParams, userId int) (err error) {
 		"IP":     m.ip,
 		"Model":  m.BmcType(),
 		"Serial": m.serial,
-	}).Info("User account config parameters applied.")
+	}).Debug("User account config parameters applied.")
 	return err
 }
 
@@ -346,7 +346,7 @@ func (m *M1000e) applySslCfg(ssl *cfgresources.Ssl) (err error) {
 		"IP":     m.ip,
 		"Model":  m.BmcType(),
 		"Serial": m.serial,
-	}).Info("SSL certs uploaded.")
+	}).Debug("SSL certs uploaded.")
 	return err
 }
 
