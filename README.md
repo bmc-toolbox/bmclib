@@ -3,7 +3,7 @@
 Bmcbutler is a tool to configure BMCs using [bmclib](https://github.com/ncode/bmclib),
 assets - BMCs to configure are read from an inventory source defined in `bmcbutler.yml` configuration file.
 
-Multiple butler processes are spawned to configure BMCs based on configuration declared in [configuration.yml sample](../master/cfg/configuration.yml), [setup.yml sample](../master/cfg/setup.yml).
+Multiple butler processes are spawned to configure BMCs based on configuration declared in [configuration.yml sample](../master/samples/cfg/configuration.yml), [setup.yml sample](../master/samples/cfg/setup.yml).
 
 For supported BMCs see the bmclib page.
 
@@ -27,7 +27,7 @@ mkdir ~/.bmcbutler/
 ```
 
 Copy the sample config into ~/.bmcbutler/
-[bmcbutler.yml sample](../master/bmcbutler.yml.sample)
+[bmcbutler.yml sample](../master/samples/bmcbutler.yml.sample)
 
 
 ###### BMC configuration
@@ -46,14 +46,14 @@ mkdir ~/.bmcbutler/cfg
 Create a directory /etc/bmcbutler/cfg/
 add the BMC yaml config definitions in there,
 
-[configuration.yml sample](../master/cfg/configuration.yml)
-[setup.yml sample](../master/cfg/setup.yml)
+[configuration.yml sample](../master/samples/cfg/configuration.yml)
+[setup.yml sample](../master/samples/cfg/setup.yml)
 
 ###### inventory
 Bmcbutler was written with the intent of sourcing inventory assets and configuring their bmcs,
 a csv inventory example is provided to play with.
 
-[inventory.csv sample](../master/inventory.csv.sample)
+[inventory.csv sample](../master/samples/inventory.csv.sample)
 
 The 'inventory' parameter points Bmcbutler to the inventory source.
 
