@@ -22,12 +22,12 @@ inventory:
   setup:
     source: needSetup
 bmcDefaults:
-  c7000:
+  HP:
     user: Administrator
     password: password
-  m1000e:
+  Dell:
     user: root
     password: calvin
-  supermicrox10:
+  Supermicro:
     user: ADMIN
     password: ADMIN

@@ -57,11 +57,11 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 	}
 
 	//auth success
-
 	switch client.(type) {
 	case devices.Bmc:
 
 		bmc := client.(devices.Bmc)
+		asset.Vendor = bmc.Vendor()
 
 		//we don't check credentials if its an ssh based connection
 		if !dontCheckCredentials {
@@ -113,8 +113,8 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 				}
 
 				//attempt to login with vendor Default user account
-				bmcDefaultUser := viper.GetString(fmt.Sprintf("bmcDefaults.%s.user", asset.Model))
-				bmcDefaultPassword := viper.GetString(fmt.Sprintf("bmcDefaults.%s.password", asset.Model))
+				bmcDefaultUser := viper.GetString(fmt.Sprintf("bmcDefaults.%s.user", asset.Vendor))
+				bmcDefaultPassword := viper.GetString(fmt.Sprintf("bmcDefaults.%s.password", asset.Vendor))
 				bmc.UpdateCredentials(bmcDefaultUser, bmcDefaultPassword)
 				err := bmc.CheckCredentials()
 				if err != nil {
@@ -138,8 +138,6 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 						"Default user": bmcDefaultUser,
 					}).Debug("Successful login with vendor default user.")
 
-					asset.Vendor = bmc.Vendor()
-
 					b.metricsData[dUserAuthSuccessMetric] += 1
 					return bmc, err
 				}
@@ -153,8 +151,6 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 					"Primary user": bmcPrimaryUser,
 				}).Debug("Successful login with Primary user.")
 
-				asset.Vendor = bmc.Vendor()
-
 				b.metricsData[pUserAuthSuccessMetric] += 1
 				return bmc, err
 			}
@@ -165,12 +161,15 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 	case devices.BmcChassis:
 		bmc := client.(devices.BmcChassis)
 		asset.Model = bmc.BmcType()
+		asset.Vendor = bmc.Vendor()
 
 		//we don't check credentials if its an ssh based connection
 		if !dontCheckCredentials {
 
 			//attempt to login with Primary user account
 			err := bmc.CheckCredentials()
+
+			//C7000's just timeout on auth failure.
 			if err == bmcerros.ErrLoginFailed || (err != nil && asset.Model == "c7000") {
 
 				log.WithFields(logrus.Fields{
@@ -210,16 +209,14 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 							"Secondary user": bmcSecondaryUser,
 						}).Debug("Successful login with Secondary user.")
 
-						asset.Vendor = bmc.Vendor()
-
 						b.metricsData[sUserAuthSuccessMetric] += 1
 						return bmc, err
 					}
 				}
 
 				//attempt to login with vendor Default user account
-				bmcDefaultUser := viper.GetString(fmt.Sprintf("bmcDefaults.%s.user", asset.Model))
-				bmcDefaultPassword := viper.GetString(fmt.Sprintf("bmcDefaults.%s.password", asset.Model))
+				bmcDefaultUser := viper.GetString(fmt.Sprintf("bmcDefaults.%s.user", asset.Vendor))
+				bmcDefaultPassword := viper.GetString(fmt.Sprintf("bmcDefaults.%s.password", asset.Vendor))
 				bmc.UpdateCredentials(bmcDefaultUser, bmcDefaultPassword)
 				err := bmc.CheckCredentials()
 				if err != nil {
@@ -242,8 +239,6 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 						"Asset":        fmt.Sprintf("%+v", asset),
 						"Default user": bmcDefaultUser,
 					}).Debug("Successful login with vendor default user.")
-
-					asset.Vendor = bmc.Vendor()
 
 					b.metricsData[dUserAuthSuccessMetric] += 1
 					return bmc, err
@@ -268,8 +263,6 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 					"Asset":        fmt.Sprintf("%+v", asset),
 					"Primary user": bmcPrimaryUser,
 				}).Debug("Successful login with Primary user.")
-
-				asset.Vendor = bmc.Vendor()
 
 				b.metricsData[pUserAuthSuccessMetric] += 1
 				return bmc, err
