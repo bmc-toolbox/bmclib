@@ -111,12 +111,6 @@
 			"revisionTime": "2018-08-17T11:32:50Z"
 		},
 		{
-			"checksumSHA1": "LrOnRW6KCAcKDnKPs+Hibtb7Duk=",
-			"path": "github.com/dghubble/sling",
-			"revision": "80ec33c6152a53edb5545864ca37567b506c4ca5",
-			"revisionTime": "2017-06-29T03:54:44Z"
-		},
-		{
 			"checksumSHA1": "5BP5xofo0GoFi6FtgqFFbmHyUKI=",
 			"path": "github.com/fatih/structs",
 			"revision": "ebf56d35bba727c68ac77f56f2fcf90b181851aa",
@@ -464,12 +458,6 @@
 			"path": "github.com/spf13/viper",
 			"revision": "aafc9e6bc7b7bb53ddaa75a5ef49a17d6e654be5",
 			"revisionTime": "2017-11-29T09:51:06Z"
-		},
-		{
-			"checksumSHA1": "WQJheyd1svc2jz/akwRwzLzWsGk=",
-			"path": "/jrebello/go-serverdb/serverdb",
-			"revision": "136562fe0419331fc64f9aa60f54742264f8aa9f",
-			"revisionTime": "2018-06-20T13:04:02Z"
 		},
 		{
 			"checksumSHA1": "IQkUIOnvlf0tYloFx9mLaXSvXWQ=",
