@@ -277,7 +277,7 @@ func (d *Dora) AssetIter() {
 			// if an asset has no bmcAddress we log and skip it.
 			for _, item := range doraAssets.Data {
 
-				if item.Attributes.BmcAddress == "" {
+				if item.Attributes.BmcAddress == "" || item.Attributes.BmcAddress == "0.0.0.0" {
 					log.WithFields(logrus.Fields{
 						"component": component,
 						"DoraAsset": fmt.Sprintf("%+v", item),
