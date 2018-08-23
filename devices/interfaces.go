@@ -23,6 +23,7 @@ type Bmc interface {
 	PowerKw() (float64, error)
 	PowerState() (string, error)
 	PowerCycleBmc() (status bool, err error)
+	PowerCycle() (status bool, err error)
 	Serial() (string, error)
 	Status() (string, error)
 	TempC() (int, error)
