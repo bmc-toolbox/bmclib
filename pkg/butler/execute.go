@@ -81,6 +81,9 @@ func (b *Butler) executeCommandBmc(bmc devices.Bmc, command string) (success boo
 	case "bmc-reset":
 		success, err := bmc.PowerCycleBmc()
 		return success, err
+	case "powercycle":
+		success, err := bmc.PowerCycle()
+		return success, err
 	default:
 		return success, errors.New(fmt.Sprintf("Unknown command: %s", command))
 	}
