@@ -10,10 +10,10 @@ type ResourcesConfig struct {
 	Ldap       *Ldap        `yaml:"ldap"`
 	LdapGroup  []*LdapGroup `yaml:"ldapGroup"`
 	Network    *Network     `yaml:"network"`
-	Ntp        *Ntp         `yaml:"ntp"`
 	Syslog     *Syslog      `yaml:"syslog"`
 	User       []*User      `yaml:"user"`
 	Ssl        *Ssl         `yaml:"ssl"`
+	Ntp        *Ntp         `yaml:"ntp"`
 	Supermicro *Supermicro  `yaml:"supermicro"` //supermicro specific config, example of issue #34
 }
 
