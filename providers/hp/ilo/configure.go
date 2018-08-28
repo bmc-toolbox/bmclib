@@ -104,6 +104,19 @@ func (i *Ilo) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 						"Error":    err,
 					}).Warn("applyLdapGroupParams returned error.")
 				}
+			case "License":
+				licenseCfg := cfg.Field(r).Interface()
+				err := i.applyLicenseParams(licenseCfg.(*cfgresources.License))
+				if err != nil {
+					log.WithFields(log.Fields{
+						"step":     "applyLicenseParams",
+						"resource": "License",
+						"IP":       i.ip,
+						"Model":    i.BmcType(),
+						"Serial":   i.serial,
+						"Error":    err,
+					}).Warn("applyLicenseParams returned error.")
+				}
 			case "Ssl":
 				fmt.Printf("%s: %v : %s\n", resourceName, cfg.Field(r), cfg.Field(r).Kind())
 			default:
@@ -371,6 +384,61 @@ func (i *Ilo) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
 		"Model":  i.BmcType(),
 		"Serial": i.serial,
 	}).Debug("Syslog parameters applied.")
+
+	return err
+}
+
+func (i *Ilo) applyLicenseParams(cfg *cfgresources.License) (err error) {
+
+	if cfg.Key == "" {
+		msg := "License resource expects parameter: Key."
+		log.WithFields(log.Fields{
+			"step": helper.WhosCalling(),
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	license := LicenseInfo{
+		Key:        cfg.Key,
+		Method:     "activate",
+		SessionKey: i.sessionKey,
+	}
+
+	payload, err := json.Marshal(license)
+	if err != nil {
+		msg := "Unable to marshal License payload to activate License."
+		log.WithFields(log.Fields{
+			"IP":     i.ip,
+			"Model":  i.BmcType(),
+			"Serial": i.serial,
+			"step":   helper.WhosCalling(),
+			"Error":  err,
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	endpoint := "json/license_info"
+	statusCode, response, err := i.post(endpoint, payload)
+	if err != nil || statusCode != 200 {
+		msg := "POST request to set User config returned error."
+		log.WithFields(log.Fields{
+			"IP":         i.ip,
+			"Model":      i.BmcType(),
+			"Serial":     i.serial,
+			"endpoint":   endpoint,
+			"step":       helper.WhosCalling(),
+			"StatusCode": statusCode,
+			"response":   string(response),
+			"Error":      err,
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	log.WithFields(log.Fields{
+		"IP":     i.ip,
+		"Model":  i.BmcType(),
+		"Serial": i.serial,
+	}).Debug("License activated.")
 
 	return err
 }
