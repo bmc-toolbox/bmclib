@@ -271,16 +271,6 @@ func (c *C7000) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) 
 
 	for _, group := range cfg {
 
-		if !c.isRoleValid(group.Role) {
-			log.WithFields(log.Fields{
-				"step":   "applyLdapGroupParams",
-				"role":   group.Role,
-				"Model":  c.BmcType(),
-				"Serial": c.serial,
-			}).Warn("Ldap resource Role must be a valid role: admin OR user.")
-			return
-		}
-
 		if group.Group == "" {
 			log.WithFields(log.Fields{
 				"step":      "applyLdapGroupParams",
@@ -288,6 +278,34 @@ func (c *C7000) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) 
 				"Ldap role": group.Role,
 				"Serial":    c.serial,
 			}).Warn("Ldap resource parameter Group required but not declared.")
+			return
+		}
+
+		//0. removeLdapGroup
+		if !group.Enable {
+			c.applyRemoveLdapGroup(group.Group)
+			if err != nil {
+				log.WithFields(log.Fields{
+					"step":     "applyRemoveLdapGroup",
+					"resource": "Ldap",
+					"IP":       c.ip,
+					"Model":    c.BmcType(),
+					"Serial":   c.serial,
+					"Error":    err,
+				}).Warn("Remove Ldap Group returned error.")
+				return
+			}
+
+			continue
+		}
+
+		if !c.isRoleValid(group.Role) {
+			log.WithFields(log.Fields{
+				"step":   "applyLdapGroupParams",
+				"role":   group.Role,
+				"Model":  c.BmcType(),
+				"Serial": c.serial,
+			}).Warn("Ldap resource Role must be a valid role: admin OR user.")
 			return
 		}
 
@@ -351,6 +369,44 @@ func (c *C7000) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) 
 		"Serial": c.serial,
 	}).Debug("Ldap config applied")
 	return
+}
+
+// LDAP remove group, soap actions in order.
+// <hpoa:removeLdapGroup>
+//  <hpoa:ldapGroup>bmcAdmins</hpoa:ldapGroup>
+// </hpoa:removeLdapGroup>
+func (c *C7000) applyRemoveLdapGroup(group string) (err error) {
+
+	payload := removeLdapGroup{LdapGroup: ldapGroup{Text: group}}
+	statusCode, _, err := c.postXML(payload)
+	if statusCode == 200 || statusCode == 500 { // 500 indicates the group exists.
+		log.WithFields(log.Fields{
+			"step":       "applyRemoveLdapGroup",
+			"IP":         c.ip,
+			"Model":      c.BmcType(),
+			"Serial":     c.serial,
+			"statusCode": statusCode,
+		}).Debug("Ldap applyRemoveLdapGroup applied.")
+		return nil
+	}
+
+	if statusCode >= 300 || err != nil {
+		log.WithFields(log.Fields{
+			"step":       "applyRemoveLdapGroup",
+			"IP":         c.ip,
+			"Model":      c.BmcType(),
+			"Serial":     c.serial,
+			"statusCode": statusCode,
+		}).Warn("Ldap applyRemoveLdapGroup request returned non 200.")
+		return err
+	}
+
+	log.WithFields(log.Fields{
+		"IP":    c.ip,
+		"Model": c.BmcType(),
+		"Group": group,
+	}).Debug("Ldap group removed.")
+	return nil
 }
 
 // LDAP setup group, soap actions in order.
