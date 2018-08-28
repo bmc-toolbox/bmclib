@@ -504,6 +504,12 @@ func (i *IDrac8) applyLdapGroupParams(cfgGroup []*cfgresources.LdapGroup, cfgLda
 	//for each ldap group
 	for _, group := range cfgGroup {
 
+		//if a group has been set to disable in the config,
+		//its configuration is skipped and removed.
+		if !group.Enable {
+			continue
+		}
+
 		if group.Role == "" {
 			msg := "Ldap resource parameter Role required but not declared."
 			log.WithFields(log.Fields{

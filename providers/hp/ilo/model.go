@@ -8,6 +8,13 @@ type DirectoryGroupAccts struct {
 	Groups []DirectoryGroups `json:"group_accts"`
 }
 
+//POST https://10.183.244.173/json/license_info
+type LicenseInfo struct {
+	Key        string `json:"key,omitempty"`
+	Method     string `json:"method,omitempty"`
+	SessionKey string `json:"session_key,omitempty"`
+}
+
 // Add/Modify/Delete a user account
 // POST
 // https://10.193.251.48/json/user_info

@@ -178,6 +178,11 @@ type addLdapGroup struct {
 	LdapGroup ldapGroup
 }
 
+type removeLdapGroup struct {
+	XMLName   xml.Name `xml:"hpoa:removeLdapGroup"`
+	LdapGroup ldapGroup
+}
+
 type ldapGroup struct {
 	XMLName xml.Name `xml:"hpoa:ldapGroup"`
 	Text    string   `xml:",chardata"`
