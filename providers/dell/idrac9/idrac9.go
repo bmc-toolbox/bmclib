@@ -122,17 +122,6 @@ func (i *IDrac9) put(endpoint string, payload []byte) (statusCode int, response 
 
 	req.Header.Add("XSRF-TOKEN", i.xsrfToken)
 
-	u, err := url.Parse(bmcURL)
-	if err != nil {
-		return statusCode, response, err
-	}
-
-	for _, cookie := range i.httpClient.Jar.Cookies(u) {
-		if cookie.Name == "-http-session-" || cookie.Name == "tokenvalue" {
-			req.AddCookie(cookie)
-		}
-	}
-
 	if log.GetLevel() == log.DebugLevel {
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
@@ -169,64 +158,6 @@ func (i *IDrac9) put(endpoint string, payload []byte) (statusCode int, response 
 	}
 
 	return resp.StatusCode, response, err
-}
-
-// posts the payload to the given endpoint
-func (i *IDrac9) post(endpoint string, data []byte) (statusCode int, body []byte, err error) {
-
-	bmcURL := fmt.Sprintf("https://%s", i.ip)
-
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/%s", bmcURL, endpoint), bytes.NewReader(data))
-	if err != nil {
-		return 0, []byte{}, err
-	}
-
-	u, err := url.Parse(bmcURL)
-	if err != nil {
-		return 0, []byte{}, err
-	}
-
-	for _, cookie := range i.httpClient.Jar.Cookies(u) {
-		if cookie.Name == "-http-session-" || cookie.Name == "tokenvalue" {
-			req.AddCookie(cookie)
-		}
-	}
-
-	req.Header.Add("XSRF-TOKEN", i.xsrfToken)
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-	if log.GetLevel() == log.DebugLevel {
-		dump, err := httputil.DumpRequestOut(req, true)
-		if err == nil {
-			log.Println(fmt.Sprintf("[Request] https://%s/%s", i.ip, endpoint))
-			log.Println(">>>>>>>>>>>>>>>")
-			log.Printf("%s\n\n", dump)
-			log.Println(">>>>>>>>>>>>>>>")
-		}
-	}
-
-	resp, err := i.httpClient.Do(req)
-	if err != nil {
-		return 0, []byte{}, err
-	}
-	defer resp.Body.Close()
-	if log.GetLevel() == log.DebugLevel {
-		dump, err := httputil.DumpResponse(resp, true)
-		if err == nil {
-			log.Println("[Response]")
-			log.Println("<<<<<<<<<<<<<<")
-			log.Printf("%s\n\n", dump)
-			log.Println("<<<<<<<<<<<<<<")
-		}
-	}
-
-	body, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return 0, []byte{}, err
-	}
-
-	//fmt.Printf("%s\n", body)
-	return resp.StatusCode, body, err
 }
 
 // calls delete on the given endpoint

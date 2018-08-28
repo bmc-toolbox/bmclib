@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
 
 	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
@@ -38,6 +39,16 @@ func (i *IDrac9) httpLogin() (err error) {
 	req.Header.Add("user", fmt.Sprintf("\"%s\"", i.username))
 	req.Header.Add("password", fmt.Sprintf("\"%s\"", i.password))
 
+	if log.GetLevel() == log.DebugLevel {
+		dump, err := httputil.DumpRequestOut(req, true)
+		if err == nil {
+			log.Println(fmt.Sprintf("[Request] %s", url))
+			log.Println(">>>>>>>>>>>>>>>")
+			log.Printf("%s\n\n", dump)
+			log.Println(">>>>>>>>>>>>>>>")
+		}
+	}
+
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return err
@@ -54,6 +65,16 @@ func (i *IDrac9) httpLogin() (err error) {
 		return err
 	}
 	defer resp.Body.Close()
+
+	if log.GetLevel() == log.DebugLevel {
+		dump, err := httputil.DumpResponse(resp, false)
+		if err == nil {
+			log.Println("[Response]")
+			log.Println("<<<<<<<<<<<<<<")
+			log.Printf("%s\n\n", dump)
+			log.Println("<<<<<<<<<<<<<<")
+		}
+	}
 
 	iDracAuth := &dell.IDracAuth{}
 	err = json.Unmarshal(payload, iDracAuth)
