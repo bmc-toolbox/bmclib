@@ -9,6 +9,7 @@ type ResourcesSetup struct {
 type ResourcesConfig struct {
 	Ldap       *Ldap        `yaml:"ldap"`
 	LdapGroup  []*LdapGroup `yaml:"ldapGroup"`
+	License    *License     `yaml:"license"`
 	Network    *Network     `yaml:"network"`
 	Syslog     *Syslog      `yaml:"syslog"`
 	User       []*User      `yaml:"user"`
@@ -60,6 +61,10 @@ type Ldap struct {
 	UserAttribute  string `yaml:"userAttribute"`
 	GroupAttribute string `yaml:"groupAttribute"`
 	SearchFilter   string `yaml:"searchFilter"`
+}
+
+type License struct {
+	Key string `yaml:"key"`
 }
 
 type LdapGroup struct {
