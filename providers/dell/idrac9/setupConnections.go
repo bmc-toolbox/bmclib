@@ -86,7 +86,9 @@ func (i *IDrac9) httpLogin() (err error) {
 		return err
 	}
 
-	if iDracAuth.AuthResult != 0 {
+	//0 = login success.
+	//7 = login success with default credentials.
+	if iDracAuth.AuthResult != 0 && iDracAuth.AuthResult != 7 {
 		return errors.ErrLoginFailed
 	}
 
