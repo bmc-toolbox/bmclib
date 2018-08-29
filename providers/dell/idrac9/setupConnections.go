@@ -54,8 +54,11 @@ func (i *IDrac9) httpLogin() (err error) {
 		return err
 	}
 
-	if resp.StatusCode == 404 {
+	switch resp.StatusCode {
+	case 404:
 		return errors.ErrPageNotFound
+	case 503:
+		return errors.ErrIdracMaxSessionsReached
 	}
 
 	i.xsrfToken = resp.Header.Get("XSRF-TOKEN")

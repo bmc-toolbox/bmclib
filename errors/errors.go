@@ -25,4 +25,7 @@ var (
 	Err500 = errors.New("we've received 500 calling this endpoint")
 	// ErrNotImplemented is returned for not implemented methods called
 	ErrNotImplemented = errors.New("this feature hasn't been implemented yet")
+
+	// ErriDracMaxSessionsReached indicates the bmc has reached the max number of login sessions.
+	ErrIdracMaxSessionsReached = errors.New("The maximum number of user sessions is reached.")
 )
