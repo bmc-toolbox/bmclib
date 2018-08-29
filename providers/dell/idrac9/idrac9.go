@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
-	"net/url"
 	"strconv"
 	"strings"
 
@@ -168,17 +167,6 @@ func (i *IDrac9) delete_(endpoint string) (statusCode int, payload []byte, err e
 	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/%s", bmcURL, endpoint), nil)
 	if err != nil {
 		return 0, []byte{}, err
-	}
-
-	u, err := url.Parse(bmcURL)
-	if err != nil {
-		return 0, []byte{}, err
-	}
-
-	for _, cookie := range i.httpClient.Jar.Cookies(u) {
-		if cookie.Name == "-http-session-" || cookie.Name == "tokenvalue" {
-			req.AddCookie(cookie)
-		}
 	}
 
 	req.Header.Add("XSRF-TOKEN", i.xsrfToken)
