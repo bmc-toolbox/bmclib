@@ -17,18 +17,11 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"os/signal"
-	"sync"
-	"syscall"
-	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
 	"github.com/bmc-toolbox/bmcbutler/pkg/butler"
-	"github.com/bmc-toolbox/bmcbutler/pkg/inventory"
-	"github.com/bmc-toolbox/bmcbutler/pkg/metrics"
 	"github.com/bmc-toolbox/bmcbutler/pkg/resource"
 )
 
@@ -45,117 +38,42 @@ func init() {
 	rootCmd.AddCommand(configureCmd)
 }
 
-func configure() {
+func validateConfigureArgs() {
 
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	//one of these args are required
+	if !runConfig.FilterParams.All &&
+		!runConfig.FilterParams.Chassis &&
+		!runConfig.FilterParams.Blade &&
+		!runConfig.FilterParams.Discrete &&
+		runConfig.FilterParams.Serial == "" &&
+		runConfig.FilterParams.Ip == "" {
 
-	//flag when its time to exit.
-	var exitFlag bool
-
-	go func() {
-		_ = <-sigChan
-		exitFlag = true
-	}()
-
-	//A sync waitgroup for routines spawned here.
-	var configureWG sync.WaitGroup
-
-	// A channel butlers sends metrics to the metrics sender
-	metricsChan := make(chan []metrics.MetricsMsg, 5)
-
-	//the metrics forwarder routine
-	metricsForwarder := metrics.Metrics{
-		Logger:  log,
-		Channel: metricsChan,
-		SyncWG:  &configureWG,
-	}
-
-	//metrics emitter instance, used by methods to emit metrics to the forwarder.
-	metricsEmitter := metrics.Emitter{Channel: metricsChan}
-
-	//spawn metrics forwarder routine
-	go metricsForwarder.Run()
-	configureWG.Add(1)
-
-	// A channel to recieve inventory assets
-	inventoryChan := make(chan []asset.Asset, 5)
-
-	butlersToSpawn := viper.GetInt("butlersToSpawn")
-
-	if butlersToSpawn == 0 {
-		butlersToSpawn = 5
-	}
-
-	inventorySource := viper.GetString("inventory.configure.source")
-
-	//if --iplist was passed, set inventorySource
-	if ipList != "" {
-		inventorySource = "iplist"
-	}
-
-	switch inventorySource {
-	case "csv":
-		inventoryInstance := inventory.Csv{Log: log, Channel: inventoryChan}
-		if all {
-			go inventoryInstance.AssetIter()
-		} else {
-			go inventoryInstance.AssetIterBySerial(serial)
-		}
-	case "dora":
-		inventoryInstance := inventory.Dora{
-			Log:            log,
-			BatchSize:      10,
-			AssetsChan:     inventoryChan,
-			MetricsEmitter: metricsEmitter,
-		}
-
-		// Spawn a goroutine that returns a slice of assets over inventoryChan
-		// the number of assets in the slice is determined by the batch size.
-		if all {
-			go inventoryInstance.AssetIter()
-		} else {
-			go inventoryInstance.AssetIterBySerial(serial, assetType)
-		}
-	case "iplist":
-		inventoryInstance := inventory.IpList{Log: log, BatchSize: 1, Channel: inventoryChan}
-
-		// invoke goroutine that passes assets by IP to spawned butlers,
-		// here we declare setup = false since this is a configure action.
-		go inventoryInstance.AssetIter(ipList)
-
-	default:
-		fmt.Println("Unknown/no inventory source declared in cfg: ", inventorySource)
+		log.Error("Expected flag missing --all/--chassis/--blade/--discrete/--serial/--ip (try --help)")
 		os.Exit(1)
 	}
 
-	// Spawn butlers to work
-	butlerChan := make(chan butler.ButlerMsg, 5)
-	butlerManager := butler.ButlerManager{
-		Log:            log,
-		SpawnCount:     butlersToSpawn,
-		ButlerChan:     butlerChan,
-		MetricsEmitter: metricsEmitter,
+	if runConfig.FilterParams.All && (runConfig.FilterParams.Serial != "" || runConfig.FilterParams.Ip != "") {
+		log.Error("--all --serial --ip are mutually exclusive args.")
+		os.Exit(1)
 	}
 
-	if serial != "" {
-		butlerManager.IgnoreLocation = true
-	}
+}
 
-	go butlerManager.SpawnButlers()
+func configure() {
 
-	//give the butlers a second to spawn.
-	time.Sleep(1 * time.Second)
+	validateConfigureArgs()
+
+	inventoryChan, butlerChan := pre()
 
 	//Read in BMC configuration data
-	configDir := viper.GetString("bmcCfgDir")
-	configFile := fmt.Sprintf("%s/%s", configDir, "configuration.yml")
+	assetConfigDir := viper.GetString("bmcCfgDir")
+	assetConfigFile := fmt.Sprintf("%s/%s", assetConfigDir, "configuration.yml")
 
 	//returns the file read as a slice of bytes
 	//config may contain templated values.
-	config, err := resource.ReadYamlTemplate(configFile)
+	assetConfig, err := resource.ReadYamlTemplate(assetConfigFile)
 	if err != nil {
-		log.Fatal("Unable to read BMC configuration: ", configFile, " Error: ", err)
+		log.Fatal("Unable to read BMC configuration: ", assetConfigFile, " Error: ", err)
 		os.Exit(1)
 	}
 
@@ -176,7 +94,7 @@ func configure() {
 			//      this loop is going to be stuck waiting for the butlerMsg to be read,
 			//      make sure to break out of this loop or have butlerChan closed in such a case,
 			//      for now, we fix this by setting exitFlag to break out of the loop.
-			butlerMsg := butler.ButlerMsg{Asset: asset, Config: config}
+			butlerMsg := butler.ButlerMsg{Asset: asset, AssetConfig: assetConfig}
 			butlerChan <- butlerMsg
 		}
 
@@ -186,13 +104,6 @@ func configure() {
 		}
 	}
 
-	close(butlerChan)
-
-	//wait until butlers are done.
-	butlerManager.Wait()
-	log.Debug("All butlers have exited.")
-
-	close(metricsChan)
-	configureWG.Wait()
+	post(butlerChan)
 
 }

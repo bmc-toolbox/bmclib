@@ -80,6 +80,9 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.ButlerMsg) 
 		inventorySource = "iplist"
 	}
 
+	//based on inventory source, invoke assetRetriever
+	var assetRetriever func()
+
 	switch inventorySource {
 	case "csv":
 		inventoryInstance := inventory.Csv{
@@ -88,10 +91,7 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.ButlerMsg) 
 			AssetsChan: inventoryChan,
 		}
 
-		var assetRetriever func()
 		assetRetriever = inventoryInstance.AssetRetrieve()
-		go assetRetriever()
-
 	case "dora":
 		inventoryInstance := inventory.Dora{
 			Config:         runConfig,
@@ -101,26 +101,22 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.ButlerMsg) 
 			MetricsEmitter: metricsEmitter,
 		}
 
-		var assetRetriever func()
 		assetRetriever = inventoryInstance.AssetRetrieve()
-		go assetRetriever()
-
 	case "iplist":
 		inventoryInstance := inventory.IpList{
-			Log:       log,
-			BatchSize: 1,
 			Channel:   inventoryChan,
+			Config:    runConfig,
+			BatchSize: 1,
+			Log:       log,
 		}
 
-		// invoke goroutine that passes assets by IP to spawned butlers,
-		// here we declare setup = false since this is a configure action.
-		go inventoryInstance.AssetIter(ipList)
-
+		assetRetriever = inventoryInstance.AssetRetrieve()
 	default:
 		fmt.Println("Unknown/no inventory source declared in cfg: ", inventorySource)
 		os.Exit(1)
 	}
 
+	go assetRetriever()
 	// Spawn butlers to work
 	butlerChan = make(chan butler.ButlerMsg, 5)
 	butlerManager = butler.ButlerManager{

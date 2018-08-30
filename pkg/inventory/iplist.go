@@ -24,9 +24,14 @@ type IpListAsset struct {
 	Type       string `csv:"type"`   //optional
 }
 
-func (i *IpList) AssetIter(ipList string) {
+//AssetRetrieve looks at d.Config.FilterParams
+//and returns the appropriate function that will retrieve assets.
+func (i *IpList) AssetRetrieve() func() {
+	return i.AssetIter
+}
 
-	ips := strings.Split(ipList, ",")
+func (i *IpList) AssetIter() {
+	ips := strings.Split(i.Config.FilterParams.Ip, ",")
 
 	assets := make([]asset.Asset, 0)
 	for _, ip := range ips {

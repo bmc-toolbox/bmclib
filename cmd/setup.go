@@ -17,17 +17,11 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"os/signal"
-	"sync"
-	"syscall"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
 	"github.com/bmc-toolbox/bmcbutler/pkg/butler"
-	"github.com/bmc-toolbox/bmcbutler/pkg/inventory"
-	"github.com/bmc-toolbox/bmcbutler/pkg/metrics"
 	"github.com/bmc-toolbox/bmcbutler/pkg/resource"
 )
 
@@ -51,89 +45,7 @@ func init() {
 
 func setup() {
 
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-
-	//flag when its time to exit.
-	var exitFlag bool
-
-	go func() {
-		_ = <-sigChan
-		exitFlag = true
-	}()
-
-	//A sync waitgroup for routines spawned here.
-	var setupWG sync.WaitGroup
-
-	// A channel butlers sends metrics to the metrics sender
-	metricsChan := make(chan []metrics.MetricsMsg, 5)
-
-	//the metrics forwarder routine
-	metricsForwarder := metrics.Metrics{
-		Logger:  log,
-		Channel: metricsChan,
-		SyncWG:  &setupWG,
-	}
-
-	//metrics emitter instance, used by methods to emit metrics to the forwarder.
-	metricsEmitter := metrics.Emitter{Channel: metricsChan}
-
-	//spawn metrics forwarder routine
-	go metricsForwarder.Run()
-	setupWG.Add(1)
-
-	// A channel to recieve inventory assets
-	inventoryChan := make(chan []asset.Asset)
-
-	butlersToSpawn := viper.GetInt("butlersToSpawn")
-
-	if butlersToSpawn == 0 {
-		butlersToSpawn = 5
-	}
-
-	inventorySource := viper.GetString("inventory.setup.source")
-
-	//if --iplist was passed, set inventorySource
-	if ipList != "" {
-		inventorySource = "iplist"
-	}
-
-	switch inventorySource {
-	case "needSetup":
-		inventoryInstance := inventory.NeedSetup{Log: log, BatchSize: 10, Channel: inventoryChan}
-		// Spawn a goroutine that returns a slice of assets over inventoryChan
-		// the number of assets in the slice is determined by the batch size.
-		if serial == "" {
-			go inventoryInstance.AssetIter()
-		} else {
-			go inventoryInstance.AssetIterBySerial(serial, assetType)
-		}
-	case "iplist":
-		inventoryInstance := inventory.IpList{Log: log, BatchSize: 1, Channel: inventoryChan}
-
-		// invoke goroutine that passes assets by IP to the butler,
-		// here we declare setup = true since this is a setup action.
-		go inventoryInstance.AssetIter(ipList)
-	default:
-		fmt.Println("Unknown inventory source declared in cfg: ", inventorySource)
-		os.Exit(1)
-	}
-
-	// Spawn butlers to work
-	butlerChan := make(chan butler.ButlerMsg, 10)
-	butlerManager := butler.ButlerManager{
-		Log:            log,
-		SpawnCount:     butlersToSpawn,
-		ButlerChan:     butlerChan,
-		MetricsEmitter: metricsEmitter,
-	}
-
-	// let butler run from any location on any given BMC
-	if serial != "" || ipList != "" || ignoreLocation {
-		butlerManager.IgnoreLocation = true
-	}
-
-	go butlerManager.SpawnButlers()
+	inventoryChan, butlerChan := pre()
 
 	//Read in BMC configuration data
 	configDir := viper.GetString("bmcCfgDir")
@@ -162,7 +74,7 @@ func setup() {
 			//      make sure to break out of this loop or have butlerChan closed in such a case,
 			//      for now, we fix this by setting exitFlag to break out of the loop.
 
-			butlerMsg := butler.ButlerMsg{Asset: asset, Setup: config}
+			butlerMsg := butler.ButlerMsg{Asset: asset, AssetSetup: config}
 			butlerChan <- butlerMsg
 		}
 
@@ -172,11 +84,5 @@ func setup() {
 		}
 	}
 
-	close(butlerChan)
-
-	//wait until butlers are done.
-	butlerManager.Wait()
-
-	close(metricsChan)
-	setupWG.Wait()
+	post(butlerChan)
 }
