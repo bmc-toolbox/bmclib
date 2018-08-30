@@ -15,6 +15,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -134,7 +135,7 @@ func (p *Params) Load(cfgFile string) {
 }
 
 //Reads in vendor default credentials based on given vendor.
-func (p *Params) LoadBmcDefaultCredentials(vendor string) (err error) {
+func (p *Params) GetDefaultCredentials(vendor string) (err error) {
 	p.BmcDefaultUser = viper.GetString(fmt.Sprintf("bmcDefaults.%s.user", vendor))
 	p.BmcDefaultPassword = viper.GetString(fmt.Sprintf("bmcDefaults.%s.password", vendor))
 
