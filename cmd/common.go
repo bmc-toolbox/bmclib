@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -30,6 +31,21 @@ func post(butlerChan chan butler.ButlerMsg) {
 	commandWG.Wait()
 }
 
+// Any flags to override configuration goes here.
+func overrideConfigFromFlags() {
+	if butlersToSpawn > 0 {
+		runConfig.ButlersToSpawn = butlersToSpawn
+	}
+
+	if locations != "" {
+		runConfig.Locations = strings.Split(locations, ",")
+	}
+
+	if runConfig.DryRun {
+		log.Info("Invoked with --dryrun.")
+	}
+}
+
 // pre sets up required plumbing and returns two channels.
 // - Spawn go routine to listen to interrupt signals
 // - Setup metrics channel
@@ -39,6 +55,8 @@ func post(butlerChan chan butler.ButlerMsg) {
 // - Spawn butlers
 // - Return inventory channel, butler channel.
 func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.ButlerMsg) {
+
+	overrideConfigFromFlags()
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
