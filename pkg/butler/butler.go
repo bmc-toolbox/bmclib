@@ -24,9 +24,9 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
+	"github.com/bmc-toolbox/bmcbutler/pkg/config"
 	"github.com/bmc-toolbox/bmcbutler/pkg/metrics"
 
 	bmclibLogger "github.com/bmc-toolbox/bmclib/logging"
@@ -38,17 +38,16 @@ var (
 )
 
 type ButlerMsg struct {
-	Asset   asset.Asset //Asset to be configured
-	Config  []byte      //The BMC configuration read in from configuration.yml
-	Setup   []byte      //The One time setup configuration read from setup.yml
-	Execute string      //Commands to be executed on the BMC
+	Asset        asset.Asset //Asset to be configured
+	AssetConfig  []byte      //The BMC configuration read in from configuration.yml
+	AssetSetup   []byte      //The One time setup configuration read from setup.yml
+	AssetExecute string      //Commands to be executed on the BMC
 }
 
 type ButlerManager struct {
-	Log            *logrus.Logger
-	SpawnCount     int
-	SyncWG         sync.WaitGroup
+	Config         *config.Params //bmcbutler config, cli params
 	ButlerChan     <-chan ButlerMsg
+	Log            *logrus.Logger
 	MetricsEmitter metrics.Emitter
 	IgnoreLocation bool
 }
@@ -67,7 +66,6 @@ func (bm *ButlerManager) SpawnButlers() {
 			butlerChan:     bm.ButlerChan,
 			metricsData:    make(map[string]int),
 			metricsEmitter: bm.MetricsEmitter,
-			ignoreLocation: bm.IgnoreLocation,
 		}
 		go butlerInstance.Run()
 		bm.SyncWG.Add(1)
@@ -93,9 +91,8 @@ type Butler struct {
 	ignoreLocation bool
 }
 
-func myLocation(location string) bool {
-	myLocations := viper.GetStringSlice("locations")
-	for _, l := range myLocations {
+func (b *Butler) myLocation(location string) bool {
+	for _, l := range b.config.Locations {
 		if l == location {
 			return true
 		}
@@ -181,7 +178,7 @@ func (b *Butler) Run() {
 
 		//if asset has a location defined, we may want to filter it
 		if msg.Asset.Location != "" {
-			if !myLocation(msg.Asset.Location) && !b.ignoreLocation {
+			if !b.myLocation(msg.Asset.Location) && !b.config.IgnoreLocation {
 				log.WithFields(logrus.Fields{
 					"component":     component,
 					"butler-id":     b.id,
@@ -212,7 +209,7 @@ func (b *Butler) Run() {
 
 		switch {
 		case msg.Asset.Setup == true:
-			err = b.setupAsset(msg.Setup, &msg.Asset)
+			err = b.setupAsset(msg.AssetSetup, &msg.Asset)
 			if err != nil {
 				log.WithFields(logrus.Fields{
 					"component": component,
@@ -226,7 +223,7 @@ func (b *Butler) Run() {
 			}
 			continue
 		case msg.Asset.Execute == true:
-			err = b.executeCommand(msg.Execute, &msg.Asset)
+			err = b.executeCommand(msg.AssetExecute, &msg.Asset)
 			if err != nil {
 				log.WithFields(logrus.Fields{
 					"component": component,
@@ -240,7 +237,7 @@ func (b *Butler) Run() {
 			}
 			continue
 		case msg.Asset.Configure == true:
-			err = b.configureAsset(msg.Config, &msg.Asset)
+			err = b.configureAsset(msg.AssetConfig, &msg.Asset)
 			if err != nil {
 				log.WithFields(logrus.Fields{
 					"component": component,

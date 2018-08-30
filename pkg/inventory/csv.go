@@ -9,16 +9,18 @@ import (
 
 	"github.com/gocarina/gocsv"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
+	"github.com/bmc-toolbox/bmcbutler/pkg/config"
 )
 
 // A inventory source is required to have a type with these fields
 type Csv struct {
-	Log       *logrus.Logger
-	BatchSize int                  //number of inventory assets to return per iteration
-	Channel   chan<- []asset.Asset //the channel to send inventory assets over
+	Config          *config.Params
+	Log             *logrus.Logger
+	BatchSize       int //number of inventory assets to return per iteration
+	AssetsChan      chan<- []asset.Asset
+	FilterAssetType []string
 }
 
 type CsvAsset struct {
@@ -31,7 +33,7 @@ type CsvAsset struct {
 func (c *Csv) readCsv() []*CsvAsset {
 
 	log := c.Log
-	csvFile_ := viper.GetString("inventory.configure.csv.file")
+	csvFile_ := c.Config.InventoryParams.File
 
 	var csvAssets []*CsvAsset
 	csvFile, err := os.Open(csvFile_)
@@ -49,15 +51,40 @@ func (c *Csv) readCsv() []*CsvAsset {
 	return csvAssets
 }
 
-func (c *Csv) AssetIterBySerial(serial string) {
+//AssetRetrieve looks at c.Config.FilterParams
+//and returns the appropriate function that will retrieve assets.
+func (c *Csv) AssetRetrieve() func() {
+
+	//setup the asset types we want to retrieve data for.
+	switch {
+	case c.Config.FilterParams.Chassis:
+		c.FilterAssetType = append(c.FilterAssetType, "chassis")
+	case c.Config.FilterParams.Blade:
+		c.FilterAssetType = append(c.FilterAssetType, "blade")
+	case c.Config.FilterParams.Discrete:
+		c.FilterAssetType = append(c.FilterAssetType, "discrete")
+	case !c.Config.FilterParams.Chassis && !c.Config.FilterParams.Blade && !c.Config.FilterParams.Discrete:
+		c.FilterAssetType = []string{"chassis", "blade", "discrete"}
+	}
+
+	//Based on the filter param given, return the asset iterator method.
+	switch {
+	case c.Config.FilterParams.Serial != "":
+		return c.AssetIterBySerial
+	default:
+		return c.AssetIter
+	}
+
+}
+
+func (c *Csv) AssetIterBySerial() {
 
 	log := c.Log
-	serials := strings.Split(serial, ",")
-
 	csvAssets := c.readCsv()
 
+	serials := c.Config.FilterParams.Serial
 	assets := make([]asset.Asset, 0)
-	for _, serial := range serials {
+	for _, serial := range strings.Split(serials, ",") {
 
 		log.Debug("Fetching asset from csv by serial: ", serial)
 		for _, item := range csvAssets {
@@ -78,8 +105,8 @@ func (c *Csv) AssetIterBySerial(serial string) {
 	}
 
 	//pass the asset to the channel
-	c.Channel <- assets
-	close(c.Channel)
+	c.AssetsChan <- assets
+	close(c.AssetsChan)
 
 }
 
@@ -107,6 +134,6 @@ func (c *Csv) AssetIter() {
 
 	}
 
-	c.Channel <- assets
-	close(c.Channel)
+	c.AssetsChan <- assets
+	close(c.AssetsChan)
 }

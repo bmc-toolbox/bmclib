@@ -6,6 +6,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
+	"github.com/bmc-toolbox/bmcbutler/pkg/config"
 )
 
 // A inventory source is required to have a type with these fields
@@ -13,6 +14,7 @@ type IpList struct {
 	Log       *logrus.Logger
 	BatchSize int                  //number of inventory assets to return per iteration
 	Channel   chan<- []asset.Asset //the channel to send inventory assets over
+	Config    *config.Params       //bmcbutler config
 }
 
 type IpListAsset struct {

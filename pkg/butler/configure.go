@@ -13,8 +13,8 @@ import (
 )
 
 // applyConfig setups up the bmc connection
-// gets any config templated data rendered
-// applies the configuration using bmclib
+// gets any Asset config templated data rendered
+// applies the asset configuration using bmclib
 func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 
 	log := b.log
@@ -34,7 +34,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		asset.Model = bmc.BmcType()
 
 		//Setup a resource instance
-		//Get any templated values in the config rendered
+		//Get any templated values in the asset config rendered
 		resourceInstance := resource.Resource{Log: log, Vendor: asset.Vendor}
 		//rendered config is a *cfgresources.ResourcesConfig type
 		renderedConfig := resourceInstance.LoadConfigResources(config)
@@ -58,7 +58,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 
 		asset.Model = chassis.BmcType()
 		//Setup a resource instance
-		//Get any templated values in the config rendered
+		//Get any templated values in the asset config rendered
 		resourceInstance := resource.Resource{Log: log, Vendor: asset.Vendor}
 		renderedConfig := resourceInstance.LoadConfigResources(config)
 

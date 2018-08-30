@@ -23,17 +23,19 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
+	"github.com/bmc-toolbox/bmcbutler/pkg/config"
 	"github.com/bmc-toolbox/bmcbutler/pkg/metrics"
 )
 
 type Dora struct {
-	Log            *logrus.Logger
-	BatchSize      int
-	AssetsChan     chan<- []asset.Asset
-	MetricsEmitter metrics.Emitter
+	Log             *logrus.Logger
+	BatchSize       int
+	AssetsChan      chan<- []asset.Asset
+	MetricsEmitter  metrics.Emitter
+	Config          *config.Params
+	FilterAssetType []string
 }
 
 type DoraAssetAttributes struct {
@@ -65,7 +67,7 @@ func (d *Dora) setLocation(doraInventoryAssets []asset.Asset) (err error) {
 	component := "inventory"
 	log := d.Log
 
-	apiUrl := viper.GetString("inventory.configure.dora.apiUrl")
+	apiUrl := d.Config.InventoryParams.ApiUrl
 	queryUrl := fmt.Sprintf("%s/v1/scanned_ports?filter[port]=22&filter[ip]=", apiUrl)
 
 	//collect IpAddresses used to look up the location
@@ -113,89 +115,123 @@ func (d *Dora) setLocation(doraInventoryAssets []asset.Asset) (err error) {
 	return err
 }
 
-func (d *Dora) AssetIterBySerial(serials string, assetType string) {
+//AssetRetrieve looks at d.Config.FilterParams
+//and returns the appropriate function that will retrieve assets.
+func (d *Dora) AssetRetrieve() func() {
 
-	var path string
+	//setup the asset types we want to retrieve data for.
+	switch {
+	case d.Config.FilterParams.Chassis:
+		d.FilterAssetType = append(d.FilterAssetType, "chassis")
+	case d.Config.FilterParams.Blade:
+		d.FilterAssetType = append(d.FilterAssetType, "blade")
+	case d.Config.FilterParams.Discrete:
+		d.FilterAssetType = append(d.FilterAssetType, "discrete")
+	case !d.Config.FilterParams.Chassis && !d.Config.FilterParams.Blade && !d.Config.FilterParams.Discrete:
+		d.FilterAssetType = []string{"chassis", "blade", "discrete"}
+	}
 
-	//assetTypes := []string{"blade", "chassis", "discrete"}
+	//Based on the filter param given, return the asset iterator method.
+	switch {
+	case d.Config.FilterParams.Serial != "":
+		return d.AssetIterBySerial
+	default:
+		return d.AssetIter
+	}
+
+}
+
+func (d *Dora) AssetIterBySerial() {
+
+	serials := d.Config.FilterParams.Serial
+	apiUrl := d.Config.InventoryParams.ApiUrl
+
 	component := "inventory"
+
 	log := d.Log
 	defer close(d.AssetsChan)
 
-	apiUrl := viper.GetString("inventory.configure.dora.apiUrl")
-
-	if assetType == "blade" {
-		path = "blades"
-	} else if assetType == "discrete" {
-		path = "discretes"
-	} else {
-		path = assetType
-	}
-
-	queryUrl := fmt.Sprintf("%s/v1/%s?filter[serial]=", apiUrl, path)
-	queryUrl += strings.ToLower(serials)
-
-	assets := make([]asset.Asset, 0)
-
-	resp, err := http.Get(queryUrl)
-	if err != nil {
-		log.WithFields(logrus.Fields{
-			"component": component,
-			"url":       queryUrl,
-			"error":     err,
-		}).Fatal("Failed to query dora for serial(s).")
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
-
-	//dora returns a list of assets
-	var doraAssets DoraAsset
-	err = json.Unmarshal(body, &doraAssets)
-	if err != nil {
-		log.WithFields(logrus.Fields{
-			"component": component,
-			"url":       queryUrl,
-			"error":     err,
-		}).Fatal("Unable to unmarshal data returned from dora.")
-	}
-
-	if len(doraAssets.Data) == 0 {
-		log.WithFields(logrus.Fields{
-			"component": component,
-		}).Warn("No data for serial(s) in dora.")
-		return
-	}
-
-	for _, item := range doraAssets.Data {
-		if item.Attributes.BmcAddress == "" {
-			log.WithFields(logrus.Fields{
-				"component": component,
-				"DoraAsset": fmt.Sprintf("%+v", item),
-			}).Warn("Asset location could not be determined, since the asset has no IP.")
-			continue
+	for _, assetType := range d.FilterAssetType {
+		var path string
+		//setup the right dora query path
+		switch assetType {
+		case "blade":
+			path = "blades"
+		case "discrete":
+			path = "discretes"
+		default:
+			path = assetType
 		}
 
-		assets = append(assets, asset.Asset{IpAddress: item.Attributes.BmcAddress,
-			Serial: item.Attributes.Serial,
-			Vendor: item.Attributes.Vendor,
-			Type:   assetType})
+		queryUrl := fmt.Sprintf("%s/v1/%s?filter[serial]=", apiUrl, path)
+		queryUrl += strings.ToLower(serials)
+		assets := make([]asset.Asset, 0)
 
+		resp, err := http.Get(queryUrl)
+		if err != nil {
+			log.WithFields(logrus.Fields{
+				"component": component,
+				"url":       queryUrl,
+				"error":     err,
+			}).Fatal("Failed to query dora for serial(s).")
+		}
+
+		body, err := ioutil.ReadAll(resp.Body)
+		resp.Body.Close()
+
+		//dora returns a list of assets
+		var doraAssets DoraAsset
+		err = json.Unmarshal(body, &doraAssets)
+		if err != nil {
+			log.WithFields(logrus.Fields{
+				"component": component,
+				"url":       queryUrl,
+				"error":     err,
+			}).Fatal("Unable to unmarshal data returned from dora.")
+		}
+
+		if len(doraAssets.Data) == 0 {
+			log.WithFields(logrus.Fields{
+				"component": component,
+				"Query url": queryUrl,
+			}).Debug("Asset was not located in dora inventory.")
+			continue
+		} else {
+			log.WithFields(logrus.Fields{
+				"component": component,
+				"Query url": queryUrl,
+			}).Debug("Asset located in dora inventory.")
+		}
+
+		for _, item := range doraAssets.Data {
+			if item.Attributes.BmcAddress == "" {
+				log.WithFields(logrus.Fields{
+					"component": component,
+					"DoraAsset": fmt.Sprintf("%+v", item),
+				}).Warn("Asset location could not be determined, since the asset has no IP.")
+				continue
+			}
+
+			assets = append(assets, asset.Asset{IpAddress: item.Attributes.BmcAddress,
+				Serial: item.Attributes.Serial,
+				Vendor: item.Attributes.Vendor,
+				Type:   assetType})
+
+		}
+
+		//set the location for the assets
+		err = d.setLocation(assets)
+		if err != nil {
+			log.WithFields(logrus.Fields{
+				"component": component,
+				"Error":     err,
+			}).Warn("Unable to determine location of assets.")
+			return
+		}
+
+		//pass the asset to the channel
+		d.AssetsChan <- assets
 	}
-
-	//set the location for the assets
-	err = d.setLocation(assets)
-	if err != nil {
-		log.WithFields(logrus.Fields{
-			"component": component,
-			"Error":     err,
-		}).Warn("Unable to determine location of assets.")
-		return
-	}
-
-	//pass the asset to the channel
-	d.AssetsChan <- assets
-
 }
 
 // A routine that returns data to iter over
@@ -205,9 +241,8 @@ func (d *Dora) AssetIter() {
 	//Iter stuffs assets into an array of Assets
 	//Iter writes the assets array to the channel
 
+	apiUrl := d.Config.InventoryParams.ApiUrl
 	component := "retrieveInventoryAssetsDora"
-
-	//setup metrics related things
 
 	metricsData := make(map[string]int)
 
@@ -215,11 +250,9 @@ func (d *Dora) AssetIter() {
 	defer d.MetricsEmitter.MeasureRunTime(
 		time.Now().Unix(), fmt.Sprintf("assets.dora.%s", component))
 
-	assetTypes := []string{"blade", "chassis", "discrete"}
 	log := d.Log
-	apiUrl := viper.GetString("inventory.configure.dora.apiUrl")
 
-	for _, assetType := range assetTypes {
+	for _, assetType := range d.FilterAssetType {
 		var path string
 
 		//setup default metric values

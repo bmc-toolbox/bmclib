@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
 
@@ -22,6 +21,7 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 	log := b.log
 	component := "setupConnection"
 
+	var user, password string
 	var pUserAuthSuccessMetric, pUserAuthFailMetric, sUserAuthSuccessMetric, sUserAuthFailMetric string
 	var dUserAuthSuccessMetric, dUserAuthFailMetric, connfailMetric string
 
@@ -42,10 +42,10 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 	defer b.metricsEmitter.MeasureRunTime(
 		time.Now().Unix(), fmt.Sprintf("%s.%s", metricPrefix, component))
 
-	bmcPrimaryUser := viper.GetString("bmcPrimaryUser")
-	bmcPrimaryPassword := viper.GetString("bmcPrimaryPassword")
+	user = b.config.BmcPrimaryUser
+	password = b.config.BmcPrimaryPassword
 
-	client, err := discover.ScanAndConnect(asset.IpAddress, bmcPrimaryUser, bmcPrimaryPassword)
+	client, err := discover.ScanAndConnect(asset.IpAddress, user, password)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"component": component,
@@ -73,17 +73,17 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 					"component":    component,
 					"butler-id":    b.id,
 					"Asset":        fmt.Sprintf("%+v", asset),
-					"Primary user": bmcPrimaryUser,
+					"Primary user": user,
 					"Error":        err,
-				}).Warn("Login with Primary user failed, trying secondary/default creds.")
+				}).Warn("Login with Primary user failed.")
 
 				b.metricsData[pUserAuthFailMetric] += 1
 
 				//attempt to login with Secondary user account
-				bmcSecondaryUser := viper.GetString("bmcSecondaryUser")
-				if bmcSecondaryUser != "" {
-					bmcSecondaryPassword := viper.GetString("bmcSecondaryPassword")
-					bmc.UpdateCredentials(bmcSecondaryUser, bmcSecondaryPassword)
+				user = b.config.BmcSecondaryUser
+				if user != "" {
+					password = b.config.BmcSecondaryPassword
+					bmc.UpdateCredentials(user, password)
 
 					err := bmc.CheckCredentials()
 					if err != nil {
@@ -91,9 +91,9 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 							"component":      component,
 							"butler-id":      b.id,
 							"Asset":          fmt.Sprintf("%+v", asset),
-							"Secondary user": bmcSecondaryUser,
+							"Secondary user": user,
 							"Error":          err,
-						}).Warn("Login with Secondary user failed, trying vendor default creds.")
+						}).Warn("Login with Secondary user failed.")
 						b.metricsData[sUserAuthFailMetric] += 1
 					} else {
 
@@ -102,7 +102,7 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 							"component":      component,
 							"butler-id":      b.id,
 							"Asset":          fmt.Sprintf("%+v", asset),
-							"Secondary user": bmcSecondaryUser,
+							"Secondary user": user,
 						}).Debug("Successful login with Secondary user.")
 
 						asset.Vendor = bmc.Vendor()
@@ -112,17 +112,29 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 					}
 				}
 
-				//attempt to login with vendor Default user account
-				bmcDefaultUser := viper.GetString(fmt.Sprintf("bmcDefaults.%s.user", asset.Vendor))
-				bmcDefaultPassword := viper.GetString(fmt.Sprintf("bmcDefaults.%s.password", asset.Vendor))
-				bmc.UpdateCredentials(bmcDefaultUser, bmcDefaultPassword)
+				//read in vendor default credentials and attempt login.
+				err = b.config.GetDefaultCredentials(asset.Vendor)
+				if err != nil {
+					log.WithFields(logrus.Fields{
+						"component": component,
+						"butler-id": b.id,
+						"Asset":     fmt.Sprintf("%+v", asset),
+						"Error":     err,
+					}).Warn("Unable to attempt login with vendor default user.")
+					return bmc, err
+				}
+
+				user = b.config.BmcDefaultUser
+				password = b.config.BmcDefaultPassword
+
+				bmc.UpdateCredentials(user, password)
 				err := bmc.CheckCredentials()
 				if err != nil {
 					log.WithFields(logrus.Fields{
 						"component":    component,
 						"butler-id":    b.id,
 						"Asset":        fmt.Sprintf("%+v", asset),
-						"Default user": bmcDefaultUser,
+						"Default user": user,
 						"Error":        err,
 					}).Warn("Login with default credentials failed.")
 
@@ -135,7 +147,7 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 						"component":    component,
 						"butler-id":    b.id,
 						"Asset":        fmt.Sprintf("%+v", asset),
-						"Default user": bmcDefaultUser,
+						"Default user": user,
 					}).Debug("Successful login with vendor default user.")
 
 					b.metricsData[dUserAuthSuccessMetric] += 1
@@ -148,7 +160,7 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 					"component":    component,
 					"butler-id":    b.id,
 					"Asset":        fmt.Sprintf("%+v", asset),
-					"Primary user": bmcPrimaryUser,
+					"Primary user": user,
 				}).Debug("Successful login with Primary user.")
 
 				b.metricsData[pUserAuthSuccessMetric] += 1
@@ -176,17 +188,16 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 					"component":    component,
 					"butler-id":    b.id,
 					"Asset":        fmt.Sprintf("%+v", asset),
-					"Primary user": bmcPrimaryUser,
+					"Primary user": user,
 					"Error":        err,
-				}).Warn("Login with Primary user failed, trying secondary/default creds.")
+				}).Warn("Login with Primary user failed.")
 
 				b.metricsData[pUserAuthFailMetric] += 1
 
-				//attempt to login with Secondary user account
-				bmcSecondaryUser := viper.GetString("bmcSecondaryUser")
-				if bmcSecondaryUser != "" {
-					bmcSecondaryPassword := viper.GetString("bmcSecondaryPassword")
-					bmc.UpdateCredentials(bmcSecondaryUser, bmcSecondaryPassword)
+				user = b.config.BmcSecondaryUser
+				if user != "" {
+					password = b.config.BmcSecondaryPassword
+					bmc.UpdateCredentials(user, password)
 
 					err := bmc.CheckCredentials()
 					if err != nil {
@@ -194,10 +205,9 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 							"component":      component,
 							"butler-id":      b.id,
 							"Asset":          fmt.Sprintf("%+v", asset),
-							"Secondary user": bmcSecondaryUser,
+							"Secondary user": user,
 							"Error":          err,
-						}).Warn("Login with Secondary user failed, trying vendor default creds.")
-
+						}).Warn("Login with Secondary user failed.")
 						b.metricsData[sUserAuthFailMetric] += 1
 					} else {
 
@@ -206,27 +216,34 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 							"component":      component,
 							"butler-id":      b.id,
 							"Asset":          fmt.Sprintf("%+v", asset),
-							"Secondary user": bmcSecondaryUser,
+							"Secondary user": user,
 						}).Debug("Successful login with Secondary user.")
+
+						asset.Vendor = bmc.Vendor()
 
 						b.metricsData[sUserAuthSuccessMetric] += 1
 						return bmc, err
 					}
 				}
+				//read in vendor default credentials and attempt login.
+				err = b.config.GetDefaultCredentials(asset.Vendor)
+				if err != nil {
+					return bmc, err
+				}
 
-				//attempt to login with vendor Default user account
-				bmcDefaultUser := viper.GetString(fmt.Sprintf("bmcDefaults.%s.user", asset.Vendor))
-				bmcDefaultPassword := viper.GetString(fmt.Sprintf("bmcDefaults.%s.password", asset.Vendor))
-				bmc.UpdateCredentials(bmcDefaultUser, bmcDefaultPassword)
+				user = b.config.BmcDefaultUser
+				password = b.config.BmcDefaultPassword
+
+				bmc.UpdateCredentials(user, password)
 				err := bmc.CheckCredentials()
 				if err != nil {
 					log.WithFields(logrus.Fields{
 						"component":    component,
 						"butler-id":    b.id,
 						"Asset":        fmt.Sprintf("%+v", asset),
-						"Default user": bmcDefaultUser,
+						"Default user": user,
 						"Error":        err,
-					}).Warn("Unable to login to bmc with default credentials.")
+					}).Warn("Login with default credentials failed.")
 
 					b.metricsData[dUserAuthFailMetric] += 1
 					return bmc, err
@@ -237,12 +254,11 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 						"component":    component,
 						"butler-id":    b.id,
 						"Asset":        fmt.Sprintf("%+v", asset),
-						"Default user": bmcDefaultUser,
+						"Default user": user,
 					}).Debug("Successful login with vendor default user.")
 
 					b.metricsData[dUserAuthSuccessMetric] += 1
 					return bmc, err
-
 				}
 			} else if err != nil {
 				log.WithFields(logrus.Fields{
@@ -261,7 +277,7 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 					"component":    component,
 					"butler-id":    b.id,
 					"Asset":        fmt.Sprintf("%+v", asset),
-					"Primary user": bmcPrimaryUser,
+					"Primary user": user,
 				}).Debug("Successful login with Primary user.")
 
 				b.metricsData[pUserAuthSuccessMetric] += 1
