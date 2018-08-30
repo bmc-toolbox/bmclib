@@ -98,14 +98,13 @@ func (i *IDrac8) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 						"Error":    err,
 					}).Warn("applyLdapGroupParams returned error.")
 				}
+			case "License":
 			case "Ssl":
-				fmt.Printf("%s: %v : %s\n", resourceName, cfg.Field(r), cfg.Field(r).Kind())
 			default:
 				log.WithFields(log.Fields{
-					"step": "ApplyCfg",
+					"step":     "ApplyCfg",
+					"resource": resourceName,
 				}).Warn("Unknown resource.")
-				//fmt.Printf("%v\n", cfg.Field(r))
-
 			}
 		}
 	}

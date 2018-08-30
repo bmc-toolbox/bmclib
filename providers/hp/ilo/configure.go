@@ -3,7 +3,6 @@ package ilo
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"reflect"
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
@@ -64,7 +63,6 @@ func (i *Ilo) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 					}).Warn("Unable to set Syslog config.")
 				}
 			case "Network":
-				fmt.Printf("%s: %v : %s\n", resourceName, cfg.Field(r), cfg.Field(r).Kind())
 			case "Ntp":
 				ntpCfg := cfg.Field(r).Interface().(*cfgresources.Ntp)
 				err := i.applyNtpParams(ntpCfg)
@@ -118,14 +116,11 @@ func (i *Ilo) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 					}).Warn("applyLicenseParams returned error.")
 				}
 			case "Ssl":
-				fmt.Printf("%s: %v : %s\n", resourceName, cfg.Field(r), cfg.Field(r).Kind())
 			default:
 				log.WithFields(log.Fields{
 					"step":     "ApplyCfg",
-					"Resource": cfg.Field(r).Kind(),
+					"resource": resourceName,
 				}).Warn("Unknown resource definition.")
-				//fmt.Printf("%v\n", cfg.Field(r))
-
 			}
 		}
 	}

@@ -1,7 +1,6 @@
 package c7000
 
 import (
-	"fmt"
 	"reflect"
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
@@ -51,7 +50,6 @@ func (c *C7000) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 					return err
 				}
 			case "Network":
-				fmt.Printf("%s: %v : %s\n", resourceName, cfg.Field(r), cfg.Field(r).Kind())
 			case "Ntp":
 				ntpCfg := cfg.Field(r).Interface().(*cfgresources.Ntp)
 				err := c.applyNtpParams(ntpCfg)
@@ -94,14 +92,13 @@ func (c *C7000) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 					}).Warn("applyLdapParams returned error.")
 					return err
 				}
+			case "License":
 			case "Ssl":
-				fmt.Printf("%s: %v : %s\n", resourceName, cfg.Field(r), cfg.Field(r).Kind())
 			default:
 				log.WithFields(log.Fields{
-					"step": "ApplyCfg",
+					"step":     "ApplyCfg",
+					"resource": resourceName,
 				}).Warn("Unknown resource.")
-				//fmt.Printf("%v\n", cfg.Field(r))
-
 			}
 		}
 	}
