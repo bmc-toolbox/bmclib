@@ -79,7 +79,7 @@ func (m *M1000e) get(endpoint string) (payload []byte, err error) {
 
 	// Dell has a really shitty consistency of the data type returned, here we fix what's possible
 	payload = bytes.Replace(payload, []byte("\"bladeTemperature\":-1"), []byte("\"bladeTemperature\":\"0\""), -1)
-	payload = bytes.Replace(payload, []byte("\"nic\": [],"), []byte("\"nic\": {},"), -1)
+	payload = bytes.Replace(payload, []byte("\"nic\":[],"), []byte("\"nic\":{},"), -1)
 	payload = bytes.Replace(payload, []byte("N\\/A"), []byte("0"), -1)
 
 	return payload, err

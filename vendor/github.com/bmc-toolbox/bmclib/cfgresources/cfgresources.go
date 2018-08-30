@@ -9,11 +9,12 @@ type ResourcesSetup struct {
 type ResourcesConfig struct {
 	Ldap       *Ldap        `yaml:"ldap"`
 	LdapGroup  []*LdapGroup `yaml:"ldapGroup"`
+	License    *License     `yaml:"license"`
 	Network    *Network     `yaml:"network"`
-	Ntp        *Ntp         `yaml:"ntp"`
 	Syslog     *Syslog      `yaml:"syslog"`
 	User       []*User      `yaml:"user"`
 	Ssl        *Ssl         `yaml:"ssl"`
+	Ntp        *Ntp         `yaml:"ntp"`
 	Supermicro *Supermicro  `yaml:"supermicro"` //supermicro specific config, example of issue #34
 }
 
@@ -60,6 +61,10 @@ type Ldap struct {
 	UserAttribute  string `yaml:"userAttribute"`
 	GroupAttribute string `yaml:"groupAttribute"`
 	SearchFilter   string `yaml:"searchFilter"`
+}
+
+type License struct {
+	Key string `yaml:"key"`
 }
 
 type LdapGroup struct {

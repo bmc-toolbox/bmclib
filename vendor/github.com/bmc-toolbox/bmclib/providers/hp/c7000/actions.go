@@ -214,6 +214,7 @@ func (c *C7000) PxeOnceBlade(position int) (status bool, err error) {
 	return status, fmt.Errorf(output)
 }
 
+// SetDynamicPower configure the dynamic power behaviour
 func (c *C7000) SetDynamicPower(enable bool) (status bool, err error) {
 	err = c.sshLogin()
 	if err != nil {
