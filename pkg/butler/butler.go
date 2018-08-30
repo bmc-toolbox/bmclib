@@ -49,46 +49,81 @@ type ButlerManager struct {
 	ButlerChan     <-chan ButlerMsg
 	Log            *logrus.Logger
 	MetricsEmitter metrics.Emitter
-	IgnoreLocation bool
+	SyncWG         *sync.WaitGroup
 }
 
-// spawn a pool of butlers
+// spawn a pool of butlers, wait until they are done.
 func (bm *ButlerManager) SpawnButlers() {
 
 	log := bm.Log
-	component := "SpawnButlers"
+	component := "Butler Manager - SpawnButlers()"
+	doneChan := make(chan int)
+	interruptChan := make(chan struct{})
 
-	for i := 1; i <= bm.SpawnCount; i++ {
+	defer bm.SyncWG.Done()
+
+	var b int
+
+	//setup interrupt handler
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		_ = <-sigChan
+		interruptChan <- struct{}{}
+
+		log.WithFields(logrus.Fields{
+			"component": component,
+		}).Warn("Interrupt SIGINT/SIGTERM recieved, butlers will exit gracefully.")
+		return
+	}()
+
+	//Spawn butlers
+	for b = 1; b <= bm.Config.ButlersToSpawn; b++ {
 		butlerInstance := Butler{
-			id:             i,
-			log:            bm.Log,
-			syncWG:         &bm.SyncWG,
 			butlerChan:     bm.ButlerChan,
+			config:         bm.Config,
+			doneChan:       doneChan,
+			interruptChan:  interruptChan,
+			id:             b,
+			log:            bm.Log,
 			metricsData:    make(map[string]int),
 			metricsEmitter: bm.MetricsEmitter,
 		}
 		go butlerInstance.Run()
-		bm.SyncWG.Add(1)
 	}
 
 	log.WithFields(logrus.Fields{
 		"component": component,
-		"Count":     bm.SpawnCount,
-	}).Debug("Spawned butlers.")
-}
+		"Count":     bm.Config.ButlersToSpawn,
+	}).Info("Spawned butlers.")
 
-func (bm *ButlerManager) Wait() {
-	bm.SyncWG.Wait()
+	//wait until butlers are done.
+	for b > 1 {
+		done := <-doneChan
+		log.WithFields(logrus.Fields{
+			"component": component,
+			"butler-id": done,
+		}).Debug("Butler exited.")
+		b--
+	}
+
+	log.WithFields(logrus.Fields{
+		"component": component,
+		"Count":     bm.Config.ButlersToSpawn,
+	}).Info("All butlers exited.")
+
+	close(bm.MetricsEmitter.Channel)
 }
 
 type Butler struct {
 	id             int
-	log            *logrus.Logger
-	syncWG         *sync.WaitGroup
 	butlerChan     <-chan ButlerMsg
+	config         *config.Params //bmcbutler config, cli params
+	doneChan       chan<- int
+	interruptChan  <-chan struct{}
+	log            *logrus.Logger
 	metricsData    map[string]int
 	metricsEmitter metrics.Emitter
-	ignoreLocation bool
 }
 
 func (b *Butler) myLocation(location string) bool {
@@ -101,17 +136,13 @@ func (b *Butler) myLocation(location string) bool {
 	return false
 }
 
-// butler recieves config, assets over channel
+// butler recieves bmc config, assets over channel
 // iterate over assets and apply config
 func (b *Butler) Run() {
 
 	var err error
-
-	//flag when a signal is received
-	var exitFlag bool
-
 	log := b.log
-	component := "ButlerRun"
+	component := "Butler Run"
 
 	//set bmclib logger params
 	bmclibLogger.SetFormatter(&logrus.TextFormatter{})
@@ -119,49 +150,43 @@ func (b *Butler) Run() {
 		bmclibLogger.SetLevel(logrus.DebugLevel)
 	}
 
+	//flag when a signal is received
+	var exitFlag bool
+
 	//set metrics send ticker
 	var metricPrefix, successMetric, failMetric string
-	metricsSendTicker := time.NewTicker(60 * time.Second)
+	metricsSendTicker := time.NewTicker(500 * time.Second)
+
 	go func() {
-		for _ = range metricsSendTicker.C {
+		select {
+		case <-metricsSendTicker.C:
 			b.metricsEmitter.EmitMetricMap(b.metricsData)
 			for k, _ := range b.metricsData {
 				b.metricsData[k] = 0
 			}
-		}
-	}()
-	defer metricsSendTicker.Stop()
-	defer b.metricsEmitter.EmitMetricMap(b.metricsData)
-
-	//set signal handlers
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-	go func() {
-		_ = <-sigChan
-		exitFlag = true
-
-		log.WithFields(logrus.Fields{
-			"component": component,
-			"butler-id": b.id,
-		}).Warn("Interrupt SIGINT/SIGTERM recieved, butlers will exit gracefully.")
-	}()
-
-	defer b.syncWG.Done()
-	for {
-		msg, ok := <-b.butlerChan
-		if !ok {
+		case <-b.interruptChan:
 			log.WithFields(logrus.Fields{
 				"component": component,
 				"butler-id": b.id,
-			}).Debug("Butler message channel closed, goodbye.")
+			}).Debug("Butler recieved interrupt.. will exit.")
+
+			b.metricsEmitter.EmitMetricMap(b.metricsData)
+			exitFlag = true
+			return
+		}
+	}()
+
+	defer func() { b.doneChan <- b.id }()
+	defer metricsSendTicker.Stop()
+	defer b.metricsEmitter.EmitMetricMap(b.metricsData)
+
+	for {
+		msg, ok := <-b.butlerChan
+		if !ok {
 			return
 		}
 
 		if exitFlag {
-			log.WithFields(logrus.Fields{
-				"component": component,
-				"butler-id": b.id,
-			}).Debug("Butler exited.")
 			return
 		}
 

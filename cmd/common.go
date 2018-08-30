@@ -22,14 +22,11 @@ var (
 	commandWG     sync.WaitGroup
 )
 
+// post handles clean up actions
+// - closes the butler channel
+// - Waits for all go routines in commandWG to finish.
 func post(butlerChan chan butler.ButlerMsg) {
 	close(butlerChan)
-
-	//wait until butlers are done.
-	butlerManager.Wait()
-	log.Debug("All butlers have exited.")
-
-	close(metricsChan)
 	commandWG.Wait()
 }
 
@@ -124,14 +121,11 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.ButlerMsg) 
 		Config:         runConfig,
 		Log:            log,
 		MetricsEmitter: metricsEmitter,
-		SpawnCount:     runConfig.ButlersToSpawn,
-	}
-
-	if serial != "" || ipList != "" || ignoreLocation {
-		runConfig.IgnoreLocation = true
+		SyncWG:         &commandWG,
 	}
 
 	go butlerManager.SpawnButlers()
+	commandWG.Add(1)
 
 	//give the butlers a second to spawn.
 	time.Sleep(1 * time.Second)
