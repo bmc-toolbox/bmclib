@@ -62,14 +62,24 @@ The 'inventory' parameter points Bmcbutler to the inventory source.
 Configure Blades/Chassis/Discretes
 
 ```
-#configure all BMCs in inventory
-bmcbutler configure --all
+#configure all BMCs in inventory, dry run with verbose output
+bmcbutler configure --all --dryrun -v
 
-#configure BMCs identified by IP(s)
-bmcbutler configure --iplist 192.168.0.1,192.168.0.2,192.168.0.2
+#configure all blades in given locations
+bmcbutler configure --blades --locations ams2
 
-#configure BMCs identified by serial(s)
-bmcbutler configure --chassis --serial <serial> --verbose
+#configure all chassis in given locations
+bmcbutler configure --chassis --locations ams2,lhr3 
+
+#configure all discretes in given location, spawning given butlers
+bmcbutler configure --discretes --locations lhr5 --butlers 200
+
+#configure one or more BMCs identified by IP(s)
+bmcbutler configure --ips 192.168.0.1,192.168.0.2,192.168.0.2
+
+#configure one or more BMCs identified by serial(s)
+bmcbutler configure --serials <serial1>,<serial2>
+
 bmcbutler configure --blade --serial <serial1>,<serial2> --verbose
 bmcbutler configure --discrete --serial <serial> --verbose
 ```
