@@ -736,6 +736,11 @@ func (c *C7000) setUserAcl(user string, role string) (err error) {
 // see applyAddLdapGroupBayAccess() for details.
 func (c *C7000) applyAddUserBayAccess(user string) (err error) {
 
+	//The c7000 wont allow changes to the bay acls for the reserved Administrator user.
+	if user == "Administrator" {
+		return nil
+	}
+
 	//setup blade bays payload
 	bladebays := bladeBays{}
 	for b := 1; b <= 16; b++ {
