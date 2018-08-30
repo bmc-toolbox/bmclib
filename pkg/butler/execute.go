@@ -18,6 +18,15 @@ func (b *Butler) executeCommand(command string, asset *asset.Asset) (err error) 
 	component := "executeCommand"
 	log := b.log
 
+	if b.config.DryRun {
+		log.WithFields(logrus.Fields{
+			"component": component,
+			"butler-id": b.id,
+			"Asset":     fmt.Sprintf("%+v", asset),
+		}).Info("Dry run, won't execute cmd on asset.")
+		return nil
+	}
+
 	//connect to the bmc/chassis bmc
 	client, err := b.setupConnection(asset, true)
 	if err != nil {

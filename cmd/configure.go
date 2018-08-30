@@ -61,6 +61,7 @@ func validateConfigureArgs() {
 
 func configure() {
 
+	runConfig.Configure = true
 	validateConfigureArgs()
 
 	inventoryChan, butlerChan := pre()

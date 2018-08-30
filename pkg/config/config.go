@@ -32,6 +32,10 @@ type Params struct {
 	BmcDefaultUser       string
 	BmcDefaultPassword   string
 	CfgFile              string
+	Configure            bool //indicates configure was invoked
+	DryRun               bool //when set, don't carry out any actions, just log.
+	Setup                bool //indicates setup was invoked
+	Execute              bool //indicates execute was invoked
 	FilterParams         *FilterParams
 	InventoryParams      *InventoryParams
 	IgnoreLocation       bool

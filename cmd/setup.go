@@ -44,7 +44,7 @@ func init() {
 }
 
 func setup() {
-
+	runConfig.Setup = true
 	inventoryChan, butlerChan := pre()
 
 	//Read in BMC configuration data

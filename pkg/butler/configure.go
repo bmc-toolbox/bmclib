@@ -20,6 +20,15 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 	log := b.log
 	component := "configureAsset"
 
+	if b.config.DryRun {
+		log.WithFields(logrus.Fields{
+			"component": component,
+			"butler-id": b.id,
+			"Asset":     fmt.Sprintf("%+v", asset),
+		}).Info("Dry run, asset configuration will be skipped.")
+		return nil
+	}
+
 	//connect to the bmc/chassis bmc
 	client, err := b.setupConnection(asset, false)
 	if err != nil {

@@ -35,6 +35,7 @@ func init() {
 
 func execute() {
 
+	runConfig.Execute = true
 	inventoryChan, butlerChan := pre()
 
 	//iterate over the inventory channel for assets,

@@ -33,6 +33,7 @@ var (
 	cfgFile        string
 	version        string
 	execCommand    string
+	locations      string
 	runConfig      *config.Params
 )
 
@@ -87,24 +88,21 @@ func init() {
 
 	//Asset filter params.
 	rootCmd.PersistentFlags().BoolVarP(&runConfig.FilterParams.All, "all", "", false, "Action all assets")
-	rootCmd.PersistentFlags().BoolVarP(&runConfig.FilterParams.Chassis, "chassis", "", false, "Action just Chassis assets.")
 	rootCmd.PersistentFlags().BoolVarP(&runConfig.FilterParams.Blade, "blade", "", false, "Action just Blade(s) assets")
+	rootCmd.PersistentFlags().BoolVarP(&runConfig.FilterParams.Chassis, "chassis", "", false, "Action just Chassis assets.")
+	rootCmd.PersistentFlags().BoolVarP(&runConfig.DryRun, "dryrun", "", false, "Only log assets that will be actioned.")
 	rootCmd.PersistentFlags().BoolVarP(&runConfig.FilterParams.Discrete, "discrete", "", false, "Action just Discrete(s) assets")
 	rootCmd.PersistentFlags().StringVarP(&runConfig.FilterParams.Serial, "serial", "", "", "Serial(s) of the asset to setup config (separated by commas - no spaces).")
 	rootCmd.PersistentFlags().StringVarP(&runConfig.FilterParams.Ip, "ip", "", "", "IP Address(s) of the asset to setup config (separated by commas - no spaces).")
 
 	rootCmd.PersistentFlags().BoolVarP(&runConfig.IgnoreLocation, "ignorelocation", "", false, "Action assets in all locations (ignore locations directive in config)")
 	rootCmd.PersistentFlags().IntVarP(&butlersToSpawn, "butlers", "b", 0, "Number of butlers to spawn (overide butlersToSpawn directive in config)")
+	rootCmd.PersistentFlags().StringVarP(&locations, "locations", "l", "", "Action assets by given location(s). (overide locations directive in config)")
 
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "Configuration file for bmcbutler (default: /etc/bmcbutler/bmcbutler.yml)")
 
 	//move to exec
 	rootCmd.PersistentFlags().StringVarP(&execCommand, "command", "", "", "Command to execute on BMCs.")
 
-	fmt.Println(butlersToSpawn)
-	if butlersToSpawn > 0 {
-		runConfig.ButlersToSpawn = butlersToSpawn
-	}
-
-	//cobra.OnInitialize(initConfig)
+	//NOTE: to override any config from the flags declared here, see overrideConfigFromFlags in common.go
 }
