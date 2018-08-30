@@ -77,6 +77,11 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.ButlerMsg) 
 		inventorySource = "iplist"
 	}
 
+	//if its a setup action, point to the appropriate inventory source.
+	if runConfig.Setup {
+		inventorySource = "needSetup"
+	}
+
 	//based on inventory source, invoke assetRetriever
 	var assetRetriever func()
 
@@ -108,12 +113,24 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.ButlerMsg) 
 		}
 
 		assetRetriever = inventoryInstance.AssetRetrieve()
+	case "needSetup":
+		inventoryInstance := inventory.NeedSetup{
+			Channel:   inventoryChan,
+			Config:    runConfig,
+			BatchSize: 10,
+			Log:       log,
+		}
+
+		assetRetriever = inventoryInstance.AssetRetrieve()
 	default:
 		fmt.Println("Unknown/no inventory source declared in cfg: ", inventorySource)
 		os.Exit(1)
 	}
 
+	//invoke asset retriever routine
+	//this routine returns assets over the inventoryChan.
 	go assetRetriever()
+
 	// Spawn butlers to work
 	butlerChan = make(chan butler.ButlerMsg, 5)
 	butlerManager = butler.ButlerManager{
