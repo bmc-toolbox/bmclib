@@ -21,10 +21,12 @@ import (
 
 	graphite "github.com/marpaia/graphite-golang"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
+
+	"github.com/bmc-toolbox/bmcbutler/pkg/config"
 )
 
 type Metrics struct {
+	Config  *config.Params
 	Logger  *logrus.Logger
 	SyncWG  *sync.WaitGroup
 	Channel <-chan []MetricsMsg
@@ -48,13 +50,14 @@ func (m *Metrics) Run() {
 
 	defer m.SyncWG.Done()
 
-	metricsTarget := viper.GetString("metrics.receiver.target")
+	//figure metrics target
+	metricsTarget := m.Config.MetricsParams.Target
 	switch metricsTarget {
 	case "graphite":
-		server = viper.GetString("metrics.receiver.graphite.host")
-		port = viper.GetInt("metrics.receiver.graphite.port")
-		prefix := viper.GetString("metrics.receiver.graphite.prefix")
-		//FIXME: validate config parameters
+
+		server := m.Config.MetricsParams.Server
+		port := m.Config.MetricsParams.Port
+		prefix := m.Config.MetricsParams.Prefix
 
 		gClient, err = graphite.NewGraphiteWithMetricPrefix(server, port, prefix)
 		if err != nil {
@@ -74,13 +77,12 @@ func (m *Metrics) Run() {
 		"Metrics target": metricsTarget,
 		"Server":         server,
 		"Port":           port,
-	}).Info("Spawned metrics forwarder.")
+	}).Debug("Spawned metrics forwarder.")
 
 	for metrics := range m.Channel {
 		switch metricsTarget {
 		case "graphite":
-			go graphiteSend(gClient, metrics, log, m.SyncWG)
-			m.SyncWG.Add(1)
+			go graphiteSend(gClient, metrics, log)
 		default:
 			continue
 		}
@@ -93,12 +95,10 @@ func (m *Metrics) Run() {
 	return
 }
 
-func graphiteSend(client *graphite.Graphite, metrics []MetricsMsg, logger *logrus.Logger, wg *sync.WaitGroup) {
+func graphiteSend(client *graphite.Graphite, metrics []MetricsMsg, logger *logrus.Logger) {
 
 	var gMetrics []graphite.Metric
 	component := "graphiteSend"
-
-	defer wg.Done()
 
 	//if there are no metrics to send / no connection to graphite
 	if len(metrics) < 1 || client == nil {
