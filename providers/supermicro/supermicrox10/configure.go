@@ -142,8 +142,8 @@ func (s *SupermicroX10) ApplyCfg(config *cfgresources.ResourcesConfig) (err erro
 				//since supermicro does not have separate ldap group config,
 				//for generic ldap configuration.
 				continue
+			case "License":
 			case "Ssl":
-				fmt.Printf("%s: %v : %s\n", resourceName, cfg.Field(r), cfg.Field(r).Kind())
 			case "Supermicro":
 				err := s.applyVendorSpecificConfig(config.Supermicro)
 				if err != nil {
@@ -159,10 +159,8 @@ func (s *SupermicroX10) ApplyCfg(config *cfgresources.ResourcesConfig) (err erro
 			default:
 				log.WithFields(log.Fields{
 					"step":     "ApplyCfg",
-					"Resource": cfg.Field(r).Kind(),
+					"Resource": resourceName,
 				}).Warn("Unknown resource definition.")
-				//fmt.Printf("%v\n", cfg.Field(r))
-
 			}
 		}
 	}

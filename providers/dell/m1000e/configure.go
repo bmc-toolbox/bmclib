@@ -68,7 +68,6 @@ func (m *M1000e) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 					}).Warn("Unable to set Syslog config.")
 				}
 			case "Network":
-				fmt.Printf("%s: %v : %s\n", resourceName, cfg.Field(r), cfg.Field(r).Kind())
 			case "Ntp":
 				datetimeParams := m.newDatetimeCfg(cfg.Field(r).Interface().(*cfgresources.Ntp))
 				err = m.applyDatetimeCfg(datetimeParams)
