@@ -31,6 +31,9 @@ ldapGroup:
     group: cn=<%= vendor%>,cn=bmcUsers #the group in ldap
     groupBaseDn: ou=Group,dc=example,dc=com #the baseDn to lookup group in.
     enable: false
+  - role: user
+    group: RemoveGroup
+    enable: false
 
 ntp:
    enable: true
@@ -38,3 +41,18 @@ ntp:
    server2: ntp1.example.com
    server3: ntp3.example.com
    timezone: CET
+
+network:
+  sshEnable: true
+  dnsFromDhcp: true  #bmc to get its DNS address from dhcp
+  ipmiEnable: true
+  dhcpEnable: true
+  solEnable: true #serial over lan
+  sshPort: 22
+  ipmiPort: 623
+
+#an example of setting the license key based on vendor.
+<%= if ( vendor == "hp" ) { %>
+license:
+  key: ASDFKLAMDNARALKNBA123
+<% } %>
