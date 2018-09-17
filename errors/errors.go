@@ -28,4 +28,7 @@ var (
 
 	// ErriDracMaxSessionsReached indicates the bmc has reached the max number of login sessions.
 	ErrIdracMaxSessionsReached = errors.New("The maximum number of user sessions is reached.")
+
+	// Err401Redfish indicates auth failure
+	Err401Redfish = errors.New("Redfish authorization failed.")
 )
