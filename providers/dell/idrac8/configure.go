@@ -26,24 +26,17 @@ func (i *IDrac8) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 				userAccounts := cfg.Field(r).Interface()
 
 				//assert userAccounts interface to its actual type - A slice of ptrs to User
-				for id, user := range userAccounts.([]*cfgresources.User) {
-
-					//the dells have user id 1 set to a anon user, so we start with 2.
-					userId := id + 2
-					//setup params to post
-					err := i.applyUserParams(user, userId)
-					if err != nil {
-						log.WithFields(log.Fields{
-							"step":     "ApplyCfg",
-							"Resource": cfg.Field(r).Kind(),
-							"IP":       i.ip,
-							"Model":    i.BmcType(),
-							"Serial":   i.serial,
-							"Error":    err,
-						}).Warn("Unable to set user config.")
-					}
+				err := i.applyUserParams(userAccounts.([]*cfgresources.User))
+				if err != nil {
+					log.WithFields(log.Fields{
+						"step":     "ApplyCfg",
+						"resource": cfg.Field(r).Kind(),
+						"IP":       i.ip,
+						"Model":    i.BmcType(),
+						"Serial":   i.Serial,
+						"Error":    err,
+					}).Warn("Unable to apply User config.")
 				}
-
 			case "Syslog":
 				syslogCfg := cfg.Field(r).Interface().(*cfgresources.Syslog)
 				err := i.applySyslogParams(syslogCfg)
@@ -151,77 +144,116 @@ func (i *IDrac8) isRoleValid(role string) bool {
 	return false
 }
 
-// attempts to add the user
-// if the user exists, update the users password.
-func (i *IDrac8) applyUserParams(cfg *cfgresources.User, Id int) (err error) {
+// Iterates over iDrac users and adds/removes/modifies the user account
+func (i *IDrac8) applyUserParams(cfgUsers []*cfgresources.User) (err error) {
 
-	if cfg.Name == "" {
-		log.WithFields(log.Fields{
-			"step": "apply-user-cfg",
-		}).Fatal("User resource expects parameter: Name.")
-	}
-
-	if cfg.Password == "" {
-		log.WithFields(log.Fields{
-			"step": "apply-user-cfg",
-		}).Fatal("User resource expects parameter: Password.")
-	}
-
-	if !i.isRoleValid(cfg.Role) {
-		log.WithFields(log.Fields{
-			"step":     "apply-user-cfg",
-			"Username": cfg.Name,
-		}).Warn("User resource Role must be declared and a must be a valid role: 'admin' OR 'user'.")
-		return
-	}
-
-	var enable string
-	if cfg.Enable == false {
-		enable = "Disabled"
-	} else {
-		enable = "Enabled"
-	}
-
-	user := User{UserName: encodeCred(cfg.Name), Password: encodeCred(cfg.Password), Enable: enable, SolEnable: "Enabled"}
-
-	switch cfg.Role {
-	case "admin":
-		user.Privilege = "511"
-		user.IpmiLanPrivilege = "Administrator"
-	case "user":
-		user.Privilege = "497"
-		user.IpmiLanPrivilege = "Operator"
-
-	}
-
-	data := make(map[string]User)
-	data["iDRAC.Users"] = user
-
-	payload, err := json.Marshal(data)
+	err = i.validateUserCfg(cfgUsers)
 	if err != nil {
+		msg := "User config validation failed."
 		log.WithFields(log.Fields{
-			"step": helper.WhosCalling(),
-		}).Warn("Unable to marshal syslog payload.")
-		return err
+			"step":   "applyUserParams",
+			"IP":     i.ip,
+			"Model":  i.BmcType(),
+			"Serial": i.Serial,
+			"Error":  err,
+		}).Warn(msg)
+		return errors.New(msg)
 	}
 
-	endpoint := fmt.Sprintf("sysmgmt/2012/server/configgroup/iDRAC.Users.%d", Id)
-	response, err := i.put(endpoint, payload)
+	idracUsers, err := i.queryUsers()
 	if err != nil {
+		msg := "Unable to query existing users"
 		log.WithFields(log.Fields{
-			"endpoint": endpoint,
-			"step":     helper.WhosCalling(),
-			"response": string(response),
-		}).Warn("PUT request failed.")
-		return err
+			"step":   "applyUserParams",
+			"IP":     i.ip,
+			"Model":  i.BmcType(),
+			"Serial": i.Serial,
+			"Error":  err,
+		}).Warn(msg)
+		return errors.New(msg)
 	}
 
-	log.WithFields(log.Fields{
-		"IP":     i.ip,
-		"Model":  i.BmcType(),
-		"Serial": i.serial,
-		"User":   cfg.Name,
-	}).Debug("User parameters applied.")
+	////for each configuration user
+	for _, cfgUser := range cfgUsers {
+
+		userId, userInfo, uExists := userInIdrac(cfgUser.Name, idracUsers)
+		//user to be added/updated
+		if cfgUser.Enable {
+
+			//new user to be added
+			if uExists == false {
+				userId, userInfo, err = getEmptyUserSlot(idracUsers)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"IP":     i.ip,
+						"Model":  i.BmcType(),
+						"Serial": i.Serial,
+						"step":   helper.WhosCalling(),
+						"User":   cfgUser.Name,
+						"Error":  err,
+					}).Warn("Unable to add new User.")
+					continue
+				}
+			}
+
+			userInfo.Enable = "Enabled"
+			userInfo.SolEnable = "Enabled"
+			userInfo.UserName = cfgUser.Name
+			userInfo.Password = cfgUser.Password
+
+			//set appropriate privileges
+			if cfgUser.Role == "admin" {
+				userInfo.Privilege = "511"
+				userInfo.IpmiLanPrivilege = "Administrator"
+			} else {
+				userInfo.Privilege = "499"
+				userInfo.IpmiLanPrivilege = "Operator"
+			}
+
+			err = i.putUser(userId, userInfo)
+			if err != nil {
+				log.WithFields(log.Fields{
+					"IP":     i.ip,
+					"Model":  i.BmcType(),
+					"Serial": i.Serial,
+					"step":   helper.WhosCalling(),
+					"User":   cfgUser.Name,
+					"Error":  err,
+				}).Warn("Add/Update user request failed.")
+				continue
+			}
+
+		} // end if cfgUser.Enable
+
+		//if the user exists but is disabled in our config, remove the user
+		if cfgUser.Enable == false && uExists == true {
+
+			userInfo.Enable = "Disabled"
+			userInfo.SolEnable = "Disabled"
+			userInfo.UserName = cfgUser.Name
+			userInfo.Privilege = "0"
+			userInfo.IpmiLanPrivilege = "No Access"
+
+			err = i.putUser(userId, userInfo)
+			if err != nil {
+				log.WithFields(log.Fields{
+					"IP":     i.ip,
+					"Model":  i.BmcType(),
+					"Serial": i.Serial,
+					"step":   helper.WhosCalling(),
+					"User":   cfgUser.Name,
+					"Error":  err,
+				}).Warn("Disable user request failed.")
+			}
+		}
+
+		log.WithFields(log.Fields{
+			"IP":     i.ip,
+			"Model":  i.BmcType(),
+			"Serial": i.Serial,
+			"User":   cfgUser.Name,
+		}).Debug("User parameters applied.")
+	}
 
 	return err
 }
@@ -273,7 +305,7 @@ func (i *IDrac8) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
 	}
 
 	endpoint := "sysmgmt/2012/server/configgroup/iDRAC.SysLog"
-	response, err := i.put(endpoint, payload)
+	response, _, err := i.put(endpoint, payload)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"endpoint": endpoint,

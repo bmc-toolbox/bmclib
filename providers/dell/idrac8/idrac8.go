@@ -58,18 +58,18 @@ func (i *IDrac8) CheckCredentials() (err error) {
 }
 
 // PUTs data
-func (i *IDrac8) put(endpoint string, payload []byte) (response []byte, err error) {
+func (i *IDrac8) put(endpoint string, payload []byte) (statusCode int, response []byte, err error) {
 	bmcURL := fmt.Sprintf("https://%s", i.ip)
 
 	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/%s", bmcURL, endpoint), bytes.NewReader(payload))
 	if err != nil {
-		return response, err
+		return statusCode, response, err
 	}
 	req.Header.Add("ST2", i.st2)
 
 	u, err := url.Parse(bmcURL)
 	if err != nil {
-		return response, err
+		return statusCode, response, err
 	}
 
 	for _, cookie := range i.httpClient.Jar.Cookies(u) {
@@ -90,7 +90,7 @@ func (i *IDrac8) put(endpoint string, payload []byte) (response []byte, err erro
 
 	resp, err := i.httpClient.Do(req)
 	if err != nil {
-		return response, err
+		return statusCode, response, err
 	}
 	defer resp.Body.Close()
 
@@ -106,14 +106,14 @@ func (i *IDrac8) put(endpoint string, payload []byte) (response []byte, err erro
 
 	response, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return response, err
+		return statusCode, response, err
 	}
 
 	if resp.StatusCode == 500 {
-		return response, errors.Err500
+		return resp.StatusCode, response, errors.Err500
 	}
 
-	return response, err
+	return resp.StatusCode, response, err
 }
 
 // posts the payload to the given endpoint
