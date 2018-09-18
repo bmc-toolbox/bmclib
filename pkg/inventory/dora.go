@@ -20,7 +20,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-	"time"
+	//	"time"
 
 	"github.com/sirupsen/logrus"
 
@@ -33,7 +33,7 @@ type Dora struct {
 	Log             *logrus.Logger
 	BatchSize       int
 	AssetsChan      chan<- []asset.Asset
-	MetricsEmitter  metrics.Emitter
+	MetricsEmitter  *metrics.Emitter
 	Config          *config.Params
 	FilterAssetType []string
 }
@@ -244,29 +244,15 @@ func (d *Dora) AssetIter() {
 	apiUrl := d.Config.InventoryParams.ApiUrl
 	component := "retrieveInventoryAssetsDora"
 
-	metricsData := make(map[string]int)
+	metric := d.MetricsEmitter
 
 	defer close(d.AssetsChan)
-	defer d.MetricsEmitter.MeasureRunTime(
-		time.Now().Unix(), fmt.Sprintf("assets.dora.%s", component))
+	//defer d.MetricsEmitter.MeasureSince(component, time.Now())
 
 	log := d.Log
 
 	for _, assetType := range d.FilterAssetType {
 		var path string
-
-		//setup default metric values
-		metricTotalAssets := fmt.Sprintf("assets.dora.%s.total", assetType)
-		metricsData[metricTotalAssets] = 0
-
-		metricNoIp := fmt.Sprintf("assets.dora.%s.noip", assetType)
-		metricsData[metricNoIp] = 0
-
-		metricNoLocation := fmt.Sprintf("assets.dora.%s.nolocation", assetType)
-		metricsData[metricNoLocation] = 0
-
-		metricAssetsToConfigure := fmt.Sprintf("assets.dora.%s.configure", assetType)
-		metricsData[metricAssetsToConfigure] = 0
 
 		//since this asset type in dora is plural.
 		if assetType == "blade" {
@@ -303,7 +289,9 @@ func (d *Dora) AssetIter() {
 				}).Fatal("Error unmarshaling data returned from Dora.")
 			}
 
-			metricsData[metricTotalAssets] += len(doraAssets.Data)
+			metric.IncrCounter(
+				[]string{"inventory", "assets_fetched_dora"},
+				float32(len(doraAssets.Data)))
 
 			// for each asset, get its location
 			// store in the assets slice
@@ -316,7 +304,7 @@ func (d *Dora) AssetIter() {
 						"DoraAsset": fmt.Sprintf("%+v", item),
 					}).Warn("Asset location could not be determined, since the asset has no IP.")
 
-					metricsData[metricNoIp] += 1
+					metric.IncrCounter([]string{"inventory", "assets_noip_dora"}, 1)
 					continue
 				}
 
@@ -337,11 +325,13 @@ func (d *Dora) AssetIter() {
 					"Assets":    fmt.Sprintf("%+v", assets),
 				}).Warn("Asset location could not be determined, ignoring assets")
 
-				metricsData[metricNoLocation] += 1
+				metric.IncrCounter([]string{"inventory", "assets_nolocation_dora"}, 1)
 				continue
 			}
 
-			metricsData[metricAssetsToConfigure] += len(assets)
+			metric.IncrCounter(
+				[]string{"inventory", "assets_returned_dora"},
+				float32(len(assets)))
 
 			//pass the asset to the channel
 			d.AssetsChan <- assets
@@ -358,8 +348,5 @@ func (d *Dora) AssetIter() {
 			// next url to query
 			queryUrl = fmt.Sprintf("%s%s", apiUrl, doraAssets.Links.Next)
 		}
-
-		d.MetricsEmitter.EmitMetricMap(metricsData)
 	}
-
 }
