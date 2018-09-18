@@ -19,6 +19,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 
 	log := b.log
 	component := "configureAsset"
+	metric := b.metricsEmitter
 
 	if b.config.DryRun {
 		log.WithFields(logrus.Fields{
@@ -28,6 +29,8 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		}).Info("Dry run, asset configuration will be skipped.")
 		return nil
 	}
+
+	defer metric.MeasureRuntime([]string{"butler", "configure_runtime"}, time.Now())
 
 	//connect to the bmc/chassis bmc
 	client, err := b.setupConnection(asset, false)
@@ -47,11 +50,6 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		resourceInstance := resource.Resource{Log: log, Vendor: asset.Vendor}
 		//rendered config is a *cfgresources.ResourcesConfig type
 		renderedConfig := resourceInstance.LoadConfigResources(config)
-
-		//time how long it takes to run configure
-		metricPrefix := fmt.Sprintf("%s.%s.%s", asset.Location, asset.Vendor, asset.Type)
-		defer b.metricsEmitter.MeasureRunTime(
-			time.Now().Unix(), fmt.Sprintf("%s.%s", metricPrefix, component))
 
 		// Apply configuration
 		bmc.ApplyCfg(renderedConfig)

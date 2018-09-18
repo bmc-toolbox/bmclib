@@ -23,6 +23,9 @@ type SetupAction struct {
 func (b *Butler) setupAsset(config []byte, asset *asset.Asset) (err error) {
 	log := b.log
 	component := "setupAsset"
+	metric := b.metricsEmitter
+
+	defer metric.MeasureRuntime([]string{"butler", "configure_runtime"}, time.Now())
 
 	setup := SetupAction{Log: log, Asset: asset, Id: b.id}
 	if b.config.DryRun {
@@ -51,11 +54,6 @@ func (b *Butler) setupAsset(config []byte, asset *asset.Asset) (err error) {
 
 		//rendered config is a *cfgresources.ResourcesSetup type
 		renderedConfig := resourceInstance.LoadSetupResources(config)
-
-		//time how long it takes to run configure
-		metricPrefix := fmt.Sprintf("%s.%s.%s", asset.Location, asset.Vendor, asset.Type)
-		defer b.metricsEmitter.MeasureRunTime(
-			time.Now().Unix(), fmt.Sprintf("%s.%s", metricPrefix, component))
 
 		//if a chassis was setup successfully,
 		//call some post setup actions.

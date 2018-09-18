@@ -20,27 +20,10 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 
 	log := b.log
 	component := "setupConnection"
+	metric := b.metricsEmitter
 
 	var user, password string
-	var pUserAuthSuccessMetric, pUserAuthFailMetric, sUserAuthSuccessMetric, sUserAuthFailMetric string
-	var dUserAuthSuccessMetric, dUserAuthFailMetric, connfailMetric string
-
-	//Setup a few metrics we will send out.
-	metricPrefix := fmt.Sprintf("%s.%s.%s", asset.Location, asset.Vendor, asset.Type)
-
-	pUserAuthSuccessMetric = fmt.Sprintf("%s.%s", metricPrefix, "primaryUserAuthSuccess")
-	pUserAuthFailMetric = fmt.Sprintf("%s.%s", metricPrefix, "primaryUserAuthFail")
-
-	sUserAuthSuccessMetric = fmt.Sprintf("%s.%s", metricPrefix, "secondaryUserAuthSuccess")
-	sUserAuthFailMetric = fmt.Sprintf("%s.%s", metricPrefix, "secondaryUserAuthFail")
-
-	dUserAuthSuccessMetric = fmt.Sprintf("%s.%s", metricPrefix, "defaultUserAuthSuccess")
-	dUserAuthFailMetric = fmt.Sprintf("%s.%s", metricPrefix, "defaultUserAuthFail")
-
-	connfailMetric = fmt.Sprintf("%s.%s", metricPrefix, "connfail")
-
-	defer b.metricsEmitter.MeasureRunTime(
-		time.Now().Unix(), fmt.Sprintf("%s.%s", metricPrefix, component))
+	defer metric.MeasureRuntime([]string{"butler", "conn_setup_runtime"}, time.Now())
 
 	user = b.config.BmcPrimaryUser
 	password = b.config.BmcPrimaryPassword
@@ -53,10 +36,12 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 			"butler-id": b.id,
 			"Error":     err,
 		}).Warn("Error connecting to bmc.")
+
+		defer metric.IncrCounter([]string{"butler", "conn_setup_failed"}, 1)
 		return connection, err
 	}
 
-	//auth success
+	//connect success
 	switch client.(type) {
 	case devices.Bmc:
 
@@ -77,7 +62,11 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 					"Error":        err,
 				}).Warn("Login with Primary user failed.")
 
-				b.metricsData[pUserAuthFailMetric] += 1
+				metric.IncrCounter(
+					[]string{
+						"butler",
+						fmt.Sprintf("user_login_failed_%s", user),
+					}, 1)
 
 				//attempt to login with Secondary user account
 				user = b.config.BmcSecondaryUser
@@ -94,7 +83,12 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 							"Secondary user": user,
 							"Error":          err,
 						}).Warn("Login with Secondary user failed.")
-						b.metricsData[sUserAuthFailMetric] += 1
+
+						metric.IncrCounter(
+							[]string{
+								"butler",
+								fmt.Sprintf("user_login_failed_%s", user),
+							}, 1)
 					} else {
 
 						//successful login with Secondary user
@@ -107,11 +101,15 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 
 						asset.Vendor = bmc.Vendor()
 
-						b.metricsData[sUserAuthSuccessMetric] += 1
+						metric.IncrCounter([]string{
+							"butler",
+							fmt.Sprintf("user_login_success_%s", user),
+						}, 1)
 						return bmc, err
 					}
 				}
 
+				fmt.Println(">>> HERE 2")
 				//read in vendor default credentials and attempt login.
 				err = b.config.GetDefaultCredentials(asset.Vendor)
 				if err != nil {
@@ -120,7 +118,13 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 						"butler-id": b.id,
 						"Asset":     fmt.Sprintf("%+v", asset),
 						"Error":     err,
-					}).Warn("Unable to attempt login with vendor default user.")
+					}).Warn("No vendor default user creds found in config.")
+
+					metric.IncrCounter(
+						[]string{
+							"butler",
+							"login_failed_no_default_creds",
+						}, 1)
 					return bmc, err
 				}
 
@@ -138,7 +142,10 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 						"Error":        err,
 					}).Warn("Login with default credentials failed.")
 
-					b.metricsData[dUserAuthFailMetric] += 1
+					metric.IncrCounter(
+						[]string{"butler",
+							fmt.Sprintf("user_login_failed_%s", user),
+						}, 1)
 					return bmc, err
 				} else {
 
@@ -149,8 +156,11 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 						"Asset":        fmt.Sprintf("%+v", asset),
 						"Default user": user,
 					}).Debug("Successful login with vendor default user.")
+					metric.IncrCounter([]string{
+						"butler",
+						fmt.Sprintf("user_login_success_%s", user),
+					}, 1)
 
-					b.metricsData[dUserAuthSuccessMetric] += 1
 					return bmc, err
 				}
 			} else {
@@ -162,8 +172,11 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 					"Asset":        fmt.Sprintf("%+v", asset),
 					"Primary user": user,
 				}).Debug("Successful login with Primary user.")
+				metric.IncrCounter([]string{
+					"butler",
+					fmt.Sprintf("user_login_success_%s", user),
+				}, 1)
 
-				b.metricsData[pUserAuthSuccessMetric] += 1
 				return bmc, err
 			}
 		}
@@ -192,7 +205,11 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 					"Error":        err,
 				}).Warn("Login with Primary user failed.")
 
-				b.metricsData[pUserAuthFailMetric] += 1
+				metric.IncrCounter(
+					[]string{
+						"butler",
+						fmt.Sprintf("user_login_failed_%s", user),
+					}, 1)
 
 				user = b.config.BmcSecondaryUser
 				if user != "" {
@@ -208,7 +225,13 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 							"Secondary user": user,
 							"Error":          err,
 						}).Warn("Login with Secondary user failed.")
-						b.metricsData[sUserAuthFailMetric] += 1
+
+						metric.IncrCounter(
+							[]string{
+								"butler",
+								fmt.Sprintf("user_login_failed_%s", user),
+							}, 1)
+
 					} else {
 
 						//successful login with Secondary user
@@ -221,7 +244,10 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 
 						asset.Vendor = bmc.Vendor()
 
-						b.metricsData[sUserAuthSuccessMetric] += 1
+						metric.IncrCounter([]string{
+							"butler",
+							fmt.Sprintf("user_login_success_%s", user),
+						}, 1)
 						return bmc, err
 					}
 				}
@@ -245,7 +271,12 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 						"Error":        err,
 					}).Warn("Login with default credentials failed.")
 
-					b.metricsData[dUserAuthFailMetric] += 1
+					metric.IncrCounter(
+						[]string{
+							"butler",
+							fmt.Sprintf("user_login_failed_%s", user),
+						}, 1)
+
 					return bmc, err
 				} else {
 
@@ -257,7 +288,10 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 						"Default user": user,
 					}).Debug("Successful login with vendor default user.")
 
-					b.metricsData[dUserAuthSuccessMetric] += 1
+					metric.IncrCounter([]string{
+						"butler",
+						fmt.Sprintf("user_login_success_%s", user),
+					}, 1)
 					return bmc, err
 				}
 			} else if err != nil {
@@ -268,7 +302,7 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 					"Error":     err,
 				}).Warn("BMC connection failed.")
 
-				b.metricsData[connfailMetric] += 1
+				defer metric.IncrCounter([]string{"butler", "conn_setup_failed"}, 1)
 				return bmc, err
 			} else {
 
@@ -280,7 +314,10 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 					"Primary user": user,
 				}).Debug("Successful login with Primary user.")
 
-				b.metricsData[pUserAuthSuccessMetric] += 1
+				metric.IncrCounter([]string{
+					"butler",
+					fmt.Sprintf("user_login_success_%s", user),
+				}, 1)
 				return bmc, err
 			}
 		}
