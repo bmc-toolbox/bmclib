@@ -1,3 +1,9 @@
+#This config is YAML based and supports plush templating,
+# https://github.com/gobuffalo/plush
+#
+# For support configuration resources, see, 
+# https://github.com/bmc-toolbox/bmclib/blob/master/cfgresources/
+#
 syslog:
   server: ldaps.example.com
   port: 514
@@ -56,3 +62,12 @@ network:
 license:
   key: ASDFKLAMDNARALKNBA123
 <% } %>
+
+#set dell idrac9 specific params
+#in this case we set PXE bios settings.
+dell:
+  idrac9bios:
+    PxeDev1EnDis: Enabled
+    PxeDev2EnDis: Disabled
+    PxeDev3EnDis: Disabled
+    PxeDev4EnDis: Disabled
