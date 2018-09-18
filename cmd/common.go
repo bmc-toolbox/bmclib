@@ -17,10 +17,10 @@ import (
 )
 
 var (
-	exitFlag      bool
-	butlerManager butler.ButlerManager
-	metricsChan   chan []metrics.MetricsMsg
-	commandWG     sync.WaitGroup
+	exitFlag       bool
+	butlerManager  butler.ButlerManager
+	commandWG      sync.WaitGroup
+	metricsEmitter *metrics.Emitter
 )
 
 // post handles clean up actions
@@ -29,6 +29,7 @@ var (
 func post(butlerChan chan butler.ButlerMsg) {
 	close(butlerChan)
 	commandWG.Wait()
+	metricsEmitter.Close(true)
 }
 
 // Any flags to override configuration goes here.
@@ -66,23 +67,13 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.ButlerMsg) 
 		exitFlag = true
 	}()
 
-	// A channel butlers sends metrics to the metrics sender
-	metricsChan = make(chan []metrics.MetricsMsg, 5)
-
-	//the metrics forwarder routine
-	metricsForwarder := metrics.Metrics{
-		Config:  runConfig,
-		Logger:  log,
-		Channel: metricsChan,
-		SyncWG:  &commandWG,
+	//Initialize metrics collection.
+	metricsEmitter = &metrics.Emitter{
+		Config: runConfig,
+		Logger: log,
 	}
 
-	//metrics emitter instance, used by methods to emit metrics to the forwarder.
-	metricsEmitter := metrics.Emitter{Channel: metricsChan}
-
-	//spawn metrics forwarder routine
-	go metricsForwarder.Run()
-	commandWG.Add(1)
+	metricsEmitter.Init()
 
 	// A channel to recieve inventory assets
 	inventoryChan = make(chan []asset.Asset, 5)
