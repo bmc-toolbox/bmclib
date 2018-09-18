@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
@@ -52,10 +53,11 @@ type InventoryParams struct {
 }
 
 type MetricsParams struct {
-	Target string
-	Server string
-	Port   int
-	Prefix string
+	Client        string //The metrics client.
+	Host          string
+	Port          int
+	Prefix        string
+	FlushInterval time.Duration
 }
 
 type FilterParams struct {
@@ -103,12 +105,13 @@ func (p *Params) Load(cfgFile string) {
 	p.CfgFile = viper.ConfigFileUsed()
 
 	//Read in metrics config
-	p.MetricsParams.Target = viper.GetString("metrics.receiver.target")
-	switch p.MetricsParams.Target {
+	p.MetricsParams.Client = viper.GetString("metrics.clients.client")
+	switch p.MetricsParams.Client {
 	case "graphite":
-		p.MetricsParams.Server = viper.GetString("metrics.receiver.graphite.host")
-		p.MetricsParams.Port = viper.GetInt("metrics.receiver.graphite.port")
-		p.MetricsParams.Prefix = viper.GetString("metrics.receiver.graphite.prefix")
+		p.MetricsParams.Host = viper.GetString("metrics.clients.graphite.host")
+		p.MetricsParams.Port = viper.GetInt("metrics.clients.graphite.port")
+		p.MetricsParams.Prefix = viper.GetString("metrics.clients.graphite.prefix")
+		p.MetricsParams.FlushInterval = viper.GetDuration("metrics.clients.graphite.flushinterval")
 	}
 
 	//Inventory to read assets from

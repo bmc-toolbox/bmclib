@@ -16,127 +16,206 @@ package metrics
 
 import (
 	"fmt"
-	"strings"
-	"sync"
-
-	graphite "github.com/marpaia/graphite-golang"
+	"github.com/cyberdelia/go-metrics-graphite"
+	gometrics "github.com/rcrowley/go-metrics"
 	"github.com/sirupsen/logrus"
+	"net"
+	"strings"
+	"time"
 
 	"github.com/bmc-toolbox/bmcbutler/pkg/config"
 )
 
-type Metrics struct {
-	Config  *config.Params
-	Logger  *logrus.Logger
-	SyncWG  *sync.WaitGroup
-	Channel <-chan []MetricsMsg
+var (
+	metricsChan chan Metric
+)
+
+//TODO:
+// Implement a counter increment method that accepts string, float32 value
+// increment method sends the metric down the channel
+// a go routine reads from the channel and updates the metricsData map
+
+type Emitter struct {
+	Config      *config.Params
+	Logger      *logrus.Logger
+	Registry    gometrics.Registry
+	metricsChan chan Metric
+	metricsData map[string]map[string]float32
 }
 
-type MetricsMsg struct {
-	Name      string
-	Value     string
-	Timestamp int64
+type Metric struct {
+	mType string   //counter/gauge
+	mKey  []string //metric key
+	mVal  float32  //metric value
 }
 
-func (m *Metrics) Run() {
+// init sets up external and internal metric sinks.
+func (m *Emitter) Init() {
 
-	var gClient *graphite.Graphite
-	var server string
+	var host, prefix string
 	var port int
-	var err error
+	var flushInterval time.Duration
 
-	component := "Metrics sender"
+	m.metricsChan = make(chan Metric)
+	m.metricsData = make(map[string]map[string]float32)
+
+	component := "Metrics emitter"
 	log := m.Logger
 
-	defer m.SyncWG.Done()
+	//go routine that records metricsData
+	go m.store()
 
-	//figure metrics target
-	metricsTarget := m.Config.MetricsParams.Target
-	switch metricsTarget {
+	//setup metrics client based on config
+	client := m.Config.MetricsParams.Client
+	switch client {
 	case "graphite":
+		host = m.Config.MetricsParams.Host
+		port = m.Config.MetricsParams.Port
+		prefix = m.Config.MetricsParams.Prefix
+		flushInterval = m.Config.MetricsParams.FlushInterval
 
-		server := m.Config.MetricsParams.Server
-		port := m.Config.MetricsParams.Port
-		prefix := m.Config.MetricsParams.Prefix
-
-		gClient, err = graphite.NewGraphiteWithMetricPrefix(server, port, prefix)
+		addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("%s:%d", host, port))
 		if err != nil {
 			log.WithFields(logrus.Fields{
-				"component": component,
-				"Error":     err,
-			}).Warn("Unable to spawn graphite sender.")
+				"component":      component,
+				"Metrics client": client,
+				"Server":         host,
+				"Port":           port,
+				"Error":          err,
+			}).Warn("Error resolving tcp addr.")
 		}
+
+		m.Registry = gometrics.NewRegistry()
+
+		go graphite.Graphite(gometrics.DefaultRegistry,
+			flushInterval,
+			prefix,
+			addr)
 	default:
+		//unknown metrics client declared
 		log.WithFields(logrus.Fields{
-			"component": component,
-		}).Debug("A metrics target was not declared in the config, no metrics will be sent.")
+			"component":      component,
+			"Metrics client": client,
+		}).Debug("Unknown/no metrics client declared in config.")
 	}
 
-	log.WithFields(logrus.Fields{
-		"component":      component,
-		"Metrics target": metricsTarget,
-		"Server":         server,
-		"Port":           port,
-	}).Debug("Spawned metrics forwarder.")
-
-	for metrics := range m.Channel {
-		switch metricsTarget {
-		case "graphite":
-			go graphiteSend(gClient, metrics, log)
-		default:
-			continue
-		}
-	}
-
-	log.WithFields(logrus.Fields{
-		"component": component,
-	}).Debug("Graphite metrics channel closed, goodbye.")
-
-	return
 }
 
-func graphiteSend(client *graphite.Graphite, metrics []MetricsMsg, logger *logrus.Logger) {
+//- writes/updates metric key/vals to metricsData
+//- register and write metrics to the go-metrics registries.
+func (m *Emitter) store() {
 
-	var gMetrics []graphite.Metric
-	component := "graphiteSend"
+	//A map of metric names to go-metrics registry
+	//the keys to this map could be of type metrics.Counter/metrics.Gauge
+	goMetricsRegistry := make(map[string]interface{})
 
-	//if there are no metrics to send / no connection to graphite
-	if len(metrics) < 1 || client == nil {
-		return
-	}
-
-	for _, metric := range metrics {
-
-		//if a metric starts with '.' or has '..' its invalid, ignore.
-		if strings.HasPrefix(metric.Name, ".") || strings.Contains(metric.Name, "..") {
-			logger.WithFields(logrus.Fields{
-				"component": component,
-				"Metric":    fmt.Sprintf("%+v", metric),
-			}).Debug("Invalid metric.")
+	for {
+		data, ok := <-m.metricsChan
+		if !ok {
 			return
 		}
 
-		gMetric := graphite.Metric{
-			Name:      metric.Name,
-			Value:     metric.Value,
-			Timestamp: metric.Timestamp,
+		mIdentifier := data.mKey[0]
+		mKey := strings.Join(data.mKey, ".")
+
+		_, keyExists := m.metricsData[mIdentifier]
+		if !keyExists {
+			m.metricsData[mIdentifier] = make(map[string]float32)
 		}
 
-		gMetrics = append(gMetrics, gMetric)
+		//register the metric with go-metrics,
+		//the metric key is used as the identifier.
+		_, registryExists := goMetricsRegistry[mIdentifier]
+		if !registryExists {
+			switch data.mType {
+			case "counter":
+				c := gometrics.NewCounter()
+				gometrics.Register(mKey, c)
+				goMetricsRegistry[mKey] = c
+			case "gauge":
+				g := gometrics.NewGauge()
+				gometrics.Register(mKey, g)
+				goMetricsRegistry[mKey] = g
+			}
+		}
+
+		//based on the metric type, update the store/registry.
+		switch data.mType {
+		case "counter":
+			m.metricsData[mIdentifier][mKey] += data.mVal
+
+			//type assert metrics registry to its type - metrics.Counter
+			//type cast float32 metric value type to int64
+			goMetricsRegistry[mKey].(gometrics.Counter).Inc(
+				int64(m.metricsData[mIdentifier][mKey]))
+		case "gauge":
+			m.metricsData[mIdentifier][mKey] = data.mVal
+
+			//type assert metrics registry to its type - metrics.Gauge
+			//type cast float32 metric value type to int64
+			goMetricsRegistry[mKey].(gometrics.Gauge).Update(
+				int64(m.metricsData[mIdentifier][mKey]))
+		}
+	}
+}
+
+//Logs current metrics
+func (m *Emitter) dumpStats() {
+
+	for mSource, metrics_ := range m.metricsData {
+
+		var metricStr string
+		for k, v := range metrics_ {
+			metricStr += fmt.Sprintf("%s: %f ", k, v)
+		}
+
+		m.Logger.WithFields(logrus.Fields{
+			"data": metricStr,
+		}).Info(fmt.Sprintf("Metrics: %s", mSource))
+	}
+}
+
+//Increment counter metric
+//key = slice of strings that will be joined with "." to be used as the metric namespace
+//val = float32 metric value
+func (m *Emitter) IncrCounter(key []string, val float32) {
+
+	d := Metric{
+		mType: "counter",
+		mKey:  key,
+		mVal:  val,
 	}
 
-	logger.WithFields(logrus.Fields{
-		"component": component,
-		"Metric":    fmt.Sprintf("%+v", gMetrics),
-	}).Debug("Sending metrics...")
+	m.metricsChan <- d
+}
 
-	err := client.SendMetrics(gMetrics)
-	if err != nil {
-		logger.WithFields(logrus.Fields{
-			"component": component,
-			"Error":     err,
-		}).Debug("Unable to send metrics.")
+//Set gauge metric
+//key = slice of strings that will be joined with "." to be used as the metric namespace
+//val = float32 metric value
+func (m *Emitter) UpdateGauge(key []string, val float32) {
+
+	d := Metric{
+		mType: "gauge",
+		mKey:  key,
+		mVal:  val,
 	}
 
-	return
+	m.metricsChan <- d
+}
+
+//Measure time elapsed since invocation
+func (m *Emitter) MeasureRuntime(key []string, start time.Time) {
+
+	//convert time.Duration to miliseconds
+	elapsed := float32(time.Since(start).Seconds() * 1e3) //1e3 == 1000
+	m.UpdateGauge(key, elapsed)
+}
+
+// Any emmiter related clean up actions go here
+func (m *Emitter) Close(printStats bool) {
+	close(m.metricsChan)
+
+	if printStats {
+		m.dumpStats()
+	}
 }
