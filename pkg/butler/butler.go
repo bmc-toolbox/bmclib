@@ -16,12 +16,10 @@ package butler
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
-	"time"
 
 	"github.com/sirupsen/logrus"
 
@@ -48,7 +46,7 @@ type ButlerManager struct {
 	Config         *config.Params //bmcbutler config, cli params
 	ButlerChan     <-chan ButlerMsg
 	Log            *logrus.Logger
-	MetricsEmitter metrics.Emitter
+	MetricsEmitter *metrics.Emitter
 	SyncWG         *sync.WaitGroup
 }
 
@@ -86,7 +84,6 @@ func (bm *ButlerManager) SpawnButlers() {
 			interruptChan:  interruptChan,
 			id:             b,
 			log:            bm.Log,
-			metricsData:    make(map[string]int),
 			metricsEmitter: bm.MetricsEmitter,
 		}
 		go butlerInstance.Run()
@@ -96,6 +93,10 @@ func (bm *ButlerManager) SpawnButlers() {
 		"component": component,
 		"Count":     bm.Config.ButlersToSpawn,
 	}).Info("Spawned butlers.")
+
+	bm.MetricsEmitter.UpdateGauge(
+		[]string{"butler", "spawned"},
+		float32(bm.Config.ButlersToSpawn))
 
 	//wait until butlers are done.
 	for b > 1 {
@@ -112,7 +113,6 @@ func (bm *ButlerManager) SpawnButlers() {
 		"Count":     bm.Config.ButlersToSpawn,
 	}).Info("All butlers exited.")
 
-	close(bm.MetricsEmitter.Channel)
 }
 
 type Butler struct {
@@ -122,8 +122,7 @@ type Butler struct {
 	doneChan       chan<- int
 	interruptChan  <-chan struct{}
 	log            *logrus.Logger
-	metricsData    map[string]int
-	metricsEmitter metrics.Emitter
+	metricsEmitter *metrics.Emitter
 }
 
 func (b *Butler) myLocation(location string) bool {
@@ -143,6 +142,7 @@ func (b *Butler) Run() {
 	var err error
 	log := b.log
 	component := "Butler Run"
+	metric := b.metricsEmitter
 
 	//set bmclib logger params
 	bmclibLogger.SetFormatter(&logrus.TextFormatter{})
@@ -153,32 +153,20 @@ func (b *Butler) Run() {
 	//flag when a signal is received
 	var exitFlag bool
 
-	//set metrics send ticker
-	var metricPrefix, successMetric, failMetric string
-	metricsSendTicker := time.NewTicker(500 * time.Second)
-
 	go func() {
 		select {
-		case <-metricsSendTicker.C:
-			b.metricsEmitter.EmitMetricMap(b.metricsData)
-			for k, _ := range b.metricsData {
-				b.metricsData[k] = 0
-			}
 		case <-b.interruptChan:
 			log.WithFields(logrus.Fields{
 				"component": component,
 				"butler-id": b.id,
 			}).Debug("Butler recieved interrupt.. will exit.")
 
-			b.metricsEmitter.EmitMetricMap(b.metricsData)
 			exitFlag = true
 			return
 		}
 	}()
 
 	defer func() { b.doneChan <- b.id }()
-	defer metricsSendTicker.Stop()
-	defer b.metricsEmitter.EmitMetricMap(b.metricsData)
 
 	for {
 		msg, ok := <-b.butlerChan
@@ -190,6 +178,8 @@ func (b *Butler) Run() {
 			return
 		}
 
+		metric.IncrCounter([]string{"butler", "asset_recvd"}, 1)
+
 		//if asset has no IPAddress, we can't do anything about it
 		if msg.Asset.IpAddress == "" {
 			log.WithFields(logrus.Fields{
@@ -198,6 +188,8 @@ func (b *Butler) Run() {
 				"Serial":    msg.Asset.Serial,
 				"AssetType": msg.Asset.Type,
 			}).Debug("Asset was retrieved without any IP address info, skipped.")
+
+			metric.IncrCounter([]string{"butler", "asset_recvd_noip"}, 1)
 			continue
 		}
 
@@ -211,26 +203,11 @@ func (b *Butler) Run() {
 					"AssetType":     msg.Asset.Type,
 					"AssetLocation": msg.Asset.Location,
 				}).Debug("Butler wont manage asset based on its current location.")
+
+				metric.IncrCounter([]string{"butler", "asset_recvd_location_unmanaged"}, 1)
 				continue
 			}
 		}
-
-		//metrics to be sent out are prefixed with this string
-		// location.vendor.assetType.configure.connfail
-		// e.g: lhr4.dell.bmc.configure.success
-		metricPrefix = fmt.Sprintf("%s.%s.%s.configure", msg.Asset.Location, msg.Asset.Vendor, msg.Asset.Type)
-		successMetric = fmt.Sprintf("%s.%s", metricPrefix, "success")
-		failMetric = fmt.Sprintf("%s.%s", metricPrefix, "fail")
-
-		log.WithFields(logrus.Fields{
-			"component": component,
-			"butler-id": b.id,
-			"IP":        msg.Asset.IpAddress,
-			"Serial":    msg.Asset.Serial,
-			"AssetType": msg.Asset.Type,
-			"Vendor":    msg.Asset.Vendor, //at this point the vendor may or may not be known.
-			"Location":  msg.Asset.Location,
-		}).Info("Connecting to asset..")
 
 		switch {
 		case msg.Asset.Setup == true:
@@ -245,7 +222,11 @@ func (b *Butler) Run() {
 					"Location":  msg.Asset.Location,
 					"Error":     err,
 				}).Warn("Unable to setup asset.")
+				metric.IncrCounter([]string{"butler", "setup_fail"}, 1)
+				continue
 			}
+
+			metric.IncrCounter([]string{"butler", "setup_success"}, 1)
 			continue
 		case msg.Asset.Execute == true:
 			err = b.executeCommand(msg.AssetExecute, &msg.Asset)
@@ -259,7 +240,11 @@ func (b *Butler) Run() {
 					"Location":  msg.Asset.Location,
 					"Error":     err,
 				}).Warn("Unable Execute command(s) on asset.")
+				metric.IncrCounter([]string{"butler", "execute_fail"}, 1)
+				continue
 			}
+
+			metric.IncrCounter([]string{"butler", "execute_success"}, 1)
 			continue
 		case msg.Asset.Configure == true:
 			err = b.configureAsset(msg.AssetConfig, &msg.Asset)
@@ -274,11 +259,11 @@ func (b *Butler) Run() {
 					"Error":     err,
 				}).Warn("Unable to configure asset.")
 
-				b.metricsData[failMetric] += 1
+				metric.IncrCounter([]string{"butler", "configure_fail"}, 1)
 				continue
 			}
 
-			b.metricsData[successMetric] += 1
+			metric.IncrCounter([]string{"butler", "configure_success"}, 1)
 			continue
 		default:
 			log.WithFields(logrus.Fields{
@@ -291,5 +276,4 @@ func (b *Butler) Run() {
 			}).Warn("Unknown action request on asset.")
 		} //switch
 	} //for
-
 }
