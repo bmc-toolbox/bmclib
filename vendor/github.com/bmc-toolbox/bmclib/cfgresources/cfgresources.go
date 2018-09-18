@@ -16,6 +16,7 @@ type ResourcesConfig struct {
 	Ssl        *Ssl         `yaml:"ssl"`
 	Ntp        *Ntp         `yaml:"ntp"`
 	Supermicro *Supermicro  `yaml:"supermicro"` //supermicro specific config, example of issue #34
+	Dell       *Dell        `yaml:"dell"`
 }
 
 //Enable/Disable Virtual Mac addresses for blades in a chassis.

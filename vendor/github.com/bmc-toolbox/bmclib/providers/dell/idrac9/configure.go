@@ -8,10 +8,21 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/internal/helper"
+
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 func (i *IDrac9) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
+
+	if config == nil {
+		msg := "No config to apply."
+		log.WithFields(log.Fields{
+			"step": "ApplyCfg",
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
 	cfg := reflect.ValueOf(config).Elem()
 
 	//Each Field in ResourcesConfig struct is a ptr to a resource,
@@ -101,12 +112,128 @@ func (i *IDrac9) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 					}).Warn("applyLdapGroupParams returned error.")
 				}
 			case "Ssl":
+			case "Dell":
+				biosCfg := cfg.Field(r).Interface().(*cfgresources.Dell)
+				if biosCfg.Idrac9BiosSettings != nil {
+					err := i.applyBiosParams(biosCfg.Idrac9BiosSettings)
+					if err != nil {
+						log.WithFields(log.Fields{
+							"step":     "applyBiosCfg",
+							"resource": "Bios",
+							"IP":       i.ip,
+							"Model":    i.BmcType(),
+							"Serial":   i.Serial,
+							"Error":    err,
+						}).Warn("applyBiosParams returned error.")
+					}
+				}
 			default:
 				log.WithFields(log.Fields{
 					"step": "ApplyCfg",
 				}).Warn("Unknown resource.")
 			}
 		}
+	}
+
+	return err
+}
+
+// Applies Bios params
+func (i *IDrac9) applyBiosParams(newBiosSettings *cfgresources.Idrac9BiosSettings) (err error) {
+
+	//The bios settings that will be applied
+	toApplyBiosSettings := &BiosSettings{}
+
+	//validate config
+	validate := validator.New()
+	err = validate.Struct(newBiosSettings)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"step":  "applyBiosParams",
+			"Error": err,
+		}).Fatal("Config validation failed.")
+		return err
+	}
+
+	//GET current settings
+	currentBiosSettings, err := i.getBiosSettings()
+	if err != nil {
+		msg := "Unable to get current bios settings through redfish."
+		log.WithFields(log.Fields{
+			"IP":     i.ip,
+			"Model":  i.BmcType(),
+			"Serial": i.Serial,
+			"step":   helper.WhosCalling(),
+			"Error":  err,
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	//Compare current bios settings with our declared config.
+	if *newBiosSettings != *currentBiosSettings {
+
+		//retrieve fields that is the config to be applied
+		toApplyBiosSettings, err = diffBiosSettings(newBiosSettings, currentBiosSettings)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"IP":     i.ip,
+				"Model":  i.BmcType(),
+				"Serial": i.Serial,
+				"step":   helper.WhosCalling(),
+				"Error":  err,
+			}).Fatal("diffBiosSettings returned error.")
+		}
+
+		log.WithFields(log.Fields{
+			"IP":     i.ip,
+			"Model":  i.BmcType(),
+			"Serial": i.Serial,
+			"step":   helper.WhosCalling(),
+			"Changes (Ignore empty fields)": fmt.Sprintf("%+v", toApplyBiosSettings),
+		}).Info("Bios configuration to be applied.")
+
+		//purge any existing pending bios setting jobs
+		//or we will not be able to set any params
+		err = i.purgeJobsForBiosSettings()
+		if err != nil {
+			log.WithFields(log.Fields{
+				"step":                  "applyBiosParams",
+				"resource":              "Bios",
+				"IP":                    i.ip,
+				"Model":                 i.BmcType(),
+				"Serial":                i.Serial,
+				"Bios settings pending": err,
+			}).Warn("Unable to purge pending bios setting jobs.")
+		}
+
+		err = i.setBiosSettings(toApplyBiosSettings)
+		if err != nil {
+			msg := "setBiosAttributes returned error."
+			log.WithFields(log.Fields{
+				"IP":     i.ip,
+				"Model":  i.BmcType(),
+				"Serial": i.Serial,
+				"step":   helper.WhosCalling(),
+				"Error":  err,
+			}).Warn(msg)
+			return errors.New(msg)
+		}
+
+		log.WithFields(log.Fields{
+			"IP":     i.ip,
+			"Model":  i.BmcType(),
+			"Serial": i.Serial,
+			"step":   helper.WhosCalling(),
+		}).Info("Bios configuration update job queued in iDrac.")
+
+	} else {
+
+		log.WithFields(log.Fields{
+			"IP":     i.ip,
+			"Model":  i.BmcType(),
+			"Serial": i.Serial,
+			"step":   helper.WhosCalling(),
+		}).Info("Bios configuration is up to date.")
 	}
 
 	return err
