@@ -61,12 +61,12 @@ type MetricsParams struct {
 }
 
 type FilterParams struct {
-	Chassis  bool
-	Blade    bool
-	Discrete bool
-	All      bool
-	Serial   string //can be one or more serials separated by commas.
-	Ip       string
+	Chassis   bool
+	Blades    bool
+	Discretes bool
+	All       bool
+	Serials   string //can be one or more serials separated by commas.
+	Ips       string
 }
 
 //Config params constructor

@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+
 	//	"time"
 
 	"github.com/sirupsen/logrus"
@@ -123,17 +124,17 @@ func (d *Dora) AssetRetrieve() func() {
 	switch {
 	case d.Config.FilterParams.Chassis:
 		d.FilterAssetType = append(d.FilterAssetType, "chassis")
-	case d.Config.FilterParams.Blade:
+	case d.Config.FilterParams.Blades:
 		d.FilterAssetType = append(d.FilterAssetType, "blade")
-	case d.Config.FilterParams.Discrete:
+	case d.Config.FilterParams.Discretes:
 		d.FilterAssetType = append(d.FilterAssetType, "discrete")
-	case !d.Config.FilterParams.Chassis && !d.Config.FilterParams.Blade && !d.Config.FilterParams.Discrete:
+	case !d.Config.FilterParams.Chassis && !d.Config.FilterParams.Blades && !d.Config.FilterParams.Discretes:
 		d.FilterAssetType = []string{"chassis", "blade", "discrete"}
 	}
 
 	//Based on the filter param given, return the asset iterator method.
 	switch {
-	case d.Config.FilterParams.Serial != "":
+	case d.Config.FilterParams.Serials != "":
 		return d.AssetIterBySerial
 	default:
 		return d.AssetIter
@@ -143,7 +144,7 @@ func (d *Dora) AssetRetrieve() func() {
 
 func (d *Dora) AssetIterBySerial() {
 
-	serials := d.Config.FilterParams.Serial
+	serials := d.Config.FilterParams.Serials
 	apiUrl := d.Config.InventoryParams.ApiUrl
 
 	component := "inventory"

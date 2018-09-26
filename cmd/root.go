@@ -88,12 +88,12 @@ func init() {
 
 	//Asset filter params.
 	rootCmd.PersistentFlags().BoolVarP(&runConfig.FilterParams.All, "all", "", false, "Action all assets")
-	rootCmd.PersistentFlags().BoolVarP(&runConfig.FilterParams.Blade, "blades", "", false, "Action just Blade(s) assets")
+	rootCmd.PersistentFlags().BoolVarP(&runConfig.FilterParams.Blades, "blades", "", false, "Action just Blade(s) assets")
 	rootCmd.PersistentFlags().BoolVarP(&runConfig.FilterParams.Chassis, "chassis", "", false, "Action just Chassis assets.")
 	rootCmd.PersistentFlags().BoolVarP(&runConfig.DryRun, "dryrun", "", false, "Only log assets that will be actioned.")
-	rootCmd.PersistentFlags().BoolVarP(&runConfig.FilterParams.Discrete, "discretes", "", false, "Action just Discrete(s) assets")
-	rootCmd.PersistentFlags().StringVarP(&runConfig.FilterParams.Serial, "serials", "", "", "Serial(s) of the asset to setup config (separated by commas - no spaces).")
-	rootCmd.PersistentFlags().StringVarP(&runConfig.FilterParams.Ip, "ips", "", "", "IP Address(s) of the asset to setup config (separated by commas - no spaces).")
+	rootCmd.PersistentFlags().BoolVarP(&runConfig.FilterParams.Discretes, "discretes", "", false, "Action just Discrete(s) assets")
+	rootCmd.PersistentFlags().StringVarP(&runConfig.FilterParams.Serials, "serials", "", "", "Serial(s) of the asset to setup config (separated by commas - no spaces).")
+	rootCmd.PersistentFlags().StringVarP(&runConfig.FilterParams.Ips, "ips", "", "", "IP Address(s) of the asset to setup config (separated by commas - no spaces).")
 
 	rootCmd.PersistentFlags().BoolVarP(&runConfig.IgnoreLocation, "ignorelocation", "", false, "Action assets in all locations (ignore locations directive in config)")
 	rootCmd.PersistentFlags().IntVarP(&butlersToSpawn, "butlers", "b", 0, "Number of butlers to spawn (overide butlersToSpawn directive in config)")

@@ -59,17 +59,17 @@ func (c *Csv) AssetRetrieve() func() {
 	switch {
 	case c.Config.FilterParams.Chassis:
 		c.FilterAssetType = append(c.FilterAssetType, "chassis")
-	case c.Config.FilterParams.Blade:
+	case c.Config.FilterParams.Blades:
 		c.FilterAssetType = append(c.FilterAssetType, "blade")
-	case c.Config.FilterParams.Discrete:
+	case c.Config.FilterParams.Discretes:
 		c.FilterAssetType = append(c.FilterAssetType, "discrete")
-	case !c.Config.FilterParams.Chassis && !c.Config.FilterParams.Blade && !c.Config.FilterParams.Discrete:
+	case !c.Config.FilterParams.Chassis && !c.Config.FilterParams.Blades && !c.Config.FilterParams.Discretes:
 		c.FilterAssetType = []string{"chassis", "blade", "discrete"}
 	}
 
 	//Based on the filter param given, return the asset iterator method.
 	switch {
-	case c.Config.FilterParams.Serial != "":
+	case c.Config.FilterParams.Serials != "":
 		return c.AssetIterBySerial
 	default:
 		return c.AssetIter
@@ -82,7 +82,7 @@ func (c *Csv) AssetIterBySerial() {
 	log := c.Log
 	csvAssets := c.readCsv()
 
-	serials := c.Config.FilterParams.Serial
+	serials := c.Config.FilterParams.Serials
 	assets := make([]asset.Asset, 0)
 	for _, serial := range strings.Split(serials, ",") {
 

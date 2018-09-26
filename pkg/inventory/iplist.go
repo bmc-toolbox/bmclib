@@ -31,7 +31,7 @@ func (i *IpList) AssetRetrieve() func() {
 }
 
 func (i *IpList) AssetIter() {
-	ips := strings.Split(i.Config.FilterParams.Ip, ",")
+	ips := strings.Split(i.Config.FilterParams.Ips, ",")
 
 	assets := make([]asset.Asset, 0)
 	for _, ip := range ips {

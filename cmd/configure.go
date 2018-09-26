@@ -43,16 +43,16 @@ func validateConfigureArgs() {
 	//one of these args are required
 	if !runConfig.FilterParams.All &&
 		!runConfig.FilterParams.Chassis &&
-		!runConfig.FilterParams.Blade &&
-		!runConfig.FilterParams.Discrete &&
-		runConfig.FilterParams.Serial == "" &&
-		runConfig.FilterParams.Ip == "" {
+		!runConfig.FilterParams.Blades &&
+		!runConfig.FilterParams.Discretes &&
+		runConfig.FilterParams.Serials == "" &&
+		runConfig.FilterParams.Ips == "" {
 
-		log.Error("Expected flag missing --all/--chassis/--blade/--discrete/--serial/--ip (try --help)")
+		log.Error("Expected flag missing --all/--chassis/--blades/--discretes/--serials/--ips (try --help)")
 		os.Exit(1)
 	}
 
-	if runConfig.FilterParams.All && (runConfig.FilterParams.Serial != "" || runConfig.FilterParams.Ip != "") {
+	if runConfig.FilterParams.All && (runConfig.FilterParams.Serials != "" || runConfig.FilterParams.Ips != "") {
 		log.Error("--all --serial --ip are mutually exclusive args.")
 		os.Exit(1)
 	}

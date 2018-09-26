@@ -82,7 +82,7 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.ButlerMsg) 
 	inventorySource := runConfig.InventoryParams.Source
 
 	//if --ip was passed, set inventorySource
-	if runConfig.FilterParams.Ip != "" {
+	if runConfig.FilterParams.Ips != "" {
 		inventorySource = "iplist"
 	}
 
