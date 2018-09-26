@@ -25,7 +25,7 @@ func (n *NeedSetup) AssetRetrieve() func() {
 
 	//Based on the filter param given, return the asset iterator method.
 	switch {
-	case n.Config.FilterParams.Serial != "":
+	case n.Config.FilterParams.Serials != "":
 		return n.AssetIterBySerial
 	default:
 		return n.AssetIter
