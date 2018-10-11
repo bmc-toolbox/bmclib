@@ -7,6 +7,8 @@ import (
 
 	"github.com/sirupsen/logrus"
 
+	"github.com/bmc-toolbox/bmclogin"
+
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
 	"github.com/bmc-toolbox/bmcbutler/pkg/resource"
 	"github.com/bmc-toolbox/bmclib/devices"
@@ -32,11 +34,20 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 
 	defer metric.MeasureRuntime([]string{"butler", "configure_runtime"}, time.Now())
 
+	bmcConn := bmclogin.Params{
+		IpAddresses:     asset.IpAddresses,
+		Credentials:     b.config.Credentials,
+		CheckCredential: true,
+		Retries:         1,
+	}
+
 	//connect to the bmc/chassis bmc
-	client, err := b.setupConnection(asset, false)
+	client, loginInfo, err := bmcConn.Login()
 	if err != nil {
 		return err
 	}
+
+	asset.IpAddress = loginInfo.ActiveIpAddress
 
 	switch client.(type) {
 	case devices.Bmc:

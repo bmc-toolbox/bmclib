@@ -15,6 +15,10 @@
 package asset
 
 type Asset struct {
+	//A chassis asset may have more than one IPs,
+	//when asset is first retrieved all IPs are listed in this slice.
+	IpAddresses []string
+	//The active IP is assigned to this field once identified,
 	IpAddress string
 	Serial    string
 	Vendor    string

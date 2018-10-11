@@ -26,6 +26,7 @@ import (
 
 type Params struct {
 	ButlersToSpawn       int
+	Credentials          []map[string]string
 	BmcPrimaryUser       string
 	BmcPrimaryPassword   string
 	BmcSecondaryUser     string
@@ -137,12 +138,20 @@ func (p *Params) Load(cfgFile string) {
 	//assets in locations not in this slice are ignored.
 	p.Locations = viper.GetStringSlice("locations")
 
+	//store credentials, the way bmclogin expects them.
+	credentials := viper.GetStringMap("credentials")
+	for _, m := range credentials["accounts"].([]interface{}) {
+		for k, v := range m.(map[interface{}]interface{}) {
+			p.Credentials = append(p.Credentials, map[string]string{k.(string): v.(string)})
+		}
+
+	}
+
 	//BMC user account credentials
 	p.BmcPrimaryUser = viper.GetString("bmcPrimaryUser")
 	p.BmcPrimaryPassword = viper.GetString("bmcPrimaryPassword")
 	p.BmcSecondaryUser = viper.GetString("bmcSecondaryUser")
 	p.BmcSecondaryPassword = viper.GetString("bmcSecondaryPassword")
-
 }
 
 //Reads in vendor default credentials based on given vendor.

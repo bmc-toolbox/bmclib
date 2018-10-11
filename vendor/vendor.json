@@ -111,6 +111,12 @@
 			"revisionTime": "2018-09-17T08:58:19Z"
 		},
 		{
+			"checksumSHA1": "xGj//uSy+cUomtz5nUOjrGZK5KE=",
+			"path": "github.com/bmc-toolbox/bmclogin",
+			"revision": "32cd7c67059539b685e049cd7bba12c1bb1b0763",
+			"revisionTime": "2018-10-11T11:48:13Z"
+		},
+		{
 			"checksumSHA1": "/6H1rhQmbq8mEP29pnmLmdwBKUE=",
 			"path": "github.com/cyberdelia/go-metrics-graphite",
 			"revision": "39f87cc3b432bbb898d7c643c0e93cac2bc865ad",

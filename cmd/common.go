@@ -81,11 +81,6 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.ButlerMsg) 
 	//determine inventory to fetch asset data.
 	inventorySource := runConfig.InventoryParams.Source
 
-	//if --ip was passed, set inventorySource
-	if runConfig.FilterParams.Ips != "" {
-		inventorySource = "iplist"
-	}
-
 	//if its a setup action, point to the appropriate inventory source.
 	if runConfig.Setup {
 		inventorySource = "needSetup"

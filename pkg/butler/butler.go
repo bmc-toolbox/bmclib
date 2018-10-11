@@ -181,13 +181,13 @@ func (b *Butler) Run() {
 		metric.IncrCounter([]string{"butler", "asset_recvd"}, 1)
 
 		//if asset has no IPAddress, we can't do anything about it
-		if msg.Asset.IpAddress == "" {
+		if len(msg.Asset.IpAddresses) == 0 {
 			log.WithFields(logrus.Fields{
 				"component": component,
 				"butler-id": b.id,
 				"Serial":    msg.Asset.Serial,
 				"AssetType": msg.Asset.Type,
-			}).Debug("Asset was retrieved without any IP address info, skipped.")
+			}).Debug("Asset was recieved by butler without any IP(s) info, skipped.")
 
 			metric.IncrCounter([]string{"butler", "asset_recvd_noip"}, 1)
 			continue

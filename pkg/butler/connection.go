@@ -109,7 +109,6 @@ func (b *Butler) setupConnection(asset *asset.Asset, dontCheckCredentials bool) 
 					}
 				}
 
-				fmt.Println(">>> HERE 2")
 				//read in vendor default credentials and attempt login.
 				err = b.config.GetDefaultCredentials(asset.Vendor)
 				if err != nil {
