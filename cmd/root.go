@@ -90,6 +90,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&runConfig.FilterParams.All, "all", "", false, "Action all assets")
 	rootCmd.PersistentFlags().BoolVarP(&runConfig.FilterParams.Blades, "blades", "", false, "Action just Blade(s) assets")
 	rootCmd.PersistentFlags().BoolVarP(&runConfig.FilterParams.Chassis, "chassis", "", false, "Action just Chassis assets.")
+	rootCmd.PersistentFlags().BoolVarP(&runConfig.FilterParams.Servers, "servers", "", false, "Action just Server assets.")
 	rootCmd.PersistentFlags().BoolVarP(&runConfig.DryRun, "dryrun", "", false, "Only log assets that will be actioned.")
 	rootCmd.PersistentFlags().BoolVarP(&runConfig.FilterParams.Discretes, "discretes", "", false, "Action just Discrete(s) assets")
 	rootCmd.PersistentFlags().StringVarP(&runConfig.FilterParams.Serials, "serials", "", "", "Serial(s) of the asset to setup config (separated by commas - no spaces).")
