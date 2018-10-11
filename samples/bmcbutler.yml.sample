@@ -1,17 +1,22 @@
 locations: ['fra4', 'ams4'] 
 butlersToSpawn: 1
 bmcCfgDir: /etc/bmcbutler/cfg
-bmcPrimaryUser: Administrator
-bmcPrimaryPassword: ThisWaschangedHopefully
-bmcSecondaryUser: AnotherAdmin
-bmcSecondaryPassword: AnotherAdminPass
+credentials:
+  accounts:
+  - Administrator: "foobar1"
+  - Administrator: "hunter2"
+  - user1: "barbar"
+  - Administrator: "password"
+  - root: "calvin"
+  - ADMIN: "ADMIN"
 metrics:
-  receiver:
-    target: graphite
+  clients:
+    client: graphite
     graphite:
       host: graphite.example.foo
       port: 3002
-      prefix: foo.bar.bmc.butler
+      prefix: "foo.bar.bmc.butler"
+      flushInterval: 5m
 inventory:
   configure:
     source: csv
@@ -23,13 +28,3 @@ inventory:
       file: /etc/bmcbutler/inventory.csv
   setup:
     source: needSetup
-bmcDefaults:
-  HP:
-    user: Administrator
-    password: password
-  Dell:
-    user: root
-    password: calvin
-  Supermicro:
-    user: ADMIN
-    password: ADMIN
