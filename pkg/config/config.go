@@ -47,9 +47,10 @@ type Params struct {
 }
 
 type InventoryParams struct {
-	Source string //dora, csv
-	ApiUrl string
-	File   string
+	Source        string //dora, csv, enc
+	EncExecutable string
+	ApiUrl        string
+	File          string
 }
 
 type MetricsParams struct {
@@ -121,6 +122,8 @@ func (p *Params) Load(cfgFile string) {
 		p.InventoryParams.ApiUrl = viper.GetString("inventory.configure.dora.apiUrl")
 	case "csv":
 		p.InventoryParams.File = viper.GetString("inventory.configure.csv.file")
+	case "enc":
+		p.InventoryParams.EncExecutable = viper.GetString("inventory.configure.enc.bin")
 	}
 
 	//Butlers to spawn

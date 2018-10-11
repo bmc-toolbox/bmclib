@@ -95,6 +95,16 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.ButlerMsg) 
 	var assetRetriever func()
 
 	switch inventorySource {
+	case "enc":
+		inventoryInstance := inventory.Enc{
+			Config:         runConfig,
+			Log:            log,
+			BatchSize:      10,
+			AssetsChan:     inventoryChan,
+			MetricsEmitter: metricsEmitter,
+		}
+
+		assetRetriever = inventoryInstance.AssetRetrieve()
 	case "csv":
 		inventoryInstance := inventory.Csv{
 			Config:     runConfig,
