@@ -303,7 +303,7 @@ func (e *Enc) AssetIter() {
 	locations := strings.Join(e.Config.Locations, ",")
 	for _, assetType := range e.FilterAssetType {
 
-		var limit = 1
+		var limit = e.BatchSize
 		var offset = 0
 
 		for {
