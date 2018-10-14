@@ -30,17 +30,34 @@ type AssetAttributes struct {
 }
 
 type Attributes struct {
-	Location  string           `json:"location"`
-	IpAddress []string         `json:"ipaddress"`
-	Extras    AttributesExtras `json:"extras"`
+	Location  string            `json:"location"`
+	IpAddress []string          `json:"ipaddress"`
+	Extras    *AttributesExtras `json:"extras"`
 }
 
 type AttributesExtras struct {
-	State     string `json:"status"`
-	Company   string `json:"company"`
-	AssetType string `json:"assetType,omitempty"` //chassis or server
+	State   string `json:"status"`
+	Company string `json:"company"`
 	//if its a chassis, this would hold serials for blades in the live state
 	LiveAssets *[]string `json:"live_assets,omitempty"`
+}
+
+// Given a AttributesExtras struct,
+// return all the attributes as a map
+func (e *Enc) AttributesExtrasAsMap(attributeExtras *AttributesExtras) (extras map[string]string) {
+
+	extras = make(map[string]string)
+
+	extras["state"] = strings.ToLower(attributeExtras.State)
+	extras["company"] = strings.ToLower(attributeExtras.Company)
+
+	if attributeExtras.LiveAssets != nil {
+		extras["liveAssets"] = strings.ToLower(strings.Join(*attributeExtras.LiveAssets, ","))
+	} else {
+		extras["liveAssets"] = ""
+	}
+
+	return extras
 }
 
 //AssetRetrieve looks at c.Config.FilterParams
@@ -138,9 +155,13 @@ func (e *Enc) encQueryBySerial(serials string) (assets []asset.Asset) {
 			continue
 		}
 
-		assets = append(assets, asset.Asset{IpAddresses: attributes.IpAddress,
-			Serial:   serial,
-			Location: attributes.Location})
+		extras := e.AttributesExtrasAsMap(attributes.Extras)
+		assets = append(assets,
+			asset.Asset{IpAddresses: attributes.IpAddress,
+				Serial:   serial,
+				Location: attributes.Location,
+				Extra:    extras,
+			})
 	}
 
 	metric.IncrCounter([]string{"inventory", "assets_fetched_enc"}, float32(len(assets)))
@@ -207,9 +228,14 @@ func (e *Enc) encQueryByIp(ips string) (assets []asset.Asset) {
 			continue
 		}
 
-		assets = append(assets, asset.Asset{IpAddresses: attributes.IpAddress,
-			Serial:   serial,
-			Location: attributes.Location})
+		extras := e.AttributesExtrasAsMap(attributes.Extras)
+
+		assets = append(assets,
+			asset.Asset{IpAddresses: attributes.IpAddress,
+				Serial:   serial,
+				Location: attributes.Location,
+				Extra:    extras,
+			})
 	}
 
 	metric.IncrCounter([]string{"inventory", "assets_fetched_enc"}, float32(len(assets)))
@@ -284,10 +310,14 @@ func (e *Enc) encQueryByOffset(assetType string, offset int, limit int, location
 			continue
 		}
 
-		assets = append(assets, asset.Asset{IpAddresses: attributes.IpAddress,
-			Serial:   serial,
-			Type:     assetType,
-			Location: attributes.Location})
+		extras := e.AttributesExtrasAsMap(attributes.Extras)
+		assets = append(assets,
+			asset.Asset{IpAddresses: attributes.IpAddress,
+				Serial:   serial,
+				Type:     assetType,
+				Location: attributes.Location,
+				Extra:    extras,
+			})
 	}
 
 	metric.IncrCounter([]string{"inventory", "assets_fetched_enc"}, float32(len(assets)))
