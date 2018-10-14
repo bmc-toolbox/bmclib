@@ -210,24 +210,6 @@ func (b *Butler) Run() {
 		}
 
 		switch {
-		case msg.Asset.Setup == true:
-			err = b.setupAsset(msg.AssetSetup, &msg.Asset)
-			if err != nil {
-				log.WithFields(logrus.Fields{
-					"component": component,
-					"butler-id": b.id,
-					"Serial":    msg.Asset.Serial,
-					"AssetType": msg.Asset.Type,
-					"Vendor":    msg.Asset.Vendor, //at this point the vendor may or may not be known.
-					"Location":  msg.Asset.Location,
-					"Error":     err,
-				}).Warn("Unable to setup asset.")
-				metric.IncrCounter([]string{"butler", "setup_fail"}, 1)
-				continue
-			}
-
-			metric.IncrCounter([]string{"butler", "setup_success"}, 1)
-			continue
 		case msg.Asset.Execute == true:
 			err = b.executeCommand(msg.AssetExecute, &msg.Asset)
 			if err != nil {

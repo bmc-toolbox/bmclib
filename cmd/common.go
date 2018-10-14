@@ -81,11 +81,6 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.ButlerMsg) 
 	//determine inventory to fetch asset data.
 	inventorySource := runConfig.InventoryParams.Source
 
-	//if its a setup action, point to the appropriate inventory source.
-	if runConfig.Setup {
-		inventorySource = "needSetup"
-	}
-
 	//based on inventory source, invoke assetRetriever
 	var assetRetriever func()
 
@@ -123,15 +118,6 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.ButlerMsg) 
 			Channel:   inventoryChan,
 			Config:    runConfig,
 			BatchSize: 1,
-			Log:       log,
-		}
-
-		assetRetriever = inventoryInstance.AssetRetrieve()
-	case "needSetup":
-		inventoryInstance := inventory.NeedSetup{
-			Channel:   inventoryChan,
-			Config:    runConfig,
-			BatchSize: 10,
 			Log:       log,
 		}
 

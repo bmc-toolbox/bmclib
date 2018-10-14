@@ -100,26 +100,3 @@ func (r *Resource) LoadConfigResources(yamlTemplate []byte) (config *cfgresource
 
 	return config
 }
-
-// Setup resources are one time setup parameters,
-// it may involve resetting/power cycling various dependencies,
-//  - e.g blades in a chassis that need to be power cycled
-//    if the flex addresses have been enabled/disabled.
-// Given a yaml template this method gets the template rendered and returns Unmarshalled yaml.
-func (r *Resource) LoadSetupResources(yamlTemplate []byte) (config *cfgresources.ResourcesSetup) {
-
-	component := "LoadSetupResources"
-	log := r.Log
-
-	yamlData := r.RenderYamlTemplate(yamlTemplate)
-
-	err := yaml.Unmarshal(yamlData, &config)
-	if err != nil {
-		log.WithFields(logrus.Fields{
-			"component": component,
-			"error":     err,
-		}).Fatal("Unable to Unmarshal setup resources template.")
-	}
-
-	return config
-}
