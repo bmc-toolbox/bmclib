@@ -23,12 +23,14 @@ import (
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 
+	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
+
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 )
 
 type Resource struct {
-	Log    *logrus.Logger
-	Vendor string
+	Log   *logrus.Logger
+	Asset *asset.Asset
 }
 
 // Reads the given config .yml file, returns it as a slice of bytes.
@@ -58,17 +60,22 @@ func (r *Resource) RenderYamlTemplate(yamlTemplate []byte) (yamlData []byte) {
 	//render any templated data
 	ctx := plush.NewContext()
 
-	//assign variables that may be used in the template.
-	ctx.Set("vendor", strings.ToLower(r.Vendor))
+	//assign variables that are exposed in the template.
+	ctx.Set("vendor", strings.ToLower(r.Asset.Vendor))
+	ctx.Set("location", strings.ToLower(r.Asset.Location))
+	ctx.Set("assetType", strings.ToLower(r.Asset.Type))
+	ctx.Set("model", strings.ToLower(r.Asset.Model))
+	ctx.Set("serial", strings.ToLower(r.Asset.Serial))
+	ctx.Set("ipaddress", strings.ToLower(r.Asset.IpAddress))
+	ctx.Set("extra", r.Asset.Extra)
 
 	//render, plush is awesome!
 	s, err := plush.Render(string(yamlTemplate), ctx)
 	if err != nil {
 		log.WithFields(logrus.Fields{
-			"component":    component,
-			"yamlTemplate": yamlTemplate,
-			"error":        err,
-		}).Fatal("Error rendering yaml template.")
+			"component": component,
+			"error":     err,
+		}).Fatal("Error rendering configuration yml template.")
 	}
 
 	return []byte(s)
