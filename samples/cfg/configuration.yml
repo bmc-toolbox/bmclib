@@ -63,6 +63,8 @@ license:
   key: ASDFKLAMDNARALKNBA123
 <% } %>
 
+
+<%= if ( vendor == "dell" ) { %>
 #set dell idrac9 specific params
 #in this case we set PXE bios settings.
 dell:
@@ -71,3 +73,19 @@ dell:
     PxeDev2EnDis: Disabled
     PxeDev3EnDis: Disabled
     PxeDev4EnDis: Disabled
+<% } %>
+
+#Chassis setup configuration to be declared only if various asset attributes match.
+<%= if ( assetType == "chassis" &&
+	 extra["company"] == "skynet" &&
+         extra["state"] == "needs-setup" &&
+         extra["liveAssets"] == "" ) { %>
+setupChassis:
+  ipmiOverLan: 
+    enable: true     #applies to all blades in a chassis
+  flexAddress: 
+    enable: false    #applies to all blades in a chassis
+  dynamicPower: 
+    enable: false    #Dell (M1000e) calls this DPSE (dynamic PSU engagement)
+                     #HP (C7000) Dynamic Power
+<% } %>

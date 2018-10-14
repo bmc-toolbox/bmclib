@@ -3,7 +3,7 @@
 Bmcbutler is a tool to configure BMCs using [bmclib](https://github.com/ncode/bmclib),
 assets - BMCs to configure are read from an inventory source defined in `bmcbutler.yml` configuration file.
 
-Multiple butler processes are spawned to configure BMCs based on configuration declared in [configuration.yml sample](../master/samples/cfg/configuration.yml), [setup.yml sample](../master/samples/cfg/setup.yml).
+Multiple butler processes are spawned to configure BMCs based on configuration declared in [configuration.yml sample](../master/cfg/configuration.yml)
 
 For supported BMCs see the bmclib page.
 
@@ -25,10 +25,8 @@ Setup configuration Bmcbutler requires to run.
 # create a configuration directory for ~/.bmcbutler
 mkdir ~/.bmcbutler/
 ```
-
 Copy the sample config into ~/.bmcbutler/
 [bmcbutler.yml sample](../master/samples/bmcbutler.yml.sample)
-
 
 ###### BMC configuration
 Configuration to be applied to BMCs.
@@ -36,18 +34,15 @@ Configuration to be applied to BMCs.
 BMC configuration is split into two types,
 
 * configuration - configuration to be applied periodically.
-* setup - one time setup configuration.
 
 ```
 # create a directory for BMC config
 mkdir ~/.bmcbutler/cfg
 ```
+add the BMC yaml config definitions in there, for sample config see [configuration.yml sample](../master/cfg/configuration.yml)
 
-Create a directory /etc/bmcbutler/cfg/
-add the BMC yaml config definitions in there,
-
-[configuration.yml sample](../master/samples/cfg/configuration.yml)
-[setup.yml sample](../master/samples/cfg/setup.yml)
+###### bmc configuration templating
+configuration.yml supports templating, for details see [configTemplating](../master/docs/configTemplating.md)
 
 ###### inventory
 Bmcbutler was written with the intent of sourcing inventory assets and configuring their bmcs,
@@ -56,6 +51,7 @@ a csv inventory example is provided to play with.
 [inventory.csv sample](../master/samples/inventory.csv.sample)
 
 The 'inventory' parameter points Bmcbutler to the inventory source.
+
 
 ##### Run
 
