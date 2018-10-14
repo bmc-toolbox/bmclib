@@ -23,7 +23,7 @@ type Asset struct {
 	Serial    string
 	Vendor    string
 	Model     string
-	Type      string //blade or chassis
+	Type      string //server or chassis
 	Location  string
 	Setup     bool              //If setup is set, butlers will setup the asset.
 	Configure bool              //If setup is set, butlers will configure the asset.

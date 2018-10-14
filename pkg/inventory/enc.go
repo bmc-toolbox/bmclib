@@ -109,6 +109,26 @@ func (e *Enc) ExecCmd(args []string) (out []byte, err error) {
 	return out, err
 }
 
+func (e *Enc) SetChassisInstalled(serials string) {
+
+	log := e.Log
+	component := "SetChassisInstalled"
+
+	//assetlookup inventory --set-chassis-installed FOO123,BAR123
+	cmdArgs := []string{"inventory", "--set-chassis-installed", serials}
+
+	encBin := e.Config.InventoryParams.EncExecutable
+	out, err := e.ExecCmd(cmdArgs)
+	if err != nil {
+		log.WithFields(logrus.Fields{
+			"component": component,
+			"error":     err,
+			"cmd":       fmt.Sprintf("%s %s", encBin, strings.Join(cmdArgs, " ")),
+			"output":    fmt.Sprintf("%s", out),
+		}).Warn("Command to update chassis state returned error.")
+	}
+}
+
 func (e *Enc) encQueryBySerial(serials string) (assets []asset.Asset) {
 
 	log := e.Log
