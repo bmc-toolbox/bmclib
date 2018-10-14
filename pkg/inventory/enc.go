@@ -154,6 +154,15 @@ func (e *Enc) encQueryByIp(ips string) (assets []asset.Asset) {
 	metric := e.MetricsEmitter
 	component := "encQueryByIp"
 
+	// if no attributes can be recieved we return assets objs
+	// populate and return slice of assets with no attributes except ips.
+	populateAssetsWithNoAttributes := func() {
+		ipList := strings.Split(",", ips)
+		for _, ip := range ipList {
+			assets = append(assets, asset.Asset{IpAddresses: []string{ip}})
+		}
+	}
+
 	//assetlookup enc --serials 192.168.1.1,192.168.1.2
 	cmdArgs := []string{"enc", "--ips", ips}
 
@@ -165,7 +174,10 @@ func (e *Enc) encQueryByIp(ips string) (assets []asset.Asset) {
 			"error":     err,
 			"cmd":       fmt.Sprintf("%s %s", encBin, strings.Join(cmdArgs, " ")),
 			"output":    fmt.Sprintf("%s", out),
-		}).Fatal("Inventory query failed, lookup command returned error.")
+		}).Warn("Inventory query failed, lookup command returned error.")
+
+		populateAssetsWithNoAttributes()
+		return assets
 	}
 
 	cmdResp := AssetAttributes{}
@@ -185,11 +197,7 @@ func (e *Enc) encQueryByIp(ips string) (assets []asset.Asset) {
 			"IP(s)":     ips,
 		}).Debug("No assets returned by inventory for given IP(s).")
 
-		ipList := strings.Split(",", ips)
-		for _, ip := range ipList {
-			assets = append(assets, asset.Asset{IpAddresses: []string{ip}})
-		}
-
+		populateAssetsWithNoAttributes()
 		return assets
 	}
 
