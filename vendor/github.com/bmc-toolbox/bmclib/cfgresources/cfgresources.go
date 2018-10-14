@@ -1,22 +1,23 @@
 package cfgresources
 
-type ResourcesSetup struct {
+type SetupChassis struct {
 	FlexAddress  *flexAddress  `yaml:"flexAddress"`
 	IpmiOverLan  *ipmiOverLan  `yaml:"ipmiOverLan"`
 	DynamicPower *dynamicPower `yaml:"dynamicPower"`
 }
 
 type ResourcesConfig struct {
-	Ldap       *Ldap        `yaml:"ldap"`
-	LdapGroup  []*LdapGroup `yaml:"ldapGroup"`
-	License    *License     `yaml:"license"`
-	Network    *Network     `yaml:"network"`
-	Syslog     *Syslog      `yaml:"syslog"`
-	User       []*User      `yaml:"user"`
-	Ssl        *Ssl         `yaml:"ssl"`
-	Ntp        *Ntp         `yaml:"ntp"`
-	Supermicro *Supermicro  `yaml:"supermicro"` //supermicro specific config, example of issue #34
-	Dell       *Dell        `yaml:"dell"`
+	Ldap         *Ldap         `yaml:"ldap"`
+	LdapGroup    []*LdapGroup  `yaml:"ldapGroup"`
+	License      *License      `yaml:"license"`
+	Network      *Network      `yaml:"network"`
+	Syslog       *Syslog       `yaml:"syslog"`
+	User         []*User       `yaml:"user"`
+	Ssl          *Ssl          `yaml:"ssl"`
+	Ntp          *Ntp          `yaml:"ntp"`
+	Supermicro   *Supermicro   `yaml:"supermicro"` //supermicro specific config, example of issue #34
+	Dell         *Dell         `yaml:"dell"`
+	SetupChassis *SetupChassis `yaml:"setupChassis"`
 }
 
 //Enable/Disable Virtual Mac addresses for blades in a chassis.
