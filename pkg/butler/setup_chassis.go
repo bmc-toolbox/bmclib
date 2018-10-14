@@ -7,27 +7,43 @@ import (
 	"time"
 
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
-	"github.com/bmc-toolbox/bmcbutler/pkg/resource"
+	"github.com/bmc-toolbox/bmcbutler/pkg/config"
+	"github.com/bmc-toolbox/bmcbutler/pkg/inventory"
+	"github.com/bmc-toolbox/bmcbutler/pkg/metrics"
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/sirupsen/logrus"
 )
 
-type SetupAction struct {
-	Asset *asset.Asset
-	Id    int
-	Log   *logrus.Logger
+type SetupChassis struct {
+	Asset          *asset.Asset
+	Config         *config.Params //bmcbutler config, cli params
+	Chassis        devices.BmcChassis
+	AssetConfig    *cfgresources.SetupChassis
+	MetricsEmitter *metrics.Emitter
+	Id             int
+	Log            *logrus.Logger
 }
 
-func (b *Butler) setupAsset(config []byte, asset *asset.Asset) (err error) {
+func (b *Butler) SetupChassis(assetConfig *cfgresources.SetupChassis, asset *asset.Asset, connection devices.BmcChassis) (err error) {
+
 	log := b.log
-	component := "setupAsset"
+	component := "setupChassis"
 	metric := b.metricsEmitter
 
-	defer metric.MeasureRuntime([]string{"butler", "configure_runtime"}, time.Now())
+	defer metric.MeasureRuntime([]string{"butler", "setupChassis_runtime"}, time.Now())
 
-	setup := SetupAction{Log: log, Asset: asset, Id: b.id}
+	chassis := SetupChassis{
+		Log:            log,
+		Config:         b.config,
+		MetricsEmitter: b.metricsEmitter,
+		Asset:          asset,
+		AssetConfig:    assetConfig,
+		Id:             b.id,
+		Chassis:        connection,
+	}
+
 	if b.config.DryRun {
 		log.WithFields(logrus.Fields{
 			"component": component,
@@ -37,45 +53,35 @@ func (b *Butler) setupAsset(config []byte, asset *asset.Asset) (err error) {
 		return nil
 	}
 
-	//connect to the bmc/chassis bmc
-	client, err := b.setupConnection(asset, false)
-	if err != nil {
-		return err
-	}
+	log.WithFields(logrus.Fields{
+		"component": component,
+		"butler-id": b.id,
+		"Asset":     fmt.Sprintf("%+v", asset),
+	}).Info("Chassis asset to be applied setup configuration.")
 
-	switch deviceType := client.(type) {
-	case devices.Bmc:
-		log.Error("Setup not implemented for BMCs ", deviceType)
-	case devices.BmcChassis:
-		chassis := client.(devices.BmcChassis)
-		//Setup a resource instance
-		//Get any templated values in the config rendered
-		resourceInstance := resource.Resource{Log: log, Vendor: asset.Vendor}
-
-		//rendered config is a *cfgresources.ResourcesSetup type
-		renderedConfig := resourceInstance.LoadSetupResources(config)
-
-		//if a chassis was setup successfully,
-		//call some post setup actions.
-		if setup.Chassis(chassis, renderedConfig) == true {
-			setup.Post(asset)
-		}
-
-		chassis.Close()
-	default:
-		log.WithFields(logrus.Fields{
-			"component":   component,
-			"butler-id":   b.id,
-			"Device type": fmt.Sprintf("%T", client),
-			"Asset":       fmt.Sprintf("%+v", asset),
-		}).Error("Unknown device type.")
-		return
+	if chassis.applyConfig() == true {
+		chassis.Post(asset)
 	}
 
 	return
 }
 
-func (s *SetupAction) Chassis(chassis devices.BmcChassis, config *cfgresources.ResourcesSetup) (configured bool) {
+//Actions to be taken once a chassis was setup successfully.
+func (s *SetupChassis) Post(asset *asset.Asset) {
+
+	log := s.Log
+	enc := inventory.Enc{
+		Config:         s.Config,
+		Log:            log,
+		MetricsEmitter: s.MetricsEmitter,
+	}
+
+	enc.SetChassisInstalled(asset.Serial)
+
+	return
+}
+
+func (s *SetupChassis) applyConfig() (configured bool) {
 
 	log := s.Log
 	component := "setupChassis"
@@ -87,7 +93,7 @@ func (s *SetupAction) Chassis(chassis devices.BmcChassis, config *cfgresources.R
 		"Asset":     fmt.Sprintf("%+v", s.Asset),
 	}).Info("Running setup actions on chassis..")
 
-	cfg := reflect.ValueOf(config).Elem()
+	cfg := reflect.ValueOf(s.AssetConfig).Elem()
 	for r := 0; r < cfg.NumField(); r++ {
 		if cfg.Field(r).Pointer() == 0 {
 			continue
@@ -95,7 +101,7 @@ func (s *SetupAction) Chassis(chassis devices.BmcChassis, config *cfgresources.R
 		resourceName := cfg.Type().Field(r).Name
 		switch resourceName {
 		case "FlexAddress":
-			err := s.setFlexAddressState(chassis, config.FlexAddress.Enable)
+			err := s.setFlexAddressState(s.Chassis, s.AssetConfig.FlexAddress.Enable)
 			if err != nil {
 				configured = false
 				log.WithFields(logrus.Fields{
@@ -106,7 +112,7 @@ func (s *SetupAction) Chassis(chassis devices.BmcChassis, config *cfgresources.R
 				}).Warn("Failed to update FlexAddressState.")
 			}
 		case "DynamicPower":
-			err := s.setDynamicPower(chassis, config.DynamicPower.Enable)
+			err := s.setDynamicPower(s.Chassis, s.AssetConfig.DynamicPower.Enable)
 			if err != nil {
 				configured = false
 				log.WithFields(logrus.Fields{
@@ -124,7 +130,7 @@ func (s *SetupAction) Chassis(chassis devices.BmcChassis, config *cfgresources.R
 	return configured
 }
 
-func (s *SetupAction) setDynamicPower(chassis devices.BmcChassis, enable bool) (err error) {
+func (s *SetupChassis) setDynamicPower(chassis devices.BmcChassis, enable bool) (err error) {
 	log := s.Log
 	component := "setDynamicPower"
 	_, err = chassis.SetDynamicPower(enable)
@@ -148,7 +154,7 @@ func (s *SetupAction) setDynamicPower(chassis devices.BmcChassis, enable bool) (
 
 }
 
-func (s *SetupAction) setIpmiOverLan(chassis devices.BmcChassis, enable bool) (err error) {
+func (s *SetupChassis) setIpmiOverLan(chassis devices.BmcChassis, enable bool) (err error) {
 	log := s.Log
 	component := "setIpmiOverLan"
 
@@ -220,7 +226,7 @@ func (s *SetupAction) setIpmiOverLan(chassis devices.BmcChassis, enable bool) (e
 
 // Enables/ Disables FlexAddress status for each blade in a chassis.
 // Each blade is powered down, flex state updated, powered up
-func (s *SetupAction) setFlexAddressState(chassis devices.BmcChassis, enable bool) (err error) {
+func (s *SetupChassis) setFlexAddressState(chassis devices.BmcChassis, enable bool) (err error) {
 
 	log := s.Log
 	component := "setFlexAddressState"

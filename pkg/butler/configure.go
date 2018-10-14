@@ -54,11 +54,13 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 
 		bmc := client.(devices.Bmc)
 
+		asset.Type = "server"
 		asset.Model = bmc.BmcType()
+		asset.Vendor = bmc.Vendor()
 
 		//Setup a resource instance
 		//Get any templated values in the asset config rendered
-		resourceInstance := resource.Resource{Log: log, Vendor: asset.Vendor}
+		resourceInstance := resource.Resource{Log: log, Asset: asset}
 		//rendered config is a *cfgresources.ResourcesConfig type
 		renderedConfig := resourceInstance.LoadConfigResources(config)
 
@@ -74,11 +76,22 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 	case devices.BmcChassis:
 		chassis := client.(devices.BmcChassis)
 
+		asset.Type = "chassis"
 		asset.Model = chassis.BmcType()
+		asset.Vendor = chassis.Vendor()
+
 		//Setup a resource instance
 		//Get any templated values in the asset config rendered
-		resourceInstance := resource.Resource{Log: log, Vendor: asset.Vendor}
+		resourceInstance := resource.Resource{Log: log, Asset: asset}
+
 		renderedConfig := resourceInstance.LoadConfigResources(config)
+
+		if renderedConfig.SetupChassis != nil {
+			b.SetupChassis(renderedConfig.SetupChassis, asset, chassis)
+
+			//to prevent chassis.ApplyCfg() from carrying out this setup action.
+			renderedConfig.SetupChassis = nil
+		}
 
 		chassis.ApplyCfg(renderedConfig)
 		log.WithFields(logrus.Fields{
