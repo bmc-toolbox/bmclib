@@ -130,7 +130,7 @@ func (i *IDrac9) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 			default:
 				log.WithFields(log.Fields{
 					"step": "ApplyCfg",
-				}).Warn("Unknown resource.")
+				}).Debug("Unknown resource.")
 			}
 		}
 	}
@@ -185,10 +185,10 @@ func (i *IDrac9) applyBiosParams(newBiosSettings *cfgresources.Idrac9BiosSetting
 		}
 
 		log.WithFields(log.Fields{
-			"IP":     i.ip,
-			"Model":  i.BmcType(),
-			"Serial": i.Serial,
-			"step":   helper.WhosCalling(),
+			"IP":                            i.ip,
+			"Model":                         i.BmcType(),
+			"Serial":                        i.Serial,
+			"step":                          helper.WhosCalling(),
 			"Changes (Ignore empty fields)": fmt.Sprintf("%+v", toApplyBiosSettings),
 		}).Info("Bios configuration to be applied.")
 

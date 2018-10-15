@@ -155,7 +155,7 @@ func (i *IDrac9) purgeJob(jobId string) (err error) {
 		return errors.New("Invalid Job ID given, Job IDs should be prefixed with JID_..")
 	}
 
-	endpoint := fmt.Sprintf("%s/%s", "redfish/v1/Managers/iDRAC.Embedded.1/Jobs/", jobId)
+	endpoint := fmt.Sprintf("%s/%s", "redfish/v1/Managers/iDRAC.Embedded.1/Jobs", jobId)
 
 	statusCode, _, err := i.queryRedfish("DELETE", endpoint, nil)
 	if err != nil || statusCode != 200 {

@@ -121,9 +121,7 @@ func (m *M1000e) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 			default:
 				log.WithFields(log.Fields{
 					"step": "ApplyCfg",
-				}).Warn("Unknown resource.")
-				//fmt.Printf("%v\n", cfg.Field(r))
-
+				}).Debug("Unknown resource.")
 			}
 		}
 	}

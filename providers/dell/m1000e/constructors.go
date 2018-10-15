@@ -160,7 +160,7 @@ func (m *M1000e) newLdapRoleCfg(cfg *cfgresources.LdapGroup, roleId int) (ldapAr
 		return ldapArgCfg, errors.New(msg)
 	}
 
-	if cfg.GroupBaseDn == "" {
+	if cfg.GroupBaseDn == "" && cfg.Enable {
 		msg := "Ldap resource parameter GroupBaseDn required but not declared."
 		log.WithFields(log.Fields{
 			"Role": cfg.Role,
