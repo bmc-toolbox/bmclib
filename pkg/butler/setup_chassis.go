@@ -123,6 +123,17 @@ func (s *SetupChassis) applyConfig() (configured bool) {
 					"Error":     err,
 				}).Warn("Failed to update Dynamic Power state.")
 			}
+		case "BladesPower":
+			err := s.setBladesPower(s.Chassis, s.AssetConfig.BladesPower.Enable)
+			if err != nil {
+				configured = false
+				log.WithFields(logrus.Fields{
+					"component": component,
+					"butler-id": s.Id,
+					"Asset":     fmt.Sprintf("%+v", s.Asset),
+					"Error":     err,
+				}).Warn("Failed to power up all blades in chassis.")
+			}
 		case "hostname":
 		default:
 		}
@@ -383,6 +394,87 @@ func (s *SetupChassis) setFlexAddressState(chassis devices.BmcChassis, enable bo
 		"butler-id": s.Id,
 		"Asset":     fmt.Sprintf("%+v", s.Asset),
 	}).Info("FlexAddress config applied successfully.")
+
+	return err
+}
+
+// Powers up/down blades as defined in config.
+func (s *SetupChassis) setBladesPower(chassis devices.BmcChassis, powerEnable bool) (err error) {
+
+	log := s.Log
+	component := "setBladesPower"
+
+	//retrieve list of blades in chassis
+	blades, err := chassis.Blades()
+	if err != nil {
+		msg := "Unable to list blades for chassis."
+		log.WithFields(logrus.Fields{
+			"component": component,
+			"butler-id": s.Id,
+			"Asset":     fmt.Sprintf("%+v", s.Asset),
+			"Error":     err,
+		}).Error(msg)
+		return errors.New(msg)
+	}
+
+	for _, blade := range blades {
+
+		bladeIsPoweredOn, _ := chassis.IsOnBlade(blade.BladePosition)
+
+		if bladeIsPoweredOn != powerEnable {
+			if powerEnable == true {
+				_, err = chassis.PowerOnBlade(blade.BladePosition)
+				if err != nil {
+					msg := "Unable power up blade."
+					log.WithFields(logrus.Fields{
+						"component":      component,
+						"butler-id":      s.Id,
+						"Blade Serial":   blade.Serial,
+						"Blade Position": blade.BladePosition,
+						"Error":          err,
+						"Asset":          fmt.Sprintf("%+v", s.Asset),
+					}).Warn(msg)
+					return errors.New(msg)
+				}
+
+				log.WithFields(logrus.Fields{
+					"component":      component,
+					"butler-id":      s.Id,
+					"Blade Serial":   blade.Serial,
+					"Blade Position": blade.BladePosition,
+				}).Info("Set blade power state on.")
+			}
+
+			if powerEnable == false {
+				chassis.PowerOffBlade(blade.BladePosition)
+				if err != nil {
+					msg := "Unable power down blade."
+					log.WithFields(logrus.Fields{
+						"component":      component,
+						"butler-id":      s.Id,
+						"Blade Serial":   blade.Serial,
+						"Blade Position": blade.BladePosition,
+						"Error":          err,
+						"Asset":          fmt.Sprintf("%+v", s.Asset),
+					}).Warn(msg)
+					return errors.New(msg)
+				}
+
+				log.WithFields(logrus.Fields{
+					"component":      component,
+					"butler-id":      s.Id,
+					"Blade Serial":   blade.Serial,
+					"Blade Position": blade.BladePosition,
+				}).Info("Set blade power state off.")
+			}
+		}
+	}
+
+	log.WithFields(logrus.Fields{
+		"component": component,
+		"butler-id": s.Id,
+		"Asset":     fmt.Sprintf("%+v", s.Asset),
+	}).Info("BladesPower config applied successfully.")
 
 	return err
 }
