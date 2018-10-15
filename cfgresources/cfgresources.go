@@ -4,6 +4,7 @@ type SetupChassis struct {
 	FlexAddress  *flexAddress  `yaml:"flexAddress"`
 	IpmiOverLan  *ipmiOverLan  `yaml:"ipmiOverLan"`
 	DynamicPower *dynamicPower `yaml:"dynamicPower"`
+	BladesPower  *bladesPower  `yaml:"bladesPower"`
 }
 
 type ResourcesConfig struct {
@@ -35,6 +36,11 @@ type ipmiOverLan struct {
 //'Dynamic Power' in HP C7000 Jargon.
 //'DPSE' (dynamic PSU engagement) in M1000e Dell jargon.
 type dynamicPower struct {
+	Enable bool `yaml:"enable"`
+}
+
+// Ensure power state on all blades in chassis.
+type bladesPower struct {
 	Enable bool `yaml:"enable"`
 }
 
