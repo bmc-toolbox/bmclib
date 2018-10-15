@@ -160,7 +160,7 @@ func (s *SupermicroX10) ApplyCfg(config *cfgresources.ResourcesConfig) (err erro
 				log.WithFields(log.Fields{
 					"step":     "ApplyCfg",
 					"Resource": resourceName,
-				}).Warn("Unknown resource definition.")
+				}).Debug("Unknown resource definition.")
 			}
 		}
 	}
@@ -483,6 +483,10 @@ func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*
 	//since supermicro can work with just one Searchbase, we go with the 'user' role group
 	for _, group := range cfgGroup {
 
+		if !group.Enable {
+			continue
+		}
+
 		if group.Role == "" {
 			msg := "Ldap resource parameter Role required but not declared."
 			log.WithFields(log.Fields{
@@ -508,8 +512,9 @@ func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*
 		if group.GroupBaseDn == "" {
 			msg := "Ldap resource parameter GroupBaseDn required but not declared."
 			log.WithFields(log.Fields{
-				"Role": group.Role,
-				"step": helper.WhosCalling(),
+				"Role":  group.Role,
+				"Group": group.Group,
+				"step":  helper.WhosCalling(),
 			}).Warn(msg)
 			return errors.New(msg)
 		}

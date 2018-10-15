@@ -120,7 +120,7 @@ func (i *Ilo) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 				log.WithFields(log.Fields{
 					"step":     "ApplyCfg",
 					"resource": resourceName,
-				}).Warn("Unknown resource definition.")
+				}).Debug("Unknown resource definition.")
 			}
 		}
 	}
