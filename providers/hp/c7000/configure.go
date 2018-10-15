@@ -98,7 +98,7 @@ func (c *C7000) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 				log.WithFields(log.Fields{
 					"step":     "ApplyCfg",
 					"resource": resourceName,
-				}).Warn("Unknown resource.")
+				}).Debug("Unknown resource.")
 			}
 		}
 	}
