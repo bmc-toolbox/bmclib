@@ -63,6 +63,9 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		resourceInstance := resource.Resource{Log: log, Asset: asset}
 		//rendered config is a *cfgresources.ResourcesConfig type
 		renderedConfig := resourceInstance.LoadConfigResources(config)
+		if renderedConfig == nil {
+			return errors.New("No BMC configuration to be applied.")
+		}
 
 		// Apply configuration
 		bmc.ApplyCfg(renderedConfig)
@@ -85,6 +88,9 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		resourceInstance := resource.Resource{Log: log, Asset: asset}
 
 		renderedConfig := resourceInstance.LoadConfigResources(config)
+		if renderedConfig == nil {
+			return errors.New("No BMC configuration to be applied.")
+		}
 
 		if renderedConfig.SetupChassis != nil {
 			b.SetupChassis(renderedConfig.SetupChassis, asset, chassis)
