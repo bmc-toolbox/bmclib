@@ -59,6 +59,7 @@ func (b *Butler) SetupChassis(assetConfig *cfgresources.SetupChassis, asset *ass
 		"Asset":     fmt.Sprintf("%+v", asset),
 	}).Info("Chassis asset to be applied setup configuration.")
 
+	//if chassis setup is done successfully invoke post action.
 	if chassis.applyConfig() == true {
 		chassis.Post(asset)
 	}
@@ -253,6 +254,8 @@ func (s *SetupChassis) setFlexAddressState(chassis devices.BmcChassis, enable bo
 				"butler-id":      s.Id,
 				"Blade Serial":   blade.Serial,
 				"Blade Position": blade.BladePosition,
+				"Current state":  blade.FlexAddressEnabled,
+				"Expected state": enable,
 			}).Info("Disabling FlexAddress on blade.")
 
 			isPoweredOn, err := chassis.IsOnBlade(blade.BladePosition)
@@ -287,7 +290,7 @@ func (s *SetupChassis) setFlexAddressState(chassis devices.BmcChassis, enable bo
 			}
 
 			//give it a few seconds to change the flex state
-			time.Sleep(5 * time.Second)
+			time.Sleep(10 * time.Second)
 
 			chassis.PowerOnBlade(blade.BladePosition)
 			if err != nil {
@@ -310,6 +313,8 @@ func (s *SetupChassis) setFlexAddressState(chassis devices.BmcChassis, enable bo
 				"butler-id":      s.Id,
 				"Blade Serial":   blade.Serial,
 				"Blade Position": blade.BladePosition,
+				"Current state":  blade.FlexAddressEnabled,
+				"Expected state": enable,
 			}).Info("Enabling FlexAddress on blade.")
 
 			isPoweredOn, err := chassis.IsOnBlade(blade.BladePosition)
@@ -324,12 +329,14 @@ func (s *SetupChassis) setFlexAddressState(chassis devices.BmcChassis, enable bo
 
 				_, err = chassis.PowerOffBlade(blade.BladePosition)
 				if err != nil {
-					msg := "Unable to disable FlexAddress - blade power off failed."
+					msg := "Unable to enable FlexAddress - blade power off failed."
 					log.WithFields(logrus.Fields{
-						"component": component,
-						"butler-id": s.Id,
-						"Asset":     fmt.Sprintf("%+v", s.Asset),
-						"Error":     err,
+						"component":      component,
+						"butler-id":      s.Id,
+						"Blade Serial":   blade.Serial,
+						"Blade Position": blade.BladePosition,
+						"Asset":          fmt.Sprintf("%+v", s.Asset),
+						"Error":          err,
 					}).Warn(msg)
 					return errors.New(msg)
 				}
@@ -342,20 +349,22 @@ func (s *SetupChassis) setFlexAddressState(chassis devices.BmcChassis, enable bo
 			if err != nil {
 				msg := "Unable to enable FlexAddress - action failed."
 				log.WithFields(logrus.Fields{
-					"component": component,
-					"butler-id": s.Id,
-					"Asset":     fmt.Sprintf("%+v", s.Asset),
-					"Error":     err,
+					"component":      component,
+					"butler-id":      s.Id,
+					"Blade Serial":   blade.Serial,
+					"Blade Position": blade.BladePosition,
+					"Asset":          fmt.Sprintf("%+v", s.Asset),
+					"Error":          err,
 				}).Error(msg)
 				return errors.New(msg)
 			}
 
 			//give it a few seconds to change the flex state
-			time.Sleep(5 * time.Second)
+			time.Sleep(10 * time.Second)
 
-			chassis.PowerOnBlade(blade.BladePosition)
+			_, err = chassis.PowerOnBlade(blade.BladePosition)
 			if err != nil {
-				msg := "Unable to disable FlexAddress - blade power on failed."
+				msg := "Unable to enable FlexAddress - blade power on failed."
 				log.WithFields(logrus.Fields{
 					"component": component,
 					"butler-id": s.Id,
