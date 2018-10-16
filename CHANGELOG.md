@@ -1,6 +1,25 @@
 # Changelog
 All notable changes to this project goes here.
 
+## [v0.0.5] - 16-10-2018
+### Added
+- Expose various asset attributes in configuration template.
+- Split out bmc, chassis login logic into bmc-toolbox/bmclogin - ensures more reliable logins.
+- Add support to "enc" lookup asset inventory, attributes using an external binary - docs/assetLookup.md
+- Add documentation for configuration templating - docs/configTemplating.md
+- Add documentation for asset/inventory lookup binary, docs/assetLookup.md
+- Add support to power up blades in chassis as part of chassis_setup actions.
+- Add --servers arg which will obsolete --blades, --discretes (so we end up with --servers/--chassis)
+
+### Changed
+- Removes 'setup' flag, merge chassis setup logic into setup_chassis.go
+- Metrics collection rewrite, use rcrowley/go-metrics
+- Fix flag variable naming consistency - use plural variables.
+
+### Fixed
+- Throw an error is there is no configuration to be applied.
+- Minor fixes to flexaddress state change.
+
 ## [v0.0.4] - 03-09-2018
 ### Added
 - Adds --dry-run flag to just run without taking actions.
