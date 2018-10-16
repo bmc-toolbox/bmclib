@@ -1,11 +1,9 @@
 ### bmcbutler - A BMC configuration tool
 
-Bmcbutler is a tool to configure BMCs using [bmclib](https://github.com/ncode/bmclib),
-assets - BMCs to configure are read from an inventory source defined in `bmcbutler.yml` configuration file.
+Bmcbutler is a BMC configuration management tool that uses [bmclib](https://github.com/ncode/bmclib),
+BMCs to be configured are read from an inventory source declared in `bmcbutler.yml` configuration file.
 
-Multiple butler processes are spawned to configure BMCs based on configuration declared in [configuration.yml sample](../master/cfg/configuration.yml)
-
-For supported BMCs see the bmclib page.
+For list of supported BMCs and configuration options supported, see [supported hardware](https://github.com/bmc-toolbox/bmclib/blob/master/README.md)
 
 ##### Build
 `go get github.com/bmc-toolbox/bmcbutler`
@@ -30,10 +28,6 @@ Copy the sample config into ~/.bmcbutler/
 
 ###### BMC configuration
 Configuration to be applied to BMCs.
-
-BMC configuration is split into two types,
-
-* configuration - configuration to be applied periodically.
 
 ```
 # create a directory for BMC config
