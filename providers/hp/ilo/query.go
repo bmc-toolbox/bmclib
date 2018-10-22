@@ -3,9 +3,30 @@ package ilo
 import (
 	"encoding/json"
 
+	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/helper"
+
 	log "github.com/sirupsen/logrus"
 )
+
+// Screenshot returns a thumbnail of video display from the bmc.
+func (i *Ilo) Screenshot() (response []byte, extension string, err error) {
+
+	endpoint := "images/thumbnail.bmp"
+	extension = "bmp"
+
+	// screen thumbnails are only available in ilo5.
+	if i.BmcType() != "ilo5" {
+		return response, extension, errors.ErrFeatureUnavailable
+	}
+
+	response, err = i.get(endpoint)
+	if err != nil {
+		return []byte{}, extension, err
+	}
+
+	return response, extension, err
+}
 
 func (i *Ilo) queryDirectoryGroups() (directoryGroups []DirectoryGroups, err error) {
 
