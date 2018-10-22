@@ -68,6 +68,17 @@ type ConfigPort struct {
 	SslRedirectEnable bool   `url:"SSL_REDIRECT,int"`  //SSL_REDIRECT=1
 }
 
+type CapturePreview struct {
+	IkvmPreview string `url:IKVM_PREVIEW.XML` //IKVM_PREVIEW.XML=(0,0)
+	TimeStamp   string `url:"time_stamp"`     //time_stamp=Wed Oct 17 2018 15:56:08 GMT+0200 (CEST)
+}
+
+type UrlRedirect struct {
+	UrlName   string `url:"url_name"`   //url_name=Snapshot
+	UrlType   string `url:"url_type"`   //url_type=img
+	TimeStamp string `url:"time_stamp"` //time_stamp=Wed Oct 17 2018 15:56:08 GMT+0200 (CEST)
+}
+
 type xmlConfigReq struct {
 	Query string `url:"CONFIG_INFO.XML"`
 }
