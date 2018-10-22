@@ -7,6 +7,19 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+func (i *IDrac9) Screenshot() (response []byte, extension string, err error) {
+
+	endpoint := "capconsole/scapture0.png"
+	extension = "png"
+
+	response, err = i.get(endpoint, &map[string]string{})
+	if err != nil {
+		return []byte{}, extension, err
+	}
+
+	return response, extension, err
+}
+
 func (i *IDrac9) queryUsers() (users map[int]User, err error) {
 
 	endpoint := "sysmgmt/2012/server/configgroup/iDRAC.Users"
