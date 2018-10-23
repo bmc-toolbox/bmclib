@@ -8,6 +8,19 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+func (i *IDrac8) Screenshot() (response []byte, extension string, err error) {
+
+	endpoint := "capconsole/scapture0.png"
+	extension = "png"
+
+	response, err = i.get(endpoint, &map[string]string{})
+	if err != nil {
+		return []byte{}, extension, err
+	}
+
+	return response, extension, err
+}
+
 //Queries Idrac8 for current user accounts
 func (i *IDrac8) queryUsers() (userInfo UserInfo, err error) {
 
