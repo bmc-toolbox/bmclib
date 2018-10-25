@@ -10,7 +10,13 @@ import (
 func init() {
 	log.SetFormatter(&log.JSONFormatter{})
 	log.SetOutput(os.Stdout)
-	log.SetLevel(log.InfoLevel)
+
+	switch os.Getenv("DEBUG_BMCLIB") {
+	case "1":
+		log.SetLevel(log.DebugLevel)
+	default:
+		log.SetLevel(log.InfoLevel)
+	}
 }
 
 // SetFormatter allows to format logrus formater
