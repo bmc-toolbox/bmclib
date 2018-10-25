@@ -2,18 +2,37 @@ package idrac8
 
 import (
 	"encoding/xml"
+	"fmt"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/bmc-toolbox/bmclib/internal/helper"
 	log "github.com/sirupsen/logrus"
 )
 
+// Grab screen preview.
 func (i *IDrac8) Screenshot() (response []byte, extension string, err error) {
 
-	endpoint := "capconsole/scapture0.png"
+	endpoint1 := fmt.Sprintf("data?get=consolepreview[auto%%20%d]",
+		time.Now().UnixNano()/int64(time.Millisecond))
+
 	extension = "png"
 
-	response, err = i.get(endpoint, &map[string]string{})
+	// here we expect an empty response
+	response, err = i.get(endpoint1, &map[string]string{"idracAutoRefresh": "1"})
+	if err != nil {
+		return []byte{}, extension, err
+	}
+
+	if !strings.Contains(string(response), "<status>ok</status>") {
+		return []byte{}, extension, fmt.Errorf(string(response))
+	}
+
+	endpoint2 := fmt.Sprintf("capconsole/scapture0.png?%d",
+		time.Now().UnixNano()/int64(time.Millisecond))
+
+	response, err = i.get(endpoint2, &map[string]string{})
 	if err != nil {
 		return []byte{}, extension, err
 	}
