@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project goes here.
 
+## [v0.0.6] - 25-10-2018
+### Changed
+- A new release since we ran go mod init on the repo.
+- vendor directory to stay for now.
+
 ## [v0.0.5] - 16-10-2018
 ### Added
 - Expose various asset attributes in configuration template.
