@@ -1,0 +1,82 @@
+package supermicrox10
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/google/go-querystring/query"
+
+	"github.com/bmc-toolbox/bmclib/errors"
+)
+
+// Screenshot returns a thumbnail of video display from the bmc.
+// 1. request capture preview.
+// 2. sleep for 3 seconds to give ikvm time to ensure preview was captured
+// 3. request for preview.
+func (s *SupermicroX10) Screenshot() (response []byte, extension string, err error) {
+
+	postEndpoint := "CapturePreview.cgi"
+	getEndpoint := "cgi/url_redirect.cgi?"
+
+	extension = "bmp"
+
+	// allow thumbnails only for supermicro x10s.
+	if s.BmcType() != "supermicrox10" {
+		return response, extension, errors.ErrFeatureUnavailable
+	}
+
+	tzLocation, err := time.LoadLocation("CET")
+	t := time.Now().In(tzLocation)
+
+	//Fri Jun 06 2018 14:28:25 GMT+0100 (CET)
+	ts := fmt.Sprintf("%s %d %d:%d:%d %s (%s)",
+		t.Format("Fri Jun 01"),
+		t.Year(),
+		t.Hour(),
+		t.Minute(),
+		t.Second(),
+		t.Format("GMT+0200"),
+		tzLocation)
+
+	capturePreview := CapturePreview{
+		IkvmPreview: "(0,0)",
+		TimeStamp:   ts,
+	}
+
+	form, _ := query.Values(capturePreview)
+	statusCode, err := s.post(postEndpoint, &form)
+	if err != nil {
+		return response, extension, err
+	}
+
+	if statusCode != 200 {
+		return response, extension, fmt.Errorf("Non 200 response from endpoint.")
+	}
+
+	time.Sleep(3 * time.Second)
+	//Fri Jun 06 2018 14:28:25 GMT+0100 (CET)
+	ts = fmt.Sprintf("%s %d %d:%d:%d %s (%s)",
+		t.Format("Fri Jun 01"),
+		t.Year(),
+		t.Hour(),
+		t.Minute(),
+		t.Second(),
+		t.Format("GMT+0200"),
+		tzLocation)
+
+	urlRedirect := UrlRedirect{
+		UrlName:   "Snapshot",
+		UrlType:   "img",
+		TimeStamp: ts,
+	}
+
+	queryString, _ := query.Values(urlRedirect)
+	getEndpoint += queryString.Encode()
+
+	response, err = s.get(getEndpoint)
+	if err != nil {
+		return []byte{}, extension, err
+	}
+
+	return response, extension, err
+}

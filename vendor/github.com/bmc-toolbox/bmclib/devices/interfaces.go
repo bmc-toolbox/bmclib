@@ -28,6 +28,7 @@ type Bmc interface {
 	Status() (string, error)
 	TempC() (int, error)
 	Vendor() string
+	Screenshot() ([]byte, string, error)
 	ServerSnapshot() (interface{}, error)
 	UpdateCredentials(string, string)
 }

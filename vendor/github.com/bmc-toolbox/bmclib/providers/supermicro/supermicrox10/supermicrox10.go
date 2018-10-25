@@ -50,6 +50,64 @@ func (s *SupermicroX10) CheckCredentials() (err error) {
 	return err
 }
 
+// get calls a given json endpoint of the ilo and returns the data
+func (s *SupermicroX10) get(endpoint string) (payload []byte, err error) {
+
+	bmcURL := fmt.Sprintf("https://%s", s.ip)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s", bmcURL, endpoint), nil)
+	if err != nil {
+		return payload, err
+	}
+
+	u, err := url.Parse(bmcURL)
+	if err != nil {
+		return payload, err
+	}
+
+	for _, cookie := range s.httpClient.Jar.Cookies(u) {
+		if cookie.Name == "SID" && cookie.Value != "" {
+			req.AddCookie(cookie)
+		}
+	}
+
+	if log.GetLevel() == log.DebugLevel {
+		dump, err := httputil.DumpRequestOut(req, true)
+		if err == nil {
+			log.Println(fmt.Sprintf("[Request] https://%s/%s", bmcURL, endpoint))
+			log.Println(">>>>>>>>>>>>>>>")
+			log.Printf("%s\n\n", dump)
+			log.Println(">>>>>>>>>>>>>>>")
+		}
+	}
+
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		return payload, err
+	}
+
+	defer resp.Body.Close()
+	if log.GetLevel() == log.DebugLevel {
+		dump, err := httputil.DumpResponse(resp, true)
+		if err == nil {
+			log.Println("[Response]")
+			log.Println("<<<<<<<<<<<<<<")
+			log.Printf("%s\n\n", dump)
+			log.Println("<<<<<<<<<<<<<<")
+		}
+	}
+
+	payload, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return payload, err
+	}
+
+	if resp.StatusCode == 404 {
+		return payload, errors.ErrPageNotFound
+	}
+
+	return payload, err
+}
+
 func (s *SupermicroX10) query(requestType string) (ipmi *supermicro.IPMI, err error) {
 	err = s.httpLogin()
 	if err != nil {
