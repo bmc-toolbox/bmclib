@@ -40,6 +40,10 @@ HP iLO4       | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :
 HP iLO5       | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | | |
 Supermicro X10 | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | | |
 
+
+## Debugging
+export DEBUG_BMCLIB=1 for bmclib to verbose log.
+
 #### Acknowledgment
 
 bmclib was originally developed for [Booking.com](http://www.booking.com).
