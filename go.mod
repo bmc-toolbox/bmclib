@@ -1,0 +1,54 @@
+module github.com/bmc-toolbox/bmcbutler
+
+require (
+	github.com/bmc-toolbox/bmclib v0.2.2
+	github.com/bmc-toolbox/bmclogin v0.0.1
+	github.com/cyberdelia/go-metrics-graphite v0.0.0-20161219230853-39f87cc3b432
+	github.com/fatih/structs v1.0.0
+	github.com/fsnotify/fsnotify v1.4.7
+	github.com/go-playground/locales v0.12.1
+	github.com/go-playground/universal-translator v0.0.0-20170327191703-71201497bace
+	github.com/gobuffalo/envy v1.6.3
+	github.com/gobuffalo/plush v0.0.0-20180619220412-2ec029f415ed
+	github.com/gobuffalo/tags v0.0.0-20180702174034-96c7cdfcadcb
+	github.com/gobuffalo/uuid v0.0.0-20180616213041-4bf3ef4efa68
+	github.com/gobuffalo/validate v1.0.0
+	github.com/gocarina/gocsv v0.0.0-20180321203523-a5c9099e2484
+	github.com/google/go-querystring v0.0.0-20170111101155-53e6ce116135
+	github.com/hashicorp/errwrap v1.0.0 // indirect
+	github.com/hashicorp/go-multierror v0.0.0-20171204182908-b7773ae21874
+	github.com/hashicorp/hcl v0.0.0-20171017181929-23c074d0eceb
+	github.com/joho/godotenv v1.2.0
+	github.com/magiconair/properties v0.0.0-20180213212811-50a685e9bc1f
+	github.com/markbates/going v1.0.1
+	github.com/markbates/inflect v1.0.0
+	github.com/microcosm-cc/bluemonday v1.0.0
+	github.com/mitchellh/go-homedir v0.0.0-20161203194507-b8bc1bf76747
+	github.com/mitchellh/mapstructure v0.0.0-20180203102830-a4e142e9c047
+	github.com/pelletier/go-toml v1.1.0
+	github.com/pkg/errors v0.8.0
+	github.com/rcrowley/go-metrics v0.0.0-20180503174638-e2704e165165
+	github.com/russross/blackfriday v0.0.0-20180428102519-11635eb403ff
+	github.com/serenize/snaker v0.0.0-20171204205717-a683aaf2d516
+	github.com/sergi/go-diff v1.0.0
+	github.com/shurcooL/github_flavored_markdown v0.0.0-20180602233135-8913699a52e3
+	github.com/shurcooL/highlight_diff v0.0.0-20170515013008-09bb4053de1b
+	github.com/shurcooL/highlight_go v0.0.0-20170515013102-78fb10f4a5f8
+	github.com/shurcooL/octicon v0.0.0-20180602230221-c42b0e3b24d9
+	github.com/shurcooL/sanitized_anchor_name v0.0.0-20170918181015-86672fcb3f95
+	github.com/sirupsen/logrus v0.0.0-20180329225952-778f2e774c72
+	github.com/sourcegraph/annotate v0.0.0-20160123013949-f4cad6c6324d
+	github.com/sourcegraph/syntaxhighlight v0.0.0-20170531221838-bd320f5d308e
+	github.com/spf13/afero v0.0.0-20180211162714-bbf41cb36dff
+	github.com/spf13/cast v1.1.0
+	github.com/spf13/cobra v0.0.3
+	github.com/spf13/jwalterweatherman v0.0.0-20180109140146-7c0cea34c8ec
+	github.com/spf13/pflag v1.0.1
+	github.com/spf13/viper v0.0.0-20171227194143-aafc9e6bc7b7
+	golang.org/x/crypto v0.0.0-20171124090802-b080dc9a8c48
+	golang.org/x/net v0.0.0-20180611182652-db08ff08e862
+	golang.org/x/sys v0.0.0-20180202135801-37707fdb30a5
+	golang.org/x/text v0.0.0-20180208041248-4e4a3210bb54
+	gopkg.in/go-playground/validator.v9 v9.21.0
+	gopkg.in/yaml.v2 v2.0.0
+)

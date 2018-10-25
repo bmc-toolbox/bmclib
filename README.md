@@ -8,6 +8,9 @@ For list of supported BMCs and configuration options supported, see [supported h
 ##### Build
 `go get github.com/bmc-toolbox/bmcbutler`
 
+###### Build with vendored modules (go 1.11)
+`GO111MODULE=on go build -mod vendor -v`
+
 ##### Setup
 Theres two parts to setting up configuration for bmcbutler,
 
