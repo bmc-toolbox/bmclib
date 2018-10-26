@@ -198,7 +198,7 @@ func (e *Enc) encQueryByIp(ips string) (assets []asset.Asset) {
 	// if no attributes can be recieved we return assets objs
 	// populate and return slice of assets with no attributes except ips.
 	populateAssetsWithNoAttributes := func() {
-		ipList := strings.Split(",", ips)
+		ipList := strings.Split(ips, ",")
 		for _, ip := range ipList {
 			assets = append(assets, asset.Asset{IpAddresses: []string{ip}})
 		}
