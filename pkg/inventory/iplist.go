@@ -35,7 +35,7 @@ func (i *IpList) AssetIter() {
 
 	assets := make([]asset.Asset, 0)
 	for _, ip := range ips {
-		assets = append(assets, asset.Asset{IpAddress: ip})
+		assets = append(assets, asset.Asset{IPAddress: ip})
 	}
 
 	//pass the asset to the channel

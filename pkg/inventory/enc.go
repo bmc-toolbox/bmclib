@@ -31,7 +31,7 @@ type AssetAttributes struct {
 
 type Attributes struct {
 	Location  string            `json:"location"`
-	IpAddress []string          `json:"ipaddress"`
+	IPAddress []string          `json:"ipaddress"`
 	Extras    *AttributesExtras `json:"extras"`
 }
 
@@ -170,14 +170,14 @@ func (e *Enc) encQueryBySerial(serials string) (assets []asset.Asset) {
 	}
 
 	for serial, attributes := range cmdResp.Data {
-		if len(attributes.IpAddress) == 0 {
+		if len(attributes.IPAddress) == 0 {
 			metric.IncrCounter([]string{"inventory", "assets_noip_enc"}, 1)
 			continue
 		}
 
 		extras := e.AttributesExtrasAsMap(attributes.Extras)
 		assets = append(assets,
-			asset.Asset{IpAddresses: attributes.IpAddress,
+			asset.Asset{IPAddresses: attributes.IPAddress,
 				Serial:   serial,
 				Location: attributes.Location,
 				Extra:    extras,
@@ -200,7 +200,7 @@ func (e *Enc) encQueryByIp(ips string) (assets []asset.Asset) {
 	populateAssetsWithNoAttributes := func() {
 		ipList := strings.Split(ips, ",")
 		for _, ip := range ipList {
-			assets = append(assets, asset.Asset{IpAddresses: []string{ip}})
+			assets = append(assets, asset.Asset{IPAddresses: []string{ip}})
 		}
 	}
 
@@ -243,7 +243,7 @@ func (e *Enc) encQueryByIp(ips string) (assets []asset.Asset) {
 	}
 
 	for serial, attributes := range cmdResp.Data {
-		if len(attributes.IpAddress) == 0 {
+		if len(attributes.IPAddress) == 0 {
 			metric.IncrCounter([]string{"inventory", "assets_noip_enc"}, 1)
 			continue
 		}
@@ -251,7 +251,7 @@ func (e *Enc) encQueryByIp(ips string) (assets []asset.Asset) {
 		extras := e.AttributesExtrasAsMap(attributes.Extras)
 
 		assets = append(assets,
-			asset.Asset{IpAddresses: attributes.IpAddress,
+			asset.Asset{IPAddresses: attributes.IPAddress,
 				Serial:   serial,
 				Location: attributes.Location,
 				Extra:    extras,
@@ -325,14 +325,14 @@ func (e *Enc) encQueryByOffset(assetType string, offset int, limit int, location
 	}
 
 	for serial, attributes := range cmdResp.Data {
-		if len(attributes.IpAddress) == 0 {
+		if len(attributes.IPAddress) == 0 {
 			metric.IncrCounter([]string{"inventory", "assets_noip_enc"}, 1)
 			continue
 		}
 
 		extras := e.AttributesExtrasAsMap(attributes.Extras)
 		assets = append(assets,
-			asset.Asset{IpAddresses: attributes.IpAddress,
+			asset.Asset{IPAddresses: attributes.IPAddress,
 				Serial:   serial,
 				Type:     assetType,
 				Location: attributes.Location,

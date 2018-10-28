@@ -181,7 +181,7 @@ func (b *Butler) Run() {
 		metric.IncrCounter([]string{"butler", "asset_recvd"}, 1)
 
 		//if asset has no IPAddress, we can't do anything about it
-		if len(msg.Asset.IpAddresses) == 0 {
+		if len(msg.Asset.IPAddresses) == 0 {
 			log.WithFields(logrus.Fields{
 				"component": component,
 				"butler-id": b.id,

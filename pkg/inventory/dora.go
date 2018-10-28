@@ -71,11 +71,11 @@ func (d *Dora) setLocation(doraInventoryAssets []asset.Asset) (err error) {
 	apiUrl := d.Config.InventoryParams.ApiUrl
 	queryUrl := fmt.Sprintf("%s/v1/scanned_ports?filter[port]=22&filter[ip]=", apiUrl)
 
-	//collect IpAddresses used to look up the location
+	//collect IPAddresses used to look up the location
 	ips := make([]string, 0)
 
 	for _, asset := range doraInventoryAssets {
-		ips = append(ips, asset.IpAddress)
+		ips = append(ips, asset.IPAddress)
 	}
 
 	queryUrl += strings.Join(ips, ",")
@@ -107,7 +107,7 @@ func (d *Dora) setLocation(doraInventoryAssets []asset.Asset) (err error) {
 	// for each scanned IP update respective asset Location
 	for _, scannedPortAsset := range doraScannedPortAssets.Data {
 		for idx, inventoryAsset := range doraInventoryAssets {
-			if scannedPortAsset.Attributes.ScannedAddress == inventoryAsset.IpAddress {
+			if scannedPortAsset.Attributes.ScannedAddress == inventoryAsset.IPAddress {
 				doraInventoryAssets[idx].Location = scannedPortAsset.Attributes.Site
 			}
 		}
@@ -213,7 +213,7 @@ func (d *Dora) AssetIterBySerial() {
 				continue
 			}
 
-			assets = append(assets, asset.Asset{IpAddress: item.Attributes.BmcAddress,
+			assets = append(assets, asset.Asset{IPAddress: item.Attributes.BmcAddress,
 				Serial: item.Attributes.Serial,
 				Vendor: item.Attributes.Vendor,
 				Type:   assetType})
@@ -310,7 +310,7 @@ func (d *Dora) AssetIter() {
 				}
 
 				assets = append(assets,
-					asset.Asset{IpAddress: item.Attributes.BmcAddress,
+					asset.Asset{IPAddress: item.Attributes.BmcAddress,
 						Serial: item.Attributes.Serial,
 						Vendor: item.Attributes.Vendor,
 						Type:   assetType})

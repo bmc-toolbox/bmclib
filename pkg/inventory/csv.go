@@ -96,7 +96,7 @@ func (c *Csv) AssetIterBySerial() {
 			}
 
 			if item.Serial == serial {
-				assets = append(assets, asset.Asset{IpAddresses: []string{item.BmcAddress},
+				assets = append(assets, asset.Asset{IPAddresses: []string{item.BmcAddress},
 					Serial: item.Serial,
 					Vendor: item.Vendor,
 					Type:   item.Type})
@@ -127,7 +127,7 @@ func (c *Csv) AssetIter() {
 			continue
 		}
 
-		assets = append(assets, asset.Asset{IpAddresses: []string{item.BmcAddress},
+		assets = append(assets, asset.Asset{IPAddresses: []string{item.BmcAddress},
 			Serial: item.Serial,
 			Vendor: item.Vendor,
 			Type:   item.Type})

@@ -30,7 +30,7 @@ func (b *Butler) executeCommand(command string, asset *asset.Asset) (err error) 
 	}
 
 	bmcConn := bmclogin.Params{
-		IpAddresses:     asset.IpAddresses,
+		IpAddresses:     asset.IPAddresses,
 		Credentials:     b.config.Credentials,
 		CheckCredential: false,
 		Retries:         1,
@@ -42,7 +42,7 @@ func (b *Butler) executeCommand(command string, asset *asset.Asset) (err error) 
 		return err
 	}
 
-	asset.IpAddress = loginInfo.ActiveIpAddress
+	asset.IPAddress = loginInfo.ActiveIpAddress
 
 	switch client.(type) {
 	case devices.Bmc:

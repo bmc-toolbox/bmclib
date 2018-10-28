@@ -35,7 +35,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 	defer metric.MeasureRuntime([]string{"butler", "configure_runtime"}, time.Now())
 
 	bmcConn := bmclogin.Params{
-		IpAddresses:     asset.IpAddresses,
+		IpAddresses:     asset.IPAddresses,
 		Credentials:     b.config.Credentials,
 		CheckCredential: true,
 		Retries:         1,
@@ -47,7 +47,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		return err
 	}
 
-	asset.IpAddress = loginInfo.ActiveIpAddress
+	asset.IPAddress = loginInfo.ActiveIpAddress
 
 	switch client.(type) {
 	case devices.Bmc:
