@@ -1,7 +1,10 @@
-### bmcbutler - A BMC configuration tool
+### bmcbutler
 
-Bmcbutler is a BMC configuration management tool that uses [bmclib](https://github.com/ncode/bmclib),
-BMCs to be configured are read from an inventory source declared in `bmcbutler.yml` configuration file.
+[![Go Report Card](https://goreportcard.com/badge/github.com/bmc-toolbox/bmcbutler)](https://goreportcard.com/report/github.com/bmc-toolbox/bmcbutler)
+
+##### About
+
+Bmcbutler is a BMC (Baseboard Management Controller) configuration management tool that uses [bmclib](https://github.com/ncode/bmclib).
 
 For list of supported BMCs and configuration options supported, see [supported hardware](https://github.com/bmc-toolbox/bmclib/blob/master/README.md)
 
