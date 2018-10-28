@@ -15,7 +15,6 @@
 package butler
 
 import (
-	"errors"
 	"os"
 	"os/signal"
 	"sync"
@@ -30,11 +29,8 @@ import (
 	bmclibLogger "github.com/bmc-toolbox/bmclib/logging"
 )
 
-var (
-	ErrBmcConnectionFail = errors.New("Unable to login to bmc") //could be a timeout or just bad credentials.
-	ErrUnkownAsset       = errors.New("Unknown asset type")
-)
-
+// ButlerMsg (butler messages) are passed over the butlerChan
+// they declare assets for butlers to carry actions on.
 type ButlerMsg struct {
 	Asset        asset.Asset //Asset to be configured
 	AssetConfig  []byte      //The BMC configuration read in from configuration.yml
