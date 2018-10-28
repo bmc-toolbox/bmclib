@@ -97,7 +97,6 @@ func (b *Butler) executeCommandBmc(bmc devices.Bmc, command string) (success boo
 		return success, errors.New(fmt.Sprintf("Unknown command: %s", command))
 	}
 
-	return success, err
 }
 
 //func (b *Butler) executeCommandChassis(chassis devices.BmcChassis, command []byte) (err error) {

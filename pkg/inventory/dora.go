@@ -52,9 +52,9 @@ type DoraAssetData struct {
 }
 
 type DoraLinks struct {
-	First string `json:first`
-	Last  string `json:last`
-	Next  string `json:next`
+	First string `json:"first"`
+	Last  string `json:"last"`
+	Next  string `json:"next"`
 }
 
 type DoraAsset struct {
