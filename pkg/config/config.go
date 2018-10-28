@@ -140,6 +140,13 @@ func (p *Params) Load(cfgFile string) {
 
 	//store credentials, the way bmclogin expects them.
 	credentials := viper.GetStringMap("credentials")
+
+	_, keyExists := credentials["accounts"]
+	if !keyExists {
+		fmt.Println("Error: expected credentials -> accounts config not declared.")
+		os.Exit(1)
+	}
+
 	for _, m := range credentials["accounts"].([]interface{}) {
 		for k, v := range m.(map[interface{}]interface{}) {
 			p.Credentials = append(p.Credentials, map[string]string{k.(string): v.(string)})
