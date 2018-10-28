@@ -14,12 +14,14 @@
 
 package asset
 
+// Asset is a unit of BMC/Chassis BMC,
+// assets are passed around from inventories to butlers.
 type Asset struct {
 	//A chassis asset may have more than one IPs,
 	//when asset is first retrieved all IPs are listed in this slice.
-	IpAddresses []string
+	IPAddresses []string
 	//The active IP is assigned to this field once identified,
-	IpAddress string
+	IPAddress string
 	Serial    string
 	Vendor    string
 	Model     string
