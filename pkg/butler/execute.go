@@ -4,10 +4,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
+	"github.com/sirupsen/logrus"
 
 	"github.com/bmc-toolbox/bmclib/devices"
-	"github.com/sirupsen/logrus"
+	"github.com/bmc-toolbox/bmclogin"
+
+	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
 )
 
 // applyConfig setups up the bmc connection
@@ -27,11 +29,20 @@ func (b *Butler) executeCommand(command string, asset *asset.Asset) (err error) 
 		return nil
 	}
 
+	bmcConn := bmclogin.Params{
+		IpAddresses:     asset.IpAddresses,
+		Credentials:     b.config.Credentials,
+		CheckCredential: false,
+		Retries:         1,
+	}
+
 	//connect to the bmc/chassis bmc
-	client, err := b.setupConnection(asset, true)
+	client, loginInfo, err := bmcConn.Login()
 	if err != nil {
 		return err
 	}
+
+	asset.IpAddress = loginInfo.ActiveIpAddress
 
 	switch client.(type) {
 	case devices.Bmc:
