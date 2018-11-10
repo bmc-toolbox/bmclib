@@ -16,12 +16,13 @@ package metrics
 
 import (
 	"fmt"
-	"github.com/cyberdelia/go-metrics-graphite"
-	gometrics "github.com/rcrowley/go-metrics"
-	"github.com/sirupsen/logrus"
 	"net"
 	"strings"
 	"time"
+
+	"github.com/cyberdelia/go-metrics-graphite"
+	gometrics "github.com/rcrowley/go-metrics"
+	"github.com/sirupsen/logrus"
 
 	"github.com/bmc-toolbox/bmcbutler/pkg/config"
 )
@@ -35,6 +36,7 @@ var (
 // increment method sends the metric down the channel
 // a go routine reads from the channel and updates the metricsData map
 
+// Emitter struct holds attributes for the metrics emitter.
 type Emitter struct {
 	Config      *config.Params
 	Logger      *logrus.Logger
@@ -43,13 +45,14 @@ type Emitter struct {
 	metricsData map[string]map[string]float32
 }
 
+// Metric struct holds attributes for a metric.
 type Metric struct {
 	mType string   //counter/gauge
 	mKey  []string //metric key
 	mVal  float32  //metric value
 }
 
-// init sets up external and internal metric sinks.
+// Init sets up external and internal metric sinks.
 func (m *Emitter) Init() {
 
 	var host, prefix string
@@ -162,10 +165,10 @@ func (m *Emitter) store() {
 //Logs current metrics
 func (m *Emitter) dumpStats() {
 
-	for mSource, metrics_ := range m.metricsData {
+	for mSource, metricsTmp := range m.metricsData {
 
 		var metricStr string
-		for k, v := range metrics_ {
+		for k, v := range metricsTmp {
 			metricStr += fmt.Sprintf("%s: %f ", k, v)
 		}
 
@@ -175,7 +178,7 @@ func (m *Emitter) dumpStats() {
 	}
 }
 
-//Increment counter metric
+// IncrCounter sets up metric attributes and passes them to the metricsChan.
 //key = slice of strings that will be joined with "." to be used as the metric namespace
 //val = float32 metric value
 func (m *Emitter) IncrCounter(key []string, val float32) {
@@ -189,7 +192,7 @@ func (m *Emitter) IncrCounter(key []string, val float32) {
 	m.metricsChan <- d
 }
 
-//Set gauge metric
+// UpdateGauge sets up the Gauge metric and passes them to the metricsChan.
 //key = slice of strings that will be joined with "." to be used as the metric namespace
 //val = float32 metric value
 func (m *Emitter) UpdateGauge(key []string, val float32) {
@@ -203,7 +206,7 @@ func (m *Emitter) UpdateGauge(key []string, val float32) {
 	m.metricsChan <- d
 }
 
-//Measure time elapsed since invocation
+// MeasureRuntime measures time elapsed since invocation
 func (m *Emitter) MeasureRuntime(key []string, start time.Time) {
 
 	//convert time.Duration to miliseconds
@@ -211,7 +214,7 @@ func (m *Emitter) MeasureRuntime(key []string, start time.Time) {
 	m.UpdateGauge(key, elapsed)
 }
 
-// Any emmiter related clean up actions go here
+// Close runs cleanup actions
 func (m *Emitter) Close(printStats bool) {
 	close(m.metricsChan)
 
