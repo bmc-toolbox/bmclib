@@ -28,12 +28,14 @@ import (
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 )
 
+// Resource struct holds configuration resource related attributes
+// Config resources are configuration parameters butlers apply to assets.
 type Resource struct {
 	Log   *logrus.Logger
 	Asset *asset.Asset
 }
 
-// Reads the given config .yml file, returns it as a slice of bytes.
+// ReadYamlTemplate reads the given config .yml file, returns it as a slice of bytes.
 func ReadYamlTemplate(yamlFile string) (yamlTemplate []byte, err error) {
 
 	//check file exists
@@ -51,7 +53,7 @@ func ReadYamlTemplate(yamlFile string) (yamlTemplate []byte, err error) {
 	return yamlTemplate, nil
 }
 
-// Renders templated values in the given config .yml, returns it as a slice of bytes.
+// RenderYamlTemplate renders templated values in the given config .yml, returns it as a slice of bytes.
 func (r *Resource) RenderYamlTemplate(yamlTemplate []byte) (yamlData []byte) {
 
 	log := r.Log
@@ -81,8 +83,7 @@ func (r *Resource) RenderYamlTemplate(yamlTemplate []byte) (yamlData []byte) {
 	return []byte(s)
 }
 
-// Config resources are configuration parameters applied periodically,
-// Given a yaml template this method gets the template rendered and returns Unmarshalled yaml.
+// LoadConfigResources gets the template rendered and unmarshals the resulting yml.
 func (r *Resource) LoadConfigResources(yamlTemplate []byte) (config *cfgresources.ResourcesConfig) {
 
 	component := "LoadConfigResources"
