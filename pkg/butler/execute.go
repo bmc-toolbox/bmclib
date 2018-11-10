@@ -89,7 +89,7 @@ func (b *Butler) executeCommand(command string, asset *asset.Asset) (err error) 
 			"butler-id": b.id,
 			"Asset":     fmt.Sprintf("%+v", asset),
 		}).Warn("Unkown device type.")
-		return errors.New("Unknown asset type.")
+		return errors.New("Unknown asset type")
 	}
 
 	return err
@@ -105,7 +105,7 @@ func (b *Butler) executeCommandBmc(bmc devices.Bmc, command string) (success boo
 		success, err := bmc.PowerCycle()
 		return success, err
 	default:
-		return success, errors.New(fmt.Sprintf("Unknown command: %s", command))
+		return success, fmt.Errorf("Unknown command: %s", command)
 	}
 
 }

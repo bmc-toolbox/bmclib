@@ -64,7 +64,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		//rendered config is a *cfgresources.ResourcesConfig type
 		renderedConfig := resourceInstance.LoadConfigResources(config)
 		if renderedConfig == nil {
-			return errors.New("No BMC configuration to be applied.")
+			return errors.New("No BMC configuration to be applied")
 		}
 
 		// Apply configuration
@@ -89,7 +89,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 
 		renderedConfig := resourceInstance.LoadConfigResources(config)
 		if renderedConfig == nil {
-			return errors.New("No BMC configuration to be applied.")
+			return errors.New("No BMC configuration to be applied")
 		}
 
 		if renderedConfig.SetupChassis != nil {
@@ -113,7 +113,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 			"butler-id": b.id,
 			"Asset":     fmt.Sprintf("%+v", asset),
 		}).Warn("Unkown device type.")
-		return errors.New("Unknown asset type.")
+		return errors.New("Unknown asset type")
 	}
 
 	return err
