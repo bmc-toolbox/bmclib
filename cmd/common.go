@@ -114,7 +114,7 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg) {
 
 		assetRetriever = inventoryInstance.AssetRetrieve()
 	case "iplist":
-		inventoryInstance := inventory.IpList{
+		inventoryInstance := inventory.IPList{
 			Channel:   inventoryChan,
 			Config:    runConfig,
 			BatchSize: 1,

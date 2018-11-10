@@ -15,6 +15,7 @@ import (
 	"github.com/bmc-toolbox/bmcbutler/pkg/metrics"
 )
 
+// Enc struct holds attributes required to run inventory/enc methods.
 type Enc struct {
 	Log             *logrus.Logger
 	BatchSize       int
@@ -24,17 +25,20 @@ type Enc struct {
 	FilterAssetType []string
 }
 
+// AssetAttributes is used to unmarshal data returned from an ENC.
 type AssetAttributes struct {
 	Data        map[string]Attributes `json:"data"` //map of asset IPs/Serials to attributes
 	EndOfAssets bool                  `json:"end_of_assets"`
 }
 
+// Attributes is used to unmarshal data returned from an ENC.
 type Attributes struct {
 	Location  string            `json:"location"`
 	IPAddress []string          `json:"ipaddress"`
 	Extras    *AttributesExtras `json:"extras"`
 }
 
+// AttributesExtras is used to unmarshal data returned from an ENC.
 type AttributesExtras struct {
 	State   string `json:"status"`
 	Company string `json:"company"`
@@ -42,8 +46,8 @@ type AttributesExtras struct {
 	LiveAssets *[]string `json:"live_assets,omitempty"`
 }
 
-// Given a AttributesExtras struct,
-// return all the attributes as a map
+// AttributesExtrasAsMap accepts a AttributesExtras struct as input,
+// and returns all attributes as a map
 func (e *Enc) AttributesExtrasAsMap(attributeExtras *AttributesExtras) (extras map[string]string) {
 
 	extras = make(map[string]string)
@@ -81,13 +85,13 @@ func (e *Enc) AssetRetrieve() func() {
 	case e.Config.FilterParams.Serials != "":
 		return e.AssetIterBySerial
 	case e.Config.FilterParams.Ips != "":
-		return e.AssetIterByIp
+		return e.AssetIterByIP
 	default:
 		return e.AssetIter
 	}
 }
 
-//Executes the ENC bin file and returns the response, error
+// ExecCmd executes the ENC bin file and returns its response, error
 func (e *Enc) ExecCmd(args []string) (out []byte, err error) {
 
 	//declare the executable
@@ -109,6 +113,7 @@ func (e *Enc) ExecCmd(args []string) (out []byte, err error) {
 	return out, err
 }
 
+// SetChassisInstalled is a method used to update a chassis state in the inventory.
 func (e *Enc) SetChassisInstalled(serials string) {
 
 	log := e.Log
@@ -189,11 +194,12 @@ func (e *Enc) encQueryBySerial(serials string) (assets []asset.Asset) {
 	return assets
 }
 
-func (e *Enc) encQueryByIp(ips string) (assets []asset.Asset) {
+//
+func (e *Enc) encQueryByIP(ips string) (assets []asset.Asset) {
 
 	log := e.Log
 	metric := e.MetricsEmitter
-	component := "encQueryByIp"
+	component := "encQueryByIP"
 
 	// if no attributes can be recieved we return assets objs
 	// populate and return slice of assets with no attributes except ips.
@@ -399,10 +405,10 @@ func (e *Enc) AssetIterBySerial() {
 	e.AssetsChan <- assets
 }
 
-// AssetIterByIp reads in list of ips passed in via cli,
+// AssetIterByIP reads in list of ips passed in via cli,
 // queries the ENC for attributes related to the, passes them to the assets channel
 // if no attributes for a given IP are returned, an asset with just the IP is returned.
-func (e *Enc) AssetIterByIp() {
+func (e *Enc) AssetIterByIP() {
 
 	defer close(e.AssetsChan)
 
@@ -410,7 +416,7 @@ func (e *Enc) AssetIterByIp() {
 	ips := e.Config.FilterParams.Ips
 
 	//query ENC for given serials
-	assets := e.encQueryByIp(ips)
+	assets := e.encQueryByIP(ips)
 
 	//pass assets returned by ENC to the assets channel
 	e.AssetsChan <- assets

@@ -118,7 +118,7 @@ func (p *Params) Load(cfgFile string) {
 	p.InventoryParams.Source = viper.GetString("inventory.configure.source")
 	switch p.InventoryParams.Source {
 	case "dora":
-		p.InventoryParams.APIURL = viper.GetString("inventory.configure.dora.apiUrl")
+		p.InventoryParams.APIURL = viper.GetString("inventory.configure.dora.apiURL")
 	case "csv":
 		p.InventoryParams.File = viper.GetString("inventory.configure.csv.file")
 	case "enc":

@@ -21,8 +21,6 @@ import (
 	"net/http"
 	"strings"
 
-	//	"time"
-
 	"github.com/sirupsen/logrus"
 
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
@@ -30,6 +28,8 @@ import (
 	"github.com/bmc-toolbox/bmcbutler/pkg/metrics"
 )
 
+// Dora struct holds attributes required to retrieve assets from Dora,
+// and pass them to the butlers.
 type Dora struct {
 	Log             *logrus.Logger
 	BatchSize       int
@@ -39,6 +39,7 @@ type Dora struct {
 	FilterAssetType []string
 }
 
+// DoraAssetAttributes struct is used to unmarshal Dora data.
 type DoraAssetAttributes struct {
 	Serial         string `json:"serial"`
 	BmcAddress     string `json:"bmc_address"`
@@ -47,16 +48,19 @@ type DoraAssetAttributes struct {
 	Site           string `json:"site"` // set when we unmarshal the scanned_ports data
 }
 
+// DoraAssetData struct is used to unmarshal Dora data.
 type DoraAssetData struct {
 	Attributes DoraAssetAttributes `json:"attributes"`
 }
 
+// DoraLinks struct is used to unmarshal Dora data.
 type DoraLinks struct {
 	First string `json:"first"`
 	Last  string `json:"last"`
 	Next  string `json:"next"`
 }
 
+// DoraAsset struct is used to unmarshal Dora data.
 type DoraAsset struct {
 	Data  []DoraAssetData `json:"data"`
 	Links DoraLinks       `json:"links"`
@@ -68,8 +72,8 @@ func (d *Dora) setLocation(doraInventoryAssets []asset.Asset) (err error) {
 	component := "inventory"
 	log := d.Log
 
-	apiUrl := d.Config.InventoryParams.APIURL
-	queryUrl := fmt.Sprintf("%s/v1/scanned_ports?filter[port]=22&filter[ip]=", apiUrl)
+	apiURL := d.Config.InventoryParams.APIURL
+	queryURL := fmt.Sprintf("%s/v1/scanned_ports?filter[port]=22&filter[ip]=", apiURL)
 
 	//collect IPAddresses used to look up the location
 	ips := make([]string, 0)
@@ -78,12 +82,12 @@ func (d *Dora) setLocation(doraInventoryAssets []asset.Asset) (err error) {
 		ips = append(ips, asset.IPAddress)
 	}
 
-	queryUrl += strings.Join(ips, ",")
-	resp, err := http.Get(queryUrl)
+	queryURL += strings.Join(ips, ",")
+	resp, err := http.Get(queryURL)
 	if err != nil || resp.StatusCode != 200 {
 		log.WithFields(logrus.Fields{
 			"component":   component,
-			"url":         queryUrl,
+			"url":         queryURL,
 			"error":       err,
 			"Status code": resp.StatusCode,
 		}).Warn("Unable to query Dora for IP location info.")
@@ -98,7 +102,7 @@ func (d *Dora) setLocation(doraInventoryAssets []asset.Asset) (err error) {
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"url":       queryUrl,
+			"url":       queryURL,
 			"error":     err,
 		}).Warn("Unable to unmarshal Dora scanned IP info.")
 		return err
@@ -142,10 +146,13 @@ func (d *Dora) AssetRetrieve() func() {
 
 }
 
+// AssetIterBySerial is an iterator method,
+// to retrieve assets from Dora by the given serial numbers,
+// assets are then sent over the inventory channel.
 func (d *Dora) AssetIterBySerial() {
 
 	serials := d.Config.FilterParams.Serials
-	apiUrl := d.Config.InventoryParams.APIURL
+	apiURL := d.Config.InventoryParams.APIURL
 
 	component := "inventory"
 
@@ -164,15 +171,15 @@ func (d *Dora) AssetIterBySerial() {
 			path = assetType
 		}
 
-		queryUrl := fmt.Sprintf("%s/v1/%s?filter[serial]=", apiUrl, path)
-		queryUrl += strings.ToLower(serials)
+		queryURL := fmt.Sprintf("%s/v1/%s?filter[serial]=", apiURL, path)
+		queryURL += strings.ToLower(serials)
 		assets := make([]asset.Asset, 0)
 
-		resp, err := http.Get(queryUrl)
+		resp, err := http.Get(queryURL)
 		if err != nil {
 			log.WithFields(logrus.Fields{
 				"component": component,
-				"url":       queryUrl,
+				"url":       queryURL,
 				"error":     err,
 			}).Fatal("Failed to query dora for serial(s).")
 		}
@@ -186,7 +193,7 @@ func (d *Dora) AssetIterBySerial() {
 		if err != nil {
 			log.WithFields(logrus.Fields{
 				"component": component,
-				"url":       queryUrl,
+				"url":       queryURL,
 				"error":     err,
 			}).Fatal("Unable to unmarshal data returned from dora.")
 		}
@@ -194,13 +201,13 @@ func (d *Dora) AssetIterBySerial() {
 		if len(doraAssets.Data) == 0 {
 			log.WithFields(logrus.Fields{
 				"component": component,
-				"Query url": queryUrl,
+				"Query url": queryURL,
 			}).Debug("Asset was not located in dora inventory.")
 			continue
 		} else {
 			log.WithFields(logrus.Fields{
 				"component": component,
-				"Query url": queryUrl,
+				"Query url": queryURL,
 			}).Debug("Asset located in dora inventory.")
 		}
 
@@ -235,14 +242,14 @@ func (d *Dora) AssetIterBySerial() {
 	}
 }
 
-// A routine that returns data to iter over
+// AssetIter routine that returns data to iter over
 func (d *Dora) AssetIter() {
 
 	//Asset needs to be an inventory asset
 	//Iter stuffs assets into an array of Assets
 	//Iter writes the assets array to the channel
 
-	apiUrl := d.Config.InventoryParams.APIURL
+	apiURL := d.Config.InventoryParams.APIURL
 	component := "retrieveInventoryAssetsDora"
 
 	metric := d.MetricsEmitter
@@ -264,15 +271,15 @@ func (d *Dora) AssetIter() {
 			path = assetType
 		}
 
-		queryUrl := fmt.Sprintf("%s/v1/%s?page[offset]=%d&page[limit]=%d", apiUrl, path, 0, d.BatchSize)
+		queryURL := fmt.Sprintf("%s/v1/%s?page[offset]=%d&page[limit]=%d", apiURL, path, 0, d.BatchSize)
 		for {
 			assets := make([]asset.Asset, 0)
 
-			resp, err := http.Get(queryUrl)
+			resp, err := http.Get(queryURL)
 			if err != nil || resp.StatusCode != 200 {
 				log.WithFields(logrus.Fields{
 					"component": component,
-					"url":       queryUrl,
+					"url":       queryURL,
 					"error":     err,
 				}).Fatal("Error querying Dora for assets.")
 			}
@@ -285,7 +292,7 @@ func (d *Dora) AssetIter() {
 			if err != nil {
 				log.WithFields(logrus.Fields{
 					"component": component,
-					"url":       queryUrl,
+					"url":       queryURL,
 					"error":     err,
 				}).Fatal("Error unmarshaling data returned from Dora.")
 			}
@@ -341,13 +348,13 @@ func (d *Dora) AssetIter() {
 			if doraAssets.Links.Next == "" {
 				log.WithFields(logrus.Fields{
 					"component": component,
-					"url":       queryUrl,
+					"url":       queryURL,
 				}).Info("Reached end of assets in dora")
 				break
 			}
 
 			// next url to query
-			queryUrl = fmt.Sprintf("%s%s", apiUrl, doraAssets.Links.Next)
+			queryURL = fmt.Sprintf("%s%s", apiURL, doraAssets.Links.Next)
 		}
 	}
 }

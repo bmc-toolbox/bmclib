@@ -14,7 +14,7 @@ import (
 	"github.com/bmc-toolbox/bmcbutler/pkg/config"
 )
 
-// A inventory source is required to have a type with these fields
+// Csv inventory struct holds attributes required to read in assets from a csv file.
 type Csv struct {
 	Config          *config.Params
 	Log             *logrus.Logger
@@ -23,6 +23,7 @@ type Csv struct {
 	FilterAssetType []string
 }
 
+// CsvAsset struct holds attributes of an asset listed in a csv file.
 type CsvAsset struct {
 	BmcAddress string `csv:"bmcaddress"`
 	Serial     string `csv:"serial"` //optional
@@ -33,10 +34,9 @@ type CsvAsset struct {
 func (c *Csv) readCsv() []*CsvAsset {
 
 	log := c.Log
-	csvFile_ := c.Config.InventoryParams.File
 
 	var csvAssets []*CsvAsset
-	csvFile, err := os.Open(csvFile_)
+	csvFile, err := os.Open(c.Config.InventoryParams.File)
 	if err != nil {
 		log.Error("Error: ", err)
 		os.Exit(1)
@@ -77,6 +77,7 @@ func (c *Csv) AssetRetrieve() func() {
 
 }
 
+// AssetIterBySerial iterates over Assets and passes on the inventory channel.
 func (c *Csv) AssetIterBySerial() {
 
 	log := c.Log

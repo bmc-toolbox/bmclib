@@ -23,7 +23,7 @@ inventory:
     enc:
       bin: /usr/bin/assetlookup
     dora:
-      apiUrl: http://dora.example.com/api
+      apiURL: http://dora.example.com/api
     csv:
       file: /etc/bmcbutler/inventory.csv
   setup:
