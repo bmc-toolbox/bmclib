@@ -185,6 +185,13 @@ func (d *Dora) AssetIterBySerial() {
 		}
 
 		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.WithFields(logrus.Fields{
+				"component": component,
+				"url":       queryURL,
+				"error":     err,
+			}).Fatal("Failed to query dora for serial(s).")
+		}
 		resp.Body.Close()
 
 		//dora returns a list of assets
@@ -285,6 +292,13 @@ func (d *Dora) AssetIter() {
 			}
 
 			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.WithFields(logrus.Fields{
+					"component": component,
+					"url":       queryURL,
+					"error":     err,
+				}).Fatal("Error querying Dora for assets.")
+			}
 			resp.Body.Close()
 
 			var doraAssets DoraAsset

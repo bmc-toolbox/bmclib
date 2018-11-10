@@ -195,7 +195,7 @@ func (s *SetupChassis) setIpmiOverLan(chassis devices.BmcChassis, enable bool) (
 		}).Debug("Updating IpmiOverLan config.")
 
 		//blade needs to be powered on to set this parameter
-		isPoweredOn, err := chassis.IsOnBlade(blade.BladePosition)
+		isPoweredOn, _ := chassis.IsOnBlade(blade.BladePosition)
 		if isPoweredOn == false {
 			_, err = chassis.PowerOnBlade(blade.BladePosition)
 			if err != nil {
@@ -271,7 +271,7 @@ func (s *SetupChassis) setFlexAddressState(chassis devices.BmcChassis, enable bo
 				"Expected state": enable,
 			}).Info("Disabling FlexAddress on blade.")
 
-			isPoweredOn, err := chassis.IsOnBlade(blade.BladePosition)
+			isPoweredOn, _ := chassis.IsOnBlade(blade.BladePosition)
 			if isPoweredOn {
 				_, err = chassis.PowerOffBlade(blade.BladePosition)
 				if err != nil {
@@ -330,7 +330,7 @@ func (s *SetupChassis) setFlexAddressState(chassis devices.BmcChassis, enable bo
 				"Expected state": enable,
 			}).Info("Enabling FlexAddress on blade.")
 
-			isPoweredOn, err := chassis.IsOnBlade(blade.BladePosition)
+			isPoweredOn, _ := chassis.IsOnBlade(blade.BladePosition)
 			if isPoweredOn {
 
 				log.WithFields(logrus.Fields{
