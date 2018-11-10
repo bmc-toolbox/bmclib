@@ -18,7 +18,7 @@ import (
 
 var (
 	exitFlag       bool
-	butlerManager  butler.ButlerManager
+	butlerManager  butler.Manager
 	commandWG      sync.WaitGroup
 	metricsEmitter *metrics.Emitter
 )
@@ -26,7 +26,7 @@ var (
 // post handles clean up actions
 // - closes the butler channel
 // - Waits for all go routines in commandWG to finish.
-func post(butlerChan chan butler.ButlerMsg) {
+func post(butlerChan chan butler.Msg) {
 	close(butlerChan)
 	commandWG.Wait()
 	metricsEmitter.Close(true)
@@ -55,7 +55,7 @@ func overrideConfigFromFlags() {
 // - Based on the inventory source (dora/csv), Spawn the asset retriever go routine.
 // - Spawn butlers
 // - Return inventory channel, butler channel.
-func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.ButlerMsg) {
+func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg) {
 
 	overrideConfigFromFlags()
 
@@ -132,8 +132,8 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.ButlerMsg) 
 	go assetRetriever()
 
 	// Spawn butlers to work
-	butlerChan = make(chan butler.ButlerMsg, 5)
-	butlerManager = butler.ButlerManager{
+	butlerChan = make(chan butler.Msg, 5)
+	butlerManager = butler.Manager{
 		ButlerChan:     butlerChan,
 		Config:         runConfig,
 		Log:            log,

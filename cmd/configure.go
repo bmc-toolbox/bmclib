@@ -96,7 +96,7 @@ func configure() {
 			//      this loop is going to be stuck waiting for the butlerMsg to be read,
 			//      make sure to break out of this loop or have butlerChan closed in such a case,
 			//      for now, we fix this by setting exitFlag to break out of the loop.
-			butlerMsg := butler.ButlerMsg{Asset: asset, AssetConfig: assetConfig}
+			butlerMsg := butler.Msg{Asset: asset, AssetConfig: assetConfig}
 			butlerChan <- butlerMsg
 		}
 

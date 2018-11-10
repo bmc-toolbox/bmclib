@@ -29,25 +29,26 @@ import (
 	bmclibLogger "github.com/bmc-toolbox/bmclib/logging"
 )
 
-// ButlerMsg (butler messages) are passed over the butlerChan
+// Msg (butler messages) are passed over the butlerChan
 // they declare assets for butlers to carry actions on.
-type ButlerMsg struct {
+type Msg struct {
 	Asset        asset.Asset //Asset to be configured
 	AssetConfig  []byte      //The BMC configuration read in from configuration.yml
 	AssetSetup   []byte      //The One time setup configuration read from setup.yml
 	AssetExecute string      //Commands to be executed on the BMC
 }
 
-type ButlerManager struct {
+// Manager struct holds attributes required to spawn butlers.
+type Manager struct {
 	Config         *config.Params //bmcbutler config, cli params
-	ButlerChan     <-chan ButlerMsg
+	ButlerChan     <-chan Msg
 	Log            *logrus.Logger
 	MetricsEmitter *metrics.Emitter
 	SyncWG         *sync.WaitGroup
 }
 
-// spawn a pool of butlers, wait until they are done.
-func (bm *ButlerManager) SpawnButlers() {
+// SpawnButlers spawns a pool of butlers, waits until they are done.
+func (bm *Manager) SpawnButlers() {
 
 	log := bm.Log
 	component := "Butler Manager - SpawnButlers()"
@@ -111,9 +112,10 @@ func (bm *ButlerManager) SpawnButlers() {
 
 }
 
+// Butler struct holds attributes required by butler to carry out tasks.
 type Butler struct {
 	id             int
-	butlerChan     <-chan ButlerMsg
+	butlerChan     <-chan Msg
 	config         *config.Params //bmcbutler config, cli params
 	doneChan       chan<- int
 	interruptChan  <-chan struct{}
@@ -131,8 +133,9 @@ func (b *Butler) myLocation(location string) bool {
 	return false
 }
 
-// butler recieves bmc config, assets over channel
-// iterate over assets and apply config
+// Run runs a butler,
+// - recieves BMC config, assets over channel
+// - iterates over assets and applies config
 func (b *Butler) Run() {
 
 	var err error

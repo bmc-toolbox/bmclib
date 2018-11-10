@@ -44,7 +44,7 @@ func execute() {
 	for assetList := range inventoryChan {
 		for _, asset := range assetList {
 			asset.Execute = true
-			butlerMsg := butler.ButlerMsg{Asset: asset, AssetExecute: execCommand}
+			butlerMsg := butler.Msg{Asset: asset, AssetExecute: execCommand}
 			butlerChan <- butlerMsg
 		}
 	}
