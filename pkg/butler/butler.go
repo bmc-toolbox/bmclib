@@ -68,7 +68,7 @@ func (bm *Manager) SpawnButlers() {
 
 		log.WithFields(logrus.Fields{
 			"component": component,
-		}).Warn("Interrupt SIGINT/SIGTERM recieved, butlers will exit gracefully.")
+		}).Warn("Interrupt SIGINT/SIGTERM received, butlers will exit gracefully.")
 		return
 	}()
 
@@ -134,7 +134,7 @@ func (b *Butler) myLocation(location string) bool {
 }
 
 // Run runs a butler,
-// - recieves BMC config, assets over channel
+// - receives BMC config, assets over channel
 // - iterates over assets and applies config
 func (b *Butler) Run() {
 
@@ -158,7 +158,7 @@ func (b *Butler) Run() {
 			log.WithFields(logrus.Fields{
 				"component": component,
 				"butler-id": b.id,
-			}).Debug("Butler recieved interrupt.. will exit.")
+			}).Debug("Butler received interrupt.. will exit.")
 
 			exitFlag = true
 			return
@@ -186,7 +186,7 @@ func (b *Butler) Run() {
 				"butler-id": b.id,
 				"Serial":    msg.Asset.Serial,
 				"AssetType": msg.Asset.Type,
-			}).Debug("Asset was recieved by butler without any IP(s) info, skipped.")
+			}).Debug("Asset was received by butler without any IP(s) info, skipped.")
 
 			metric.IncrCounter([]string{"butler", "asset_recvd_noip"}, 1)
 			continue

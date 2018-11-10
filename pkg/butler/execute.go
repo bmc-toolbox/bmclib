@@ -88,7 +88,7 @@ func (b *Butler) executeCommand(command string, asset *asset.Asset) (err error) 
 			"component": component,
 			"butler-id": b.id,
 			"Asset":     fmt.Sprintf("%+v", asset),
-		}).Warn("Unkown device type.")
+		}).Warn("Unknown device type.")
 		return errors.New("Unknown asset type")
 	}
 

@@ -99,7 +99,7 @@ func (e *Enc) ExecCmd(args []string) (out []byte, err error) {
 
 	cmd := exec.Command(executable, args...)
 
-	//To ignore SIGINTs recieved by bmcbutler,
+	//To ignore SIGINTs received by bmcbutler,
 	//the commands are spawned in its own process group.
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setpgid: true,
@@ -201,7 +201,7 @@ func (e *Enc) encQueryByIP(ips string) (assets []asset.Asset) {
 	metric := e.MetricsEmitter
 	component := "encQueryByIP"
 
-	// if no attributes can be recieved we return assets objs
+	// if no attributes can be received we return assets objs
 	// populate and return slice of assets with no attributes except ips.
 	populateAssetsWithNoAttributes := func() {
 		ipList := strings.Split(ips, ",")
