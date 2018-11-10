@@ -15,7 +15,6 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -24,36 +23,33 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Params struct holds all bmcbutler configuration parameters
 type Params struct {
-	ButlersToSpawn       int
-	Credentials          []map[string]string
-	BmcPrimaryUser       string
-	BmcPrimaryPassword   string
-	BmcSecondaryUser     string
-	BmcSecondaryPassword string
-	BmcDefaultUser       string
-	BmcDefaultPassword   string
-	CfgFile              string
-	Configure            bool //indicates configure was invoked
-	DryRun               bool //when set, don't carry out any actions, just log.
-	Setup                bool //indicates setup was invoked
-	Execute              bool //indicates execute was invoked
-	FilterParams         *FilterParams
-	InventoryParams      *InventoryParams
-	IgnoreLocation       bool
-	Locations            []string
-	MetricsParams        *MetricsParams
-	Version              string
-	Verbose              bool
+	ButlersToSpawn  int
+	Credentials     []map[string]string
+	CfgFile         string
+	Configure       bool //indicates configure was invoked
+	DryRun          bool //when set, don't carry out any actions, just log.
+	Setup           bool //indicates setup was invoked
+	Execute         bool //indicates execute was invoked
+	FilterParams    *FilterParams
+	InventoryParams *InventoryParams
+	IgnoreLocation  bool
+	Locations       []string
+	MetricsParams   *MetricsParams
+	Version         string
+	Verbose         bool
 }
 
+// InventoryParams struct holds inventory configuration parameters.
 type InventoryParams struct {
 	Source        string //dora, csv, enc
 	EncExecutable string
-	ApiUrl        string
+	APIURL        string
 	File          string
 }
 
+// MetricsParams struct holds metrics emitter configuration parameters.
 type MetricsParams struct {
 	Client        string //The metrics client.
 	Host          string
@@ -62,6 +58,7 @@ type MetricsParams struct {
 	FlushInterval time.Duration
 }
 
+// FilterParams struct holds various asset filter arguments that may be passed via cli args.
 type FilterParams struct {
 	Chassis   bool
 	Blades    bool
@@ -72,7 +69,7 @@ type FilterParams struct {
 	Ips       string
 }
 
-//Config params constructor
+// Load sets up bmcbutler configuration.
 func (p *Params) Load(cfgFile string) {
 
 	//FilterParams holds the configure/setup/execute related host filter cli args.
@@ -121,7 +118,7 @@ func (p *Params) Load(cfgFile string) {
 	p.InventoryParams.Source = viper.GetString("inventory.configure.source")
 	switch p.InventoryParams.Source {
 	case "dora":
-		p.InventoryParams.ApiUrl = viper.GetString("inventory.configure.dora.apiUrl")
+		p.InventoryParams.APIURL = viper.GetString("inventory.configure.dora.apiUrl")
 	case "csv":
 		p.InventoryParams.File = viper.GetString("inventory.configure.csv.file")
 	case "enc":
@@ -154,21 +151,4 @@ func (p *Params) Load(cfgFile string) {
 
 	}
 
-	//BMC user account credentials
-	p.BmcPrimaryUser = viper.GetString("bmcPrimaryUser")
-	p.BmcPrimaryPassword = viper.GetString("bmcPrimaryPassword")
-	p.BmcSecondaryUser = viper.GetString("bmcSecondaryUser")
-	p.BmcSecondaryPassword = viper.GetString("bmcSecondaryPassword")
-}
-
-//Reads in vendor default credentials based on given vendor.
-func (p *Params) GetDefaultCredentials(vendor string) (err error) {
-	p.BmcDefaultUser = viper.GetString(fmt.Sprintf("bmcDefaults.%s.user", vendor))
-	p.BmcDefaultPassword = viper.GetString(fmt.Sprintf("bmcDefaults.%s.password", vendor))
-
-	if p.BmcDefaultUser == "" || p.BmcDefaultPassword == "" {
-		return errors.New(fmt.Sprintf("No vendor default credentials in config for: %s", vendor))
-	}
-
-	return err
 }
