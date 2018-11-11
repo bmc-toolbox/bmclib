@@ -1,6 +1,6 @@
 ### bmcbutler
 
-[![Status](https://api.travis-ci.org/bmc-toolbox/bmcbutler.svg?branch=master)](https://api.travis-ci.org/bmc-toolbox/bmcbutler.svg?branch=master)
+[![Status](https://api.travis-ci.org/bmc-toolbox/bmcbutler.svg?branch=master)](https://travis-ci.org/bmc-toolbox/bmcbutler)
 [![Go Report Card](https://goreportcard.com/badge/github.com/bmc-toolbox/bmcbutler)](https://goreportcard.com/report/github.com/bmc-toolbox/bmcbutler)
 
 ##### About
