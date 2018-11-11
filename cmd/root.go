@@ -28,10 +28,8 @@ import (
 
 var (
 	log            *logrus.Logger
-	verbose        bool
 	butlersToSpawn int
 	cfgFile        string
-	version        string
 	execCommand    string
 	locations      string
 	runConfig      *config.Params

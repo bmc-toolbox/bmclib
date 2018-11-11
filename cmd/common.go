@@ -51,7 +51,7 @@ func overrideConfigFromFlags() {
 // - Spawn go routine to listen to interrupt signals
 // - Setup metrics channel
 // - Spawn the metrics forwarder go routine
-// - Setup the inventory channel over which to recieve assets
+// - Setup the inventory channel over which to receive assets
 // - Based on the inventory source (dora/csv), Spawn the asset retriever go routine.
 // - Spawn butlers
 // - Return inventory channel, butler channel.
@@ -75,7 +75,7 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg) {
 
 	metricsEmitter.Init()
 
-	// A channel to recieve inventory assets
+	// A channel to receive inventory assets
 	inventoryChan = make(chan []asset.Asset, 5)
 
 	//determine inventory to fetch asset data.
