@@ -245,7 +245,7 @@ func (m *M1000e) PxeOnceBlade(position int) (status bool, err error) {
 	return status, fmt.Errorf(output)
 }
 
-// Enable/Disable IPMI over lan parameter per blade in chassis
+// SetIpmiOverLan Enable/Disable IPMI over lan parameter per blade in chassis
 func (m *M1000e) SetIpmiOverLan(position int, enable bool) (status bool, err error) {
 	err = m.sshLogin()
 	if err != nil {
@@ -273,7 +273,7 @@ func (m *M1000e) SetIpmiOverLan(position int, enable bool) (status bool, err err
 
 }
 
-// Enable/Disable Dynamic Power - Dynamic Power Supply Engagement (DPSE) in Dell jargon.
+// SetDynamicPower Enable/Disable Dynamic Power - Dynamic Power Supply Engagement (DPSE) in Dell jargon.
 // Dynamic Power Supply Engagement (DPSE) mode is disabled by default.
 // DPSE saves power by optimizing the power efficiency of the PSUs supplying power to the chassis.
 // This also increases the PSU life, and reduces heat generation.
@@ -340,7 +340,7 @@ func (m *M1000e) SetFlexAddressState(position int, enable bool) (status bool, er
 	return status, fmt.Errorf(output)
 }
 
-// FirmwareVersion returns the chassis firmware version
+// GetFirmwareVersion returns the chassis firmware version
 func (m *M1000e) GetFirmwareVersion() (version string, err error) {
 	err = m.sshLogin()
 	if err != nil {
@@ -388,4 +388,19 @@ func (m *M1000e) UpdateFirmware(host, filepath string) (status bool, err error) 
 func (m *M1000e) UpdateFirmwareBmcBlade(position int, host, filepath string) (status bool, err error) {
 	// iDRAC 7 or later is not supported by fwupdate on the M1000e
 	return status, errors.ErrNotImplemented
+}
+
+// AddBladeBmcAdmin adds BMC Admin user accounts through the chassis.
+func (m *M1000e) AddBladeBmcAdmin(username string, password string) (err error) {
+	return errors.ErrNotImplemented
+}
+
+// RemoveBladeBmcUser removes BMC Admin user accounts through the chassis.
+func (m *M1000e) RemoveBladeBmcUser(username string) (err error) {
+	return errors.ErrNotImplemented
+}
+
+// ModBladeBmcUser modifies a BMC Admin user password through the chassis.
+func (m *M1000e) ModBladeBmcUser(username string) (err error) {
+	return errors.ErrNotImplemented
 }
