@@ -305,6 +305,111 @@ func (c *C7000) UpdateFirmwareBmcBlade(position int, host, filepath string) (sta
 	return status, err
 }
 
+// ModBladeBmcUser modfies BMC Admin user account password through the chassis,
+// this method will attempt to modify a user account on all BMCs in a chassis.
+func (c *C7000) ModBladeBmcUser(username string, password string) (err error) {
+
+	ribcl := `HPONCFG all  << end_marker
+<RIBCL VERSION="2.0">
+<LOGIN USER_LOGIN="__USERNAME__" PASSWORD="__PASSWORD__">
+ <USER_INFO MODE="write">
+  <MOD_USER USER_LOGIN="__USERNAME__">
+     <PASSWORD value="__PASSWORD__"/>
+</MOD_USER>
+ </USER_INFO>
+ </LOGIN>
+</RIBCL>
+end_marker`
+
+	ribcl = strings.Replace(ribcl, "__USERNAME__", username, -1)
+	ribcl = strings.Replace(ribcl, "__PASSWORD__", password, -1)
+
+	output, err := c.sshClient.Run(ribcl)
+	if err != nil {
+		return fmt.Errorf(output)
+	}
+
+	//since there are multiple blades and this command
+	//could fail on any of the blades because they are un responsive
+	//we only validate the command actually ran and not if it succeded on each blade.
+	if !strings.Contains(output, "END RIBCL RESULTS") {
+		return fmt.Errorf(output)
+	}
+
+	return err
+}
+
+// AddBladeBmcAdmin configures BMC Admin user accounts through the chassis.
+// this method will attempt to add the user to all BMCs in a chassis.
+func (c *C7000) AddBladeBmcAdmin(username string, password string) (err error) {
+
+	ribcl := `HPONCFG all  << end_marker
+<RIBCL VERSION="2.0">
+<LOGIN USER_LOGIN="__USERNAME__" PASSWORD="__PASSWORD__">
+ <USER_INFO MODE="write">
+   <ADD_USER
+     USER_NAME="__USERNAME__"
+     USER_LOGIN="__USERNAME__"
+     PASSWORD="__PASSWORD__">
+     <ADMIN_PRIV value ="Yes"/>
+     <REMOTE_CONS_PRIV value ="Yes"/>
+     <RESET_SERVER_PRIV value ="Yes"/>
+     <VIRTUAL_MEDIA_PRIV value ="Yes"/>
+     <CONFIG_ILO_PRIV value="Yes"/>
+   </ADD_USER>
+ </USER_INFO>
+ </LOGIN>
+</RIBCL>
+end_marker`
+
+	ribcl = strings.Replace(ribcl, "__USERNAME__", username, -1)
+	ribcl = strings.Replace(ribcl, "__PASSWORD__", password, -1)
+
+	output, err := c.sshClient.Run(ribcl)
+	if err != nil {
+		return fmt.Errorf(output)
+	}
+
+	//since there are multiple blades and this command
+	//could fail on any of the blades because they are un responsive
+	//we only validate the command actually ran and not if it succeded on each blade.
+	if !strings.Contains(output, "END RIBCL RESULTS") {
+		return fmt.Errorf(output)
+	}
+
+	return err
+}
+
+// RemoveBladeBmcUser removes the user account from all BMCs through the chassis.
+func (c *C7000) RemoveBladeBmcUser(username string) (err error) {
+
+	ribcl := `HPONCFG all  << end_marker
+<RIBCL VERSION="2.0">
+<LOGIN USER_LOGIN="__USERNAME__" PASSWORD="">
+ <USER_INFO MODE="write">
+   <DELETE_USER USER_LOGIN="__USERNAME__" />
+ </USER_INFO>
+ </LOGIN>
+</RIBCL>
+end_marker`
+
+	ribcl = strings.Replace(ribcl, "__USERNAME__", username, -1)
+
+	output, err := c.sshClient.Run(ribcl)
+	if err != nil {
+		return fmt.Errorf(output)
+	}
+
+	//since there are multiple blades and this command
+	//could fail on any of the blades because they are un responsive
+	//we only validate the command actually ran and not if it succeded on each blade.
+	if !strings.Contains(output, "END RIBCL RESULTS") {
+		return fmt.Errorf(output)
+	}
+
+	return err
+}
+
 // SetFlexAddressState Enable/Disable FlexAddress disables flex Addresses for blades
 // FlexAddress is a virtual addressing scheme
 func (c *C7000) SetFlexAddressState(position int, enable bool) (status bool, err error) {
