@@ -9,10 +9,16 @@ import (
 
 func (i *IDrac9) Screenshot() (response []byte, extension string, err error) {
 
-	endpoint := "capconsole/scapture0.png"
 	extension = "png"
 
-	response, err = i.get(endpoint, &map[string]string{})
+	endpoint1 := "sysmgmt/2015/server/preview"
+	response, err = i.get(endpoint1, &map[string]string{})
+	if err != nil {
+		return []byte{}, extension, err
+	}
+
+	endpoint2 := "capconsole/scapture0.png"
+	response, err = i.get(endpoint2, &map[string]string{})
 	if err != nil {
 		return []byte{}, extension, err
 	}
