@@ -16,7 +16,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// SetupChassis struct holds attributes required to run chassis setup.
+// SetupChassis struct holds various attributes for chassis setup methods.
 type SetupChassis struct {
 	Asset          *asset.Asset
 	Config         *config.Params //bmcbutler config, cli params
@@ -136,12 +136,94 @@ func (s *SetupChassis) applyConfig() (configured bool) {
 					"Error":     err,
 				}).Warn("Failed to power up all blades in chassis.")
 			}
+		case "AddBladeBmcAdmins":
+			err := s.addBladeBmcAdmins(s.Chassis, s.AssetConfig.AddBladeBmcAdmins)
+			if err != nil {
+				configured = false
+				log.WithFields(logrus.Fields{
+					"component": component,
+					"butler-id": s.ID,
+					"Asset":     fmt.Sprintf("%+v", s.Asset),
+					"Error":     err,
+				}).Warn("Failed to add blade BMC admin accounts through chassis.")
+			}
+		case "RemoveBladeBmcUsers":
+			err := s.removeBladeBmcUsers(s.Chassis, s.AssetConfig.RemoveBladeBmcUsers)
+			if err != nil {
+				configured = false
+				log.WithFields(logrus.Fields{
+					"component": component,
+					"butler-id": s.ID,
+					"Asset":     fmt.Sprintf("%+v", s.Asset),
+					"Error":     err,
+				}).Warn("Failed to remove blade BMC admin accounts through chassis.")
+			}
+
 		case "hostname":
 		default:
 		}
 	}
 
 	return configured
+}
+
+func (s *SetupChassis) addBladeBmcAdmins(chassis devices.BmcChassis, cfg []*cfgresources.BladeBmcAccount) (err error) {
+	component := "addBladeBmcAdmins"
+
+	for _, user := range cfg {
+		if user.Name == "" {
+			return fmt.Errorf("AddbladeBmcAdmins resource expects parameter: Name")
+		}
+
+		if user.Password == "" {
+			return fmt.Errorf("AddbladeBmcAdmins resource expects parameter: Password")
+		}
+
+		err = chassis.AddBladeBmcAdmin(user.Name, user.Password)
+		if err != nil {
+			return err
+		}
+
+		// in cases where the user may already exist, we modify the credentials
+		err = chassis.ModBladeBmcUser(user.Name, user.Password)
+		if err != nil {
+			return err
+		}
+
+		s.Log.WithFields(logrus.Fields{
+			"component": component,
+			"butler-id": s.ID,
+			"Asset":     fmt.Sprintf("%+v", s.Asset),
+			"User":      user.Name,
+		}).Debug("Blade BMC admin account added.")
+	}
+
+	return err
+}
+
+func (s *SetupChassis) removeBladeBmcUsers(chassis devices.BmcChassis, cfg []*cfgresources.BladeBmcAccount) (err error) {
+
+	component := "removeBladeBmcUsers"
+
+	for _, user := range cfg {
+		if user.Name == "" {
+			return fmt.Errorf("RemoveBladeBmcUsers resource expects parameter: Name")
+		}
+
+		err = chassis.RemoveBladeBmcUser(user.Name)
+		if err != nil {
+			return err
+		}
+
+		s.Log.WithFields(logrus.Fields{
+			"component": component,
+			"butler-id": s.ID,
+			"Asset":     fmt.Sprintf("%+v", s.Asset),
+			"User":      user.Name,
+		}).Debug("Blade BMC user account removed.")
+	}
+
+	return err
 }
 
 func (s *SetupChassis) setDynamicPower(chassis devices.BmcChassis, enable bool) (err error) {
@@ -163,7 +245,7 @@ func (s *SetupChassis) setDynamicPower(chassis devices.BmcChassis, enable bool) 
 		"component": component,
 		"butler-id": s.ID,
 		"Asset":     fmt.Sprintf("%+v", s.Asset),
-	}).Info("Dynamic Power config applied successfully.")
+	}).Debug("Dynamic Power config applied successfully.")
 	return err
 
 }
@@ -232,7 +314,7 @@ func (s *SetupChassis) setIpmiOverLan(chassis devices.BmcChassis, enable bool) (
 		"component": component,
 		"butler-id": s.ID,
 		"Asset":     fmt.Sprintf("%+v", s.Asset),
-	}).Info("IpmiOverLan config applied successfully.")
+	}).Debug("IpmiOverLan config applied successfully.")
 
 	return err
 
@@ -269,7 +351,7 @@ func (s *SetupChassis) setFlexAddressState(chassis devices.BmcChassis, enable bo
 				"Blade Position": blade.BladePosition,
 				"Current state":  blade.FlexAddressEnabled,
 				"Expected state": enable,
-			}).Info("Disabling FlexAddress on blade.")
+			}).Debug("Disabling FlexAddress on blade.")
 
 			isPoweredOn, _ := chassis.IsOnBlade(blade.BladePosition)
 			if isPoweredOn {
@@ -395,7 +477,7 @@ func (s *SetupChassis) setFlexAddressState(chassis devices.BmcChassis, enable bo
 		"component": component,
 		"butler-id": s.ID,
 		"Asset":     fmt.Sprintf("%+v", s.Asset),
-	}).Info("FlexAddress config applied successfully.")
+	}).Debug("FlexAddress config applied successfully.")
 
 	return err
 }
@@ -444,7 +526,7 @@ func (s *SetupChassis) setBladesPower(chassis devices.BmcChassis, powerEnable bo
 					"butler-id":      s.ID,
 					"Blade Serial":   blade.Serial,
 					"Blade Position": blade.BladePosition,
-				}).Info("Set blade power state on.")
+				}).Debug("Set blade power state on.")
 			}
 
 			if powerEnable == false {
@@ -476,7 +558,7 @@ func (s *SetupChassis) setBladesPower(chassis devices.BmcChassis, powerEnable bo
 		"component": component,
 		"butler-id": s.ID,
 		"Asset":     fmt.Sprintf("%+v", s.Asset),
-	}).Info("BladesPower config applied successfully.")
+	}).Debug("BladesPower config applied successfully.")
 
 	return err
 }

@@ -86,6 +86,13 @@ setupChassis:
   flexAddress: 
     enable: false    #applies to all blades in a chassis
   dynamicPower: 
-    enable: false    #Dell (M1000e) calls this DPSE (dynamic PSU engagement)
-                     #HP (C7000) Dynamic Power
+    enable: false    #DPSE on M1000e, Dynamic power for the c7000.
+   addBladeBmcAdmins: #Add/Mod admin accounts to all blades in the chassis.
+    - name: Administrator
+      password: foobar123
+    - name: barbar
+      password: barbar
+  removeBladeBmcUsers: #Remove admin accounts from all blades in the chassis.
+    - name: olduser
+    - name: foo
 <% } %>
