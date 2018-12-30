@@ -48,7 +48,7 @@ type AttributesExtras struct {
 
 // AttributesExtrasAsMap accepts a AttributesExtras struct as input,
 // and returns all attributes as a map
-func (e *Enc) AttributesExtrasAsMap(attributeExtras *AttributesExtras) (extras map[string]string) {
+func AttributesExtrasAsMap(attributeExtras *AttributesExtras) (extras map[string]string) {
 
 	extras = make(map[string]string)
 
@@ -91,13 +91,11 @@ func (e *Enc) AssetRetrieve() func() {
 	}
 }
 
-// ExecCmd executes the ENC bin file and returns its response, error
-func (e *Enc) ExecCmd(args []string) (out []byte, err error) {
+// ExecCmd executes the executable with the given args and returns
+// the response as a slice of bytes, and the error if any.
+func ExecCmd(exe string, args []string) (out []byte, err error) {
 
-	//declare the executable
-	executable := e.Config.InventoryParams.EncExecutable
-
-	cmd := exec.Command(executable, args...)
+	cmd := exec.Command(exe, args...)
 
 	//To ignore SIGINTs received by bmcbutler,
 	//the commands are spawned in its own process group.
@@ -123,7 +121,7 @@ func (e *Enc) SetChassisInstalled(serials string) {
 	cmdArgs := []string{"inventory", "--set-chassis-installed", serials}
 
 	encBin := e.Config.InventoryParams.EncExecutable
-	out, err := e.ExecCmd(cmdArgs)
+	out, err := ExecCmd(encBin, cmdArgs)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"component": component,
@@ -144,7 +142,7 @@ func (e *Enc) encQueryBySerial(serials string) (assets []asset.Asset) {
 	cmdArgs := []string{"enc", "--serials", serials}
 
 	encBin := e.Config.InventoryParams.EncExecutable
-	out, err := e.ExecCmd(cmdArgs)
+	out, err := ExecCmd(encBin, cmdArgs)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"component": component,
@@ -180,7 +178,7 @@ func (e *Enc) encQueryBySerial(serials string) (assets []asset.Asset) {
 			continue
 		}
 
-		extras := e.AttributesExtrasAsMap(attributes.Extras)
+		extras := AttributesExtrasAsMap(attributes.Extras)
 		assets = append(assets,
 			asset.Asset{IPAddresses: attributes.IPAddress,
 				Serial:   serial,
@@ -189,7 +187,9 @@ func (e *Enc) encQueryBySerial(serials string) (assets []asset.Asset) {
 			})
 	}
 
-	metric.IncrCounter([]string{"inventory", "assets_fetched_enc"}, float32(len(assets)))
+	if metric != nil {
+		metric.IncrCounter([]string{"inventory", "assets_fetched_enc"}, float32(len(assets)))
+	}
 
 	return assets
 }
@@ -214,7 +214,7 @@ func (e *Enc) encQueryByIP(ips string) (assets []asset.Asset) {
 	cmdArgs := []string{"enc", "--ips", ips}
 
 	encBin := e.Config.InventoryParams.EncExecutable
-	out, err := e.ExecCmd(cmdArgs)
+	out, err := ExecCmd(encBin, cmdArgs)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"component": component,
@@ -254,7 +254,7 @@ func (e *Enc) encQueryByIP(ips string) (assets []asset.Asset) {
 			continue
 		}
 
-		extras := e.AttributesExtrasAsMap(attributes.Extras)
+		extras := AttributesExtrasAsMap(attributes.Extras)
 
 		assets = append(assets,
 			asset.Asset{IPAddresses: attributes.IPAddress,
@@ -303,7 +303,7 @@ func (e *Enc) encQueryByOffset(assetType string, offset int, limit int, location
 	}
 
 	encBin := e.Config.InventoryParams.EncExecutable
-	out, err := e.ExecCmd(cmdArgs)
+	out, err := ExecCmd(encBin, cmdArgs)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"component": component,
@@ -336,7 +336,7 @@ func (e *Enc) encQueryByOffset(assetType string, offset int, limit int, location
 			continue
 		}
 
-		extras := e.AttributesExtrasAsMap(attributes.Extras)
+		extras := AttributesExtrasAsMap(attributes.Extras)
 		assets = append(assets,
 			asset.Asset{IPAddresses: attributes.IPAddress,
 				Serial:   serial,
