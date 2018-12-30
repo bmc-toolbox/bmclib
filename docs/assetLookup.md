@@ -8,6 +8,8 @@ The idea is similar to a ENC (external node classifier),
 in this case given a server/chassis serial/ip its attributes are returned,
 the executable could also lookup the inventory given a limit and offset.
 
+TLDR; see samples/assetlookup.go for an example.
+
 ### Why
 
 Inventory lookup being handled by a binary of a users choice,
