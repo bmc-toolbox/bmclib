@@ -97,7 +97,7 @@ func assetBySerial(serials []string) AssetAttributes {
 				Company:   "acme",
 				AssetType: "server",
 				NetworkInterfaces: &[]NetworkInterface{
-					NetworkInterface{
+					{
 						Name:       "eth0",
 						MACAddress: fmt.Sprintf("02:42:85:1f:80:0%d", i),
 						IPAddress:  fmt.Sprintf("172.0.1.%d", i),
