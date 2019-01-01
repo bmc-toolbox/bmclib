@@ -7,9 +7,10 @@ import (
 
 // SelectOption describes a HTML <select> tag <option> meta data.
 type SelectOption struct {
-	Value    interface{}
-	Label    interface{}
-	Selected bool
+	Value       interface{}
+	Label       interface{}
+	Selected    bool
+	Placeholder bool
 }
 
 func (s SelectOption) String() string {
@@ -21,6 +22,9 @@ func (s SelectOption) String() string {
 	bb.WriteString(`"`)
 	if s.Selected {
 		bb.WriteString(` selected`)
+	}
+	if s.Placeholder {
+		bb.WriteString(` hidden disabled`)
 	}
 	bb.WriteString(`>`)
 	bb.WriteString(l)

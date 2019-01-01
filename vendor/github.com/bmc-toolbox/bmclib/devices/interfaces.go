@@ -7,6 +7,7 @@ import (
 // Bmc represents the requirement of items to be collected a server
 type Bmc interface {
 	ApplyCfg(*cfgresources.ResourcesConfig) error
+	Configure
 	BiosVersion() (string, error)
 	BmcType() string
 	BmcVersion() (string, error)
@@ -74,4 +75,16 @@ type BmcChassis interface {
 	TempC() (int, error)
 	UpdateCredentials(string, string)
 	Vendor() string
+}
+
+// Configure interface declares methods implemented
+// to apply configuration to BMCs.
+type Configure interface {
+	User([]*cfgresources.User) error
+	Syslog(*cfgresources.Syslog) error
+	Ntp(*cfgresources.Ntp) error
+	Ldap(*cfgresources.Ldap) error
+	LdapGroup([]*cfgresources.LdapGroup, *cfgresources.Ldap) error
+	Timezone(string) error
+	Network(*cfgresources.Network) error
 }

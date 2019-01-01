@@ -31,7 +31,7 @@ Custom Validation Functions
 Custom Validation functions can be added. Example:
 
 	// Structure
-	func customFunc(fl FieldLevel) bool {
+	func customFunc(fl validator.FieldLevel) bool {
 
 		if fl.Field().String() == "invalid" {
 			return false
@@ -583,18 +583,18 @@ E-mail String
 
 This validates that a string value contains a valid email
 This may not conform to all possibilities of any rfc standard, but neither
-does any email provider accept all posibilities.
+does any email provider accept all possibilities.
 
 	Usage: email
 
 File path
 
-This validates that a string value contains a valid file path and that 
-the file exists on the machine. 
-This is done using os.Stat, which is a platform independent function. 
+This validates that a string value contains a valid file path and that
+the file exists on the machine.
+This is done using os.Stat, which is a platform independent function.
 
 	Usage: file
-	
+
 URL String
 
 This validates that a string value contains a valid url
@@ -609,6 +609,13 @@ This validates that a string value contains a valid uri
 This will accept any uri the golang request uri accepts
 
 	Usage: uri
+
+Urn RFC 2141 String
+
+This validataes that a string value contains a valid URN
+according to the RFC 2141 spec.
+
+	Usage: urn_rfc2141
 
 Base64 String
 

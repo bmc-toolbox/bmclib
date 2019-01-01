@@ -147,11 +147,6 @@ type Command struct {
 	commandsMaxNameLen        int
 	// commandsAreSorted defines, if command slice are sorted or not.
 	commandsAreSorted bool
-	// commandCalledAs is the name or alias value used to call this command.
-	commandCalledAs struct {
-		name   string
-		called bool
-	}
 
 	// args is actual args parsed from flags.
 	args []string
@@ -562,7 +557,6 @@ func (c *Command) findNext(next string) *Command {
 	matches := make([]*Command, 0)
 	for _, cmd := range c.commands {
 		if cmd.Name() == next || cmd.HasAlias(next) {
-			cmd.commandCalledAs.name = next
 			return cmd
 		}
 		if EnablePrefixMatching && cmd.hasNameOrAliasPrefix(next) {
@@ -573,7 +567,6 @@ func (c *Command) findNext(next string) *Command {
 	if len(matches) == 1 {
 		return matches[0]
 	}
-
 	return nil
 }
 
@@ -833,11 +826,6 @@ func (c *Command) ExecuteC() (cmd *Command, err error) {
 			c.Printf("Run '%v --help' for usage.\n", c.CommandPath())
 		}
 		return c, err
-	}
-
-	cmd.commandCalledAs.called = true
-	if cmd.commandCalledAs.name == "" {
-		cmd.commandCalledAs.name = cmd.Name()
 	}
 
 	err = cmd.execute(flags)
@@ -1147,25 +1135,14 @@ func (c *Command) HasAlias(s string) bool {
 	return false
 }
 
-// CalledAs returns the command name or alias that was used to invoke
-// this command or an empty string if the command has not been called.
-func (c *Command) CalledAs() string {
-	if c.commandCalledAs.called {
-		return c.commandCalledAs.name
-	}
-	return ""
-}
-
 // hasNameOrAliasPrefix returns true if the Name or any of aliases start
 // with prefix
 func (c *Command) hasNameOrAliasPrefix(prefix string) bool {
 	if strings.HasPrefix(c.Name(), prefix) {
-		c.commandCalledAs.name = c.Name()
 		return true
 	}
 	for _, alias := range c.Aliases {
 		if strings.HasPrefix(alias, prefix) {
-			c.commandCalledAs.name = alias
 			return true
 		}
 	}
@@ -1268,7 +1245,7 @@ func (c *Command) HasParent() bool {
 	return c.parent != nil
 }
 
-// GlobalNormalizationFunc returns the global normalization function or nil if it doesn't exist.
+// GlobalNormalizationFunc returns the global normalization function or nil if doesn't exists.
 func (c *Command) GlobalNormalizationFunc() func(f *flag.FlagSet, name string) flag.NormalizedName {
 	return c.globNormFunc
 }

@@ -1,0 +1,152 @@
+package ibmc
+
+import (
+	"github.com/bmc-toolbox/bmclib/cfgresources"
+	"github.com/bmc-toolbox/bmclib/devices"
+)
+
+// The ibmc model is part of the dummy vendor,
+// for lack of a better name and since most annoying devices begin with "i"
+// ibmc only exists to make testing easier.
+
+const (
+	// BMCType defines the bmc model that is supported by this package
+	BMCType = "ibmc"
+)
+
+// Ibmc holds the status and properties of a connection to an iDrac device
+type Ibmc struct {
+	ip       string
+	username string
+	password string
+}
+
+// New returns a new ibmc ready to be used
+func New(ip string, username string, password string) *Ibmc {
+	return &Ibmc{ip: ip, username: username, password: password}
+}
+
+// ApplyCfg implements the Bmc interface
+func (i *Ibmc) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
+	return nil
+}
+
+// BiosVersion implements the Bmc interface
+func (i *Ibmc) BiosVersion() (string, error) {
+	return "", nil
+}
+
+// BmcType implements the Bmc interface
+func (i *Ibmc) BmcType() string {
+	return ""
+}
+
+// BmcVersion implements the Bmc interface
+func (i *Ibmc) BmcVersion() (string, error) {
+	return "", nil
+}
+
+// CPU implements the Bmc interface
+func (i *Ibmc) CPU() (string, int, int, int, error) {
+	return "", 0, 0, 0, nil
+}
+
+// CheckCredentials implements the Bmc interface
+func (i *Ibmc) CheckCredentials() error {
+	return nil
+}
+
+// Disks implements the Bmc interface
+func (i *Ibmc) Disks() ([]*devices.Disk, error) {
+	return make([]*devices.Disk, 0), nil
+}
+
+// IsBlade implements the Bmc interface
+func (i *Ibmc) IsBlade() (bool, error) {
+	return false, nil
+}
+
+// License implements the Bmc interface
+func (i *Ibmc) License() (string, string, error) {
+	return "", "", nil
+}
+
+// Close implements the Bmc interface
+func (i *Ibmc) Close() error {
+	return nil
+}
+
+// Memory implements the Bmc interface
+func (i *Ibmc) Memory() (int, error) {
+	return 0, nil
+}
+
+// Model implements the Bmc interface
+func (i *Ibmc) Model() (string, error) {
+	return "", nil
+}
+
+// Name implements the Bmc interface
+func (i *Ibmc) Name() (string, error) {
+	return "", nil
+}
+
+// Nics implements the Bmc interface
+func (i *Ibmc) Nics() ([]*devices.Nic, error) {
+	return make([]*devices.Nic, 0), nil
+}
+
+// PowerKw implements the Bmc interface
+func (i *Ibmc) PowerKw() (float64, error) {
+	return 0.0, nil
+}
+
+// PowerState implements the Bmc interface
+func (i *Ibmc) PowerState() (string, error) {
+	return "", nil
+}
+
+// PowerCycleBmc implements the Bmc interface
+func (i *Ibmc) PowerCycleBmc() (status bool, err error) {
+	return false, nil
+}
+
+// PowerCycle implements the Bmc interface
+func (i *Ibmc) PowerCycle() (status bool, err error) {
+	return false, nil
+}
+
+// Serial implements the Bmc interface
+func (i *Ibmc) Serial() (string, error) {
+	return "", nil
+}
+
+// Status implements the Bmc interface
+func (i *Ibmc) Status() (string, error) {
+	return "", nil
+}
+
+// TempC implements the Bmc interface
+func (i *Ibmc) TempC() (int, error) {
+	return 0, nil
+}
+
+// Vendor implements the Bmc interface
+func (i *Ibmc) Vendor() string {
+	return ""
+}
+
+// Screenshot implements the Bmc interface
+func (i *Ibmc) Screenshot() ([]byte, string, error) {
+	return []byte{}, "", nil
+}
+
+// ServerSnapshot implements the Bmc interface
+func (i *Ibmc) ServerSnapshot() (interface{}, error) {
+	return nil, nil
+}
+
+// UpdateCredentials implements the Bmc interface
+func (i *Ibmc) UpdateCredentials(string, string) {
+	return
+}

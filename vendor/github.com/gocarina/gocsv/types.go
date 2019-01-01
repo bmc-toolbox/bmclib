@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+
+	"encoding/json"
 )
 
 // --------------------------------------------------------------------------
@@ -89,12 +91,12 @@ func toBool(in interface{}) (bool, error) {
 	switch inValue.Kind() {
 	case reflect.String:
 		s := inValue.String()
-		switch s {
-		case "yes":
+		s = strings.TrimSpace(s)
+		if strings.EqualFold(s, "yes") {
 			return true, nil
-		case "no", "":
+		} else if strings.EqualFold(s, "no") || s == "" {
 			return false, nil
-		default:
+		} else {
 			return strconv.ParseBool(s)
 		}
 	case reflect.Bool:
@@ -285,6 +287,11 @@ func setField(field reflect.Value, value string, omitEmpty bool) error {
 					return err
 				}
 				field.SetFloat(f)
+			case reflect.Slice:
+				err := json.Unmarshal([]byte(value), field.Addr().Interface())
+				if err != nil {
+					return err
+				}
 			default:
 				return err
 			}

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gobuffalo/flect"
 	"github.com/gobuffalo/tags"
-	"github.com/markbates/inflect"
 )
 
 func buildOptions(opts tags.Options, err bool) {
@@ -43,7 +43,7 @@ func divWrapper(opts tags.Options, fn func(opts tags.Options) tags.Body) *tags.T
 	if opts["label"] == nil && opts["tags-field"] != nil {
 		if tf, ok := opts["tags-field"].(string); ok {
 			tf = strings.Join(strings.Split(tf, "."), " ")
-			opts["label"] = inflect.Titleize(tf)
+			opts["label"] = flect.Titleize(tf)
 		}
 	}
 

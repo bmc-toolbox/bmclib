@@ -99,7 +99,18 @@ func parseSelectOptions(opts tags.Options) SelectOptions {
 	sopts := opts["options"]
 	delete(opts, "options")
 
+	placeHolder := opts["placeholder"]
+	delete(opts, "placeholder")
+
 	so := SelectOptions{}
+	if ph, ok := placeHolder.(string); ok {
+		so = append(so, SelectOption{
+			Value:       "",
+			Label:       ph,
+			Placeholder: true,
+		})
+	}
+
 	if aw, ok := allowBlank.(bool); ok && aw {
 		so = append(so, SelectOption{
 			Value: "",
@@ -108,7 +119,7 @@ func parseSelectOptions(opts tags.Options) SelectOptions {
 	}
 
 	if x, ok := sopts.(SelectOptions); ok {
-		x = append(so, x...) // prepend blank SelectOption if present
+		x = append(so, x...) // prepend placerholder or blank SelectOption if present
 		return x
 	}
 
