@@ -60,17 +60,19 @@ func (c *Csv) AssetRetrieve() func() {
 	case c.Config.FilterParams.Chassis:
 		c.FilterAssetType = append(c.FilterAssetType, "chassis")
 	case c.Config.FilterParams.Blades:
-		c.FilterAssetType = append(c.FilterAssetType, "blade")
+		c.FilterAssetType = append(c.FilterAssetType, "servers")
 	case c.Config.FilterParams.Discretes:
-		c.FilterAssetType = append(c.FilterAssetType, "discrete")
+		c.FilterAssetType = append(c.FilterAssetType, "servers")
 	case !c.Config.FilterParams.Chassis && !c.Config.FilterParams.Blades && !c.Config.FilterParams.Discretes:
-		c.FilterAssetType = []string{"chassis", "blade", "discrete"}
+		c.FilterAssetType = []string{"chassis", "servers"}
 	}
 
 	//Based on the filter param given, return the asset iterator method.
 	switch {
 	case c.Config.FilterParams.Serials != "":
 		return c.AssetIterBySerial
+	case c.Config.FilterParams.Ips != "":
+		return c.AssetIterByIP
 	default:
 		return c.AssetIter
 	}
@@ -109,6 +111,47 @@ func (c *Csv) AssetIterBySerial() {
 	c.AssetsChan <- assets
 	close(c.AssetsChan)
 
+}
+
+// AssetIterByIP reads in list of ips passed in via cli,
+// attempts to lookup any attributes for the IP in the inventory,
+// and sends an asset for each attribute over the asset channel
+func (c *Csv) AssetIterByIP() {
+
+	defer close(c.AssetsChan)
+
+	csvAssets := c.readCsv()
+
+	ips := c.Config.FilterParams.Ips
+
+	//query csv inventory for asset attributes
+	assets := make([]asset.Asset, 0)
+	for _, ip := range strings.Split(ips, ",") {
+
+		a := asset.Asset{IPAddresses: []string{ip}}
+
+		c.Log.Debug("looking up attributes for IP: ", ip)
+		for _, item := range csvAssets {
+			if item == nil {
+				continue
+			}
+			if item.BmcAddress == "" {
+				continue
+			}
+
+			if item.BmcAddress == ip {
+
+				a.Serial = item.Serial
+				a.Vendor = item.Vendor
+				a.Type = item.Type
+
+			}
+		}
+
+		assets = append(assets, a)
+	}
+
+	c.AssetsChan <- assets
 }
 
 // AssetIter reads in assets and passes them to the inventory channel.
