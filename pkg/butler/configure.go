@@ -10,6 +10,7 @@ import (
 	"github.com/bmc-toolbox/bmclogin"
 
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
+	"github.com/bmc-toolbox/bmcbutler/pkg/butler/configure"
 	"github.com/bmc-toolbox/bmcbutler/pkg/resource"
 	"github.com/bmc-toolbox/bmclib/devices"
 )
@@ -67,13 +68,11 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 			return errors.New("No BMC configuration to be applied")
 		}
 
+		// type case the bmc device for configuration
+		c := configure.New(bmc.(devices.Configure), log)
+
 		// Apply configuration
-		bmc.ApplyCfg(renderedConfig)
-		log.WithFields(logrus.Fields{
-			"component": component,
-			"butler-id": b.id,
-			"Asset":     fmt.Sprintf("%+v", asset),
-		}).Info("Config applied.")
+		c.Apply()
 
 		bmc.Close()
 	case devices.BmcChassis:
