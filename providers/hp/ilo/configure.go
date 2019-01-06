@@ -10,6 +10,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// This ensures the compiler errors if this type is missing
+// a method that should be implmented to satisfy the Configure interface.
+var _ devices.Configure = (*Ilo)(nil)
+
 // Resources returns a slice of supported resources and
 // the order they are to be applied in.
 func (i *Ilo) Resources() []string {
