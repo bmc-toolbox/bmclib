@@ -3,13 +3,28 @@ package ilo
 import (
 	"encoding/json"
 	"errors"
-	"reflect"
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
+	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/internal/helper"
 	log "github.com/sirupsen/logrus"
 )
 
+// Resources returns a slice of supported resources and
+// the order they are to be applied in.
+func (i *Ilo) Resources() []string {
+	return []string{
+		"user",
+		"syslog",
+		"license",
+		"ntp",
+		"ldap_group",
+		"ldap",
+	}
+}
+
+// ApplyCfg applies configuration
+// To be deprecated once the Configure interface is ready.
 func (i *Ilo) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 
 	//check sessionKey is available
@@ -24,108 +39,7 @@ func (i *Ilo) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 		return errors.New(msg)
 	}
 
-	cfg := reflect.ValueOf(config).Elem()
-
-	//Each Field in ResourcesConfig struct is a ptr to a resource,
-	//Here we figure the resources to be configured, i.e the ptr is not nil
-	for r := 0; r < cfg.NumField(); r++ {
-		resourceName := cfg.Type().Field(r).Name
-		if cfg.Field(r).Pointer() != 0 {
-			switch resourceName {
-			case "User":
-				//retrieve users resource values as an interface
-				userAccounts := cfg.Field(r).Interface()
-
-				//assert userAccounts interface to its actual type - A slice of ptrs to User
-				err := i.applyUserParams(userAccounts.([]*cfgresources.User))
-				if err != nil {
-					log.WithFields(log.Fields{
-						"step":     "ApplyCfg",
-						"resource": cfg.Field(r).Kind(),
-						"IP":       i.ip,
-						"Model":    i.BmcType(),
-						"Serial":   i.serial,
-						"Error":    err,
-					}).Warn("Unable to set User config.")
-				}
-
-			case "Syslog":
-				syslogCfg := cfg.Field(r).Interface().(*cfgresources.Syslog)
-				err := i.applySyslogParams(syslogCfg)
-				if err != nil {
-					log.WithFields(log.Fields{
-						"step":     "ApplyCfg",
-						"resource": cfg.Field(r).Kind(),
-						"IP":       i.ip,
-						"Model":    i.BmcType(),
-						"Serial":   i.serial,
-						"Error":    err,
-					}).Warn("Unable to set Syslog config.")
-				}
-			case "Network":
-			case "Ntp":
-				ntpCfg := cfg.Field(r).Interface().(*cfgresources.Ntp)
-				err := i.applyNtpParams(ntpCfg)
-				if err != nil {
-					log.WithFields(log.Fields{
-						"step":     "ApplyCfg",
-						"resource": cfg.Field(r).Kind(),
-						"IP":       i.ip,
-						"Model":    i.BmcType(),
-						"Serial":   i.serial,
-						"Error":    err,
-					}).Warn("Unable to set NTP config.")
-				}
-			case "LdapGroup":
-				ldapGroups := cfg.Field(r).Interface()
-				err := i.applyLdapGroupParams(ldapGroups.([]*cfgresources.LdapGroup))
-				if err != nil {
-					log.WithFields(log.Fields{
-						"step":     "applyLdapParams",
-						"resource": "Ldap",
-						"IP":       i.ip,
-						"Model":    i.BmcType(),
-						"Serial":   i.serial,
-						"Error":    err,
-					}).Warn("applyLdapGroupParams returned error.")
-				}
-			case "Ldap":
-				ldapCfg := cfg.Field(r).Interface()
-				err := i.applyLdapParams(ldapCfg.(*cfgresources.Ldap))
-				if err != nil {
-					log.WithFields(log.Fields{
-						"step":     "applyLdapParams",
-						"resource": "Ldap",
-						"IP":       i.ip,
-						"Model":    i.BmcType(),
-						"Serial":   i.serial,
-						"Error":    err,
-					}).Warn("applyLdapGroupParams returned error.")
-				}
-			case "License":
-				licenseCfg := cfg.Field(r).Interface()
-				err := i.applyLicenseParams(licenseCfg.(*cfgresources.License))
-				if err != nil {
-					log.WithFields(log.Fields{
-						"step":     "applyLicenseParams",
-						"resource": "License",
-						"IP":       i.ip,
-						"Model":    i.BmcType(),
-						"Serial":   i.serial,
-						"Error":    err,
-					}).Warn("applyLicenseParams returned error.")
-				}
-			case "Ssl":
-			default:
-				log.WithFields(log.Fields{
-					"step":     "ApplyCfg",
-					"resource": resourceName,
-				}).Debug("Unknown resource definition.")
-			}
-		}
-	}
-
-	return err
+	return nil
 }
 
 // Return bool value if the role is valid.
@@ -165,9 +79,10 @@ func ldapGroupExists(group string, directoryGroups []DirectoryGroups) (directory
 	return directoryGroup, false
 }
 
-// attempts to add the user
-// if the user exists, update the users password.
-func (i *Ilo) applyUserParams(users []*cfgresources.User) (err error) {
+// User applies the User configuration resource,
+// if the user exists, it updates the users password,
+// User implements the Configure interface.
+func (i *Ilo) User(users []*cfgresources.User) (err error) {
 
 	existingUsers, err := i.queryUsers()
 	if err != nil {
@@ -307,7 +222,9 @@ func (i *Ilo) applyUserParams(users []*cfgresources.User) (err error) {
 	return err
 }
 
-func (i *Ilo) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
+// Syslog applies the Syslog configuration resource
+// Syslog implements the Configure interface
+func (i *Ilo) Syslog(cfg *cfgresources.Syslog) (err error) {
 
 	var port int
 	enable := 1
@@ -383,7 +300,9 @@ func (i *Ilo) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
 	return err
 }
 
-func (i *Ilo) applyLicenseParams(cfg *cfgresources.License) (err error) {
+// SetLicense applies license configuration params
+// SetLicense implements the Configure interface.
+func (i *Ilo) SetLicense(cfg *cfgresources.License) (err error) {
 
 	if cfg.Key == "" {
 		msg := "License resource expects parameter: Key."
@@ -438,7 +357,9 @@ func (i *Ilo) applyLicenseParams(cfg *cfgresources.License) (err error) {
 	return err
 }
 
-func (i *Ilo) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
+// Ntp applies NTP configuration params
+// Ntp implements the Configure interface.
+func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 
 	enable := 1
 	if cfg.Server1 == "" {
@@ -546,7 +467,9 @@ func (i *Ilo) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 	return err
 }
 
-func (i *Ilo) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) {
+// LdapGroup applies LDAP Group/Role related configuration
+// LdapGroup implements the Configure interface.
+func (i *Ilo) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
 
 	directoryGroups, err := i.queryDirectoryGroups()
 	if err != nil {
@@ -674,7 +597,9 @@ func (i *Ilo) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) {
 	return err
 }
 
-func (i *Ilo) applyLdapParams(cfg *cfgresources.Ldap) (err error) {
+// Ldap applies LDAP configuration params.
+// Ldap implements the Configure interface.
+func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 
 	if cfg.Server == "" {
 		msg := "Ldap resource parameter Server required but not declared."
@@ -760,4 +685,9 @@ func (i *Ilo) applyLdapParams(cfg *cfgresources.Ldap) (err error) {
 
 	return err
 
+}
+
+// Network method implements the Configure interface
+func (i *Ilo) Network(cfg *cfgresources.Network) error {
+	return nil
 }
