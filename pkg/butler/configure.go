@@ -68,10 +68,8 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 			return errors.New("No BMC configuration to be applied")
 		}
 
-		// type case the bmc device for configuration
-		c := configure.New(bmc.(devices.Configure), log)
-
 		// Apply configuration
+		c := configure.New(bmc, renderedConfig, log)
 		c.Apply()
 
 		bmc.Close()
