@@ -38,6 +38,8 @@ type Bmc interface {
 // BmcChassis represents the requirement of items to be collected from a chassis
 type BmcChassis interface {
 	ApplyCfg(*cfgresources.ResourcesConfig) error
+	// embed Configure interface
+	Configure
 	Blades() ([]*Blade, error)
 	BmcType() string
 	ChassisSnapshot() (*Chassis, error)
