@@ -69,7 +69,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		}
 
 		// Apply configuration
-		c := configure.New(bmc, renderedConfig, log)
+		c := configure.NewBmcConfigurator(bmc, renderedConfig, log)
 		c.Apply()
 
 		bmc.Close()
@@ -91,17 +91,11 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 
 		if renderedConfig.SetupChassis != nil {
 			b.SetupChassis(renderedConfig.SetupChassis, asset, chassis)
-
-			//to prevent chassis.ApplyCfg() from carrying out this setup action.
-			renderedConfig.SetupChassis = nil
 		}
 
-		chassis.ApplyCfg(renderedConfig)
-		log.WithFields(logrus.Fields{
-			"component": component,
-			"butler-id": b.id,
-			"Asset":     fmt.Sprintf("%+v", asset),
-		}).Info("Config applied.")
+		// Apply configuration
+		c := configure.NewBmcChassisConfigurator(chassis, renderedConfig, log)
+		c.Apply()
 
 		chassis.Close()
 	default:

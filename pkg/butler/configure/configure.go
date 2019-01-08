@@ -6,17 +6,17 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// Configure struct declares attributes required to apply configuration.
-type Configure struct {
+// Bmc struct declares attributes required to apply configuration.
+type Bmc struct {
 	bmc       devices.Bmc
 	configure devices.Configure
 	config    *cfgresources.ResourcesConfig
 	logger    *logrus.Logger
 }
 
-// New returns a new configure struct to apply configuration.
-func New(bmc devices.Bmc, config *cfgresources.ResourcesConfig, logger *logrus.Logger) *Configure {
-	return &Configure{
+// NewBmcConfigurator returns a new configure struct to apply configuration.
+func NewBmcConfigurator(bmc devices.Bmc, config *cfgresources.ResourcesConfig, logger *logrus.Logger) *Bmc {
+	return &Bmc{
 		// client is of type devices.Bmc
 		bmc: bmc,
 		// devices.Bmc is type asserted to apply configuration,
@@ -28,14 +28,14 @@ func New(bmc devices.Bmc, config *cfgresources.ResourcesConfig, logger *logrus.L
 }
 
 // Apply applies configuration.
-func (c *Configure) Apply() {
+func (b *Bmc) Apply() {
 
 	// retrieve valid or known configuration resources for the bmc.
-	resources := c.configure.Resources()
+	resources := b.configure.Resources()
 
-	vendor := c.bmc.Vendor()
-	model, _ := c.bmc.Model()
-	serial, _ := c.bmc.Serial()
+	vendor := b.bmc.Vendor()
+	model, _ := b.bmc.Model()
+	serial, _ := b.bmc.Serial()
 
 	for _, resource := range resources {
 
@@ -43,23 +43,23 @@ func (c *Configure) Apply() {
 
 		switch resource {
 		case "user":
-			err = c.configure.User(c.config.User)
+			err = b.configure.User(b.config.User)
 		case "syslog":
-			err = c.configure.Syslog(c.config.Syslog)
+			err = b.configure.Syslog(b.config.Syslog)
 		case "ntp":
-			err = c.configure.Ntp(c.config.Ntp)
+			err = b.configure.Ntp(b.config.Ntp)
 		case "ldap":
-			err = c.configure.Ldap(c.config.Ldap)
+			err = b.configure.Ldap(b.config.Ldap)
 		case "ldap_group":
-			err = c.configure.LdapGroup(c.config.LdapGroup, c.config.Ldap)
+			err = b.configure.LdapGroup(b.config.LdapGroup, b.config.Ldap)
 		case "license":
-			err = c.configure.SetLicense(c.config.License)
+			err = b.configure.SetLicense(b.config.License)
 		case "network":
-			err = c.configure.Network(c.config.Network)
+			err = b.configure.Network(b.config.Network)
 		}
 
 		if err != nil {
-			c.logger.WithFields(logrus.Fields{
+			b.logger.WithFields(logrus.Fields{
 				"resource": resource,
 				"IP":       "",
 				"Vendor":   vendor,
@@ -69,7 +69,7 @@ func (c *Configure) Apply() {
 			}).Warn("Resource configuration returned errors.")
 		}
 
-		c.logger.WithFields(logrus.Fields{
+		b.logger.WithFields(logrus.Fields{
 			"resource": resource,
 			"IP":       "",
 			"Vendor":   vendor,
@@ -79,7 +79,88 @@ func (c *Configure) Apply() {
 
 	}
 
-	c.logger.WithFields(logrus.Fields{
+	b.logger.WithFields(logrus.Fields{
+		"IP":     "",
+		"Vendor": vendor,
+		"Model":  model,
+		"Serial": serial,
+	}).Debug("Configuration applied successfully.")
+}
+
+// BmcChassis struct declares attributes required to apply configuration.
+type BmcChassis struct {
+	bmc       devices.BmcChassis
+	configure devices.Configure
+	config    *cfgresources.ResourcesConfig
+	logger    *logrus.Logger
+}
+
+// NewBmcChassisConfigurator returns a new configure struct to apply configuration.
+func NewBmcChassisConfigurator(bmc devices.BmcChassis, config *cfgresources.ResourcesConfig, logger *logrus.Logger) *BmcChassis {
+	return &BmcChassis{
+		// client is of type devices.Bmc
+		bmc: bmc,
+		// devices.BmcChassis is type asserted to apply configuration,
+		// this is possible since devices.Bmc embeds the Configure interface.
+		configure: bmc.(devices.Configure),
+		config:    config,
+		logger:    logger,
+	}
+}
+
+// Apply applies configuration.
+func (b *BmcChassis) Apply() {
+
+	// retrieve valid or known configuration resources for the Chassis bmc.
+	resources := b.configure.Resources()
+
+	vendor := b.bmc.Vendor()
+	model, _ := b.bmc.Model()
+	serial, _ := b.bmc.Serial()
+
+	for _, resource := range resources {
+
+		var err error
+
+		switch resource {
+		case "user":
+			err = b.configure.User(b.config.User)
+		case "syslog":
+			err = b.configure.Syslog(b.config.Syslog)
+		case "ntp":
+			err = b.configure.Ntp(b.config.Ntp)
+		case "ldap":
+			err = b.configure.Ldap(b.config.Ldap)
+		case "ldap_group":
+			err = b.configure.LdapGroup(b.config.LdapGroup, b.config.Ldap)
+		case "license":
+			err = b.configure.SetLicense(b.config.License)
+		case "network":
+			err = b.configure.Network(b.config.Network)
+		}
+
+		if err != nil {
+			b.logger.WithFields(logrus.Fields{
+				"resource": resource,
+				"IP":       "",
+				"Vendor":   vendor,
+				"Model":    model,
+				"Serial":   serial,
+				"Error":    err,
+			}).Warn("Resource configuration returned errors.")
+		}
+
+		b.logger.WithFields(logrus.Fields{
+			"resource": resource,
+			"IP":       "",
+			"Vendor":   vendor,
+			"Model":    model,
+			"Serial":   serial,
+		}).Debug("Resource configuration applied.")
+
+	}
+
+	b.logger.WithFields(logrus.Fields{
 		"IP":     "",
 		"Vendor": vendor,
 		"Model":  model,
