@@ -33,16 +33,14 @@ func diffBiosSettings(new *BiosSettings, current *BiosSettings) (diff *BiosSetti
 		//
 		struct1fieldValue, ok := struct1V.Field(i).Interface().(string)
 		if !ok {
-			return diff, errors.New(
-				fmt.Sprintf("BiosSettings struct field expected to be of type string: ",
-					typeOfStruct.Field(i).Name))
+			return diff, fmt.Errorf("BiosSettings struct field expected to be of type string: %v",
+				typeOfStruct.Field(i).Name)
 		}
 
 		struct2fieldValue := struct2V.Field(i).Interface().(string)
 		if !ok {
-			return diff, errors.New(
-				fmt.Sprintf("BiosSettings struct field expected to be of type string: ",
-					typeOfStruct.Field(i).Name))
+			return diff, fmt.Errorf("BiosSettings struct field expected to be of type string: %v",
+				typeOfStruct.Field(i).Name)
 		}
 
 		if struct1fieldValue != struct2fieldValue {
@@ -278,7 +276,7 @@ func isRequestMethodValid(method string) (valid bool) {
 func (i *IDrac9) queryRedfish(method string, endpoint string, payload []byte) (statusCode int, response []byte, err error) {
 
 	if !isRequestMethodValid(method) {
-		return statusCode, response, errors.New(fmt.Sprintf("Invalid request method: ", method))
+		return statusCode, response, fmt.Errorf("Invalid request method: %v", method)
 	}
 
 	bmcURL := fmt.Sprintf("https://%s", i.ip)
