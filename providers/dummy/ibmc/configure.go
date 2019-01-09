@@ -51,3 +51,8 @@ func (i *Ibmc) Network(cfg *cfgresources.Network) error {
 func (i *Ibmc) SetLicense(*cfgresources.License) error {
 	return nil
 }
+
+// Bios method implements the Configure interface
+func (i *Ibmc) Bios(cfg *cfgresources.Bios) error {
+	return nil
+}

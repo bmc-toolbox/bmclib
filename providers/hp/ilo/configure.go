@@ -695,3 +695,8 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 func (i *Ilo) Network(cfg *cfgresources.Network) error {
 	return nil
 }
+
+// Bios method implements the Configure interface
+func (i *Ilo) Bios(cfg *cfgresources.Bios) error {
+	return nil
+}

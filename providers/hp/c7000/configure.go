@@ -979,3 +979,8 @@ func (c *C7000) Network(cfg *cfgresources.Network) error {
 func (c *C7000) SetLicense(*cfgresources.License) error {
 	return nil
 }
+
+// Bios method implements the Configure interface
+func (c *C7000) Bios(cfg *cfgresources.Bios) error {
+	return nil
+}

@@ -91,4 +91,5 @@ type Configure interface {
 	LdapGroup([]*cfgresources.LdapGroup, *cfgresources.Ldap) error
 	Network(*cfgresources.Network) error
 	SetLicense(*cfgresources.License) error
+	Bios(*cfgresources.Bios) error
 }
