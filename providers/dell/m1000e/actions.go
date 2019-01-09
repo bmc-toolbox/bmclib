@@ -401,6 +401,6 @@ func (m *M1000e) RemoveBladeBmcUser(username string) (err error) {
 }
 
 // ModBladeBmcUser modifies a BMC Admin user password through the chassis.
-func (m *M1000e) ModBladeBmcUser(username string) (err error) {
+func (m *M1000e) ModBladeBmcUser(username string, password string)) (err error) {
 	return errors.ErrNotImplemented
 }
