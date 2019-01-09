@@ -214,8 +214,13 @@ func (i *IDrac9) Nics() (nics []*devices.Nic, err error) {
 
 	for _, component := range i.iDracInventory.Component {
 		if component.Classname == "DCIM_NICView" {
+			var speed string
+			var up bool
 			for _, property := range component.Properties {
-				if property.Name == "ProductName" && property.Type == "string" {
+				if property.Name == "LinkSpeed" && property.Type == "uint8" && property.DisplayValue != "Unknown" {
+					speed = property.DisplayValue
+					up = true
+				} else if property.Name == "ProductName" && property.Type == "string" {
 					data := strings.Split(property.Value, " - ")
 					if len(data) == 2 {
 						if nics == nil {
@@ -224,6 +229,8 @@ func (i *IDrac9) Nics() (nics []*devices.Nic, err error) {
 
 						n := &devices.Nic{
 							Name:       data[0],
+							Speed:      speed,
+							Up:         up,
 							MacAddress: strings.ToLower(data[1]),
 						}
 						nics = append(nics, n)

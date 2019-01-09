@@ -4160,14 +4160,20 @@ func TestIDracNics(t *testing.T) {
 		&devices.Nic{
 			MacAddress: "24:6e:96:78:33:0c",
 			Name:       "Intel(R) Ethernet 10G 2P X520-k bNDC",
+			Up:         true,
+			Speed:      "10 Gbps",
 		},
 		&devices.Nic{
 			MacAddress: "24:6e:96:78:33:0e",
 			Name:       "Intel(R) Ethernet 10G 2P X520-k bNDC",
+			Up:         false,
+			Speed:      "",
 		},
 		&devices.Nic{
 			MacAddress: "50:9a:4c:6e:d7:2c",
 			Name:       "bmc",
+			Up:         false,
+			Speed:      "",
 		},
 	}
 
@@ -4186,7 +4192,7 @@ func TestIDracNics(t *testing.T) {
 	}
 
 	for pos, nic := range nics {
-		if nic.MacAddress != expectedAnswer[pos].MacAddress || nic.Name != expectedAnswer[pos].Name {
+		if nic.MacAddress != expectedAnswer[pos].MacAddress || nic.Name != expectedAnswer[pos].Name || nic.Speed != expectedAnswer[pos].Speed || nic.Up != expectedAnswer[pos].Up {
 			t.Errorf("Expected answer %v: found %v", expectedAnswer[pos], nic)
 		}
 	}
