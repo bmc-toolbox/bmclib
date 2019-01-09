@@ -2926,7 +2926,7 @@ var (
 				   </PROPERTY>
 				   <PROPERTY NAME="LinkSpeed" TYPE="uint8">
 					 <VALUE>9</VALUE>
-					 <DisplayValue>Unknown</DisplayValue>
+					 <DisplayValue>10 Gbps</DisplayValue>
 				   </PROPERTY>
 				   <PROPERTY NAME="LinkDuplex" TYPE="uint8">
 					 <VALUE>1</VALUE>
@@ -5485,14 +5485,20 @@ func TestIDracNics(t *testing.T) {
 		&devices.Nic{
 			MacAddress: "24:8a:07:5a:9e:8c",
 			Name:       "Mellanox ConnectX-4 LX 25GbE SFP Rack NDC",
+			Up:         true,
+			Speed:      "10 Gbps",
 		},
 		&devices.Nic{
 			MacAddress: "24:8a:07:5a:9e:8d",
 			Name:       "Mellanox ConnectX-4 LX 25GbE SFP Rack NDC",
+			Up:         false,
+			Speed:      "",
 		},
 		&devices.Nic{
 			MacAddress: "84:7b:eb:f7:82:5a",
 			Name:       "bmc",
+			Up:         false,
+			Speed:      "",
 		},
 	}
 
@@ -5511,7 +5517,7 @@ func TestIDracNics(t *testing.T) {
 	}
 
 	for pos, nic := range nics {
-		if nic.MacAddress != expectedAnswer[pos].MacAddress || nic.Name != expectedAnswer[pos].Name {
+		if nic.MacAddress != expectedAnswer[pos].MacAddress || nic.Name != expectedAnswer[pos].Name || nic.Speed != expectedAnswer[pos].Speed || nic.Up != expectedAnswer[pos].Up {
 			t.Errorf("Expected answer %v: found %v", expectedAnswer[pos], nic)
 		}
 	}
