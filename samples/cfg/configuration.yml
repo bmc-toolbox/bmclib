@@ -63,17 +63,14 @@ license:
   key: ASDFKLAMDNARALKNBA123
 <% } %>
 
-
-<%= if ( vendor == "dell" ) { %>
-#set dell idrac9 specific params
-#in this case we set PXE bios settings.
-dell:
-  idrac9bios:
-    PxeDev1EnDis: Enabled
-    PxeDev2EnDis: Disabled
-    PxeDev3EnDis: Disabled
-    PxeDev4EnDis: Disabled
-<% } %>
+#Bios configuration, declared per vendor, model.
+bios:
+  dell:
+    idrac9bios:
+      PxeDev1EnDis: Enabled
+      PxeDev2EnDis: Disabled
+      PxeDev3EnDis: Disabled
+      PxeDev4EnDis: Disabled
 
 #Chassis setup configuration to be declared only if various asset attributes match.
 <%= if ( assetType == "chassis" &&

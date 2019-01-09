@@ -56,6 +56,8 @@ func (b *Bmc) Apply() {
 			err = b.configure.SetLicense(b.config.License)
 		case "network":
 			err = b.configure.Network(b.config.Network)
+		case "bios":
+			err = b.configure.Bios(b.config.Bios)
 		}
 
 		if err != nil {
