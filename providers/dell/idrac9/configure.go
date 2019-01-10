@@ -26,7 +26,7 @@ func (i *IDrac9) Resources() []string {
 		"network",
 		"ntp",
 		"ldap",
-		"roup",
+		"ldap_group",
 		"bios",
 	}
 }
