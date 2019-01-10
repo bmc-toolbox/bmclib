@@ -4,117 +4,45 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"reflect"
 	"strconv"
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
+	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/internal/helper"
 	log "github.com/sirupsen/logrus"
 )
 
-func (i *IDrac8) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
-	cfg := reflect.ValueOf(config).Elem()
+// This ensures the compiler errors if this type is missing
+// a method that should be implmented to satisfy the Configure interface.
+var _ devices.Configure = (*IDrac8)(nil)
 
-	//Each Field in ResourcesConfig struct is a ptr to a resource,
-	//Here we figure the resources to be configured, i.e the ptr is not nil
-	for r := 0; r < cfg.NumField(); r++ {
-		resourceName := cfg.Type().Field(r).Name
-		if cfg.Field(r).Pointer() != 0 {
-			switch resourceName {
-			case "User":
-				//retrieve users resource values as an interface
-				userAccounts := cfg.Field(r).Interface()
-
-				//assert userAccounts interface to its actual type - A slice of ptrs to User
-				err := i.applyUserParams(userAccounts.([]*cfgresources.User))
-				if err != nil {
-					log.WithFields(log.Fields{
-						"step":     "ApplyCfg",
-						"resource": cfg.Field(r).Kind(),
-						"IP":       i.ip,
-						"Model":    i.BmcType(),
-						"Serial":   i.Serial,
-						"Error":    err,
-					}).Warn("Unable to apply User config.")
-				}
-			case "Syslog":
-				syslogCfg := cfg.Field(r).Interface().(*cfgresources.Syslog)
-				err := i.applySyslogParams(syslogCfg)
-				if err != nil {
-					log.WithFields(log.Fields{
-						"step":     "ApplyCfg",
-						"resource": cfg.Field(r).Kind(),
-						"IP":       i.ip,
-						"Model":    i.BmcType(),
-						"Serial":   i.serial,
-						"Error":    err,
-					}).Warn("Unable to set Syslog config.")
-				}
-			case "Network":
-				networkCfg := cfg.Field(r).Interface().(*cfgresources.Network)
-				err := i.applyNetworkParams(networkCfg)
-				if err != nil {
-					log.WithFields(log.Fields{
-						"step":     "ApplyCfg",
-						"resource": cfg.Field(r).Kind(),
-						"IP":       i.ip,
-						"Model":    i.BmcType(),
-						"Serial":   i.serial,
-						"Error":    err,
-					}).Warn("Unable to set Network config.")
-				}
-			case "Ntp":
-				ntpCfg := cfg.Field(r).Interface().(*cfgresources.Ntp)
-				err := i.applyNtpParams(ntpCfg)
-				if err != nil {
-					log.WithFields(log.Fields{
-						"step":     "ApplyCfg",
-						"resource": cfg.Field(r).Kind(),
-						"IP":       i.ip,
-						"Model":    i.BmcType(),
-						"Serial":   i.serial,
-					}).Warn("Unable to set NTP config.")
-				}
-			case "Ldap":
-				ldapCfg := cfg.Field(r).Interface().(*cfgresources.Ldap)
-				i.applyLdapParams(ldapCfg)
-			case "LdapGroup":
-				ldapGroups := cfg.Field(r).Interface()
-				err := i.applyLdapGroupParams(ldapGroups.([]*cfgresources.LdapGroup), config.Ldap)
-				if err != nil {
-					log.WithFields(log.Fields{
-						"step":     "applyLdapParams",
-						"resource": "Ldap",
-						"IP":       i.ip,
-						"Model":    i.BmcType(),
-						"Serial":   i.serial,
-						"Error":    err,
-					}).Warn("applyLdapGroupParams returned error.")
-				}
-			case "License":
-			case "Ssl":
-			default:
-				log.WithFields(log.Fields{
-					"step":     "ApplyCfg",
-					"resource": resourceName,
-				}).Debug("Unknown resource.")
-			}
-		}
+// Resources returns a slice of supported resources and
+// the order they are to be applied in.
+func (i *IDrac8) Resources() []string {
+	return []string{
+		"user",
+		"syslog",
+		"network",
+		"ntp",
+		"ldap",
+		"ldap_group",
 	}
+}
 
+// ApplyCfg implements the Bmc interface
+// this is to be deprecated.
+func (i *IDrac8) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 	return err
 }
 
-// Encodes the string the way idrac expects credentials to be sent
-// foobar == @066@06f@06f@062@061@072
-// convert ever character to its hex equiv, and prepend @0
-func encodeCred(s string) string {
-	r := ""
-	for _, c := range s {
-		r += fmt.Sprintf("@0%x", c)
-	}
+// SetLicense implements the Configure interface.
+func (i *IDrac8) SetLicense(cfg *cfgresources.License) (err error) {
+	return err
+}
 
-	return r
+// Bios implements the Configure interface.
+func (i *IDrac8) Bios(cfg *cfgresources.Bios) (err error) {
+	return err
 }
 
 // escapeLdapString escapes ldap parameters strings
@@ -144,8 +72,11 @@ func (i *IDrac8) isRoleValid(role string) bool {
 	return false
 }
 
-// Iterates over iDrac users and adds/removes/modifies the user account
-func (i *IDrac8) applyUserParams(cfgUsers []*cfgresources.User) (err error) {
+// User applies the User configuration resource,
+// if the user exists, it updates the users password,
+// User implements the Configure interface.
+// Iterate over iDrac users and adds/removes/modifies user accounts
+func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 
 	err = i.validateUserCfg(cfgUsers)
 	if err != nil {
@@ -176,13 +107,13 @@ func (i *IDrac8) applyUserParams(cfgUsers []*cfgresources.User) (err error) {
 	////for each configuration user
 	for _, cfgUser := range cfgUsers {
 
-		userId, userInfo, uExists := userInIdrac(cfgUser.Name, idracUsers)
+		userID, userInfo, uExists := userInIdrac(cfgUser.Name, idracUsers)
 		//user to be added/updated
 		if cfgUser.Enable {
 
 			//new user to be added
 			if uExists == false {
-				userId, userInfo, err = getEmptyUserSlot(idracUsers)
+				userID, userInfo, err = getEmptyUserSlot(idracUsers)
 				if err != nil {
 					log.WithFields(log.Fields{
 						"IP":     i.ip,
@@ -210,7 +141,7 @@ func (i *IDrac8) applyUserParams(cfgUsers []*cfgresources.User) (err error) {
 				userInfo.IpmiLanPrivilege = "Operator"
 			}
 
-			err = i.putUser(userId, userInfo)
+			err = i.putUser(userID, userInfo)
 			if err != nil {
 				log.WithFields(log.Fields{
 					"IP":     i.ip,
@@ -234,7 +165,7 @@ func (i *IDrac8) applyUserParams(cfgUsers []*cfgresources.User) (err error) {
 			userInfo.Privilege = "0"
 			userInfo.IpmiLanPrivilege = "No Access"
 
-			err = i.putUser(userId, userInfo)
+			err = i.putUser(userID, userInfo)
 			if err != nil {
 				log.WithFields(log.Fields{
 					"IP":     i.ip,
@@ -258,7 +189,9 @@ func (i *IDrac8) applyUserParams(cfgUsers []*cfgresources.User) (err error) {
 	return err
 }
 
-func (i *IDrac8) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
+// Syslog applies the Syslog configuration resource
+// Syslog implements the Configure interface
+func (i *IDrac8) Syslog(cfg *cfgresources.Syslog) (err error) {
 
 	var port int
 	enable := "Enabled"
@@ -324,7 +257,9 @@ func (i *IDrac8) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
 	return err
 }
 
-func (i *IDrac8) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
+// Ntp applies NTP configuration params
+// Ntp implements the Configure interface.
+func (i *IDrac8) Ntp(cfg *cfgresources.Ntp) (err error) {
 
 	if cfg.Server1 == "" {
 		log.WithFields(log.Fields{
@@ -391,47 +326,22 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 
 }
 
-//applies ldap config parameters
-func (i *IDrac8) applyLdapParams(cfg *cfgresources.Ldap) {
-	// LDAP settings
-	// Notes: - all non-numeric,alphabetic characters are escaped
-	//        - the idrac posts each payload twice?
-	//        - requests can be either POST or GET except for the final one - postset?ldapconf
-
-	//Set ldap groups
-
-	r := i.applyLdapServerParam(cfg)
-	if r != 0 {
-		return
-	}
-
-	r = i.applyLdapSearchFilterParam(cfg)
-	if r != 0 {
-		return
-	}
-
-	log.WithFields(log.Fields{
-		"IP":     i.ip,
-		"Model":  i.BmcType(),
-		"Serial": i.serial,
-	}).Debug("Ldap config applied.")
-
-}
-
-// Applies ldap server param
-// https://10.193.251.10/data?set=xGLServer:ldaps.prod.blah.com
-func (i *IDrac8) applyLdapServerParam(cfg *cfgresources.Ldap) int {
+// Ldap applies LDAP configuration params.
+// Ldap implements the Configure interface.
+func (i *IDrac8) Ldap(cfg *cfgresources.Ldap) error {
 
 	if cfg.Server == "" {
+		msg := "Ldap resource parameter Server required but not declared."
 		log.WithFields(log.Fields{
 			"step": "applyLdapServerParam",
-		}).Warn("Ldap resource parameter Server required but not declared.")
-		return 1
+		}).Warn(msg)
+		return errors.New(msg)
 	}
 
 	endpoint := fmt.Sprintf("data?set=xGLServer:%s", cfg.Server)
 	response, err := i.get(endpoint, nil)
 	if err != nil {
+		msg := "Request to set ldap server failed."
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
 			"Model":    i.BmcType(),
@@ -439,8 +349,13 @@ func (i *IDrac8) applyLdapServerParam(cfg *cfgresources.Ldap) int {
 			"endpoint": endpoint,
 			"step":     helper.WhosCalling(),
 			"response": string(response),
-		}).Warn("GET request failed.")
-		return 1
+		}).Warn(msg)
+		return errors.New(msg)
+	}
+
+	err = i.applyLdapSearchFilterParam(cfg)
+	if err != nil {
+		return err
 	}
 
 	log.WithFields(log.Fields{
@@ -448,23 +363,25 @@ func (i *IDrac8) applyLdapServerParam(cfg *cfgresources.Ldap) int {
 		"Model":  i.BmcType(),
 		"Serial": i.serial,
 	}).Debug("Ldap server param set.")
-
-	return 0
+	return nil
 }
 
 // Applies ldap search filter param.
 // set=xGLSearchFilter:objectClass\=posixAccount
-func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) int {
+func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) error {
+
 	if cfg.SearchFilter == "" {
+		msg := "Ldap resource parameter SearchFilter required but not declared."
 		log.WithFields(log.Fields{
 			"step": "applyLdapSearchFilterParam",
-		}).Warn("Ldap resource parameter SearchFilter required but not declared.")
-		return 1
+		}).Warn(msg)
+		return errors.New(msg)
 	}
 
 	endpoint := fmt.Sprintf("data?set=xGLSearchFilter:%s", escapeLdapString(cfg.SearchFilter))
 	response, err := i.get(endpoint, nil)
 	if err != nil {
+		msg := "request to set ldap search filter failed."
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
 			"Model":    i.BmcType(),
@@ -472,8 +389,8 @@ func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) int {
 			"endpoint": endpoint,
 			"step":     helper.WhosCalling(),
 			"response": string(response),
-		}).Warn("GET request failed.")
-		return 1
+		}).Warn(msg)
+		return errors.New(msg)
 	}
 
 	log.WithFields(log.Fields{
@@ -481,20 +398,19 @@ func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) int {
 		"Model":  i.BmcType(),
 		"Serial": i.serial,
 	}).Debug("Ldap search filter param applied.")
-
-	return 0
+	return nil
 }
 
-// Sets up ldap role groups
-//data?set=xGLGroup1Name:cn\=bmcAdmins\,ou\=Group\,dc\=activehotels\,dc\=com
-func (i *IDrac8) applyLdapGroupParams(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
+// LdapGroup applies LDAP Group/Role related configuration
+// LdapGroup implements the Configure interface.
+func (i *IDrac8) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
 
-	groupId := 1
+	groupID := 1
 
 	//set to decide what privileges the group should have
 	//497 == operator
 	//511 == administrator (full privileges)
-	privId := "0"
+	privID := "0"
 
 	//groupPrivilegeParam is populated per group and is passed to i.applyLdapRoleGroupPrivParam
 	groupPrivilegeParam := ""
@@ -505,7 +421,7 @@ func (i *IDrac8) applyLdapGroupParams(cfgGroup []*cfgresources.LdapGroup, cfgLda
 		log.WithFields(log.Fields{
 			"step": "applyLdapRoleGroupPrivParam",
 		}).Warn(msg)
-		errors.New(msg)
+		return errors.New(msg)
 	}
 
 	if cfgLdap.BaseDn == "" {
@@ -513,7 +429,7 @@ func (i *IDrac8) applyLdapGroupParams(cfgGroup []*cfgresources.LdapGroup, cfgLda
 		log.WithFields(log.Fields{
 			"step": "applyLdapRoleGroupPrivParam",
 		}).Warn(msg)
-		errors.New(msg)
+		return errors.New(msg)
 	}
 
 	if cfgLdap.UserAttribute == "" {
@@ -521,7 +437,7 @@ func (i *IDrac8) applyLdapGroupParams(cfgGroup []*cfgresources.LdapGroup, cfgLda
 		log.WithFields(log.Fields{
 			"step": "applyLdapRoleGroupPrivParam",
 		}).Warn(msg)
-		errors.New(msg)
+		return errors.New(msg)
 	}
 
 	if cfgLdap.GroupAttribute == "" {
@@ -529,7 +445,7 @@ func (i *IDrac8) applyLdapGroupParams(cfgGroup []*cfgresources.LdapGroup, cfgLda
 		log.WithFields(log.Fields{
 			"step": "applyLdapRoleGroupPrivParam",
 		}).Warn(msg)
-		errors.New(msg)
+		return errors.New(msg)
 	}
 
 	//for each ldap group
@@ -580,7 +496,7 @@ func (i *IDrac8) applyLdapGroupParams(cfgGroup []*cfgresources.LdapGroup, cfgLda
 		groupDn := fmt.Sprintf("%s,%s", group.Group, group.GroupBaseDn)
 		groupDn = escapeLdapString(groupDn)
 
-		endpoint := fmt.Sprintf("data?set=xGLGroup%dName:%s", groupId, groupDn)
+		endpoint := fmt.Sprintf("data?set=xGLGroup%dName:%s", groupID, groupDn)
 		response, err := i.get(endpoint, nil)
 		if err != nil {
 			log.WithFields(log.Fields{
@@ -603,18 +519,18 @@ func (i *IDrac8) applyLdapGroupParams(cfgGroup []*cfgresources.LdapGroup, cfgLda
 
 		switch group.Role {
 		case "user":
-			privId = "497"
+			privID = "497"
 		case "admin":
-			privId = "511"
+			privID = "511"
 		}
 
-		groupPrivilegeParam += fmt.Sprintf("xGLGroup%dPriv:%s,", groupId, privId)
-		groupId += 1
+		groupPrivilegeParam += fmt.Sprintf("xGLGroup%dPriv:%s,", groupID, privID)
+		groupID++
 
 	}
 
 	//set the rest of the group privileges to 0
-	for i := groupId + 1; i <= 5; i++ {
+	for i := groupID + 1; i <= 5; i++ {
 		groupPrivilegeParam += fmt.Sprintf("xGLGroup%dPriv:0,", i)
 	}
 
@@ -706,7 +622,9 @@ func (i *IDrac8) applyTimezoneParam(timezone string) {
 
 }
 
-func (i *IDrac8) applyNetworkParams(cfg *cfgresources.Network) (err error) {
+// Network method implements the Configure interface
+// applies various network parameters.
+func (i *IDrac8) Network(cfg *cfgresources.Network) (err error) {
 
 	params := map[string]int{
 		"EnableIPv4":              1,
