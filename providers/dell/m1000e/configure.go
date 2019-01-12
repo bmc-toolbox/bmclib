@@ -11,132 +11,194 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
+	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/google/go-querystring/query"
 	log "github.com/sirupsen/logrus"
 )
 
-func (m *M1000e) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
-	//for each field in the struct that is not nil
-	//call the respective getCfg, then post the data to the respective pages.
+// This ensures the compiler errors if this type is missing
+// a method that should be implmented to satisfy the Configure interface.
+var _ devices.Configure = (*M1000e)(nil)
 
-	cfg := reflect.ValueOf(config).Elem()
-
-	//Each Field in ResourcesConfig struct is a ptr to a resource,
-	//Here we figure the resources to be configured, i.e the ptr is not nil
-	for r := 0; r < cfg.NumField(); r++ {
-		resourceName := cfg.Type().Field(r).Name
-		if cfg.Field(r).Pointer() != 0 {
-			switch resourceName {
-			case "User":
-				//fmt.Printf("%s: %v : %s\n", resourceName, reflect.ValueOf(cfg.Field(r)), cfg.Field(r).Kind())
-				//retrieve users resource values as an interface
-				userAccounts := cfg.Field(r).Interface()
-
-				//assert userAccounts interface to its actual type - A slice of ptrs to User
-				for id, user := range userAccounts.([]*cfgresources.User) {
-					userId := id + 1
-					//setup params to post
-					userParams := m.newUserCfg(user, userId)
-					//post params
-					err := m.applyUserCfg(userParams, userId)
-					if err != nil {
-						log.WithFields(log.Fields{
-							"step":     "ApplyCfg",
-							"Resource": cfg.Field(r).Kind(),
-							"IP":       m.ip,
-							"Serial":   m.serial,
-						}).Warn("Unable to set user config.")
-					}
-
-				}
-
-			case "Syslog":
-				// interface of values of config struct field and type assert
-				interfaceParams := m.newInterfaceCfg(cfg.Field(r).Interface().(*cfgresources.Syslog))
-				err := m.applyInterfaceCfg(interfaceParams)
-				if err != nil {
-					log.WithFields(log.Fields{
-						"step":     "ApplyCfg",
-						"resource": cfg.Field(r).Kind(),
-						"IP":       m.ip,
-						"Model":    m.BmcType(),
-						"Serial":   m.serial,
-					}).Warn("Unable to set Syslog config.")
-				}
-			case "Network":
-			case "Ntp":
-				datetimeParams := m.newDatetimeCfg(cfg.Field(r).Interface().(*cfgresources.Ntp))
-				err = m.applyDatetimeCfg(datetimeParams)
-				if err != nil {
-					log.WithFields(log.Fields{
-						"step":     "ApplyCfg",
-						"resource": cfg.Field(r).Kind(),
-						"IP":       m.ip,
-						"Model":    m.BmcType(),
-						"Serial":   m.serial,
-					}).Warn("Unable to set Ntp config.")
-				}
-
-			case "Ldap":
-				//configure ldap service parameters
-				directoryServicesParams := m.newDirectoryServicesCfg(cfg.Field(r).Interface().(*cfgresources.Ldap))
-				err = m.applyDirectoryServicesCfg(directoryServicesParams)
-				if err != nil {
-					log.WithFields(log.Fields{
-						"step":     "ApplyCfg",
-						"resource": cfg.Field(r).Kind(),
-						"IP":       m.ip,
-						"Model":    m.BmcType(),
-						"Serial":   m.serial,
-					}).Warn("Unable to set Ldap config.")
-				}
-			case "LdapGroup":
-				ldapGroups := cfg.Field(r).Interface()
-				err := m.applyLdapGroupParams(ldapGroups.([]*cfgresources.LdapGroup))
-				if err != nil {
-					log.WithFields(log.Fields{
-						"step":     "applyLdapParams",
-						"resource": "Ldap",
-						"IP":       m.ip,
-						"Model":    m.BmcType(),
-						"Serial":   m.serial,
-						"Error":    err,
-					}).Warn("applyLdapGroupParams returned error.")
-				}
-			case "Ssl":
-				err := m.applySslCfg(cfg.Field(r).Interface().(*cfgresources.Ssl))
-				if err != nil {
-					log.WithFields(log.Fields{
-						"step":     "ApplyCfg",
-						"resource": cfg.Field(r).Kind(),
-						"IP":       m.ip,
-						"Model":    m.BmcType(),
-						"Serial":   m.serial,
-					}).Warn("Unable to set SSL config.")
-				}
-			default:
-				log.WithFields(log.Fields{
-					"step": "ApplyCfg",
-				}).Debug("Unknown resource.")
-			}
-		}
+// Resources returns a slice of supported resources and
+// the order they are to be applied in.
+func (m *M1000e) Resources() []string {
+	return []string{
+		"user",
+		"syslog",
+		"ntp",
+		"ldap",
+		"ldap_group",
+		//"ssl",
 	}
+}
+
+// ApplyCfg implements the Bmc interface
+// this is to be deprecated.
+func (m *M1000e) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 	return err
 }
 
-func (m *M1000e) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) {
+// SetLicense implements the Configure interface.
+func (m *M1000e) SetLicense(cfg *cfgresources.License) (err error) {
+	return err
+}
+
+// Bios implements the Configure interface.
+func (m *M1000e) Bios(cfg *cfgresources.Bios) (err error) {
+	return err
+}
+
+// Network method implements the Configure interface
+// applies various network parameters.
+func (m *M1000e) Network(cfg *cfgresources.Network) (err error) {
+	return err
+}
+
+// User applies the User configuration resource,
+// if the user exists, it updates the users password,
+// User implements the Configure interface.
+// Iterate over iDrac users and adds/removes/modifies user accounts
+func (m *M1000e) User(cfgUsers []*cfgresources.User) (err error) {
+
 	err = m.httpLogin()
 	if err != nil {
 		return err
 	}
 
-	roleId := 1
+	id := 1
+	for _, cfgUser := range cfgUsers {
+
+		userID := id + 1
+		//setup params to post
+		userParams := m.newUserCfg(cfgUser, userID)
+
+		userParams.SessionToken = m.SessionToken
+		path := fmt.Sprintf("user?id=%d", userID)
+		form, _ := query.Values(userParams)
+		err = m.post(path, &form)
+		if err != nil {
+			return err
+		}
+
+		log.WithFields(log.Fields{
+			"IP":     m.ip,
+			"Model":  m.BmcType(),
+			"Serial": m.serial,
+		}).Debug("User account config parameters applied.")
+		return err
+
+	}
+
+	return err
+}
+
+// Syslog applies the Syslog configuration resource
+// Syslog implements the Configure interface
+// TODO: this currently applies network config as well,
+//       figure a way to split the two.
+func (m *M1000e) Syslog(cfg *cfgresources.Syslog) (err error) {
+
+	interfaceParams := m.newInterfaceCfg(cfg)
+
+	interfaceParams.SessionToken = m.SessionToken
+	form, _ := query.Values(interfaceParams)
+	err = m.post("interfaces", &form)
+	if err != nil {
+		return err
+	}
+
+	log.WithFields(log.Fields{
+		"IP":     m.ip,
+		"Model":  m.BmcType(),
+		"Serial": m.serial,
+	}).Debug("Interface config parameters applied.")
+	return err
+}
+
+// Ntp applies NTP configuration params
+// Ntp implements the Configure interface.
+func (m *M1000e) Ntp(cfg *cfgresources.Ntp) (err error) {
+
+	err = m.httpLogin()
+	if err != nil {
+		return err
+	}
+
+	datetimeParams := m.newDatetimeCfg(cfg)
+
+	datetimeParams.SessionToken = m.SessionToken
+	path := fmt.Sprintf("datetime")
+	form, _ := query.Values(datetimeParams)
+	err = m.post(path, &form)
+	if err != nil {
+		return err
+	}
+
+	log.WithFields(log.Fields{
+		"IP":     m.ip,
+		"Model":  m.BmcType(),
+		"Serial": m.serial,
+	}).Debug("DateTime config parameters applied.")
+	return err
+}
+
+// Ldap applies LDAP configuration params.
+// Ldap implements the Configure interface.
+func (m *M1000e) Ldap(cfg *cfgresources.Ldap) (err error) {
+
+	directoryServicesParams := m.newDirectoryServicesCfg(cfg)
+
+	directoryServicesParams.SessionToken = m.SessionToken
+	path := fmt.Sprintf("dirsvcs")
+	form, _ := query.Values(directoryServicesParams)
+	err = m.post(path, &form)
+	if err != nil {
+		return err
+	}
+
+	log.WithFields(log.Fields{
+		"IP":     m.ip,
+		"Model":  m.BmcType(),
+		"Serial": m.serial,
+	}).Debug("Ldap config parameters applied.")
+	return err
+}
+
+// /cgi-bin/webcgi/ldaprg?index=1
+// apply ldap role payload
+func (m *M1000e) applyLdapRoleCfg(cfg LdapArgParams, roleID int) (err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return err
+	}
+
+	cfg.SessionToken = m.SessionToken
+	path := fmt.Sprintf("ldaprg?index=%d", roleID)
+	form, _ := query.Values(cfg)
+	err = m.post(path, &form)
+	if err != nil {
+		return err
+	}
+
+	log.WithFields(log.Fields{
+		"IP":     m.ip,
+		"Model":  m.BmcType(),
+		"Serial": m.serial,
+	}).Debug("Ldap Role group config parameters applied.")
+	return err
+}
+
+// LdapGroup applies LDAP Group/Role related configuration
+// LdapGroup implements the Configure interface.
+func (m *M1000e) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
+
+	roleID := 1
 	for _, group := range cfg {
-		ldapRoleParams, err := m.newLdapRoleCfg(group, roleId)
+		ldapRoleParams, err := m.newLdapRoleCfg(group, roleID)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"step":      "applyLdapGroupParams",
@@ -149,7 +211,7 @@ func (m *M1000e) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error)
 			return err
 		}
 
-		err = m.applyLdapRoleCfg(ldapRoleParams, roleId)
+		err = m.applyLdapRoleCfg(ldapRoleParams, roleID)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"step":      "applyLdapGroupParams",
@@ -170,156 +232,17 @@ func (m *M1000e) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error)
 			"Group":  group.Group,
 		}).Debug("Ldap group parameters applied.")
 
-		roleId += 1
+		roleID++
 	}
 
 	return nil
 }
 
-//  /cgi-bin/webcgi/datetime
-// apply datetime payload
-func (m *M1000e) applyDatetimeCfg(cfg DatetimeParams) (err error) {
-	err = m.httpLogin()
-	if err != nil {
-		return err
-	}
-
-	cfg.SessionToken = m.SessionToken
-	path := fmt.Sprintf("datetime")
-	form, _ := query.Values(cfg)
-	err = m.post(path, &form)
-	if err != nil {
-		return err
-	}
-
-	log.WithFields(log.Fields{
-		"IP":     m.ip,
-		"Model":  m.BmcType(),
-		"Serial": m.serial,
-	}).Debug("DateTime config parameters applied.")
-	return err
-}
-
-//  /cgi-bin/webcgi/dirsvcs
-// apply directoryservices payload
-func (m *M1000e) applyDirectoryServicesCfg(cfg DirectoryServicesParams) (err error) {
-	err = m.httpLogin()
-	if err != nil {
-		return err
-	}
-
-	cfg.SessionToken = m.SessionToken
-	path := fmt.Sprintf("dirsvcs")
-	form, _ := query.Values(cfg)
-	err = m.post(path, &form)
-	if err != nil {
-		return err
-	}
-
-	log.WithFields(log.Fields{
-		"IP":     m.ip,
-		"Model":  m.BmcType(),
-		"Serial": m.serial,
-	}).Debug("Ldap config parameters applied.")
-	return err
-}
-
-// /cgi-bin/webcgi/ldaprg?index=1
-// apply ldap role payload
-func (m *M1000e) applyLdapRoleCfg(cfg LdapArgParams, roleId int) (err error) {
-	err = m.httpLogin()
-	if err != nil {
-		return err
-	}
-
-	cfg.SessionToken = m.SessionToken
-	path := fmt.Sprintf("ldaprg?index=%d", roleId)
-	form, _ := query.Values(cfg)
-	err = m.post(path, &form)
-	if err != nil {
-		return err
-	}
-
-	log.WithFields(log.Fields{
-		"IP":     m.ip,
-		"Model":  m.BmcType(),
-		"Serial": m.serial,
-	}).Debug("Ldap Role group config parameters applied.")
-	return err
-}
-
-// Configures various interface params - syslog, snmp etc.
-func (m *M1000e) ApplySecurityCfg(cfg LoginSecurityParams) (err error) {
-	err = m.httpLogin()
-	if err != nil {
-		return err
-	}
-
-	cfg.SessionToken = m.SessionToken
-	form, _ := query.Values(cfg)
-	err = m.post("loginSecurity", &form)
-	if err != nil {
-		return err
-	}
-
-	log.WithFields(log.Fields{
-		"IP":     m.ip,
-		"Model":  m.BmcType(),
-		"Serial": m.serial,
-	}).Debug("Security config parameters applied.")
-	return err
-
-}
-
-// Configures various interface params - syslog, snmp etc.
-func (m *M1000e) applyInterfaceCfg(cfg InterfaceParams) (err error) {
-	err = m.httpLogin()
-	if err != nil {
-		return err
-	}
-
-	cfg.SessionToken = m.SessionToken
-	form, _ := query.Values(cfg)
-	err = m.post("interfaces", &form)
-	if err != nil {
-		return err
-	}
-
-	log.WithFields(log.Fields{
-		"IP":     m.ip,
-		"Model":  m.BmcType(),
-		"Serial": m.serial,
-	}).Debug("Interface config parameters applied.")
-	return err
-}
-
-// call the cgi-bin/webcgi/user?id=<> endpoint
-// with the user account payload
-func (m *M1000e) applyUserCfg(cfg UserParams, userId int) (err error) {
-	err = m.httpLogin()
-	if err != nil {
-		return err
-	}
-
-	cfg.SessionToken = m.SessionToken
-	path := fmt.Sprintf("user?id=%d", userId)
-	form, _ := query.Values(cfg)
-	err = m.post(path, &form)
-	if err != nil {
-		return err
-	}
-
-	log.WithFields(log.Fields{
-		"IP":     m.ip,
-		"Model":  m.BmcType(),
-		"Serial": m.serial,
-	}).Debug("User account config parameters applied.")
-	return err
-}
-
+// Ssl applies the SSL configuration
+// TODO: add to the configure interface.
 // call cgi-bin/webcgi/certuploadext
 // with the ssl cert payload
-func (m *M1000e) applySslCfg(ssl *cfgresources.Ssl) (err error) {
+func (m *M1000e) Ssl(ssl *cfgresources.Ssl) (err error) {
 	err = m.httpLogin()
 	if err != nil {
 		return err
@@ -334,7 +257,7 @@ func (m *M1000e) applySslCfg(ssl *cfgresources.Ssl) (err error) {
 	formParams["pageId"] = "2"
 	formParams["pageName"] = ""
 
-	err = m.NewSslMultipartUpload(endpoint, formParams, ssl.CertFile, ssl.KeyFile)
+	err = m.newSslMultipartUpload(endpoint, formParams, ssl.CertFile, ssl.KeyFile)
 	if err != nil {
 		return err
 	}
@@ -349,7 +272,7 @@ func (m *M1000e) applySslCfg(ssl *cfgresources.Ssl) (err error) {
 
 // setup a multipart form with the expected order of form parameters
 // for the payload format see  https://github.com/bmc-toolbox/bmclib/issues/3
-func (m *M1000e) NewSslMultipartUpload(endpoint string, params map[string]string, SslCert string, SslKey string) (err error) {
+func (m *M1000e) newSslMultipartUpload(endpoint string, params map[string]string, SslCert string, SslKey string) (err error) {
 	err = m.httpLogin()
 	if err != nil {
 		return err
@@ -498,7 +421,25 @@ func (m *M1000e) post(endpoint string, form *url.Values) (err error) {
 	return err
 }
 
-//Implement a constructor to ensure required values are set
-//func (m *M1000e) setSecurityCfg(cfg LoginSecurityParams) (cfg LoginSecurityParams, err error) {
-//	return cfg, err
-//}
+// ApplySecurityCfg configures various interface params - syslog, snmp etc.
+func (m *M1000e) ApplySecurityCfg(cfg LoginSecurityParams) (err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return err
+	}
+
+	cfg.SessionToken = m.SessionToken
+	form, _ := query.Values(cfg)
+	err = m.post("loginSecurity", &form)
+	if err != nil {
+		return err
+	}
+
+	log.WithFields(log.Fields{
+		"IP":     m.ip,
+		"Model":  m.BmcType(),
+		"Serial": m.serial,
+	}).Debug("Security config parameters applied.")
+	return err
+
+}
