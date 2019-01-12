@@ -8,17 +8,50 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"reflect"
 	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
+	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/internal/helper"
 
 	"github.com/google/go-querystring/query"
 )
+
+// This ensures the compiler errors if this type is missing
+// a method that should be implmented to satisfy the Configure interface.
+var _ devices.Configure = (*SupermicroX10)(nil)
+
+// Resources returns a slice of supported resources and
+// the order they are to be applied in.
+func (s *SupermicroX10) Resources() []string {
+	return []string{
+		"user",
+		"syslog",
+		"network",
+		"ntp",
+		//"ldap", - ldap configuration is applied as part of ldap_group.
+		"ldap_group",
+	}
+}
+
+// ApplyCfg implements the Bmc interface
+// this is to be deprecated.
+func (s *SupermicroX10) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
+	return err
+}
+
+// SetLicense implements the Configure interface.
+func (s *SupermicroX10) SetLicense(cfg *cfgresources.License) (err error) {
+	return err
+}
+
+// Bios implements the Configure interface.
+func (s *SupermicroX10) Bios(cfg *cfgresources.Bios) (err error) {
+	return err
+}
 
 // Returns the UTC offset for a given timezone location
 func timezoneToUtcOffset(location *time.Location) (offset int) {
@@ -40,7 +73,7 @@ func (s *SupermicroX10) isRoleValid(role string) bool {
 	return false
 }
 
-// returns a map of user accounts and thier ids
+// returns a map of user accounts and their ids
 func (s *SupermicroX10) queryUserAccounts() (userAccounts map[string]int, err error) {
 
 	userAccounts = make(map[string]int)
@@ -59,119 +92,11 @@ func (s *SupermicroX10) queryUserAccounts() (userAccounts map[string]int, err er
 	return userAccounts, err
 }
 
-func (s *SupermicroX10) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
-
-	cfg := reflect.ValueOf(config).Elem()
-
-	//Each Field in ResourcesConfig struct is a ptr to a resource,
-	//Here we figure the resources to be configured, i.e the ptr is not nil
-	for r := 0; r < cfg.NumField(); r++ {
-		resourceName := cfg.Type().Field(r).Name
-		if cfg.Field(r).Pointer() != 0 {
-			switch resourceName {
-			case "User":
-				//retrieve users resource values as an interface
-				userAccounts := cfg.Field(r).Interface()
-
-				//assert userAccounts interface to its actual type - A slice of ptrs to User
-				err := s.applyUserParams(userAccounts.([]*cfgresources.User))
-				if err != nil {
-					log.WithFields(log.Fields{
-						"step":     "ApplyCfg",
-						"resource": cfg.Field(r).Kind(),
-						"IP":       s.ip,
-						"Model":    s.BmcType(),
-						"Serial":   s.serial,
-						"Error":    err,
-					}).Warn("Unable to set User config.")
-				}
-
-			case "Syslog":
-				syslogCfg := cfg.Field(r).Interface().(*cfgresources.Syslog)
-				err := s.applySyslogParams(syslogCfg)
-				if err != nil {
-					log.WithFields(log.Fields{
-						"step":     "ApplyCfg",
-						"resource": cfg.Field(r).Kind(),
-						"IP":       s.ip,
-						"Model":    s.BmcType(),
-						"Serial":   s.serial,
-						"Error":    err,
-					}).Warn("Unable to set Syslog config.")
-				}
-			case "Network":
-				networkCfg := cfg.Field(r).Interface().(*cfgresources.Network)
-				err := s.applyNetworkParams(networkCfg)
-				if err != nil {
-					log.WithFields(log.Fields{
-						"step":     "ApplyCfg",
-						"resource": cfg.Field(r).Kind(),
-						"IP":       s.ip,
-						"Model":    s.BmcType(),
-						"Serial":   s.serial,
-						"Error":    err,
-					}).Warn("Unable to set Network config params.")
-				}
-			case "Ntp":
-				ntpCfg := cfg.Field(r).Interface().(*cfgresources.Ntp)
-				err := s.applyNtpParams(ntpCfg)
-				if err != nil {
-					log.WithFields(log.Fields{
-						"step":     "ApplyCfg",
-						"resource": cfg.Field(r).Kind(),
-						"IP":       s.ip,
-						"Model":    s.BmcType(),
-						"Serial":   s.serial,
-						"Error":    err,
-					}).Warn("Unable to set NTP config.")
-				}
-			case "Ldap":
-				err := s.applyLdapParams((config.Ldap), config.LdapGroup)
-				if err != nil {
-					log.WithFields(log.Fields{
-						"step":     "applyLdapParams",
-						"resource": "Ldap",
-						"IP":       s.ip,
-						"Model":    s.BmcType(),
-						"Serial":   s.serial,
-						"Error":    err,
-					}).Warn("applyLdapParams returned error.")
-				}
-			case "LdapGroup":
-				//ldap config is set as part of LdapGroup
-				//since supermicro does not have separate ldap group config,
-				//for generic ldap configuration.
-				continue
-			case "License":
-			case "Ssl":
-			case "Supermicro":
-				err := s.applyVendorSpecificConfig(config.Supermicro)
-				if err != nil {
-					log.WithFields(log.Fields{
-						"step":     "applyVendorSpecificConfig",
-						"resource": "Supermicro",
-						"IP":       s.ip,
-						"Model":    s.BmcType(),
-						"Serial":   s.serial,
-						"Error":    err,
-					}).Warn("applyVendorSpecificConfig returned error.")
-				}
-			default:
-				log.WithFields(log.Fields{
-					"step":     "ApplyCfg",
-					"Resource": resourceName,
-				}).Debug("Unknown resource definition.")
-			}
-		}
-	}
-
-	return err
-}
-
-// attempts to add the user
-// if the user exists, update the users password.
+// User applies the User configuration resource,
+// if the user exists, it updates the users password,
+// User implements the Configure interface.
 // supermicro user accounts start with 1, account 0 which is a large empty string :\.
-func (s *SupermicroX10) applyUserParams(users []*cfgresources.User) (err error) {
+func (s *SupermicroX10) User(users []*cfgresources.User) (err error) {
 
 	currentUsers, err := s.queryUserAccounts()
 	if err != nil {
@@ -186,7 +111,7 @@ func (s *SupermicroX10) applyUserParams(users []*cfgresources.User) (err error) 
 		return errors.New(msg)
 	}
 
-	userId := 1
+	userID := 1
 	for _, user := range users {
 
 		if user.Name == "" {
@@ -221,7 +146,7 @@ func (s *SupermicroX10) applyUserParams(users []*cfgresources.User) (err error) 
 		if user.Enable {
 			configUser.Username = user.Name
 			configUser.Password = user.Password
-			configUser.UserId = userId
+			configUser.UserID = userID
 
 			if user.Role == "admin" {
 				configUser.NewPrivilege = 4
@@ -235,9 +160,9 @@ func (s *SupermicroX10) applyUserParams(users []*cfgresources.User) (err error) 
 			//the respective userid
 			if uexists {
 				configUser.Username = ""
-				configUser.UserId = currentUsers[user.Name]
+				configUser.UserID = currentUsers[user.Name]
 			} else {
-				userId += 1
+				userID++
 				continue
 			}
 		}
@@ -266,22 +191,20 @@ func (s *SupermicroX10) applyUserParams(users []*cfgresources.User) (err error) 
 			"User":   user.Name,
 		}).Debug("User parameters applied.")
 
-		userId += 1
+		userID++
 	}
 
 	return err
 }
 
-func (s *SupermicroX10) applyNetworkParams(cfg *cfgresources.Network) (err error) {
+// Network method implements the Configure interface
+// applies various network parameters.
+func (s *SupermicroX10) Network(cfg *cfgresources.Network) (err error) {
 
 	sshPort := 22
-	ipmiPort := 623
 
 	if cfg.SshPort != 0 && cfg.SshPort != sshPort {
 		sshPort = cfg.SshPort
-	}
-	if cfg.IpmiPort != 0 && cfg.IpmiPort != ipmiPort {
-		ipmiPort = cfg.IpmiPort
 	}
 
 	configPort := ConfigPort{
@@ -328,7 +251,9 @@ func (s *SupermicroX10) applyNetworkParams(cfg *cfgresources.Network) (err error
 	return err
 }
 
-func (s *SupermicroX10) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
+// Ntp applies NTP configuration params
+// Ntp implements the Configure interface.
+func (s *SupermicroX10) Ntp(cfg *cfgresources.Ntp) (err error) {
 
 	var enable string
 	if cfg.Server1 == "" {
@@ -361,15 +286,14 @@ func (s *SupermicroX10) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 	tzUtcOffset := timezoneToUtcOffset(tzLocation)
 
 	if cfg.Enable != true {
-		enable = "off"
 		log.WithFields(log.Fields{
 			"step":  "applyNtpParams",
 			"Model": s.BmcType(),
 		}).Debug("Ntp resource declared with enable: false.")
 		return
-	} else {
-		enable = "on"
 	}
+
+	enable = "on"
 
 	t := time.Now().In(tzLocation)
 	//Fri Jun 06 2018 14:28:25 GMT+0100 (CET)
@@ -424,9 +348,18 @@ func (s *SupermicroX10) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
 	return err
 }
 
-// Applies Ldap parameters
-// Supermicro does not have any separate configuration for Ldap groups - for generic ldap
-func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*cfgresources.LdapGroup) (err error) {
+// Ldap applies LDAP configuration params.
+// Ldap implements the Configure interface.
+// Configuration for LDAP is applied in the LdapGroup method,
+// since supermicros just support a single LDAP group.
+func (s *SupermicroX10) Ldap(cfgLdap *cfgresources.Ldap) error {
+	return nil
+}
+
+// LdapGroup applies LDAP and LDAP Group/Role related configuration,
+// LdapGroup implements the Configure interface.
+// Supermicro does not have any separate configuration for Ldap groups just for generic ldap
+func (s *SupermicroX10) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
 
 	var enable string
 
@@ -446,19 +379,18 @@ func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*
 			"step":  helper.WhosCalling(),
 			"Model": s.BmcType(),
 		}).Warn(msg)
-		errors.New(msg)
+		return errors.New(msg)
 	}
 
 	if cfgLdap.Enable != true {
-		enable = "off"
 		log.WithFields(log.Fields{
 			"step":  helper.WhosCalling(),
 			"Model": s.BmcType(),
 		}).Debug("Ldap resource declared with enable: false.")
 		return
-	} else {
-		enable = "on"
 	}
+
+	enable = "on"
 
 	if cfgLdap.BaseDn == "" {
 		msg := "Ldap resource parameter BaseDn required but not declared."
@@ -469,8 +401,8 @@ func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*
 		return errors.New(msg)
 	}
 
-	serverIp, err := net.LookupIP(cfgLdap.Server)
-	if err != nil || serverIp == nil {
+	serverIP, err := net.LookupIP(cfgLdap.Server)
+	if err != nil || serverIP == nil {
 		msg := "Unable to lookup the IP for ldap server hostname."
 		log.WithFields(log.Fields{
 			"step":  helper.WhosCalling(),
@@ -532,7 +464,7 @@ func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*
 			Op:           "config_ldap",
 			Enable:       enable,
 			EnableSsl:    true,
-			LdapIp:       fmt.Sprintf("%s", serverIp[0]),
+			LdapIp:       fmt.Sprintf("%s", serverIP[0]),
 			BaseDn:       group.Group,
 			LdapPort:     cfgLdap.Port,
 			BindDn:       cfgLdap.BindDn,
@@ -564,12 +496,9 @@ func (s *SupermicroX10) applyLdapParams(cfgLdap *cfgresources.Ldap, cfgGroup []*
 	return err
 }
 
-//An example of a vendor specific configuration
-func (s *SupermicroX10) applyVendorSpecificConfig(cfg *cfgresources.Supermicro) (err error) {
-	return err
-}
-
-func (s *SupermicroX10) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
+// Syslog applies the Syslog configuration resource
+// Syslog implements the Configure interface
+func (s *SupermicroX10) Syslog(cfg *cfgresources.Syslog) (err error) {
 
 	var port int
 
@@ -599,8 +528,8 @@ func (s *SupermicroX10) applySyslogParams(cfg *cfgresources.Syslog) (err error) 
 		}).Debug("Syslog resource declared with disable.")
 	}
 
-	serverIp, err := net.LookupIP(cfg.Server)
-	if err != nil || serverIp == nil {
+	serverIP, err := net.LookupIP(cfg.Server)
+	if err != nil || serverIP == nil {
 		msg := "Unable to lookup IP for syslog server hostname, yes supermicros requires the Syslog server IP :|."
 		log.WithFields(log.Fields{
 			"step":  helper.WhosCalling(),
@@ -611,7 +540,7 @@ func (s *SupermicroX10) applySyslogParams(cfg *cfgresources.Syslog) (err error) 
 
 	configSyslog := ConfigSyslog{
 		Op:          "config_syslog",
-		SyslogIp1:   fmt.Sprintf("%s", serverIp[0]),
+		SyslogIp1:   fmt.Sprintf("%s", serverIP[0]),
 		SyslogPort1: port,
 		Enable:      cfg.Enable,
 	}
