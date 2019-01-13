@@ -43,8 +43,6 @@ func validateConfigureArgs() {
 	//one of these args are required
 	if !runConfig.FilterParams.All &&
 		!runConfig.FilterParams.Chassis &&
-		!runConfig.FilterParams.Blades &&
-		!runConfig.FilterParams.Discretes &&
 		!runConfig.FilterParams.Servers &&
 		runConfig.FilterParams.Serials == "" &&
 		runConfig.FilterParams.Ips == "" {

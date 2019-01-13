@@ -60,13 +60,11 @@ type MetricsParams struct {
 
 // FilterParams struct holds various asset filter arguments that may be passed via cli args.
 type FilterParams struct {
-	Chassis   bool
-	Blades    bool
-	Discretes bool
-	Servers   bool //Server is to replace Discrete, Blade.
-	All       bool
-	Serials   string //can be one or more serials separated by commas.
-	Ips       string
+	Chassis bool
+	Servers bool
+	All     bool
+	Serials string //can be one or more serials separated by commas.
+	Ips     string
 }
 
 // Load sets up bmcbutler configuration.

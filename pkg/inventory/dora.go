@@ -128,11 +128,10 @@ func (d *Dora) AssetRetrieve() func() {
 	switch {
 	case d.Config.FilterParams.Chassis:
 		d.FilterAssetType = append(d.FilterAssetType, "chassis")
-	case d.Config.FilterParams.Blades:
+	case d.Config.FilterParams.Servers:
 		d.FilterAssetType = append(d.FilterAssetType, "blade")
-	case d.Config.FilterParams.Discretes:
 		d.FilterAssetType = append(d.FilterAssetType, "discrete")
-	case !d.Config.FilterParams.Chassis && !d.Config.FilterParams.Blades && !d.Config.FilterParams.Discretes:
+	case !d.Config.FilterParams.Chassis && !d.Config.FilterParams.Servers:
 		d.FilterAssetType = []string{"chassis", "blade", "discrete"}
 	}
 

@@ -74,8 +74,6 @@ func (e *Enc) AssetRetrieve() func() {
 		e.FilterAssetType = append(e.FilterAssetType, "chassis")
 	case e.Config.FilterParams.Servers:
 		e.FilterAssetType = append(e.FilterAssetType, "servers")
-	case e.Config.FilterParams.Discretes:
-		e.FilterAssetType = append(e.FilterAssetType, "servers")
 	case !e.Config.FilterParams.Chassis && !e.Config.FilterParams.Servers:
 		e.FilterAssetType = []string{"chassis", "servers"}
 	}

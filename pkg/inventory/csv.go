@@ -59,11 +59,9 @@ func (c *Csv) AssetRetrieve() func() {
 	switch {
 	case c.Config.FilterParams.Chassis:
 		c.FilterAssetType = append(c.FilterAssetType, "chassis")
-	case c.Config.FilterParams.Blades:
+	case c.Config.FilterParams.Servers:
 		c.FilterAssetType = append(c.FilterAssetType, "servers")
-	case c.Config.FilterParams.Discretes:
-		c.FilterAssetType = append(c.FilterAssetType, "servers")
-	case !c.Config.FilterParams.Chassis && !c.Config.FilterParams.Blades && !c.Config.FilterParams.Discretes:
+	case !c.Config.FilterParams.Chassis && !c.Config.FilterParams.Servers:
 		c.FilterAssetType = []string{"chassis", "servers"}
 	}
 
