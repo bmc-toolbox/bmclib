@@ -4,6 +4,19 @@ import (
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 )
 
+// Resources returns a slice of supported resources and
+// the order they are to be applied in.
+func (i *Ibmc) Resources() []string {
+	return []string{
+		"user",
+		"syslog",
+		"ntp",
+		"ldap",
+		"ldap_group",
+		"network",
+	}
+}
+
 // User method implements the Configure interface
 func (i *Ibmc) User(cfg []*cfgresources.User) error {
 	return nil
@@ -29,12 +42,17 @@ func (i *Ibmc) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresourc
 	return nil
 }
 
-// Timezone method implements the Configure interface
-func (i *Ibmc) Timezone(timezone string) error {
+// Network method implements the Configure interface
+func (i *Ibmc) Network(cfg *cfgresources.Network) error {
 	return nil
 }
 
-// Network method implements the Configure interface
-func (i *Ibmc) Network(cfg *cfgresources.Network) error {
+// SetLicense implements the Configure interface
+func (i *Ibmc) SetLicense(*cfgresources.License) error {
+	return nil
+}
+
+// Bios method implements the Configure interface
+func (i *Ibmc) Bios(cfg *cfgresources.Bios) error {
 	return nil
 }

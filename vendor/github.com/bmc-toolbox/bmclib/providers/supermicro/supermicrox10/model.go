@@ -32,7 +32,7 @@ type ConfigDateTime struct {
 // /cgi/config_user.cgi
 type ConfigUser struct {
 	Username     string `url:"username"`
-	UserId       int    `url:"original_username"` //username integer
+	UserID       int    `url:"original_username"` //username integer
 	Password     string `url:"password,omitempty"`
 	NewPrivilege int    `url:"new_privilege,omitempty"` //4 == administrator, 3 == operator
 }

@@ -7,6 +7,7 @@ import (
 // Bmc represents the requirement of items to be collected a server
 type Bmc interface {
 	ApplyCfg(*cfgresources.ResourcesConfig) error
+	// embed Configure interface
 	Configure
 	BiosVersion() (string, error)
 	BmcType() string
@@ -37,6 +38,8 @@ type Bmc interface {
 // BmcChassis represents the requirement of items to be collected from a chassis
 type BmcChassis interface {
 	ApplyCfg(*cfgresources.ResourcesConfig) error
+	// embed Configure interface
+	Configure
 	Blades() ([]*Blade, error)
 	BmcType() string
 	ChassisSnapshot() (*Chassis, error)
@@ -80,11 +83,13 @@ type BmcChassis interface {
 // Configure interface declares methods implemented
 // to apply configuration to BMCs.
 type Configure interface {
+	Resources() []string
 	User([]*cfgresources.User) error
 	Syslog(*cfgresources.Syslog) error
 	Ntp(*cfgresources.Ntp) error
 	Ldap(*cfgresources.Ldap) error
 	LdapGroup([]*cfgresources.LdapGroup, *cfgresources.Ldap) error
-	Timezone(string) error
 	Network(*cfgresources.Network) error
+	SetLicense(*cfgresources.License) error
+	Bios(*cfgresources.Bios) error
 }

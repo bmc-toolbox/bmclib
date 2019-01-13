@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/bmc-toolbox/bmclib/errors"
@@ -30,7 +31,7 @@ func ScanAndConnect(host string, username string, password string) (bmcConnectio
 	log.WithFields(log.Fields{"step": "ScanAndConnect", "host": host}).Debug("detecting vendor")
 
 	// return a connection to our dummy device.
-	if host == "01.01.01.01" {
+	if os.Getenv("BMCLIB_TEST") == "1" {
 		log.WithFields(log.Fields{"step": "ScanAndConnect", "host": host}).Debug("returning connection to dummy ibmc device.")
 		return ibmc.New(host, username, password), nil
 	}

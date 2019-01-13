@@ -21,6 +21,10 @@ type Ibmc struct {
 	password string
 }
 
+// This ensures the compiler errors if this type is missing
+// a method that should be implmented to satisfy the configure interface.
+var _ devices.Configure = (*Ibmc)(nil)
+
 // New returns a new ibmc ready to be used
 func New(ip string, username string, password string) *Ibmc {
 	return &Ibmc{ip: ip, username: username, password: password}
