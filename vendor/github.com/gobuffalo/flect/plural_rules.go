@@ -21,7 +21,6 @@ func AddPlural(suffix string, repl string) {
 }
 
 var singleToPlural = map[string]string{
-	"human":       "humans",
 	"matrix":      "matrices",
 	"vertix":      "vertices",
 	"index":       "indices",

@@ -26,9 +26,8 @@ import (
 )
 
 var (
-	debug                 bool
-	backoff               int
-	errUnrecognizedDevice = errors.New("Unrecognized device")
+	debug   bool
+	backoff int
 )
 
 type Params struct {
@@ -84,10 +83,6 @@ func (p *Params) Login() (connection interface{}, loginInfo LoginInfo, err error
 							ip, user, pass, loginInfo.Attempts, err)
 					}
 
-					if err == errUnrecognizedDevice {
-						return connection, loginInfo, err
-					}
-
 					//if the IP is not active, break out of this loop
 					//to try credentials on the next IP.
 					if ipInactive {
@@ -96,6 +91,7 @@ func (p *Params) Login() (connection interface{}, loginInfo LoginInfo, err error
 						//but its status is not active,
 						if len(p.IpAddresses) == 1 {
 							loginInfo.WorkingCredentials = map[string]string{user: pass}
+
 							return connection, loginInfo, err
 						}
 						break
@@ -139,6 +135,7 @@ func (p *Params) attemptLogin(ip string, user string, pass string) (connection i
 
 	switch connection.(type) {
 	case devices.Bmc:
+
 		bmc := connection.(devices.Bmc)
 		err := bmc.CheckCredentials()
 		if err != nil {
@@ -149,6 +146,7 @@ func (p *Params) attemptLogin(ip string, user string, pass string) (connection i
 		//successful login.
 		return connection, ipInactive, nil
 	case devices.BmcChassis:
+
 		chassis := connection.(devices.BmcChassis)
 		err := chassis.CheckCredentials()
 		if err != nil {
@@ -165,7 +163,8 @@ func (p *Params) attemptLogin(ip string, user string, pass string) (connection i
 
 		return connection, ipInactive, nil
 	default:
-		return connection, ipInactive, errUnrecognizedDevice
+		return connection, ipInactive, errors.New(
+			fmt.Sprintf("Unrecognized device type."))
 	}
 
 	//we won't ever end up here
