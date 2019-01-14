@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/providers/dell/idrac8"
 	"github.com/bmc-toolbox/bmclib/providers/dell/idrac9"
 	"github.com/bmc-toolbox/bmclib/providers/dell/m1000e"
+	"github.com/bmc-toolbox/bmclib/providers/dummy/ibmc"
 	"github.com/bmc-toolbox/bmclib/providers/hp"
 	"github.com/bmc-toolbox/bmclib/providers/hp/c7000"
 
@@ -27,6 +29,12 @@ import (
 // ScanAndConnect will scan the bmc trying to learn the device type and return a working connection
 func ScanAndConnect(host string, username string, password string) (bmcConnection interface{}, err error) {
 	log.WithFields(log.Fields{"step": "ScanAndConnect", "host": host}).Debug("detecting vendor")
+
+	// return a connection to our dummy device.
+	if os.Getenv("BMCLIB_TEST") == "1" {
+		log.WithFields(log.Fields{"step": "ScanAndConnect", "host": host}).Debug("returning connection to dummy ibmc device.")
+		return ibmc.New(host, username, password), nil
+	}
 
 	client, err := httpclient.Build()
 	if err != nil {

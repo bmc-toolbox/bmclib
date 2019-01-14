@@ -20,9 +20,14 @@ type ResourcesConfig struct {
 	User         []*User       `yaml:"user"`
 	Ssl          *Ssl          `yaml:"ssl"`
 	Ntp          *Ntp          `yaml:"ntp"`
+	Bios         *Bios         `yaml:"bios"`
 	Supermicro   *Supermicro   `yaml:"supermicro"` //supermicro specific config, example of issue #34
-	Dell         *Dell         `yaml:"dell"`
 	SetupChassis *SetupChassis `yaml:"setupChassis"`
+}
+
+// Bios struct holds bios configuration for each vendor.
+type Bios struct {
+	Dell *Dell `yaml:"dell"`
 }
 
 // BladeBmcAccount declares attributes for a Blade BMC user to be managed through the chassis.

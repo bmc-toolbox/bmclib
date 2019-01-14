@@ -1,109 +1,26 @@
 package c7000
 
 import (
-	"reflect"
-
 	"github.com/bmc-toolbox/bmclib/cfgresources"
+	"github.com/bmc-toolbox/bmclib/devices"
 	log "github.com/sirupsen/logrus"
 )
 
-func (c *C7000) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
-	cfg := reflect.ValueOf(config).Elem()
+// This ensures the compiler errors if this type is missing
+// a method that should be implmented to satisfy the Configure interface.
+var _ devices.Configure = (*C7000)(nil)
 
-	//Each Field in ResourcesConfig struct is a ptr to a resource,
-	//Here we figure the resources to be configured, i.e the ptr is not nil
-	for r := 0; r < cfg.NumField(); r++ {
-		resourceName := cfg.Type().Field(r).Name
-		if cfg.Field(r).Pointer() != 0 {
-			switch resourceName {
-			case "User":
-				//retrieve users resource values as an interface
-				userAccounts := cfg.Field(r).Interface()
-
-				//assert userAccounts interface to its actual type - A slice of ptrs to User
-				for _, user := range userAccounts.([]*cfgresources.User) {
-					err := c.applyUserParams(user)
-					if err != nil {
-						log.WithFields(log.Fields{
-							"step":     "ApplyCfg",
-							"Resource": cfg.Field(r).Kind(),
-							"IP":       c.ip,
-							"Model":    c.BmcType(),
-							"Serial":   c.serial,
-							"Error":    err,
-						}).Warn("Unable to set user config.")
-					}
-				}
-
-			case "Syslog":
-				syslogCfg := cfg.Field(r).Interface().(*cfgresources.Syslog)
-				err := c.applySyslogParams(syslogCfg)
-				if err != nil {
-					log.WithFields(log.Fields{
-						"step":     "ApplyCfg",
-						"resource": cfg.Field(r).Kind(),
-						"IP":       c.ip,
-						"Model":    c.BmcType(),
-						"Serial":   c.serial,
-						"Error":    err,
-					}).Warn("Unable to set Syslog config.")
-					return err
-				}
-			case "Network":
-			case "Ntp":
-				ntpCfg := cfg.Field(r).Interface().(*cfgresources.Ntp)
-				err := c.applyNtpParams(ntpCfg)
-				if err != nil {
-					log.WithFields(log.Fields{
-						"step":     "ApplyCfg",
-						"resource": cfg.Field(r).Kind(),
-						"IP":       c.ip,
-						"Model":    c.BmcType(),
-						"Serial":   c.serial,
-						"Error":    err,
-					}).Warn("Unable to set NTP config.")
-					return err
-				}
-			case "LdapGroup":
-				ldapGroups := cfg.Field(r).Interface()
-				err := c.applyLdapGroupParams(ldapGroups.([]*cfgresources.LdapGroup))
-				if err != nil {
-					log.WithFields(log.Fields{
-						"step":     "applyLdapParams",
-						"resource": "LdapGroup",
-						"IP":       c.ip,
-						"Model":    c.BmcType(),
-						"Serial":   c.serial,
-						"Error":    err,
-					}).Warn("applyLdapGroupParams returned error.")
-					return err
-				}
-			case "Ldap":
-				ldapCfg := cfg.Field(r).Interface().(*cfgresources.Ldap)
-				err := c.applyLdapParams(ldapCfg)
-				if err != nil {
-					log.WithFields(log.Fields{
-						"step":     "applyLdapParams",
-						"resource": "Ldap",
-						"IP":       c.ip,
-						"Model":    c.BmcType(),
-						"Serial":   c.serial,
-						"Error":    err,
-					}).Warn("applyLdapParams returned error.")
-					return err
-				}
-			case "License":
-			case "Ssl":
-			default:
-				log.WithFields(log.Fields{
-					"step":     "ApplyCfg",
-					"resource": resourceName,
-				}).Debug("Unknown resource.")
-			}
-		}
+// Resources returns a slice of supported resources and
+// the order they are to be applied in.
+func (c *C7000) Resources() []string {
+	return []string{
+		"user",
+		"syslog",
+		"license",
+		"ntp",
+		"ldap_group",
+		"ldap",
 	}
-
-	return err
 }
 
 // Return bool value if the role is valid.
@@ -119,12 +36,18 @@ func (c *C7000) isRoleValid(role string) bool {
 	return false
 }
 
+// ApplyCfg implements the BmcChassis interface
+func (c *C7000) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
+	return nil
+}
+
+// Ldap applies LDAP configuration params.
+// Ldap implements the Configure interface.
 //1. apply ldap group params
 //2. enable ldap auth
 //3. apply ldap server params
-func (c *C7000) applyLdapParams(cfg *cfgresources.Ldap) error {
-
-	err := c.applysetLdapInfo4(cfg)
+func (c *C7000) Ldap(cfg *cfgresources.Ldap) (err error) {
+	err = c.applysetLdapInfo4(cfg)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"step":     "applyLdapParams",
@@ -260,11 +183,13 @@ func (c *C7000) applyEnableLdapAuth(enable bool) (err error) {
 	return err
 }
 
+// LdapGroup applies LDAP Group/Role related configuration
+// LdapGroup implements the Configure interface.
 // Actions carried out in order
 // 1.  addLdapGroup
 // 2.  setLdapGroupBayAcl
 // 3.  addLdapGroupBayAccess (done)
-func (c *C7000) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) {
+func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
 
 	for _, group := range cfg {
 
@@ -321,7 +246,7 @@ func (c *C7000) applyLdapGroupParams(cfg []*cfgresources.LdapGroup) (err error) 
 		}
 
 		//2. setLdapGroupBayAcl
-		err = c.applyLdapGroupBayAcl(group.Role, group.Group)
+		err = c.applyLdapGroupBayACL(group.Role, group.Group)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"step":     "setLdapGroupBayAcl",
@@ -448,27 +373,27 @@ func (c *C7000) applyAddLdapGroup(group string) (err error) {
 //  <hpoa:ldapGroup>bmcAdmins</hpoa:ldapGroup>
 //  <hpoa:acl>ADMINISTRATOR</hpoa:acl>
 // </hpoa:setLdapGroupBayAcl>
-func (c *C7000) applyLdapGroupBayAcl(role string, group string) (err error) {
+func (c *C7000) applyLdapGroupBayACL(role string, group string) (err error) {
 
-	var userAcl string
+	var userACL string
 
 	if role == "admin" {
-		userAcl = "ADMINISTRATOR"
+		userACL = "ADMINISTRATOR"
 	} else {
-		userAcl = "USER"
+		userACL = "USER"
 	}
 
-	payload := setLdapGroupBayAcl{LdapGroup: ldapGroup{Text: group}, Acl: Acl{Text: userAcl}}
+	payload := setLdapGroupBayAcl{LdapGroup: ldapGroup{Text: group}, Acl: Acl{Text: userACL}}
 	statusCode, _, err := c.postXML(payload)
 	if statusCode != 200 || err != nil {
 		log.WithFields(log.Fields{
-			"step":       "applyLdapGroupBayAcl",
+			"step":       "applyLdapGroupBayACL",
 			"IP":         c.ip,
 			"Model":      c.BmcType(),
 			"Serial":     c.serial,
 			"statusCode": statusCode,
 			"Error":      err,
-		}).Warn("LDAP applyLdapGroupBayAcl request returned non 200.")
+		}).Warn("LDAP applyLdapGroupBayACL request returned non 200.")
 		return err
 	}
 
@@ -568,99 +493,103 @@ func (c *C7000) applyAddLdapGroupBayAccess(group string) (err error) {
 	return err
 }
 
-// attempts to add the user
-// if the user exists, update the users password.
-func (c *C7000) applyUserParams(cfg *cfgresources.User) (err error) {
+// User applies the User configuration resource,
+// if the user exists, it updates the users password,
+// User implements the Configure interface.
+func (c *C7000) User(users []*cfgresources.User) (err error) {
 
-	if cfg.Name == "" {
-		log.WithFields(log.Fields{
-			"step":  "applyUserParams",
-			"Model": c.BmcType(),
-		}).Fatal("User resource expects parameter: Name.")
-	}
+	for _, cfg := range users {
+		if cfg.Name == "" {
+			log.WithFields(log.Fields{
+				"step":  "applyUserParams",
+				"Model": c.BmcType(),
+			}).Fatal("User resource expects parameter: Name.")
+		}
 
-	if cfg.Password == "" {
-		log.WithFields(log.Fields{
-			"step":  "applyUserParams",
-			"Model": c.BmcType(),
-		}).Fatal("User resource expects parameter: Password.")
-	}
+		if cfg.Password == "" {
+			log.WithFields(log.Fields{
+				"step":  "applyUserParams",
+				"Model": c.BmcType(),
+			}).Fatal("User resource expects parameter: Password.")
+		}
 
-	if c.isRoleValid(cfg.Role) == false {
-		log.WithFields(log.Fields{
-			"step":  "applyUserParams",
-			"Model": c.BmcType(),
-			"Role":  cfg.Role,
-		}).Fatal("User resource Role must be declared and a valid role: admin.")
-	}
+		if c.isRoleValid(cfg.Role) == false {
+			log.WithFields(log.Fields{
+				"step":  "applyUserParams",
+				"Model": c.BmcType(),
+				"Role":  cfg.Role,
+			}).Fatal("User resource Role must be declared and a valid role: admin.")
+		}
 
-	username := Username{Text: cfg.Name}
-	password := Password{Text: cfg.Password}
+		username := Username{Text: cfg.Name}
+		password := Password{Text: cfg.Password}
 
-	//if user account is disabled, remove the user
-	if cfg.Enable == false {
-		payload := RemoveUser{Username: username}
-		statusCode, _, _ := c.postXML(payload)
+		//if user account is disabled, remove the user
+		if cfg.Enable == false {
+			payload := RemoveUser{Username: username}
+			statusCode, _, _ := c.postXML(payload)
 
-		//user doesn't exist
-		if statusCode != 400 {
+			//user doesn't exist
+			if statusCode != 400 {
+				return err
+			}
+
+			log.WithFields(log.Fields{
+				"IP":     c.ip,
+				"Model":  c.BmcType(),
+				"Serial": c.serial,
+				"User":   cfg.Name,
+			}).Debug("User removed.")
+
+			//user exists and was removed.
 			return err
+		}
+
+		payload := AddUser{Username: username, Password: password}
+		statusCode, _, err := c.postXML(payload)
+		if err != nil {
+			return err
+		}
+
+		//user exists
+		if statusCode == 400 {
+			log.WithFields(log.Fields{
+				"step":        "applyUserParams",
+				"user":        cfg.Name,
+				"IP":          c.ip,
+				"Model":       c.BmcType(),
+				"Serial":      c.serial,
+				"Return code": statusCode,
+			}).Debug("User already exists, setting password.")
+
+			//update user password
+			err := c.setUserPassword(cfg.Name, cfg.Password)
+			if err != nil {
+				return err
+			}
+
+			//update user acl
+			err = c.setUserACL(cfg.Name, cfg.Role)
+			if err != nil {
+				return err
+			}
+
+			//updates user blade bay access acls
+			err = c.applyAddUserBayAccess(cfg.Name)
+			if err != nil {
+				return err
+			}
+
 		}
 
 		log.WithFields(log.Fields{
 			"IP":     c.ip,
 			"Model":  c.BmcType(),
 			"Serial": c.serial,
-			"User":   cfg.Name,
-		}).Debug("User removed.")
-
-		//user exists and was removed.
-		return err
-	}
-
-	payload := AddUser{Username: username, Password: password}
-	statusCode, _, err := c.postXML(payload)
-	if err != nil {
-		return err
-	}
-
-	//user exists
-	if statusCode == 400 {
-		log.WithFields(log.Fields{
-			"step":        "applyUserParams",
-			"user":        cfg.Name,
-			"IP":          c.ip,
-			"Model":       c.BmcType(),
-			"Serial":      c.serial,
-			"Return code": statusCode,
-		}).Debug("User already exists, setting password.")
-
-		//update user password
-		err := c.setUserPassword(cfg.Name, cfg.Password)
-		if err != nil {
-			return err
-		}
-
-		//update user acl
-		err = c.setUserAcl(cfg.Name, cfg.Role)
-		if err != nil {
-			return err
-		}
-
-		//updates user blade bay access acls
-		err = c.applyAddUserBayAccess(cfg.Name)
-		if err != nil {
-			return err
-		}
+			"user":   cfg.Name,
+		}).Debug("User cfg applied.")
 
 	}
-
-	log.WithFields(log.Fields{
-		"IP":     c.ip,
-		"Model":  c.BmcType(),
-		"Serial": c.serial,
-		"user":   cfg.Name,
-	}).Debug("User cfg applied.")
 	return err
 }
 
@@ -693,7 +622,7 @@ func (c *C7000) setUserPassword(user string, password string) (err error) {
 	return err
 }
 
-func (c *C7000) setUserAcl(user string, role string) (err error) {
+func (c *C7000) setUserACL(user string, role string) (err error) {
 
 	var aclRole string
 	if role == "admin" {
@@ -710,7 +639,7 @@ func (c *C7000) setUserAcl(user string, role string) (err error) {
 	statusCode, _, err := c.postXML(payload)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"step":        "setUserAcl",
+			"step":        "setUserACL",
 			"user":        user,
 			"Acl":         role,
 			"IP":          c.ip,
@@ -795,7 +724,9 @@ func (c *C7000) applyAddUserBayAccess(user string) (err error) {
 	return err
 }
 
-// Applies ntp parameters
+// Ntp applies NTP configuration params
+// Ntp implements the Configure interface.
+//
 // 1. SOAP call to set the NTP server params
 // 2. SOAP call to set TZ
 // 1.
@@ -808,7 +739,7 @@ func (c *C7000) applyAddUserBayAccess(user string) (err error) {
 // <hpoa:setEnclosureTimeZone>
 //  <hpoa:timeZone>CET</hpoa:timeZone>
 // </hpoa:setEnclosureTimeZone>
-func (c *C7000) applyNtpParams(cfg *cfgresources.Ntp) (err error) {
+func (c *C7000) Ntp(cfg *cfgresources.Ntp) (err error) {
 
 	if cfg.Server1 == "" {
 		log.WithFields(log.Fields{
@@ -902,12 +833,14 @@ func (c *C7000) applyNtpTimezoneParam(timezone string) (err error) {
 	return err
 }
 
+// Syslog applies the Syslog configuration resource
+// Syslog implements the Configure interface
 // Applies syslog parameters
 // 1. set syslog server
 // 2. set syslog port
 // 3. enable syslog
 // theres no option to set the port
-func (c *C7000) applySyslogParams(cfg *cfgresources.Syslog) (err error) {
+func (c *C7000) Syslog(cfg *cfgresources.Syslog) (err error) {
 
 	var port int
 	if cfg.Server == "" {
@@ -1035,4 +968,19 @@ func (c *C7000) applySyslogEnabled(enabled bool) {
 	}).Debug("Syslog enabled.")
 	return
 
+}
+
+// Network method implements the Configure interface
+func (c *C7000) Network(cfg *cfgresources.Network) error {
+	return nil
+}
+
+// SetLicense implements the Configure interface
+func (c *C7000) SetLicense(*cfgresources.License) error {
+	return nil
+}
+
+// Bios method implements the Configure interface
+func (c *C7000) Bios(cfg *cfgresources.Bios) error {
+	return nil
 }

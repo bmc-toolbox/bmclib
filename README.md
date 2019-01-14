@@ -42,7 +42,8 @@ Supermicro X10 | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | 
 
 
 ## Debugging
-export DEBUG_BMCLIB=1 for bmclib to verbose log.
+export DEBUG_BMCLIB=1 for bmclib to verbose log
+export BMCLIB_TEST=1 to run on a dummy bmc (dry run).
 
 #### Acknowledgment
 
