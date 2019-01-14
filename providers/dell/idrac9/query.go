@@ -7,10 +7,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// Screenshot grab screen preview.
 func (i *IDrac9) Screenshot() (response []byte, extension string, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return response, extension, err
+	}
 
 	extension = "png"
-
 	endpoint1 := "sysmgmt/2015/server/preview"
 	response, err = i.get(endpoint1, &map[string]string{})
 	if err != nil {

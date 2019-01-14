@@ -11,8 +11,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// Grab screen preview.
+// Screenshot Grab screen preview.
 func (i *IDrac8) Screenshot() (response []byte, extension string, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return response, extension, err
+	}
 
 	endpoint1 := fmt.Sprintf("data?get=consolepreview[auto%%20%d]",
 		time.Now().UnixNano()/int64(time.Millisecond))
