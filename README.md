@@ -15,6 +15,15 @@ For list of supported BMCs and configuration options supported, see [supported h
 ###### Build with vendored modules (go 1.11)
 `GO111MODULE=on go build -mod vendor -v`
 
+###### Notes on working with go mod
+To pick a specific bmclib SHA.
+
+`GO111MODULE=on go get github.com/bmc-toolbox/bmclib@2d1bd1cb`
+
+To add/update the vendor dir.
+
+`GO111MODULE=on go mod vendor`
+
 ##### Setup
 Theres two parts to setting up configuration for bmcbutler,
 
