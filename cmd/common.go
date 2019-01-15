@@ -42,6 +42,10 @@ func overrideConfigFromFlags() {
 		runConfig.Locations = strings.Split(locations, ",")
 	}
 
+	if resources != "" {
+		runConfig.Resources = strings.Split(resources, ",")
+	}
+
 	if runConfig.DryRun {
 		log.Info("Invoked with --dryrun.")
 	}

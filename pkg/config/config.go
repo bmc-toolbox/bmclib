@@ -36,6 +36,7 @@ type Params struct {
 	InventoryParams *InventoryParams
 	IgnoreLocation  bool
 	Locations       []string
+	Resources       []string
 	MetricsParams   *MetricsParams
 	Version         string
 	Verbose         bool

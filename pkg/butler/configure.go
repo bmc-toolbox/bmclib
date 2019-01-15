@@ -69,7 +69,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		}
 
 		// Apply configuration
-		c := configure.NewBmcConfigurator(bmc, renderedConfig, log)
+		c := configure.NewBmcConfigurator(bmc, b.config.Resources, renderedConfig, log)
 		c.Apply()
 
 		bmc.Close()
@@ -94,7 +94,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		}
 
 		// Apply configuration
-		c := configure.NewBmcChassisConfigurator(chassis, renderedConfig, log)
+		c := configure.NewBmcChassisConfigurator(chassis, b.config.Resources, renderedConfig, log)
 		c.Apply()
 
 		chassis.Close()
