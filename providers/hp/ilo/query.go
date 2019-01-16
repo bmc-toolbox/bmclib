@@ -11,6 +11,10 @@ import (
 
 // Screenshot returns a thumbnail of video display from the bmc.
 func (i *Ilo) Screenshot() (response []byte, extension string, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return response, extension, err
+	}
 
 	endpoint := "images/thumbnail.bmp"
 	extension = "bmp"
