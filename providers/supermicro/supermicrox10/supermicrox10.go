@@ -33,7 +33,6 @@ type SupermicroX10 struct {
 	username   string
 	password   string
 	httpClient *http.Client
-	serial     string
 }
 
 // New returns a new SupermicroX10 instance ready to be used

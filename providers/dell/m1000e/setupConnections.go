@@ -127,12 +127,6 @@ func (m *M1000e) httpLogin() (err error) {
 	}
 	m.SessionToken = token
 
-	serial, err := m.Serial()
-	if err != nil {
-		return err
-	}
-	m.serial = serial
-
 	return err
 }
 

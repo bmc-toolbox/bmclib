@@ -41,7 +41,6 @@ type M1000e struct {
 	cmcJSON      *dell.CMC
 	cmcTemp      *dell.CMCTemp
 	cmcWWN       *dell.CMCWWN
-	serial       string
 	SessionToken string //required to set config
 }
 

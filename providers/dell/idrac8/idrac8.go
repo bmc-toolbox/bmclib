@@ -39,7 +39,6 @@ type IDrac8 struct {
 	sshClient      *sshclient.SSHClient
 	st1            string
 	st2            string
-	serial         string
 	iDracInventory *dell.IDracInventory
 }
 

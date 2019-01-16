@@ -77,12 +77,6 @@ func (i *IDrac8) httpLogin() (err error) {
 		return err
 	}
 
-	serial, err := i.Serial()
-	if err != nil {
-		return err
-	}
-	i.serial = serial
-
 	return err
 }
 
