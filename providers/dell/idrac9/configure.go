@@ -60,7 +60,6 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 		log.WithFields(log.Fields{
 			"IP":     i.ip,
 			"Model":  i.BmcType(),
-			"Serial": i.Serial,
 			"step":   helper.WhosCalling(),
 			"Error":  err,
 		}).Warn(msg)
@@ -76,7 +75,6 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 			log.WithFields(log.Fields{
 				"IP":     i.ip,
 				"Model":  i.BmcType(),
-				"Serial": i.Serial,
 				"step":   helper.WhosCalling(),
 				"Error":  err,
 			}).Fatal("diffBiosSettings returned error.")
@@ -85,7 +83,6 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 		log.WithFields(log.Fields{
 			"IP":                            i.ip,
 			"Model":                         i.BmcType(),
-			"Serial":                        i.Serial,
 			"step":                          helper.WhosCalling(),
 			"Changes (Ignore empty fields)": fmt.Sprintf("%+v", toApplyBiosSettings),
 		}).Info("Bios configuration to be applied.")
@@ -99,7 +96,6 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 				"resource":              "Bios",
 				"IP":                    i.ip,
 				"Model":                 i.BmcType(),
-				"Serial":                i.Serial,
 				"Bios settings pending": err,
 			}).Warn("Unable to purge pending bios setting jobs.")
 		}
@@ -110,7 +106,6 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 			log.WithFields(log.Fields{
 				"IP":     i.ip,
 				"Model":  i.BmcType(),
-				"Serial": i.Serial,
 				"step":   helper.WhosCalling(),
 				"Error":  err,
 			}).Warn(msg)
@@ -120,7 +115,6 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 		log.WithFields(log.Fields{
 			"IP":     i.ip,
 			"Model":  i.BmcType(),
-			"Serial": i.Serial,
 			"step":   helper.WhosCalling(),
 		}).Info("Bios configuration update job queued in iDrac.")
 
@@ -129,7 +123,6 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 		log.WithFields(log.Fields{
 			"IP":     i.ip,
 			"Model":  i.BmcType(),
-			"Serial": i.Serial,
 			"step":   helper.WhosCalling(),
 		}).Info("Bios configuration is up to date.")
 	}
@@ -150,7 +143,6 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 			"step":   "applyUserParams",
 			"IP":     i.ip,
 			"Model":  i.BmcType(),
-			"Serial": i.Serial,
 			"Error":  err,
 		}).Warn(msg)
 		return errors.New(msg)
@@ -163,7 +155,6 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 			"step":   "applyUserParams",
 			"IP":     i.ip,
 			"Model":  i.BmcType(),
-			"Serial": i.Serial,
 			"Error":  err,
 		}).Warn(msg)
 		return errors.New(msg)
@@ -184,7 +175,6 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 					log.WithFields(log.Fields{
 						"IP":     i.ip,
 						"Model":  i.BmcType(),
-						"Serial": i.Serial,
 						"step":   helper.WhosCalling(),
 						"User":   cfgUser.Name,
 						"Error":  err,
@@ -212,7 +202,6 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 				log.WithFields(log.Fields{
 					"IP":     i.ip,
 					"Model":  i.BmcType(),
-					"Serial": i.Serial,
 					"step":   helper.WhosCalling(),
 					"User":   cfgUser.Name,
 					"Error":  err,
@@ -230,7 +219,6 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 				log.WithFields(log.Fields{
 					"IP":         i.ip,
 					"Model":      i.BmcType(),
-					"Serial":     i.Serial,
 					"step":       helper.WhosCalling(),
 					"User":       cfgUser.Name,
 					"Error":      err,
@@ -244,7 +232,6 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 		log.WithFields(log.Fields{
 			"IP":     i.ip,
 			"Model":  i.BmcType(),
-			"Serial": i.Serial,
 			"User":   cfgUser.Name,
 		}).Debug("User parameters applied.")
 
@@ -271,7 +258,6 @@ func (i *IDrac9) Ldap(cfg *cfgresources.Ldap) (err error) {
 		log.WithFields(log.Fields{
 			"IP":     i.ip,
 			"Model":  i.BmcType(),
-			"Serial": i.Serial,
 			"step":   helper.WhosCalling,
 		}).Warn(msg)
 		return errors.New(msg)
@@ -325,7 +311,6 @@ func (i *IDrac9) Ldap(cfg *cfgresources.Ldap) (err error) {
 		log.WithFields(log.Fields{
 			"IP":     i.ip,
 			"Model":  i.BmcType(),
-			"Serial": i.Serial,
 			"step":   helper.WhosCalling(),
 			"Error":  err,
 		}).Warn(msg)
@@ -346,7 +331,6 @@ func (i *IDrac9) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.
 			"step":   "applyUserParams",
 			"IP":     i.ip,
 			"Model":  i.BmcType(),
-			"Serial": i.Serial,
 			"Error":  err,
 		}).Warn(msg)
 		return errors.New(msg)
@@ -366,7 +350,6 @@ func (i *IDrac9) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.
 					log.WithFields(log.Fields{
 						"IP":              i.ip,
 						"Model":           i.BmcType(),
-						"Serial":          i.Serial,
 						"step":            helper.WhosCalling(),
 						"Ldap Role Group": cfgRole.Group,
 						"Role Group DN":   cfgRole.Role,
@@ -390,7 +373,6 @@ func (i *IDrac9) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.
 				log.WithFields(log.Fields{
 					"IP":              i.ip,
 					"Model":           i.BmcType(),
-					"Serial":          i.Serial,
 					"step":            helper.WhosCalling(),
 					"Ldap Role Group": cfgRole.Group,
 					"Role Group DN":   cfgRole.Role,
@@ -411,7 +393,6 @@ func (i *IDrac9) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.
 				log.WithFields(log.Fields{
 					"IP":              i.ip,
 					"Model":           i.BmcType(),
-					"Serial":          i.Serial,
 					"step":            helper.WhosCalling(),
 					"Ldap Role Group": cfgRole.Group,
 					"Role Group DN":   cfgRole.Role,
@@ -424,7 +405,6 @@ func (i *IDrac9) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.
 		log.WithFields(log.Fields{
 			"IP":              i.ip,
 			"Model":           i.BmcType(),
-			"Serial":          i.Serial,
 			"Step":            helper.WhosCalling(),
 			"Ldap Role Group": cfgRole.Role,
 			"Role Group DN":   cfgRole.Role,
@@ -452,7 +432,6 @@ func (i *IDrac9) Ntp(cfg *cfgresources.Ntp) (err error) {
 		log.WithFields(log.Fields{
 			"IP":     i.ip,
 			"Model":  i.BmcType(),
-			"Serial": i.Serial,
 			"Step":   helper.WhosCalling(),
 		}).Warn(msg)
 		return errors.New(msg)
@@ -463,7 +442,6 @@ func (i *IDrac9) Ntp(cfg *cfgresources.Ntp) (err error) {
 		log.WithFields(log.Fields{
 			"IP":     i.ip,
 			"Model":  i.BmcType(),
-			"Serial": i.Serial,
 			"Step":   helper.WhosCalling(),
 		}).Warn(msg)
 		return errors.New(msg)
@@ -475,7 +453,6 @@ func (i *IDrac9) Ntp(cfg *cfgresources.Ntp) (err error) {
 		log.WithFields(log.Fields{
 			"IP":               i.ip,
 			"Model":            i.BmcType(),
-			"Serial":           i.Serial,
 			"step":             helper.WhosCalling(),
 			"Unknown Timezone": cfg.Timezone,
 		}).Warn(msg)
@@ -487,7 +464,6 @@ func (i *IDrac9) Ntp(cfg *cfgresources.Ntp) (err error) {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
 			"Model":    i.BmcType(),
-			"Serial":   i.Serial,
 			"step":     helper.WhosCalling(),
 			"Timezone": cfg.Timezone,
 			"Error":    err,
@@ -507,7 +483,6 @@ func (i *IDrac9) Ntp(cfg *cfgresources.Ntp) (err error) {
 		log.WithFields(log.Fields{
 			"IP":     i.ip,
 			"Model":  i.BmcType(),
-			"Serial": i.Serial,
 			"step":   helper.WhosCalling(),
 			"Error":  err,
 		}).Warn("PUT Ntp  request failed.")
@@ -517,7 +492,6 @@ func (i *IDrac9) Ntp(cfg *cfgresources.Ntp) (err error) {
 	log.WithFields(log.Fields{
 		"IP":     i.ip,
 		"Model":  i.BmcType(),
-		"Serial": i.Serial,
 	}).Debug("NTP servers param applied.")
 
 	return err
@@ -534,7 +508,6 @@ func (i *IDrac9) Syslog(cfg *cfgresources.Syslog) (err error) {
 		log.WithFields(log.Fields{
 			"IP":     i.ip,
 			"Model":  i.BmcType(),
-			"Serial": i.Serial,
 			"step":   helper.WhosCalling(),
 		}).Warn("Syslog resource expects parameter: Server.")
 		return
@@ -568,7 +541,6 @@ func (i *IDrac9) Syslog(cfg *cfgresources.Syslog) (err error) {
 		log.WithFields(log.Fields{
 			"IP":     i.ip,
 			"Model":  i.BmcType(),
-			"Serial": i.Serial,
 			"step":   helper.WhosCalling(),
 			"Error":  err,
 		}).Warn("PUT Syslog request failed.")
@@ -578,7 +550,6 @@ func (i *IDrac9) Syslog(cfg *cfgresources.Syslog) (err error) {
 	log.WithFields(log.Fields{
 		"IP":     i.ip,
 		"Model":  i.BmcType(),
-		"Serial": i.Serial,
 	}).Debug("Syslog parameters applied.")
 	return err
 }
@@ -637,7 +608,6 @@ func (i *IDrac9) Network(cfg *cfgresources.Network) (err error) {
 		log.WithFields(log.Fields{
 			"IP":     i.ip,
 			"Model":  i.BmcType(),
-			"Serial": i.Serial,
 			"step":   helper.WhosCalling(),
 			"Error":  err,
 		}).Warn("PUT IPv4 request failed.")
@@ -648,7 +618,6 @@ func (i *IDrac9) Network(cfg *cfgresources.Network) (err error) {
 		log.WithFields(log.Fields{
 			"IP":     i.ip,
 			"Model":  i.BmcType(),
-			"Serial": i.Serial,
 			"step":   helper.WhosCalling(),
 			"Error":  err,
 		}).Warn("PUT SerialOverLan request failed.")
@@ -659,7 +628,6 @@ func (i *IDrac9) Network(cfg *cfgresources.Network) (err error) {
 		log.WithFields(log.Fields{
 			"IP":     i.ip,
 			"Model":  i.BmcType(),
-			"Serial": i.Serial,
 			"step":   helper.WhosCalling(),
 			"Error":  err,
 		}).Warn("PUT SerialRedirection request failed.")
@@ -670,7 +638,6 @@ func (i *IDrac9) Network(cfg *cfgresources.Network) (err error) {
 		log.WithFields(log.Fields{
 			"IP":     i.ip,
 			"Model":  i.BmcType(),
-			"Serial": i.Serial,
 			"step":   helper.WhosCalling(),
 			"Error":  err,
 		}).Warn("PUT IpmiOverLan request failed.")
@@ -679,7 +646,6 @@ func (i *IDrac9) Network(cfg *cfgresources.Network) (err error) {
 	log.WithFields(log.Fields{
 		"IP":     i.ip,
 		"Model":  i.BmcType(),
-		"Serial": i.Serial,
 	}).Debug("Network config parameters applied.")
 	return err
 }

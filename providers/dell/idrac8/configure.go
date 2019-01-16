@@ -82,11 +82,10 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 	if err != nil {
 		msg := "User config validation failed."
 		log.WithFields(log.Fields{
-			"step":   "applyUserParams",
-			"IP":     i.ip,
-			"Model":  i.BmcType(),
-			"Serial": i.Serial,
-			"Error":  err,
+			"step":  "applyUserParams",
+			"IP":    i.ip,
+			"Model": i.BmcType(),
+			"Error": err,
 		}).Warn(msg)
 		return errors.New(msg)
 	}
@@ -95,11 +94,10 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 	if err != nil {
 		msg := "Unable to query existing users"
 		log.WithFields(log.Fields{
-			"step":   "applyUserParams",
-			"IP":     i.ip,
-			"Model":  i.BmcType(),
-			"Serial": i.Serial,
-			"Error":  err,
+			"step":  "applyUserParams",
+			"IP":    i.ip,
+			"Model": i.BmcType(),
+			"Error": err,
 		}).Warn(msg)
 		return errors.New(msg)
 	}
@@ -116,12 +114,11 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 				userID, userInfo, err = getEmptyUserSlot(idracUsers)
 				if err != nil {
 					log.WithFields(log.Fields{
-						"IP":     i.ip,
-						"Model":  i.BmcType(),
-						"Serial": i.Serial,
-						"step":   helper.WhosCalling(),
-						"User":   cfgUser.Name,
-						"Error":  err,
+						"IP":    i.ip,
+						"Model": i.BmcType(),
+						"step":  helper.WhosCalling(),
+						"User":  cfgUser.Name,
+						"Error": err,
 					}).Warn("Unable to add new User.")
 					continue
 				}
@@ -144,12 +141,11 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 			err = i.putUser(userID, userInfo)
 			if err != nil {
 				log.WithFields(log.Fields{
-					"IP":     i.ip,
-					"Model":  i.BmcType(),
-					"Serial": i.Serial,
-					"step":   helper.WhosCalling(),
-					"User":   cfgUser.Name,
-					"Error":  err,
+					"IP":    i.ip,
+					"Model": i.BmcType(),
+					"step":  helper.WhosCalling(),
+					"User":  cfgUser.Name,
+					"Error": err,
 				}).Warn("Add/Update user request failed.")
 				continue
 			}
@@ -168,21 +164,19 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 			err = i.putUser(userID, userInfo)
 			if err != nil {
 				log.WithFields(log.Fields{
-					"IP":     i.ip,
-					"Model":  i.BmcType(),
-					"Serial": i.Serial,
-					"step":   helper.WhosCalling(),
-					"User":   cfgUser.Name,
-					"Error":  err,
+					"IP":    i.ip,
+					"Model": i.BmcType(),
+					"step":  helper.WhosCalling(),
+					"User":  cfgUser.Name,
+					"Error": err,
 				}).Warn("Disable user request failed.")
 			}
 		}
 
 		log.WithFields(log.Fields{
-			"IP":     i.ip,
-			"Model":  i.BmcType(),
-			"Serial": i.Serial,
-			"User":   cfgUser.Name,
+			"IP":    i.ip,
+			"Model": i.BmcType(),
+			"User":  cfgUser.Name,
 		}).Debug("User parameters applied.")
 	}
 
@@ -249,9 +243,8 @@ func (i *IDrac8) Syslog(cfg *cfgresources.Syslog) (err error) {
 	}
 
 	log.WithFields(log.Fields{
-		"IP":     i.ip,
-		"Model":  i.BmcType(),
-		"Serial": i.serial,
+		"IP":    i.ip,
+		"Model": i.BmcType(),
 	}).Debug("Syslog parameters applied.")
 
 	return err
@@ -311,7 +304,6 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
 			"Model":    i.BmcType(),
-			"Serial":   i.serial,
 			"endpoint": endpoint,
 			"step":     helper.WhosCalling(),
 			"response": string(response),
@@ -319,9 +311,8 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 	}
 
 	log.WithFields(log.Fields{
-		"IP":     i.ip,
-		"Model":  i.BmcType(),
-		"Serial": i.serial,
+		"IP":    i.ip,
+		"Model": i.BmcType(),
 	}).Debug("NTP servers param applied.")
 
 }
@@ -345,7 +336,6 @@ func (i *IDrac8) Ldap(cfg *cfgresources.Ldap) error {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
 			"Model":    i.BmcType(),
-			"Serial":   i.serial,
 			"endpoint": endpoint,
 			"step":     helper.WhosCalling(),
 			"response": string(response),
@@ -359,9 +349,8 @@ func (i *IDrac8) Ldap(cfg *cfgresources.Ldap) error {
 	}
 
 	log.WithFields(log.Fields{
-		"IP":     i.ip,
-		"Model":  i.BmcType(),
-		"Serial": i.serial,
+		"IP":    i.ip,
+		"Model": i.BmcType(),
 	}).Debug("Ldap server param set.")
 	return nil
 }
@@ -385,7 +374,6 @@ func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) error {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
 			"Model":    i.BmcType(),
-			"Serial":   i.serial,
 			"endpoint": endpoint,
 			"step":     helper.WhosCalling(),
 			"response": string(response),
@@ -394,9 +382,8 @@ func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) error {
 	}
 
 	log.WithFields(log.Fields{
-		"IP":     i.ip,
-		"Model":  i.BmcType(),
-		"Serial": i.serial,
+		"IP":    i.ip,
+		"Model": i.BmcType(),
 	}).Debug("Ldap search filter param applied.")
 	return nil
 }
@@ -502,7 +489,6 @@ func (i *IDrac8) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresou
 			log.WithFields(log.Fields{
 				"IP":       i.ip,
 				"Model":    i.BmcType(),
-				"Serial":   i.serial,
 				"endpoint": endpoint,
 				"step":     "applyLdapGroupParams",
 				"response": string(response),
@@ -511,10 +497,9 @@ func (i *IDrac8) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresou
 		}
 
 		log.WithFields(log.Fields{
-			"IP":     i.ip,
-			"Model":  i.BmcType(),
-			"Serial": i.serial,
-			"Role":   group.Role,
+			"IP":    i.ip,
+			"Model": i.BmcType(),
+			"Role":  group.Role,
 		}).Debug("Ldap GroupDN config applied.")
 
 		switch group.Role {
@@ -537,10 +522,9 @@ func (i *IDrac8) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresou
 	err = i.applyLdapRoleGroupPrivParam(cfgLdap, groupPrivilegeParam)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"IP":     i.ip,
-			"Model":  i.BmcType(),
-			"Serial": i.serial,
-			"step":   "applyLdapGroupParams",
+			"IP":    i.ip,
+			"Model": i.BmcType(),
+			"step":  "applyLdapGroupParams",
 		}).Warn("Unable to set Ldap Role Group Privileges.")
 		return err
 	}
@@ -578,7 +562,6 @@ func (i *IDrac8) applyLdapRoleGroupPrivParam(cfg *cfgresources.Ldap, groupPrivil
 		log.WithFields(log.Fields{
 			"IP":           i.ip,
 			"Model":        i.BmcType(),
-			"Serial":       i.serial,
 			"endpoint":     endpoint,
 			"step":         helper.WhosCalling(),
 			"responseCode": responseCode,
@@ -588,9 +571,8 @@ func (i *IDrac8) applyLdapRoleGroupPrivParam(cfg *cfgresources.Ldap, groupPrivil
 	}
 
 	log.WithFields(log.Fields{
-		"IP":     i.ip,
-		"Model":  i.BmcType(),
-		"Serial": i.serial,
+		"IP":    i.ip,
+		"Model": i.BmcType(),
 	}).Debug("Ldap Group role privileges applied.")
 
 	return err
@@ -607,7 +589,6 @@ func (i *IDrac8) applyTimezoneParam(timezone string) {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
 			"Model":    i.BmcType(),
-			"Serial":   i.serial,
 			"endpoint": endpoint,
 			"step":     helper.WhosCalling(),
 			"response": string(response),
@@ -615,9 +596,8 @@ func (i *IDrac8) applyTimezoneParam(timezone string) {
 	}
 
 	log.WithFields(log.Fields{
-		"IP":     i.ip,
-		"Model":  i.BmcType(),
-		"Serial": i.serial,
+		"IP":    i.ip,
+		"Model": i.BmcType(),
 	}).Debug("Timezone param applied.")
 
 }
@@ -662,7 +642,6 @@ func (i *IDrac8) Network(cfg *cfgresources.Network) (err error) {
 		log.WithFields(log.Fields{
 			"IP":           i.ip,
 			"Model":        i.BmcType(),
-			"Serial":       i.serial,
 			"endpoint":     endpoint,
 			"step":         helper.WhosCalling(),
 			"responseCode": responseCode,
@@ -672,9 +651,8 @@ func (i *IDrac8) Network(cfg *cfgresources.Network) (err error) {
 	}
 
 	log.WithFields(log.Fields{
-		"IP":     i.ip,
-		"Model":  i.BmcType(),
-		"Serial": i.Serial,
+		"IP":    i.ip,
+		"Model": i.BmcType(),
 	}).Debug("Network config parameters applied.")
 	return err
 }

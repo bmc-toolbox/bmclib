@@ -35,10 +35,9 @@ func (i *Ilo) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 	if i.sessionKey == "" {
 		msg := "Expected sessionKey not found, unable to configure BMC."
 		log.WithFields(log.Fields{
-			"step":   "Login()",
-			"IP":     i.ip,
-			"Model":  i.BmcType(),
-			"Serial": i.serial,
+			"step":  "Login()",
+			"IP":    i.ip,
+			"Model": i.BmcType(),
 		}).Warn(msg)
 		return errors.New(msg)
 	}
@@ -92,11 +91,10 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 	if err != nil {
 		msg := "Unable to query existing users"
 		log.WithFields(log.Fields{
-			"step":   "applyUserParams",
-			"IP":     i.ip,
-			"Model":  i.BmcType(),
-			"Serial": i.serial,
-			"Error":  err,
+			"step":  "applyUserParams",
+			"IP":    i.ip,
+			"Model": i.BmcType(),
+			"Error": err,
 		}).Warn(msg)
 		return errors.New(msg)
 	}
@@ -174,10 +172,9 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 			userinfo.Method = "del_user"
 			userinfo.UserId = userinfo.Id
 			log.WithFields(log.Fields{
-				"IP":     i.ip,
-				"Model":  i.BmcType(),
-				"Serial": i.serial,
-				"User":   user.Name,
+				"IP":    i.ip,
+				"Model": i.BmcType(),
+				"User":  user.Name,
 			}).Debug("User disabled in config, will be removed.")
 			postPayload = true
 		}
@@ -186,12 +183,11 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 			payload, err := json.Marshal(userinfo)
 			if err != nil {
 				log.WithFields(log.Fields{
-					"IP":     i.ip,
-					"Model":  i.BmcType(),
-					"Serial": i.serial,
-					"step":   helper.WhosCalling(),
-					"User":   user.Name,
-					"Error":  err,
+					"IP":    i.ip,
+					"Model": i.BmcType(),
+					"step":  helper.WhosCalling(),
+					"User":  user.Name,
+					"Error": err,
 				}).Warn("Unable to marshal userInfo payload to set User config.")
 				continue
 			}
@@ -202,7 +198,6 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 				log.WithFields(log.Fields{
 					"IP":         i.ip,
 					"Model":      i.BmcType(),
-					"Serial":     i.serial,
 					"endpoint":   endpoint,
 					"step":       helper.WhosCalling(),
 					"User":       user.Name,
@@ -214,10 +209,9 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 			}
 
 			log.WithFields(log.Fields{
-				"IP":     i.ip,
-				"Model":  i.BmcType(),
-				"Serial": i.serial,
-				"User":   user.Name,
+				"IP":    i.ip,
+				"Model": i.BmcType(),
+				"User":  user.Name,
 			}).Debug("User parameters applied.")
 
 		}
@@ -269,11 +263,10 @@ func (i *Ilo) Syslog(cfg *cfgresources.Syslog) (err error) {
 	if err != nil {
 		msg := "Unable to marshal RemoteSyslog payload to set Syslog config."
 		log.WithFields(log.Fields{
-			"IP":     i.ip,
-			"Model":  i.BmcType(),
-			"Serial": i.serial,
-			"step":   helper.WhosCalling(),
-			"Error":  err,
+			"IP":    i.ip,
+			"Model": i.BmcType(),
+			"step":  helper.WhosCalling(),
+			"Error": err,
 		}).Warn(msg)
 		return errors.New(msg)
 	}
@@ -285,7 +278,6 @@ func (i *Ilo) Syslog(cfg *cfgresources.Syslog) (err error) {
 		log.WithFields(log.Fields{
 			"IP":         i.ip,
 			"Model":      i.BmcType(),
-			"Serial":     i.serial,
 			"endpoint":   endpoint,
 			"step":       helper.WhosCalling(),
 			"StatusCode": statusCode,
@@ -296,9 +288,8 @@ func (i *Ilo) Syslog(cfg *cfgresources.Syslog) (err error) {
 	}
 
 	log.WithFields(log.Fields{
-		"IP":     i.ip,
-		"Model":  i.BmcType(),
-		"Serial": i.serial,
+		"IP":    i.ip,
+		"Model": i.BmcType(),
 	}).Debug("Syslog parameters applied.")
 
 	return err
@@ -326,11 +317,10 @@ func (i *Ilo) SetLicense(cfg *cfgresources.License) (err error) {
 	if err != nil {
 		msg := "Unable to marshal License payload to activate License."
 		log.WithFields(log.Fields{
-			"IP":     i.ip,
-			"Model":  i.BmcType(),
-			"Serial": i.serial,
-			"step":   helper.WhosCalling(),
-			"Error":  err,
+			"IP":    i.ip,
+			"Model": i.BmcType(),
+			"step":  helper.WhosCalling(),
+			"Error": err,
 		}).Warn(msg)
 		return errors.New(msg)
 	}
@@ -342,7 +332,6 @@ func (i *Ilo) SetLicense(cfg *cfgresources.License) (err error) {
 		log.WithFields(log.Fields{
 			"IP":         i.ip,
 			"Model":      i.BmcType(),
-			"Serial":     i.serial,
 			"endpoint":   endpoint,
 			"step":       helper.WhosCalling(),
 			"StatusCode": statusCode,
@@ -353,9 +342,8 @@ func (i *Ilo) SetLicense(cfg *cfgresources.License) (err error) {
 	}
 
 	log.WithFields(log.Fields{
-		"IP":     i.ip,
-		"Model":  i.BmcType(),
-		"Serial": i.serial,
+		"IP":    i.ip,
+		"Model": i.BmcType(),
 	}).Debug("License activated.")
 
 	return err
@@ -403,11 +391,10 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 	if err != nil {
 		msg := "Unable to query existing config"
 		log.WithFields(log.Fields{
-			"step":   helper.WhosCalling(),
-			"IP":     i.ip,
-			"Model":  i.BmcType(),
-			"Serial": i.serial,
-			"Error":  err,
+			"step":  helper.WhosCalling(),
+			"IP":    i.ip,
+			"Model": i.BmcType(),
+			"Error": err,
 		}).Warn(msg)
 		return errors.New(msg)
 	}
@@ -437,11 +424,10 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 	if err != nil {
 		msg := "Unable to marshal NetworkSntp payload to set NTP config."
 		log.WithFields(log.Fields{
-			"IP":     i.ip,
-			"Model":  i.BmcType(),
-			"Serial": i.serial,
-			"step":   helper.WhosCalling(),
-			"Error":  err,
+			"IP":    i.ip,
+			"Model": i.BmcType(),
+			"step":  helper.WhosCalling(),
+			"Error": err,
 		}).Warn(msg)
 		return errors.New(msg)
 	}
@@ -453,7 +439,6 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 		log.WithFields(log.Fields{
 			"IP":         i.ip,
 			"Model":      i.BmcType(),
-			"Serial":     i.serial,
 			"endpoint":   endpoint,
 			"step":       helper.WhosCalling(),
 			"StatusCode": statusCode,
@@ -479,11 +464,10 @@ func (i *Ilo) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Lda
 	if err != nil {
 		msg := "Unable to query existing Ldap groups"
 		log.WithFields(log.Fields{
-			"IP":     i.ip,
-			"Model":  i.BmcType(),
-			"Serial": i.serial,
-			"Step":   helper.WhosCalling(),
-			"Error":  err,
+			"IP":    i.ip,
+			"Model": i.BmcType(),
+			"Step":  helper.WhosCalling(),
+			"Error": err,
 		}).Warn(msg)
 		return errors.New(msg)
 	}
@@ -548,10 +532,9 @@ func (i *Ilo) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Lda
 		if group.Enable == false && gexists {
 			directoryGroup.Method = "del_group"
 			log.WithFields(log.Fields{
-				"IP":     i.ip,
-				"Model":  i.BmcType(),
-				"Serial": i.serial,
-				"User":   group.Group,
+				"IP":    i.ip,
+				"Model": i.BmcType(),
+				"User":  group.Group,
 			}).Debug("Ldap role group disabled in config, will be removed.")
 			postPayload = true
 		}
@@ -560,12 +543,11 @@ func (i *Ilo) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Lda
 			payload, err := json.Marshal(directoryGroup)
 			if err != nil {
 				log.WithFields(log.Fields{
-					"IP":     i.ip,
-					"Model":  i.BmcType(),
-					"Serial": i.serial,
-					"Step":   helper.WhosCalling(),
-					"Group":  group.Group,
-					"Error":  err,
+					"IP":    i.ip,
+					"Model": i.BmcType(),
+					"Step":  helper.WhosCalling(),
+					"Group": group.Group,
+					"Error": err,
 				}).Warn("Unable to marshal directoryGroup payload to set LdapGroup config.")
 				continue
 			}
@@ -576,7 +558,6 @@ func (i *Ilo) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Lda
 				log.WithFields(log.Fields{
 					"IP":         i.ip,
 					"Model":      i.BmcType(),
-					"Serial":     i.serial,
 					"endpoint":   endpoint,
 					"step":       helper.WhosCalling(),
 					"Group":      group.Group,
@@ -588,10 +569,9 @@ func (i *Ilo) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Lda
 			}
 
 			log.WithFields(log.Fields{
-				"IP":     i.ip,
-				"Model":  i.BmcType(),
-				"Serial": i.serial,
-				"User":   group.Group,
+				"IP":    i.ip,
+				"Model": i.BmcType(),
+				"User":  group.Group,
 			}).Debug("LdapGroup parameters applied.")
 
 		}
@@ -655,11 +635,10 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 	payload, err := json.Marshal(directory)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"IP":     i.ip,
-			"Model":  i.BmcType(),
-			"Serial": i.serial,
-			"Step":   helper.WhosCalling(),
-			"Error":  err,
+			"IP":    i.ip,
+			"Model": i.BmcType(),
+			"Step":  helper.WhosCalling(),
+			"Error": err,
 		}).Warn("Unable to marshal directory payload to set Ldap config.")
 		return err
 	}
@@ -671,7 +650,6 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 		log.WithFields(log.Fields{
 			"IP":         i.ip,
 			"Model":      i.BmcType(),
-			"Serial":     i.serial,
 			"endpoint":   endpoint,
 			"step":       helper.WhosCalling(),
 			"StatusCode": statusCode,
@@ -682,9 +660,8 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 	}
 
 	log.WithFields(log.Fields{
-		"IP":     i.ip,
-		"Model":  i.BmcType(),
-		"Serial": i.serial,
+		"IP":    i.ip,
+		"Model": i.BmcType(),
 	}).Debug("Ldap parameters applied.")
 
 	return err

@@ -57,12 +57,6 @@ func (s *SupermicroX10) httpLogin() (err error) {
 
 	s.httpClient = httpClient
 
-	serial, err := s.Serial()
-	if err != nil {
-		return err
-	}
-
-	s.serial = serial
 	return err
 }
 

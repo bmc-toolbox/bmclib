@@ -63,7 +63,6 @@ func (m *M1000e) Network(cfg *cfgresources.Network) (err error) {
 // User implements the Configure interface.
 // Iterate over iDrac users and adds/removes/modifies user accounts
 func (m *M1000e) User(cfgUsers []*cfgresources.User) (err error) {
-
 	err = m.httpLogin()
 	if err != nil {
 		return err
@@ -87,7 +86,6 @@ func (m *M1000e) User(cfgUsers []*cfgresources.User) (err error) {
 		log.WithFields(log.Fields{
 			"IP":     m.ip,
 			"Model":  m.BmcType(),
-			"Serial": m.serial,
 		}).Debug("User account config parameters applied.")
 		return err
 
@@ -114,7 +112,6 @@ func (m *M1000e) Syslog(cfg *cfgresources.Syslog) (err error) {
 	log.WithFields(log.Fields{
 		"IP":     m.ip,
 		"Model":  m.BmcType(),
-		"Serial": m.serial,
 	}).Debug("Interface config parameters applied.")
 	return err
 }
@@ -141,7 +138,6 @@ func (m *M1000e) Ntp(cfg *cfgresources.Ntp) (err error) {
 	log.WithFields(log.Fields{
 		"IP":     m.ip,
 		"Model":  m.BmcType(),
-		"Serial": m.serial,
 	}).Debug("DateTime config parameters applied.")
 	return err
 }
@@ -161,9 +157,8 @@ func (m *M1000e) Ldap(cfg *cfgresources.Ldap) (err error) {
 	}
 
 	log.WithFields(log.Fields{
-		"IP":     m.ip,
-		"Model":  m.BmcType(),
-		"Serial": m.serial,
+		"IP":    m.ip,
+		"Model": m.BmcType(),
 	}).Debug("Ldap config parameters applied.")
 	return err
 }
@@ -187,7 +182,6 @@ func (m *M1000e) applyLdapRoleCfg(cfg LdapArgParams, roleID int) (err error) {
 	log.WithFields(log.Fields{
 		"IP":     m.ip,
 		"Model":  m.BmcType(),
-		"Serial": m.serial,
 	}).Debug("Ldap Role group config parameters applied.")
 	return err
 }
@@ -205,7 +199,6 @@ func (m *M1000e) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.
 				"Ldap role": group.Role,
 				"IP":        m.ip,
 				"Model":     m.BmcType(),
-				"Serial":    m.serial,
 				"Error":     err,
 			}).Warn("Unable to apply Ldap role group config.")
 			return err
@@ -218,7 +211,6 @@ func (m *M1000e) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.
 				"Ldap role": group.Role,
 				"IP":        m.ip,
 				"Model":     m.BmcType(),
-				"Serial":    m.serial,
 				"Error":     err,
 			}).Warn("Unable to apply Ldap role group config.")
 			return err
@@ -227,7 +219,6 @@ func (m *M1000e) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.
 		log.WithFields(log.Fields{
 			"IP":     m.ip,
 			"Model":  m.BmcType(),
-			"Serial": m.serial,
 			"Role":   group.Role,
 			"Group":  group.Group,
 		}).Debug("Ldap group parameters applied.")
@@ -265,7 +256,6 @@ func (m *M1000e) Ssl(ssl *cfgresources.Ssl) (err error) {
 	log.WithFields(log.Fields{
 		"IP":     m.ip,
 		"Model":  m.BmcType(),
-		"Serial": m.serial,
 	}).Debug("SSL certs uploaded.")
 	return err
 }
@@ -438,7 +428,6 @@ func (m *M1000e) ApplySecurityCfg(cfg LoginSecurityParams) (err error) {
 	log.WithFields(log.Fields{
 		"IP":     m.ip,
 		"Model":  m.BmcType(),
-		"Serial": m.serial,
 	}).Debug("Security config parameters applied.")
 	return err
 

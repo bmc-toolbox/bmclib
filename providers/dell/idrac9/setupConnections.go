@@ -94,15 +94,16 @@ func (i *IDrac9) httpLogin() (err error) {
 
 	i.httpClient = httpClient
 
-	err = i.loadHwData()
-	if err != nil {
-		return err
-	}
 	return err
 }
 
 // loadHwData load the full hardware information from the iDrac
 func (i *IDrac9) loadHwData() (err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return err
+	}
+
 	url := "sysmgmt/2012/server/inventory/hardware"
 	payload, err := i.get(url, nil)
 	if err != nil {

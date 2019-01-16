@@ -54,7 +54,6 @@ func (c *C7000) Ldap(cfg *cfgresources.Ldap) (err error) {
 			"resource": "Ldap",
 			"IP":       c.ip,
 			"Model":    c.BmcType(),
-			"Serial":   c.serial,
 			"Error":    err,
 		}).Warn("applyLdapParams returned error.")
 		return err
@@ -67,7 +66,6 @@ func (c *C7000) Ldap(cfg *cfgresources.Ldap) (err error) {
 			"resource": "Ldap",
 			"IP":       c.ip,
 			"Model":    c.BmcType(),
-			"Serial":   c.serial,
 			"Error":    err,
 		}).Warn("applyLdapParams returned error.")
 		return err
@@ -141,7 +139,6 @@ func (c *C7000) applysetLdapInfo4(cfg *cfgresources.Ldap) (err error) {
 			"step":       "applysetLdapInfo4",
 			"IP":         c.ip,
 			"Model":      c.BmcType(),
-			"Serial":     c.serial,
 			"statusCode": statusCode,
 			"Error":      err,
 		}).Warn("Ldap applysetLdapInfo4 apply request returned non 200.")
@@ -168,7 +165,6 @@ func (c *C7000) applyEnableLdapAuth(enable bool) (err error) {
 			"step":       "applyEnableLdapAuth",
 			"IP":         c.ip,
 			"Model":      c.BmcType(),
-			"Serial":     c.serial,
 			"statusCode": statusCode,
 			"Error":      err,
 		}).Warn("Ldap applyEnableLdapAuth apply request returned non 200.")
@@ -178,7 +174,6 @@ func (c *C7000) applyEnableLdapAuth(enable bool) (err error) {
 	log.WithFields(log.Fields{
 		"IP":     c.ip,
 		"Model":  c.BmcType(),
-		"Serial": c.serial,
 	}).Debug("Ldap Enabled.")
 	return err
 }
@@ -198,7 +193,6 @@ func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.L
 				"step":      "applyLdapGroupParams",
 				"Model":     c.BmcType(),
 				"Ldap role": group.Role,
-				"Serial":    c.serial,
 			}).Warn("Ldap resource parameter Group required but not declared.")
 			return
 		}
@@ -212,7 +206,6 @@ func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.L
 					"resource": "Ldap",
 					"IP":       c.ip,
 					"Model":    c.BmcType(),
-					"Serial":   c.serial,
 					"Error":    err,
 				}).Warn("Remove Ldap Group returned error.")
 				return
@@ -226,7 +219,6 @@ func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.L
 				"step":   "applyLdapGroupParams",
 				"role":   group.Role,
 				"Model":  c.BmcType(),
-				"Serial": c.serial,
 			}).Warn("Ldap resource Role must be a valid role: admin OR user.")
 			return
 		}
@@ -239,7 +231,6 @@ func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.L
 				"resource": "Ldap",
 				"IP":       c.ip,
 				"Model":    c.BmcType(),
-				"Serial":   c.serial,
 				"Error":    err,
 			}).Warn("addLdapGroup returned error.")
 			return
@@ -253,7 +244,6 @@ func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.L
 				"resource": "Ldap",
 				"IP":       c.ip,
 				"Model":    c.BmcType(),
-				"Serial":   c.serial,
 				"Error":    err,
 			}).Warn("addLdapGroup returned error.")
 			return
@@ -267,7 +257,6 @@ func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.L
 				"resource": "Ldap",
 				"IP":       c.ip,
 				"Model":    c.BmcType(),
-				"Serial":   c.serial,
 				"Error":    err,
 			}).Warn("addLdapGroup returned error.")
 			return
@@ -279,7 +268,6 @@ func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.L
 				"IP":     c.ip,
 				"Role":   group.Role,
 				"Model":  c.BmcType(),
-				"Serial": c.serial,
 				"Error":  err,
 			}).Warn("Unable to set LdapGroup config for role.")
 		}
@@ -288,7 +276,6 @@ func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.L
 	log.WithFields(log.Fields{
 		"IP":     c.ip,
 		"Model":  c.BmcType(),
-		"Serial": c.serial,
 	}).Debug("Ldap config applied")
 	return
 }
@@ -306,7 +293,6 @@ func (c *C7000) applyRemoveLdapGroup(group string) (err error) {
 			"step":       "applyRemoveLdapGroup",
 			"IP":         c.ip,
 			"Model":      c.BmcType(),
-			"Serial":     c.serial,
 			"statusCode": statusCode,
 		}).Debug("Ldap applyRemoveLdapGroup applied.")
 		return nil
@@ -317,7 +303,6 @@ func (c *C7000) applyRemoveLdapGroup(group string) (err error) {
 			"step":       "applyRemoveLdapGroup",
 			"IP":         c.ip,
 			"Model":      c.BmcType(),
-			"Serial":     c.serial,
 			"statusCode": statusCode,
 		}).Warn("Ldap applyRemoveLdapGroup request returned non 200.")
 		return err
@@ -344,7 +329,6 @@ func (c *C7000) applyAddLdapGroup(group string) (err error) {
 			"step":       "applyAddLdapGroup",
 			"IP":         c.ip,
 			"Model":      c.BmcType(),
-			"Serial":     c.serial,
 			"statusCode": statusCode,
 		}).Debug("Ldap applyAddLdapGroup applied.")
 		return nil
@@ -355,7 +339,6 @@ func (c *C7000) applyAddLdapGroup(group string) (err error) {
 			"step":       "applyAddLdapGroup",
 			"IP":         c.ip,
 			"Model":      c.BmcType(),
-			"Serial":     c.serial,
 			"statusCode": statusCode,
 		}).Warn("Ldap applyAddLdapGroup request returned non 200.")
 		return err
@@ -390,7 +373,6 @@ func (c *C7000) applyLdapGroupBayACL(role string, group string) (err error) {
 			"step":       "applyLdapGroupBayACL",
 			"IP":         c.ip,
 			"Model":      c.BmcType(),
-			"Serial":     c.serial,
 			"statusCode": statusCode,
 			"Error":      err,
 		}).Warn("LDAP applyLdapGroupBayACL request returned non 200.")
@@ -400,7 +382,6 @@ func (c *C7000) applyLdapGroupBayACL(role string, group string) (err error) {
 	log.WithFields(log.Fields{
 		"IP":     c.ip,
 		"Model":  c.BmcType(),
-		"Serial": c.serial,
 		"Role":   role,
 		"Group":  group,
 	}).Debug("Ldap group ACL added.")
@@ -477,7 +458,6 @@ func (c *C7000) applyAddLdapGroupBayAccess(group string) (err error) {
 			"step":       "applyAddLdapGroupBayAccess",
 			"IP":         c.ip,
 			"Model":      c.BmcType(),
-			"Serial":     c.serial,
 			"statusCode": statusCode,
 			"Error":      err,
 		}).Warn("LDAP applyAddLdapGroupBayAccess apply request returned non 200.")
@@ -487,7 +467,6 @@ func (c *C7000) applyAddLdapGroupBayAccess(group string) (err error) {
 	log.WithFields(log.Fields{
 		"IP":     c.ip,
 		"Model":  c.BmcType(),
-		"Serial": c.serial,
 		"Group":  group,
 	}).Debug("Ldap interconnect and bay ACLs added.")
 	return err
@@ -537,7 +516,6 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 			log.WithFields(log.Fields{
 				"IP":     c.ip,
 				"Model":  c.BmcType(),
-				"Serial": c.serial,
 				"User":   cfg.Name,
 			}).Debug("User removed.")
 
@@ -558,7 +536,6 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 				"user":        cfg.Name,
 				"IP":          c.ip,
 				"Model":       c.BmcType(),
-				"Serial":      c.serial,
 				"Return code": statusCode,
 			}).Debug("User already exists, setting password.")
 
@@ -585,7 +562,6 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 		log.WithFields(log.Fields{
 			"IP":     c.ip,
 			"Model":  c.BmcType(),
-			"Serial": c.serial,
 			"user":   cfg.Name,
 		}).Debug("User cfg applied.")
 
@@ -606,7 +582,6 @@ func (c *C7000) setUserPassword(user string, password string) (err error) {
 			"user":        user,
 			"IP":          c.ip,
 			"Model":       c.BmcType(),
-			"Serial":      c.serial,
 			"return code": statusCode,
 			"Error":       err,
 		}).Warn("Unable to set user password.")
@@ -616,7 +591,6 @@ func (c *C7000) setUserPassword(user string, password string) (err error) {
 	log.WithFields(log.Fields{
 		"IP":     c.ip,
 		"Model":  c.BmcType(),
-		"Serial": c.serial,
 		"user":   user,
 	}).Debug("User password set.")
 	return err
@@ -644,7 +618,6 @@ func (c *C7000) setUserACL(user string, role string) (err error) {
 			"Acl":         role,
 			"IP":          c.ip,
 			"Model":       c.BmcType(),
-			"Serial":      c.serial,
 			"return code": statusCode,
 			"Error":       err,
 		}).Warn("Unable to set user Acl.")
@@ -654,7 +627,6 @@ func (c *C7000) setUserACL(user string, role string) (err error) {
 	log.WithFields(log.Fields{
 		"IP":     c.ip,
 		"Model":  c.BmcType(),
-		"Serial": c.serial,
 		"User":   user,
 		"Acl":    role,
 	}).Debug("User ACL set.")
@@ -707,7 +679,6 @@ func (c *C7000) applyAddUserBayAccess(user string) (err error) {
 			"step":       "applyAddUserBayAccess",
 			"IP":         c.ip,
 			"Model":      c.BmcType(),
-			"Serial":     c.serial,
 			"statusCode": statusCode,
 			"Error":      err,
 		}).Warn("LDAP applyAddUserBayAccess apply request returned non 200.")
@@ -718,7 +689,6 @@ func (c *C7000) applyAddUserBayAccess(user string) (err error) {
 		"step":   "applyAddUserBayAccess",
 		"IP":     c.ip,
 		"Model":  c.BmcType(),
-		"Serial": c.serial,
 		"user":   user,
 	}).Debug("User account related interconnect and bay ACLs added.")
 	return err
@@ -778,7 +748,6 @@ func (c *C7000) Ntp(cfg *cfgresources.Ntp) (err error) {
 			"step":       "applyNtpParams",
 			"IP":         c.ip,
 			"Model":      c.BmcType(),
-			"Serial":     c.serial,
 			"StatusCode": statusCode,
 			"Error":      err,
 		}).Warn("NTP apply request returned non 200.")
@@ -791,7 +760,6 @@ func (c *C7000) Ntp(cfg *cfgresources.Ntp) (err error) {
 			"step":   "applyNtpParams",
 			"IP":     c.ip,
 			"Model":  c.BmcType(),
-			"Serial": c.serial,
 			"Error":  err,
 		}).Warn("Unable to apply NTP timezone config.")
 		return err
@@ -800,7 +768,6 @@ func (c *C7000) Ntp(cfg *cfgresources.Ntp) (err error) {
 	log.WithFields(log.Fields{
 		"IP":     c.ip,
 		"Model":  c.BmcType(),
-		"Serial": c.serial,
 	}).Debug("Date and time config applied.")
 	return err
 }
@@ -818,7 +785,6 @@ func (c *C7000) applyNtpTimezoneParam(timezone string) (err error) {
 			"step":       "applyNtpTimezoneParam",
 			"IP":         c.ip,
 			"Model":      c.BmcType(),
-			"Serial":     c.serial,
 			"Error":      err,
 			"StatusCode": statusCode,
 		}).Warn("NTP applyNtpTimezoneParam request returned non 200.")
@@ -828,7 +794,6 @@ func (c *C7000) applyNtpTimezoneParam(timezone string) (err error) {
 	log.WithFields(log.Fields{
 		"IP":     c.ip,
 		"Model":  c.BmcType(),
-		"Serial": c.serial,
 	}).Debug("Timezone config applied.")
 	return err
 }
@@ -848,7 +813,6 @@ func (c *C7000) Syslog(cfg *cfgresources.Syslog) (err error) {
 			"step":   "applySyslogParams",
 			"IP":     c.ip,
 			"Model":  c.BmcType(),
-			"Serial": c.serial,
 		}).Warn("Syslog resource expects parameter: Server.")
 		return
 	}
@@ -858,7 +822,6 @@ func (c *C7000) Syslog(cfg *cfgresources.Syslog) (err error) {
 			"step":   "applySyslogParams",
 			"IP":     c.ip,
 			"Model":  c.BmcType(),
-			"Serial": c.serial,
 		}).Debug("Syslog resource port set to default: 514.")
 		port = 514
 	} else {
@@ -870,7 +833,6 @@ func (c *C7000) Syslog(cfg *cfgresources.Syslog) (err error) {
 			"step":   "applySyslogParams",
 			"IP":     c.ip,
 			"Model":  c.BmcType(),
-			"Serial": c.serial,
 		}).Debug("Syslog resource declared with enable: false.")
 	}
 
@@ -881,7 +843,6 @@ func (c *C7000) Syslog(cfg *cfgresources.Syslog) (err error) {
 	log.WithFields(log.Fields{
 		"IP":     c.ip,
 		"Model":  c.BmcType(),
-		"Serial": c.serial,
 	}).Debug("Syslog config applied.")
 	return err
 }
@@ -899,7 +860,6 @@ func (c *C7000) applySyslogServer(server string) {
 			"step":       "applySyslogServer",
 			"IP":         c.ip,
 			"Model":      c.BmcType(),
-			"Serial":     c.serial,
 			"Error":      err,
 			"StatusCode": statusCode,
 		}).Warn("Syslog set server request returned non 200.")
@@ -909,7 +869,6 @@ func (c *C7000) applySyslogServer(server string) {
 	log.WithFields(log.Fields{
 		"IP":     c.ip,
 		"Model":  c.BmcType(),
-		"Serial": c.serial,
 	}).Debug("Syslog server set.")
 	return
 }
@@ -926,7 +885,6 @@ func (c *C7000) applySyslogPort(port int) {
 			"step":       "applySyslogPort",
 			"IP":         c.ip,
 			"Model":      c.BmcType(),
-			"Serial":     c.serial,
 			"Error":      err,
 			"StatusCode": statusCode,
 		}).Warn("Syslog set port request returned non 200.")
@@ -936,7 +894,6 @@ func (c *C7000) applySyslogPort(port int) {
 	log.WithFields(log.Fields{
 		"IP":     c.ip,
 		"Model":  c.BmcType(),
-		"Serial": c.serial,
 	}).Debug("Syslog port set.")
 	return
 }
@@ -954,7 +911,6 @@ func (c *C7000) applySyslogEnabled(enabled bool) {
 			"step":       "SetRemoteSyslogEnabled",
 			"IP":         c.ip,
 			"Model":      c.BmcType(),
-			"Serial":     c.serial,
 			"Error":      err,
 			"StatusCode": statusCode,
 		}).Warn("Syslog enable request returned non 200.")
@@ -964,7 +920,6 @@ func (c *C7000) applySyslogEnabled(enabled bool) {
 	log.WithFields(log.Fields{
 		"IP":     c.ip,
 		"Model":  c.BmcType(),
-		"Serial": c.serial,
 	}).Debug("Syslog enabled.")
 	return
 

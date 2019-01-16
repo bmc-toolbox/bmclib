@@ -30,7 +30,6 @@ type C7000 struct {
 	XMLToken   string //required to send SOAP XML payloads
 	httpClient *http.Client
 	sshClient  *sshclient.SSHClient
-	serial     string
 	Rimp       *hp.Rimp
 }
 

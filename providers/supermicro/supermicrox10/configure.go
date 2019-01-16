@@ -104,7 +104,6 @@ func (s *SupermicroX10) User(users []*cfgresources.User) (err error) {
 		log.WithFields(log.Fields{
 			"IP":     s.ip,
 			"Model":  s.BmcType(),
-			"Serial": s.serial,
 			"Step":   helper.WhosCalling(),
 			"Error":  err,
 		}).Warn(msg)
@@ -175,7 +174,6 @@ func (s *SupermicroX10) User(users []*cfgresources.User) (err error) {
 			log.WithFields(log.Fields{
 				"IP":         s.ip,
 				"Model":      s.BmcType(),
-				"Serial":     s.serial,
 				"Endpoint":   endpoint,
 				"StatusCode": statusCode,
 				"Step":       helper.WhosCalling(),
@@ -187,7 +185,6 @@ func (s *SupermicroX10) User(users []*cfgresources.User) (err error) {
 		log.WithFields(log.Fields{
 			"IP":     s.ip,
 			"Model":  s.BmcType(),
-			"Serial": s.serial,
 			"User":   user.Name,
 		}).Debug("User parameters applied.")
 
@@ -234,7 +231,6 @@ func (s *SupermicroX10) Network(cfg *cfgresources.Network) (err error) {
 		log.WithFields(log.Fields{
 			"IP":         s.ip,
 			"Model":      s.BmcType(),
-			"Serial":     s.serial,
 			"Endpoint":   endpoint,
 			"StatusCode": statusCode,
 			"Step":       helper.WhosCalling(),
@@ -246,7 +242,6 @@ func (s *SupermicroX10) Network(cfg *cfgresources.Network) (err error) {
 	log.WithFields(log.Fields{
 		"IP":     s.ip,
 		"Model":  s.BmcType(),
-		"Serial": s.serial,
 	}).Debug("Network config parameters applied.")
 	return err
 }
@@ -330,7 +325,6 @@ func (s *SupermicroX10) Ntp(cfg *cfgresources.Ntp) (err error) {
 		log.WithFields(log.Fields{
 			"IP":         s.ip,
 			"Model":      s.BmcType(),
-			"Serial":     s.serial,
 			"Endpoint":   endpoint,
 			"StatusCode": statusCode,
 			"Step":       helper.WhosCalling(),
@@ -343,7 +337,6 @@ func (s *SupermicroX10) Ntp(cfg *cfgresources.Ntp) (err error) {
 	log.WithFields(log.Fields{
 		"IP":     s.ip,
 		"Model":  s.BmcType(),
-		"Serial": s.serial,
 	}).Debug("NTP config parameters applied.")
 	return err
 }
@@ -479,7 +472,6 @@ func (s *SupermicroX10) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *c
 			log.WithFields(log.Fields{
 				"IP":         s.ip,
 				"Model":      s.BmcType(),
-				"Serial":     s.serial,
 				"Endpoint":   endpoint,
 				"StatusCode": statusCode,
 				"Step":       helper.WhosCalling(),
@@ -553,7 +545,6 @@ func (s *SupermicroX10) Syslog(cfg *cfgresources.Syslog) (err error) {
 		log.WithFields(log.Fields{
 			"IP":         s.ip,
 			"Model":      s.BmcType(),
-			"Serial":     s.serial,
 			"Endpoint":   endpoint,
 			"StatusCode": statusCode,
 			"step":       helper.WhosCalling(),
@@ -566,7 +557,6 @@ func (s *SupermicroX10) Syslog(cfg *cfgresources.Syslog) (err error) {
 	log.WithFields(log.Fields{
 		"IP":     s.ip,
 		"Model":  s.BmcType(),
-		"Serial": s.serial,
 	}).Debug("Syslog config parameters applied.")
 	return err
 }
