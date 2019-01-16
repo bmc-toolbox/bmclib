@@ -236,7 +236,7 @@ func (i *IDrac8) get(endpoint string, extraHeaders *map[string]string) (payload 
 
 // Nics returns all found Nics in the device
 func (i *IDrac8) Nics() (nics []*devices.Nic, err error) {
-	err = i.httpLogin()
+	err = i.loadHwData()
 	if err != nil {
 		return nics, err
 	}
@@ -289,7 +289,7 @@ func (i *IDrac8) Nics() (nics []*devices.Nic, err error) {
 
 // Serial returns the device serial
 func (i *IDrac8) Serial() (serial string, err error) {
-	err = i.httpLogin()
+	err = i.loadHwData()
 	if err != nil {
 		return serial, err
 	}
@@ -372,7 +372,7 @@ func (i *IDrac8) PowerKw() (power float64, err error) {
 
 // PowerState returns the current power state of the machine
 func (i *IDrac8) PowerState() (state string, err error) {
-	err = i.httpLogin()
+	err = i.loadHwData()
 	if err != nil {
 		return state, err
 	}
@@ -391,7 +391,7 @@ func (i *IDrac8) PowerState() (state string, err error) {
 
 // BiosVersion returns the current version of the bios
 func (i *IDrac8) BiosVersion() (version string, err error) {
-	err = i.httpLogin()
+	err = i.loadHwData()
 	if err != nil {
 		return version, err
 	}
@@ -411,7 +411,7 @@ func (i *IDrac8) BiosVersion() (version string, err error) {
 
 // Name returns the name of this server from the bmc point of view
 func (i *IDrac8) Name() (name string, err error) {
-	err = i.httpLogin()
+	err = i.loadHwData()
 	if err != nil {
 		return name, err
 	}
@@ -431,7 +431,7 @@ func (i *IDrac8) Name() (name string, err error) {
 
 // BmcVersion returns the version of the bmc we are running
 func (i *IDrac8) BmcVersion() (bmcVersion string, err error) {
-	err = i.httpLogin()
+	err = i.loadHwData()
 	if err != nil {
 		return bmcVersion, err
 	}
@@ -450,7 +450,7 @@ func (i *IDrac8) BmcVersion() (bmcVersion string, err error) {
 
 // Model returns the device model
 func (i *IDrac8) Model() (model string, err error) {
-	err = i.httpLogin()
+	err = i.loadHwData()
 	if err != nil {
 		return model, err
 	}
@@ -504,7 +504,7 @@ func (i *IDrac8) License() (name string, licType string, err error) {
 
 // Memory return the total amount of memory of the server
 func (i *IDrac8) Memory() (mem int, err error) {
-	err = i.httpLogin()
+	err = i.loadHwData()
 	if err != nil {
 		return mem, err
 	}
@@ -527,7 +527,7 @@ func (i *IDrac8) Memory() (mem int, err error) {
 
 // Disks returns a list of disks installed on the device
 func (i *IDrac8) Disks() (disks []*devices.Disk, err error) {
-	err = i.httpLogin()
+	err = i.loadHwData()
 	if err != nil {
 		return disks, err
 	}
