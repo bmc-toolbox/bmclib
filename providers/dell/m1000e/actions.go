@@ -3,6 +3,7 @@ package m1000e
 import (
 	"bufio"
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -364,14 +365,23 @@ func (m *M1000e) GetFirmwareVersion() (version string, err error) {
 }
 
 // UpdateFirmware updates the chassis firmware
-func (m *M1000e) UpdateFirmware(host, filepath string) (status bool, err error) {
+func (m *M1000e) UpdateFirmware(source, file string) (status bool, err error) {
 	err = m.sshLogin()
 	if err != nil {
 		return status, err
 	}
 
-	// XXX make FTP user/pass as arguments intead of hardcoding
-	cmd := fmt.Sprintf("fwupdate -f %s anonymous anonymous -d %s -m cmc-active -m cmc-standby", host, filepath)
+	u, err := url.Parse(source)
+	if err != nil {
+		return status, err
+	}
+
+	password, ok := u.User.Password()
+	if !ok {
+		password = "anonymous"
+	}
+
+	cmd := fmt.Sprintf("fwupdate -f %s %s %s -d %s -m cmc-active -m cmc-standby", u.Host, u.User.Username(), password, u.Path)
 	output, err := m.sshClient.Run(cmd)
 	if err != nil {
 		return false, fmt.Errorf(output)
