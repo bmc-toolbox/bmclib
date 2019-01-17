@@ -206,7 +206,7 @@ func (s *SupermicroX10) Model() (model string, err error) {
 	}
 
 	if ipmi.FruInfo != nil && ipmi.FruInfo.Board != nil {
-		return ipmi.FruInfo.Board.ProdName, err
+		return ipmi.FruInfo.Board.PartNum, err
 	}
 
 	return model, err

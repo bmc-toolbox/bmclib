@@ -36,6 +36,7 @@ type Bmc interface {
 	Screenshot() ([]byte, string, error)
 	ServerSnapshot() (interface{}, error)
 	UpdateCredentials(string, string)
+	UpdateFirmware(string, string) (bool, error)
 }
 
 // BmcChassis represents the requirement of items to be collected from a chassis
@@ -80,6 +81,7 @@ type BmcChassis interface {
 	StorageBlades() ([]*StorageBlade, error)
 	TempC() (int, error)
 	UpdateCredentials(string, string)
+	UpdateFirmware(string, string) (bool, error)
 	Vendor() string
 }
 

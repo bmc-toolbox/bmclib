@@ -1,6 +1,8 @@
 package supermicrox10
 
 import (
+	"fmt"
+
 	"github.com/bmc-toolbox/bmclib/internal/ipmi"
 )
 
@@ -65,4 +67,9 @@ func (s *SupermicroX10) IsOn() (status bool, err error) {
 	}
 	status, err = i.IsOn()
 	return status, err
+}
+
+// UpdateFirmware updates the bmc firmware
+func (s *SupermicroX10) UpdateFirmware(source, file string) (status bool, err error) {
+	return true, fmt.Errorf("not supported yet")
 }
