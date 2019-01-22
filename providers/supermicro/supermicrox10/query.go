@@ -50,7 +50,7 @@ func (s *SupermicroX10) Screenshot() (response []byte, extension string, err err
 	}
 
 	if statusCode != 200 {
-		return response, extension, fmt.Errorf("Non 200 response from endpoint.")
+		return response, extension, fmt.Errorf("Non 200 response from endpoint")
 	}
 
 	time.Sleep(3 * time.Second)
