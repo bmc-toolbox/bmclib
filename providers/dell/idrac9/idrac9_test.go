@@ -4157,19 +4157,19 @@ func TestIDracTempC(t *testing.T) {
 
 func TestIDracNics(t *testing.T) {
 	expectedAnswer := []*devices.Nic{
-		&devices.Nic{
+		{
 			MacAddress: "24:6e:96:78:33:0c",
 			Name:       "Intel(R) Ethernet 10G 2P X520-k bNDC",
 			Up:         true,
 			Speed:      "10 Gbps",
 		},
-		&devices.Nic{
+		{
 			MacAddress: "24:6e:96:78:33:0e",
 			Name:       "Intel(R) Ethernet 10G 2P X520-k bNDC",
 			Up:         false,
 			Speed:      "",
 		},
-		&devices.Nic{
+		{
 			MacAddress: "50:9a:4c:6e:d7:2c",
 			Name:       "bmc",
 			Up:         false,
@@ -4227,7 +4227,7 @@ func TestIDracLicense(t *testing.T) {
 
 func TestDiskDisks(t *testing.T) {
 	expectedAnswer := []*devices.Disk{
-		&devices.Disk{
+		{
 			Serial:    "s37mnx0j700554",
 			Type:      "SSD",
 			Size:      "3576 GB",
@@ -4236,7 +4236,7 @@ func TestDiskDisks(t *testing.T) {
 			Status:    "OK",
 			FwVersion: "gc57",
 		},
-		&devices.Disk{
+		{
 			Serial:    "s37mnx0j700557",
 			Type:      "SSD",
 			Size:      "3576 GB",

@@ -97,7 +97,7 @@ func (i *IDrac9) biosSettingsPendingReboot() (pendingBiosSettings *BiosSettings,
 // PATCHs Bios settings, queues setting to be applied at next boot.
 func (i *IDrac9) setBiosSettings(biosSettings *BiosSettings) (err error) {
 
-	biosSettingsUri := "redfish/v1/Systems/System.Embedded.1/Bios/Settings"
+	biosSettingsURI := "redfish/v1/Systems/System.Embedded.1/Bios/Settings"
 	idracPayload := make(map[string]*BiosSettings)
 	idracPayload["Attributes"] = biosSettings
 
@@ -108,32 +108,32 @@ func (i *IDrac9) setBiosSettings(biosSettings *BiosSettings) (err error) {
 	}
 
 	//PATCH bios settings
-	statusCode, _, err := i.queryRedfish("PATCH", biosSettingsUri, payload)
+	statusCode, _, err := i.queryRedfish("PATCH", biosSettingsURI, payload)
 	if err != nil || statusCode != 200 {
 		msg := fmt.Sprintf("PATCH request to set Bios config, returned code: %d", statusCode)
 		return errors.New(msg)
 	}
 
 	//Queue config to be set at next boot.
-	return i.queueJobs(biosSettingsUri)
+	return i.queueJobs(biosSettingsURI)
 }
 
-func (i *IDrac9) queueJobs(jobUri string) (err error) {
+func (i *IDrac9) queueJobs(jobURI string) (err error) {
 
 	endpoint := "redfish/v1/Managers/iDRAC.Embedded.1/Jobs"
 
-	if !strings.HasPrefix(jobUri, "/") {
-		jobUri = fmt.Sprintf("/%s", jobUri)
+	if !strings.HasPrefix(jobURI, "/") {
+		jobURI = fmt.Sprintf("/%s", jobURI)
 	}
 
 	//Queue this setting to be applied at the next boot.
-	targetSetting := TargetSettingsUri{
-		TargetSettingsUri: jobUri,
+	targetSetting := TargetSettingsURI{
+		TargetSettingsURI: jobURI,
 	}
 
 	payload, err := json.Marshal(targetSetting)
 	if err != nil {
-		msg := fmt.Sprintf("Error marshalling job queue payload for uri: %s, error: %s", jobUri, err)
+		msg := fmt.Sprintf("Error marshalling job queue payload for uri: %s, error: %s", jobURI, err)
 		return errors.New(msg)
 	}
 
@@ -147,13 +147,13 @@ func (i *IDrac9) queueJobs(jobUri string) (err error) {
 }
 
 // Given a Job ID, purge it from the job queue
-func (i *IDrac9) purgeJob(jobId string) (err error) {
+func (i *IDrac9) purgeJob(jobID string) (err error) {
 
-	if !strings.Contains(jobId, "JID") {
-		return errors.New("Invalid Job ID given, Job IDs should be prefixed with JID_..")
+	if !strings.Contains(jobID, "JID") {
+		return errors.New("Invalid Job ID given, Job IDs should be prefixed with JID_")
 	}
 
-	endpoint := fmt.Sprintf("%s/%s", "redfish/v1/Managers/iDRAC.Embedded.1/Jobs", jobId)
+	endpoint := fmt.Sprintf("%s/%s", "redfish/v1/Managers/iDRAC.Embedded.1/Jobs", jobID)
 
 	statusCode, _, err := i.queryRedfish("DELETE", endpoint, nil)
 	if err != nil || statusCode != 200 {
@@ -168,14 +168,14 @@ func (i *IDrac9) purgeJob(jobId string) (err error) {
 func (i *IDrac9) purgeJobsForBiosSettings() (err error) {
 
 	//get current job ids
-	jobIds, err := i.getJobIds()
+	jobIDs, err := i.getJobIds()
 	if err != nil {
 		return err
 	}
 
 	//check if any jobs are queued for bios configuration
-	if len(jobIds) > 0 {
-		err = i.purgeJobsByType(jobIds, "BIOSConfiguration")
+	if len(jobIDs) > 0 {
+		err = i.purgeJobsByType(jobIDs, "BIOSConfiguration")
 		if err != nil {
 			return err
 		}
@@ -185,32 +185,30 @@ func (i *IDrac9) purgeJobsForBiosSettings() (err error) {
 }
 
 //Purges jobs of the given type - if they are in the "Scheduled" state
-func (i *IDrac9) purgeJobsByType(jobIds []string, jobType string) (err error) {
+func (i *IDrac9) purgeJobsByType(jobIDs []string, jobType string) (err error) {
 
-	for _, jobId := range jobIds {
-		jState, jType, err := i.getJob(jobId)
+	for _, jobID := range jobIDs {
+		jState, jType, err := i.getJob(jobID)
 		if err != nil {
 			return err
 		}
 
-		if jType == jobType {
-			if jState == "Scheduled" {
-				return i.purgeJob(jobId)
-			} else {
-				return errors.New(
-					fmt.Sprintf("Job not in Scheduled state cannot be purged, state: %s, id: %s",
-						jState, jobId))
-			}
+		if jType == jobType && jState == "Scheduled" {
+			return i.purgeJob(jobID)
 		}
+
+		return errors.New(
+			fmt.Errorf("Job not in Scheduled state cannot be purged, state: %s, id: %s",
+				jState, jobID))
 	}
 
 	return err
 }
 
 //Returns the job state, Type for the given Job id
-func (i *IDrac9) getJob(jobId string) (jobState string, jobType string, err error) {
+func (i *IDrac9) getJob(jobID string) (jobState string, jobType string, err error) {
 
-	endpoint := fmt.Sprintf("%s/%s", "redfish/v1/Managers/iDRAC.Embedded.1/Jobs/", jobId)
+	endpoint := fmt.Sprintf("%s/%s", "redfish/v1/Managers/iDRAC.Embedded.1/Jobs/", jobID)
 
 	oData := Odata{}
 	_, response, err := i.queryRedfish("GET", endpoint, nil)
@@ -253,8 +251,8 @@ func (i *IDrac9) getJobIds() (jobs []string, err error) {
 		for _, v := range m {
 			//extract the Job id from the string
 			tokens := strings.Split(v, "/")
-			jobId := tokens[len(tokens)-1]
-			jobs = append(jobs, jobId)
+			jobID := tokens[len(tokens)-1]
+			jobs = append(jobs, jobID)
 		}
 	}
 

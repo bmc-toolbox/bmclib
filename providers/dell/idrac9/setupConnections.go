@@ -144,7 +144,7 @@ func (i *IDrac9) sshLogin() (err error) {
 // Close closes the connection properly
 func (i *IDrac9) Close() (err error) {
 	if i.httpClient != nil {
-		_, _, e := i.delete_("sysmgmt/2015/bmc/session")
+		_, _, e := i.delete("sysmgmt/2015/bmc/session")
 		if e != nil {
 			err = multierror.Append(e, err)
 		}

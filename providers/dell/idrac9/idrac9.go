@@ -160,7 +160,7 @@ func (i *IDrac9) put(endpoint string, payload []byte) (statusCode int, response 
 }
 
 // calls delete on the given endpoint
-func (i *IDrac9) delete_(endpoint string) (statusCode int, payload []byte, err error) {
+func (i *IDrac9) delete(endpoint string) (statusCode int, payload []byte, err error) {
 
 	bmcURL := fmt.Sprintf("https://%s", i.ip)
 
