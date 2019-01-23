@@ -112,14 +112,15 @@ type Ssl struct {
 type Network struct {
 	Hostname    string `yaml:"hostname"`
 	DNSFromDHCP bool   `yaml:"dnsFromDhcp"`
-	SshEnable   bool   `yaml:"sshEnable"`
-	SshPort     int    `yaml:"sshPort"`
+	SSHEnable   bool   `yaml:"sshEnable"`
+	SSHPort     int    `yaml:"sshPort"`
 	SolEnable   bool   `yaml:"solEnable"` //Serial over lan
 	IpmiEnable  bool   `yaml:"ipmiEnable"`
 	DhcpEnable  bool   `yaml:"dhcpEnable"`
 	IpmiPort    int    `yaml:"ipmiPort"`
 }
 
+// Ntp struct holds BMC NTP configuration.
 type Ntp struct {
 	Enable   bool   `yaml:"enable"`
 	Server1  string `yaml:"server1"`
