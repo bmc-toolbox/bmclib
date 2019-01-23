@@ -95,7 +95,7 @@ func ScanAndConnect(host string, username string, password string) (bmcConnectio
 		return bmcConnection, err
 	}
 
-	payload, err = ioutil.ReadAll(resp.Body)
+	_, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return bmcConnection, err
 	}
@@ -111,7 +111,7 @@ func ScanAndConnect(host string, username string, password string) (bmcConnectio
 		return bmcConnection, err
 	}
 
-	payload, err = ioutil.ReadAll(resp.Body)
+	_, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return bmcConnection, err
 	}

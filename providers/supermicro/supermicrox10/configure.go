@@ -102,10 +102,10 @@ func (s *SupermicroX10) User(users []*cfgresources.User) (err error) {
 	if err != nil {
 		msg := "Unable to query current user accounts."
 		log.WithFields(log.Fields{
-			"IP":     s.ip,
-			"Model":  s.BmcType(),
-			"Step":   helper.WhosCalling(),
-			"Error":  err,
+			"IP":    s.ip,
+			"Model": s.BmcType(),
+			"Step":  helper.WhosCalling(),
+			"Error": err,
 		}).Warn(msg)
 		return errors.New(msg)
 	}
@@ -183,9 +183,9 @@ func (s *SupermicroX10) User(users []*cfgresources.User) (err error) {
 		}
 
 		log.WithFields(log.Fields{
-			"IP":     s.ip,
-			"Model":  s.BmcType(),
-			"User":   user.Name,
+			"IP":    s.ip,
+			"Model": s.BmcType(),
+			"User":  user.Name,
 		}).Debug("User parameters applied.")
 
 		userID++
@@ -200,24 +200,24 @@ func (s *SupermicroX10) Network(cfg *cfgresources.Network) (err error) {
 
 	sshPort := 22
 
-	if cfg.SshPort != 0 && cfg.SshPort != sshPort {
-		sshPort = cfg.SshPort
+	if cfg.SSHPort != 0 && cfg.SSHPort != sshPort {
+		sshPort = cfg.SSHPort
 	}
 
 	configPort := ConfigPort{
 		Op:                "config_port",
-		HttpPort:          80,
-		HttpsPort:         443,
+		HTTPPort:          80,
+		HTTPSPort:         443,
 		IkvmPort:          5900,
-		VmPort:            623,
-		SshPort:           sshPort,
+		VMPort:            623,
+		SSHPort:           sshPort,
 		WsmanPort:         5985,
 		SnmpPort:          161,
 		httpEnable:        true,
 		httpsEnable:       true,
 		IkvmEnable:        true,
-		VmEnable:          true,
-		SshEnable:         cfg.SshEnable,
+		VMEnable:          true,
+		SSHEnable:         cfg.SSHEnable,
 		SnmpEnable:        false,
 		WsmanEnable:       false,
 		SslRedirectEnable: true,
@@ -240,8 +240,8 @@ func (s *SupermicroX10) Network(cfg *cfgresources.Network) (err error) {
 	}
 
 	log.WithFields(log.Fields{
-		"IP":     s.ip,
-		"Model":  s.BmcType(),
+		"IP":    s.ip,
+		"Model": s.BmcType(),
 	}).Debug("Network config parameters applied.")
 	return err
 }
@@ -335,8 +335,8 @@ func (s *SupermicroX10) Ntp(cfg *cfgresources.Ntp) (err error) {
 
 	//
 	log.WithFields(log.Fields{
-		"IP":     s.ip,
-		"Model":  s.BmcType(),
+		"IP":    s.ip,
+		"Model": s.BmcType(),
 	}).Debug("NTP config parameters applied.")
 	return err
 }
@@ -457,7 +457,7 @@ func (s *SupermicroX10) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *c
 			Op:           "config_ldap",
 			Enable:       enable,
 			EnableSsl:    true,
-			LdapIp:       fmt.Sprintf("%s", serverIP[0]),
+			LdapIP:       fmt.Sprintf("%s", serverIP[0]),
 			BaseDn:       group.Group,
 			LdapPort:     cfgLdap.Port,
 			BindDn:       cfgLdap.BindDn,
@@ -532,7 +532,7 @@ func (s *SupermicroX10) Syslog(cfg *cfgresources.Syslog) (err error) {
 
 	configSyslog := ConfigSyslog{
 		Op:          "config_syslog",
-		SyslogIp1:   fmt.Sprintf("%s", serverIP[0]),
+		SyslogIP1:   fmt.Sprintf("%s", serverIP[0]),
 		SyslogPort1: port,
 		Enable:      cfg.Enable,
 	}
@@ -555,8 +555,8 @@ func (s *SupermicroX10) Syslog(cfg *cfgresources.Syslog) (err error) {
 	//returns okStarting Syslog daemon if successful
 
 	log.WithFields(log.Fields{
-		"IP":     s.ip,
-		"Model":  s.BmcType(),
+		"IP":    s.ip,
+		"Model": s.BmcType(),
 	}).Debug("Syslog config parameters applied.")
 	return err
 }

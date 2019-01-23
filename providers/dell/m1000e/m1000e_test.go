@@ -529,7 +529,7 @@ func TestChassisTempC(t *testing.T) {
 
 func TestChassisNics(t *testing.T) {
 	expectedAnswer := []*devices.Nic{
-		&devices.Nic{
+		{
 			MacAddress: "18:66:da:9d:cd:cd",
 			Name:       "OA1",
 		},
@@ -560,25 +560,25 @@ func TestChassisNics(t *testing.T) {
 
 func TestChassisPsu(t *testing.T) {
 	expectedAnswer := []*devices.Psu{
-		&devices.Psu{
+		{
 			Serial:     "51f3dk2_psu_1",
 			CapacityKw: 2.7,
 			Status:     "OK",
 			PowerKw:    0.184,
 		},
-		&devices.Psu{
+		{
 			Serial:     "51f3dk2_psu_2",
 			CapacityKw: 2.7,
 			Status:     "OK",
 			PowerKw:    0.20862,
 		},
-		&devices.Psu{
+		{
 			Serial:     "51f3dk2_psu_5",
 			CapacityKw: 2.7,
 			Status:     "OK",
 			PowerKw:    0.20772000000000002,
 		},
-		&devices.Psu{
+		{
 			Serial:     "51f3dk2_psu_6",
 			CapacityKw: 2.7,
 			Status:     "OK",

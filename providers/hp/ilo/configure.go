@@ -153,7 +153,7 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 			//if the user exists, modify it
 			if uexists {
 				userinfo.Method = "mod_user"
-				userinfo.UserId = userinfo.Id
+				userinfo.UserID = userinfo.ID
 				userinfo.UserName = user.Name
 				userinfo.LoginName = user.Name
 				userinfo.Password = user.Password
@@ -170,7 +170,7 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 		//if the user is disabled remove it
 		if user.Enable == false && uexists {
 			userinfo.Method = "del_user"
-			userinfo.UserId = userinfo.Id
+			userinfo.UserID = userinfo.ID
 			log.WithFields(log.Fields{
 				"IP":    i.ip,
 				"Model": i.BmcType(),

@@ -1,5 +1,8 @@
 # bmclib - board management controller library
 
+[![Status](https://api.travis-ci.org/bmc-toolbox/bmclib.svg?branch=master)](https://travis-ci.org/bmc-toolbox/bmclib)
+[![Go Report Card](https://goreportcard.com/badge/github.com/bmc-toolbox/bmclib)](https://goreportcard.com/report/github.com/bmc-toolbox/bmclib)
+
 A library to interact with BMCs of different vendors
 
 ## Data collection support

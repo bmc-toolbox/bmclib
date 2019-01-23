@@ -404,35 +404,35 @@ func TestIloTempC(t *testing.T) {
 
 func TestIloNics(t *testing.T) {
 	expectedAnswer := []*devices.Nic{
-		&devices.Nic{
+		{
 			MacAddress: "94:57:a5:60:aa:ca",
 			Name:       "bmc",
 		},
-		&devices.Nic{
+		{
 			MacAddress: "94:57:a5:60:aa:cb",
 			Name:       "bmc",
 		},
-		&devices.Nic{
+		{
 			MacAddress: "14:02:ec:33:1d:30",
 			Name:       "HPE Ethernet 1Gb 4-port 331i Adapter - NIC",
 		},
-		&devices.Nic{
+		{
 			MacAddress: "14:02:ec:33:1d:31",
 			Name:       "HPE Ethernet 1Gb 4-port 331i Adapter - NIC",
 		},
-		&devices.Nic{
+		{
 			MacAddress: "14:02:ec:33:1d:32",
 			Name:       "HPE Ethernet 1Gb 4-port 331i Adapter - NIC",
 		},
-		&devices.Nic{
+		{
 			MacAddress: "14:02:ec:33:1d:33",
 			Name:       "HPE Ethernet 1Gb 4-port 331i Adapter - NIC",
 		},
-		&devices.Nic{
+		{
 			MacAddress: "14:02:ec:6c:95:20",
 			Name:       "HPE Ethernet 10Gb 2-port 562FLR-SFP+ Adpt",
 		},
-		&devices.Nic{
+		{
 			MacAddress: "14:02:ec:6c:95:28",
 			Name:       "HPE Ethernet 10Gb 2-port 562FLR-SFP+ Adpt",
 		},
@@ -488,13 +488,13 @@ func TestIloLicense(t *testing.T) {
 
 func TestIloPsu(t *testing.T) {
 	expectedAnswer := []*devices.Psu{
-		&devices.Psu{
+		{
 			Serial:     "5dmwa0cll9e56r",
 			CapacityKw: 0.5,
 			Status:     "OK",
 			PowerKw:    0.073,
 		},
-		&devices.Psu{
+		{
 			Serial:     "5dmwa0cll9e5su",
 			CapacityKw: 0.5,
 			Status:     "OK",
@@ -527,7 +527,7 @@ func TestIloPsu(t *testing.T) {
 
 func TestIloDisks(t *testing.T) {
 	expectedAnswer := []*devices.Disk{
-		&devices.Disk{
+		{
 			Serial:    "s403crxk0000e7227365",
 			Type:      "HDD",
 			Size:      "1200 GB",
@@ -536,7 +536,7 @@ func TestIloDisks(t *testing.T) {
 			Status:    "OK",
 			FwVersion: "hpd6",
 		},
-		&devices.Disk{
+		{
 			Serial:    "s403d7j40000e722a3mt",
 			Type:      "HDD",
 			Size:      "1200 GB",

@@ -5482,19 +5482,19 @@ func TestIDracTempC(t *testing.T) {
 
 func TestIDracNics(t *testing.T) {
 	expectedAnswer := []*devices.Nic{
-		&devices.Nic{
+		{
 			MacAddress: "24:8a:07:5a:9e:8c",
 			Name:       "Mellanox ConnectX-4 LX 25GbE SFP Rack NDC",
 			Up:         true,
 			Speed:      "10 Gbps",
 		},
-		&devices.Nic{
+		{
 			MacAddress: "24:8a:07:5a:9e:8d",
 			Name:       "Mellanox ConnectX-4 LX 25GbE SFP Rack NDC",
 			Up:         false,
 			Speed:      "",
 		},
-		&devices.Nic{
+		{
 			MacAddress: "84:7b:eb:f7:82:5a",
 			Name:       "bmc",
 			Up:         false,
@@ -5552,13 +5552,13 @@ func TestIDracLicense(t *testing.T) {
 
 func TestIDracPsu(t *testing.T) {
 	expectedAnswer := []*devices.Psu{
-		&devices.Psu{
+		{
 			Serial:     "65kt7j2_PS1",
 			CapacityKw: 0.75,
 			Status:     "OK",
 			PowerKw:    0.0,
 		},
-		&devices.Psu{
+		{
 			Serial:     "65kt7j2_PS2",
 			CapacityKw: 0.75,
 			Status:     "OK",
@@ -5611,7 +5611,7 @@ func TestIDracIsBlade(t *testing.T) {
 
 func TestDiskDisks(t *testing.T) {
 	expectedAnswer := []*devices.Disk{
-		&devices.Disk{
+		{
 			Serial:    "phdv707000d51p6egn",
 			Type:      "SSD",
 			Size:      "1490 GB",
@@ -5620,7 +5620,7 @@ func TestDiskDisks(t *testing.T) {
 			Status:    "OK",
 			FwVersion: "n201dl42",
 		},
-		&devices.Disk{
+		{
 			Serial:    "phdv707000fx1p6egn",
 			Type:      "SSD",
 			Size:      "1490 GB",
