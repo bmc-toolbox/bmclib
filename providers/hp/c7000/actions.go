@@ -310,7 +310,7 @@ end_marker`
 
 	//since there are multiple blades and this command
 	//could fail on any of the blades because they are un responsive
-	//we only validate the command actually ran and not if it succeded on each blade.
+	//we only validate the command actually ran and not if it succeeded on each blade.
 	if !strings.Contains(output, "END RIBCL RESULTS") {
 		return fmt.Errorf(output)
 	}
@@ -351,7 +351,7 @@ end_marker`
 
 	//since there are multiple blades and this command
 	//could fail on any of the blades because they are un responsive
-	//we only validate the command actually ran and not if it succeded on each blade.
+	//we only validate the command actually ran and not if it succeeded on each blade.
 	if !strings.Contains(output, "END RIBCL RESULTS") {
 		return fmt.Errorf(output)
 	}
@@ -381,7 +381,7 @@ end_marker`
 
 	//since there are multiple blades and this command
 	//could fail on any of the blades because they are un responsive
-	//we only validate the command actually ran and not if it succeded on each blade.
+	//we only validate the command actually ran and not if it succeeded on each blade.
 	if !strings.Contains(output, "END RIBCL RESULTS") {
 		return fmt.Errorf(output)
 	}

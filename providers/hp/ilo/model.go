@@ -1,13 +1,16 @@
 package ilo
 
+// Users struct declares payload to un/marshal user accounts.
 type Users struct {
 	UsersInfo []UserInfo `json:"users"`
 }
 
+// DirectoryGroupAccts struct declares directory group account payload.
 type DirectoryGroupAccts struct {
 	Groups []DirectoryGroups `json:"group_accts"`
 }
 
+// LicenseInfo declares License information payload.
 //POST https://10.183.244.173/json/license_info
 type LicenseInfo struct {
 	Key        string `json:"key,omitempty"`
@@ -15,11 +18,12 @@ type LicenseInfo struct {
 	SessionKey string `json:"session_key,omitempty"`
 }
 
+// UserInfo struct declares payload for a user account.
 // Add/Modify/Delete a user account
 // POST
 // https://10.193.251.48/json/user_info
 type UserInfo struct {
-	Id               int    `json:"id,int,omitempty"`
+	ID               int    `json:"id,int,omitempty"`
 	LoginName        string `json:"login_name,omitempty"`
 	UserName         string `json:"user_name,omitempty"`
 	Password         string `json:"password,omitempty"`
@@ -30,10 +34,11 @@ type UserInfo struct {
 	UserPriv         int    `json:"user_priv,omitempty"`
 	LoginPriv        int    `json:"login_priv,omitempty"`
 	Method           string `json:"method"` //mod_user, add_user, del_user
-	UserId           int    `json:"user_id,int,omitempty"`
+	UserID           int    `json:"user_id,int,omitempty"`
 	SessionKey       string `json:"session_key,omitempty"`
 }
 
+// RemoteSyslog struct declares Syslog configuration payload.
 // Set syslog params
 // POST
 // https://10.193.251.48/json/remote_syslog
@@ -45,6 +50,7 @@ type RemoteSyslog struct {
 	SessionKey   string `json:"session_key,omitempty"`
 }
 
+// NetworkSntp struct declares network services configuration payload.
 // /json/network_sntp
 type NetworkSntp struct {
 	Interface                   int    `json:"interface"`
@@ -67,6 +73,7 @@ type NetworkSntp struct {
 	SessionKey                  string `json:"session_key,omitempty"`
 }
 
+// Directory struct declares LDAP configuration payload.
 // /json/directory
 //{"server_address":"ldap.example.com","method":"mod_dir_config","session_key":"51b01f402d65eb2f42342f6d67832989","server_port":637,"user_contexts":["ou=People,dc=example,dc=con"],"authentication_enabled":1,"enable_group_acct":1,"enable_kerberos":0,"local_user_acct":1,"enable_generic_ldap":1}
 type Directory struct {
@@ -84,6 +91,7 @@ type Directory struct {
 	SessionKey            string   `json:"session_key"`
 }
 
+// DirectoryGroups declares LDAP groups configuration payload.
 // /json/directory_groups
 //{"dn":"cn=hp,cn=bmcUsers","new_dn":"cn=hp,cn=bmcUsers","sid":"","login_priv":1,"remote_cons_priv":1,"virtual_media_priv":1,"reset_priv":1,"config_priv":0,"user_priv":0,"method":"mod_group","session_key":"bc2dae77e36a45fbeffce0bddd2ccabe"}
 type DirectoryGroups struct {
@@ -100,6 +108,7 @@ type DirectoryGroups struct {
 	SessionKey       string `json:"session_key"`
 }
 
+// Timezones declares valid timezones.
 //Important timezone ints taken from https://10.193.251.48/html/network_sntp.html?intf=0
 var Timezones = map[string]int{
 	"CET":           368,

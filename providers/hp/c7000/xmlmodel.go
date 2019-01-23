@@ -4,16 +4,19 @@ import (
 	"encoding/xml"
 )
 
+// Username struct to Un/Marshal Username payload.
 type Username struct {
 	XMLName xml.Name `xml:"hpoa:username"`
 	Text    string   `xml:",chardata"`
 }
 
+// Password struct to Un/Marshal Password payload.
 type Password struct {
 	XMLName xml.Name `xml:"hpoa:password"`
 	Text    string   `xml:",chardata"`
 }
 
+// UserLogIn struct to Un/Marshal UserLogin payload.
 type UserLogIn struct {
 	XMLName  xml.Name `xml:"hpoa:userLogIn"`
 	Text     string   `xml:",chardata"`
@@ -21,12 +24,14 @@ type UserLogIn struct {
 	Password Password
 }
 
+// Body struct to Un/Marshal XML Body payload.
 type Body struct {
 	XMLName xml.Name    `xml:"SOAP-ENV:Body"`
 	Text    string      `xml:",chardata"`
 	Content interface{} `xml:",any"`
 }
 
+// EnvelopeLoginResponse struct to Unmarshal login response.
 type EnvelopeLoginResponse struct {
 	XMLName xml.Name `xml:"Envelope"`
 	Text    string   `xml:",chardata"`
@@ -48,47 +53,56 @@ type EnvelopeLoginResponse struct {
 	} `xml:"Body"`
 }
 
+// OaSessionKey struct to Un/marshal OA session key payload.
 type OaSessionKey struct {
 	XMLName xml.Name `xml:"hpoa:oaSessionKey"`
 	Text    string   `xml:",chardata"`
 }
 
+// HpOaSessionKeyToken struct to Un/marshal HP session key tokens.
 type HpOaSessionKeyToken struct {
 	XMLName      xml.Name `xml:"hpoa:HpOaSessionKeyToken"`
 	OaSessionKey OaSessionKey
 }
 
+// Security to Un/marshal Security payload.
 type Security struct {
 	XMLName             xml.Name `xml:"wsse:Security"`
 	MustUnderstand      string   `xml:"SOAP-ENV:mustUnderstand,attr"`
 	HpOaSessionKeyToken HpOaSessionKeyToken
 }
 
+// Header to Un/marshal Header payload.
 type Header struct {
 	XMLName  xml.Name `xml:"SOAP-ENV:Header,omitempty"`
 	Security Security
 }
 
+// Server to Un/marshal Server payload.
 type Server struct {
 	XMLName xml.Name `xml:"hpoa:server"`
 	Text    string   `xml:",chardata"`
 }
 
+// SetRemoteSyslogServer to Un/marshal Syslog config payload.
 type SetRemoteSyslogServer struct {
 	XMLName xml.Name `xml:"hpoa:setRemoteSyslogServer"`
 	Server  string   `xml:"hpoa:server"`
 }
 
+// SetRemoteSyslogPort to Un/marshal Syslog port config payload.
 type SetRemoteSyslogPort struct {
 	XMLName xml.Name `xml:"hpoa:setRemoteSyslogPort"`
 	Port    int      `xml:"hpoa:port"`
 }
 
+// SetRemoteSyslogEnabled to Un/marshal Syslog enable/disable payload.
 type SetRemoteSyslogEnabled struct {
 	XMLName xml.Name `xml:"hpoa:setRemoteSyslogEnabled"`
 	Enabled bool     `xml:"hpoa:enabled"`
 }
 
+// Envelope to marshal XML body and header payloads.
 type Envelope struct {
 	XMLName xml.Name `xml:"SOAP-ENV:Envelope"`
 	Text    string   `xml:",chardata"`
@@ -102,6 +116,7 @@ type Envelope struct {
 	Body    Body
 }
 
+// AddUser to marshal User account payloads.
 // <hpoa:addUser>
 //  <hpoa:username>Test</hpoa:username>
 //   <hpoa:password>foobar</hpoa:password>
@@ -112,6 +127,7 @@ type AddUser struct {
 	Password Password
 }
 
+// SetUserPassword to marshal User password payloads.
 // <hpoa:setUserPassword>
 //  <hpoa:username>Administrator</hpoa:username>
 //  <hpoa:password>foobar</hpoa:password>
@@ -122,16 +138,18 @@ type SetUserPassword struct {
 	Password Password
 }
 
+// SetUserBayACL to marshal User account ACL payloads.
 // <hpoa:setUserBayAcl>
 //   <hpoa:username>psm</hpoa:username>
 //     <hpoa:acl>ADMINISTRATOR</hpoa:acl>
 //   </hpoa:setUserBayAcl>
-type SetUserBayAcl struct {
+type SetUserBayACL struct {
 	XMLName  xml.Name `xml:"hpoa:setUserBayAcl"`
 	Username Username
-	Acl      Acl
+	ACL      ACL
 }
 
+// RemoveUser to marshal User account removal payloads.
 // <hpoa:removeUser>
 //   <hpoa:username>psm</hpoa:username>
 // </hpoa:removeUser>
@@ -148,16 +166,19 @@ type configureNtp struct {
 	NtpPoll      NtpPoll
 }
 
+// NtpPrimary to marshal NTP primary config payloads.
 type NtpPrimary struct {
 	XMLName xml.Name `xml:"hpoa:ntpPrimary"`
 	Text    string   `xml:",chardata"`
 }
 
+// NtpSecondary to marshal NTP secondary config payloads.
 type NtpSecondary struct {
 	XMLName xml.Name `xml:"hpoa:ntpSecondary"`
 	Text    string   `xml:",chardata"`
 }
 
+// NtpPoll to marshal NTP polling config payloads.
 type NtpPoll struct {
 	XMLName xml.Name `xml:"hpoa:ntpPoll"`
 	Text    string   `xml:",chardata"`
@@ -188,13 +209,14 @@ type ldapGroup struct {
 	Text    string   `xml:",chardata"`
 }
 
-type setLdapGroupBayAcl struct {
+type setLdapGroupBayACL struct {
 	XMLName   xml.Name `xml:"hpoa:setLdapGroupBayAcl"`
 	LdapGroup ldapGroup
-	Acl       Acl
+	ACL       ACL
 }
 
-type Acl struct {
+// ACL struct declares payload to set ACLs
+type ACL struct {
 	XMLName xml.Name `xml:"hpoa:acl"`
 	Text    string   `xml:",chardata"`
 }
@@ -276,12 +298,14 @@ type setLdapInfo4 struct {
 	SearchContexts           SearchContexts
 }
 
+// SearchContexts declares multiple LDAP search context payloads.
 type SearchContexts struct {
 	XMLName       xml.Name `xml:"hpoa:searchContexts"`
 	Hpoa          string   `xml:"xmlns:hpoa,attr"`
 	SearchContext []SearchContext
 }
 
+// SearchContext declares a LDAP search context payload.
 type SearchContext struct {
 	XMLName xml.Name `xml:"hpoa:searchContext"`
 	Text    string   `xml:",chardata"`
@@ -293,7 +317,7 @@ type SearchContext struct {
 //mark setup wizard complete - required if the chassis was reset.
 //<hpoa:setWizardComplete><hpoa:wizardStatus>WIZARD_SETUP_COMPLETE</hpoa:wizardStatus></hpoa:setWizardComplete>
 
-// UserLogout is requied to logout the session
+// UserLogout declares payload to log out.
 type UserLogout struct {
 	XMLName xml.Name `xml:"hpoa:userLogOut"`
 }
