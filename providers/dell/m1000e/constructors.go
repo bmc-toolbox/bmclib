@@ -302,7 +302,7 @@ func (m *M1000e) newUserCfg(user *cfgresources.User, userID int) UserParams {
 	userCfg := UserParams{
 		SessionToken:    m.SessionToken,
 		Privilege:       privilege,
-		UserId:          userID,
+		UserID:          userID,
 		EnableUser:      user.Enable,
 		UserName:        user.Name,
 		ChangePassword:  true,

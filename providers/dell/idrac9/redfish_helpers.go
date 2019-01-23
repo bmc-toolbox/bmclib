@@ -197,9 +197,7 @@ func (i *IDrac9) purgeJobsByType(jobIDs []string, jobType string) (err error) {
 			return i.purgeJob(jobID)
 		}
 
-		return errors.New(
-			fmt.Errorf("Job not in Scheduled state cannot be purged, state: %s, id: %s",
-				jState, jobID))
+		return fmt.Errorf(fmt.Sprintf("Job not in Scheduled state cannot be purged, state: %s, id: %s", jState, jobID))
 	}
 
 	return err
