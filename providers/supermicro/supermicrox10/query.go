@@ -64,9 +64,9 @@ func (s *SupermicroX10) Screenshot() (response []byte, extension string, err err
 		t.Format("GMT+0200"),
 		tzLocation)
 
-	urlRedirect := UrlRedirect{
-		UrlName:   "Snapshot",
-		UrlType:   "img",
+	urlRedirect := URLRedirect{
+		URLName:   "Snapshot",
+		URLType:   "img",
 		TimeStamp: ts,
 	}
 

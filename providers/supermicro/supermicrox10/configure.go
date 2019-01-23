@@ -200,8 +200,8 @@ func (s *SupermicroX10) Network(cfg *cfgresources.Network) (err error) {
 
 	sshPort := 22
 
-	if cfg.SshPort != 0 && cfg.SshPort != sshPort {
-		sshPort = cfg.SshPort
+	if cfg.SSHPort != 0 && cfg.SSHPort != sshPort {
+		sshPort = cfg.SSHPort
 	}
 
 	configPort := ConfigPort{
@@ -216,8 +216,8 @@ func (s *SupermicroX10) Network(cfg *cfgresources.Network) (err error) {
 		httpEnable:        true,
 		httpsEnable:       true,
 		IkvmEnable:        true,
-		VmEnable:          true,
-		SSHEnable:         cfg.SshEnable,
+		VMEnable:          true,
+		SSHEnable:         cfg.SSHEnable,
 		SnmpEnable:        false,
 		WsmanEnable:       false,
 		SslRedirectEnable: true,
