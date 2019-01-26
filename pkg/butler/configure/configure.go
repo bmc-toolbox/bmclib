@@ -53,21 +53,37 @@ func (b *Bmc) Apply() {
 
 		switch resource {
 		case "user":
-			err = b.configure.User(b.config.User)
+			if b.config.User != nil {
+				err = b.configure.User(b.config.User)
+			}
 		case "syslog":
-			err = b.configure.Syslog(b.config.Syslog)
+			if b.config.Syslog != nil {
+				err = b.configure.Syslog(b.config.Syslog)
+			}
 		case "ntp":
-			err = b.configure.Ntp(b.config.Ntp)
+			if b.config.Ntp != nil {
+				err = b.configure.Ntp(b.config.Ntp)
+			}
 		case "ldap":
-			err = b.configure.Ldap(b.config.Ldap)
+			if b.config.Ldap != nil {
+				err = b.configure.Ldap(b.config.Ldap)
+			}
 		case "ldap_group":
-			err = b.configure.LdapGroup(b.config.LdapGroup, b.config.Ldap)
+			if b.config.LdapGroup != nil && b.config.Ldap != nil {
+				err = b.configure.LdapGroup(b.config.LdapGroup, b.config.Ldap)
+			}
 		case "license":
-			err = b.configure.SetLicense(b.config.License)
+			if b.config.License != nil {
+				err = b.configure.SetLicense(b.config.License)
+			}
 		case "network":
-			err = b.configure.Network(b.config.Network)
+			if b.config.Network != nil {
+				err = b.configure.Network(b.config.Network)
+			}
 		case "bios":
-			err = b.configure.Bios(b.config.Bios)
+			if b.config.Bios != nil {
+				err = b.configure.Bios(b.config.Bios)
+			}
 		default:
 			b.logger.WithFields(logrus.Fields{
 				"resource": resource,
@@ -150,19 +166,33 @@ func (b *BmcChassis) Apply() {
 
 		switch resource {
 		case "user":
-			err = b.configure.User(b.config.User)
+			if b.config.User != nil {
+				err = b.configure.User(b.config.User)
+			}
 		case "syslog":
-			err = b.configure.Syslog(b.config.Syslog)
+			if b.config.Syslog != nil {
+				err = b.configure.Syslog(b.config.Syslog)
+			}
 		case "ntp":
-			err = b.configure.Ntp(b.config.Ntp)
+			if b.config.Ntp != nil {
+				err = b.configure.Ntp(b.config.Ntp)
+			}
 		case "ldap":
-			err = b.configure.Ldap(b.config.Ldap)
+			if b.config.Ldap != nil {
+				err = b.configure.Ldap(b.config.Ldap)
+			}
 		case "ldap_group":
-			err = b.configure.LdapGroup(b.config.LdapGroup, b.config.Ldap)
+			if b.config.LdapGroup != nil && b.config.Ldap != nil {
+				err = b.configure.LdapGroup(b.config.LdapGroup, b.config.Ldap)
+			}
 		case "license":
-			err = b.configure.SetLicense(b.config.License)
+			if b.config.License != nil {
+				err = b.configure.SetLicense(b.config.License)
+			}
 		case "network":
-			err = b.configure.Network(b.config.Network)
+			if b.config.Network != nil {
+				err = b.configure.Network(b.config.Network)
+			}
 		default:
 			b.logger.WithFields(logrus.Fields{
 				"resource": resource,
