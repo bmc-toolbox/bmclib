@@ -46,35 +46,35 @@ func (i *IDrac8) validateUserCfg(cfgUsers []*cfgresources.User) (err error) {
 
 // IDrac8 supports upto 16 users, user 0 is reserved
 // this function returns an empty user slot that can be used for a new user account
-func getEmptyUserSlot(idracUsers UserInfo) (userId int, user User, err error) {
-	for userId, user := range idracUsers {
+func getEmptyUserSlot(idracUsers UserInfo) (userID int, user User, err error) {
+	for userID, user := range idracUsers {
 
-		if userId == 1 {
+		if userID == 1 {
 			continue
 		}
 
 		if user.UserName == "" {
-			return userId, user, err
+			return userID, user, err
 		}
 	}
 
-	return 0, user, errors.New("All user account slots in use, remove an account before adding a new one.")
+	return 0, user, errors.New("All user account slots in use, remove an account before adding a new one")
 }
 
 // checks if a user is present in a given list
-func userInIdrac(user string, usersInfo UserInfo) (userId int, userInfo User, exists bool) {
+func userInIdrac(user string, usersInfo UserInfo) (userID int, userInfo User, exists bool) {
 
-	for userId, userInfo := range usersInfo {
+	for userID, userInfo := range usersInfo {
 		if userInfo.UserName == user {
-			return userId, userInfo, true
+			return userID, userInfo, true
 		}
 	}
 
-	return userId, userInfo, false
+	return userID, userInfo, false
 }
 
 // PUTs user config
-func (i *IDrac8) putUser(userId int, user User) (err error) {
+func (i *IDrac8) putUser(userID int, user User) (err error) {
 
 	idracPayload := make(map[string]User)
 	idracPayload["iDRAC.Users"] = user
@@ -85,7 +85,7 @@ func (i *IDrac8) putUser(userId int, user User) (err error) {
 		return errors.New(msg)
 	}
 
-	endpoint := fmt.Sprintf("sysmgmt/2012/server/configgroup/iDRAC.Users.%d", userId)
+	endpoint := fmt.Sprintf("sysmgmt/2012/server/configgroup/iDRAC.Users.%d", userID)
 	statusCode, _, err := i.put(endpoint, payload)
 	if err != nil || statusCode != 200 {
 		msg := fmt.Sprintf("PUT request to set User config returned error, return code: %d", statusCode)

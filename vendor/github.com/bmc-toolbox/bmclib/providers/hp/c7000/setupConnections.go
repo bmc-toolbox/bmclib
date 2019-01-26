@@ -93,12 +93,6 @@ func (c *C7000) httpLogin() (err error) {
 
 	c.httpClient = httpClient
 
-	serial, err := c.Serial()
-	if err != nil {
-		return err
-	}
-	c.serial = serial
-
 	return err
 }
 

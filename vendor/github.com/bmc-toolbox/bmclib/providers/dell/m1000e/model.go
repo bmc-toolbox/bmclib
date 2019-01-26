@@ -1,5 +1,6 @@
 package m1000e
 
+// LdapArgParams declares parameters for LDAP configuration.
 // Setup LDAP role group - administrator
 // 1. the url parameter ?index=<int> and Index form value must match,
 // 2. the PrivBitmap, GenLdapRolePrivilege params must match,
@@ -26,8 +27,8 @@ type LdapArgParams struct {
 	Bfabricadmin         bool   `url:"bfabricadmin,int"`       //bfabricadmin=1
 }
 
+// DirectoryServicesParams declares parameters for various LDAP configuration.
 // /cgi-bin/webcgi/dirsvcs
-
 type DirectoryServicesParams struct {
 	SessionToken                 string `url:"ST2"`
 	SeviceSelected               string `url:"service_selected"`                     //service_selected=ldap
@@ -70,15 +71,17 @@ type DirectoryServicesParams struct {
 	AdCmcdomain                  string `url:"AD_cmc_domain"`                        //AD_cmc_domain=
 }
 
+// LoginSecurityParams declares payload to apply Login related security params.
 // /cgi-bin/webcgi/loginSecurity
 type LoginSecurityParams struct {
 	SessionToken               string `url:"ST2"`                          //7bdaaa73307ebb471d0e71a9cecc44fb most likely the auth token
-	EnforcedIpBlockEnable      bool   `url:"ENFORCED_IPBLOCK_enable,int"`  //1
-	EnforcedIpBlockFailcount   int    `url:"ENFORCED_IPBLOCK_failcount"`   //5
-	EnforcedIpBlockFailwindow  int    `url:"ENFORCED_IPBLOCK_failwindow"`  //60
-	EnforcedIpBlockPenaltyTime int    `url:"ENFORCED_IPBLOCK_penaltytime"` //300
+	EnforcedIPBlockEnable      bool   `url:"ENFORCED_IPBLOCK_enable,int"`  //1
+	EnforcedIPBlockFailcount   int    `url:"ENFORCED_IPBLOCK_failcount"`   //5
+	EnforcedIPBlockFailwindow  int    `url:"ENFORCED_IPBLOCK_failwindow"`  //60
+	EnforcedIPBlockPenaltyTime int    `url:"ENFORCED_IPBLOCK_penaltytime"` //300
 }
 
+// DatetimeParams declares payload to apply time params.
 // cgi-bin/webcgi/datetime
 type DatetimeParams struct {
 	SessionToken          string `url:"ST2"`                      //ST2=ba9a6bbf88764c829ca4f49146fd4817
@@ -91,7 +94,7 @@ type DatetimeParams struct {
 	TzChanged             bool   `url:"tzChanged,int"`            //tzChanged=1
 }
 
-// Manages user login account parameters,
+// UserParams declares payload to configure user accounts.
 // notes:
 // 1. the url parameter ?id=<int> and UserID form value must match,
 // 2. the CMC_GROUP, Privilege params must match,
@@ -102,7 +105,7 @@ type DatetimeParams struct {
 type UserParams struct {
 	SessionToken    string `url:"ST2"`                //ST2=ba9a6bbf88764c829ca4f49146fd4817
 	Privilege       int    `url:"Privilege"`          //Privilege=4095
-	UserId          int    `url:"UserID"`             //UserID=1
+	UserID          int    `url:"UserID"`             //UserID=1
 	EnableUser      bool   `url:"EnableUser,int"`     //EnableUser=1
 	UserName        string `url:"UserName"`           //UserName=Test
 	ChangePassword  bool   `url:"ChangePassword,int"` //ChangePassword=1
@@ -123,6 +126,7 @@ type UserParams struct {
 	CFabricAcminc   bool   `url:"cfabricadmin,int"`   //cfabricadmin=1
 }
 
+// InterfaceParams declares payload to configure interface options.
 // /cgi-bin/webcgi/interfaces
 type InterfaceParams struct {
 	SessionToken                     string `url:"ST2"`                                      //ST2=2754be61766abf5808085b3f2dd7bd94
@@ -137,12 +141,12 @@ type InterfaceParams struct {
 	WebserverEnable                  bool   `url:"WEBSERVER_enable,int"`                     //WEBSERVER_enable=1
 	WebserverMaxSessions             int    `url:"WEBSERVER_maxsessions"`                    //WEBSERVER_maxsessions=4
 	WebserverTimeout                 int    `url:"WEBSERVER_timeout"`                        //WEBSERVER_timeout=1800
-	WebserverHttpPort                int    `url:"WEBSERVER_http_port"`                      //WEBSERVER_http_port=80
-	WebserverHttpsPort               int    `url:"WEBSERVER_https_port"`                     //WEBSERVER_https_port=443
-	SshEnable                        bool   `url:"SSH_enable,int"`                           //SSH_enable=1
-	SshMaxSessions                   int    `url:"SSH_maxsessions"`                          //SSH_maxsessions=4
-	SshTimeout                       int    `url:"SSH_timeout`                               //SSH_timeout=1800
-	SshPort                          int    `url:"SSH_port"`                                 //SSH_port=22
+	WebserverHTTPPort                int    `url:"WEBSERVER_http_port"`                      //WEBSERVER_http_port=80
+	WebserverHTTPSPort               int    `url:"WEBSERVER_https_port"`                     //WEBSERVER_https_port=443
+	SSHEnable                        bool   `url:"SSH_enable,int"`                           //SSH_enable=1
+	SSHMaxSessions                   int    `url:"SSH_maxsessions"`                          //SSH_maxsessions=4
+	SSHTimeout                       int    `url:"SSH_timeout"`                              //SSH_timeout=1800
+	SSHPort                          int    `url:"SSH_port"`                                 //SSH_port=22
 	TelnetEnable                     bool   `url:"TELNET_enable,int"`                        //TELNET_enable=1
 	TelnetMaxSessions                int    `url:"TELNET_maxsessions"`                       //TELNET_maxsessions=4
 	TelnetTimeout                    int    `url:"TELNET_timeout"`                           //TELNET_timeout=1800

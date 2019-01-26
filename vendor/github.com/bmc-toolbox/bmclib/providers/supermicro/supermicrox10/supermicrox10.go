@@ -33,7 +33,6 @@ type SupermicroX10 struct {
 	username   string
 	password   string
 	httpClient *http.Client
-	serial     string
 }
 
 // New returns a new SupermicroX10 instance ready to be used
@@ -207,7 +206,7 @@ func (s *SupermicroX10) Model() (model string, err error) {
 	}
 
 	if ipmi.FruInfo != nil && ipmi.FruInfo.Board != nil {
-		return ipmi.FruInfo.Board.ProdName, err
+		return ipmi.FruInfo.Board.PartNum, err
 	}
 
 	return model, err

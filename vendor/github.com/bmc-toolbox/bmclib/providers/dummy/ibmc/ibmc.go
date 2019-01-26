@@ -154,18 +154,3 @@ func (i *Ibmc) ServerSnapshot() (interface{}, error) {
 func (i *Ibmc) UpdateCredentials(string, string) {
 	return
 }
-
-// PowerOn implements the Bmc interface
-func (i *Ibmc) PowerOn() (status bool, err error) {
-	return
-}
-
-// PowerOff implements the Bmc interface
-func (i *Ibmc) PowerOff() (status bool, err error) {
-	return
-}
-
-//PxeOnce implements the Bmc interface
-func (i *Ibmc) PxeOnce() (status bool, err error) {
-	return
-}

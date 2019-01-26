@@ -99,12 +99,6 @@ func (i *Ilo) httpLogin() (err error) {
 
 	i.httpClient = httpClient
 
-	serial, err := i.Serial()
-	if err != nil {
-		return err
-	}
-	i.serial = serial
-
 	return err
 }
 

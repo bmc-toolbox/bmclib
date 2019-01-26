@@ -160,7 +160,7 @@ func (i *IDrac9) put(endpoint string, payload []byte) (statusCode int, response 
 }
 
 // calls delete on the given endpoint
-func (i *IDrac9) delete_(endpoint string) (statusCode int, payload []byte, err error) {
+func (i *IDrac9) delete(endpoint string) (statusCode int, payload []byte, err error) {
 
 	bmcURL := fmt.Sprintf("https://%s", i.ip)
 
@@ -207,7 +207,7 @@ func (i *IDrac9) delete_(endpoint string) (statusCode int, payload []byte, err e
 
 // Nics returns all found Nics in the device
 func (i *IDrac9) Nics() (nics []*devices.Nic, err error) {
-	err = i.httpLogin()
+	err = i.loadHwData()
 	if err != nil {
 		return nics, err
 	}
@@ -260,7 +260,7 @@ func (i *IDrac9) Nics() (nics []*devices.Nic, err error) {
 
 // Serial returns the device serial
 func (i *IDrac9) Serial() (serial string, err error) {
-	err = i.httpLogin()
+	err = i.loadHwData()
 	if err != nil {
 		return serial, err
 	}
@@ -335,7 +335,7 @@ func (i *IDrac9) PowerKw() (power float64, err error) {
 
 // PowerState returns the current power state of the machine
 func (i *IDrac9) PowerState() (state string, err error) {
-	err = i.httpLogin()
+	err = i.loadHwData()
 	if err != nil {
 		return state, err
 	}
@@ -354,7 +354,7 @@ func (i *IDrac9) PowerState() (state string, err error) {
 
 // BiosVersion returns the current version of the bios
 func (i *IDrac9) BiosVersion() (version string, err error) {
-	err = i.httpLogin()
+	err = i.loadHwData()
 	if err != nil {
 		return version, err
 	}
@@ -374,7 +374,7 @@ func (i *IDrac9) BiosVersion() (version string, err error) {
 
 // Name returns the name of this server from the bmc point of view
 func (i *IDrac9) Name() (name string, err error) {
-	err = i.httpLogin()
+	err = i.loadHwData()
 	if err != nil {
 		return name, err
 	}
@@ -394,7 +394,7 @@ func (i *IDrac9) Name() (name string, err error) {
 
 // BmcVersion returns the version of the bmc we are running
 func (i *IDrac9) BmcVersion() (bmcVersion string, err error) {
-	err = i.httpLogin()
+	err = i.loadHwData()
 	if err != nil {
 		return bmcVersion, err
 	}
@@ -413,7 +413,7 @@ func (i *IDrac9) BmcVersion() (bmcVersion string, err error) {
 
 // Model returns the device model
 func (i *IDrac9) Model() (model string, err error) {
-	err = i.httpLogin()
+	err = i.loadHwData()
 	if err != nil {
 		return model, err
 	}
@@ -467,7 +467,7 @@ func (i *IDrac9) License() (name string, licType string, err error) {
 
 // Memory return the total amount of memory of the server
 func (i *IDrac9) Memory() (mem int, err error) {
-	err = i.httpLogin()
+	err = i.loadHwData()
 	if err != nil {
 		return mem, err
 	}
@@ -517,7 +517,7 @@ func (i *IDrac9) TempC() (temp int, err error) {
 
 // CPU return the cpu, cores and hyperthreads the server
 func (i *IDrac9) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCount int, err error) {
-	err = i.httpLogin()
+	err = i.loadHwData()
 	if err != nil {
 		return cpu, cpuCount, coreCount, hyperthreadCount, err
 	}
@@ -760,7 +760,7 @@ func (i *IDrac9) ServerSnapshot() (server interface{}, err error) {
 
 // Disks returns a list of disks installed on the device
 func (i *IDrac9) Disks() (disks []*devices.Disk, err error) {
-	err = i.httpLogin()
+	err = i.loadHwData()
 	if err != nil {
 		return disks, err
 	}

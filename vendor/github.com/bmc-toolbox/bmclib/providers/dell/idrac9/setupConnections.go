@@ -94,15 +94,16 @@ func (i *IDrac9) httpLogin() (err error) {
 
 	i.httpClient = httpClient
 
-	err = i.loadHwData()
-	if err != nil {
-		return err
-	}
 	return err
 }
 
 // loadHwData load the full hardware information from the iDrac
 func (i *IDrac9) loadHwData() (err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return err
+	}
+
 	url := "sysmgmt/2012/server/inventory/hardware"
 	payload, err := i.get(url, nil)
 	if err != nil {
@@ -143,7 +144,7 @@ func (i *IDrac9) sshLogin() (err error) {
 // Close closes the connection properly
 func (i *IDrac9) Close() (err error) {
 	if i.httpClient != nil {
-		_, _, e := i.delete_("sysmgmt/2015/bmc/session")
+		_, _, e := i.delete("sysmgmt/2015/bmc/session")
 		if e != nil {
 			err = multierror.Append(e, err)
 		}

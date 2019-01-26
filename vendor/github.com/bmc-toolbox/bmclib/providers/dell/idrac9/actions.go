@@ -2,6 +2,7 @@ package idrac9
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 )
 
@@ -119,4 +120,34 @@ func (i *IDrac9) IsOn() (status bool, err error) {
 	}
 
 	return status, fmt.Errorf(output)
+}
+
+// UpdateFirmware updates the bmc firmware
+func (i *IDrac9) UpdateFirmware(source, file string) (status bool, err error) {
+	err = i.sshLogin()
+	if err != nil {
+		return status, err
+	}
+
+	u, err := url.Parse(source)
+	if err != nil {
+		return status, err
+	}
+
+	password, ok := u.User.Password()
+	if !ok {
+		password = "anonymous"
+	}
+
+	cmd := fmt.Sprintf("racadm fwupdate -f %s %s %s -d %s", u.Host, u.User.Username(), password, u.Path)
+	output, err := i.sshClient.Run(cmd)
+	if err != nil {
+		return false, fmt.Errorf(output)
+	}
+
+	if strings.Contains(output, "Firmware update completed successfully") {
+		return true, err
+	}
+
+	return status, err
 }

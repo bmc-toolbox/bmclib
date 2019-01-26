@@ -72,22 +72,20 @@ func (i *IDrac8) httpLogin() (err error) {
 	i.st1 = strings.TrimLeft(stTemp[0], "index.html?ST1=")
 	i.st2 = strings.TrimLeft(stTemp[1], "ST2=")
 
-	err = i.loadHwData()
-	if err != nil {
-		return err
-	}
-
-	serial, err := i.Serial()
-	if err != nil {
-		return err
-	}
-	i.serial = serial
-
 	return err
 }
 
 // loadHwData load the full hardware information from the iDrac
 func (i *IDrac8) loadHwData() (err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return err
+	}
+
+	if i.iDracInventory != nil {
+		return err
+	}
+
 	url := "sysmgmt/2012/server/inventory/hardware"
 	payload, err := i.get(url, nil)
 	if err != nil {

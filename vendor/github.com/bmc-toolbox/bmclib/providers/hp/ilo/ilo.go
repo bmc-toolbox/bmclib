@@ -44,7 +44,6 @@ type Ilo struct {
 	sessionKey string
 	httpClient *http.Client
 	sshClient  *sshclient.SSHClient
-	serial     string
 	loginURL   *url.URL
 	rimpBlade  *hp.RimpBlade
 }

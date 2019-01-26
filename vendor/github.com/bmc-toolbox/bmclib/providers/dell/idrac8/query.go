@@ -63,7 +63,7 @@ func (i *IDrac8) queryUsers() (userInfo UserInfo, err error) {
 		return userInfo, err
 	}
 
-	xmlData := XmlRoot{}
+	xmlData := XMLRoot{}
 	err = xml.Unmarshal(response, &xmlData)
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -76,7 +76,7 @@ func (i *IDrac8) queryUsers() (userInfo UserInfo, err error) {
 		return userInfo, err
 	}
 
-	for _, userAccount := range xmlData.XmlUserAccount {
+	for _, userAccount := range xmlData.XMLUserAccount {
 
 		user := User{
 			UserName:  userAccount.Name,
@@ -102,7 +102,7 @@ func (i *IDrac8) queryUsers() (userInfo UserInfo, err error) {
 			user.Enable = "disabled"
 		}
 
-		userInfo[userAccount.Id] = user
+		userInfo[userAccount.ID] = user
 	}
 
 	return userInfo, err
