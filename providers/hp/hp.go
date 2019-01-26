@@ -9,118 +9,118 @@ const (
 
 // Blade contains the unmarshalled data from the hp chassis
 type Blade struct {
-	Bay             *Bay   `xml:" BAY,omitempty"`
-	Bsn             string `xml:" BSN,omitempty"`
-	MgmtIPAddr      string `xml:" MGMTIPADDR,omitempty"`
-	MgmtType        string `xml:" MGMTPN,omitempty"`
-	MgmtVersion     string `xml:" MGMTFWVERSION,omitempty"`
-	Name            string `xml:" NAME,omitempty"`
-	Type            string `xml:" TYPE,omitempty"`
-	Power           *Power `xml:" POWER,omitempty"`
-	Status          string `xml:" STATUS,omitempty"`
-	Spn             string `xml:" SPN,omitempty"`
-	Temp            *Temp  `xml:" TEMPS>TEMP,omitempty"`
-	BladeRomVer     string `xml:" BLADEROMVER,omitempty"`
-	AssociatedBlade int    `xml:" ASSOCIATEDBLADE,omitempty"`
+	Bay             *Bay   `xml:"BAY,omitempty"`
+	Bsn             string `xml:"BSN,omitempty"`
+	MgmtIPAddr      string `xml:"MGMTIPADDR,omitempty"`
+	MgmtType        string `xml:"MGMTPN,omitempty"`
+	MgmtVersion     string `xml:"MGMTFWVERSION,omitempty"`
+	Name            string `xml:"NAME,omitempty"`
+	Type            string `xml:"TYPE,omitempty"`
+	Power           *Power `xml:"POWER,omitempty"`
+	Status          string `xml:"STATUS,omitempty"`
+	Spn             string `xml:"SPN,omitempty"`
+	Temp            *Temp  `xml:"TEMPS>TEMP,omitempty"`
+	BladeRomVer     string `xml:"BLADEROMVER,omitempty"`
+	AssociatedBlade int    `xml:"ASSOCIATEDBLADE,omitempty"`
 }
 
 // Bay contains the position of the blade within the chassis
 type Bay struct {
-	Connection int `xml:" CONNECTION,omitempty"`
+	Connection int `xml:"CONNECTION,omitempty"`
 }
 
 // Infra2 is the data retrieved from the chassis xml interface that contains all components
 type Infra2 struct {
-	Addr         string        `xml:" ADDR,omitempty"`
-	Blades       []*Blade      `xml:" BLADES>BLADE,omitempty"`
-	Switches     []*Switch     `xml:" SWITCHES>SWITCH,omitempty"`
-	ChassisPower *ChassisPower `xml:" POWER,omitempty"`
-	Status       string        `xml:" STATUS,omitempty"`
-	Temp         *Temp         `xml:" TEMPS>TEMP,omitempty"`
-	EnclSn       string        `xml:" ENCL_SN,omitempty"`
-	Pn           string        `xml:" PN,omitempty"`
-	Encl         string        `xml:" ENCL,omitempty"`
-	Rack         string        `xml:" RACK,omitempty"`
-	Managers     []*Manager    `xml:" MANAGERS>MANAGER,omitempty"`
+	Addr         string        `xml:"ADDR,omitempty"`
+	Blades       []*Blade      `xml:"BLADES>BLADE,omitempty"`
+	Switches     []*Switch     `xml:"SWITCHES>SWITCH,omitempty"`
+	ChassisPower *ChassisPower `xml:"POWER,omitempty"`
+	Status       string        `xml:"STATUS,omitempty"`
+	Temp         *Temp         `xml:"TEMPS>TEMP,omitempty"`
+	EnclSn       string        `xml:"ENCL_SN,omitempty"`
+	Pn           string        `xml:"PN,omitempty"`
+	Encl         string        `xml:"ENCL,omitempty"`
+	Rack         string        `xml:"RACK,omitempty"`
+	Managers     []*Manager    `xml:"MANAGERS>MANAGER,omitempty"`
 }
 
 // MP contains the firmware version and the model of the chassis or blade
 type MP struct {
-	Pn   string `xml:" PN,omitempty"`
-	Sn   string `xml:" SN,omitempty"`
-	Fwri string `xml:" FWRI,omitempty"`
+	Pn   string `xml:"PN,omitempty"`
+	Sn   string `xml:"SN,omitempty"`
+	Fwri string `xml:"FWRI,omitempty"`
 }
 
 // Switch contains the type of the switch
 type Switch struct {
-	Spn string `xml:" SPN,omitempty"`
+	Spn string `xml:"SPN,omitempty"`
 }
 
 // Power contains the power information of a blade
 type Power struct {
-	PowerConsumed float64 `xml:" POWER_CONSUMED,omitempty"`
-	PowerState    string  `xml:" POWERSTATE,omitempty"`
+	PowerConsumed float64 `xml:"POWER_CONSUMED,omitempty"`
+	PowerState    string  `xml:"POWERSTATE,omitempty"`
 }
 
 // ChassisPower contains the power information of the chassis
 type ChassisPower struct {
-	PowerConsumed float64        `xml:" POWER_CONSUMED,omitempty"`
-	Powersupply   []*Powersupply `xml:" POWERSUPPLY,omitempty"`
+	PowerConsumed float64        `xml:"POWER_CONSUMED,omitempty"`
+	Powersupply   []*Powersupply `xml:"POWERSUPPLY,omitempty"`
 }
 
 // Rimp is the entry data structure for the chassis
 type Rimp struct {
-	Infra2 *Infra2 `xml:" INFRA2,omitempty"`
-	MP     *MP     `xml:" MP,omitempty"`
+	Infra2 *Infra2 `xml:"INFRA2,omitempty"`
+	MP     *MP     `xml:"MP,omitempty"`
 }
 
 // Manager hold the information of the manager board of the chassis
 type Manager struct {
-	MgmtIPAddr string `xml:" MGMTIPADDR,omitempty"`
-	Role       string `xml:" ROLE,omitempty"`
-	MacAddr    string `xml:" MACADDR,omitempty"`
-	Status     string `xml:" STATUS,omitempty"`
-	Name       string `xml:" NAME,omitempty"`
+	MgmtIPAddr string `xml:"MGMTIPADDR,omitempty"`
+	Role       string `xml:"ROLE,omitempty"`
+	MacAddr    string `xml:"MACADDR,omitempty"`
+	Status     string `xml:"STATUS,omitempty"`
+	Name       string `xml:"NAME,omitempty"`
 }
 
 // Powersupply contains the data of the power supply of the chassis
 type Powersupply struct {
-	Sn           string  `xml:" SN,omitempty"`
-	Status       string  `xml:" STATUS,omitempty"`
-	Capacity     float64 `xml:" CAPACITY,omitempty"`
-	ActualOutput float64 `xml:" ACTUALOUTPUT,omitempty"`
+	Sn           string  `xml:"SN,omitempty"`
+	Status       string  `xml:"STATUS,omitempty"`
+	Capacity     float64 `xml:"CAPACITY,omitempty"`
+	ActualOutput float64 `xml:"ACTUALOUTPUT,omitempty"`
 }
 
 // Temp contains the thermal data of a chassis or blade
 type Temp struct {
-	C    int    `xml:" C,omitempty" json:"C,omitempty"`
-	Desc string `xml:" DESC,omitempty"`
+	C    int    `xml:"C,omitempty" json:"C,omitempty"`
+	Desc string `xml:"DESC,omitempty"`
 }
 
 // RimpBlade is the entry data structure for the blade when queries directly
 type RimpBlade struct {
-	MP          *MP          `xml:" MP,omitempty"`
-	HSI         *HSI         `xml:" HSI,omitempty"`
-	BladeSystem *BladeSystem `xml:" BLADESYSTEM,omitempty"`
+	MP          *MP          `xml:"MP,omitempty"`
+	HSI         *HSI         `xml:"HSI,omitempty"`
+	BladeSystem *BladeSystem `xml:"BLADESYSTEM,omitempty"`
 }
 
 // BladeSystem blade information from the hprimp of blades
 type BladeSystem struct {
-	Bay int `xml:" BAY,omitempty"`
+	Bay int `xml:"BAY,omitempty"`
 }
 
 // HSI contains the information about the components of the blade
 type HSI struct {
-	NICS []*NIC `xml:" NICS>NIC,omitempty"`
-	Sbsn string `xml:" SBSN,omitempty" json:"SBSN,omitempty"`
-	Spn  string `xml:" SPN,omitempty" json:"SPN,omitempty"`
+	NICS []*NIC `xml:"NICS>NIC,omitempty"`
+	Sbsn string `xml:"SBSN,omitempty" json:"SBSN,omitempty"`
+	Spn  string `xml:"SPN,omitempty" json:"SPN,omitempty"`
 }
 
 // NIC contains the nic information of a blade
 type NIC struct {
-	Description string `xml:" DESCRIPTION,omitempty"`
-	MacAddr     string `xml:" MACADDR,omitempty"`
-	Status      string `xml:" STATUS,omitempty"`
+	Description string `xml:"DESCRIPTION,omitempty"`
+	MacAddr     string `xml:"MACADDR,omitempty"`
+	Status      string `xml:"STATUS,omitempty"`
 }
 
 // Firmware is the struct used to render the data from https://$ip/json/fw_info, it contains firmware data of the blade
