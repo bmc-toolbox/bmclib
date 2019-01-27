@@ -366,7 +366,7 @@ func (s *SupermicroX10) Nics() (nics []*devices.Nic, err error) {
 		return nics, err
 	}
 
-	if ipmi != nil && ipmi.GenericInfo != nil && ipmi.GenericInfo.Generic != nil && ipmi.GenericInfo.Generic.BmcMac != nil {
+	if ipmi != nil && ipmi.GenericInfo != nil && ipmi.GenericInfo.Generic != nil {
 		bmcNic := &devices.Nic{
 			Name:       "bmc",
 			MacAddress: ipmi.GenericInfo.Generic.BmcMac,
