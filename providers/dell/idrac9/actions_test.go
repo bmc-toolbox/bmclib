@@ -201,7 +201,6 @@ func TestIDracPowerCycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
-	defer tearDownSSH()
 
 	answer, err := bmc.PowerCycle()
 	if err != nil {
@@ -211,6 +210,8 @@ func TestIDracPowerCycle(t *testing.T) {
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
+
+	tearDownSSH()
 }
 
 func TestIDracPowerCycleBmc(t *testing.T) {
@@ -220,7 +221,6 @@ func TestIDracPowerCycleBmc(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
-	defer tearDownSSH()
 
 	answer, err := bmc.PowerCycleBmc()
 	if err != nil {
@@ -230,6 +230,8 @@ func TestIDracPowerCycleBmc(t *testing.T) {
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
+
+	tearDownSSH()
 }
 
 func TestIDracPowerOn(t *testing.T) {
@@ -239,7 +241,6 @@ func TestIDracPowerOn(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
-	defer tearDownSSH()
 
 	answer, err := bmc.PowerOn()
 	if err != nil {
@@ -249,6 +250,8 @@ func TestIDracPowerOn(t *testing.T) {
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
+
+	tearDownSSH()
 }
 
 func TestIDracPowerOff(t *testing.T) {
@@ -258,7 +261,6 @@ func TestIDracPowerOff(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
-	defer tearDownSSH()
 
 	answer, err := bmc.PowerOff()
 	if err != nil {
@@ -268,6 +270,8 @@ func TestIDracPowerOff(t *testing.T) {
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
+
+	tearDownSSH()
 }
 
 func TestIDracPxeOnce(t *testing.T) {
@@ -277,7 +281,6 @@ func TestIDracPxeOnce(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
-	defer tearDownSSH()
 
 	answer, err := bmc.PxeOnce()
 	if err != nil {
@@ -287,6 +290,8 @@ func TestIDracPxeOnce(t *testing.T) {
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
+
+	tearDownSSH()
 }
 
 func TestIDracIsOn(t *testing.T) {
@@ -296,7 +301,6 @@ func TestIDracIsOn(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
-	defer tearDownSSH()
 
 	answer, err := bmc.IsOn()
 	if err != nil {
@@ -306,4 +310,6 @@ func TestIDracIsOn(t *testing.T) {
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
+
+	tearDownSSH()
 }
