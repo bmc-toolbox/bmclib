@@ -5,6 +5,10 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"time"
+
+	mrand "math/rand"
+
 	"fmt"
 	"log"
 	"net"
@@ -15,6 +19,14 @@ import (
 
 // Test server based on:
 // http://grokbase.com/t/gg/golang-nuts/165yek1eje/go-nuts-creating-an-ssh-server-instance-for-tests
+
+func init() {
+	mrand.Seed(time.Now().Unix())
+}
+
+func sshServerAddress(min, max int) string {
+	return fmt.Sprintf("127.0.0.1:%d", mrand.Intn(max-min)+min)
+}
 
 var (
 	sshServer  net.Listener
@@ -139,11 +151,11 @@ func encodePrivateKeyToPEM(pk *rsa.PrivateKey) (payload []byte) {
 	return pem.EncodeToMemory(&block)
 }
 
-func runSSHServer(config *ssh.ServerConfig, loading chan interface{}) {
+func runSSHServer(config *ssh.ServerConfig, address string, loading chan interface{}) {
 	var err error
-	sshServer, err = net.Listen("tcp", "127.0.0.1:2200")
+	sshServer, err = net.Listen("tcp", address)
 	if err != nil {
-		log.Fatalf("Failed to listen on 2200 (%s)", err)
+		log.Fatalf("Failed to listen on %s (%s)", address, err)
 	}
 
 	close(loading)
@@ -245,11 +257,12 @@ func setupSSH() (bmc *M1000e, err error) {
 
 	config.AddHostKey(private)
 
+	address := sshServerAddress(2000, 4000)
 	loading := make(chan interface{})
-	go runSSHServer(config, loading)
+	go runSSHServer(config, address, loading)
 	<-loading
 
-	bmc, err = New("127.0.0.1:2200", username, password)
+	bmc, err = New(address, username, password)
 	if err != nil {
 		return bmc, err
 	}
