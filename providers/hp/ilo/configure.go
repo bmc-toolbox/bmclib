@@ -370,7 +370,17 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 		return errors.New(msg)
 	}
 
-	_, validTimezone := Timezones[cfg.Timezone]
+	// supported timezone based on device.
+	var timezones map[string]int
+
+	// ideally ilo5 ilo4 should be split up into its own device
+	// instead of depending on BmcType.
+	if i.BmcType() == "ilo5" {
+		timezones = TimezonesIlo5
+	} else {
+		timezones = TimezonesIlo4
+	}
+	_, validTimezone := timezones[cfg.Timezone]
 	if !validTimezone {
 		msg := "NTP resource a valid timezone parameter, for valid timezones see hp/ilo/model.go"
 		log.WithFields(log.Fields{
@@ -415,7 +425,7 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 		TimePropagate:               existingConfig.TimePropagate,
 		SntpServer1:                 cfg.Server1,
 		SntpServer2:                 cfg.Server2,
-		OurZone:                     Timezones[cfg.Timezone],
+		OurZone:                     timezones[cfg.Timezone],
 		Method:                      "set_sntp",
 		SessionKey:                  i.sessionKey,
 	}

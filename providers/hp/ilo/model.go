@@ -108,9 +108,49 @@ type DirectoryGroups struct {
 	SessionKey       string `json:"session_key"`
 }
 
-// Timezones declares valid timezones.
+// TimezonesIlo5 declares valid timezone for ilo5 devices.
+var TimezonesIlo5 = map[string]int{
+	"Etc/GMT+12":                     0,
+	"Pacific/Midway":                 1,
+	"US/Hawaii":                      2,
+	"US/Alaska":                      3,
+	"US/Pacific":                     4,
+	"US/Mountain":                    5,
+	"US/Central":                     6,
+	"US/Eastern":                     7,
+	"America/Caracas":                8,
+	"Canada/Atlantic":                9,
+	"Canada/Newfoundland":            10,
+	"America/Argentina/Buenos_Aires": 11,
+	"Atlantic/South_Georgia":         12,
+	"Atlantic/Cape_Verde":            13,
+	"Greenwich":                      14,
+	"CET":                            15,
+	"EET":                            16,
+	"Asia/Kuwait":                    17,
+	"Asia/Tehran":                    18,
+	"Asia/Dubai":                     19,
+	"Asia/Kabul":                     20,
+	"Asia/Yekaterinburg":             21,
+	"Asia/Kolkata":                   22,
+	"Asia/Kathmandu":                 23,
+	"Asia/Almaty":                    24,
+	"Asia/Rangoon":                   25,
+	"Asia/Bangkok":                   26,
+	"Asia/Taipei":                    27,
+	"Asia/Tokyo":                     28,
+	"Australia/Adelaide":             29,
+	"Australia/Canberra":             30,
+	"Asia/Magadan":                   31,
+	"Pacific/Auckland":               32,
+	"Pacific/Fakaofo":                33,
+	"Pacific/Kiritimati":             34,
+	"Unspecified Time Zone":          35,
+}
+
+// TimezonesIlo4 declares valid timezones.
 //Important timezone ints taken from https://10.193.251.48/html/network_sntp.html?intf=0
-var Timezones = map[string]int{
+var TimezonesIlo4 = map[string]int{
 	"CET":           368,
 	"CST6CDT":       371,
 	"EET":           373,
