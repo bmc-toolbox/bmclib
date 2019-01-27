@@ -177,3 +177,8 @@ func (s *Server) handleChannel(newChannel ssh.NewChannel) {
 		}
 	}()
 }
+
+// Close shutdown the current ssh server
+func (s *Server) Close() error {
+	return s.ssh.Close()
+}
