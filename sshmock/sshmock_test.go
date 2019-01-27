@@ -30,4 +30,9 @@ func TestServer(t *testing.T) {
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
+
+	err = s.Close()
+	if err != nil {
+		t.Fatalf("unable to close the ssh server %s", err.Error())
+	}
 }
