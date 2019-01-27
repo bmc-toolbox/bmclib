@@ -249,7 +249,7 @@ func setupSSH() (bmc *C7000, err error) {
 	if err != nil {
 		return bmc, err
 	}
-	bmc.ip = "127.0.0.1:2200"
+	bmc.ip = address
 
 	return bmc, err
 }
