@@ -90,7 +90,16 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		}
 
 		if renderedConfig.SetupChassis != nil {
-			b.SetupChassis(renderedConfig.SetupChassis, asset, chassis)
+			s := configure.NewBmcChassisSetup(
+				chassis,
+				asset,
+				b.config.Resources,
+				renderedConfig.SetupChassis,
+				b.config,
+				b.metricsEmitter,
+				b.log,
+			)
+			s.Apply()
 		}
 
 		// Apply configuration

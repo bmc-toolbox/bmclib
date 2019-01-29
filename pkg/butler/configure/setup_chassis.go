@@ -1,9 +1,8 @@
-package butler
+package configure
 
 import (
 	"errors"
 	"fmt"
-	"reflect"
 	"time"
 
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
@@ -16,159 +15,203 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// SetupChassis struct holds various attributes for chassis setup methods.
-type SetupChassis struct {
-	Asset          *asset.Asset
-	Config         *config.Params //bmcbutler config, cli params
-	Chassis        devices.BmcChassis
-	AssetConfig    *cfgresources.SetupChassis
-	MetricsEmitter *metrics.Emitter
-	ID             int
-	Log            *logrus.Logger
+// BmcChassisSetup struct holds various attributes for chassis setup methods.
+type BmcChassisSetup struct {
+	asset          *asset.Asset
+	chassis        devices.BmcChassis
+	setup          devices.BmcChassisSetup
+	config         *cfgresources.SetupChassis
+	resources      []string
+	butlerConfig   *config.Params
+	metricsEmitter *metrics.Emitter
+	log            *logrus.Logger
+	ip             string
+	serial         string
+	vendor         string
+	model          string
 }
 
-// SetupChassis method applies setup related configuration for chassis assets.
-func (b *Butler) SetupChassis(assetConfig *cfgresources.SetupChassis, asset *asset.Asset, connection devices.BmcChassis) (err error) {
+// NewBmcChassisSetup returns a new  struct to apply configuration.
+func NewBmcChassisSetup(
+	chassis devices.BmcChassis,
+	asset *asset.Asset,
+	resources []string,
+	config *cfgresources.SetupChassis,
+	butlerConfig *config.Params,
+	metricsEmitter *metrics.Emitter,
+	logger *logrus.Logger) *BmcChassisSetup {
 
-	log := b.log
-	component := "setupChassis"
-	metric := b.metricsEmitter
+	return &BmcChassisSetup{
+		// asset to be setup
+		asset: asset,
+		// client is of type devices.Bmc
+		chassis: chassis,
+		// devices.Bmc is type asserted to apply one time setup configuration,
+		// this is possible since devices.Bmc embeds the BmcChassisSetup interface.
+		setup:        chassis.(devices.BmcChassisSetup),
+		butlerConfig: butlerConfig,
+		// if --resources was passed, only these resources will be applied
+		resources:      resources,
+		metricsEmitter: metricsEmitter,
+		config:         config,
+		log:            logger,
+	}
+}
 
-	defer metric.MeasureRuntime([]string{"butler", "setupChassis_runtime"}, time.Now())
+// Apply applies one time setup configuration.
+func (b *BmcChassisSetup) Apply() {
 
-	chassis := SetupChassis{
-		Log:            log,
-		Config:         b.config,
-		MetricsEmitter: b.metricsEmitter,
-		Asset:          asset,
-		AssetConfig:    assetConfig,
-		ID:             b.id,
-		Chassis:        connection,
+	defer b.metricsEmitter.MeasureRuntime(
+		[]string{"butler", "setupChassis_runtime"},
+		time.Now(),
+	)
+
+	// slice of configuration resources to be applied.
+	var resources []string
+
+	// if any setup action fails, this is set to false
+	// if this finally is true, the post actions are invoked.
+	setupActionSuccess := true
+
+	// retrieve valid or known setup configuration resources for the chassis.
+	if len(b.resources) > 0 {
+		resources = b.resources
+	} else {
+		resources = b.setup.ResourcesSetup()
 	}
 
-	if b.config.DryRun {
-		log.WithFields(logrus.Fields{
-			"component": component,
-			"butler-id": b.id,
-			"Asset":     fmt.Sprintf("%+v", asset),
-		}).Info("Dry run, asset setup will be skipped.")
-		return nil
-	}
+	b.vendor = b.chassis.Vendor()
+	b.model, _ = b.chassis.Model()
+	b.serial, _ = b.chassis.Serial()
+	b.ip = b.asset.IPAddress
 
-	log.WithFields(logrus.Fields{
-		"component": component,
-		"butler-id": b.id,
-		"Asset":     fmt.Sprintf("%+v", asset),
-	}).Info("Chassis asset to be applied setup configuration.")
+	for _, resource := range resources {
+
+		var err error
+
+		err = b.ensurePoweredUp()
+		if err != nil {
+			b.log.WithFields(logrus.Fields{
+				"resource":  resource,
+				"Vendor":    b.vendor,
+				"Model":     b.model,
+				"Serial":    b.serial,
+				"IPAddress": b.ip,
+				"Error":     err,
+			}).Warn("Chassis power status")
+			return
+		}
+
+		b.log.WithFields(logrus.Fields{
+			"resource":  resource,
+			"Vendor":    b.vendor,
+			"Model":     b.model,
+			"Serial":    b.serial,
+			"IPAddress": b.ip,
+		}).Debug("Chassis is powered on, continuing setup.")
+
+		switch resource {
+		case "setipmioverlan":
+			if b.config.IpmiOverLan != nil {
+				err = b.setIpmiOverLan()
+			}
+		case "flexaddress":
+			if b.config.FlexAddress != nil {
+				err = b.setFlexAddressState()
+			}
+		case "dynamicpower":
+			if b.config.DynamicPower != nil {
+				err = b.setDynamicPower()
+			}
+		case "bladespower":
+			if b.config.BladesPower != nil {
+				err = b.setBladesPower()
+			}
+		case "add_blade_bmc_admins":
+			if len(b.config.AddBladeBmcAdmins) > 0 {
+				err = b.addBladeBmcAdmins()
+			}
+		case "remove_blade_bmc_users":
+			if len(b.config.RemoveBladeBmcUsers) > 0 {
+				err = b.removeBladeBmcUsers()
+			}
+		default:
+			b.log.WithFields(logrus.Fields{
+				"resource": resource,
+			}).Warn("Unknown setup resource.")
+		}
+
+		if err != nil {
+			setupActionSuccess = false
+			b.log.WithFields(logrus.Fields{
+				"resource":  resource,
+				"Vendor":    b.vendor,
+				"Model":     b.model,
+				"Serial":    b.serial,
+				"IPAddress": b.ip,
+				"Error":     err,
+			}).Warn("Setup resource returned errors.")
+		}
+
+		b.log.WithFields(logrus.Fields{
+			"resource":  resource,
+			"Vendor":    b.vendor,
+			"Model":     b.model,
+			"Serial":    b.serial,
+			"IPAddress": b.ip,
+		}).Debug("Resource configuration applied.")
+
+	}
 
 	//if chassis setup is done successfully invoke post action.
-	if chassis.applyConfig() == true {
-		chassis.Post(asset)
+	if setupActionSuccess {
+		b.Post()
 	}
 
-	return
+	b.log.WithFields(logrus.Fields{
+		"Vendor":    b.vendor,
+		"Model":     b.model,
+		"Serial":    b.serial,
+		"IPAddress": b.ip,
+	}).Info("All setup actions successful.")
+
 }
 
 // Post method is when a chassis was setup successfully.
-func (s *SetupChassis) Post(asset *asset.Asset) {
+func (b *BmcChassisSetup) Post() {
 
-	log := s.Log
 	enc := inventory.Enc{
-		Config:         s.Config,
-		Log:            log,
-		MetricsEmitter: s.MetricsEmitter,
+		Config:         b.butlerConfig,
+		Log:            b.log,
+		MetricsEmitter: b.metricsEmitter,
 	}
 
-	enc.SetChassisInstalled(asset.Serial)
+	enc.SetChassisInstalled(b.asset.Serial)
 
 	return
 }
 
-func (s *SetupChassis) applyConfig() (configured bool) {
+// ensurePoweredUp method checks if a chassis is powered off
+// and powers it back on.
+func (b *BmcChassisSetup) ensurePoweredUp() (err error) {
 
-	log := s.Log
-	component := "setupChassis"
-	configured = true
-
-	log.WithFields(logrus.Fields{
-		"component": component,
-		"butler-id": s.ID,
-		"Asset":     fmt.Sprintf("%+v", s.Asset),
-	}).Info("Running setup actions on chassis..")
-
-	cfg := reflect.ValueOf(s.AssetConfig).Elem()
-	for r := 0; r < cfg.NumField(); r++ {
-		if cfg.Field(r).Pointer() == 0 {
-			continue
+	status, _ := b.chassis.IsOn()
+	if status == false {
+		_, err := b.chassis.PowerOn()
+		if err != nil {
+			return err
 		}
-		resourceName := cfg.Type().Field(r).Name
-		switch resourceName {
-		case "FlexAddress":
-			err := s.setFlexAddressState(s.Chassis, s.AssetConfig.FlexAddress.Enable)
-			if err != nil {
-				configured = false
-				log.WithFields(logrus.Fields{
-					"component": component,
-					"butler-id": s.ID,
-					"Asset":     fmt.Sprintf("%+v", s.Asset),
-					"Error":     err,
-				}).Warn("Failed to update FlexAddressState.")
-			}
-		case "DynamicPower":
-			err := s.setDynamicPower(s.Chassis, s.AssetConfig.DynamicPower.Enable)
-			if err != nil {
-				configured = false
-				log.WithFields(logrus.Fields{
-					"component": component,
-					"butler-id": s.ID,
-					"Asset":     fmt.Sprintf("%+v", s.Asset),
-					"Error":     err,
-				}).Warn("Failed to update Dynamic Power state.")
-			}
-		case "BladesPower":
-			err := s.setBladesPower(s.Chassis, s.AssetConfig.BladesPower.Enable)
-			if err != nil {
-				configured = false
-				log.WithFields(logrus.Fields{
-					"component": component,
-					"butler-id": s.ID,
-					"Asset":     fmt.Sprintf("%+v", s.Asset),
-					"Error":     err,
-				}).Warn("Failed to power up all blades in chassis.")
-			}
-		case "AddBladeBmcAdmins":
-			err := s.addBladeBmcAdmins(s.Chassis, s.AssetConfig.AddBladeBmcAdmins)
-			if err != nil {
-				configured = false
-				log.WithFields(logrus.Fields{
-					"component": component,
-					"butler-id": s.ID,
-					"Asset":     fmt.Sprintf("%+v", s.Asset),
-					"Error":     err,
-				}).Warn("Failed to add blade BMC admin accounts through chassis.")
-			}
-		case "RemoveBladeBmcUsers":
-			err := s.removeBladeBmcUsers(s.Chassis, s.AssetConfig.RemoveBladeBmcUsers)
-			if err != nil {
-				configured = false
-				log.WithFields(logrus.Fields{
-					"component": component,
-					"butler-id": s.ID,
-					"Asset":     fmt.Sprintf("%+v", s.Asset),
-					"Error":     err,
-				}).Warn("Failed to remove blade BMC admin accounts through chassis.")
-			}
 
-		case "hostname":
-		default:
-		}
+		return errors.New("Chassis power status was off, powering on.. retry in a few minutes")
 	}
 
-	return configured
+	return nil
 }
 
-func (s *SetupChassis) addBladeBmcAdmins(chassis devices.BmcChassis, cfg []*cfgresources.BladeBmcAccount) (err error) {
+func (b *BmcChassisSetup) addBladeBmcAdmins() (err error) {
+
 	component := "addBladeBmcAdmins"
+	cfg := b.config.AddBladeBmcAdmins
 
 	for _, user := range cfg {
 		if user.Name == "" {
@@ -179,21 +222,23 @@ func (s *SetupChassis) addBladeBmcAdmins(chassis devices.BmcChassis, cfg []*cfgr
 			return fmt.Errorf("AddbladeBmcAdmins resource expects parameter: Password")
 		}
 
-		err = chassis.AddBladeBmcAdmin(user.Name, user.Password)
+		err = b.setup.AddBladeBmcAdmin(user.Name, user.Password)
 		if err != nil {
 			return err
 		}
 
 		// in cases where the user may already exist, we modify the credentials
-		err = chassis.ModBladeBmcUser(user.Name, user.Password)
+		err = b.setup.ModBladeBmcUser(user.Name, user.Password)
 		if err != nil {
 			return err
 		}
 
-		s.Log.WithFields(logrus.Fields{
+		b.log.WithFields(logrus.Fields{
 			"component": component,
-			"butler-id": s.ID,
-			"Asset":     fmt.Sprintf("%+v", s.Asset),
+			"Vendor":    b.vendor,
+			"Model":     b.model,
+			"Serial":    b.serial,
+			"IPAddress": b.ip,
 			"User":      user.Name,
 		}).Debug("Blade BMC admin account added.")
 	}
@@ -201,24 +246,27 @@ func (s *SetupChassis) addBladeBmcAdmins(chassis devices.BmcChassis, cfg []*cfgr
 	return err
 }
 
-func (s *SetupChassis) removeBladeBmcUsers(chassis devices.BmcChassis, cfg []*cfgresources.BladeBmcAccount) (err error) {
+func (b *BmcChassisSetup) removeBladeBmcUsers() (err error) {
 
 	component := "removeBladeBmcUsers"
 
+	cfg := b.config.RemoveBladeBmcUsers
 	for _, user := range cfg {
 		if user.Name == "" {
 			return fmt.Errorf("RemoveBladeBmcUsers resource expects parameter: Name")
 		}
 
-		err = chassis.RemoveBladeBmcUser(user.Name)
+		err = b.setup.RemoveBladeBmcUser(user.Name)
 		if err != nil {
 			return err
 		}
 
-		s.Log.WithFields(logrus.Fields{
+		b.log.WithFields(logrus.Fields{
 			"component": component,
-			"butler-id": s.ID,
-			"Asset":     fmt.Sprintf("%+v", s.Asset),
+			"Vendor":    b.vendor,
+			"Model":     b.model,
+			"Serial":    b.serial,
+			"IPAddress": b.ip,
 			"User":      user.Name,
 		}).Debug("Blade BMC user account removed.")
 	}
@@ -226,16 +274,20 @@ func (s *SetupChassis) removeBladeBmcUsers(chassis devices.BmcChassis, cfg []*cf
 	return err
 }
 
-func (s *SetupChassis) setDynamicPower(chassis devices.BmcChassis, enable bool) (err error) {
-	log := s.Log
+func (b *BmcChassisSetup) setDynamicPower() (err error) {
+
+	log := b.log
 	component := "setDynamicPower"
-	_, err = chassis.SetDynamicPower(enable)
+
+	_, err = b.setup.SetDynamicPower(b.config.DynamicPower.Enable)
 	if err != nil {
 		msg := "Unable to update Dynamic Power status."
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"butler-id": s.ID,
-			"Asset":     fmt.Sprintf("%+v", s.Asset),
+			"Vendor":    b.vendor,
+			"Model":     b.model,
+			"Serial":    b.serial,
+			"IPAddress": b.ip,
 			"Error":     err,
 		}).Warn(msg)
 		return errors.New(msg)
@@ -243,16 +295,23 @@ func (s *SetupChassis) setDynamicPower(chassis devices.BmcChassis, enable bool) 
 
 	log.WithFields(logrus.Fields{
 		"component": component,
-		"butler-id": s.ID,
-		"Asset":     fmt.Sprintf("%+v", s.Asset),
+		"Vendor":    b.vendor,
+		"Model":     b.model,
+		"Serial":    b.serial,
+		"IPAddress": b.ip,
 	}).Debug("Dynamic Power config applied successfully.")
 	return err
 
 }
 
-func (s *SetupChassis) setIpmiOverLan(chassis devices.BmcChassis, enable bool) (err error) {
-	log := s.Log
+func (b *BmcChassisSetup) setIpmiOverLan() (err error) {
+
+	log := b.log
 	component := "setIpmiOverLan"
+
+	enable := b.config.IpmiOverLan.Enable
+	chassis := b.chassis
+	setup := b.setup
 
 	//retrive list of blades in chassis
 	blades, err := chassis.Blades()
@@ -260,8 +319,10 @@ func (s *SetupChassis) setIpmiOverLan(chassis devices.BmcChassis, enable bool) (
 		msg := "Unable to list blades for chassis."
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"butler-id": s.ID,
-			"Asset":     fmt.Sprintf("%+v", s.Asset),
+			"Vendor":    b.vendor,
+			"Model":     b.model,
+			"Serial":    b.serial,
+			"IPAddress": b.ip,
 			"Error":     err,
 		}).Error(msg)
 		return errors.New(msg)
@@ -270,7 +331,10 @@ func (s *SetupChassis) setIpmiOverLan(chassis devices.BmcChassis, enable bool) (
 	for _, blade := range blades {
 		log.WithFields(logrus.Fields{
 			"component":      component,
-			"butler-id":      s.ID,
+			"Vendor":         b.vendor,
+			"Model":          b.model,
+			"Serial":         b.serial,
+			"IPAddress":      b.ip,
 			"Blade Serial":   blade.Serial,
 			"Blade Position": blade.BladePosition,
 			"Enable":         enable,
@@ -284,8 +348,10 @@ func (s *SetupChassis) setIpmiOverLan(chassis devices.BmcChassis, enable bool) (
 				msg := "Unable to power up blade to enable IpmiOverLan."
 				log.WithFields(logrus.Fields{
 					"component": component,
-					"butler-id": s.ID,
-					"Asset":     fmt.Sprintf("%+v", s.Asset),
+					"Vendor":    b.vendor,
+					"Model":     b.model,
+					"Serial":    b.serial,
+					"IPAddress": b.ip,
 					"Error":     err,
 				}).Warn(msg)
 				return errors.New(msg)
@@ -295,15 +361,17 @@ func (s *SetupChassis) setIpmiOverLan(chassis devices.BmcChassis, enable bool) (
 			time.Sleep(20 * time.Second)
 		}
 
-		_, err = chassis.SetIpmiOverLan(blade.BladePosition, enable)
+		_, err = setup.SetIpmiOverLan(blade.BladePosition, enable)
 		if err != nil {
 			msg := "Unable to update IpmiOverLan status."
 			log.WithFields(logrus.Fields{
 				"component":      component,
-				"butler-id":      s.ID,
+				"Vendor":         b.vendor,
+				"Model":          b.model,
+				"Serial":         b.serial,
+				"IPAddress":      b.ip,
 				"Blade Serial":   blade.Serial,
 				"Blade Position": blade.BladePosition,
-				"Asset":          fmt.Sprintf("%+v", s.Asset),
 				"Error":          err,
 			}).Warn(msg)
 			return errors.New(msg)
@@ -312,8 +380,10 @@ func (s *SetupChassis) setIpmiOverLan(chassis devices.BmcChassis, enable bool) (
 
 	log.WithFields(logrus.Fields{
 		"component": component,
-		"butler-id": s.ID,
-		"Asset":     fmt.Sprintf("%+v", s.Asset),
+		"Vendor":    b.vendor,
+		"Model":     b.model,
+		"Serial":    b.serial,
+		"IPAddress": b.ip,
 	}).Debug("IpmiOverLan config applied successfully.")
 
 	return err
@@ -322,10 +392,15 @@ func (s *SetupChassis) setIpmiOverLan(chassis devices.BmcChassis, enable bool) (
 
 // Enables/ Disables FlexAddress status for each blade in a chassis.
 // Each blade is powered down, flex state updated, powered up
-func (s *SetupChassis) setFlexAddressState(chassis devices.BmcChassis, enable bool) (err error) {
+func (b *BmcChassisSetup) setFlexAddressState() (err error) {
 
-	log := s.Log
 	component := "setFlexAddressState"
+
+	chassis := b.chassis
+	setup := b.setup
+	log := b.log
+
+	enable := b.config.FlexAddress.Enable
 
 	//retrive list of blades in chassis
 	blades, err := chassis.Blades()
@@ -333,8 +408,10 @@ func (s *SetupChassis) setFlexAddressState(chassis devices.BmcChassis, enable bo
 		msg := "Unable to list blades for chassis."
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"butler-id": s.ID,
-			"Asset":     fmt.Sprintf("%+v", s.Asset),
+			"Vendor":    b.vendor,
+			"Model":     b.model,
+			"Serial":    b.serial,
+			"IPAddress": b.ip,
 			"Error":     err,
 		}).Error(msg)
 		return errors.New(msg)
@@ -346,7 +423,10 @@ func (s *SetupChassis) setFlexAddressState(chassis devices.BmcChassis, enable bo
 
 			log.WithFields(logrus.Fields{
 				"component":      component,
-				"butler-id":      s.ID,
+				"Vendor":         b.vendor,
+				"Model":          b.model,
+				"Serial":         b.serial,
+				"IPAddress":      b.ip,
 				"Blade Serial":   blade.Serial,
 				"Blade Position": blade.BladePosition,
 				"Current state":  blade.FlexAddressEnabled,
@@ -360,8 +440,10 @@ func (s *SetupChassis) setFlexAddressState(chassis devices.BmcChassis, enable bo
 					msg := "Unable to disable FlexAddress - blade power off failed."
 					log.WithFields(logrus.Fields{
 						"component": component,
-						"butler-id": s.ID,
-						"Asset":     fmt.Sprintf("%+v", s.Asset),
+						"Vendor":    b.vendor,
+						"Model":     b.model,
+						"Serial":    b.serial,
+						"IPAddress": b.ip,
 						"Error":     err,
 					}).Warn(msg)
 					return errors.New(msg)
@@ -372,13 +454,15 @@ func (s *SetupChassis) setFlexAddressState(chassis devices.BmcChassis, enable bo
 
 			}
 
-			_, err = chassis.SetFlexAddressState(blade.BladePosition, false)
+			_, err = setup.SetFlexAddressState(blade.BladePosition, false)
 			if err != nil {
 				msg := "Unable to disable FlexAddress - action failed."
 				log.WithFields(logrus.Fields{
 					"component": component,
-					"butler-id": s.ID,
-					"Asset":     fmt.Sprintf("%+v", s.Asset),
+					"Vendor":    b.vendor,
+					"Model":     b.model,
+					"Serial":    b.serial,
+					"IPAddress": b.ip,
 					"Error":     err,
 				}).Warn(msg)
 				return errors.New(msg)
@@ -392,8 +476,10 @@ func (s *SetupChassis) setFlexAddressState(chassis devices.BmcChassis, enable bo
 				msg := "Unable to disable FlexAddress - blade power on failed."
 				log.WithFields(logrus.Fields{
 					"component": component,
-					"butler-id": s.ID,
-					"Asset":     fmt.Sprintf("%+v", s.Asset),
+					"Vendor":    b.vendor,
+					"Model":     b.model,
+					"Serial":    b.serial,
+					"IPAddress": b.ip,
 					"Error":     err,
 				}).Warn(msg)
 				return errors.New(msg)
@@ -405,7 +491,10 @@ func (s *SetupChassis) setFlexAddressState(chassis devices.BmcChassis, enable bo
 
 			log.WithFields(logrus.Fields{
 				"component":      component,
-				"butler-id":      s.ID,
+				"Vendor":         b.vendor,
+				"Model":          b.model,
+				"Serial":         b.serial,
+				"IPAddress":      b.ip,
 				"Blade Serial":   blade.Serial,
 				"Blade Position": blade.BladePosition,
 				"Current state":  blade.FlexAddressEnabled,
@@ -417,7 +506,10 @@ func (s *SetupChassis) setFlexAddressState(chassis devices.BmcChassis, enable bo
 
 				log.WithFields(logrus.Fields{
 					"component":      component,
-					"butler-id":      s.ID,
+					"Vendor":         b.vendor,
+					"Model":          b.model,
+					"Serial":         b.serial,
+					"IPAddress":      b.ip,
 					"Blade Serial":   blade.Serial,
 					"Blade Position": blade.BladePosition,
 				}).Info("Powering off blade, this takes a few seconds..")
@@ -427,10 +519,12 @@ func (s *SetupChassis) setFlexAddressState(chassis devices.BmcChassis, enable bo
 					msg := "Unable to enable FlexAddress - blade power off failed."
 					log.WithFields(logrus.Fields{
 						"component":      component,
-						"butler-id":      s.ID,
+						"Vendor":         b.vendor,
+						"Model":          b.model,
+						"Serial":         b.serial,
+						"IPAddress":      b.ip,
 						"Blade Serial":   blade.Serial,
 						"Blade Position": blade.BladePosition,
-						"Asset":          fmt.Sprintf("%+v", s.Asset),
 						"Error":          err,
 					}).Warn(msg)
 					return errors.New(msg)
@@ -440,15 +534,17 @@ func (s *SetupChassis) setFlexAddressState(chassis devices.BmcChassis, enable bo
 				time.Sleep(10 * time.Second)
 			}
 
-			_, err = chassis.SetFlexAddressState(blade.BladePosition, true)
+			_, err = setup.SetFlexAddressState(blade.BladePosition, true)
 			if err != nil {
 				msg := "Unable to enable FlexAddress - action failed."
 				log.WithFields(logrus.Fields{
 					"component":      component,
-					"butler-id":      s.ID,
+					"Vendor":         b.vendor,
+					"Model":          b.model,
+					"Serial":         b.serial,
+					"IPAddress":      b.ip,
 					"Blade Serial":   blade.Serial,
 					"Blade Position": blade.BladePosition,
-					"Asset":          fmt.Sprintf("%+v", s.Asset),
 					"Error":          err,
 				}).Error(msg)
 				return errors.New(msg)
@@ -462,8 +558,10 @@ func (s *SetupChassis) setFlexAddressState(chassis devices.BmcChassis, enable bo
 				msg := "Unable to enable FlexAddress - blade power on failed."
 				log.WithFields(logrus.Fields{
 					"component": component,
-					"butler-id": s.ID,
-					"Asset":     fmt.Sprintf("%+v", s.Asset),
+					"Vendor":    b.vendor,
+					"Model":     b.model,
+					"Serial":    b.serial,
+					"IPAddress": b.ip,
 					"Error":     err,
 				}).Warn(msg)
 				return errors.New(msg)
@@ -475,27 +573,33 @@ func (s *SetupChassis) setFlexAddressState(chassis devices.BmcChassis, enable bo
 
 	log.WithFields(logrus.Fields{
 		"component": component,
-		"butler-id": s.ID,
-		"Asset":     fmt.Sprintf("%+v", s.Asset),
+		"Vendor":    b.vendor,
+		"Model":     b.model,
+		"Serial":    b.serial,
+		"IPAddress": b.ip,
 	}).Debug("FlexAddress config applied successfully.")
 
 	return err
 }
 
 // Powers up/down blades as defined in config.
-func (s *SetupChassis) setBladesPower(chassis devices.BmcChassis, powerEnable bool) (err error) {
+func (b *BmcChassisSetup) setBladesPower() (err error) {
 
-	log := s.Log
+	log := b.log
 	component := "setBladesPower"
 
-	//retrieve list of blades in chassis
+	chassis := b.chassis
+	powerEnable := b.config.BladesPower.Enable
+
 	blades, err := chassis.Blades()
 	if err != nil {
 		msg := "Unable to list blades for chassis."
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"butler-id": s.ID,
-			"Asset":     fmt.Sprintf("%+v", s.Asset),
+			"Vendor":    b.vendor,
+			"Model":     b.model,
+			"Serial":    b.serial,
+			"IPAddress": b.ip,
 			"Error":     err,
 		}).Error(msg)
 		return errors.New(msg)
@@ -512,18 +616,23 @@ func (s *SetupChassis) setBladesPower(chassis devices.BmcChassis, powerEnable bo
 					msg := "Unable power up blade."
 					log.WithFields(logrus.Fields{
 						"component":      component,
-						"butler-id":      s.ID,
+						"Vendor":         b.vendor,
+						"Model":          b.model,
+						"Serial":         b.serial,
+						"IPAddress":      b.ip,
 						"Blade Serial":   blade.Serial,
 						"Blade Position": blade.BladePosition,
 						"Error":          err,
-						"Asset":          fmt.Sprintf("%+v", s.Asset),
 					}).Warn(msg)
 					return errors.New(msg)
 				}
 
 				log.WithFields(logrus.Fields{
 					"component":      component,
-					"butler-id":      s.ID,
+					"Vendor":         b.vendor,
+					"Model":          b.model,
+					"Serial":         b.serial,
+					"IPAddress":      b.ip,
 					"Blade Serial":   blade.Serial,
 					"Blade Position": blade.BladePosition,
 				}).Debug("Set blade power state on.")
@@ -535,18 +644,23 @@ func (s *SetupChassis) setBladesPower(chassis devices.BmcChassis, powerEnable bo
 					msg := "Unable power down blade."
 					log.WithFields(logrus.Fields{
 						"component":      component,
-						"butler-id":      s.ID,
+						"Vendor":         b.vendor,
+						"Model":          b.model,
+						"Serial":         b.serial,
+						"IPAddress":      b.ip,
 						"Blade Serial":   blade.Serial,
 						"Blade Position": blade.BladePosition,
 						"Error":          err,
-						"Asset":          fmt.Sprintf("%+v", s.Asset),
 					}).Warn(msg)
 					return errors.New(msg)
 				}
 
 				log.WithFields(logrus.Fields{
 					"component":      component,
-					"butler-id":      s.ID,
+					"Vendor":         b.vendor,
+					"Model":          b.model,
+					"Serial":         b.serial,
+					"IPAddress":      b.ip,
 					"Blade Serial":   blade.Serial,
 					"Blade Position": blade.BladePosition,
 				}).Info("Set blade power state off.")
@@ -556,8 +670,10 @@ func (s *SetupChassis) setBladesPower(chassis devices.BmcChassis, powerEnable bo
 
 	log.WithFields(logrus.Fields{
 		"component": component,
-		"butler-id": s.ID,
-		"Asset":     fmt.Sprintf("%+v", s.Asset),
+		"Vendor":    b.vendor,
+		"Model":     b.model,
+		"Serial":    b.serial,
+		"IPAddress": b.ip,
 	}).Debug("BladesPower config applied successfully.")
 
 	return err
