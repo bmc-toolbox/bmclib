@@ -23,6 +23,20 @@ func (c *C7000) Resources() []string {
 	}
 }
 
+// ResourcesSetup returns
+// - slice of supported one time setup resources,
+//   in the order they must be applied
+// ResourcesSetup implements the BmcChassisSetup interface
+// see cfgresources.SetupChassis for list of setup resources.
+func (c *C7000) ResourcesSetup() []string {
+	return []string{
+		"add_blade_bmc_admins",
+		"remove_blade_bmc_users",
+		"dynamicpower",
+		"bladespower",
+	}
+}
+
 // Return bool value if the role is valid.
 func (c *C7000) isRoleValid(role string) bool {
 

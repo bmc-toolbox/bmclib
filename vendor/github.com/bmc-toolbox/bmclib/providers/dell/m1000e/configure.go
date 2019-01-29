@@ -25,6 +25,7 @@ var _ devices.Configure = (*M1000e)(nil)
 
 // Resources returns a slice of supported resources and
 // the order they are to be applied in.
+// Resources implements the Configure interface
 func (m *M1000e) Resources() []string {
 	return []string{
 		"user",
@@ -33,6 +34,20 @@ func (m *M1000e) Resources() []string {
 		"ldap",
 		"ldap_group",
 		//"ssl",
+	}
+}
+
+// ResourcesSetup returns
+// - slice of supported one time setup resources,
+//   in the order they must be applied
+// ResourcesSetup implements the BmcChassisSetup interface
+// see cfgresources.SetupChassis for list of setup resources.
+func (m *M1000e) ResourcesSetup() []string {
+	return []string{
+		"setipmioverlan",
+		"flexaddress",
+		"dynamicpower",
+		"bladespower",
 	}
 }
 

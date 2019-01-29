@@ -227,12 +227,12 @@ type IDracPsSensorList struct {
 
 // IDracPsSensor contains the information regarding the psu devices
 type IDracPsSensor struct {
-	FwVersion    string `xml:" fwVersion,omitempty"`
-	InputWattage int    `xml:" inputWattage,omitempty"`
-	MaxWattage   int    `xml:" maxWattage,omitempty"`
-	Name         string `xml:" name,omitempty"`
-	SensorHealth int    `xml:" sensorHealth,omitempty"`
-	SensorStatus int    `xml:" sensorStatus,omitempty"`
+	FwVersion    string `xml:"fwVersion,omitempty"`
+	InputWattage int    `xml:"inputWattage,omitempty"`
+	MaxWattage   int    `xml:"maxWattage,omitempty"`
+	Name         string `xml:"name,omitempty"`
+	SensorHealth int    `xml:"sensorHealth,omitempty"`
+	SensorStatus int    `xml:"sensorStatus,omitempty"`
 }
 
 // IDracPowermonitordata contains the power consumption data for the iDrac
@@ -242,13 +242,13 @@ type IDracPowermonitordata struct {
 
 // IDracPresentReading contains the present reading data
 type IDracPresentReading struct {
-	Reading *IDracReading `xml:" reading,omitempty"`
+	Reading *IDracReading `xml:"reading,omitempty"`
 }
 
 // IDracReading is used to express the power data
 type IDracReading struct {
-	ProbeName string `xml:" probeName,omitempty"`
-	Reading   string `xml:" reading"`
+	ProbeName string `xml:"probeName,omitempty"`
+	Reading   string `xml:"reading"`
 }
 
 // SVMInventory is the struct used to collect data from "https://$ip/sysmgmt/2012/server/inventory/software"
@@ -258,14 +258,14 @@ type SVMInventory struct {
 
 // IDracDevice contains the list of devices and their information
 type IDracDevice struct {
-	Display     string            `xml:" display,attr"`
-	Application *IDracApplication `xml:" Application"`
+	Display     string            `xml:"display,attr"`
+	Application *IDracApplication `xml:"Application"`
 }
 
 // IDracApplication contains the name of the device and it's version
 type IDracApplication struct {
-	Display string `xml:" display,attr"`
-	Version string `xml:" version,attr"`
+	Display string `xml:"display,attr"`
+	Version string `xml:"version,attr"`
 }
 
 // SystemServerOS contains the hostname, os name and os version
@@ -279,23 +279,23 @@ type SystemServerOS struct {
 
 // IDracInventory contains the whole hardware inventory exposed thru https://$ip/sysmgmt/2012/server/inventory/hardware
 type IDracInventory struct {
-	Version   string            `xml:" version,attr"`
-	Component []*IDracComponent `xml:" Component,omitempty"`
+	Version   string            `xml:"version,attr"`
+	Component []*IDracComponent `xml:"Component,omitempty"`
 }
 
 // IDracComponent holds the information from each component detected by the iDrac
 type IDracComponent struct {
-	Classname  string           `xml:" Classname,attr"`
-	Key        string           `xml:" Key,attr"`
-	Properties []*IDracProperty `xml:" PROPERTY,omitempty"`
+	Classname  string           `xml:"Classname,attr"`
+	Key        string           `xml:"Key,attr"`
+	Properties []*IDracProperty `xml:"PROPERTY,omitempty"`
 }
 
 // IDracProperty is the property of each component exposed to iDrac
 type IDracProperty struct {
-	Name         string `xml:" NAME,attr"`
-	Type         string `xml:" TYPE,attr"`
-	DisplayValue string `xml:" DisplayValue,omitempty"`
-	Value        string `xml:" VALUE,omitempty"`
+	Name         string `xml:"NAME,attr"`
+	Type         string `xml:"TYPE,attr"`
+	DisplayValue string `xml:"DisplayValue,omitempty"`
+	Value        string `xml:"VALUE,omitempty"`
 }
 
 // IDracTemp contains the data structure to render the thermal data from iDrac http://$ip/sysmgmt/2012/server/temperature
