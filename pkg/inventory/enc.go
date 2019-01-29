@@ -33,9 +33,17 @@ type AssetAttributes struct {
 
 // Attributes is used to unmarshal data returned from an ENC.
 type Attributes struct {
-	Location  string            `json:"location"`
-	IPAddress []string          `json:"ipaddress"`
-	Extras    *AttributesExtras `json:"extras"`
+	Location          string              `json:"location"`
+	NetworkInterfaces *[]NetworkInterface `json:"network_interfaces"`
+	BMCIPAddress      []string            `json:"-"`
+	Extras            *AttributesExtras   `json:"extras"`
+}
+
+// NetworkInterface is used to unmarshal data returned from the ENC.
+type NetworkInterface struct {
+	Name       string `json:"name"`
+	MACAddress string `json:"mac_address"`
+	IPAddress  string `json:"ip_address"`
 }
 
 // AttributesExtras is used to unmarshal data returned from an ENC.
@@ -44,6 +52,34 @@ type AttributesExtras struct {
 	Company string `json:"company"`
 	//if its a chassis, this would hold serials for blades in the live state
 	LiveAssets *[]string `json:"live_assets,omitempty"`
+}
+
+func stringHasPrefix(s string, prefixes []string) bool {
+	for _, prefix := range prefixes {
+		if strings.HasPrefix(strings.ToLower(s), prefix) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// SetBMCInterfaces populates IPAddresses of BMC interfaces,
+// from the Slice of NetworkInterfaces
+func (e *Enc) SetBMCInterfaces(attributes Attributes) Attributes {
+
+	if attributes.NetworkInterfaces == nil {
+		return attributes
+	}
+
+	bmcNicPrefixes := e.Config.InventoryParams.BMCNicPrefix
+	for _, nic := range *attributes.NetworkInterfaces {
+		if stringHasPrefix(nic.Name, bmcNicPrefixes) && nic.IPAddress != "" {
+			attributes.BMCIPAddress = append(attributes.BMCIPAddress, nic.IPAddress)
+		}
+	}
+
+	return attributes
 }
 
 // AttributesExtrasAsMap accepts a AttributesExtras struct as input,
@@ -171,14 +207,16 @@ func (e *Enc) encQueryBySerial(serials string) (assets []asset.Asset) {
 	}
 
 	for serial, attributes := range cmdResp.Data {
-		if len(attributes.IPAddress) == 0 {
+
+		attributes := e.SetBMCInterfaces(attributes)
+		if len(attributes.BMCIPAddress) == 0 {
 			metric.IncrCounter([]string{"inventory", "assets_noip_enc"}, 1)
 			continue
 		}
 
 		extras := AttributesExtrasAsMap(attributes.Extras)
 		assets = append(assets,
-			asset.Asset{IPAddresses: attributes.IPAddress,
+			asset.Asset{IPAddresses: attributes.BMCIPAddress,
 				Serial:   serial,
 				Location: attributes.Location,
 				Extra:    extras,
@@ -247,7 +285,10 @@ func (e *Enc) encQueryByIP(ips string) (assets []asset.Asset) {
 	}
 
 	for serial, attributes := range cmdResp.Data {
-		if len(attributes.IPAddress) == 0 {
+
+		attributes := e.SetBMCInterfaces(attributes)
+		if len(attributes.BMCIPAddress) == 0 {
+			populateAssetsWithNoAttributes()
 			metric.IncrCounter([]string{"inventory", "assets_noip_enc"}, 1)
 			continue
 		}
@@ -255,7 +296,7 @@ func (e *Enc) encQueryByIP(ips string) (assets []asset.Asset) {
 		extras := AttributesExtrasAsMap(attributes.Extras)
 
 		assets = append(assets,
-			asset.Asset{IPAddresses: attributes.IPAddress,
+			asset.Asset{IPAddresses: attributes.BMCIPAddress,
 				Serial:   serial,
 				Location: attributes.Location,
 				Extra:    extras,
@@ -329,14 +370,16 @@ func (e *Enc) encQueryByOffset(assetType string, offset int, limit int, location
 	}
 
 	for serial, attributes := range cmdResp.Data {
-		if len(attributes.IPAddress) == 0 {
+
+		attributes := e.SetBMCInterfaces(attributes)
+		if len(attributes.BMCIPAddress) == 0 {
 			metric.IncrCounter([]string{"inventory", "assets_noip_enc"}, 1)
 			continue
 		}
 
 		extras := AttributesExtrasAsMap(attributes.Extras)
 		assets = append(assets,
-			asset.Asset{IPAddresses: attributes.IPAddress,
+			asset.Asset{IPAddresses: attributes.BMCIPAddress,
 				Serial:   serial,
 				Type:     assetType,
 				Location: attributes.Location,
