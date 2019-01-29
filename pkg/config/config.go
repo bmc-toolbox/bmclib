@@ -46,6 +46,7 @@ type Params struct {
 type InventoryParams struct {
 	Source        string //dora, csv, enc
 	EncExecutable string
+	BMCNicPrefix  []string
 	APIURL        string
 	File          string
 }
@@ -122,6 +123,7 @@ func (p *Params) Load(cfgFile string) {
 		p.InventoryParams.File = viper.GetString("inventory.configure.csv.file")
 	case "enc":
 		p.InventoryParams.EncExecutable = viper.GetString("inventory.configure.enc.bin")
+		p.InventoryParams.BMCNicPrefix = viper.GetStringSlice("inventory.configure.enc.bmcNicPrefix")
 	}
 
 	//Butlers to spawn

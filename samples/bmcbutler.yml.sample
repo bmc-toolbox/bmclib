@@ -22,6 +22,7 @@ inventory:
     source: csv
     enc:
       bin: /usr/bin/assetlookup
+      bmcNicPrefix: ["oa", "ilo"]
     dora:
       apiURL: http://dora.example.com/api
     csv:
