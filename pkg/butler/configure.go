@@ -35,6 +35,12 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 
 	defer metric.MeasureRuntime([]string{"butler", "configure_runtime"}, time.Now())
 
+	b.logger.WithFields(logrus.Fields{
+		"component": component,
+		"Serial":    asset.Serial,
+		"IPAddress": asset.IPAddress,
+	}).Debug("Connecting to asset.")
+
 	bmcConn := bmclogin.Params{
 		IpAddresses:     asset.IPAddresses,
 		Credentials:     b.config.Credentials,

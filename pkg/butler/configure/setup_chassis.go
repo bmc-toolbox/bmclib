@@ -3,6 +3,7 @@ package configure
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
@@ -85,6 +86,16 @@ func (b *BmcChassisSetup) Apply() {
 	b.serial, _ = b.chassis.Serial()
 	b.ip = b.asset.IPAddress
 
+	var failed, success []string
+
+	b.logger.WithFields(logrus.Fields{
+		"Vendor":    b.vendor,
+		"Model":     b.model,
+		"Serial":    b.serial,
+		"IPAddress": b.ip,
+		"To apply":  strings.Join(resources, ", "),
+	}).Trace("Configuration resources to be applied.")
+
 	for _, resource := range resources {
 
 		var err error
@@ -159,7 +170,7 @@ func (b *BmcChassisSetup) Apply() {
 			"Model":     b.model,
 			"Serial":    b.serial,
 			"IPAddress": b.ip,
-		}).Debug("Resource configuration applied.")
+		}).Trace("Resource configuration applied.")
 
 	}
 
@@ -169,11 +180,13 @@ func (b *BmcChassisSetup) Apply() {
 	}
 
 	b.log.WithFields(logrus.Fields{
-		"Vendor":    b.vendor,
-		"Model":     b.model,
-		"Serial":    b.serial,
-		"IPAddress": b.ip,
-	}).Info("All setup actions successful.")
+		"Vendor":       b.vendor,
+		"Model":        b.model,
+		"Serial":       b.serial,
+		"IPAddress":    b.ip,
+		"applied":      strings.Join(success, ", "),
+		"unsuccessful": strings.Join(failed, ", "),
+	}).Info("Chassis setup actions done.")
 
 }
 
