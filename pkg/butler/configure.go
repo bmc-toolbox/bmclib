@@ -35,7 +35,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 
 	defer metric.MeasureRuntime([]string{"butler", "configure_runtime"}, time.Now())
 
-	b.logger.WithFields(logrus.Fields{
+	b.log.WithFields(logrus.Fields{
 		"component": component,
 		"Serial":    asset.Serial,
 		"IPAddress": asset.IPAddress,
@@ -75,7 +75,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		}
 
 		// Apply configuration
-		c := configure.NewBmcConfigurator(bmc, asset, b.config.Resources, renderedConfig, log)
+		c := configure.NewBmcConfigurator(bmc, asset, b.config.Resources, renderedConfig, b.stopChan, log)
 		c.Apply()
 
 		bmc.Close()
@@ -103,13 +103,14 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 				renderedConfig.SetupChassis,
 				b.config,
 				b.metricsEmitter,
+				b.stopChan,
 				b.log,
 			)
 			s.Apply()
 		}
 
 		// Apply configuration
-		c := configure.NewBmcChassisConfigurator(chassis, asset, b.config.Resources, renderedConfig, log)
+		c := configure.NewBmcChassisConfigurator(chassis, asset, b.config.Resources, renderedConfig, b.stopChan, log)
 		c.Apply()
 
 		chassis.Close()
