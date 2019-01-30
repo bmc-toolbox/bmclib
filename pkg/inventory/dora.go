@@ -94,7 +94,7 @@ func (d *Dora) setLocation(doraInventoryAssets []asset.Asset) (err error) {
 		return err
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, _ := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
 
 	var doraScannedPortAssets DoraAsset
