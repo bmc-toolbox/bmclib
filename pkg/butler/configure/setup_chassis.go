@@ -60,7 +60,7 @@ func NewBmcChassisSetup(
 }
 
 // Apply applies one time setup configuration.
-func (b *BmcChassisSetup) Apply() {
+func (b *BmcChassisSetup) Apply() { //nolint: gocyclo
 
 	defer b.metricsEmitter.MeasureRuntime(
 		[]string{"butler", "setupChassis_runtime"},
@@ -154,6 +154,7 @@ func (b *BmcChassisSetup) Apply() {
 
 		if err != nil {
 			setupActionSuccess = false
+			failed = append(failed, resource)
 			b.log.WithFields(logrus.Fields{
 				"resource":  resource,
 				"Vendor":    b.vendor,
@@ -162,6 +163,9 @@ func (b *BmcChassisSetup) Apply() {
 				"IPAddress": b.ip,
 				"Error":     err,
 			}).Warn("Setup resource returned errors.")
+		} else {
+			success = append(success, resource)
+
 		}
 
 		b.log.WithFields(logrus.Fields{
@@ -405,7 +409,7 @@ func (b *BmcChassisSetup) setIpmiOverLan() (err error) {
 
 // Enables/ Disables FlexAddress status for each blade in a chassis.
 // Each blade is powered down, flex state updated, powered up
-func (b *BmcChassisSetup) setFlexAddressState() (err error) {
+func (b *BmcChassisSetup) setFlexAddressState() (err error) { // nolint: gocyclo
 
 	component := "setFlexAddressState"
 
