@@ -17,16 +17,17 @@ import (
 )
 
 var (
-	exitFlag       bool
 	butlerManager  butler.Manager
 	commandWG      sync.WaitGroup
 	metricsEmitter *metrics.Emitter
+	stopChan       chan struct{}
 )
 
 // post handles clean up actions
 // - closes the butler channel
 // - Waits for all go routines in commandWG to finish.
 func post(butlerChan chan butler.Msg) {
+	close(stopChan)
 	close(butlerChan)
 	commandWG.Wait()
 	metricsEmitter.Close(true)
@@ -59,17 +60,17 @@ func overrideConfigFromFlags() {
 // - Based on the inventory source (dora/csv), Spawn the asset retriever go routine.
 // - Spawn butlers
 // - Return inventory channel, butler channel.
-func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg) {
+func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg, sigChan chan os.Signal) {
 
 	overrideConfigFromFlags()
 
-	sigChan := make(chan os.Signal, 1)
+	//setup a sigchan
+	sigChan = make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
-	go func() {
-		_ = <-sigChan
-		exitFlag = true
-	}()
+	//Channel used to indicate goroutines to exit.
+
+	stopChan = make(chan struct{})
 
 	//Initialize metrics collection.
 	metricsEmitter = &metrics.Emitter{
@@ -139,6 +140,7 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg) {
 	butlerChan = make(chan butler.Msg, 5)
 	butlerManager = butler.Manager{
 		ButlerChan:     butlerChan,
+		StopChan:       stopChan,
 		Config:         runConfig,
 		Log:            log,
 		MetricsEmitter: metricsEmitter,
@@ -151,5 +153,5 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg) {
 	//give the butlers a second to spawn.
 	time.Sleep(1 * time.Second)
 
-	return inventoryChan, butlerChan
+	return inventoryChan, butlerChan, sigChan
 }
