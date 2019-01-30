@@ -63,7 +63,7 @@ func configure() {
 	runConfig.Configure = true
 	validateConfigureArgs()
 
-	inventoryChan, butlerChan := pre()
+	inventoryChan, butlerChan, sigChan := pre()
 
 	//Read in BMC configuration data
 	assetConfigDir := viper.GetString("bmcCfgDir")
@@ -80,30 +80,23 @@ func configure() {
 	//iterate over the inventory channel for assets,
 	//create a butler message for each asset along with the configuration,
 	//at this point templated values in the config are not yet rendered.
-	for assetList := range inventoryChan {
-		for _, asset := range assetList {
 
-			//if signal was received, break out.
-			if exitFlag {
-				break
-			}
+	for {
+		select {
+		case assetList := <-inventoryChan:
+			go func() {
+				for _, asset := range assetList {
+					asset.Configure = true
+					butlerMsg := butler.Msg{Asset: asset, AssetConfig: assetConfig}
+					butlerChan <- butlerMsg
+				}
+			}()
 
-			asset.Configure = true
-
-			//NOTE: if all butlers exit, and we're trying to write to butlerChan
-			//      this loop is going to be stuck waiting for the butlerMsg to be read,
-			//      make sure to break out of this loop or have butlerChan closed in such a case,
-			//      for now, we fix this by setting exitFlag to break out of the loop.
-			butlerMsg := butler.Msg{Asset: asset, AssetConfig: assetConfig}
-			butlerChan <- butlerMsg
-		}
-
-		//if sigterm is received, break out.
-		if exitFlag {
-			break
+		case <-sigChan:
+			log.Warn("Interrupt SIGINT/SIGTERM received.")
+			post(butlerChan)
+			return
 		}
 	}
-
-	post(butlerChan)
 
 }

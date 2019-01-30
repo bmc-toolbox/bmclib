@@ -21,6 +21,7 @@ type Bmc struct {
 	serial    string
 	vendor    string
 	model     string
+	stopChan  <-chan struct{}
 }
 
 // NewBmcConfigurator returns a new configure struct to apply configuration.
@@ -28,6 +29,7 @@ func NewBmcConfigurator(bmc devices.Bmc,
 	asset *asset.Asset,
 	resources []string,
 	config *cfgresources.ResourcesConfig,
+	stopChan <-chan struct{},
 	logger *logrus.Logger) *Bmc {
 
 	return &Bmc{
@@ -42,6 +44,7 @@ func NewBmcConfigurator(bmc devices.Bmc,
 		resources: resources,
 		config:    config,
 		logger:    logger,
+		stopChan:  stopChan,
 	}
 }
 
@@ -49,6 +52,9 @@ func NewBmcConfigurator(bmc devices.Bmc,
 // nolint: gocyclo
 func (b *Bmc) Apply() {
 
+	var interrupt bool
+
+	go func() { <-b.stopChan; interrupt = true }()
 	// slice of configuration resources to be applied.
 	var resources []string
 
@@ -77,6 +83,17 @@ func (b *Bmc) Apply() {
 	for _, resource := range resources {
 
 		var err error
+
+		// check if an interrupt was received.
+		if interrupt == true {
+			b.logger.WithFields(logrus.Fields{
+				"Vendor":    b.vendor,
+				"Model":     b.model,
+				"Serial":    b.serial,
+				"IPAddress": b.ip,
+			}).Debug("Received interrupt.")
+			break
+		}
 
 		switch resource {
 		case "user":

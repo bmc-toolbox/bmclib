@@ -30,6 +30,7 @@ type BmcChassisSetup struct {
 	serial         string
 	vendor         string
 	model          string
+	stopChan       <-chan struct{}
 }
 
 // NewBmcChassisSetup returns a new  struct to apply configuration.
@@ -40,6 +41,7 @@ func NewBmcChassisSetup(
 	config *cfgresources.SetupChassis,
 	butlerConfig *config.Params,
 	metricsEmitter *metrics.Emitter,
+	stopChan <-chan struct{},
 	logger *logrus.Logger) *BmcChassisSetup {
 
 	return &BmcChassisSetup{
@@ -56,6 +58,7 @@ func NewBmcChassisSetup(
 		metricsEmitter: metricsEmitter,
 		config:         config,
 		log:            logger,
+		stopChan:       stopChan,
 	}
 }
 
@@ -66,6 +69,9 @@ func (b *BmcChassisSetup) Apply() { //nolint: gocyclo
 		[]string{"butler", "setupChassis_runtime"},
 		time.Now(),
 	)
+
+	var interrupt bool
+	go func() { <-b.stopChan; interrupt = true }()
 
 	// slice of configuration resources to be applied.
 	var resources []string
@@ -88,7 +94,7 @@ func (b *BmcChassisSetup) Apply() { //nolint: gocyclo
 
 	var failed, success []string
 
-	b.logger.WithFields(logrus.Fields{
+	b.log.WithFields(logrus.Fields{
 		"Vendor":    b.vendor,
 		"Model":     b.model,
 		"Serial":    b.serial,
@@ -99,6 +105,17 @@ func (b *BmcChassisSetup) Apply() { //nolint: gocyclo
 	for _, resource := range resources {
 
 		var err error
+
+		// check if an interrupt was received.
+		if interrupt == true {
+			b.log.WithFields(logrus.Fields{
+				"Vendor":    b.vendor,
+				"Model":     b.model,
+				"Serial":    b.serial,
+				"IPAddress": b.ip,
+			}).Debug("Received interrupt.")
+			break
+		}
 
 		err = b.ensurePoweredUp()
 		if err != nil {
