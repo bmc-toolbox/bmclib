@@ -15,10 +15,17 @@
 package main
 
 import (
+	"log"
+	"net/http"
+	_ "net/http/pprof" //pprof
+
 	"github.com/bmc-toolbox/bmcbutler/cmd"
 )
 
 func main() {
 
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
 	cmd.Execute()
 }
