@@ -39,7 +39,8 @@ type Params struct {
 	Resources       []string
 	MetricsParams   *MetricsParams
 	Version         string
-	Verbose         bool
+	Debug           bool
+	Trace           bool
 }
 
 // InventoryParams struct holds inventory configuration parameters.
@@ -70,6 +71,7 @@ type FilterParams struct {
 }
 
 // Load sets up bmcbutler configuration.
+// nolint: gocyclo
 func (p *Params) Load(cfgFile string) {
 
 	//FilterParams holds the configure/setup/execute related host filter cli args.

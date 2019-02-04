@@ -47,7 +47,7 @@ func validateConfigureArgs() {
 		runConfig.FilterParams.Serials == "" &&
 		runConfig.FilterParams.Ips == "" {
 
-		log.Error("Expected flag missing --all/--chassis/--blades/--discretes/--servers/--serials/--ips (try --help)")
+		log.Error("Expected flag missing --all/--chassis/--servers/--serials/--ips (try --help)")
 		os.Exit(1)
 	}
 

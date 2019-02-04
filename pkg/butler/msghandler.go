@@ -1,6 +1,9 @@
 package butler
 
-import "github.com/sirupsen/logrus"
+import (
+	bmclibLogger "github.com/bmc-toolbox/bmclib/logging"
+	"github.com/sirupsen/logrus"
+)
 
 func (b *Butler) myLocation(location string) bool {
 	for _, l := range b.Config.Locations {
@@ -13,6 +16,7 @@ func (b *Butler) myLocation(location string) bool {
 }
 
 // msgHandler invokes the appropriate action based on msg attributes.
+// nolint: gocyclo
 func (b *Butler) msgHandler(msg Msg) {
 
 	log := b.Log
@@ -20,6 +24,12 @@ func (b *Butler) msgHandler(msg Msg) {
 
 	metric := b.MetricsEmitter
 	metric.IncrCounter([]string{"butler", "asset_recvd"}, 1)
+
+	//set bmclib logger params
+	bmclibLogger.SetFormatter(&logrus.TextFormatter{})
+	if log.Level == logrus.DebugLevel {
+		bmclibLogger.SetLevel(logrus.DebugLevel)
+	}
 
 	//if asset has no IPAddress, we can't do anything about it
 	if len(msg.Asset.IPAddresses) == 0 {

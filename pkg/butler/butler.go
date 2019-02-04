@@ -23,8 +23,6 @@ import (
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
 	"github.com/bmc-toolbox/bmcbutler/pkg/config"
 	"github.com/bmc-toolbox/bmcbutler/pkg/metrics"
-
-	bmclibLogger "github.com/bmc-toolbox/bmclib/logging"
 )
 
 // Msg (butler messages) are passed over the butlerChan

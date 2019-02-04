@@ -5,7 +5,7 @@
 
 ##### About
 
-Bmcbutler is a BMC (Baseboard Management Controller) configuration management tool that uses [bmclib](https://github.com/ncode/bmclib).
+Bmcbutler is a BMC (Baseboard Management Controller) configuration management tool that uses [bmclib](https://github.com/bmc-toolbox/bmclib).
 
 For list of supported BMCs and configuration options supported, see [supported hardware](https://github.com/bmc-toolbox/bmclib/blob/master/README.md)
 
@@ -49,7 +49,7 @@ Configuration to be applied to BMCs.
 # create a directory for BMC config
 mkdir ~/.bmcbutler/cfg
 ```
-add the BMC yaml config definitions in there, for sample config see [configuration.yml sample](../master/cfg/configuration.yml)
+add the BMC yaml config definitions in there, for sample config see [configuration.yml sample](../master/samples/cfg/configuration.yml)
 
 ###### bmc configuration templating
 configuration.yml supports templating, for details see [configTemplating](../master/docs/configTemplating.md)
@@ -68,8 +68,8 @@ The 'inventory' parameter points Bmcbutler to the inventory source.
 Configure Blades/Chassis/Discretes
 
 ```
-#configure all BMCs in inventory, dry run with verbose output
-bmcbutler configure --all --dryrun -v
+#configure all BMCs in inventory, dry run with debug output
+bmcbutler configure --all --dryrun --debug
 
 #configure all servers in given locations
 bmcbutler configure --servers --locations ams2
@@ -83,14 +83,14 @@ bmcbutler configure --servers --locations lhr5 --butlers 200
 #configure one or more BMCs identified by IP(s)
 bmcbutler configure --ips 192.168.0.1,192.168.0.2,192.168.0.2
 
-#configure one or more BMCs identified by serial(s)
-bmcbutler configure --serials <serial1>,<serial2>
+#configure one or more BMCs identified by serial(s) and trace log
+bmcbutler configure --serials <serial1>,<serial2> --trace
 
-bmcbutler configure --serial <serial1>,<serial2> --verbose
-bmcbutler configure  --serial <serial> --verbose
+bmcbutler configure --serial <serial1>,<serial2> --debug
+bmcbutler configure  --serial <serial> --debug
 
-#Apply specific configuration resource(s)
-bmcbutler configure --ips 192.168.1.4 --resources ntp,syslog,user
+#Apply specific configuration resource(s) and trace log
+bmcbutler configure --ips 192.168.1.4 --resources ntp,syslog,user --trace
 ```
 
 #### Acknowledgment

@@ -70,9 +70,12 @@ func setupLogger() {
 		log.AddHook(hook)
 	}
 
-	if runConfig.Verbose == true {
+	switch {
+	case runConfig.Debug == true:
 		log.SetLevel(logrus.DebugLevel)
-	} else {
+	case runConfig.Trace == true:
+		log.SetLevel(logrus.TraceLevel)
+	default:
 		log.SetLevel(logrus.InfoLevel)
 	}
 }
@@ -83,7 +86,8 @@ func init() {
 	runConfig = &config.Params{}
 	runConfig.Load(cfgFile)
 
-	rootCmd.PersistentFlags().BoolVarP(&runConfig.Verbose, "verbose", "v", false, "verbose logging")
+	rootCmd.PersistentFlags().BoolVarP(&runConfig.Debug, "debug", "d", false, "debug logging")
+	rootCmd.PersistentFlags().BoolVarP(&runConfig.Trace, "trace", "t", false, "trace logging")
 
 	//Asset filter params.
 	rootCmd.PersistentFlags().BoolVarP(&runConfig.FilterParams.All, "all", "", false, "Action all assets")
