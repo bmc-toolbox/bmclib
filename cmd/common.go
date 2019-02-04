@@ -7,7 +7,6 @@ import (
 	"strings"
 	"sync"
 	"syscall"
-	"time"
 
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
 	"github.com/bmc-toolbox/bmcbutler/pkg/butler"
@@ -17,19 +16,21 @@ import (
 )
 
 var (
-	butlerManager  butler.Manager
+	butlers        *butler.Butler
 	commandWG      sync.WaitGroup
 	metricsEmitter *metrics.Emitter
 	stopChan       chan struct{}
+	interrupt      bool
 )
 
 // post handles clean up actions
 // - closes the butler channel
 // - Waits for all go routines in commandWG to finish.
 func post(butlerChan chan butler.Msg) {
-	close(stopChan)
-	close(butlerChan)
 	commandWG.Wait()
+	if !interrupt {
+		close(stopChan)
+	}
 	metricsEmitter.Close(true)
 }
 
@@ -60,13 +61,9 @@ func overrideConfigFromFlags() {
 // - Based on the inventory source (dora/csv), Spawn the asset retriever go routine.
 // - Spawn butlers
 // - Return inventory channel, butler channel.
-func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg, sigChan chan os.Signal) {
+func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg) {
 
 	overrideConfigFromFlags()
-
-	//setup a sigchan
-	sigChan = make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	//Channel used to indicate goroutines to exit.
 
@@ -147,11 +144,18 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg, sigCha
 		SyncWG:         &commandWG,
 	}
 
-	go butlerManager.SpawnButlers()
+	go butlers.Runner()
 	commandWG.Add(1)
 
-	//give the butlers a second to spawn.
-	time.Sleep(1 * time.Second)
+	//setup a sigchan
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-sigChan
+		interrupt = true
+		log.Warn("Interrupt SIGINT/SIGTERM received.")
+		close(stopChan)
+	}()
 
-	return inventoryChan, butlerChan, sigChan
+	return inventoryChan, butlerChan
 }
