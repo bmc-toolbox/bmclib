@@ -5,6 +5,8 @@ require (
 	github.com/bmc-toolbox/bmclogin v0.0.2-0.20190106211646-d5c2f26514e9
 	github.com/cyberdelia/go-metrics-graphite v0.0.0-20161219230853-39f87cc3b432
 	github.com/fatih/structs v1.1.0 // indirect
+	github.com/gammazero/deque v0.0.0-20190130191400-2afb3858e9c7 // indirect
+	github.com/gammazero/workerpool v0.0.0-20181230203049-86a96b5d5d92
 	github.com/go-playground/locales v0.12.1 // indirect
 	github.com/go-playground/universal-translator v0.16.0 // indirect
 	github.com/gobuffalo/envy v1.6.11 // indirect

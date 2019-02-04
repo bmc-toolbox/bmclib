@@ -26,6 +26,10 @@ github.com/cyberdelia/go-metrics-graphite
 github.com/fatih/structs
 # github.com/fsnotify/fsnotify v1.4.7
 github.com/fsnotify/fsnotify
+# github.com/gammazero/deque v0.0.0-20190130191400-2afb3858e9c7
+github.com/gammazero/deque
+# github.com/gammazero/workerpool v0.0.0-20181230203049-86a96b5d5d92
+github.com/gammazero/workerpool
 # github.com/go-playground/locales v0.12.1
 github.com/go-playground/locales
 github.com/go-playground/locales/currency
