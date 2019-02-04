@@ -18,12 +18,11 @@ import (
 func (b *Butler) executeCommand(command string, asset *asset.Asset) (err error) {
 
 	component := "executeCommand"
-	log := b.log
+	log := b.Log
 
-	if b.config.DryRun {
+	if b.Config.DryRun {
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"butler-id": b.id,
 			"Asset":     fmt.Sprintf("%+v", asset),
 		}).Info("Dry run, won't execute cmd on asset.")
 		return nil
@@ -31,7 +30,7 @@ func (b *Butler) executeCommand(command string, asset *asset.Asset) (err error) 
 
 	bmcConn := bmclogin.Params{
 		IpAddresses:     asset.IPAddresses,
-		Credentials:     b.config.Credentials,
+		Credentials:     b.Config.Credentials,
 		CheckCredential: false,
 		Retries:         1,
 	}
@@ -51,7 +50,6 @@ func (b *Butler) executeCommand(command string, asset *asset.Asset) (err error) 
 		if err != nil || success != true {
 			log.WithFields(logrus.Fields{
 				"component":          component,
-				"butler-id":          b.id,
 				"Serial":             asset.Serial,
 				"AssetType":          asset.Type,
 				"Vendor":             asset.Vendor, //at this point the vendor may or may not be known.
@@ -63,7 +61,6 @@ func (b *Butler) executeCommand(command string, asset *asset.Asset) (err error) 
 		} else {
 			log.WithFields(logrus.Fields{
 				"component":          component,
-				"butler-id":          b.id,
 				"Serial":             asset.Serial,
 				"AssetType":          asset.Type,
 				"Vendor":             asset.Vendor,
@@ -79,14 +76,12 @@ func (b *Butler) executeCommand(command string, asset *asset.Asset) (err error) 
 		//b.executeCommandChassis(chassis, command)
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"butler-id": b.id,
 			"Asset":     fmt.Sprintf("%+v", asset),
 		}).Info("Command executed.")
 		chassis.Close()
 	default:
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"butler-id": b.id,
 			"Asset":     fmt.Sprintf("%+v", asset),
 		}).Warn("Unknown device type.")
 		return errors.New("Unknown asset type")

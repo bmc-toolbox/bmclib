@@ -20,14 +20,13 @@ import (
 // applies the asset configuration using bmclib
 func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 
-	log := b.log
+	log := b.Log
 	component := "configureAsset"
-	metric := b.metricsEmitter
+	metric := b.MetricsEmitter
 
-	if b.config.DryRun {
+	if b.Config.DryRun {
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"butler-id": b.id,
 			"Asset":     fmt.Sprintf("%+v", asset),
 		}).Info("Dry run, asset configuration will be skipped.")
 		return nil
@@ -35,7 +34,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 
 	defer metric.MeasureRuntime([]string{"butler", "configure_runtime"}, time.Now())
 
-	b.log.WithFields(logrus.Fields{
+	b.Log.WithFields(logrus.Fields{
 		"component": component,
 		"Serial":    asset.Serial,
 		"IPAddress": asset.IPAddress,
@@ -43,7 +42,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 
 	bmcConn := bmclogin.Params{
 		IpAddresses:     asset.IPAddresses,
-		Credentials:     b.config.Credentials,
+		Credentials:     b.Config.Credentials,
 		CheckCredential: true,
 		Retries:         1,
 	}
@@ -75,7 +74,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		}
 
 		// Apply configuration
-		c := configure.NewBmcConfigurator(bmc, asset, b.config.Resources, renderedConfig, b.stopChan, log)
+		c := configure.NewBmcConfigurator(bmc, asset, b.Config.Resources, renderedConfig, b.StopChan, log)
 		c.Apply()
 
 		bmc.Close()
@@ -99,25 +98,24 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 			s := configure.NewBmcChassisSetup(
 				chassis,
 				asset,
-				b.config.Resources,
+				b.Config.Resources,
 				renderedConfig.SetupChassis,
-				b.config,
-				b.metricsEmitter,
-				b.stopChan,
-				b.log,
+				b.Config,
+				b.MetricsEmitter,
+				b.StopChan,
+				b.Log,
 			)
 			s.Apply()
 		}
 
 		// Apply configuration
-		c := configure.NewBmcChassisConfigurator(chassis, asset, b.config.Resources, renderedConfig, b.stopChan, log)
+		c := configure.NewBmcChassisConfigurator(chassis, asset, b.Config.Resources, renderedConfig, b.StopChan, log)
 		c.Apply()
 
 		chassis.Close()
 	default:
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"butler-id": b.id,
 			"Asset":     fmt.Sprintf("%+v", asset),
 		}).Warn("Unknown device type.")
 		return errors.New("Unknown asset type")

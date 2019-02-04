@@ -17,6 +17,7 @@ package butler
 import (
 	"sync"
 
+	"github.com/gammazero/workerpool"
 	"github.com/sirupsen/logrus"
 
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
@@ -35,111 +36,47 @@ type Msg struct {
 	AssetExecute string      //Commands to be executed on the BMC
 }
 
-// Manager struct holds attributes required to spawn butlers.
-type Manager struct {
+// Butler struct holds attributes required to spawn butlers.
+type Butler struct {
 	Config         *config.Params //bmcbutler config, cli params
 	ButlerChan     <-chan Msg
 	Log            *logrus.Logger
 	StopChan       <-chan struct{}
 	MetricsEmitter *metrics.Emitter
 	SyncWG         *sync.WaitGroup
+	WorkerPool     *workerpool.WorkerPool
 }
 
-// SpawnButlers spawns a pool of butlers, waits until they are done.
-func (bm *Manager) SpawnButlers() {
+// Runner spawns a pool of butlers, waits until they are done.
+func (b *Butler) Runner() {
 
-	log := bm.Log
-	component := "Butler Manager - SpawnButlers()"
-	doneChan := make(chan int)
+	log := b.Log
+	component := "Runner"
 
-	defer bm.SyncWG.Done()
+	defer b.SyncWG.Done()
 
-	var b int
-
-	//Spawn butlers
-	for b = 1; b <= bm.Config.ButlersToSpawn; b++ {
-		butlerInstance := Butler{
-			butlerChan:     bm.ButlerChan,
-			config:         bm.Config,
-			doneChan:       doneChan,
-			stopChan:       bm.StopChan,
-			SyncWG:         bm.SyncWG,
-			id:             b,
-			log:            bm.Log,
-			metricsEmitter: bm.MetricsEmitter,
-		}
-		go butlerInstance.Run()
-		bm.SyncWG.Add(1)
-	}
-
-	log.WithFields(logrus.Fields{
-		"component": component,
-		"Count":     bm.Config.ButlersToSpawn,
-	}).Info("Spawned butlers.")
-
-	bm.MetricsEmitter.UpdateGauge(
-		[]string{"butler", "spawned"},
-		float32(bm.Config.ButlersToSpawn))
-
-	//wait until butlers are done.
-	for b > 1 {
-		done := <-doneChan
-		log.WithFields(logrus.Fields{
-			"component": component,
-			"butler-id": done,
-		}).Trace("Butler exited.")
-		b--
-	}
-
-	log.WithFields(logrus.Fields{
-		"component": component,
-		"Count":     bm.Config.ButlersToSpawn,
-	}).Info("All butlers exited.")
-
-}
-
-// Butler struct holds attributes required by butler to carry out tasks.
-type Butler struct {
-	id             int
-	butlerChan     <-chan Msg
-	config         *config.Params //bmcbutler config, cli params
-	doneChan       chan<- int
-	stopChan       <-chan struct{}
-	SyncWG         *sync.WaitGroup
-	log            *logrus.Logger
-	metricsEmitter *metrics.Emitter
-}
-
-// Run runs a butler,
-// - receives BMC config, assets over channel
-// - iterates over assets and applies config
-func (b *Butler) Run() {
-
-	log := b.log
-	component := "Butler Run"
-
-	defer func() { b.doneChan <- b.id; b.SyncWG.Done() }()
-
-	//set bmclib logger params
-	bmclibLogger.SetFormatter(&logrus.TextFormatter{})
-	if log.Level == logrus.DebugLevel {
-		bmclibLogger.SetLevel(logrus.DebugLevel)
-	}
-
+	b.WorkerPool = workerpool.New(b.Config.ButlersToSpawn)
+loop:
 	for {
 		select {
-		case msg, ok := <-b.butlerChan:
+		case msg, ok := <-b.ButlerChan:
 			if !ok {
-				return
+				log.WithFields(logrus.Fields{
+					"component": component,
+				}).Trace("Butler channel closed.")
+				break loop
 			}
-			b.msgHandler(msg)
-			//spew.Dump(msg)
-		case <-b.stopChan:
-			log.WithFields(logrus.Fields{
-				"component": component,
-				"butler-id": b.id,
-			}).Debug("Butler received interrupt.. will exit.")
-			return
+			b.WorkerPool.Submit(func() { b.msgHandler(msg) })
+		case <-b.StopChan:
+			break loop
 		}
 	}
+
+	b.WorkerPool.StopWait()
+
+	log.WithFields(logrus.Fields{
+		"component": component,
+		"Count":     b.Config.ButlersToSpawn,
+	}).Info("All butlers exited.")
+
 }

@@ -3,7 +3,7 @@ package butler
 import "github.com/sirupsen/logrus"
 
 func (b *Butler) myLocation(location string) bool {
-	for _, l := range b.config.Locations {
+	for _, l := range b.Config.Locations {
 		if l == location {
 			return true
 		}
@@ -15,17 +15,16 @@ func (b *Butler) myLocation(location string) bool {
 // msgHandler invokes the appropriate action based on msg attributes.
 func (b *Butler) msgHandler(msg Msg) {
 
-	log := b.log
+	log := b.Log
 	component := "msgHandler"
 
-	metric := b.metricsEmitter
+	metric := b.MetricsEmitter
 	metric.IncrCounter([]string{"butler", "asset_recvd"}, 1)
 
 	//if asset has no IPAddress, we can't do anything about it
 	if len(msg.Asset.IPAddresses) == 0 {
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"butler-id": b.id,
 			"Serial":    msg.Asset.Serial,
 			"AssetType": msg.Asset.Type,
 		}).Debug("Asset was received by butler without any IP(s) info, skipped.")
@@ -36,14 +35,13 @@ func (b *Butler) msgHandler(msg Msg) {
 
 	//if asset has a location defined, we may want to filter it
 	if msg.Asset.Location != "" {
-		if !b.myLocation(msg.Asset.Location) && !b.config.IgnoreLocation {
+		if !b.myLocation(msg.Asset.Location) && !b.Config.IgnoreLocation {
 			log.WithFields(logrus.Fields{
 				"component":     component,
-				"butler-id":     b.id,
 				"Serial":        msg.Asset.Serial,
 				"AssetType":     msg.Asset.Type,
 				"AssetLocation": msg.Asset.Location,
-			}).Debug("Butler wont manage asset based on its current location.")
+			}).Warn("Butler wont manage asset based on its current location.")
 
 			metric.IncrCounter([]string{"butler", "asset_recvd_location_unmanaged"}, 1)
 			return
@@ -56,7 +54,6 @@ func (b *Butler) msgHandler(msg Msg) {
 		if err != nil {
 			log.WithFields(logrus.Fields{
 				"component": component,
-				"butler-id": b.id,
 				"Serial":    msg.Asset.Serial,
 				"AssetType": msg.Asset.Type,
 				"Vendor":    msg.Asset.Vendor, //at this point the vendor may or may not be known.
@@ -74,7 +71,6 @@ func (b *Butler) msgHandler(msg Msg) {
 		if err != nil {
 			log.WithFields(logrus.Fields{
 				"component": component,
-				"butler-id": b.id,
 				"Serial":    msg.Asset.Serial,
 				"AssetType": msg.Asset.Type,
 				"Vendor":    msg.Asset.Vendor, //at this point the vendor may or may not be known.
@@ -91,7 +87,6 @@ func (b *Butler) msgHandler(msg Msg) {
 	default:
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"butler-id": b.id,
 			"Serial":    msg.Asset.Serial,
 			"AssetType": msg.Asset.Type,
 			"Vendor":    msg.Asset.Vendor, //at this point the vendor may or may not be known.

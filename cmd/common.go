@@ -135,7 +135,7 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg) {
 
 	// Spawn butlers to work
 	butlerChan = make(chan butler.Msg, 5)
-	butlerManager = butler.Manager{
+	butlers = &butler.Butler{
 		ButlerChan:     butlerChan,
 		StopChan:       stopChan,
 		Config:         runConfig,
