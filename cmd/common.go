@@ -95,6 +95,7 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg) {
 			BatchSize:      10,
 			AssetsChan:     inventoryChan,
 			MetricsEmitter: metricsEmitter,
+			StopChan:       stopChan,
 		}
 
 		assetRetriever = inventoryInstance.AssetRetrieve()

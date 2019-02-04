@@ -23,6 +23,7 @@ type Enc struct {
 	MetricsEmitter  *metrics.Emitter
 	Config          *config.Params
 	FilterAssetType []string
+	StopChan        <-chan struct{}
 }
 
 // AssetAttributes is used to unmarshal data returned from an ENC.
@@ -402,6 +403,10 @@ func (e *Enc) AssetIter() {
 
 	//metric := d.MetricsEmitter
 
+	var interrupt bool
+
+	go func() { <-e.StopChan; interrupt = true }()
+
 	defer close(e.AssetsChan)
 	//defer d.MetricsEmitter.MeasureSince(component, time.Now())
 
@@ -423,7 +428,12 @@ func (e *Enc) AssetIter() {
 			offset += limit
 
 			//If the ENC indicates we've reached the end of assets
-			if endOfAssets {
+			if endOfAssets || interrupt {
+
+				e.Log.WithFields(logrus.Fields{
+					"component": "inventory",
+					"method":    "AssetIter",
+				}).Trace("Reached end of assets/interrupt received.")
 				break
 			}
 		} // endless for
