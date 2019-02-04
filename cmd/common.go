@@ -29,6 +29,7 @@ var (
 func post(butlerChan chan butler.Msg) {
 	commandWG.Wait()
 	if !interrupt {
+		close(butlerChan)
 		close(stopChan)
 	}
 	metricsEmitter.Close(true)
@@ -154,6 +155,7 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg) {
 		<-sigChan
 		interrupt = true
 		log.Warn("Interrupt SIGINT/SIGTERM received.")
+		close(butlerChan)
 		close(stopChan)
 	}()
 
