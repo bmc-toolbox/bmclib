@@ -80,8 +80,12 @@ func configure() {
 	//iterate over the inventory channel for assets,
 	//create a butler message for each asset along with the configuration,
 	//at this point templated values in the config are not yet rendered.
+loop:
 	for assetList := range inventoryChan {
 		for _, asset := range assetList {
+			if interrupt {
+				break loop
+			}
 			asset.Configure = true
 			butlerMsg := butler.Msg{Asset: asset, AssetConfig: assetConfig}
 			butlerChan <- butlerMsg

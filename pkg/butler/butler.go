@@ -43,6 +43,7 @@ type Butler struct {
 	MetricsEmitter *metrics.Emitter
 	SyncWG         *sync.WaitGroup
 	WorkerPool     *workerpool.WorkerPool
+	interrupt      bool
 }
 
 // Runner spawns a pool of butlers, waits until they are done.
@@ -66,6 +67,10 @@ loop:
 			}
 			b.WorkerPool.Submit(func() { b.msgHandler(msg) })
 		case <-b.StopChan:
+			b.interrupt = true
+
+			// wait for currently running routines, pending task are abandoned.
+			b.WorkerPool.Stop()
 			break loop
 		}
 	}

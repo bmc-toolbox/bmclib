@@ -19,6 +19,11 @@ func (b *Butler) myLocation(location string) bool {
 // nolint: gocyclo
 func (b *Butler) msgHandler(msg Msg) {
 
+	// if an interrupt was received, return.
+	if b.interrupt {
+		return
+	}
+
 	log := b.Log
 	component := "msgHandler"
 
