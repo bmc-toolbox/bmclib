@@ -242,7 +242,16 @@ func (s *SupermicroX10) Name() (name string, err error) {
 
 // Status returns health string status from the bmc
 func (s *SupermicroX10) Status() (health string, err error) {
-	return "NotSupported", err
+	ipmi, err := s.query("SENSOR_INFO_FOR_SYS_HEALTH.XML=(1,ff)")
+	if err != nil {
+		return health, err
+	}
+
+	if ipmi.HealthInfo != nil && ipmi.HealthInfo.Health == "1" {
+		return "OK", err
+	}
+
+	return "Unhealthy", err
 }
 
 // Memory returns the total amount of memory of the server
