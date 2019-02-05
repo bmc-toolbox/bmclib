@@ -63,7 +63,7 @@ func configure() {
 	runConfig.Configure = true
 	validateConfigureArgs()
 
-	inventoryChan, butlerChan := pre()
+	inventoryChan, butlerChan, stopChan := pre()
 
 	//Read in BMC configuration data
 	assetConfigDir := viper.GetString("bmcCfgDir")
@@ -81,16 +81,21 @@ func configure() {
 	//create a butler message for each asset along with the configuration,
 	//at this point templated values in the config are not yet rendered.
 loop:
-	for assetList := range inventoryChan {
-		for _, asset := range assetList {
-			if interrupt {
-				break loop
-			}
-			asset.Configure = true
-			butlerMsg := butler.Msg{Asset: asset, AssetConfig: assetConfig}
-			butlerChan <- butlerMsg
-		}
+	for {
+		select {
+		case assetList := <-inventoryChan:
+			for _, asset := range assetList {
+				asset.Configure = true
+				butlerMsg := butler.Msg{Asset: asset, AssetConfig: assetConfig}
+				if interrupt {
+					break loop
+				}
 
+				butlerChan <- butlerMsg
+			}
+		case <-stopChan:
+			interrupt = true
+		}
 	}
 
 	post(butlerChan)

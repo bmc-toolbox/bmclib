@@ -62,7 +62,7 @@ func overrideConfigFromFlags() {
 // - Based on the inventory source (dora/csv), Spawn the asset retriever go routine.
 // - Spawn butlers
 // - Return inventory channel, butler channel.
-func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg) {
+func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg, stopChan chan struct{}) {
 
 	overrideConfigFromFlags()
 
@@ -136,7 +136,7 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg) {
 	go assetRetriever()
 
 	// Spawn butlers to work
-	butlerChan = make(chan butler.Msg, 5)
+	butlerChan = make(chan butler.Msg, 2)
 	butlers = &butler.Butler{
 		ButlerChan:     butlerChan,
 		StopChan:       stopChan,
@@ -160,5 +160,5 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg) {
 		close(stopChan)
 	}()
 
-	return inventoryChan, butlerChan
+	return inventoryChan, butlerChan, stopChan
 }
