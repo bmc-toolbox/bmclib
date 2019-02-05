@@ -16,6 +16,7 @@ package butler
 
 import (
 	"sync"
+	"time"
 
 	"github.com/gammazero/workerpool"
 	"github.com/sirupsen/logrus"
@@ -65,14 +66,29 @@ loop:
 				}).Trace("Butler channel closed.")
 				break loop
 			}
+
+			for b.WorkerPool.WaitingQueueSize() > b.Config.ButlersToSpawn {
+				log.WithFields(logrus.Fields{
+					"component":          component,
+					"Waiting queue size": b.WorkerPool.WaitingQueueSize(),
+					"butlers":            b.Config.ButlersToSpawn,
+				}).Trace("Waiting for workerpool queue size to drop below butler count")
+				time.Sleep(10 * time.Second)
+			}
+
 			b.WorkerPool.Submit(func() { b.msgHandler(msg) })
 		case <-b.StopChan:
 			b.interrupt = true
+			log.WithFields(logrus.Fields{
+				"component":          component,
+				"Waiting queue size": b.WorkerPool.WaitingQueueSize(),
+			}).Debug("Interrupt received.")
 
-			// wait for currently running routines, pending task are abandoned.
+			// wait for currently running routines, pending tasks are abandoned.
 			b.WorkerPool.Stop()
 			break loop
 		}
+
 	}
 
 	b.WorkerPool.StopWait()

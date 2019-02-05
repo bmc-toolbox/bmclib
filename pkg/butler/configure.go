@@ -45,6 +45,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		Credentials:     b.Config.Credentials,
 		CheckCredential: true,
 		Retries:         1,
+		StopChan:        b.StopChan,
 	}
 
 	//connect to the bmc/chassis bmc
