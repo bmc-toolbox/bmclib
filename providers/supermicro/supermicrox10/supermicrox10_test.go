@@ -99,7 +99,8 @@ var (
 			<IPMI>
 			  <BIOS_LINCESNE CHECK="0"/>
 			</IPMI>`),
-		"POWER_INFO.XML=(0,0)": []byte(`<?xml version="1.0"?>  <IPMI>  <POWER_INFO>  <POWER STATUS="ON"/>  </POWER_INFO>  </IPMI>`),
+		"POWER_INFO.XML=(0,0)":                  []byte(`<?xml version="1.0"?>  <IPMI>  <POWER_INFO>  <POWER STATUS="ON"/>  </POWER_INFO>  </IPMI>`),
+		"SENSOR_INFO_FOR_SYS_HEALTH.XML=(1,ff)": []byte(`<?xml version="1.0"?>  <IPMI>  <HEALTH_INFO HEALTH="1"/> </IPMI>`),
 	}
 )
 
@@ -233,7 +234,7 @@ func TestName(t *testing.T) {
 }
 
 func TestStatus(t *testing.T) {
-	expectedAnswer := "NotSupported"
+	expectedAnswer := "OK"
 
 	bmc, err := setup()
 	if err != nil {
