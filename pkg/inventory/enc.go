@@ -421,6 +421,15 @@ func (e *Enc) AssetIter() {
 
 			assets, endOfAssets := e.encQueryByOffset(assetType, offset, limit, locations)
 
+			e.Log.WithFields(logrus.Fields{
+				"component": "inventory",
+				"method":    "AssetIter",
+				"Asset":     assetType,
+				"Offset":    offset,
+				"Limit":     limit,
+				"locations": locations,
+			}).Trace("Assets retrieved.")
+
 			//pass the asset to the channel
 			e.AssetsChan <- assets
 

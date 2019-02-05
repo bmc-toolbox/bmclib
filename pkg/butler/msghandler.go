@@ -32,7 +32,7 @@ func (b *Butler) msgHandler(msg Msg) {
 
 	//set bmclib logger params
 	bmclibLogger.SetFormatter(&logrus.TextFormatter{})
-	if log.Level == logrus.DebugLevel {
+	if log.Level == logrus.TraceLevel {
 		bmclibLogger.SetLevel(logrus.DebugLevel)
 	}
 
@@ -91,7 +91,7 @@ func (b *Butler) msgHandler(msg Msg) {
 				"Vendor":    msg.Asset.Vendor, //at this point the vendor may or may not be known.
 				"Location":  msg.Asset.Location,
 				"Error":     err,
-			}).Warn("Unable to configure asset.")
+			}).Warn("Configure action returned error.")
 
 			metric.IncrCounter([]string{"butler", "configure_fail"}, 1)
 			return
