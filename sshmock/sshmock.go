@@ -31,7 +31,7 @@ func New(answers map[string][]byte, randomPort bool) (s *Server, err error) {
 
 	port := 22
 	if randomPort {
-		port = mrand.Intn(4000-2000) + 2000
+		port = mrand.Intn(20000-2000) + 2000
 	}
 
 	s = &Server{
