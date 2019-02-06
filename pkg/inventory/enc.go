@@ -167,6 +167,7 @@ func (e *Enc) SetChassisInstalled(serials string) {
 	}
 }
 
+// nolint: gocyclo
 func (e *Enc) encQueryBySerial(serials string) (assets []asset.Asset) {
 
 	log := e.Log
@@ -207,12 +208,21 @@ func (e *Enc) encQueryBySerial(serials string) (assets []asset.Asset) {
 		return []asset.Asset{}
 	}
 
+	missingSerials := strings.Split(serials, ",")
 	for serial, attributes := range cmdResp.Data {
 
 		attributes := e.SetBMCInterfaces(attributes)
 		if len(attributes.BMCIPAddress) == 0 {
 			metric.IncrCounter([]string{"inventory", "assets_noip_enc"}, 1)
 			continue
+		}
+
+		// missing Serials are Serials we looked up using the enc and got no data for.
+		for idx, s := range missingSerials {
+			if s == serial {
+				// if its in the list, purge it.
+				missingSerials = append(missingSerials[:idx], missingSerials[idx+1:]...)
+			}
 		}
 
 		extras := AttributesExtrasAsMap(attributes.Extras)
@@ -224,6 +234,13 @@ func (e *Enc) encQueryBySerial(serials string) (assets []asset.Asset) {
 			})
 	}
 
+	// append missing Serials to assets
+	if len(missingSerials) > 0 {
+		for _, serial := range missingSerials {
+			assets = append(assets, asset.Asset{Serial: serial, IPAddresses: []string{}})
+		}
+	}
+
 	if metric != nil {
 		metric.IncrCounter([]string{"inventory", "assets_fetched_enc"}, float32(len(assets)))
 	}
@@ -231,7 +248,7 @@ func (e *Enc) encQueryBySerial(serials string) (assets []asset.Asset) {
 	return assets
 }
 
-//
+// nolint: gocyclo
 func (e *Enc) encQueryByIP(ips string) (assets []asset.Asset) {
 
 	log := e.Log
