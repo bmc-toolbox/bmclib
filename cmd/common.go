@@ -27,11 +27,8 @@ var (
 // - closes the butler channel
 // - Waits for all go routines in commandWG to finish.
 func post(butlerChan chan butler.Msg) {
+	close(butlerChan)
 	commandWG.Wait()
-	if !interrupt {
-		close(butlerChan)
-		close(stopChan)
-	}
 	metricsEmitter.Close(true)
 }
 
@@ -153,11 +150,14 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg, stopCh
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
-		<-sigChan
-		interrupt = true
-		log.Warn("Interrupt SIGINT/SIGTERM received.")
-		close(butlerChan)
-		close(stopChan)
+		select {
+		case <-sigChan:
+			interrupt = true
+			log.Warn("Interrupt SIGINT/SIGTERM received.")
+			close(stopChan)
+		case <-stopChan:
+			return
+		}
 	}()
 
 	return inventoryChan, butlerChan, stopChan
