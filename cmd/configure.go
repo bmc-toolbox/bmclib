@@ -83,7 +83,10 @@ func configure() {
 loop:
 	for {
 		select {
-		case assetList := <-inventoryChan:
+		case assetList, ok := <-inventoryChan:
+			if !ok {
+				break loop
+			}
 			for _, asset := range assetList {
 				asset.Configure = true
 				butlerMsg := butler.Msg{Asset: asset, AssetConfig: assetConfig}

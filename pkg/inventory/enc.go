@@ -428,7 +428,7 @@ func (e *Enc) AssetIter() {
 				"Offset":    offset,
 				"Limit":     limit,
 				"locations": locations,
-			}).Trace("Assets retrieved.")
+			}).Debug("Assets retrieved.")
 
 			//pass the asset to the channel
 			e.AssetsChan <- assets
@@ -442,7 +442,7 @@ func (e *Enc) AssetIter() {
 				e.Log.WithFields(logrus.Fields{
 					"component": "inventory",
 					"method":    "AssetIter",
-				}).Trace("Reached end of assets/interrupt received.")
+				}).Debug("Reached end of assets/interrupt received.")
 				break
 			}
 		} // endless for
