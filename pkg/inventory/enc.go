@@ -285,6 +285,8 @@ func (e *Enc) encQueryByIP(ips string) (assets []asset.Asset) {
 		return assets
 	}
 
+	// missing IPs are IPs we looked up using the enc and got no data for.
+	missingIPs := strings.Split(ips, ",")
 	for serial, attributes := range cmdResp.Data {
 
 		attributes := e.SetBMCInterfaces(attributes)
@@ -294,6 +296,13 @@ func (e *Enc) encQueryByIP(ips string) (assets []asset.Asset) {
 			continue
 		}
 
+		for _, bmcIPAddress := range attributes.BMCIPAddress {
+			for idx, ip := range missingIPs {
+				if ip == bmcIPAddress {
+					missingIPs = append(missingIPs[:idx], missingIPs[idx+1:]...)
+				}
+			}
+		}
 		extras := AttributesExtrasAsMap(attributes.Extras)
 
 		assets = append(assets,
@@ -302,6 +311,13 @@ func (e *Enc) encQueryByIP(ips string) (assets []asset.Asset) {
 				Location: attributes.Location,
 				Extra:    extras,
 			})
+	}
+
+	// append missing IPs.
+	if len(missingIPs) > 0 {
+		for _, ip := range missingIPs {
+			assets = append(assets, asset.Asset{IPAddresses: []string{ip}})
+		}
 	}
 
 	metric.IncrCounter([]string{"inventory", "assets_fetched_enc"}, float32(len(assets)))

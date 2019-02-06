@@ -37,7 +37,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 	b.Log.WithFields(logrus.Fields{
 		"component": component,
 		"Serial":    asset.Serial,
-		"IPAddress": asset.IPAddress,
+		"IPAddress": asset.IPAddresses,
 	}).Debug("Connecting to asset.")
 
 	bmcConn := bmclogin.Params{
