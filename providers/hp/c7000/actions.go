@@ -303,6 +303,11 @@ end_marker`
 	ribcl = strings.Replace(ribcl, "__USERNAME__", username, -1)
 	ribcl = strings.Replace(ribcl, "__PASSWORD__", password, -1)
 
+	err = c.sshLogin()
+	if err != nil {
+		return err
+	}
+
 	output, err := c.sshClient.Run(ribcl)
 	if err != nil {
 		return fmt.Errorf(output)
@@ -344,6 +349,11 @@ end_marker`
 	ribcl = strings.Replace(ribcl, "__USERNAME__", username, -1)
 	ribcl = strings.Replace(ribcl, "__PASSWORD__", password, -1)
 
+	err = c.sshLogin()
+	if err != nil {
+		return err
+	}
+
 	output, err := c.sshClient.Run(ribcl)
 	if err != nil {
 		return fmt.Errorf(output)
@@ -373,6 +383,11 @@ func (c *C7000) RemoveBladeBmcUser(username string) (err error) {
 end_marker`
 
 	ribcl = strings.Replace(ribcl, "__USERNAME__", username, -1)
+
+	err = c.sshLogin()
+	if err != nil {
+		return err
+	}
 
 	output, err := c.sshClient.Run(ribcl)
 	if err != nil {

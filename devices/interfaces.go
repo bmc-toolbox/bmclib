@@ -44,6 +44,8 @@ type BmcChassis interface {
 	ApplyCfg(*cfgresources.ResourcesConfig) error
 	// embed Configure interface
 	Configure
+	// embed BmcChassisSetup interface
+	BmcChassisSetup
 	Blades() ([]*Blade, error)
 	BmcType() string
 	ChassisSnapshot() (*Chassis, error)
@@ -71,18 +73,24 @@ type BmcChassis interface {
 	PxeOnceBlade(int) (bool, error)
 	ReseatBlade(int) (bool, error)
 	Serial() (string, error)
-	RemoveBladeBmcUser(string) error
-	AddBladeBmcAdmin(string, string) error
-	ModBladeBmcUser(string, string) error
-	SetDynamicPower(bool) (bool, error)
-	SetIpmiOverLan(int, bool) (bool, error)
-	SetFlexAddressState(int, bool) (bool, error)
 	Status() (string, error)
 	StorageBlades() ([]*StorageBlade, error)
 	TempC() (int, error)
 	UpdateCredentials(string, string)
 	UpdateFirmware(string, string) (bool, error)
 	Vendor() string
+}
+
+// BmcChassisSetup interface declares methods
+// that are used to apply one time configuration to a Chassis.
+type BmcChassisSetup interface {
+	ResourcesSetup() []string
+	RemoveBladeBmcUser(string) error
+	AddBladeBmcAdmin(string, string) error
+	ModBladeBmcUser(string, string) error
+	SetDynamicPower(bool) (bool, error)
+	SetIpmiOverLan(int, bool) (bool, error)
+	SetFlexAddressState(int, bool) (bool, error)
 }
 
 // Configure interface declares methods implemented
