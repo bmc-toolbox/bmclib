@@ -21,7 +21,13 @@ type IPMI struct {
 	PowerSupply  []*PowerSupply `xml:"PowerSupply,omitempty"`
 	PowerInfo    *PowerInfo     `xml:"POWER_INFO"`
 	NodeInfo     *NodeInfo      `xml:"NodeInfo,omitempty"`
-	BiosLicense  *BiosLicense   `xml:"BIOS_LINCESNE,omitempty" json:"BIOS_LINCESNE,omitempty"`
+	BiosLicense  *BiosLicense   `xml:"BIOS_LINCESNE,omitempty"`
+	HealthInfo   *HealthInfo    `xml:"HEALTH_INFO,omitempty"`
+}
+
+// HealthInfo holds the health information
+type HealthInfo struct {
+	Health string `xml:"HEALTH,attr"`
 }
 
 // Bios holds the bios information

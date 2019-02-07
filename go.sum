@@ -19,6 +19,8 @@ github.com/bmc-toolbox/bmclib v0.2.4-0.20190126163515-af294eb9ce61 h1:K59bAWN3+9
 github.com/bmc-toolbox/bmclib v0.2.4-0.20190126163515-af294eb9ce61/go.mod h1:z0DjdwjcklfuNQPChtprwJblNR3XJriU0fffx1aDSIs=
 github.com/bmc-toolbox/bmclib v0.2.4-0.20190129223326-130f5983a6f7 h1:TtsGBc6QvgqoIok+KrriRw+fIZYuakbSh9sCx7l9rBM=
 github.com/bmc-toolbox/bmclib v0.2.4-0.20190129223326-130f5983a6f7/go.mod h1:z0DjdwjcklfuNQPChtprwJblNR3XJriU0fffx1aDSIs=
+github.com/bmc-toolbox/bmclib v0.2.4-0.20190207100627-c58d7d0cac4e h1:Z87EOCyrpTsPFQ7tm3q/nkGYKA+TOll+R02wPvhhJXQ=
+github.com/bmc-toolbox/bmclib v0.2.4-0.20190207100627-c58d7d0cac4e/go.mod h1:z0DjdwjcklfuNQPChtprwJblNR3XJriU0fffx1aDSIs=
 github.com/bmc-toolbox/bmclogin v0.0.1 h1:xPZMATBB2XHkCo4i1hQkDodeKdioYN7GSf5D05yUQ7c=
 github.com/bmc-toolbox/bmclogin v0.0.1/go.mod h1:jtifl2zfoGTDZNE9WhUeKgXPiurdaB33HjkHXz6gMAE=
 github.com/bmc-toolbox/bmclogin v0.0.2-0.20190106211646-d5c2f26514e9 h1:OXHi7NDPtMbtFW7RbyoCYedNKHK7Nwf6NynH1Cm1Yu0=
