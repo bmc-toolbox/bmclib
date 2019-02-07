@@ -45,8 +45,28 @@ Supermicro X10 | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | 
 
 
 ## Debugging
+
 export DEBUG_BMCLIB=1 for bmclib to verbose log
+
 export BMCLIB_TEST=1 to run on a dummy bmc (dry run).
+
+## bmc-toolbox
+
+All of the tooling that uses bmclib is part of the [bmc-toolbox](https://github.com/bmc-toolbox)
+
+
+#### Inventory collection
+
+[dora](https://github.com/bmc-toolbox/dora) uses bmclib to identify and inventorize assets.
+
+#### Configuration
+
+[bmcbutler](https://github.com/bmc-toolbox/bmcbutler) uses bmclib to manage configuration on BMCs.
+
+#### Web API
+
+[actor](https://github.com/bmc-toolbox/actor) uses bmclib to abstract away various BMCs and expose a consistent web API to interact with them.
+
 
 #### Acknowledgment
 
