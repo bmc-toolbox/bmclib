@@ -33,7 +33,8 @@ func ScanAndConnect(host string, username string, password string) (bmcConnectio
 	// return a connection to our dummy device.
 	if os.Getenv("BMCLIB_TEST") == "1" {
 		log.WithFields(log.Fields{"step": "ScanAndConnect", "host": host}).Debug("returning connection to dummy ibmc device.")
-		return ibmc.New(host, username, password), nil
+		bmc, err := ibmc.New(host, username, password)
+		return bmc, err
 	}
 
 	client, err := httpclient.Build()
