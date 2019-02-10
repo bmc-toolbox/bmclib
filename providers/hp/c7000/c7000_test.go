@@ -2702,6 +2702,9 @@ func TestHpChassisInterface(t *testing.T) {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
 	_ = devices.BmcChassis(chassis)
+	_ = devices.Configure(chassis)
+	_ = devices.BmcChassisSetup(chassis)
+
 	tearDown()
 }
 

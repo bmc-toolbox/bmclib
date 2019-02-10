@@ -622,6 +622,7 @@ func TestIloInterface(t *testing.T) {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
 	_ = devices.Bmc(bmc)
+	_ = devices.Configure(bmc)
 	tearDown()
 }
 
