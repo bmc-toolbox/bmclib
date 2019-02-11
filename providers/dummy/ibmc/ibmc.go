@@ -21,13 +21,9 @@ type Ibmc struct {
 	password string
 }
 
-// This ensures the compiler errors if this type is missing
-// a method that should be implmented to satisfy the configure interface.
-var _ devices.Configure = (*Ibmc)(nil)
-
 // New returns a new ibmc ready to be used
-func New(ip string, username string, password string) *Ibmc {
-	return &Ibmc{ip: ip, username: username, password: password}
+func New(ip string, username string, password string) (i *Ibmc, err error) {
+	return &Ibmc{ip: ip, username: username, password: password}, err
 }
 
 // ApplyCfg implements the Bmc interface
@@ -120,6 +116,21 @@ func (i *Ibmc) PowerCycle() (status bool, err error) {
 	return false, nil
 }
 
+// PowerOff implements the Bmc interface
+func (i *Ibmc) PowerOff() (status bool, err error) {
+	return false, nil
+}
+
+// PowerOn implements the Bmc interface
+func (i *Ibmc) PowerOn() (status bool, err error) {
+	return false, nil
+}
+
+// PxeOnce implements the Bmc interface
+func (i *Ibmc) PxeOnce() (status bool, err error) {
+	return false, nil
+}
+
 // Serial implements the Bmc interface
 func (i *Ibmc) Serial() (string, error) {
 	return "", nil
@@ -153,4 +164,9 @@ func (i *Ibmc) ServerSnapshot() (interface{}, error) {
 // UpdateCredentials implements the Bmc interface
 func (i *Ibmc) UpdateCredentials(string, string) {
 	return
+}
+
+// UpdateFirmware implements the Bmc inteface
+func (i *Ibmc) UpdateFirmware(string, string) (b bool, e error) {
+	return b, e
 }
