@@ -102,7 +102,6 @@ func (m *M1000e) User(cfgUsers []*cfgresources.User) (err error) {
 			"IP":    m.ip,
 			"Model": m.BmcType(),
 		}).Debug("User account config parameters applied.")
-		return err
 
 	}
 
