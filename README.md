@@ -3,6 +3,7 @@
 [![Status](https://api.travis-ci.org/bmc-toolbox/bmclib.svg?branch=master)](https://travis-ci.org/bmc-toolbox/bmclib)
 [![Go Report Card](https://goreportcard.com/badge/github.com/bmc-toolbox/bmclib)](https://goreportcard.com/report/github.com/bmc-toolbox/bmclib)
 [![GoDoc](https://godoc.org/github.com/bmc-toolbox/bmclib?status.svg)](https://godoc.org/github.com/bmc-toolbox/bmclib)
+[![Development/Support](https://img.shields.io/badge/chat-on%20freenode-brightgreen.svg)](https://kiwiirc.com/client/irc.freenode.net/##bmc-toolbox)
 
 A library to interact with BMCs of different vendors
 
