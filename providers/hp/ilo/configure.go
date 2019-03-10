@@ -25,6 +25,7 @@ func (i *Ilo) Resources() []string {
 		"ntp",
 		"ldap_group",
 		"ldap",
+		"https_cert",
 	}
 }
 
