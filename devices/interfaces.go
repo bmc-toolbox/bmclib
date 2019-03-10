@@ -1,6 +1,8 @@
 package devices
 
 import (
+	"crypto/x509"
+
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 )
 
@@ -24,6 +26,7 @@ type Bmc interface {
 	Nics() ([]*Nic, error)
 	PowerKw() (float64, error)
 	PowerState() (string, error)
+	IsOn() (bool, error)
 	PowerOn() (status bool, err error)
 	PowerOff() (status bool, err error)
 	PxeOnce() (status bool, err error)
@@ -105,4 +108,7 @@ type Configure interface {
 	Network(*cfgresources.Network) error
 	SetLicense(*cfgresources.License) error
 	Bios(*cfgresources.Bios) error
+	CurrentHTTPSCert() ([]*x509.Certificate, error)
+	GenerateCSR(*cfgresources.HTTPSCertAttributes) ([]byte, error)
+	UploadHTTPSCert([]byte, string) (bool, error)
 }
