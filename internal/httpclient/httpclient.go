@@ -20,7 +20,7 @@ import (
 func Build() (client *http.Client, err error) {
 	tr := &http.Transport{
 		TLSClientConfig:   &tls.Config{InsecureSkipVerify: true},
-		DisableKeepAlives: false,
+		DisableKeepAlives: true,
 		Dial: (&net.Dialer{
 			Timeout:   120 * time.Second,
 			KeepAlive: 120 * time.Second,
