@@ -1,10 +1,14 @@
 package idrac8
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"strconv"
+	"strings"
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
@@ -26,6 +30,7 @@ func (i *IDrac8) Resources() []string {
 		"ntp",
 		"ldap",
 		"ldap_group",
+		"https_cert",
 	}
 }
 
@@ -655,4 +660,135 @@ func (i *IDrac8) Network(cfg *cfgresources.Network) (err error) {
 		"Model": i.BmcType(),
 	}).Debug("Network config parameters applied.")
 	return err
+}
+
+// GenerateCSR generates a CSR request on the BMC.
+func (i *IDrac8) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, error) {
+
+	var payload []string
+
+	endpoint := "bindata?set"
+	payload = []string{
+		cert.CommonName,
+		cert.OrganizationName,
+		cert.OrganizationUnit,
+		cert.Locality,
+		cert.StateName,
+		cert.CountryCode,
+		strings.Join(strings.Split(cert.Email, "@"), "@040"), // heh, don't ask.
+		cert.SubjectAltName,
+	}
+
+	queryString := fmt.Sprintf("%s=serverCSR(%s)", endpoint, strings.Join(payload, ","))
+
+	body, err := i.get(queryString, nil)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IP":       i.ip,
+			"Model":    i.BmcType(),
+			"endpoint": endpoint,
+			"step":     helper.WhosCalling(),
+			"Error":    err,
+		}).Warn("GET request failed.")
+		return []byte{}, err
+	}
+
+	return body, nil
+}
+
+// UploadHTTPSCert uploads the given CRT cert,
+// returns true if the BMC needs a reset.
+// 1. POST upload signed x509 cert in multipart form.
+// 2. POST returned resource URI
+func (i *IDrac8) UploadHTTPSCert(cert []byte, fileName string) (bool, error) {
+
+	endpoint := "sysmgmt/2012/server/transient/filestore?fileupload=true"
+	endpoint += fmt.Sprintf("&ST1=%s", i.st1)
+
+	// form params
+	params := make(map[string]string)
+	params["caller"] = ""
+	params["pageCode"] = ""
+	params["pageId"] = "2"
+	params["pageName"] = ""
+	params["index"] = "8"
+
+	// setup a buffer for our multipart form
+	var form bytes.Buffer
+	w := multipart.NewWriter(&form)
+
+	// write params to form
+	for k, v := range params {
+		_ = w.WriteField(k, v)
+	}
+
+	// setup the ssl cert part
+	formWriter, err := w.CreateFormFile("serverSSLCertificate", fileName)
+	if err != nil {
+		return false, err
+	}
+
+	_, err = io.Copy(formWriter, bytes.NewReader(cert))
+	if err != nil {
+		return false, err
+	}
+
+	_ = w.WriteField("CertType", "2")
+
+	// close multipart writer - adds the teminating boundary.
+	w.Close()
+
+	// 1. POST upload x509 cert
+	status, body, err := i.post(endpoint, form.Bytes(), w.FormDataContentType())
+	if err != nil || status != 201 {
+		log.WithFields(log.Fields{
+			"IP":       i.ip,
+			"Model":    i.BmcType(),
+			"endpoint": endpoint,
+			"step":     helper.WhosCalling(),
+			"status":   status,
+		}).Warn("Cert form upload POST request failed, expected 201.")
+		return false, err
+	}
+
+	// extract resourceURI from response
+	var certStore = new(certStore)
+	err = json.Unmarshal(body, certStore)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"step":  helper.WhosCalling(),
+			"IP":    i.ip,
+			"Model": i.BmcType(),
+			"Error": err,
+		}).Warn("Unable to unmarshal cert store response payload.")
+		return false, err
+	}
+
+	resourceURI, err := json.Marshal(certStore.File)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"step":  helper.WhosCalling(),
+			"IP":    i.ip,
+			"Model": i.BmcType(),
+			"Error": err,
+		}).Warn("Unable to marshal cert store resource URI.")
+		return false, err
+	}
+
+	// 2. POST resource URI
+	endpoint = "sysmgmt/2012/server/network/ssl/cert"
+	status, _, err = i.post(endpoint, []byte(resourceURI), "")
+	if err != nil || status != 201 {
+		log.WithFields(log.Fields{
+			"IP":       i.ip,
+			"Model":    i.BmcType(),
+			"endpoint": endpoint,
+			"step":     helper.WhosCalling(),
+			"status":   status,
+		}).Warn("Cert form upload POST request failed, expected 201.")
+		return false, err
+	}
+
+	return true, err
+
 }
