@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -679,7 +680,7 @@ func (i *IDrac8) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, er
 		cert.SubjectAltName,
 	}
 
-	queryString := fmt.Sprintf("%s=serverCSR(%s)", endpoint, strings.Join(payload, ","))
+	queryString := url.QueryEscape(fmt.Sprintf("%s=serverCSR(%s)", endpoint, strings.Join(payload, ",")))
 
 	body, err := i.get(queryString, nil)
 	if err != nil {
