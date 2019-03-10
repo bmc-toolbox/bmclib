@@ -562,7 +562,7 @@ func (i *IDrac8) applyLdapRoleGroupPrivParam(cfg *cfgresources.Ldap, groupPrivil
 
 	//fmt.Println(payload)
 	endpoint := "postset?ldapconf"
-	responseCode, responseBody, err := i.post(endpoint, []byte(payload))
+	responseCode, responseBody, err := i.post(endpoint, []byte(payload), "")
 	if err != nil || responseCode != 200 {
 		log.WithFields(log.Fields{
 			"IP":           i.ip,
@@ -642,7 +642,7 @@ func (i *IDrac8) Network(cfg *cfgresources.Network) (err error) {
 	payload += fmt.Sprintf("racRedirectEna:%d,", params["EnableSerialRedirection"])
 	payload += fmt.Sprintf("racEscKey:^\\\\")
 
-	responseCode, responseBody, err := i.post(endpoint, []byte(payload))
+	responseCode, responseBody, err := i.post(endpoint, []byte(payload), "")
 	if err != nil || responseCode != 200 {
 		log.WithFields(log.Fields{
 			"IP":           i.ip,
