@@ -108,6 +108,41 @@ type DirectoryGroups struct {
 	SessionKey       string `json:"session_key"`
 }
 
+// Generate CSR
+// POST /json/csr
+type csr struct {
+	Country          string `json:"country"`
+	State            string `json:"state"`
+	Locality         string `json:"locality"`
+	OrganizationName string `json:"organization_name"`
+	OrganizationUnit string `json:"organization_unit"`
+	CommonName       string `json:"common_name"`
+	IncludeIP        int    `json:"include_ip"`
+	Method           string `json:"method"`
+	SessionKey       string `json:"session_key"`
+}
+
+// The CSR response
+type csrResponse struct {
+	CsrPEM string `json:"csr_pem"`
+}
+
+// Cert import
+// POST json/certificate
+type certImport struct {
+	Method          string `json:"method"`
+	CertificateData string `json:"certificate_data"`
+	SessionKey      string `json:"session_key"`
+}
+
+// reset bmc json/ilo_status
+// POST {"method":"reset_ilo","cause":"config","session_key":"555d3f83cae987d7484bebaf05717c8a"}
+type resetIlo struct {
+	Method     string `json:"method"`
+	Cause      string `json:"cause"`
+	SessionKey string `json:"session_key"`
+}
+
 // TimezonesIlo5 declares valid timezone for ilo5 devices.
 var TimezonesIlo5 = map[string]int{
 	"Etc/GMT+12":                     0,

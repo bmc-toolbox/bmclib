@@ -3,6 +3,7 @@ package ilo
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
@@ -676,6 +677,85 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 
 	return err
 
+}
+
+// GenerateCSR generates a CSR request on the BMC.
+// If its the first CSR attempt - the BMC is going to take a while to generate the CSR,
+// the response will be a 500 with the body	{"message":"JS_CERT_NOT_AVAILABLE","details":null}
+// If the configuration for the Subject has not changed and the CSR is ready a CSR is returned.
+func (i *Ilo) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, error) {
+
+	csrConfig := &csr{
+		Country:          cert.CountryCode,
+		State:            cert.StateName,
+		Locality:         cert.Locality,
+		CommonName:       cert.CommonName,
+		OrganizationName: cert.OrganizationName,
+		OrganizationUnit: cert.OrganizationUnit,
+		IncludeIP:        1, // Use IP as SAN
+		Method:           "create_csr",
+		SessionKey:       i.sessionKey,
+	}
+
+	payload, err := json.Marshal(csrConfig)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	endpoint := "json/csr"
+	statusCode, response, err := i.post(endpoint, payload)
+	if statusCode == 500 {
+		return []byte{}, fmt.Errorf("CSR being generated, retry later")
+	}
+
+	// if its a not a 200 at this point,
+	// something else went wrong.
+	if statusCode != 200 {
+		return []byte{}, fmt.Errorf("Unexpected return code: %d", statusCode)
+	}
+
+	// Some other error
+	if err != nil {
+		return []byte{}, err
+	}
+
+	var r = new(csrResponse)
+	err = json.Unmarshal(response, r)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	return []byte(r.CsrPEM), nil
+}
+
+// UploadHTTPSCert uploads the given CRT cert,
+// UploadHTTPSCert implements the Configure interface.
+// return true if the bmc requires a reset.
+func (i *Ilo) UploadHTTPSCert(cert []byte, fileName string) (bool, error) {
+
+	certPayload := &certImport{
+		Method:          "import_certificate",
+		CertificateData: string(cert),
+		SessionKey:      i.sessionKey,
+	}
+
+	payload, err := json.Marshal(certPayload)
+	if err != nil {
+		return false, err
+	}
+
+	endpoint := "json/certificate"
+	statusCode, _, err := i.post(endpoint, payload)
+	if err != nil {
+		return false, err
+	}
+
+	if statusCode != 200 {
+		return false, fmt.Errorf("Unexpected return code: %d", statusCode)
+	}
+
+	// ILOs need a reset after cert upload.
+	return true, nil
 }
 
 // Network method implements the Configure interface
