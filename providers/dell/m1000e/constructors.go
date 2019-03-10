@@ -8,19 +8,19 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (m *M1000e) newSslCfg(ssl *cfgresources.Ssl) (MFormParams map[string]string) {
-
-	//params for the multipart form.
-	MformParams := make(map[string]string)
-
-	MformParams["ST2"] = m.SessionToken
-	MformParams["caller"] = ""
-	MformParams["pageCode"] = ""
-	MformParams["pageId"] = "2"
-	MformParams["pageName"] = ""
-
-	return MformParams
-}
+//func (m *M1000e) newSslCfg(ssl *cfgresources.Ssl) (MFormParams map[string]string) {
+//
+//	//params for the multipart form.
+//	MformParams := make(map[string]string)
+//
+//	MformParams["ST2"] = m.SessionToken
+//	MformParams["caller"] = ""
+//	MformParams["pageCode"] = ""
+//	MformParams["pageId"] = "2"
+//	MformParams["pageName"] = ""
+//
+//	return MformParams
+//}
 
 // Given the Ntp resource,
 // populate the required Datetime params

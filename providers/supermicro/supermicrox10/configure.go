@@ -1,6 +1,7 @@
 package supermicrox10
 
 import (
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -619,4 +620,22 @@ func (s *SupermicroX10) post(endpoint string, form *url.Values) (statusCode int,
 	//fmt.Printf("-->> %d\n", resp.StatusCode)
 	//fmt.Printf("%s\n", body)
 	return statusCode, err
+}
+
+// GenerateCSR generates a CSR request on the BMC.
+// GenerateCSR implements the Configure interface.
+func (s *SupermicroX10) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, error) {
+	return []byte{}, nil
+}
+
+// UploadHTTPSCert uploads the given CRT cert,
+// UploadHTTPSCert implements the Configure interface.
+func (s *SupermicroX10) UploadHTTPSCert(cert []byte, fileName string) (bool, error) {
+	return false, nil
+}
+
+// CurrentHTTPSCert returns the current x509 certficates configured on the BMC
+// CurrentHTTPSCert implements the Configure interface.
+func (s *SupermicroX10) CurrentHTTPSCert() (c []*x509.Certificate, e error) {
+	return c, e
 }

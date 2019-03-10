@@ -1,6 +1,7 @@
 package idrac9
 
 import (
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"strconv"
@@ -653,4 +654,22 @@ func (i *IDrac9) Network(cfg *cfgresources.Network) (err error) {
 // SetLicense implements the Configure interface.
 func (i *IDrac9) SetLicense(cfg *cfgresources.License) (err error) {
 	return err
+}
+
+// GenerateCSR generates a CSR request on the BMC.
+// GenerateCSR implements the Configure interface.
+func (i *IDrac9) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, error) {
+	return []byte{}, nil
+}
+
+// UploadHTTPSCert uploads the given CRT cert,
+// UploadHTTPSCert implements the Configure interface.
+func (i *IDrac9) UploadHTTPSCert(cert []byte, fileName string) (bool, error) {
+	return false, nil
+}
+
+// CurrentHTTPSCert returns the current x509 certficates configured on the BMC
+// CurrentHTTPSCert implements the Configure interface.
+func (i *IDrac9) CurrentHTTPSCert() (c []*x509.Certificate, e error) {
+	return c, e
 }
