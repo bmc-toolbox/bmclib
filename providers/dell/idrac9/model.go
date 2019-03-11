@@ -90,6 +90,26 @@ type Timezone struct {
 	Timezone string `json:"Timezone"` //CET
 }
 
+// CSRInfo declares SSL/TLS CSR request payloads.
+type CSRInfo struct {
+	CommonName       string `json:"CsrCommonName"`
+	CountryCode      string `json:"CsrCountryCode"`
+	LocalityName     string `json:"CsrLocalityName"`
+	OrganizationName string `json:"CsrOrganizationName"`
+	OrganizationUnit string `json:"CsrOrganizationUnit"`
+	StateName        string `json:"CsrStateName"`
+	EmailAddr        string `json:"CsrEmailAddr"`
+}
+
+// certStore is the response received when uploading a multipart form,
+// that includes the certificate, this cert is stored in a transient store.
+// {"File":{"ResourceURI":"/var/volatile/tmp/upload/idrac9.crt"}}
+type certStore struct {
+	File struct {
+		ResourceURI string `json:"ResourceURI"`
+	} `json:"File"`
+}
+
 // Timezones declares all known timezones, taken from the idrac web interface.
 var Timezones = map[string]string{
 	"Africa/Abidjan":                   "Africa/Abidjan",
