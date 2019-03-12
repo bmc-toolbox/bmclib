@@ -161,6 +161,7 @@ func (i *Ilo) post(endpoint string, data []byte) (statusCode int, body []byte, e
 		return 0, []byte{}, err
 	}
 
+	req.Header.Add("Content-Type", "application/json")
 	for _, cookie := range i.httpClient.Jar.Cookies(u) {
 		if cookie.Name == "sessionKey" {
 			req.AddCookie(cookie)

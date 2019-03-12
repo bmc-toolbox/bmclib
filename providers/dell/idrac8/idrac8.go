@@ -116,7 +116,7 @@ func (i *IDrac8) put(endpoint string, payload []byte) (statusCode int, response 
 }
 
 // posts the payload to the given endpoint
-func (i *IDrac8) post(endpoint string, data []byte) (statusCode int, body []byte, err error) {
+func (i *IDrac8) post(endpoint string, data []byte, formDataContentType string) (statusCode int, body []byte, err error) {
 
 	u, err := url.Parse(fmt.Sprintf("https://%s/%s", i.ip, endpoint))
 	if err != nil {
@@ -135,7 +135,21 @@ func (i *IDrac8) post(endpoint string, data []byte) (statusCode int, body []byte
 	}
 
 	req.Header.Add("ST2", i.st2)
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	if formDataContentType == "" {
+		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	} else {
+
+		// Set multipart form content type
+		req.Header.Set("Content-Type", formDataContentType)
+
+		// set the token value
+		c := new(http.Cookie)
+		c.Name = "tokenvalue"
+		c.Value = i.st1
+
+		req.AddCookie(c)
+	}
 
 	if log.GetLevel() == log.DebugLevel {
 		dump, err := httputil.DumpRequestOut(req, true)

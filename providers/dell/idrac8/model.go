@@ -28,6 +28,15 @@ type User struct {
 	SolEnable        string `json:"SolEnable"`
 }
 
+// certStore is the response received when uploading a multipart form,
+// that includes the certificate, this cert is stored in a transient store.
+// {"File":{"ResourceURI":"/sysmgmt/2012/server/transient/filestore/721k12.bmc.dummy.com.crt"}}
+type certStore struct {
+	File struct {
+		ResourceURI string `json:"ResourceURI"`
+	} `json:"File"`
+}
+
 // NtpServer struct holds NTP configuration payload
 //GET - params as query string
 //https://10.193.251.10/data?set=tm_ntp_int_opmode:1,tm_ntp_str_server1:ntp0.lhr4.example.com,tm_ntp_str_server2:ntp0.ams4.example.com,tm_ntp_str_server3:ntp0.fra4.example.com

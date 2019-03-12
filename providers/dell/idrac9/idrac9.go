@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -203,6 +204,64 @@ func (i *IDrac9) delete(endpoint string) (statusCode int, payload []byte, err er
 	}
 
 	return resp.StatusCode, payload, err
+}
+
+// posts the payload to the given endpoint
+func (i *IDrac9) post(endpoint string, data []byte, formDataContentType string) (statusCode int, body []byte, err error) {
+
+	u, err := url.Parse(fmt.Sprintf("https://%s/%s", i.ip, endpoint))
+	if err != nil {
+		return 0, []byte{}, err
+	}
+
+	req, err := http.NewRequest("POST", u.String(), bytes.NewReader(data))
+	if err != nil {
+		return 0, []byte{}, err
+	}
+
+	for _, cookie := range i.httpClient.Jar.Cookies(u) {
+		if cookie.Name == "-http-session-" || cookie.Name == "tokenvalue" {
+			req.AddCookie(cookie)
+		}
+	}
+	req.Header.Add("XSRF-TOKEN", i.xsrfToken)
+
+	if formDataContentType != "" {
+		// Set multipart form content type
+		req.Header.Set("Content-Type", formDataContentType)
+	}
+
+	if log.GetLevel() == log.DebugLevel {
+		dump, err := httputil.DumpRequestOut(req, true)
+		if err == nil {
+			log.Println(fmt.Sprintf("[Request] https://%s/%s", i.ip, endpoint))
+			log.Println(">>>>>>>>>>>>>>>")
+			log.Printf("%s\n\n", dump)
+			log.Println(">>>>>>>>>>>>>>>")
+		}
+	}
+
+	resp, err := i.httpClient.Do(req)
+	if err != nil {
+		return 0, []byte{}, err
+	}
+	defer resp.Body.Close()
+	if log.GetLevel() == log.DebugLevel {
+		dump, err := httputil.DumpResponse(resp, true)
+		if err == nil {
+			log.Println("[Response]")
+			log.Println("<<<<<<<<<<<<<<")
+			log.Printf("%s\n\n", dump)
+			log.Println("<<<<<<<<<<<<<<")
+		}
+	}
+
+	body, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return 0, []byte{}, err
+	}
+
+	return resp.StatusCode, body, err
 }
 
 // Nics returns all found Nics in the device

@@ -1,13 +1,36 @@
 package ilo
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
+	"net"
+	"time"
 
 	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/helper"
 
 	log "github.com/sirupsen/logrus"
 )
+
+// CurrentHTTPSCert returns the current x509 certficates configured on the BMC
+func (i *Ilo) CurrentHTTPSCert() ([]*x509.Certificate, error) {
+
+	dialer := &net.Dialer{
+		Timeout: time.Duration(10) * time.Second,
+	}
+
+	conn, err := tls.DialWithDialer(dialer, "tcp", i.ip+":"+"443", &tls.Config{InsecureSkipVerify: true})
+
+	if err != nil {
+		return []*x509.Certificate{&x509.Certificate{}}, err
+	}
+
+	defer conn.Close()
+
+	return conn.ConnectionState().PeerCertificates, nil
+
+}
 
 // Screenshot returns a thumbnail of video display from the bmc.
 func (i *Ilo) Screenshot() (response []byte, extension string, err error) {

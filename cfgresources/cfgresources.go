@@ -18,7 +18,7 @@ type ResourcesConfig struct {
 	Network      *Network      `yaml:"network"`
 	Syslog       *Syslog       `yaml:"syslog"`
 	User         []*User       `yaml:"user"`
-	Ssl          *Ssl          `yaml:"ssl"`
+	HTTPSCert    *HTTPSCert    `yaml:"httpsCert"`
 	Ntp          *Ntp          `yaml:"ntp"`
 	Bios         *Bios         `yaml:"bios"`
 	Supermicro   *Supermicro   `yaml:"supermicro"` //supermicro specific config, example of issue #34
@@ -102,10 +102,25 @@ type LdapGroup struct {
 	Enable      bool   `yaml:"enable"`
 }
 
-// Ssl struct holds BMC SSL configuration.
-type Ssl struct {
+// HTTPSCert struct holds BMC HTTPs cert configuration.
+type HTTPSCert struct {
+	GenerateCSR bool                 `yaml:"generateCSR"`
+	Attributes  *HTTPSCertAttributes `yaml:"attributes"`
+	// If GenerateCSR is false a CertFile and KeyFile is looked up
 	CertFile string `yaml:"certfile"`
 	KeyFile  string `yaml:"keyfile"`
+}
+
+// HTTPSCertAttributes declares attributes that are part of a cert.
+type HTTPSCertAttributes struct {
+	CommonName       string `yaml:"commonName"`
+	OrganizationName string `yaml:"organizationName"`
+	OrganizationUnit string `yaml:"organizationUnit"`
+	Locality         string `yaml:"locality"`
+	StateName        string `yaml:"stateName"`
+	CountryCode      string `yaml:"countryCode"`
+	Email            string `yaml:"email"`
+	SubjectAltName   string `yaml:"subjectAltName"`
 }
 
 // Network struct holds BMC network configuration.

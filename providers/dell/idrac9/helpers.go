@@ -317,3 +317,23 @@ func (i *IDrac9) putIpmiOverLan(ipmiOverLan IpmiOverLan) (err error) {
 
 	return err
 }
+
+// PUTs CSR request - request for a CSR based on given attributes.
+func (i *IDrac9) putCSR(csrInfo CSRInfo) (err error) {
+
+	m := map[string]CSRInfo{"iDRAC.Security": csrInfo}
+	payload, err := json.Marshal(m)
+	if err != nil {
+		msg := fmt.Sprintf("Error marshalling CSRInfo payload: %s", err)
+		return errors.New(msg)
+	}
+
+	endpoint := fmt.Sprintf("sysmgmt/2012/server/configgroup/iDRAC.Security")
+	statusCode, _, err := i.put(endpoint, payload)
+	if err != nil || statusCode != 200 {
+		msg := fmt.Sprintf("PUT request to set CSR attributes returned: %d", statusCode)
+		return errors.New(msg)
+	}
+
+	return err
+}
