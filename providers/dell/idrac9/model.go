@@ -99,6 +99,7 @@ type CSRInfo struct {
 	OrganizationUnit string `json:"CsrOrganizationUnit"`
 	StateName        string `json:"CsrStateName"`
 	EmailAddr        string `json:"CsrEmailAddr"`
+	SubjectAltName   string `json:"CsrSubjectAltName"`
 }
 
 // certStore is the response received when uploading a multipart form,
