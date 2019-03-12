@@ -170,3 +170,8 @@ func (i *Ibmc) UpdateCredentials(string, string) {
 func (i *Ibmc) UpdateFirmware(string, string) (b bool, e error) {
 	return b, e
 }
+
+// IsOn implements the Bmc interface
+func (i *Ibmc) IsOn() (status bool, err error) {
+	return false, nil
+}
