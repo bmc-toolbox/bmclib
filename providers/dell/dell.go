@@ -345,7 +345,7 @@ type CMCWWNBlade struct {
 	BladeSlotName     string `json:"bladeSlotName"`
 	IsNotDoubleHeight struct {
 		IsInstalled string `json:"isInstalled"`
-		PortFMAC    string `json:"portFMAC"`
+		PortPMAC    string `json:"portPMAC"`
 		IsSelected  int    `json:"isSelected"` //flexaddress enabled/disabled
 	} `json:"is_not_double_height"`
 }

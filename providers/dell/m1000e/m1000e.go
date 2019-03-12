@@ -350,7 +350,7 @@ func (m *M1000e) Blades() (blades []*devices.Blade, err error) {
 			if bmcData, ok := m.cmcWWN.SlotMacWwn.SlotMacWwnList[blade.BladePosition]; ok {
 				n := &devices.Nic{
 					Name:       "bmc",
-					MacAddress: strings.ToLower(bmcData.IsNotDoubleHeight.PortFMAC),
+					MacAddress: strings.ToLower(bmcData.IsNotDoubleHeight.PortPMAC),
 				}
 
 				if bmcData.IsNotDoubleHeight.IsSelected == 1 {
