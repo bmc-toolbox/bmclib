@@ -45,8 +45,8 @@ func (i *Ibmc) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresourc
 }
 
 // Network method implements the Configure interface
-func (i *Ibmc) Network(cfg *cfgresources.Network) error {
-	return nil
+func (i *Ibmc) Network(cfg *cfgresources.Network) (bool, error) {
+	return false, nil
 }
 
 // SetLicense implements the Configure interface

@@ -105,7 +105,7 @@ type Configure interface {
 	Ntp(*cfgresources.Ntp) error
 	Ldap(*cfgresources.Ldap) error
 	LdapGroup([]*cfgresources.LdapGroup, *cfgresources.Ldap) error
-	Network(*cfgresources.Network) error
+	Network(*cfgresources.Network) (bool, error)
 	SetLicense(*cfgresources.License) error
 	Bios(*cfgresources.Bios) error
 	CurrentHTTPSCert() ([]*x509.Certificate, error)

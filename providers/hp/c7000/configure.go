@@ -942,8 +942,8 @@ func (c *C7000) applySyslogEnabled(enabled bool) {
 }
 
 // Network method implements the Configure interface
-func (c *C7000) Network(cfg *cfgresources.Network) error {
-	return nil
+func (c *C7000) Network(cfg *cfgresources.Network) (bool, error) {
+	return false, nil
 }
 
 // SetLicense implements the Configure interface

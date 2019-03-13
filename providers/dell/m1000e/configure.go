@@ -65,8 +65,8 @@ func (m *M1000e) Bios(cfg *cfgresources.Bios) (err error) {
 
 // Network method implements the Configure interface
 // applies various network parameters.
-func (m *M1000e) Network(cfg *cfgresources.Network) (err error) {
-	return err
+func (m *M1000e) Network(cfg *cfgresources.Network) (reset bool, err error) {
+	return reset, err
 }
 
 // User applies the User configuration resource,

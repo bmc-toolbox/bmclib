@@ -396,6 +396,7 @@ func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) error {
 
 // LdapGroup applies LDAP Group/Role related configuration
 // LdapGroup implements the Configure interface.
+// nolint: gocyclo
 func (i *IDrac8) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
 
 	groupID := 1
@@ -610,7 +611,7 @@ func (i *IDrac8) applyTimezoneParam(timezone string) {
 
 // Network method implements the Configure interface
 // applies various network parameters.
-func (i *IDrac8) Network(cfg *cfgresources.Network) (err error) {
+func (i *IDrac8) Network(cfg *cfgresources.Network) (reset bool, err error) {
 
 	params := map[string]int{
 		"EnableIPv4":              1,
@@ -653,14 +654,14 @@ func (i *IDrac8) Network(cfg *cfgresources.Network) (err error) {
 			"responseCode": responseCode,
 			"response":     string(responseBody),
 		}).Warn("POST request to set Network params failed.")
-		return err
+		return reset, err
 	}
 
 	log.WithFields(log.Fields{
 		"IP":    i.ip,
 		"Model": i.BmcType(),
 	}).Debug("Network config parameters applied.")
-	return err
+	return reset, err
 }
 
 // GenerateCSR generates a CSR request on the BMC.
