@@ -25,6 +25,7 @@ func (i *Ilo) Resources() []string {
 		"ntp",
 		"ldap_group",
 		"ldap",
+		"network",
 		"https_cert",
 	}
 }
@@ -87,6 +88,7 @@ func ldapGroupExists(group string, directoryGroups []DirectoryGroups) (directory
 // User applies the User configuration resource,
 // if the user exists, it updates the users password,
 // User implements the Configure interface.
+// nolint: gocyclo
 func (i *Ilo) User(users []*cfgresources.User) (err error) {
 
 	existingUsers, err := i.queryUsers()
@@ -470,6 +472,7 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 
 // LdapGroup applies LDAP Group/Role related configuration
 // LdapGroup implements the Configure interface.
+// nolint: gocyclo
 func (i *Ilo) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
 
 	directoryGroups, err := i.queryDirectoryGroups()
@@ -760,8 +763,53 @@ func (i *Ilo) UploadHTTPSCert(cert []byte, fileName string) (bool, error) {
 }
 
 // Network method implements the Configure interface
-func (i *Ilo) Network(cfg *cfgresources.Network) error {
-	return nil
+// nolint: gocyclo
+func (i *Ilo) Network(cfg *cfgresources.Network) (reset bool, err error) {
+
+	// check if AccessSettings configuration update is required.
+	accessSettings, updateAccessSettings, err := i.cmpAccessSettings(cfg)
+	if err != nil {
+		return reset, err
+	}
+
+	if updateAccessSettings {
+		payload, err := json.Marshal(accessSettings)
+		if err != nil {
+			return reset, fmt.Errorf("Error marshaling AccessSettings payload: %s", err)
+		}
+
+		endpoint := "json/access_settings"
+		statusCode, _, err := i.post(endpoint, payload)
+		if err != nil || statusCode != 200 {
+			return reset, fmt.Errorf("Error/non 200 response calling access_settings, status: %d, error: %s", statusCode, err)
+		}
+
+		reset = true
+	}
+
+	// check the current network IPv4 config
+	networkIPv4Settings, updateIPv4Settings, err := i.cmpNetworkIPv4Settings(cfg)
+	if err != nil {
+		return reset, err
+	}
+
+	if updateIPv4Settings {
+
+		payload, err := json.Marshal(networkIPv4Settings)
+		if err != nil {
+			return reset, fmt.Errorf("Error marshaling NetworkIPv4 payload: %s", err)
+		}
+
+		endpoint := "json/network_ipv4/interface/0"
+		statusCode, _, err := i.post(endpoint, payload)
+		if err != nil || statusCode != 200 {
+			return reset, fmt.Errorf("Error/non 200 response calling access_settings, status: %d, error: %s", statusCode, err)
+		}
+
+		reset = true
+	}
+
+	return reset, nil
 }
 
 // Bios method implements the Configure interface
