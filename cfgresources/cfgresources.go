@@ -125,14 +125,17 @@ type HTTPSCertAttributes struct {
 
 // Network struct holds BMC network configuration.
 type Network struct {
-	Hostname    string `yaml:"hostname"`
-	DNSFromDHCP bool   `yaml:"dnsFromDhcp"`
-	SSHEnable   bool   `yaml:"sshEnable"`
-	SSHPort     int    `yaml:"sshPort"`
-	SolEnable   bool   `yaml:"solEnable"` //Serial over lan
-	IpmiEnable  bool   `yaml:"ipmiEnable"`
-	DhcpEnable  bool   `yaml:"dhcpEnable"`
-	IpmiPort    int    `yaml:"ipmiPort"`
+	Hostname       string `yaml:"hostname"`
+	DNSFromDHCP    bool   `yaml:"dnsFromDhcp"`
+	SSHEnable      bool   `yaml:"sshEnable"`
+	SSHPort        int    `yaml:"sshPort"`
+	SolEnable      bool   `yaml:"solEnable"` //Serial over lan
+	IpmiEnable     bool   `yaml:"ipmiEnable"`
+	DhcpEnable     bool   `yaml:"dhcpEnable"`
+	IpmiPort       int    `yaml:"ipmiPort"`
+	KVMMediaPort   int    `yaml:"kvmMediaPort"`
+	KVMConsolePort int    `yaml:"kvmConsolePort"`
+	DDNSEnable     bool   `yaml:"ddnsEnable"`
 }
 
 // Ntp struct holds BMC NTP configuration.
