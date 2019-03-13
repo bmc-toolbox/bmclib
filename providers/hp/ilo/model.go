@@ -135,14 +135,6 @@ type certImport struct {
 	SessionKey      string `json:"session_key"`
 }
 
-// reset bmc json/ilo_status
-// POST {"method":"reset_ilo","cause":"config","session_key":"555d3f83cae987d7484bebaf05717c8a"}
-type resetIlo struct {
-	Method     string `json:"method"`
-	Cause      string `json:"cause"`
-	SessionKey string `json:"session_key"`
-}
-
 // TimezonesIlo5 declares valid timezone for ilo5 devices.
 var TimezonesIlo5 = map[string]int{
 	"Etc/GMT+12":                     0,

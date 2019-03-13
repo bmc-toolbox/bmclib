@@ -674,6 +674,7 @@ func (i *IDrac9) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, er
 		OrganizationUnit: cert.OrganizationUnit,
 		StateName:        cert.StateName,
 		EmailAddr:        cert.Email,
+		SubjectAltName:   cert.SubjectAltName,
 	}
 
 	// 1. PUT CSR params

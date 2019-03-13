@@ -22,7 +22,7 @@ func (i *IDrac9) CurrentHTTPSCert() ([]*x509.Certificate, error) {
 	conn, err := tls.DialWithDialer(dialer, "tcp", i.ip+":"+"443", &tls.Config{InsecureSkipVerify: true})
 
 	if err != nil {
-		return []*x509.Certificate{&x509.Certificate{}}, err
+		return []*x509.Certificate{{}}, err
 	}
 
 	defer conn.Close()
