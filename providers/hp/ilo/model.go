@@ -135,6 +135,79 @@ type certImport struct {
 	SessionKey      string `json:"session_key"`
 }
 
+// AccessSettings declares BMC network service ports
+// Updating these params requires the BMC to be reset.
+type AccessSettings struct {
+	SSHStatus                    int           `json:"ssh_status"`
+	SSHPort                      int           `json:"ssh_port"`
+	HTTPPort                     int           `json:"http_port"`
+	HTTPSPort                    int           `json:"https_port"`
+	RemoteConsolePort            int           `json:"remote_console_port"`
+	VirtualMediaPort             int           `json:"virtual_media_port"`
+	IpmiLanStatus                int           `json:"ipmi_lan_status"`
+	IpmiPort                     int           `json:"ipmi_port"`
+	SNMPSettings                 *SNMPSettings `json:"snmp_settings"`
+	SessionTimeout               int           `json:"session_timeout"`
+	IloFunctEnabled              int           `json:"ilo_funct_enabled"`
+	IloFunctRequired             int           `json:"ilo_funct_required"`
+	RbsuEnabled                  int           `json:"rbsu_enabled"`
+	F8LoginRequired              int           `json:"f8_login_required"`
+	RbsuPostIP                   int           `json:"rbsu_post_ip"`
+	SerialCliStatus              int           `json:"serial_cli_status"`
+	SystemNoUart                 int           `json:"system_no_uart"`
+	SerialCliSpeed               int           `json:"serial_cli_speed"`
+	VspLogging                   int           `json:"vsp_logging"`
+	AuthenticationFailureLogging int           `json:"authentication_failure_logging"`
+	MinPassword                  int           `json:"min_password"`
+	AuthFailureDelayTime         int           `json:"auth_failure_delay_time"`
+	AuthNodelayFailures          int           `json:"auth_nodelay_failures"`
+	ServerName                   string        `json:"server_name"`
+	ServerFqdn                   string        `json:"server_fqdn"`
+	DefaultLang                  string        `json:"default_lang"`
+	SessionKey                   string        `json:"session_key"`
+	Method                       string        `json:"method"`
+}
+
+// SNMPSettings declares BMC SNMP params
+type SNMPSettings struct {
+	SnmpPort            int `json:"snmp_port"`
+	TrapPort            int `json:"trap_port"`
+	SnmpExternalDisable int `json:"snmp_external_disable"`
+}
+
+// NetworkIPv4 sets IPv4 network settings
+// The BMC would require a reset if these params are updated.
+type NetworkIPv4 struct {
+	Interface                   int    `json:"interface"`
+	PendingChange               int    `json:"pending_change"`
+	DhcpEnabled                 int    `json:"dhcp_enabled"`
+	UseDhcpSuppliedGateway      int    `json:"use_dhcp_supplied_gateway"`
+	UseDhcpSuppliedDNS          int    `json:"use_dhcp_supplied_dns"`
+	UseDhcpSuppliedWins         int    `json:"use_dhcp_supplied_wins"`
+	UseDhcpSuppliedStaticRoutes int    `json:"use_dhcp_supplied_static_routes"`
+	UseDhcpSuppliedDomainName   int    `json:"use_dhcp_supplied_domain_name"`
+	UseDhcpSuppliedTimeServers  int    `json:"use_dhcp_supplied_time_servers"`
+	IPAddress                   string `json:"ip_address"`
+	SubnetMask                  string `json:"subnet_mask"`
+	GatewayIPAddress            string `json:"gateway_ip_address"`
+	PingGateway                 int    `json:"ping_gateway"`
+	RegWinsServer               int    `json:"reg_wins_server"`
+	DNS                         []ipv4 `json:"dns"`
+	Wins                        []ipv4 `json:"wins"`
+	RegDdnsServer               int    `json:"reg_ddns_server"`
+	StaticRouteDest             []ipv4 `json:"static_route_dest"`
+	StaticRouteMask             []ipv4 `json:"static_route_mask"`
+	StaticRouteGate             []ipv4 `json:"static_route_gate"`
+	Wcount                      int    `json:"wcount"`
+	SessionKey                  string `json:"session_key"`
+	Method                      string `json:"method"`
+}
+
+type ipv4 struct {
+	ID     int    `json:"id"`
+	Ipv4IP string `json:"ipv4_ip"`
+}
+
 // TimezonesIlo5 declares valid timezone for ilo5 devices.
 var TimezonesIlo5 = map[string]int{
 	"Etc/GMT+12":                     0,

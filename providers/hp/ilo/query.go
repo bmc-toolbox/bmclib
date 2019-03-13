@@ -149,3 +149,67 @@ func (i *Ilo) queryNetworkSntp() (networkSntp NetworkSntp, err error) {
 
 	return networkSntp, err
 }
+
+func (i *Ilo) queryAccessSettings() (AccessSettings, error) {
+
+	endpoint := "json/access_settings"
+
+	var accessSettings AccessSettings
+
+	payload, err := i.get(endpoint)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IP":       i.ip,
+			"Model":    i.BmcType(),
+			"endpoint": endpoint,
+			"step":     helper.WhosCalling(),
+			"Error":    err,
+		}).Warn("GET request failed.")
+		return accessSettings, err
+	}
+
+	err = json.Unmarshal(payload, &accessSettings)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IP":    i.ip,
+			"step":  helper.WhosCalling(),
+			"Model": i.BmcType(),
+			"Error": err,
+		}).Warn("Unable to unmarshal payload.")
+		return accessSettings, err
+	}
+
+	return accessSettings, err
+}
+
+func (i *Ilo) queryNetworkIPv4() (NetworkIPv4, error) {
+
+	endpoint := "json/network_ipv4/interface/0"
+
+	var networkIPv4 NetworkIPv4
+
+	payload, err := i.get(endpoint)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IP":       i.ip,
+			"Model":    i.BmcType(),
+			"endpoint": endpoint,
+			"step":     helper.WhosCalling(),
+			"Error":    err,
+		}).Warn("GET request failed.")
+		return networkIPv4, err
+	}
+
+	err = json.Unmarshal(payload, &networkIPv4)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IP":    i.ip,
+			"step":  helper.WhosCalling(),
+			"Model": i.BmcType(),
+			"Error": err,
+		}).Warn("Unable to unmarshal payload.")
+		return networkIPv4, err
+	}
+
+	return networkIPv4, err
+}

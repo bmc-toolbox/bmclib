@@ -97,6 +97,7 @@ func (s *SupermicroX10) queryUserAccounts() (userAccounts map[string]int, err er
 // if the user exists, it updates the users password,
 // User implements the Configure interface.
 // supermicro user accounts start with 1, account 0 which is a large empty string :\.
+// nolint: gocyclo
 func (s *SupermicroX10) User(users []*cfgresources.User) (err error) {
 
 	currentUsers, err := s.queryUserAccounts()
@@ -197,7 +198,7 @@ func (s *SupermicroX10) User(users []*cfgresources.User) (err error) {
 
 // Network method implements the Configure interface
 // applies various network parameters.
-func (s *SupermicroX10) Network(cfg *cfgresources.Network) (err error) {
+func (s *SupermicroX10) Network(cfg *cfgresources.Network) (reset bool, err error) {
 
 	sshPort := 22
 
@@ -237,14 +238,14 @@ func (s *SupermicroX10) Network(cfg *cfgresources.Network) (err error) {
 			"Step":       helper.WhosCalling(),
 			"Error":      err,
 		}).Warn(msg)
-		return errors.New(msg)
+		return reset, errors.New(msg)
 	}
 
 	log.WithFields(log.Fields{
 		"IP":    s.ip,
 		"Model": s.BmcType(),
 	}).Debug("Network config parameters applied.")
-	return err
+	return reset, err
 }
 
 // Ntp applies NTP configuration params
@@ -353,6 +354,7 @@ func (s *SupermicroX10) Ldap(cfgLdap *cfgresources.Ldap) error {
 // LdapGroup applies LDAP and LDAP Group/Role related configuration,
 // LdapGroup implements the Configure interface.
 // Supermicro does not have any separate configuration for Ldap groups just for generic ldap
+// nolint: gocyclo
 func (s *SupermicroX10) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
 
 	var enable string
@@ -563,6 +565,7 @@ func (s *SupermicroX10) Syslog(cfg *cfgresources.Syslog) (err error) {
 }
 
 // posts a urlencoded form to the given endpoint
+// nolint: gocyclo
 func (s *SupermicroX10) post(endpoint string, form *url.Values) (statusCode int, err error) {
 	err = s.httpLogin()
 	if err != nil {
