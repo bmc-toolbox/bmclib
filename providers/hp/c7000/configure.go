@@ -964,12 +964,13 @@ func (c *C7000) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, err
 
 // UploadHTTPSCert uploads the given CRT cert,
 // UploadHTTPSCert implements the Configure interface.
-func (c *C7000) UploadHTTPSCert(cert []byte, fileName string) (bool, error) {
+func (c *C7000) UploadHTTPSCert(cert []byte, certFileName string, key []byte, keyFileName string) (bool, error) {
 	return false, nil
 }
 
 // CurrentHTTPSCert returns the current x509 certficates configured on the BMC
+// The bool value returned indicates if the BMC supports CSR generation.
 // CurrentHTTPSCert implements the Configure interface.
-func (c *C7000) CurrentHTTPSCert() (x []*x509.Certificate, e error) {
-	return x, e
+func (c *C7000) CurrentHTTPSCert() (x []*x509.Certificate, b bool, e error) {
+	return x, b, e
 }

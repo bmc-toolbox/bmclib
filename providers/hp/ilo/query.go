@@ -14,7 +14,9 @@ import (
 )
 
 // CurrentHTTPSCert returns the current x509 certficates configured on the BMC
-func (i *Ilo) CurrentHTTPSCert() ([]*x509.Certificate, error) {
+// The bool value returned indicates if the BMC supports CSR generation.
+// CurrentHTTPSCert implements the Configure interface
+func (i *Ilo) CurrentHTTPSCert() ([]*x509.Certificate, bool, error) {
 
 	dialer := &net.Dialer{
 		Timeout: time.Duration(10) * time.Second,
@@ -23,12 +25,12 @@ func (i *Ilo) CurrentHTTPSCert() ([]*x509.Certificate, error) {
 	conn, err := tls.DialWithDialer(dialer, "tcp", i.ip+":"+"443", &tls.Config{InsecureSkipVerify: true})
 
 	if err != nil {
-		return []*x509.Certificate{{}}, err
+		return []*x509.Certificate{{}}, true, err
 	}
 
 	defer conn.Close()
 
-	return conn.ConnectionState().PeerCertificates, nil
+	return conn.ConnectionState().PeerCertificates, true, nil
 
 }
 
