@@ -1,10 +1,12 @@
 package supermicrox10
 
 import (
-	"crypto/x509"
+	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -35,6 +37,7 @@ func (s *SupermicroX10) Resources() []string {
 		"ntp",
 		//"ldap", - ldap configuration is applied as part of ldap_group.
 		"ldap_group",
+		"https_cert",
 	}
 }
 
@@ -170,7 +173,7 @@ func (s *SupermicroX10) User(users []*cfgresources.User) (err error) {
 
 		endpoint := "config_user.cgi"
 		form, _ := query.Values(configUser)
-		statusCode, err := s.post(endpoint, &form)
+		statusCode, err := s.post(endpoint, &form, []byte{}, "")
 		if err != nil || statusCode != 200 {
 			msg := "POST request to set User config returned error."
 			log.WithFields(log.Fields{
@@ -227,7 +230,7 @@ func (s *SupermicroX10) Network(cfg *cfgresources.Network) (reset bool, err erro
 
 	endpoint := fmt.Sprintf("op.cgi")
 	form, _ := query.Values(configPort)
-	statusCode, err := s.post(endpoint, &form)
+	statusCode, err := s.post(endpoint, &form, []byte{}, "")
 	if err != nil || statusCode != 200 {
 		msg := "POST request to set Port config returned error."
 		log.WithFields(log.Fields{
@@ -321,7 +324,7 @@ func (s *SupermicroX10) Ntp(cfg *cfgresources.Ntp) (err error) {
 
 	endpoint := fmt.Sprintf("op.cgi")
 	form, _ := query.Values(configDateTime)
-	statusCode, err := s.post(endpoint, &form)
+	statusCode, err := s.post(endpoint, &form, []byte{}, "")
 	if err != nil || statusCode != 200 {
 		msg := "POST request to set Syslog config returned error."
 		log.WithFields(log.Fields{
@@ -467,9 +470,9 @@ func (s *SupermicroX10) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *c
 			BindPassword: "********", //default value
 		}
 
-		endpoint := fmt.Sprintf("op.cgi")
+		endpoint := "op.cgi"
 		form, _ := query.Values(configLdap)
-		statusCode, err := s.post(endpoint, &form)
+		statusCode, err := s.post(endpoint, &form, []byte{}, "")
 		if err != nil || statusCode != 200 {
 			msg := "POST request to set Ldap config returned error."
 			log.WithFields(log.Fields{
@@ -542,7 +545,7 @@ func (s *SupermicroX10) Syslog(cfg *cfgresources.Syslog) (err error) {
 
 	endpoint := fmt.Sprintf("op.cgi")
 	form, _ := query.Values(configSyslog)
-	statusCode, err := s.post(endpoint, &form)
+	statusCode, err := s.post(endpoint, &form, []byte{}, "")
 	if err != nil || statusCode != 200 {
 		msg := "POST request to set Syslog config returned error."
 		log.WithFields(log.Fields{
@@ -566,7 +569,8 @@ func (s *SupermicroX10) Syslog(cfg *cfgresources.Syslog) (err error) {
 
 // posts a urlencoded form to the given endpoint
 // nolint: gocyclo
-func (s *SupermicroX10) post(endpoint string, form *url.Values) (statusCode int, err error) {
+func (s *SupermicroX10) post(endpoint string, urlValues *url.Values, form []byte, formDataContentType string) (statusCode int, err error) {
+
 	err = s.httpLogin()
 	if err != nil {
 		return statusCode, err
@@ -576,11 +580,26 @@ func (s *SupermicroX10) post(endpoint string, form *url.Values) (statusCode int,
 	if err != nil {
 		return statusCode, err
 	}
-	req, err := http.NewRequest("POST", u.String(), strings.NewReader(form.Encode()))
-	if err != nil {
-		return statusCode, err
+
+	var req *http.Request
+
+	if formDataContentType == "" {
+
+		req, err = http.NewRequest("POST", u.String(), strings.NewReader(urlValues.Encode()))
+		if err != nil {
+			return statusCode, err
+		}
+		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	} else {
+
+		req, err = http.NewRequest("POST", u.String(), bytes.NewReader(form))
+		if err != nil {
+			return statusCode, err
+		}
+		// Set multipart form content type
+		req.Header.Set("Content-Type", formDataContentType)
 	}
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	for _, cookie := range s.httpClient.Jar.Cookies(u) {
 		if cookie.Name == "SID" && cookie.Value != "" {
@@ -633,12 +652,50 @@ func (s *SupermicroX10) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]b
 
 // UploadHTTPSCert uploads the given CRT cert,
 // UploadHTTPSCert implements the Configure interface.
-func (s *SupermicroX10) UploadHTTPSCert(cert []byte, fileName string) (bool, error) {
-	return false, nil
-}
+func (s *SupermicroX10) UploadHTTPSCert(cert []byte, certFileName string, key []byte, keyFileName string) (bool, error) {
 
-// CurrentHTTPSCert returns the current x509 certficates configured on the BMC
-// CurrentHTTPSCert implements the Configure interface.
-func (s *SupermicroX10) CurrentHTTPSCert() (c []*x509.Certificate, e error) {
-	return c, e
+	endpoint := "upload_ssl.cgi"
+
+	// setup a buffer for our multipart form
+	var form bytes.Buffer
+	w := multipart.NewWriter(&form)
+
+	// setup the ssl cert part
+	certWriter, err := w.CreateFormFile("/tmp/cert.pem", "cert.pem")
+	if err != nil {
+		return false, err
+	}
+
+	_, err = io.Copy(certWriter, bytes.NewReader(cert))
+	if err != nil {
+		return false, err
+	}
+
+	// setup the ssl key part
+	keyWriter, err := w.CreateFormFile("/tmp/key.pem", "key.pem")
+	if err != nil {
+		return false, err
+	}
+	_, err = io.Copy(keyWriter, bytes.NewReader(key))
+	if err != nil {
+		return false, err
+	}
+
+	// close multipart writer - adds the teminating boundary.
+	w.Close()
+
+	status, err := s.post(endpoint, &url.Values{}, form.Bytes(), w.FormDataContentType())
+	if err != nil || status != 200 {
+		log.WithFields(log.Fields{
+			"IP":         s.ip,
+			"Model":      s.BmcType(),
+			"Endpoint":   endpoint,
+			"StatusCode": status,
+			"Step":       helper.WhosCalling(),
+			"Error":      err,
+		}).Warn("Cert form upload POST request failed, expected 200.")
+		return false, err
+	}
+
+	return true, nil
 }

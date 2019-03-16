@@ -1,13 +1,37 @@
 package supermicrox10
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"net"
 	"time"
 
 	"github.com/google/go-querystring/query"
 
 	"github.com/bmc-toolbox/bmclib/errors"
 )
+
+// CurrentHTTPSCert returns the current x509 certficates configured on the BMC
+// the bool value returned is set to true if the BMC support CSR generation.
+// CurrentHTTPSCert implements the Configure interface.
+func (s *SupermicroX10) CurrentHTTPSCert() ([]*x509.Certificate, bool, error) {
+
+	dialer := &net.Dialer{
+		Timeout: time.Duration(10) * time.Second,
+	}
+
+	conn, err := tls.DialWithDialer(dialer, "tcp", s.ip+":"+"443", &tls.Config{InsecureSkipVerify: true})
+
+	if err != nil {
+		return []*x509.Certificate{{}}, false, err
+	}
+
+	defer conn.Close()
+
+	return conn.ConnectionState().PeerCertificates, false, nil
+
+}
 
 // Screenshot returns a thumbnail of video display from the bmc.
 // 1. request capture preview.
@@ -44,7 +68,7 @@ func (s *SupermicroX10) Screenshot() (response []byte, extension string, err err
 	}
 
 	form, _ := query.Values(capturePreview)
-	statusCode, err := s.post(postEndpoint, &form)
+	statusCode, err := s.post(postEndpoint, &form, []byte{}, "")
 	if err != nil {
 		return response, extension, err
 	}
