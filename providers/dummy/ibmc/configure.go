@@ -67,12 +67,13 @@ func (i *Ibmc) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, erro
 
 // UploadHTTPSCert uploads the given CRT cert,
 // UploadHTTPSCert implements the Configure interface.
-func (i *Ibmc) UploadHTTPSCert(cert []byte, fileName string) (bool, error) {
+func (i *Ibmc) UploadHTTPSCert(cert []byte, certFileName string, key []byte, keyFileName string) (bool, error) {
 	return false, nil
 }
 
 // CurrentHTTPSCert returns the current x509 certficates configured on the BMC
+// The bool value returned indicates if the BMC supports CSR generation.
 // CurrentHTTPSCert implements the Configure interface.
-func (i *Ibmc) CurrentHTTPSCert() (c []*x509.Certificate, e error) {
-	return c, e
+func (i *Ibmc) CurrentHTTPSCert() (c []*x509.Certificate, b bool, e error) {
+	return c, b, e
 }

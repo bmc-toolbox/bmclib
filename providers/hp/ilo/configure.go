@@ -735,7 +735,7 @@ func (i *Ilo) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, error
 // UploadHTTPSCert uploads the given CRT cert,
 // UploadHTTPSCert implements the Configure interface.
 // return true if the bmc requires a reset.
-func (i *Ilo) UploadHTTPSCert(cert []byte, fileName string) (bool, error) {
+func (i *Ilo) UploadHTTPSCert(cert []byte, certFileName string, key []byte, keyFileName string) (bool, error) {
 
 	certPayload := &certImport{
 		Method:          "import_certificate",

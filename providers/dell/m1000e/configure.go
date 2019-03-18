@@ -247,14 +247,15 @@ func (m *M1000e) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, er
 
 // UploadHTTPSCert uploads the given CRT cert,
 // UploadHTTPSCert implements the Configure interface.
-func (m *M1000e) UploadHTTPSCert(cert []byte, fileName string) (bool, error) {
+func (m *M1000e) UploadHTTPSCert(cert []byte, certFileName string, key []byte, keyFileName string) (bool, error) {
 	return false, nil
 }
 
 // CurrentHTTPSCert returns the current x509 certficates configured on the BMC
+// The bool value returned indicates if the BMC supports CSR generation.
 // CurrentHTTPSCert implements the Configure interface.
-func (m *M1000e) CurrentHTTPSCert() (c []*x509.Certificate, e error) {
-	return c, e
+func (m *M1000e) CurrentHTTPSCert() (c []*x509.Certificate, b bool, e error) {
+	return c, b, e
 }
 
 // Ssl applies the SSL configuration
