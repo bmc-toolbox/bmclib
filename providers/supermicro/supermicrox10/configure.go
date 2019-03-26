@@ -572,6 +572,11 @@ func (s *SupermicroX10) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]b
 
 // UploadHTTPSCert uploads the given CRT cert,
 // UploadHTTPSCert implements the Configure interface.
+// 1. Upload the certificate and key pair
+// 2. delay for a second (to let the BMC process the certificate)
+// 3. Get the BMC to validate the certificate: SSL_VALIDATE.XML	(0,0)
+// 4. delay for a second
+// 5. Request for the current: SSL_STATUS.XML	(0,0)
 func (s *SupermicroX10) UploadHTTPSCert(cert []byte, certFileName string, key []byte, keyFileName string) (bool, error) {
 
 	endpoint := "upload_ssl.cgi"
@@ -604,6 +609,7 @@ func (s *SupermicroX10) UploadHTTPSCert(cert []byte, certFileName string, key []
 	// close multipart writer - adds the teminating boundary.
 	w.Close()
 
+	// 1. upload
 	status, err := s.post(endpoint, &url.Values{}, form.Bytes(), w.FormDataContentType())
 	if err != nil || status != 200 {
 		log.WithFields(log.Fields{
@@ -617,5 +623,72 @@ func (s *SupermicroX10) UploadHTTPSCert(cert []byte, certFileName string, key []
 		return false, err
 	}
 
+	// 2. delay
+	time.Sleep(1 * time.Second)
+
+	// 3. Get BMC to validate uploaded cert
+	err = s.validateSSL()
+	if err != nil {
+		return false, err
+	}
+
+	// 4. delay
+	time.Sleep(1 * time.Second)
+
+	// 5. Get cert status
+	err = s.statusSSL()
+	if err != nil {
+		return false, err
+	}
+
 	return true, nil
+}
+
+// The second part of the certificate upload process,
+// we get the BMC to validate the uploaded SSL certificate.
+func (s *SupermicroX10) validateSSL() error {
+
+	var v = url.Values{}
+	v.Set("SSL_VALIDATE.XML", "(0,0)")
+
+	var endpoint = "ipmi.cgi"
+	status, err := s.post(endpoint, &v, []byte{}, "")
+	if err != nil || status != 200 {
+		log.WithFields(log.Fields{
+			"IP":         s.ip,
+			"Model":      s.BmcType(),
+			"Endpoint":   endpoint,
+			"StatusCode": status,
+			"Step":       helper.WhosCalling(),
+			"Error":      err,
+		}).Warn("Cert validate POST request failed, expected 200.")
+		return err
+	}
+
+	return nil
+}
+
+// The third part of the certificate upload process
+// Get the current status of the certificate.
+// POST https://10.193.251.43/cgi/ipmi.cgi SSL_STATUS.XML: (0,0)
+func (s *SupermicroX10) statusSSL() error {
+
+	var v = url.Values{}
+	v.Add("SSL_STATUS.XML", "(0,0)")
+
+	var endpoint = "ipmi.cgi"
+	status, err := s.post(endpoint, &v, []byte{}, "")
+	if err != nil || status != 200 {
+		log.WithFields(log.Fields{
+			"IP":         s.ip,
+			"Model":      s.BmcType(),
+			"Endpoint":   endpoint,
+			"StatusCode": status,
+			"Step":       helper.WhosCalling(),
+			"Error":      err,
+		}).Warn("Cert status POST request failed, expected 200.")
+		return err
+	}
+
+	return nil
 }
