@@ -5,11 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net"
-	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"strings"
 	"time"
@@ -565,83 +562,6 @@ func (s *SupermicroX10) Syslog(cfg *cfgresources.Syslog) (err error) {
 		"Model": s.BmcType(),
 	}).Debug("Syslog config parameters applied.")
 	return err
-}
-
-// posts a urlencoded form to the given endpoint
-// nolint: gocyclo
-func (s *SupermicroX10) post(endpoint string, urlValues *url.Values, form []byte, formDataContentType string) (statusCode int, err error) {
-
-	err = s.httpLogin()
-	if err != nil {
-		return statusCode, err
-	}
-
-	u, err := url.Parse(fmt.Sprintf("https://%s/cgi/%s", s.ip, endpoint))
-	if err != nil {
-		return statusCode, err
-	}
-
-	var req *http.Request
-
-	if formDataContentType == "" {
-
-		req, err = http.NewRequest("POST", u.String(), strings.NewReader(urlValues.Encode()))
-		if err != nil {
-			return statusCode, err
-		}
-		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-	} else {
-
-		req, err = http.NewRequest("POST", u.String(), bytes.NewReader(form))
-		if err != nil {
-			return statusCode, err
-		}
-		// Set multipart form content type
-		req.Header.Set("Content-Type", formDataContentType)
-	}
-
-	for _, cookie := range s.httpClient.Jar.Cookies(u) {
-		if cookie.Name == "SID" && cookie.Value != "" {
-			req.AddCookie(cookie)
-		}
-	}
-
-	if log.GetLevel() == log.DebugLevel {
-		fmt.Println(fmt.Sprintf("https://%s/cgi/%s", s.ip, endpoint))
-		dump, err := httputil.DumpRequestOut(req, true)
-		if err == nil {
-			log.Println("[Request]")
-			log.Println(">>>>>>>>>>>>>>>")
-			log.Printf("%s\n\n", dump)
-			log.Println(">>>>>>>>>>>>>>>")
-		}
-	}
-
-	resp, err := s.httpClient.Do(req)
-	if err != nil {
-		return statusCode, err
-	}
-	defer resp.Body.Close()
-
-	if log.GetLevel() == log.DebugLevel {
-		dump, err := httputil.DumpResponse(resp, true)
-		if err == nil {
-			log.Println("[Response]")
-			log.Println("<<<<<<<<<<<<<<")
-			log.Printf("%s\n\n", dump)
-			log.Println("<<<<<<<<<<<<<<")
-		}
-	}
-
-	statusCode = resp.StatusCode
-	_, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return statusCode, err
-	}
-	//fmt.Printf("-->> %d\n", resp.StatusCode)
-	//fmt.Printf("%s\n", body)
-	return statusCode, err
 }
 
 // GenerateCSR generates a CSR request on the BMC.
