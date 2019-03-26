@@ -1,5 +1,7 @@
 package cfgresources
 
+import "time"
+
 // SetupChassis struct holds attributes for one time chassis setup.
 type SetupChassis struct {
 	FlexAddress         *flexAddress       `yaml:"flexAddress"`
@@ -113,14 +115,15 @@ type HTTPSCert struct {
 
 // HTTPSCertAttributes declares attributes that are part of a cert.
 type HTTPSCertAttributes struct {
-	CommonName       string `yaml:"commonName"`
-	OrganizationName string `yaml:"organizationName"`
-	OrganizationUnit string `yaml:"organizationUnit"`
-	Locality         string `yaml:"locality"`
-	StateName        string `yaml:"stateName"`
-	CountryCode      string `yaml:"countryCode"`
-	Email            string `yaml:"email"`
-	SubjectAltName   string `yaml:"subjectAltName"`
+	CommonName        string        `yaml:"commonName"`
+	OrganizationName  string        `yaml:"organizationName"`
+	OrganizationUnit  string        `yaml:"organizationUnit"`
+	Locality          string        `yaml:"locality"`
+	StateName         string        `yaml:"stateName"`
+	CountryCode       string        `yaml:"countryCode"`
+	Email             string        `yaml:"email"`
+	SubjectAltName    string        `yaml:"subjectAltName"`
+	RenewBeforeExpiry time.Duration `yaml:"renewBeforeExpiry"`
 }
 
 // Network struct holds BMC network configuration.
