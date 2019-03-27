@@ -60,7 +60,7 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 
 	//GET current settings
 	currentBiosSettings, err := i.getBiosSettings()
-	if err != nil {
+	if err != nil || currentBiosSettings == nil {
 		msg := "Unable to get current bios settings through redfish."
 		log.WithFields(log.Fields{
 			"IP":    i.ip,
