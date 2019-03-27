@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
+	"net/url"
 	"reflect"
 	"strings"
 
@@ -283,7 +284,19 @@ func (i *IDrac9) queryRedfish(method string, endpoint string, payload []byte) (s
 	}
 
 	req.SetBasicAuth(i.username, i.password)
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json, text/plain, */*")
+	req.Header.Add("X-AUTH-TOKEN", i.xsrfToken)
+
+	u, err := url.Parse(bmcURL)
+	if err != nil {
+		return 0, []byte{}, err
+	}
+
+	for _, cookie := range i.httpClient.Jar.Cookies(u) {
+		if cookie.Name == "-http-session-" || cookie.Name == "tokenvalue" {
+			req.AddCookie(cookie)
+		}
+	}
 
 	if log.GetLevel() == log.DebugLevel {
 		dump, err := httputil.DumpRequestOut(req, true)
