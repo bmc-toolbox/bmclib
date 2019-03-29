@@ -73,7 +73,7 @@ func (i *IDrac9) get(endpoint string, extraHeaders *map[string]string) (payload 
 		}
 	}
 
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
 			log.Println(fmt.Sprintf("[Request] %s/%s", bmcURL, endpoint))
@@ -89,7 +89,7 @@ func (i *IDrac9) get(endpoint string, extraHeaders *map[string]string) (payload 
 	}
 	defer resp.Body.Close()
 
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpResponse(resp, true)
 		if err == nil {
 			log.Println("[Response]")
@@ -122,7 +122,7 @@ func (i *IDrac9) put(endpoint string, payload []byte) (statusCode int, response 
 
 	req.Header.Add("XSRF-TOKEN", i.xsrfToken)
 
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
 			log.Println(fmt.Sprintf("[Request] %s/%s", bmcURL, endpoint))
@@ -138,7 +138,7 @@ func (i *IDrac9) put(endpoint string, payload []byte) (statusCode int, response 
 	}
 	defer resp.Body.Close()
 
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpResponse(resp, true)
 		if err == nil {
 			log.Println("[Response]")
@@ -172,7 +172,7 @@ func (i *IDrac9) delete(endpoint string) (statusCode int, payload []byte, err er
 
 	req.Header.Add("XSRF-TOKEN", i.xsrfToken)
 
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
 			log.Println(fmt.Sprintf("[Request] %s", fmt.Sprintf("%s/%s", bmcURL, endpoint)))
@@ -188,7 +188,7 @@ func (i *IDrac9) delete(endpoint string) (statusCode int, payload []byte, err er
 	}
 	defer resp.Body.Close()
 
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpResponse(resp, true)
 		if err == nil {
 			log.Println("[Response]")
@@ -231,7 +231,7 @@ func (i *IDrac9) post(endpoint string, data []byte, formDataContentType string) 
 		req.Header.Set("Content-Type", formDataContentType)
 	}
 
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
 			log.Println(fmt.Sprintf("[Request] https://%s/%s", i.ip, endpoint))
@@ -246,7 +246,7 @@ func (i *IDrac9) post(endpoint string, data []byte, formDataContentType string) 
 		return 0, []byte{}, err
 	}
 	defer resp.Body.Close()
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpResponse(resp, true)
 		if err == nil {
 			log.Println("[Response]")

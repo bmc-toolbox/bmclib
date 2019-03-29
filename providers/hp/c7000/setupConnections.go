@@ -54,7 +54,7 @@ func (c *C7000) httpLogin() (err error) {
 
 	//req.Header.Add("Content-Type", "application/soap+xml; charset=utf-8")
 	req.Header.Add("Content-Type", "text/plain;charset=UTF-8")
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		log.Println(fmt.Sprintf("https://%s/hpoa", c.ip))
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
@@ -68,7 +68,7 @@ func (c *C7000) httpLogin() (err error) {
 	}
 	defer resp.Body.Close()
 
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpResponse(resp, true)
 		if err == nil {
 			log.Printf("%s\n\n", dump)

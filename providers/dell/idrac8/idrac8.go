@@ -77,7 +77,7 @@ func (i *IDrac8) put(endpoint string, payload []byte) (statusCode int, response 
 		}
 	}
 
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
 			log.Println(fmt.Sprintf("[Request] %s/%s", bmcURL, endpoint))
@@ -93,7 +93,7 @@ func (i *IDrac8) put(endpoint string, payload []byte) (statusCode int, response 
 	}
 	defer resp.Body.Close()
 
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpResponse(resp, true)
 		if err == nil {
 			log.Println("[Response]")
@@ -151,7 +151,7 @@ func (i *IDrac8) post(endpoint string, data []byte, formDataContentType string) 
 		req.AddCookie(c)
 	}
 
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
 			log.Println(fmt.Sprintf("[Request] https://%s/%s", i.ip, endpoint))
@@ -166,7 +166,7 @@ func (i *IDrac8) post(endpoint string, data []byte, formDataContentType string) 
 		return 0, []byte{}, err
 	}
 	defer resp.Body.Close()
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpResponse(resp, true)
 		if err == nil {
 			log.Println("[Response]")
@@ -211,7 +211,7 @@ func (i *IDrac8) get(endpoint string, extraHeaders *map[string]string) (payload 
 			req.AddCookie(cookie)
 		}
 	}
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
 			log.Println(fmt.Sprintf("[Request] https://%s/%s", bmcURL, endpoint))
@@ -226,7 +226,7 @@ func (i *IDrac8) get(endpoint string, extraHeaders *map[string]string) (payload 
 		return payload, err
 	}
 	defer resp.Body.Close()
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpResponse(resp, true)
 		if err == nil {
 			log.Println("[Response]")
