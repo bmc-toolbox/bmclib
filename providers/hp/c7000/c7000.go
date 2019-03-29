@@ -151,8 +151,6 @@ func (c *C7000) Fans() (fans []*devices.Fan, err error) {
 			Position:   fan.Bay.Connection,
 			Model:      fan.ProducName,
 			CurrentRPM: fan.RpmCUR,
-			MaxRPM:     fan.RpmMAX,
-			MinRPM:     fan.RpmMIN,
 			PowerKw:    float64(fan.PowerUsed) / 1000,
 		}
 		fans = append(fans, f)
@@ -315,4 +313,19 @@ func (c *C7000) ChassisSnapshot() (chassis *devices.Chassis, err error) {
 func (c *C7000) UpdateCredentials(username string, password string) {
 	c.username = username
 	c.password = password
+}
+
+// GetConfigure returns itself as a configure interface to avoid using reflect
+func (c *C7000) GetConfigure() devices.Configure {
+	return c
+}
+
+// GetSetup returns itself as a configure interface to avoid using reflect
+func (c *C7000) GetSetup() devices.CmcSetup {
+	return c
+}
+
+// GetCollection returns itself as a configure interface to avoid using reflect
+func (c *C7000) GetCollection() devices.CmcCollection {
+	return c
 }

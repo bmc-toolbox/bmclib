@@ -711,9 +711,9 @@ func TestChassisInterface(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
-	_ = devices.BmcChassis(chassis)
+	_ = devices.Cmc(chassis)
 	_ = devices.Configure(chassis)
-	_ = devices.BmcChassisSetup(chassis)
+	_ = devices.CmcSetup(chassis)
 
 	tearDown()
 }

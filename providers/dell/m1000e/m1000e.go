@@ -490,3 +490,18 @@ func (m *M1000e) UpdateCredentials(username string, password string) {
 	m.username = username
 	m.password = password
 }
+
+// GetConfigure returns itself as a configure interface to avoid using reflect
+func (m *M1000e) GetConfigure() devices.Configure {
+	return m
+}
+
+// GetSetup returns itself as a configure interface to avoid using reflect
+func (m *M1000e) GetSetup() devices.CmcSetup {
+	return m
+}
+
+// GetCollection returns itself as a configure interface to avoid using reflect
+func (m *M1000e) GetCollection() devices.CmcCollection {
+	return m
+}

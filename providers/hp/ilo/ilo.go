@@ -743,3 +743,13 @@ func (i *Ilo) UpdateCredentials(username string, password string) {
 	i.username = username
 	i.password = password
 }
+
+// GetConfigure returns itself as a configure interface to avoid using reflect
+func (i *Ilo) GetConfigure() devices.Configure {
+	return i
+}
+
+// GetCollection returns itself as a configure interface to avoid using reflect
+func (i *Ilo) GetCollection() devices.BmcCollection {
+	return i
+}
