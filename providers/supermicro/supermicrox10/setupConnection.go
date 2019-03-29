@@ -80,7 +80,7 @@ func (s *SupermicroX10) Close() (err error) {
 				req.AddCookie(cookie)
 			}
 		}
-		if log.GetLevel() == log.DebugLevel {
+		if log.GetLevel() == log.TraceLevel {
 			log.Println(fmt.Sprintf("https://%s/cgi/%s", bmcURL, s.ip))
 			dump, err := httputil.DumpRequestOut(req, true)
 			if err == nil {
@@ -99,7 +99,7 @@ func (s *SupermicroX10) Close() (err error) {
 		defer resp.Body.Close()
 		defer io.Copy(ioutil.Discard, resp.Body)
 
-		if log.GetLevel() == log.DebugLevel {
+		if log.GetLevel() == log.TraceLevel {
 			log.Println(fmt.Sprintf("https://%s/cgi/%s", bmcURL, s.ip))
 			dump, err := httputil.DumpRequestOut(req, true)
 			if err == nil {

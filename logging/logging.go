@@ -11,9 +11,11 @@ func init() {
 	log.SetFormatter(&log.JSONFormatter{})
 	log.SetOutput(os.Stdout)
 
-	switch os.Getenv("DEBUG_BMCLIB") {
-	case "1":
+	switch os.Getenv("BMCLIB_LOG_LEVEL") {
+	case "debug":
 		log.SetLevel(log.DebugLevel)
+	case "trace":
+		log.SetLevel(log.TraceLevel)
 	default:
 		log.SetLevel(log.InfoLevel)
 	}

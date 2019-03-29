@@ -56,7 +56,7 @@ func (i *Ilo) httpLogin() (err error) {
 		}
 	}
 
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
 			log.Println(fmt.Sprintf("[Request] %s", i.loginURL.String()))
@@ -83,7 +83,7 @@ func (i *Ilo) httpLogin() (err error) {
 		return err
 	}
 	defer resp.Body.Close()
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpResponse(resp, true)
 		if err == nil {
 			log.Println("[Response]")
@@ -131,7 +131,7 @@ func (i *Ilo) Close() (err error) {
 
 			req.Header.Set("Content-Type", "application/json")
 
-			if log.GetLevel() == log.DebugLevel {
+			if log.GetLevel() == log.TraceLevel {
 				dump, err := httputil.DumpRequestOut(req, true)
 				if err == nil {
 					log.Println(fmt.Sprintf("[Request] %s", i.loginURL.String()))
@@ -148,7 +148,7 @@ func (i *Ilo) Close() (err error) {
 				defer resp.Body.Close()
 
 				defer io.Copy(ioutil.Discard, resp.Body)
-				if log.GetLevel() == log.DebugLevel {
+				if log.GetLevel() == log.TraceLevel {
 					dump, err := httputil.DumpResponse(resp, true)
 					if err == nil {
 						log.Println("[Response]")

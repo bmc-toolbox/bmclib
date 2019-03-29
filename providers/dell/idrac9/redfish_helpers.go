@@ -298,7 +298,7 @@ func (i *IDrac9) queryRedfish(method string, endpoint string, payload []byte) (s
 		}
 	}
 
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
 			log.Println(fmt.Sprintf("[Request] %s/%s", bmcURL, endpoint))
@@ -314,7 +314,7 @@ func (i *IDrac9) queryRedfish(method string, endpoint string, payload []byte) (s
 	}
 	defer resp.Body.Close()
 
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpResponse(resp, true)
 		if err == nil {
 			log.Println("[Response]")

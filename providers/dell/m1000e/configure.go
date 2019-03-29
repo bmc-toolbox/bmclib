@@ -354,7 +354,7 @@ func (m *M1000e) CurrentHTTPSCert() (c []*x509.Certificate, b bool, e error) {
 //	url := fmt.Sprintf("https://%s/cgi-bin/webcgi/%s", m.ip, endpoint)
 //	req, err := http.NewRequest("POST", url, body)
 //	req.Header.Set("Content-Type", writer.FormDataContentType())
-//	if log.GetLevel() == log.DebugLevel {
+//	if log.GetLevel() == log.TraceLevel {
 //		dump, err := httputil.DumpRequestOut(req, true)
 //		if err == nil {
 //			log.Println(fmt.Sprintf("[Request] https://%s/cgi-bin/webcgi/%s", m.ip, endpoint))
@@ -369,7 +369,7 @@ func (m *M1000e) CurrentHTTPSCert() (c []*x509.Certificate, b bool, e error) {
 //		return err
 //	}
 //	defer resp.Body.Close()
-//	if log.GetLevel() == log.DebugLevel {
+//	if log.GetLevel() == log.TraceLevel {
 //		dump, err := httputil.DumpResponse(resp, true)
 //		if err == nil {
 //			log.Println("[Response]")
@@ -404,7 +404,7 @@ func (m *M1000e) post(endpoint string, form *url.Values) (err error) {
 		return err
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
 			log.Println(fmt.Sprintf("[Request] https://%s/cgi-bin/webcgi/%s", m.ip, endpoint))
@@ -422,7 +422,7 @@ func (m *M1000e) post(endpoint string, form *url.Values) (err error) {
 		return err
 	}
 	defer resp.Body.Close()
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpResponse(resp, true)
 		if err == nil {
 			log.Println("[Response]")

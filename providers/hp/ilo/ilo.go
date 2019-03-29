@@ -110,7 +110,7 @@ func (i *Ilo) get(endpoint string) (payload []byte, err error) {
 			req.AddCookie(cookie)
 		}
 	}
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
 			log.Println(fmt.Sprintf("[Request] %s/%s", bmcURL, endpoint))
@@ -125,7 +125,7 @@ func (i *Ilo) get(endpoint string) (payload []byte, err error) {
 		return payload, err
 	}
 	defer resp.Body.Close()
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpResponse(resp, true)
 		if err == nil {
 			log.Println("[Response]")
@@ -167,7 +167,7 @@ func (i *Ilo) post(endpoint string, data []byte) (statusCode int, body []byte, e
 		}
 	}
 
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
 			log.Println(fmt.Sprintf("[Request] %s/%s", i.ip, endpoint))
@@ -182,7 +182,7 @@ func (i *Ilo) post(endpoint string, data []byte) (statusCode int, body []byte, e
 		return 0, []byte{}, err
 	}
 	defer resp.Body.Close()
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpResponse(resp, true)
 		if err == nil {
 			log.Println("[Response]")

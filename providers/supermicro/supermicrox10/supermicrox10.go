@@ -69,7 +69,7 @@ func (s *SupermicroX10) get(endpoint string) (payload []byte, err error) {
 		}
 	}
 
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
 			log.Println(fmt.Sprintf("[Request] https://%s/%s", bmcURL, endpoint))
@@ -83,9 +83,9 @@ func (s *SupermicroX10) get(endpoint string) (payload []byte, err error) {
 	if err != nil {
 		return payload, err
 	}
-
 	defer resp.Body.Close()
-	if log.GetLevel() == log.DebugLevel {
+
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpResponse(resp, true)
 		if err == nil {
 			log.Println("[Response]")
@@ -147,7 +147,7 @@ func (s *SupermicroX10) post(endpoint string, urlValues *url.Values, form []byte
 		}
 	}
 
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		fmt.Println(fmt.Sprintf("https://%s/cgi/%s", s.ip, endpoint))
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
@@ -164,7 +164,7 @@ func (s *SupermicroX10) post(endpoint string, urlValues *url.Values, form []byte
 	}
 	defer resp.Body.Close()
 
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpResponse(resp, true)
 		if err == nil {
 			log.Println("[Response]")
@@ -207,7 +207,7 @@ func (s *SupermicroX10) query(requestType string) (ipmi *supermicro.IPMI, err er
 			req.AddCookie(cookie)
 		}
 	}
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		log.Println(fmt.Sprintf("https://%s/cgi/%s", bmcURL, s.ip))
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
@@ -228,8 +228,8 @@ func (s *SupermicroX10) query(requestType string) (ipmi *supermicro.IPMI, err er
 	if err != nil {
 		return ipmi, err
 	}
-	defer resp.Body.Close()
-	if log.GetLevel() == log.DebugLevel {
+
+	if log.GetLevel() == log.TraceLevel {
 		log.Println(fmt.Sprintf("https://%s/cgi/%s", bmcURL, s.ip))
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
