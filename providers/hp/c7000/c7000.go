@@ -111,10 +111,11 @@ func (c *C7000) Psus() (psus []*devices.Psu, err error) {
 		}
 
 		p := &devices.Psu{
-			Serial:     strings.ToLower(strings.TrimSpace(psu.Sn)),
-			Status:     psu.Status,
-			PowerKw:    psu.ActualOutput / 1000.00,
-			CapacityKw: psu.Capacity / 1000.00,
+			Serial:        strings.ToLower(strings.TrimSpace(psu.Sn)),
+			Status:        psu.Status,
+			PowerKw:       psu.ActualOutput / 1000.00,
+			CapacityKw:    psu.Capacity / 1000.00,
+			PartnerNumber: psu.Pn,
 		}
 		psus = append(psus, p)
 	}

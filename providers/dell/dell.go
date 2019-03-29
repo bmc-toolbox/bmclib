@@ -114,6 +114,7 @@ type PsuData struct {
 	PsuHealth      int    `json:"psuHealth"`
 	PsuAcCurrent   string `json:"psuAcCurrent"`
 	PsuAcVolts     string `json:"psuAcVolts"`
+	PsuPartNum     string `json:"psuPartNum"`
 }
 
 // UnmarshalJSON custom unmarshalling for this "special" data structure

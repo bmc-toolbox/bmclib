@@ -294,10 +294,11 @@ func (m *M1000e) Psus() (psus []*devices.Psu, err error) {
 		}
 
 		p := &devices.Psu{
-			Serial:     fmt.Sprintf("%s_%s", serial, psu.PsuPosition),
-			CapacityKw: float64(psu.PsuCapacity) / 1000.00,
-			PowerKw:    (i * e) / 1000.00,
-			Status:     status,
+			Serial:        fmt.Sprintf("%s_%s", serial, psu.PsuPosition),
+			CapacityKw:    float64(psu.PsuCapacity) / 1000.00,
+			PowerKw:       (i * e) / 1000.00,
+			Status:        status,
+			PartnerNumber: psu.PsuPartNum,
 		}
 
 		psus = append(psus, p)

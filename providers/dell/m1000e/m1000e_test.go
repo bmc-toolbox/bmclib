@@ -561,28 +561,32 @@ func TestChassisNics(t *testing.T) {
 func TestChassisPsu(t *testing.T) {
 	expectedAnswer := []*devices.Psu{
 		{
-			Serial:     "51f3dk2_psu_1",
-			CapacityKw: 2.7,
-			Status:     "OK",
-			PowerKw:    0.184,
+			Serial:        "51f3dk2_psu_1",
+			CapacityKw:    2.7,
+			Status:        "OK",
+			PowerKw:       0.184,
+			PartnerNumber: "0TJJ3M",
 		},
 		{
-			Serial:     "51f3dk2_psu_2",
-			CapacityKw: 2.7,
-			Status:     "OK",
-			PowerKw:    0.20862,
+			Serial:        "51f3dk2_psu_2",
+			CapacityKw:    2.7,
+			Status:        "OK",
+			PowerKw:       0.20862,
+			PartnerNumber: "0TJJ3M",
 		},
 		{
-			Serial:     "51f3dk2_psu_5",
-			CapacityKw: 2.7,
-			Status:     "OK",
-			PowerKw:    0.20772000000000002,
+			Serial:        "51f3dk2_psu_5",
+			CapacityKw:    2.7,
+			Status:        "OK",
+			PowerKw:       0.20772000000000002,
+			PartnerNumber: "0TJJ3M",
 		},
 		{
-			Serial:     "51f3dk2_psu_6",
-			CapacityKw: 2.7,
-			Status:     "OK",
-			PowerKw:    0.25278,
+			Serial:        "51f3dk2_psu_6",
+			CapacityKw:    2.7,
+			Status:        "OK",
+			PowerKw:       0.25278,
+			PartnerNumber: "0TJJ3M",
 		},
 	}
 
@@ -601,7 +605,11 @@ func TestChassisPsu(t *testing.T) {
 	}
 
 	for pos, psu := range psus {
-		if psu.Serial != expectedAnswer[pos].Serial || psu.CapacityKw != expectedAnswer[pos].CapacityKw || psu.PowerKw != expectedAnswer[pos].PowerKw || psu.Status != expectedAnswer[pos].Status {
+		if psu.Serial != expectedAnswer[pos].Serial ||
+			psu.CapacityKw != expectedAnswer[pos].CapacityKw ||
+			psu.PowerKw != expectedAnswer[pos].PowerKw ||
+			psu.Status != expectedAnswer[pos].Status ||
+			psu.PartnerNumber != expectedAnswer[pos].PartnerNumber {
 			t.Errorf("Expected answer %v: found %v", expectedAnswer[pos], psu)
 		}
 	}

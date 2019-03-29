@@ -2732,28 +2732,32 @@ func TestHpChassisFans(t *testing.T) {
 func TestHpChassisPsu(t *testing.T) {
 	expectedAnswer := []*devices.Psu{
 		{
-			Serial:     "5drca0ahl610qj",
-			CapacityKw: 2.65,
-			Status:     "OK",
-			PowerKw:    0.263,
+			Serial:        "5drca0ahl610qj",
+			CapacityKw:    2.65,
+			Status:        "OK",
+			PowerKw:       0.263,
+			PartnerNumber: "733459-B21",
 		},
 		{
-			Serial:     "5drca0ahl610qe",
-			CapacityKw: 2.65,
-			Status:     "OK",
-			PowerKw:    0.263,
+			Serial:        "5drca0ahl610qe",
+			CapacityKw:    2.65,
+			Status:        "OK",
+			PowerKw:       0.263,
+			PartnerNumber: "733459-B21",
 		},
 		{
-			Serial:     "5drca0ahl610q0",
-			CapacityKw: 2.65,
-			Status:     "OK",
-			PowerKw:    0.263,
+			Serial:        "5drca0ahl610q0",
+			CapacityKw:    2.65,
+			Status:        "OK",
+			PowerKw:       0.263,
+			PartnerNumber: "733459-B21",
 		},
 		{
-			Serial:     "5drca0ahl610pw",
-			CapacityKw: 2.65,
-			Status:     "OK",
-			PowerKw:    0.263,
+			Serial:        "5drca0ahl610pw",
+			CapacityKw:    2.65,
+			Status:        "OK",
+			PowerKw:       0.263,
+			PartnerNumber: "733459-B21",
 		},
 	}
 
@@ -2772,7 +2776,11 @@ func TestHpChassisPsu(t *testing.T) {
 	}
 
 	for pos, psu := range psus {
-		if psu.Serial != expectedAnswer[pos].Serial || psu.CapacityKw != expectedAnswer[pos].CapacityKw || psu.PowerKw != expectedAnswer[pos].PowerKw || psu.Status != expectedAnswer[pos].Status {
+		if psu.Serial != expectedAnswer[pos].Serial ||
+			psu.CapacityKw != expectedAnswer[pos].CapacityKw ||
+			psu.PowerKw != expectedAnswer[pos].PowerKw ||
+			psu.Status != expectedAnswer[pos].Status ||
+			psu.PartnerNumber != expectedAnswer[pos].PartnerNumber {
 			t.Errorf("Expected answer %v: found %v", expectedAnswer[pos], psu)
 		}
 	}

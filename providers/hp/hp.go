@@ -99,6 +99,7 @@ type Manager struct {
 // Powersupply contains the data of the power supply of the chassis
 type Powersupply struct {
 	Sn           string  `xml:"SN,omitempty"`
+	Pn           string  `xml:"PN,omitempty"`
 	Status       string  `xml:"STATUS,omitempty"`
 	Capacity     float64 `xml:"CAPACITY,omitempty"`
 	ActualOutput float64 `xml:"ACTUALOUTPUT,omitempty"`
