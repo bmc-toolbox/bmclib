@@ -356,7 +356,6 @@ func (i *IDrac9) Status() (status string, err error) {
 	iDracHealthStatus := &dell.IDracHealthStatus{}
 	err = json.Unmarshal(payload, iDracHealthStatus)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
 		return status, err
 	}
 
@@ -385,7 +384,6 @@ func (i *IDrac9) PowerKw() (power float64, err error) {
 	iDracPowerData := &dell.IDracPowerData{}
 	err = json.Unmarshal(payload, iDracPowerData)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
 		return power, err
 	}
 
@@ -514,7 +512,6 @@ func (i *IDrac9) License() (name string, licType string, err error) {
 	iDracLicense := &dell.IDracLicense{}
 	err = json.Unmarshal(payload, iDracLicense)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
 		return name, licType, err
 	}
 
@@ -567,7 +564,6 @@ func (i *IDrac9) TempC() (temp int, err error) {
 	iDracTemp := &dell.IDracTemp{}
 	err = json.Unmarshal(payload, iDracTemp)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
 		return temp, err
 	}
 
@@ -641,7 +637,6 @@ func (i *IDrac9) Psus() (psus []*devices.Psu, err error) {
 	iDracRoot := &dell.IDracRoot{}
 	err = xml.Unmarshal(payload, iDracRoot)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
 		return psus, err
 	}
 

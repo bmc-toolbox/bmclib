@@ -6,20 +6,33 @@ import (
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 )
 
-// Bmc represents the requirement of items to be collected a server
+// Bmc represents all the required bmc items
 type Bmc interface {
 	ApplyCfg(*cfgresources.ResourcesConfig) error
 	// embed Configure interface
 	Configure
+	BmcCollection
+
+	CheckCredentials() error
+	Close() error
+	PowerOn() (status bool, err error)
+	PowerOff() (status bool, err error)
+	PxeOnce() (status bool, err error)
+	PowerCycleBmc() (status bool, err error)
+	PowerCycle() (status bool, err error)
+	UpdateCredentials(string, string)
+	UpdateFirmware(string, string) (bool, error)
+}
+
+// BmcCollection represents the requirement of items to be collected a server
+type BmcCollection interface {
 	BiosVersion() (string, error)
 	BmcType() string
 	BmcVersion() (string, error)
 	CPU() (string, int, int, int, error)
-	CheckCredentials() error
 	Disks() ([]*Disk, error)
 	IsBlade() (bool, error)
 	License() (string, string, error)
-	Close() error
 	Memory() (int, error)
 	Model() (string, error)
 	Name() (string, error)
@@ -27,19 +40,12 @@ type Bmc interface {
 	PowerKw() (float64, error)
 	PowerState() (string, error)
 	IsOn() (bool, error)
-	PowerOn() (status bool, err error)
-	PowerOff() (status bool, err error)
-	PxeOnce() (status bool, err error)
-	PowerCycleBmc() (status bool, err error)
-	PowerCycle() (status bool, err error)
 	Serial() (string, error)
 	Status() (string, error)
 	TempC() (int, error)
 	Vendor() string
 	Screenshot() ([]byte, string, error)
 	ServerSnapshot() (interface{}, error)
-	UpdateCredentials(string, string)
-	UpdateFirmware(string, string) (bool, error)
 }
 
 // BmcChassis represents the requirement of items to be collected from a chassis

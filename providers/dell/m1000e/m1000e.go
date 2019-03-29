@@ -145,7 +145,6 @@ func (m *M1000e) TempC() (temp int, err error) {
 	dellCMCTemp := &dell.CMCTemp{}
 	err = json.Unmarshal(payload, dellCMCTemp)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, m.ip, payload)
 		return temp, err
 	}
 
@@ -154,6 +153,28 @@ func (m *M1000e) TempC() (temp int, err error) {
 	}
 
 	return temp, err
+}
+
+// Fans returns all found fans in the device
+func (m *M1000e) Fans() (fans []*devices.Fan, err error) {
+	for _, fan := range c.Rimp.Infra2.Fans {
+		if fans == nil {
+			fans = make([]*devices.Fan, 0)
+		}
+
+		f := &devices.Fan{
+			Status:     fan.Status,
+			Position:   fan.Bay.Connection,
+			Model:      fan.ProducName,
+			CurrentRPM: fan.RpmCUR,
+			MaxRPM:     fan.RpmMAX,
+			MinRPM:     fan.RpmMIN,
+			PowerKw:    float64(fan.PowerUsed) / 1000,
+		}
+		fans = append(fans, f)
+	}
+
+	return fans, err
 }
 
 // Status returns health string status from the bmc

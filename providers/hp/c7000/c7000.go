@@ -54,7 +54,6 @@ func New(ip string, username string, password string) (chassis *C7000, err error
 	Rimp := &hp.Rimp{}
 	err = xml.Unmarshal(payload, Rimp)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, ip, payload)
 		return chassis, err
 	}
 
@@ -138,6 +137,28 @@ func (c *C7000) Nics() (nics []*devices.Nic, err error) {
 	}
 
 	return nics, err
+}
+
+// Fans returns all found fans in the device
+func (c *C7000) Fans() (fans []*devices.Fan, err error) {
+	for _, fan := range c.Rimp.Infra2.Fans {
+		if fans == nil {
+			fans = make([]*devices.Fan, 0)
+		}
+
+		f := &devices.Fan{
+			Status:     fan.Status,
+			Position:   fan.Bay.Connection,
+			Model:      fan.ProducName,
+			CurrentRPM: fan.RpmCUR,
+			MaxRPM:     fan.RpmMAX,
+			MinRPM:     fan.RpmMIN,
+			PowerKw:    float64(fan.PowerUsed) / 1000,
+		}
+		fans = append(fans, f)
+	}
+
+	return fans, err
 }
 
 // Status returns health string status from the bmc

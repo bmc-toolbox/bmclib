@@ -243,7 +243,6 @@ func (s *SupermicroX10) query(requestType string) (ipmi *supermicro.IPMI, err er
 	ipmi = &supermicro.IPMI{}
 	err = xml.Unmarshal(payload, ipmi)
 	if err != nil {
-		httpclient.DumpInvalidPayload(requestType, s.ip, payload)
 		return ipmi, err
 	}
 

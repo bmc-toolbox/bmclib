@@ -2628,6 +2628,129 @@ func TestHpChassisNics(t *testing.T) {
 	tearDown()
 }
 
+func TestHpChassisFans(t *testing.T) {
+	expectedAnswer := []*devices.Fan{
+		{
+			Status:     "OK",
+			Position:   1,
+			Model:      "Active Cool 200 Fan",
+			CurrentRPM: 5502,
+			MaxRPM:     18000,
+			MinRPM:     600,
+			PowerKw:    0.007,
+		},
+		{
+			Status:     "OK",
+			Position:   2,
+			Model:      "Active Cool 200 Fan",
+			CurrentRPM: 5500,
+			MaxRPM:     18000,
+			MinRPM:     600,
+			PowerKw:    0.009,
+		},
+		{
+			Status:     "OK",
+			Position:   3,
+			Model:      "Active Cool 200 Fan",
+			CurrentRPM: 5500,
+			MaxRPM:     18000,
+			MinRPM:     600,
+			PowerKw:    0.009,
+		},
+		{
+			Status:     "OK",
+			Position:   4,
+			Model:      "Active Cool 200 Fan",
+			CurrentRPM: 5499,
+			MaxRPM:     18000,
+			MinRPM:     600,
+			PowerKw:    0.007,
+		},
+		{
+			Status:     "OK",
+			Position:   5,
+			Model:      "Active Cool 200 Fan",
+			CurrentRPM: 5499,
+			MaxRPM:     18000,
+			MinRPM:     600,
+			PowerKw:    0.009,
+		},
+		{
+			Status:     "OK",
+			Position:   6,
+			Model:      "Active Cool 200 Fan",
+			CurrentRPM: 5499,
+			MaxRPM:     18000,
+			MinRPM:     600,
+			PowerKw:    0.009,
+		},
+		{
+			Status:     "OK",
+			Position:   7,
+			Model:      "Active Cool 200 Fan",
+			CurrentRPM: 5500,
+			MaxRPM:     18000,
+			MinRPM:     600,
+			PowerKw:    0.009,
+		},
+		{
+			Status:     "OK",
+			Position:   8,
+			Model:      "Active Cool 200 Fan",
+			CurrentRPM: 5500,
+			MaxRPM:     18000,
+			MinRPM:     600,
+			PowerKw:    0.007,
+		},
+		{
+			Status:     "OK",
+			Position:   9,
+			Model:      "Active Cool 200 Fan",
+			CurrentRPM: 5498,
+			MaxRPM:     18000,
+			MinRPM:     600,
+			PowerKw:    0.007,
+		},
+		{
+			Status:     "OK",
+			Position:   10,
+			Model:      "Active Cool 200 Fan",
+			CurrentRPM: 5500,
+			MaxRPM:     18000,
+			MinRPM:     600,
+			PowerKw:    0.007,
+		},
+	}
+
+	chassis, err := setup()
+	if err != nil {
+		t.Fatalf("Found errors during the test setup %v", err)
+	}
+
+	fans, err := chassis.Fans()
+	if err != nil {
+		t.Fatalf("Found errors calling chassis.Fans %v", err)
+	}
+
+	if len(fans) != len(expectedAnswer) {
+		t.Fatalf("Expected %v fans: found %v fans", len(expectedAnswer), len(fans))
+	}
+
+	for pos, fan := range fans {
+		if fan.Status != expectedAnswer[pos].Status ||
+			fan.Position != expectedAnswer[pos].Position ||
+			fan.Model != expectedAnswer[pos].Model ||
+			fan.CurrentRPM != expectedAnswer[pos].CurrentRPM ||
+			fan.MaxRPM != expectedAnswer[pos].MaxRPM ||
+			fan.MinRPM != expectedAnswer[pos].MinRPM ||
+			fan.PowerKw != expectedAnswer[pos].PowerKw {
+			t.Errorf("Expected answer %v: found %v", expectedAnswer[pos], fan)
+		}
+	}
+
+	tearDown()
+}
+
 func TestHpChassisPsu(t *testing.T) {
 	expectedAnswer := []*devices.Psu{
 		{
