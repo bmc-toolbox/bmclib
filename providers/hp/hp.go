@@ -112,8 +112,8 @@ type BladeSystem struct {
 // HSI contains the information about the components of the blade
 type HSI struct {
 	NICS []*NIC `xml:"NICS>NIC,omitempty"`
-	Sbsn string `xml:"SBSN,omitempty" json:"SBSN,omitempty"`
-	Spn  string `xml:"SPN,omitempty" json:"SPN,omitempty"`
+	Sbsn string `xml:"SBSN,omitempty"
+	Spn  string `xml:"SPN,omitempty"
 }
 
 // NIC contains the nic information of a blade
