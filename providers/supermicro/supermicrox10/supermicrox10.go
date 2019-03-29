@@ -243,7 +243,6 @@ func (s *SupermicroX10) query(requestType string) (ipmi *supermicro.IPMI, err er
 	ipmi = &supermicro.IPMI{}
 	err = xml.Unmarshal(payload, ipmi)
 	if err != nil {
-		httpclient.DumpInvalidPayload(requestType, s.ip, payload)
 		return ipmi, err
 	}
 
@@ -670,4 +669,14 @@ func (s *SupermicroX10) Disks() (disks []*devices.Disk, err error) {
 func (s *SupermicroX10) UpdateCredentials(username string, password string) {
 	s.username = username
 	s.password = password
+}
+
+// GetConfigure returns itself as a configure interface to avoid using reflect
+func (s *SupermicroX10) GetConfigure() devices.Configure {
+	return s
+}
+
+// GetCollection returns itself as a configure interface to avoid using reflect
+func (s *SupermicroX10) GetCollection() devices.BmcCollection {
+	return s
 }

@@ -75,7 +75,6 @@ func New(ip string, username string, password string) (ilo *Ilo, err error) {
 	rimpBlade := &hp.RimpBlade{}
 	err = xml.Unmarshal(payload, rimpBlade)
 	if err != nil {
-		httpclient.DumpInvalidPayload(xmlURL, ip, payload)
 		return ilo, err
 	}
 
@@ -248,7 +247,6 @@ func (i *Ilo) Name() (name string, err error) {
 	overview := &hp.Overview{}
 	err = json.Unmarshal(payload, overview)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
 		return name, err
 	}
 
@@ -271,7 +269,6 @@ func (i *Ilo) Status() (health string, err error) {
 	overview := &hp.Overview{}
 	err = json.Unmarshal(payload, overview)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
 		return health, err
 	}
 
@@ -298,7 +295,6 @@ func (i *Ilo) Memory() (mem int, err error) {
 	hpMemData := &hp.Mem{}
 	err = json.Unmarshal(payload, hpMemData)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
 		return mem, err
 	}
 
@@ -329,7 +325,6 @@ func (i *Ilo) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCount i
 	hpProcData := &hp.Procs{}
 	err = json.Unmarshal(payload, hpProcData)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
 		return cpu, cpuCount, coreCount, hyperthreadCount, err
 	}
 
@@ -356,7 +351,6 @@ func (i *Ilo) BiosVersion() (version string, err error) {
 	overview := &hp.Overview{}
 	err = json.Unmarshal(payload, overview)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
 		return version, err
 	}
 
@@ -383,7 +377,6 @@ func (i *Ilo) PowerKw() (power float64, err error) {
 	hpPowerSummary := &hp.PowerSummary{}
 	err = json.Unmarshal(payload, hpPowerSummary)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
 		return power, err
 	}
 
@@ -406,7 +399,6 @@ func (i *Ilo) PowerState() (state string, err error) {
 	hpPowerSummary := &hp.PowerSummary{}
 	err = json.Unmarshal(payload, hpPowerSummary)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
 		return state, err
 	}
 
@@ -429,7 +421,6 @@ func (i *Ilo) TempC() (temp int, err error) {
 	hpHealthTemperature := &hp.HealthTemperature{}
 	err = json.Unmarshal(payload, hpHealthTemperature)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
 		return temp, err
 	}
 
@@ -483,7 +474,6 @@ func (i *Ilo) License() (name string, licType string, err error) {
 	hpIloLicense := &hp.IloLicense{}
 	err = json.Unmarshal(payload, hpIloLicense)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
 		return name, licType, err
 	}
 
@@ -506,7 +496,6 @@ func (i *Ilo) Psus() (psus []*devices.Psu, err error) {
 	hpIloPowerSupply := &hp.IloPowerSupply{}
 	err = json.Unmarshal(payload, hpIloPowerSupply)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
 		return psus, err
 	}
 
@@ -550,7 +539,6 @@ func (i *Ilo) Disks() (disks []*devices.Disk, err error) {
 	hpIloDisks := &hp.IloDisks{}
 	err = json.Unmarshal(payload, hpIloDisks)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
 		return disks, err
 	}
 
@@ -754,4 +742,14 @@ func (i *Ilo) ServerSnapshot() (server interface{}, err error) {
 func (i *Ilo) UpdateCredentials(username string, password string) {
 	i.username = username
 	i.password = password
+}
+
+// GetConfigure returns itself as a configure interface to avoid using reflect
+func (i *Ilo) GetConfigure() devices.Configure {
+	return i
+}
+
+// GetCollection returns itself as a configure interface to avoid using reflect
+func (i *Ilo) GetCollection() devices.BmcCollection {
+	return i
 }

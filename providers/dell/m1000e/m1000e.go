@@ -12,7 +12,6 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/errors"
-	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/providers/dell"
 
@@ -145,7 +144,6 @@ func (m *M1000e) TempC() (temp int, err error) {
 	dellCMCTemp := &dell.CMCTemp{}
 	err = json.Unmarshal(payload, dellCMCTemp)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, m.ip, payload)
 		return temp, err
 	}
 
@@ -154,6 +152,41 @@ func (m *M1000e) TempC() (temp int, err error) {
 	}
 
 	return temp, err
+}
+
+// Fans returns all found fans in the device
+func (m *M1000e) Fans() (fans []*devices.Fan, err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return fans, err
+	}
+
+	for pos, fan := range m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.Fans {
+		if fans == nil {
+			fans = make([]*devices.Fan, 0)
+		}
+
+		if fan.Presence == 1 {
+			status := "OK"
+			if fan.ActiveError != "No Errors" {
+				status = fan.ActiveError
+			}
+
+			p, err := strconv.Atoi(pos)
+			if err != nil && pos != "ECM" {
+				return fans, fmt.Errorf("unable to read: %s", pos)
+			}
+
+			f := &devices.Fan{
+				Position:   p,
+				Status:     status,
+				CurrentRPM: fan.FanRPM,
+			}
+			fans = append(fans, f)
+		}
+	}
+
+	return fans, err
 }
 
 // Status returns health string status from the bmc
@@ -265,6 +298,7 @@ func (m *M1000e) Psus() (psus []*devices.Psu, err error) {
 			CapacityKw: float64(psu.PsuCapacity) / 1000.00,
 			PowerKw:    (i * e) / 1000.00,
 			Status:     status,
+			PartNumber: psu.PsuPartNum,
 		}
 
 		psus = append(psus, p)
@@ -456,4 +490,19 @@ func (m *M1000e) ChassisSnapshot() (chassis *devices.Chassis, err error) {
 func (m *M1000e) UpdateCredentials(username string, password string) {
 	m.username = username
 	m.password = password
+}
+
+// GetConfigure returns itself as a configure interface to avoid using reflect
+func (m *M1000e) GetConfigure() devices.Configure {
+	return m
+}
+
+// GetSetup returns itself as a configure interface to avoid using reflect
+func (m *M1000e) GetSetup() devices.CmcSetup {
+	return m
+}
+
+// GetCollection returns itself as a configure interface to avoid using reflect
+func (m *M1000e) GetCollection() devices.CmcCollection {
+	return m
 }

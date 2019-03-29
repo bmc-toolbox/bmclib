@@ -175,3 +175,13 @@ func (i *Ibmc) UpdateFirmware(string, string) (b bool, e error) {
 func (i *Ibmc) IsOn() (status bool, err error) {
 	return false, nil
 }
+
+// GetConfigure returns itself as a configure interface to avoid using reflect
+func (i *Ibmc) GetConfigure() devices.Configure {
+	return i
+}
+
+// GetCollection returns itself as a configure interface to avoid using reflect
+func (i *Ibmc) GetCollection() devices.BmcCollection {
+	return i
+}

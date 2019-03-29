@@ -43,7 +43,6 @@ func (m *M1000e) loadHwData() (err error) {
 	m.cmcJSON = &dell.CMC{}
 	err = json.Unmarshal(payload, m.cmcJSON)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, m.ip, payload)
 		return err
 	}
 
@@ -60,7 +59,6 @@ func (m *M1000e) loadHwData() (err error) {
 	m.cmcWWN = &dell.CMCWWN{}
 	err = json.Unmarshal(payload, m.cmcWWN)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, m.ip, payload)
 		return err
 	}
 

@@ -565,24 +565,28 @@ func TestChassisPsu(t *testing.T) {
 			CapacityKw: 2.7,
 			Status:     "OK",
 			PowerKw:    0.184,
+			PartNumber: "0TJJ3M",
 		},
 		{
 			Serial:     "51f3dk2_psu_2",
 			CapacityKw: 2.7,
 			Status:     "OK",
 			PowerKw:    0.20862,
+			PartNumber: "0TJJ3M",
 		},
 		{
 			Serial:     "51f3dk2_psu_5",
 			CapacityKw: 2.7,
 			Status:     "OK",
 			PowerKw:    0.20772000000000002,
+			PartNumber: "0TJJ3M",
 		},
 		{
 			Serial:     "51f3dk2_psu_6",
 			CapacityKw: 2.7,
 			Status:     "OK",
 			PowerKw:    0.25278,
+			PartNumber: "0TJJ3M",
 		},
 	}
 
@@ -601,7 +605,11 @@ func TestChassisPsu(t *testing.T) {
 	}
 
 	for pos, psu := range psus {
-		if psu.Serial != expectedAnswer[pos].Serial || psu.CapacityKw != expectedAnswer[pos].CapacityKw || psu.PowerKw != expectedAnswer[pos].PowerKw || psu.Status != expectedAnswer[pos].Status {
+		if psu.Serial != expectedAnswer[pos].Serial ||
+			psu.CapacityKw != expectedAnswer[pos].CapacityKw ||
+			psu.PowerKw != expectedAnswer[pos].PowerKw ||
+			psu.Status != expectedAnswer[pos].Status ||
+			psu.PartNumber != expectedAnswer[pos].PartNumber {
 			t.Errorf("Expected answer %v: found %v", expectedAnswer[pos], psu)
 		}
 	}
@@ -625,14 +633,95 @@ func TestChassisBmcType(t *testing.T) {
 	tearDown()
 }
 
+func TestChassisFans(t *testing.T) {
+	expectedAnswer := []*devices.Fan{
+		{
+			Position:   1,
+			Status:     "OK",
+			CurrentRPM: 2873,
+		},
+		{
+			Status:     "OK",
+			Position:   2,
+			CurrentRPM: 4089,
+		},
+		{
+			Status:     "OK",
+			Position:   3,
+			CurrentRPM: 4103,
+		},
+		{
+			Status:     "OK",
+			Position:   4,
+			CurrentRPM: 2871,
+		},
+		{
+			Status:     "OK",
+			Position:   5,
+			CurrentRPM: 4076,
+		},
+		{
+			Status:     "OK",
+			Position:   6,
+			CurrentRPM: 4078,
+		},
+		{
+			Status:     "OK",
+			Position:   7,
+			CurrentRPM: 2860,
+		},
+		{
+			Status:     "OK",
+			Position:   8,
+			CurrentRPM: 4068,
+		},
+		{
+			Status:     "OK",
+			Position:   9,
+			CurrentRPM: 4086,
+		},
+	}
+
+	chassis, err := setup()
+	if err != nil {
+		t.Fatalf("Found errors during the test setup %v", err)
+	}
+
+	fans, err := chassis.Fans()
+	if err != nil {
+		t.Fatalf("Found errors calling chassis.Fans %v", err)
+	}
+
+	if len(fans) != len(expectedAnswer) {
+		t.Fatalf("Expected %v fans: found %v fans", len(expectedAnswer), len(fans))
+	}
+
+	for _, fan := range fans {
+		found := false
+		for _, ef := range expectedAnswer {
+			if fan.Position == ef.Position {
+				found = true
+				if fan.CurrentRPM != ef.CurrentRPM || fan.Status != ef.Status {
+					t.Errorf("Expected answer %v: found %v", ef, fan)
+				}
+			}
+		}
+		if !found {
+			t.Errorf("Unable to find a match for %v", fan)
+		}
+	}
+
+	tearDown()
+}
+
 func TestChassisInterface(t *testing.T) {
 	chassis, err := setup()
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
-	_ = devices.BmcChassis(chassis)
+	_ = devices.Cmc(chassis)
 	_ = devices.Configure(chassis)
-	_ = devices.BmcChassisSetup(chassis)
+	_ = devices.CmcSetup(chassis)
 
 	tearDown()
 }

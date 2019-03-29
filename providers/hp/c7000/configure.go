@@ -28,7 +28,7 @@ func (c *C7000) Resources() []string {
 // ResourcesSetup returns
 // - slice of supported one time setup resources,
 //   in the order they must be applied
-// ResourcesSetup implements the BmcChassisSetup interface
+// ResourcesSetup implements the CmcSetup interface
 // see cfgresources.SetupChassis for list of setup resources.
 func (c *C7000) ResourcesSetup() []string {
 	return []string{
@@ -52,7 +52,7 @@ func (c *C7000) isRoleValid(role string) bool {
 	return false
 }
 
-// ApplyCfg implements the BmcChassis interface
+// ApplyCfg implements the Cmc interface
 func (c *C7000) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 	return nil
 }

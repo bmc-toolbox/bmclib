@@ -58,7 +58,6 @@ func (i *IDrac8) httpLogin() (err error) {
 	iDracAuth := &dell.IDracAuth{}
 	err = xml.Unmarshal(payload, iDracAuth)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
 		return err
 	}
 
@@ -95,7 +94,6 @@ func (i *IDrac8) loadHwData() (err error) {
 	iDracInventory := &dell.IDracInventory{}
 	err = xml.Unmarshal(payload, iDracInventory)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
 		return err
 	}
 

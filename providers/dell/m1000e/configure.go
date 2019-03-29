@@ -36,7 +36,7 @@ func (m *M1000e) Resources() []string {
 // ResourcesSetup returns
 // - slice of supported one time setup resources,
 //   in the order they must be applied
-// ResourcesSetup implements the BmcChassisSetup interface
+// ResourcesSetup implements the CmcSetup interface
 // see cfgresources.SetupChassis for list of setup resources.
 func (m *M1000e) ResourcesSetup() []string {
 	return []string{

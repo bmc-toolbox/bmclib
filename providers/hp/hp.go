@@ -38,10 +38,23 @@ type Infra2 struct {
 	Status       string        `xml:"STATUS,omitempty"`
 	Temp         *Temp         `xml:"TEMPS>TEMP,omitempty"`
 	EnclSn       string        `xml:"ENCL_SN,omitempty"`
+	Fans         []*Fan        `xml:"FANS>FAN,omitempty"`
 	Pn           string        `xml:"PN,omitempty"`
 	Encl         string        `xml:"ENCL,omitempty"`
 	Rack         string        `xml:"RACK,omitempty"`
 	Managers     []*Manager    `xml:"MANAGERS>MANAGER,omitempty"`
+}
+
+// Fan contains individual information of each fan
+type Fan struct {
+	Bay        *Bay   `xml:"BAY,omitempty"`
+	PN         string `xml:"PN,omitempty"`
+	ProducName string `xml:"PRODUCTNAME,omitempty"`
+	PowerUsed  int64  `xml:"PWR_USED,omitempty"`
+	RpmCUR     int64  `xml:"RPM_CUR,omitempty"`
+	RpmMAX     int64  `xml:"RPM_MAX,omitempty"`
+	RpmMIN     int64  `xml:"RPM_MIN,omitempty"`
+	Status     string `xml:"STATUS,omitempty"`
 }
 
 // MP contains the firmware version and the model of the chassis or blade
@@ -86,6 +99,7 @@ type Manager struct {
 // Powersupply contains the data of the power supply of the chassis
 type Powersupply struct {
 	Sn           string  `xml:"SN,omitempty"`
+	Pn           string  `xml:"PN,omitempty"`
 	Status       string  `xml:"STATUS,omitempty"`
 	Capacity     float64 `xml:"CAPACITY,omitempty"`
 	ActualOutput float64 `xml:"ACTUALOUTPUT,omitempty"`
@@ -112,8 +126,8 @@ type BladeSystem struct {
 // HSI contains the information about the components of the blade
 type HSI struct {
 	NICS []*NIC `xml:"NICS>NIC,omitempty"`
-	Sbsn string `xml:"SBSN,omitempty" json:"SBSN,omitempty"`
-	Spn  string `xml:"SPN,omitempty" json:"SPN,omitempty"`
+	Sbsn string `xml:"SBSN,omitempty"`
+	Spn  string `xml:"SPN,omitempty"`
 }
 
 // NIC contains the nic information of a blade
