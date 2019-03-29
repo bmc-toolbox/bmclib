@@ -5,11 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net"
-	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"strings"
 	"time"
@@ -567,83 +564,6 @@ func (s *SupermicroX10) Syslog(cfg *cfgresources.Syslog) (err error) {
 	return err
 }
 
-// posts a urlencoded form to the given endpoint
-// nolint: gocyclo
-func (s *SupermicroX10) post(endpoint string, urlValues *url.Values, form []byte, formDataContentType string) (statusCode int, err error) {
-
-	err = s.httpLogin()
-	if err != nil {
-		return statusCode, err
-	}
-
-	u, err := url.Parse(fmt.Sprintf("https://%s/cgi/%s", s.ip, endpoint))
-	if err != nil {
-		return statusCode, err
-	}
-
-	var req *http.Request
-
-	if formDataContentType == "" {
-
-		req, err = http.NewRequest("POST", u.String(), strings.NewReader(urlValues.Encode()))
-		if err != nil {
-			return statusCode, err
-		}
-		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-	} else {
-
-		req, err = http.NewRequest("POST", u.String(), bytes.NewReader(form))
-		if err != nil {
-			return statusCode, err
-		}
-		// Set multipart form content type
-		req.Header.Set("Content-Type", formDataContentType)
-	}
-
-	for _, cookie := range s.httpClient.Jar.Cookies(u) {
-		if cookie.Name == "SID" && cookie.Value != "" {
-			req.AddCookie(cookie)
-		}
-	}
-
-	if log.GetLevel() == log.DebugLevel {
-		fmt.Println(fmt.Sprintf("https://%s/cgi/%s", s.ip, endpoint))
-		dump, err := httputil.DumpRequestOut(req, true)
-		if err == nil {
-			log.Println("[Request]")
-			log.Println(">>>>>>>>>>>>>>>")
-			log.Printf("%s\n\n", dump)
-			log.Println(">>>>>>>>>>>>>>>")
-		}
-	}
-
-	resp, err := s.httpClient.Do(req)
-	if err != nil {
-		return statusCode, err
-	}
-	defer resp.Body.Close()
-
-	if log.GetLevel() == log.DebugLevel {
-		dump, err := httputil.DumpResponse(resp, true)
-		if err == nil {
-			log.Println("[Response]")
-			log.Println("<<<<<<<<<<<<<<")
-			log.Printf("%s\n\n", dump)
-			log.Println("<<<<<<<<<<<<<<")
-		}
-	}
-
-	statusCode = resp.StatusCode
-	_, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return statusCode, err
-	}
-	//fmt.Printf("-->> %d\n", resp.StatusCode)
-	//fmt.Printf("%s\n", body)
-	return statusCode, err
-}
-
 // GenerateCSR generates a CSR request on the BMC.
 // GenerateCSR implements the Configure interface.
 func (s *SupermicroX10) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, error) {
@@ -652,6 +572,11 @@ func (s *SupermicroX10) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]b
 
 // UploadHTTPSCert uploads the given CRT cert,
 // UploadHTTPSCert implements the Configure interface.
+// 1. Upload the certificate and key pair
+// 2. delay for a second (to let the BMC process the certificate)
+// 3. Get the BMC to validate the certificate: SSL_VALIDATE.XML	(0,0)
+// 4. delay for a second
+// 5. Request for the current: SSL_STATUS.XML	(0,0)
 func (s *SupermicroX10) UploadHTTPSCert(cert []byte, certFileName string, key []byte, keyFileName string) (bool, error) {
 
 	endpoint := "upload_ssl.cgi"
@@ -684,6 +609,7 @@ func (s *SupermicroX10) UploadHTTPSCert(cert []byte, certFileName string, key []
 	// close multipart writer - adds the teminating boundary.
 	w.Close()
 
+	// 1. upload
 	status, err := s.post(endpoint, &url.Values{}, form.Bytes(), w.FormDataContentType())
 	if err != nil || status != 200 {
 		log.WithFields(log.Fields{
@@ -697,5 +623,72 @@ func (s *SupermicroX10) UploadHTTPSCert(cert []byte, certFileName string, key []
 		return false, err
 	}
 
+	// 2. delay
+	time.Sleep(1 * time.Second)
+
+	// 3. Get BMC to validate uploaded cert
+	err = s.validateSSL()
+	if err != nil {
+		return false, err
+	}
+
+	// 4. delay
+	time.Sleep(1 * time.Second)
+
+	// 5. Get cert status
+	err = s.statusSSL()
+	if err != nil {
+		return false, err
+	}
+
 	return true, nil
+}
+
+// The second part of the certificate upload process,
+// we get the BMC to validate the uploaded SSL certificate.
+func (s *SupermicroX10) validateSSL() error {
+
+	var v = url.Values{}
+	v.Set("SSL_VALIDATE.XML", "(0,0)")
+
+	var endpoint = "ipmi.cgi"
+	status, err := s.post(endpoint, &v, []byte{}, "")
+	if err != nil || status != 200 {
+		log.WithFields(log.Fields{
+			"IP":         s.ip,
+			"Model":      s.BmcType(),
+			"Endpoint":   endpoint,
+			"StatusCode": status,
+			"Step":       helper.WhosCalling(),
+			"Error":      err,
+		}).Warn("Cert validate POST request failed, expected 200.")
+		return err
+	}
+
+	return nil
+}
+
+// The third part of the certificate upload process
+// Get the current status of the certificate.
+// POST https://10.193.251.43/cgi/ipmi.cgi SSL_STATUS.XML: (0,0)
+func (s *SupermicroX10) statusSSL() error {
+
+	var v = url.Values{}
+	v.Add("SSL_STATUS.XML", "(0,0)")
+
+	var endpoint = "ipmi.cgi"
+	status, err := s.post(endpoint, &v, []byte{}, "")
+	if err != nil || status != 200 {
+		log.WithFields(log.Fields{
+			"IP":         s.ip,
+			"Model":      s.BmcType(),
+			"Endpoint":   endpoint,
+			"StatusCode": status,
+			"Step":       helper.WhosCalling(),
+			"Error":      err,
+		}).Warn("Cert status POST request failed, expected 200.")
+		return err
+	}
+
+	return nil
 }
