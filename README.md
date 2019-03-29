@@ -82,3 +82,4 @@ which the authors would like to express their gratitude.
 - Juliano Martinez
 - Joel Rebello 
 - Guilherme M. Schroeder
+- Mariano Guezuraga
