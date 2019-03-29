@@ -12,7 +12,6 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/errors"
-	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/providers/dell"
 
@@ -157,21 +156,34 @@ func (m *M1000e) TempC() (temp int, err error) {
 
 // Fans returns all found fans in the device
 func (m *M1000e) Fans() (fans []*devices.Fan, err error) {
-	for _, fan := range c.Rimp.Infra2.Fans {
+	err = m.httpLogin()
+	if err != nil {
+		return fans, err
+	}
+
+	for pos, fan := range m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.Fans {
 		if fans == nil {
 			fans = make([]*devices.Fan, 0)
 		}
 
-		f := &devices.Fan{
-			Status:     fan.Status,
-			Position:   fan.Bay.Connection,
-			Model:      fan.ProducName,
-			CurrentRPM: fan.RpmCUR,
-			MaxRPM:     fan.RpmMAX,
-			MinRPM:     fan.RpmMIN,
-			PowerKw:    float64(fan.PowerUsed) / 1000,
+		if fan.Presence == 1 {
+			status := "OK"
+			if fan.ActiveError != "No Errors" {
+				status = fan.ActiveError
+			}
+
+			p, err := strconv.Atoi(pos)
+			if err != nil && pos != "ECM" {
+				return fans, fmt.Errorf("unable to read: %s", pos)
+			}
+
+			f := &devices.Fan{
+				Position:   p,
+				Status:     status,
+				CurrentRPM: fan.FanRPM,
+			}
+			fans = append(fans, f)
 		}
-		fans = append(fans, f)
 	}
 
 	return fans, err

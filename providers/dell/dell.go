@@ -48,7 +48,14 @@ type ChassisGroupMemberHealthBlob struct {
 	PsuStatus     *PsuStatus        `json:"psu_status"`
 	ChassisStatus *ChassisStatus    `json:"chassis_status"`
 	CMCStatus     *CMCStatus        `json:"cmc_status"`
-	// TODO: active_alerts
+	Fans          map[string]*Fan   `json:"fans_status"`
+}
+
+// Fan contains dell fan data
+type Fan struct {
+	Presence    int    `json:"FanPresence"`
+	ActiveError string `json:"fanActiveError"`
+	FanRPM      int64  `json:"FanRPMTach1"`
 }
 
 // ChassisStatus expose the basic information that identify the chassis

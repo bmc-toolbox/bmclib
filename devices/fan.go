@@ -6,7 +6,5 @@ type Fan struct {
 	Position   int
 	Model      string
 	CurrentRPM int64
-	MaxRPM     int64
-	MinRPM     int64
 	PowerKw    float64
 }

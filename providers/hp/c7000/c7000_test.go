@@ -2635,8 +2635,6 @@ func TestHpChassisFans(t *testing.T) {
 			Position:   1,
 			Model:      "Active Cool 200 Fan",
 			CurrentRPM: 5502,
-			MaxRPM:     18000,
-			MinRPM:     600,
 			PowerKw:    0.007,
 		},
 		{
@@ -2644,8 +2642,6 @@ func TestHpChassisFans(t *testing.T) {
 			Position:   2,
 			Model:      "Active Cool 200 Fan",
 			CurrentRPM: 5500,
-			MaxRPM:     18000,
-			MinRPM:     600,
 			PowerKw:    0.009,
 		},
 		{
@@ -2653,8 +2649,6 @@ func TestHpChassisFans(t *testing.T) {
 			Position:   3,
 			Model:      "Active Cool 200 Fan",
 			CurrentRPM: 5500,
-			MaxRPM:     18000,
-			MinRPM:     600,
 			PowerKw:    0.009,
 		},
 		{
@@ -2662,8 +2656,6 @@ func TestHpChassisFans(t *testing.T) {
 			Position:   4,
 			Model:      "Active Cool 200 Fan",
 			CurrentRPM: 5499,
-			MaxRPM:     18000,
-			MinRPM:     600,
 			PowerKw:    0.007,
 		},
 		{
@@ -2671,8 +2663,6 @@ func TestHpChassisFans(t *testing.T) {
 			Position:   5,
 			Model:      "Active Cool 200 Fan",
 			CurrentRPM: 5499,
-			MaxRPM:     18000,
-			MinRPM:     600,
 			PowerKw:    0.009,
 		},
 		{
@@ -2680,8 +2670,6 @@ func TestHpChassisFans(t *testing.T) {
 			Position:   6,
 			Model:      "Active Cool 200 Fan",
 			CurrentRPM: 5499,
-			MaxRPM:     18000,
-			MinRPM:     600,
 			PowerKw:    0.009,
 		},
 		{
@@ -2689,8 +2677,6 @@ func TestHpChassisFans(t *testing.T) {
 			Position:   7,
 			Model:      "Active Cool 200 Fan",
 			CurrentRPM: 5500,
-			MaxRPM:     18000,
-			MinRPM:     600,
 			PowerKw:    0.009,
 		},
 		{
@@ -2698,8 +2684,6 @@ func TestHpChassisFans(t *testing.T) {
 			Position:   8,
 			Model:      "Active Cool 200 Fan",
 			CurrentRPM: 5500,
-			MaxRPM:     18000,
-			MinRPM:     600,
 			PowerKw:    0.007,
 		},
 		{
@@ -2707,8 +2691,6 @@ func TestHpChassisFans(t *testing.T) {
 			Position:   9,
 			Model:      "Active Cool 200 Fan",
 			CurrentRPM: 5498,
-			MaxRPM:     18000,
-			MinRPM:     600,
 			PowerKw:    0.007,
 		},
 		{
@@ -2716,8 +2698,6 @@ func TestHpChassisFans(t *testing.T) {
 			Position:   10,
 			Model:      "Active Cool 200 Fan",
 			CurrentRPM: 5500,
-			MaxRPM:     18000,
-			MinRPM:     600,
 			PowerKw:    0.007,
 		},
 	}
@@ -2741,8 +2721,6 @@ func TestHpChassisFans(t *testing.T) {
 			fan.Position != expectedAnswer[pos].Position ||
 			fan.Model != expectedAnswer[pos].Model ||
 			fan.CurrentRPM != expectedAnswer[pos].CurrentRPM ||
-			fan.MaxRPM != expectedAnswer[pos].MaxRPM ||
-			fan.MinRPM != expectedAnswer[pos].MinRPM ||
 			fan.PowerKw != expectedAnswer[pos].PowerKw {
 			t.Errorf("Expected answer %v: found %v", expectedAnswer[pos], fan)
 		}
