@@ -7,6 +7,7 @@ type Chassis struct {
 	BmcAddress    string
 	Blades        []*Blade
 	StorageBlades []*StorageBlade
+	Fans          []*Fan
 	Nics          []*Nic
 	Psus          []*Psu
 	TempC         int

@@ -306,6 +306,10 @@ func (c *C7000) ChassisSnapshot() (chassis *devices.Chassis, err error) {
 	if err != nil {
 		return nil, err
 	}
+	chassis.Fans, err = c.Fans()
+	if err != nil {
+		return nil, err
+	}
 
 	return chassis, err
 }
