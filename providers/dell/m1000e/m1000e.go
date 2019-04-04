@@ -156,7 +156,7 @@ func (m *M1000e) TempC() (temp int, err error) {
 
 // Fans returns all found fans in the device
 func (m *M1000e) Fans() (fans []*devices.Fan, err error) {
-	err = m.httpLogin()
+	serial, err := m.Serial()
 	if err != nil {
 		return fans, err
 	}
@@ -178,6 +178,7 @@ func (m *M1000e) Fans() (fans []*devices.Fan, err error) {
 			}
 
 			f := &devices.Fan{
+				Serial:     fmt.Sprintf("%d_%s", p, serial),
 				Position:   p,
 				Status:     status,
 				CurrentRPM: fan.FanRPM,
@@ -293,12 +294,18 @@ func (m *M1000e) Psus() (psus []*devices.Psu, err error) {
 			status = psu.PsuActiveError
 		}
 
+		psuPosition, err := strconv.Atoi(strings.Split(psu.PsuPosition, "_")[1])
+		if err != nil {
+			return psus, err
+		}
+
 		p := &devices.Psu{
 			Serial:     fmt.Sprintf("%s_%s", serial, psu.PsuPosition),
 			CapacityKw: float64(psu.PsuCapacity) / 1000.00,
 			PowerKw:    (i * e) / 1000.00,
 			Status:     status,
 			PartNumber: psu.PsuPartNum,
+			Position:   psuPosition,
 		}
 
 		psus = append(psus, p)
