@@ -482,6 +482,10 @@ func (m *M1000e) ChassisSnapshot() (chassis *devices.Chassis, err error) {
 	if err != nil {
 		return nil, err
 	}
+	chassis.Fans, err = m.Fans()
+	if err != nil {
+		return nil, err
+	}
 
 	return chassis, err
 }

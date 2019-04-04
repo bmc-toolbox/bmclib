@@ -95,6 +95,7 @@ type CmcCollection interface {
 	FindBladePosition(string) (int, error)
 	FwVersion() (string, error)
 	GetFirmwareVersion() (string, error)
+	Fans() ([]*Fan, error)
 	IsActive() bool
 	IsOn() (bool, error)
 	IsOnBlade(int) (bool, error)
