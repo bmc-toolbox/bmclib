@@ -98,6 +98,7 @@ type Manager struct {
 
 // Powersupply contains the data of the power supply of the chassis
 type Powersupply struct {
+	Bay          *Bay    `xml:"BAY,omitempty"`
 	Sn           string  `xml:"SN,omitempty"`
 	Pn           string  `xml:"PN,omitempty"`
 	Status       string  `xml:"STATUS,omitempty"`

@@ -116,6 +116,7 @@ func (c *C7000) Psus() (psus []*devices.Psu, err error) {
 			PowerKw:    psu.ActualOutput / 1000.00,
 			CapacityKw: psu.Capacity / 1000.00,
 			PartNumber: psu.Pn,
+			Position:   psu.Bay.Connection,
 		}
 		psus = append(psus, p)
 	}
@@ -142,12 +143,18 @@ func (c *C7000) Nics() (nics []*devices.Nic, err error) {
 
 // Fans returns all found fans in the device
 func (c *C7000) Fans() (fans []*devices.Fan, err error) {
+	serial, err := c.Serial()
+	if err != nil {
+		return fans, err
+	}
+
 	for _, fan := range c.Rimp.Infra2.Fans {
 		if fans == nil {
 			fans = make([]*devices.Fan, 0)
 		}
 
 		f := &devices.Fan{
+			Serial:     fmt.Sprintf("%d_%s", fan.Bay.Connection, serial),
 			Status:     fan.Status,
 			Position:   fan.Bay.Connection,
 			Model:      fan.ProducName,

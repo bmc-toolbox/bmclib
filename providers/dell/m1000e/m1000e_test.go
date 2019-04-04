@@ -566,6 +566,7 @@ func TestChassisPsu(t *testing.T) {
 			Status:     "OK",
 			PowerKw:    0.184,
 			PartNumber: "0TJJ3M",
+			Position:   1,
 		},
 		{
 			Serial:     "51f3dk2_psu_2",
@@ -573,6 +574,7 @@ func TestChassisPsu(t *testing.T) {
 			Status:     "OK",
 			PowerKw:    0.20862,
 			PartNumber: "0TJJ3M",
+			Position:   2,
 		},
 		{
 			Serial:     "51f3dk2_psu_5",
@@ -580,6 +582,7 @@ func TestChassisPsu(t *testing.T) {
 			Status:     "OK",
 			PowerKw:    0.20772000000000002,
 			PartNumber: "0TJJ3M",
+			Position:   5,
 		},
 		{
 			Serial:     "51f3dk2_psu_6",
@@ -587,6 +590,7 @@ func TestChassisPsu(t *testing.T) {
 			Status:     "OK",
 			PowerKw:    0.25278,
 			PartNumber: "0TJJ3M",
+			Position:   6,
 		},
 	}
 
@@ -609,7 +613,8 @@ func TestChassisPsu(t *testing.T) {
 			psu.CapacityKw != expectedAnswer[pos].CapacityKw ||
 			psu.PowerKw != expectedAnswer[pos].PowerKw ||
 			psu.Status != expectedAnswer[pos].Status ||
-			psu.PartNumber != expectedAnswer[pos].PartNumber {
+			psu.PartNumber != expectedAnswer[pos].PartNumber ||
+			psu.Position != expectedAnswer[pos].Position {
 			t.Errorf("Expected answer %v: found %v", expectedAnswer[pos], psu)
 		}
 	}

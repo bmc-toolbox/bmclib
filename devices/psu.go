@@ -7,4 +7,5 @@ type Psu struct {
 	PowerKw    float64
 	Status     string
 	PartNumber string
+	Position   int
 }
