@@ -22,15 +22,13 @@ const (
 // For those platforms don't have a 'cpuid' equivalent we use HWCAP/HWCAP2
 // These are initialized in cpu_$GOARCH.go
 // and should not be changed after they are initialized.
-var hwCap uint
-var hwCap2 uint
+var HWCap uint
+var HWCap2 uint
 
 func init() {
 	buf, err := ioutil.ReadFile(procAuxv)
 	if err != nil {
-		// e.g. on android /proc/self/auxv is not accessible, so silently
-		// ignore the error and leave Initialized = false
-		return
+		panic("read proc auxv failed: " + err.Error())
 	}
 
 	bo := hostByteOrder()
@@ -48,12 +46,10 @@ func init() {
 		}
 		switch tag {
 		case _AT_HWCAP:
-			hwCap = val
+			HWCap = val
 		case _AT_HWCAP2:
-			hwCap2 = val
+			HWCap2 = val
 		}
 	}
 	doinit()
-
-	Initialized = true
 }
