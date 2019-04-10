@@ -23,6 +23,1352 @@ var (
 		"/cgi-bin/webcgi/logout": {
 			"default": []byte(``),
 		},
+		"/cgi-bin/webcgi/pwr_redundancy": {
+			"default": []byte(`<?xml version="1.0"?>
+				<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/html4/strict.dtd">
+				<html xmlns="http://www.w3.org/1999/xhtml" xmlns:fo="http://www.w3.org/1999/XSL/Format">
+				  <head>
+					<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+					<title>Budget/Redundancy Configuration</title>
+					<link rel="stylesheet" type="text/css" href="/cmc/css/stylesheet.css?0332" />
+					<script type="text/javascript" src="/cmc/js/prototype.js?0332"></script>
+					<script type="text/javascript" src="/cmc/js/Clarity.js?0332"></script>
+					<script type="text/javascript" src="/cmc/js/validate.js?0332"></script>
+					<script type="text/javascript" src="/cmc/js/context_help.js?0332"></script>
+					<script type="text/javascript">
+						  UpdateHelpIdAndState(context_help("Budget Redundancy Configuration"), true);
+				
+						  var strNoSelectionsMade             = "No user input or modifications detected, and no changes have been applied.";
+						  var strStatusBudgetLowPerformance   = "System Input Power Cap setting too low. This will impact server performance.";
+						  var strForceACPowerBudgetSetting    = "Do you want to force this setting?";
+						  var strUPSWarning                   = "Enabling Max Power Conservation Mode will deactivate Extended Power Performance.\n\nMax Power Conservation Mode option will force servers into a low power, limited performance mode and disable server power up.\n\nPress OK to continue.";
+						  var strEPPUnsupportedWarningPart1   = "System Input Power Cap cannot be set to less than or equal to";
+						  var strEPPUnsupportedWarningPart2   = "while Extended Power Performance is enabled.";
+						  var strBlacklisted1                 = "Enhanced DPSE is not supported by the current power supply configuration.";
+						  var strBlacklisted2                 = "DPSE setting will be ignored.";
+						  var strPerfOverRedundancyMessage    = "Checking the Server Performance Over Power Redundancy option allows server power allocations to exceed redundant power capabilities of the chassis. Are you sure you want to continue?";
+						  var str110VackMessage               = "You are about to allow your chassis to be powered from a 110 volt circuit. This may overload the supply branch circuit. Are you sure you want to do this?";
+						  var strUPSModeMessage               = "Checking the Max Power Conservation Mode option will force your servers into a low power, limited performance mode and disables server power up. Are you sure you want to do this?";
+						  var strSBPMModeMessage              = "Checking the Server Based Power Management Mode option will set your power cap to max value, server priorities to default priority, and disables Max Power Conservervation Mode. Are you sure you want to continue?";
+						  var strInvalidRemoteLoggingInterval = "Invalid remote logging interval. Valid range is from 1 to 1440 minutes.";
+						  var strECMEnabled                   = "0";
+						  var strUPSEcmAndEppWarning          = "Enabling Max Power Conservation Mode will deactivate Extended Power Performance and Enhanced Cooling Mode.\n\nMax Power Conservation Mode option will force servers into a low power, limited performance mode and disable server power up.\n\nPress OK to continue.";
+						  var strUPSEcmWarning                = "Enabling Max Power Conservation Mode will deactivate Enhanced Cooling Mode.\n\nMax Power Conservation Mode option will force servers into a low power, limited performance mode and disable server power up.\n\nPress OK to continue.";
+						  var strStatusValInvalid             = "Property Value Invalid. Try Again.";
+						  var outOfRange = 0;
+						  var max = 16685;              // MMS_PWRMGMT_BUDGET_AC_MAX as defined in pwrmgmt_interface.h
+				
+						  
+						  
+							function hasUserInputOrModifiedAnything()
+							{
+							  var pCount= document.getElementById("pCount").value;
+							  var vCount = 0;
+							  var propertyName;
+							  var propertyValue;
+							  var propertyCurrentValue;
+							  var modified = false;
+				
+							  for (var i = 12; i <= pCount; i++) // Skip first 11 parameters
+							  {
+								propertyName = document.getElementById("p" + i.toString()).value;
+								vCount = document.getElementById("vCount" + propertyName).value;
+								if (propertyName != "ChassisPSUFailure")
+								{ 
+								propertyValue = Number(document.getElementById("v" + propertyName + "1").value);
+								propertyCurrentValue = Number(document.getElementById(propertyName + "1").value);
+				
+								if (propertyCurrentValue != propertyValue)
+								{
+								  if (vCount > 1)
+								  {
+									document.getElementById(propertyName + "1").maxLength = document.getElementById(propertyName + "1").maxLength + 1; // FF work-around
+									document.getElementById(propertyName + "1").value = propertyCurrentValue + "*"; // The '*' token is appended to allow CGI to identify which paramter/unit has been modified.
+								  }
+								  modified = true;
+								}
+							   }
+							  }
+							  return modified;
+							}
+				
+							function formSubmit()
+							{
+							  // old valuesoldpsuinputpowercap
+							  var oldEPPEnable=GetOriginalValue('CHASSIS_POWER_epp_enable');
+							  var oldPerfMode=GetOriginalValue('CHASSIS_POWER_performance_over_redundancy');
+							  var origDPSE = GetOriginalValue('psuDynEng');
+							  var olddpse = Number(document.getElementById("vpsuDynEng1").value);
+							  var old110V = GetOriginalValue('CHASSIS_POWER_110V_acknowledge');
+							  var oldUPSMode=GetOriginalValue('CHASSIS_POWER_UPSMode');
+							  var oldSBPMMode=GetOriginalValue('CHASSIS_POWER_SBPMMode');
+							  var oldpsuinputpowercap = GetOriginalValue("acPowerBudget");
+							  var oldpsuredundancy = GetOriginalValue("psuRedundancy");
+							  // MMS_PWRMGMT_BUDGET_AC_MAX as defined in pwrmgmt_interface.h. ugg this is so bad to have at this level.  I hate this part.
+							  // these details should be lower then GUI. -lbt
+				
+							  // new values
+							  var enhNotSupported = Number(document.getElementById("vpsuAnyBlacklisted1").value);
+							  var newEPPEnable=$("CHASSIS_POWER_epp_enable1").value;
+							  var newPerfMode=$("CHASSIS_POWER_performance_over_redundancy1").value;
+							  var dpse = Number(document.getElementById("psuDynEng1").value);
+							  var ele=document.getElementById("CHASSIS_POWER_button_disable1");
+							  ele.focus();
+							  var new110V=$("CHASSIS_POWER_110V_acknowledge1").value;
+							  var newUPSMode=$("CHASSIS_POWER_UPSMode1").value;
+							  var newSBPMMode=$("CHASSIS_POWER_SBPMMode1").value;
+							  var remoteLoggingInterval = $("CHASSIS_POWER_remote_logging_interval1").value;
+							  var newpsuinputpowercap = $("acPowerBudget1").value;
+							  var newpsuredundancy = $("psuRedundancy1").value;
+							  var oldPowerCapPercentage = 0;
+				
+							  if(outOfRange == 1)
+							  {
+								 alert(strStatusValInvalid);
+								 //did this to make sure we stay current with what the backend has the power at.
+								 $("acPowerBudget1").value = oldpsuinputpowercap;
+								 oldPowerCapPercentage = Math.round((oldpsuinputpowercap/max)*100);
+								 $("acPowerBudget3").value = oldPowerCapPercentage;
+							   }
+							  else
+							  {
+								if(hasUserInputOrModifiedAnything() != 1)
+								{
+								  alert(strNoSelectionsMade);
+								  return;
+								}
+							  }
+				
+							  if (dpse && (dpse != origDPSE )) {
+								if (enhNotSupported) {
+								  alert(strBlacklisted1 + "\n" + strBlacklisted2);
+								}
+							  }
+				
+							  if ( (old110V != new110V) && (new110V != 0) ) {
+								if (!confirm(str110VackMessage)) return;
+							  }
+				
+							  if (oldUPSMode != newUPSMode) {
+								if(strECMEnabled != 0 && newEPPEnable != 0 && newUPSMode != 0) //ECM and EPP enable
+								{
+								  if (!confirm(strUPSEcmAndEppWarning)) return;
+								}
+								else if (newEPPEnable != 0 && newUPSMode != 0 && strECMEnabled != 1) //EPP enable and ECM disable
+								{
+								  if (!confirm(strUPSWarning)) return;
+								}
+								else if(strECMEnabled != 0  && newUPSMode != 0 && newEPPEnable != 1)//ECM enable and EPP disable
+								{
+								  if (!confirm(strUPSEcmWarning)) return;
+								}
+							  }
+				
+							  if (newEPPEnable != 0 && newpsuinputpowercap <= GetOriginalValue("EPPUpperCap")) {
+								alert(strEPPUnsupportedWarningPart1 + " " + GetOriginalValue("EPPUpperCap") + " W (" +
+								  // BTU_H_PER_WATTS 3.4121411564884; as defined in pwrmgmt_interface.h;
+								  + (GetOriginalValue("EPPUpperCap") * 3.4121411564884).toFixed(0) + " BTU/h) " + strEPPUnsupportedWarningPart2);
+				
+								// Restore value of the input box
+								// since hasUserInputOrModifiedAnything()
+								// added an asterix to it.
+				
+								if(outOfRange == 0)
+								{
+								  $("acPowerBudget1").value = newpsuinputpowercap;
+								  convertUnits($("acPowerBudget1"));
+								}
+								return;
+							  }
+				
+							  if (strECMEnabled != 1 && newEPPEnable == 0 && (oldUPSMode != newUPSMode) && newUPSMode != 0) {
+								if (!confirm(strUPSModeMessage)) return;
+							  }
+				
+							  if ( (oldSBPMMode != newSBPMMode) && newSBPMMode != 0) {
+								if (!confirm(strSBPMModeMessage)) return;
+							  }
+				
+							  if ( (oldPerfMode != newPerfMode) && newPerfMode != 0)
+							  {
+								if (!confirm(strPerfOverRedundancyMessage)) return;
+							  }
+				
+							  if ( remoteLoggingInterval < 1 || remoteLoggingInterval > 1440 )
+							  {
+								alert( strInvalidRemoteLoggingInterval );
+								return;
+							  }
+				
+				
+							  // If the the EPP checkbox is set,
+							  // enable it before submiting the form,
+							  // otherwise if the checkbox was disabled,
+							  // the CGI layer receive a value 0, instead of 1.
+							  if ($("CHASSIS_POWER_epp_enable1").checked)
+								$("CHASSIS_POWER_epp_enable1").disabled = false;
+				
+							  if(outOfRange == 0)
+								document.dataarea.submit();
+							}
+				
+							function selectProperty(property)
+							{
+							  if (property.checked)
+							  {
+								property.value = 1;
+							  }
+							  else
+							  {
+								property.value = 0;
+							  }
+							  updateDependents( property );
+							}
+				
+							function updateDependents( property )
+							{
+							  if ( property.name == "CHASSIS_POWER_remote_logging_enable1" )
+							  {
+								if ( property.checked )
+								{
+								  $( "CHASSIS_POWER_remote_logging_interval1" ).disabled = false;
+								}
+								else
+								{
+								  $( "CHASSIS_POWER_remote_logging_interval1" ).disabled = true;
+								}
+							  }
+							  if ( property.name == "CHASSIS_POWER_SBPMMode1" )
+							  {
+								if ( property.checked )
+								{
+								  $( "CHASSIS_POWER_UPSMode1" ).checked = false;
+								  $( "CHASSIS_POWER_UPSMode1" ).disabled = true;
+								  $( "acPowerBudget1" ).disabled = true;
+								  $( "acPowerBudget2" ).disabled = true;
+								  $( "acPowerBudget3" ).disabled = true;
+								}
+								else
+								{
+								  $( "CHASSIS_POWER_UPSMode1" ).disabled = false;
+								  $( "acPowerBudget1" ).disabled = false;
+								  $( "acPowerBudget2" ).disabled = false;
+								  $( "acPowerBudget3" ).disabled = false;
+								}
+							  }
+				
+							  if ($("CHASSIS_POWER_epp_enable1").checked) {
+				
+								$("CHASSIS_POWER_SBPMMode1").disabled = true;
+								$("psuDynEng1").disabled = true;
+								$("psuRedundancy1").options[1].disabled = true;
+								$("psuRedundancy1").options[2].disabled = true;
+				
+							  } else {
+				
+								$("CHASSIS_POWER_SBPMMode1").disabled = false;
+								$("psuDynEng1").disabled = false;
+								$("psuRedundancy1").options[1].disabled = false;
+								$("psuRedundancy1").options[2].disabled = false;
+				
+							  }
+				
+							  if ($("CHASSIS_POWER_SBPMMode1").checked ||
+								$("acPowerBudget1").value <= GetOriginalValue("EPPUpperCap") ||
+								  $("psuRedundancy1").value != 1 || $("psuDynEng1").checked ||
+									$("CHASSIS_POWER_UPSMode1").checked ||
+									  GetOriginalValue("CHASSIS_type_freshair").value == 1 ||
+										GetOriginalValue("allPSUsEPPCapable") != 1 || $("vChassisPSUFailure1").value == 1) {
+				
+								$("CHASSIS_POWER_epp_enable1").disabled = true;
+				
+							  } else {
+				
+								$("CHASSIS_POWER_epp_enable1").disabled = false;
+				
+							  }
+							}
+				
+							function isNumericKey(e)
+							{
+							  try {
+								if (!e) var e = window.event;
+								var k = document.all ? e.keyCode : e.which;
+								if ((k > 47 && k < 58) || k == 8 || k == 0) {
+								  return true;
+								}
+								else { // Explicitly cancel the event on IE
+								  e.preventDefault ? e.preventDefault() : e.returnValue = false;
+								  return false;
+								}
+							  } catch(e) { }
+							}
+				
+							function extractNumeric(property)
+							{
+							  try {
+								return property.value.replace(/\D/g,"");
+							  }
+							  catch(e) { }
+							}
+				
+						   function onKeyUp(obj)
+							{
+							  try
+							  {
+								//this doesn't just convert unit is sets the power cap items with respect to each other...it syncs the values
+								convertUnits(obj);
+							  }
+							  catch(e) { }
+							}
+				
+							//this logic should totally not be in the GUI level. -lbt
+							function convertUnits(property)
+							{
+							  var m = 3.4121411564884;      // BTU_H_PER_WATTS as defined in pwrmgmt_interface.h
+							  var min = 2715;               // MMS_PWRMGMT_BUDGET_AC_MIN as defined in pwrmgmt_interface.h
+							  var n = property.name.substr(0, property.name.length - 1);
+							  var c = document.getElementById("vCount" + n).value;
+							  var p = property.name.substring(n.length);
+							  var v = Number(property.value);
+				
+							  try {
+								if (p == 1)                                                                                          // Watts
+								{
+								  document.getElementById(n + "2").value = Math.round(v * m);                                        // BTU/h
+								  if (c == 3)
+								  {
+									var e = Math.round(v * 100 / max);
+									document.getElementById(n + "3").value = (e >= 0 && e <= 100) ? e : '0';     // Percent
+								  }
+								}
+								else if (p == 2)                                                                                     // BTU/h
+								{
+								  var t = Math.round(v / m);
+								  document.getElementById(n + "1").value = t;                                                        // Watts
+								  if (c == 3)
+								  {
+									var e = Math.round(t * 100 / max);
+									document.getElementById(n + "3").value = (e >= 0 && e <= 100) ? e : '0';     // Percent
+								  }
+								}
+								else if (p == 3)                                                      // Percent
+								{
+								  var t = Math.round(v * max / 100);
+								  if ( v == Math.round(min/max * 100))
+								  {
+									 t = min;
+								  }
+								  document.getElementById(n + "1").value = t;                                                        // Watts
+								  document.getElementById(n + "2").value = Math.round(t * m);                                        // BTU/h
+								}
+							  } catch(e) { }
+							}
+				
+							// This function is a kind of override of the function contained in the GetCookieStatusScripts template in common.xsl to add the special handling needed for CR208270.
+							function overrideDisplayStatus()
+							{
+							  var status = Get_Cookie("status");
+							  var rcStatus = Get_Cookie("rcStatus");
+				
+							  var pName = Get_Cookie("pName");
+							  var pValue = Get_Cookie("pValue");
+							  if (status != null)
+							  {
+								if (rcStatus == 0x5517) // Special handling as per CR208270 : Setting for System Input Power Cap too low. This will affect server performance. Note the hard-wired error code.
+								{
+								  if (confirm(strStatusBudgetLowPerformance + '\n' +
+											  strForceACPowerBudgetSetting))
+								  {
+									if (pName != null)
+									{
+									  document.getElementById(pName).maxLength = document.getElementById(pName).maxLength + 1; // FF work-around
+									  document.getElementById(pName).value = pValue.replace('*', '#');  // The hash sign will be used to guide the cgi code as to which MMS power function to call.
+				
+									  document.dataarea.submit();
+									 }
+								  }
+								}
+								else
+								{
+								   alert(TranslateStatus(rcStatus)); // Display other status messages and error codes as normal.
+								}
+							  }
+				
+							  Delete_Cookie("pValue", "", "");
+							  Delete_Cookie("pName", "", "");
+							  Delete_Cookie("status", "", "");
+							  Delete_Cookie("rcStatus", "", "");
+							  FirstFocus();
+							}
+				
+							function GetOriginalValue(propName)
+							{
+							  var pCount= document.getElementById("pCount").value;
+				
+							  for (var i = 4; i <= pCount; i++) // Skip first three parameters
+							  {
+								var propertyName = document.getElementById("p" + i.toString()).value;
+								if (propName == propertyName)
+								{
+								  var vCount = document.getElementById("vCount" + propertyName).value;
+								  var propertyValue = Number(document.getElementById("v" + propertyName + "1").value);
+								  return propertyValue;
+								}
+							  }
+							}
+				
+							
+						  </script>
+					<script xmlns="">
+					  var vDesc = "Detailed Description:";
+					  var vAction = "Recommended Action:";
+					  var vExtension = "Extension of ";
+					  var vunMapped = "Unmapped";
+					  var vIsNoble      = "1";
+					  
+				
+				  
+					  function common_init(affirm)
+					  {
+						DisplayStatus(affirm);
+				
+						// Check for the RESET cookie.
+						var reset = Get_Cookie("RESET_CMC");
+						if (reset == 1)
+						{
+						  Delete_Cookie("RESET_CMC", "", "");
+						  Set_Cookie( "logout", 'common.xsl: Reset CMC', 2, "", "");
+						  top.document.location.replace("/cgi-bin/webcgi/logout");
+						  Delete_Cookie("sid", "", ""); // comes after so that the session id is cleared from SSN cache
+						}
+						FirstFocus();
+					  }
+				
+					  function Get_Cookie( name )
+					  {
+						var start = document.cookie.indexOf( name + "=" );
+						var len = start + name.length + 1;
+						if ( ( !start ) &&
+						( name != document.cookie.substring( 0, name.length ) ) )
+						{
+						return null;
+						}
+						if ( start == -1 ) return null;
+						var end = document.cookie.indexOf( ";", len );
+						if ( end == -1 ) end = document.cookie.length;
+						return unescape( document.cookie.substring( len, end ) );
+					  }
+				
+					  function Delete_Cookie( name, path, domain ) {
+						if ( Get_Cookie( name ) ) document.cookie = name + "=" +
+						( ( path ) ? ";path=" + path : "") +
+						( ( domain ) ? ";domain=" + domain : "" ) +
+						";expires=Thu, 01-Jan-1970 00:00:01 GMT";
+				
+						// the cookie didn't get deleted so maybe we need to specify the path with an ending '/'
+						if ( Get_Cookie( name ) && (path.match(/\/$/) == null) ) document.cookie = name + "=" +
+						( ( path ) ? ";path=" + path + "/" : "") +
+						( ( domain ) ? ";domain=" + domain : "" ) +
+						";expires=Thu, 01-Jan-1970 00:00:01 GMT";
+					  }
+				
+					  function Set_Cookie( name, value, days, path, domain )
+					  {
+						var expires = "";
+						if (days)
+						{
+						  var date = new Date();
+						  date.setTime(date.getTime()+(days*86400000));
+						  expires = "; expires="+date.toGMTString();
+						}
+						document.cookie = name + "=" + unescape(value) + expires +
+						  ( ( path ) ? ";path=" + path : "") +
+						  ( ( domain ) ? ";domain=" + domain : "" ) + expires
+					  }
+				
+					  function DisplayStatus(affirm)
+					  {
+						var status = Get_Cookie("status");
+						var rcStatus = Get_Cookie("rcStatus");
+				
+						if ( status != null)
+						{
+						  if ( !( (affirm == "noAffirm") && (rcStatus == 0)))
+						  {
+						  alert(TranslateStatus(rcStatus));
+						  }
+						}
+				
+						Delete_Cookie("status", "", "");
+						Delete_Cookie("rcStatus", "", "");
+					  }
+				
+					  function DisplayAlert(msg)
+					  {
+						alert(htmlDecodeString(msg));
+					  }
+				
+					  function DisplayMsgDescAction(msg, desc, action)
+					  {
+						var strMsg = msg;
+						if ((desc != null) && (desc != "")) {
+						  strMsg = strMsg.concat('\n\n' + vDesc + '\n' + desc);
+						}
+						if ((action != null) && (action != "")) {
+						  strMsg = strMsg.concat('\n\n' + vAction + '\n'+ action);
+						}
+						DisplayAlert(strMsg);
+					  }
+				
+					  //************************************************
+					  // Initializa PCIE object Array
+					  //************************************************
+					  function FormatServerNamesForFullHeight(useHostName, serverSlot, slotType, serverName)
+					  {
+						var serverString = "";
+				
+						//Need to check for only slot 3 and 4
+						if(serverSlot == 3 || serverSlot == 4)
+						{
+						  //slotType 2 for serverSlot 3, means it is full Height in slot 1 else half
+						  //slotType 2 for serverSlot 4, means it is full Height in slot 2 else half
+						  if(slotType == 2)
+						  {
+							serverString = vExtension + " " + (serverSlot-2);
+						  }
+						  else
+						  {
+							serverString = serverName;
+						  }
+						}
+						else
+						{
+							serverString = serverName;
+						}
+				
+						return serverString;
+					  }
+				
+					  //Referred cmc_src\cmc_open\osabs\include\cmc_systemid.h to have System ID's for various CMC systems
+					  //Adding similar functions for xslt/javaScript check to differentiate between different system.
+					  var SYSID_NOBLE_CMC_CHASSIS = "0x0000";
+					  var SYSID_PLASMA_CMC_CHASSIS = "0x0001";
+					  var SYSID_PLASMA_CMC_EB = "0x0002"; //Carrier card
+					  var SYSID_PLASMA_CMC_EB_PCBATEST = "0x0003"; //Carrier PCBA test
+					  var SYSID_NOBLE_CMC_NEB = "0x0004"; //Carrier card
+					  var SYSID_STOMP_CMC_CHASSIS_PSB = "0x0010";
+					  var SYSID_STOMP_CMC_EB = "0x0020"; //Carrier card
+					  var SYSID_STOMP_CMC_EB_PCBATEST = "0x0021"; //Carrier PCBA test
+				
+					  function IsNoble(sysid)
+					  {
+						var sysFlag = false;
+						if((sysid == SYSID_NOBLE_CMC_CHASSIS) || (sysid == SYSID_NOBLE_CMC_NEB))
+						{
+						   sysFlag = true;
+						}
+						return sysFlag;
+					  }
+				
+					  function IsPlasma(sysid)
+					  {
+						var sysFlag = false;
+						if((sysid == SYSID_PLASMA_CMC_CHASSIS) || (sysid == SYSID_PLASMA_CMC_EB) || (sysid == SYSID_PLASMA_CMC_EB_PCBATEST))
+						{
+						   sysFlag = true;
+						}
+						return sysFlag;
+				
+					  }
+				
+					  function IsStomp(sysid)
+					  {
+						var sysFlag = false;
+						if((sysid == SYSID_STOMP_CMC_CHASSIS_PSB) || (sysid == SYSID_STOMP_CMC_EB) || (sysid == SYSID_STOMP_CMC_EB_PCBATEST))
+						{
+						   sysFlag = true;
+						}
+						return sysFlag;
+				
+					  }
+					
+				
+				
+					  function TranslateStatus(v)
+					  {
+						switch(v*1)
+						{
+						  case 0:
+							return ("Operation Successful.");
+				
+						  // Colossus Exposed Completion codes.
+						  case 0x0027: // IPMI Command Downgraded Fabric
+							return ("Error selecting fabric. Make sure the fabric's IOMs support 10Gb.");
+						  case 0x0028: // IPMI Command Downgraded Midplane.
+							return ("M1000e Midplane must be upgraded to support 10Gb on Fabric-A");
+						  case 0x0029: // IPMI Command Downgraded Midplane.
+							return ("Error selecting fabric. Make sure the fabric has 10Gb IOMs installed.");
+						  case 0x00D5: // IPMI Command execution Failure.
+							return ("The IOMs currently installed in Fabric A do not support this system");
+				
+						  // fwupdate Errors
+						  case 0x1400: // FUP_ERR_NO_PRIVILEGE                                     //  0x1400 == 5120
+							return ("User does not have permission to perform update");
+						  case 0x1407: // FUP_ERR_MX_BAD_PARAM                                     //  0x1400 == 5127
+							return ("File Not Found!");
+						  case 0x1409: // FUP_INVALID_REQUEST_PREV_UPDATE_IN_PROGRESS              //  0x1409 == 5129
+							return ("Previous update still in progress");
+						  case 0x140B: // FUP_DEVICE_NOT_AVAILABLE                                 //  0x140B == 5131
+							return ("Device unavailable for update");
+						  case 0x140D: // FUP_DEVICE_PAYLOAD_TOO_BIG                               //  0x140D == 5133
+							return ("Invalid firmware: The uploaded firmware image is not valid on this hardware.\n\nRetry the operation with a valid firmware image.");
+						  case 0x1411: // FUP_ERR_TARGET_NOT_READY                                 // 0x1411 == 5137
+							return ("Target not ready for update");
+						  case 0x1416: // FUP_ERR_OP_NOT_CANCELABLE                                // 0x1416 == 5142
+							return ("Cannot cancel update");
+						  case 0x141C: // FUP_ERR_IMAGE_FILE_NOT_ACCESSIBLE                        // 0x141C == 5148
+							return ("Image file not transferred from host");
+						  case 0x1440: // FUP_ERR_CLIENT_CONNECT               // 0x1440 == 5184
+						  case 0x1460: // FUP_ST_START_INVALID_REQ             // 0x1460 == 5216
+						  case 0x1461: // FUP_ST_BOUND_INVALID_REQ,            // 0x1461 == 5217
+						  case 0x1462: // FUP_ST_RESERVED_INVALID_REQ,         // 0x1462 == 5218
+						  case 0x1463: // FUP_ST_CONNECTED_INVALID_REQ,        // 0x1463 == 5219
+							return ("Firmware update operation temporarily unavailable " + v);
+						  case 0x1464: // FUP_ST_INITIALIZING_INVALID_REQ,     // 0x1464 == 5220
+							return ("A firmware update operation is already in progress");
+				
+						  // cfg Manager Errors
+						  case 0x2E3E: // ERRNO_CFGMGR_LIB_RC_INVALID_ARGS
+						  case 11776: // ERRNO_CFGMGR_LIB_RC_INVALID_ARGS
+						  case 11805: // ERRNO_CFGMGR_LIB_RC_INVALID_INDEX
+						  case 11837: // ERRNO_CFGMGR_CMCCFG_RC_ARGS
+							return ("Property Argument List Error");
+						  case 11814: // ERRNO_CFGMGR_CFG_RC_NOTFOUND
+							return ("Property Not Found");
+						  case 11838: // ERRNO_CFGMGR_CMCCFG_RC_LASTPROP
+							return ("Operation Successful.");
+						  case 11839: // ERRNO_CFGMGR_CMCCFG_RC_NORESPONSE
+						  case 11781: // ERRNO_CFGMGR_LIB_RC_REQUEST_FAILED
+							return ("No Response from Configuration Manager.");
+						  case 11782: // ERRNO_CFGMGR_LIB_RC_TIMEOUT
+						  case 11820: // ERRNO_CFGMGR_CFG_RC_EINPROGRESS
+							return ("The requested configuration change is in progress. Please wait for completion.");
+						  case 11840: // ERRNO_CFGMGR_CMCCFG_RC_VALUE_TOOBIG
+						  case 11807: // ERRNO_CFGMGR_CFG_RC_INVALID_LENGTH
+						  case 11817: // ERRNO_CFGMGR_CFG_RC_BUF_TOOSMALL
+							return ("Buffer is invalid for this property.");
+						  case 11808: // ERRNO_CFGMGR_CFG_RC_INVALID_VALUE
+							return ("Property Value Invalid. Try Again.");
+						  case 11818: // ERRNO_CFGMGR_CFG_RC_READONLY_VALUE
+							return ("Property Value cannot be modified.");
+						  case 11841: // ERRNO_CFGMGR_CMCCFG_RC_AUTHENTICATION_ERROR
+							return ("User Authorization Error");
+						  case 11842: // ERRNO_CFGMGR_CMCCFG_RC_UNAUTHORIZED
+							return ("User not authorized for this action.");
+						  case 12045: // ERRNO_CFGMGR_FC_ERR_BLADE_CONFLICT
+							return ("Server(s) Must Be Powered Down Before Changing this Property.");
+				
+						  // Blade Manager Errors.
+						  case 0x5200: // BM_ERR_MEM_ACQUIRE_FAILED=BM_BLADE_ERR_BASE
+							return ("Failed to Acquire Memory for Operation.");
+						  case 0x5201: // BM_ERR_INVALID_BLADE_NUM
+							return ("Invalid server number");
+						  case 0x5202: // BM_ERR_BLADE_ABSENT
+							return ("Server Absent");
+						  case 0x5108: // IPMI_ERR_IMC_NOT_READY
+						  case 0x5203: // BM_ERR_IMC_NOT_READY
+							return ("iDRAC Not Ready. See CMC Log for Details.");
+						  case 0x5204: // BM_ERR_BLD_PWRD_ON
+							return ("Server already powered on");
+						  case 0x5205: // BM_ERR_IMC_CMD_FAILED
+							return ("Error while sending command to iDRAC");
+						  case 0x5206: // BM_ERR_INVALID_SLOT_NAME
+							return ("Invalid slot name");
+						  case 0x5207: // BM_ERR_INVALID_SLOT_PRIORITY
+							return ("Invalid slot priority");
+						  case 0x5208: // BM_ERR_INVALID_INPUT
+							return ("Invalid input value.");
+						  case 0x5209: // BM_ERR_HWABS_COMMN_FAILED
+							return ("Error while communicating with instrumentation.");
+						  case 0x520A: // BM_ERR_BLD_INFO_POP
+							return ("Error populating server information.");
+						  case 0x520B: // BM_ERR_INVALID_USR
+							return ("User not authorized for this action.");
+						  case 0x520C: // BM_ERR_ACQUIRE_EDID
+							return ("Cannot Obtain Server Extended Display Identification Data (EDID)");
+						  case 0x520D: // BM_ERR_INVALID_PASSWD_LEN
+							return ("Invalid iDRAC Password");
+						  case 0x520E: // BM_ERR_SHM_ACCESS
+							return ("Hardware Error: Cannot obtain Mutex");
+						  case 0x520F: // BM_ERR_READING_REQUEST,
+							return ("Cannot communicate with Server.");
+						  case 0x5210: // BM_ERR_ACTN_PROGRESS
+							return ("Another action is being performed on this server. Try again.");
+						  case 0x5211: // BM_ERR_BLD_PWRD_OFF
+							return ("Server already powered off.");
+						  case 0x5212: // BM_ERR_DUPLICATE_IP_ADDR
+							return ("IP Address is already used on another iDRAC.");
+						  case 0x5213: // BM_ERR_INVALID_SLOT_LEN
+							return ("Slot Name length is invalid.");
+						  case 0x5214: // BM_ERR_DUP_SLOT_NAME
+							return ("Slot Name is already used.");
+						  case 0x5215: // BM_ERR_CHASSIS_PWR_OFF
+							return ("Cannot process command while chassis is off.");
+						  case 0x5218: // BM_ERR_START_IP_OUT_OF_RANGE
+							return ("Starting IP address is out of range.");
+						  case 0x5219: // BM_ERR_FEATURE_UNAVAILABLE
+							return ("Server feature unavailable.");
+						  case 0x522D: // BM_ERR_STASH_PWR_ON
+							return ("Cannot process command while the storage array is powered ON.");
+				
+						  // enum ce_error_t -- Relocated to base 0xC000 - Only listing the likely errors.
+						  case 0xC006: // CE_STATUS_SSN_VALIDATION_FAILED
+							return ("Not authorized to complete this action.");
+						  case 0xC007: // CE_STATUS_SSN_ID_MISSING
+							return ("Session credentials missing, cannot complete this action.");
+						  case 0xC00A: // CE_STATUS_FILE_TOO_LARGE
+							return ("File is too large, try again.");
+						  case 0xC010: // CE_STATUS_INSUFFICIENT_PRIVILEGES
+							return ("Not authorized to complete this action.");
+						  case 0xC011: // CE_STATUS_TEST_EMAIL_FAILED
+							return ("Unable to send test email.\nMake sure email alerts have been configured correctly\nand connectivity to the SMTP server exists.");
+						  case 0xC012: // CE_STATUS_NO_DATA_RETURNED
+							return ("Problem reading data.");
+						  case 0xC014: // CE_STATUS_BACKUP_RESTORE_BUSY
+							return ("Save or restore operation already in progress.");
+						  case 0xC015: // CE_STATUS_TMP_FILESYSTEM_PROBLEM
+							return ("Tmp filesystem not functional.");
+						  case 0xC016: // CE_STATUS_ENCRYPTION_FAILED
+							return ("Encryption or decryption failed.");
+						  case 0xC017: // CE_STATUS_BACKUP_FAILED
+							return ("Backup or restore failed.");
+						  case 0xC018: // CE_STATUS_BACKUP_FILE_NOT_FOUND
+							return ("File not found.");
+						  case 0xC019: // CE_STATUS_FILE_OPEN
+							return ("Cannot Open File");
+						  case 0xC01A: // CE_STATUS_DATA_WRITE_PROBLEM
+							return ("Data write failed.");
+						  case 0xC01B: // CE_STATUS_NV_PREPARE_FAIL
+							return ("Media preparation failed.");
+						  case 0xC01C: // CE_STATUS_BACKUP_FILE_INVALID
+							return ("Invalid file for restore operation.");
+						  case 0xC01D: // CE_STATUS_NV_UNAVAILABLE
+							return ("The EEPROM is unavailable. Contact Service.");
+				
+						  // cgic.h errors -- Relocated to base 0xC100
+						  case 0xC100: // cgiFormSuccess
+							return ("Operation Successful.");
+						  case 0xC101: // cgiFormTruncated,
+							return ("Name Truncated Due to Length.");
+						  case 0xC102: // cgiFormBadType,
+							return ("Invalid Value Specified.");
+						  case 0xC103: // cgiFormEmpty,
+							return ("No Data Specified.");
+						  case 0xC104: // cgiFormNotFound,
+							return ("No Data Found.");
+						  case 0xC105: // cgiFormConstrained,
+							return ("Value out-of-bounds.");
+						  case 0xC106: // cgiFormNoSuchChoice,
+							return ("Button Choice not Applicable.");
+						  case 0xC107: // cgiFormMemory,
+							return ("Out of Memory.");
+						  case 0xC108: // cgiFormNoFileName,
+							return ("No File Specified");
+						  case 0xC209: // CE_STATUS_FILE_INVALID
+						  case 0xC109: // cgiFormNoContentType,
+							return ("Bad File Type.");
+						  case 0xC10A: // cgiFormNotAFile,
+							return ("File Not Found!");
+						  case 0xC10B: // cgiFormOpenFailed,
+							return ("Cannot Open File");
+						  case 0xC10C: // cgiFormIO,
+							return ("System I/O Error Occurred.");
+						  case 0xC10D: // cgiFormEOF
+							return ("Reached End-Of-File");
+						  case 0xC110: // Enhance Chassis Log mode changed
+							return ("Chassis Events setting fails. Enhanced Chassis Logging mode has been changed externally.");
+				
+						  //SSL Errors
+						  case 0xC200: // invalid cert
+							return ("Bad File Format. Try Again.");
+						  case 0xC20A: // invalid cert
+							return ("Bad File Format. Try Again.");
+				
+						  //System Lockdown Error
+						  case 0xd4: // System Lockdown mode enabled
+							if (vIsNoble == 1) {
+							   return ("Lockdown Mode enabled. Unable to apply any changes. Refer to CMC log for Lockdown Mode enabled systems.");
+							}
+							else {
+							   return ("Lockdown Mode enabled. Unable to apply any changes. Refer to Chassis log for Lockdown Mode enabled systems.");
+							}
+				
+						  // IOM Errors
+						  case 0x5406: // IOM_ERR_NO_IOM,
+							return ("No IOM is present in this slot.");
+						  case 0x5407: // IOM_ERR_IOM_OFF,
+							return ("Cannot process the command while the I/O module is off.");
+						  case 0x5408: // IOM_ERR_NO_POWER,
+							return ("Insufficient Power Budget. Check Chassis Power Management.");
+						  case 0x5409: // IOM_ERR_POWER_MGMT,
+							return ("Power Management Sub-System is initializing. Try Again.");
+						  case 0x540A: // IOM_ERR_PSOC_ACCESS,
+						  case 0x5007: // MMS_ERR_IPC_RCV_TIMEOUT
+							return ("Communication Error with IOM. Try Again.");
+						  case 0x540B: // IOM_ERR_FCC,            // error due to fabric mismatch
+							return ("IOM Fabric Mismatch. Cannot Perform Action.");
+						  case 0x540C: // IOM_ERR_LINKT,          // link tuning mismatch
+							return ("Link tuning data unavailable for the current IOM configuration. Cannot perform the action.");
+						  case 0x540D: // IOM_ERR_LINKT_DATA,     // link tuning invalid data length
+							return ("Bad Link Tuning Data. Cannot Perform Action.");
+						  case 0x5416: // THREAD_IN_PROGRESS,     // VLAN update in progress
+							return ("IOM update in progress. Wait for update to complete before applying additional settings.");
+						  case 0x5418: // IOM_ERR_XML_OPERATION_STARTED
+							return ("The requested operation has started. The operation will take some time to complete, failures can be viewed in the CMC Log.");
+				
+						  // Power Management Error Codes
+						  case 0x5502: // MMS_PWRMGMT_INV_ARGS  (0x5502)
+							return ("Property Argument List Error");
+						  case 0x5503: // MMS_PWRMGMT_INV_PERMISSION (0x5503)
+							return ("Not authorized to complete this action.");
+						  case 0x5504: // MMS_PWRMGMT_INV_REQ  (0x5504)
+							return ("Property Argument List Error");
+						  case 0x5505: // MMS_PWRMGMT_TIMEOUT  (0x5505)
+							return ("No Response from Configuration Manager.");
+						  case 0x5506: // MMS_PWRMGMT_NOMEM  (0x5506)
+							return ("Failed to Acquire Memory for Operation.");
+						  case 0x5507: // MMS_PWRMGMT_ERR_SHM_ACCESS (0x5507)
+						  case 0x550D: // MMS_PWRMGMT_ERR_SHM_CORRUPTION (0x550D)
+							return ("Hardware Error: Cannot obtain Mutex");
+						  case 0x5508: // MMS_PWRMGMT_SOCKET_SEND_ERROR (0x5508)
+						  case 0x5509: // MMS_PWRMGMT_SOCKET_RECV_ERROR (0x5509)
+							return ("No Response from Configuration Manager.");
+						  case 0x550A: // MMS_PWRMGMT_ERR_NULL_SHM_ADDR (0x550A)
+							return ("Hardware Error: Cannot obtain Mutex");
+						  case 0x5501: // MMS_PWRMGMT_FAILED  (0x5501)
+						  case 0x550C: // MMS_PWRMGMT_HAPI_FAILED  (0x550C)
+						  case 0x550E: // MMS_PWRMGMT_ERR_BLADE_OP_FAILED (0x550E)
+							return ("Error while communicating with instrumentation.");
+						  case 0x550F: // MMS_PWRMGMT_PSU_CNT_INVALID
+							return ("Error! Insufficient Power Supplies present in the system for the configuration operation to succeed.");
+						  case 0x5510: // MMS_PWRMGMT_PSU_CNT_INVALID
+							return ("Chassis power-off in progress. Click refresh for current status");
+				
+						  case 0x5511: // MMS_PWRMGMT_INV_REQ_CHASSIS_ON
+							return ("Chassis power-on in progress. Click refresh for current status");
+						  case 0x5512: // MMS_PWRMGMT_INV_REQ_CHASSIS_RST
+							return ("Chassis reset in progress. Click refresh for current status");
+						  case 0x5513: // MMS_PWRMGMT_INV_REQ_CHASSIS_CYC
+							return ("Chassis power-cycle in progress. Click refresh for current status");
+						  case 0x5514: // MMS_PWRMGMT_CHASSIS_SHUTDN_FAIL
+							return ("Chassis power-shutdown failed. Check server status.");
+						  case 0x5515: // MMS_PWRMGMT_RETRY_AFTER_60SECS
+							return ("Operation in progress. Try again later.");
+						  case 0x5517: // MMS_PWRMGMT_BUDGET_LOW_PERFORMANCE
+							return ("System Input Power Cap setting too low. This will impact server performance.");
+						  case 0x5518: // MMS_PWRMGMT_BUDGET_LOW_SHUTDOWN
+							return ("System Input Power Cap setting too low. This will cause server or other components to shut down.");
+						  case 0x551A: // MMS_PWRMGMT_FWUPDATE_INPROGRESS
+							return ("PSU Update in progress. Try again later.");
+						  case 0x5522: // MMS_PWRMGMT_AC_REDUNDANCY_CANNOT_SET
+						   return ("Cannot set Grid redundancy due to insufficient PSU in power grids.");
+						  case 0x5523: // power cap is set lower than power bound
+						   return ("The power cap value cannot be less than the lower power bound");
+				
+						  // IPv6 address errors
+						  case 0x1900: // NET_OP_V6ADRERRNULL       6400
+							return ("IPv6 Null address not allowed.");
+						  case 0x1901: // NET_OP_V6ADRERRLENGTH     6401
+							return ("IPv6 Address too long.");
+						  case 0x1902: // NET_OP_V6ADRERRINVCHAR    6402
+							return ("IPv6 Address contains invalid character(s).");
+						  case 0x1903: // NET_OP_V6ADRERRSEGMENTS   6403
+							return ("IPv6 Address contains too many segments.");
+						  case 0x1904: // NET_OP_V6ADRERRSEGMENTLEN 6404
+							return ("IPv6 Address segment contains more than 4 characters.");
+						  case 0x1905: // NET_OP_V6ADRERRDOUBLECOLON  6405
+							return ("IPv6 Address contains more than one double colon.");
+						  case 0x1906: // NET_OP_V6ADRERRSEGMENTNAN 6406
+							return ("IPv6 Address segment is not a number.");
+						  case 0x1907: // NET_OP_V6ADRERRTOOSHORT   6407
+							return ("IPv6 Address less than 128 bits.");
+						  case 0x1908: // NET_OP_V6ADRERRZERO       6408
+							return ("IPv6 Address of zero not allowed.");
+						  case 0x1909: // NET_OP_V6ADRERRMULTICAST  6409
+							return ("IPv6 Multicast address not allowed (FFxx::/8).");
+						  case 0x190A: // NET_OP_V6ADRBEGINCOLON    6410
+							return ("IPv6 Address cannot begin with a single colon.");
+						  case 0x190B: // NET_OP_V6ADRENDCOLON      6411
+							return ("IPv6 Address cannot end with a single colon.");
+						  case 0x1804: // INVALID IP RANGE ADDRESS   6148
+							return ("The IP Range Address is invalid.");
+						  case 0x1805: // INVALID IP RANGE MASK      6149
+							return ("The IP Range Mask is invalid.");
+				
+						  // Multi Chassis Management Client Library Errors
+				
+						  case 0x7000: // MCMCL_ERR_EINVAL               28672
+							return ("Invalid data submitted");
+						  case 0x7001: // MCMCL_ERR_TIMEOUT              28673
+							return ("Communication timeout");
+						  case 0x7002: // MCMCL_ERR_IPC                  28674
+							return ("Communication error");
+						  case 0x7003: // MCMCL_ERR_NORESOURCES          28675
+							return ("Insufficient resources");
+						  case 0x7004: // MCMCL_ERR_NOSUCH_MEMBER        28676
+							return ("No such member exists");
+						  case 0x7005: // MCMCL_ERR_TOOMANY_MEMBERS      28677
+							return ("Too many members");
+						  case 0x7006: // MCMCL_ERR_DUPLICATE_NODE       28678
+							return ("Duplicate member IP address or host name");
+						  case 0x700B: // MCMCL_ERR_INCONSISTENT_ROLE    28683
+							return ("Operation cannot be performed by this role");
+						  case 0x700C: // MCMCL_ERR_CFG                  28684
+							return ("Configuration storage error");
+						  case 0x700D: // MCMCL_ERR_NO_EXT_STORAGE       28685
+							return ("Extended storage required");
+						  case 0x700E: // MCMCL_ERR_NO_DATA              28686
+							return ("Data retrieval error");
+						  case 0x700F: // MCMCL_ERR_INSUFFICIENT_PRIV    28687
+							return ("Insufficient privileges");
+				
+						  // Blade Cloning error codes
+						  case 0x727b: // BLCL_ERR_SYSCALL_ENOMEDIUM     29307
+							return ("Error accessing Extended Storage. Make sure that the Extended Storage feature is enabled and healthy.");
+						  case 0x7302: // BLCL_ERR_OP_INPROGRESS         29442
+							return ("Server profile operation is already in progress. Wait for the completion of previous operation before starting another one.");
+						  case 0x7304: // BLCL_ERR_MAX_PROFILE_LIMIT     29444
+							return ("Error Saving Profile. Maximum allowed profiles reached.");
+						  case 0x7305: // BLCL_ERR_PROFILE_EXIST         29445
+							return ("Profile name already in use.");
+						  case 0x7306: // BLCL_ERR_PROFILE_NOT_FOUND     29446
+							return ("Profile not found.");
+						  case 0x7307: // BLCL_ERR_PROFILE_NO_NAME       29447
+							return ("No profile name and description provided.");
+				
+						  case 0x7400: // BLCL_CANT_READ_CONFIGURATION              29696
+							return ("Error accessing the profile.");
+						  case 0x7404: // BLCL_CANT_ACCESS_SERVER                   29700
+							return ("Error accessing the server.");
+						  case 0x7405: // BLCL_CANT_ACCESS_VIEW_DISPLAY_SETTINGS    29701
+							return ("Error occurred while extracting viewable settings.");
+						  case 0x7409: // BLCL_SERVER_NOT_READY                     29705
+							return ("Error occurred while accessing the server - iDRAC is unresponsive. Restart the iDRAC and retry the operation.");
+						  case 0x740C: // _BLCL_PROFILE_TOO_LARGE                   29708
+							return ("Error Importing Profile - File size is larger than the 2MB maximum. Select a valid profile file.");
+						  case 0x740D: // _BLCL_PROFILE_INVALID_FORMAT              29709
+							return ("Error Importing Profile - Selected file is not a valid profile. Select a valid profile file.");
+						  case 0x740E: // _BLCL_CSIOR_DISABLED                      29710
+							return ("Warning: The Collect System Inventory on Restart (CSIOR) control is not enabled for servers targeted by the Blade Cloning operation. Enable CSIOR and retry the operation.");
+						  case 0x7414: // _BLCL_REMOTE_SVC                          29716
+							return ("Remote Service is not ready.");
+				
+						  case 0x7480: // VMACDB_NO_SERVICE_TAG                     29824
+							return ("Service tag for the selected server is not availabe.");
+						  case 0x7481: // VMACDB_INVALID_MAC_ADDR                   29825
+							return ("MAC Address format is not valid.");
+						  case 0x7484: // VMACDB_MAC_ADD_PARTIAL                    29828
+							return ("Some of the MAC addresses are not added to the Virtual MAC Address Pool, because the MAC Addresses exists.");
+						  case 0x7485: // VMACDB_MAC_REMOVE_PARTIAL                 29829
+							return ("Cannot remove some of the MAC addresses from the pool, as these MAC Addresses do not exist or used in Boot Identity profile.");
+						  case 0x7486: // VMACDB_MAC_STATUS_MISMATCH                29830
+							return ("MAC address status does not support the requested action.");
+						  case 0x7487: // VMACDB_INSUFFICIENT_MAC_ADDRESS           29831
+							return ("Sufficient number of MAC addresses not available to capture the profile.");
+						  case 0x7489: // VMACDB_OTHER_PROFILE_IN_USE               29833
+							return ("If a profile is already applied to the server, ensure that you clear the existing profile identity before applying a new profile.");
+						  case 0x748A: // VMACDB_INVALID_BI_SERVER                  29834
+							return ("There is no profile associated with the server.");
+						  case 0x748F: // VMACDB_ACTIVE_PROFILE_DELETE              29839
+							return ("Active profiles cannot be deleted.");
+						  case 0x7490: // VMACDB_ENABLE_IOID_PERSISTENCE            29840
+							return ("Error in enabling IO ID and Persistence policy for the selected server.");
+						  case 0x7483: // VMACDB_MAC_ADDRESS_EXISTS                 29827
+							return ("MAC Address exists in the Virtual MAC Address Pool.");
+						  case 0x7482: // VMACDB_MAC_ADDRESS_NOT_AVAILABLE          29826
+							return ("MAC addresses are not available in the MAC Pool.");
+						  case 0x748D: // VMACDB_XML_MACDB_ERROR                    29837
+							return ("Virtual MAC Address pool is not valid.");
+						  case 0x748B: // VMACDB_INVALID_PROFILE                    29835
+							return ("Profile is not valid.");
+						  case 0x7491: // VMACDB_WSMAN_FAILED                       29841
+							return ("Server communication error.");
+						  case 0x7493: // VMACDB_BI_OPS_IN_PROGRESS                 29843
+							return ("The Boot Identity operation cannot be started because a Boot Identity operation is already in progress.");
+						  case 0x7494: // VMACDB_PROFILE_USED_IN_OTHER_BLADE        29844
+							return ("Selected Boot identity profile is already used by some other server.");
+				
+						  case 0x2018: // SSN_ERR_NO_PRIV           8216
+							return ("Not authorized to complete this action.");
+				
+						  case 0x7500: // LIC000 (base=0x7500)
+							return("The License Manager successfully performed the actions.");
+						  case 0x7501: // LIC001 (base=0x7500)
+							return("The License Manager command parameter used is invalid.");
+						  case 0x7502: // LIC002 (base=0x7500)
+							return("License Manager is unable to allocate the required resources at startup.");
+						  case 0x7503: // LIC003 (base=0x7500)
+							return("License Manager was unable to create and/or allocate the required resources.");
+						  case 0x7504: // LIC004 (base=0x7500)
+							return("An internal system error has occurred.");
+						  case 0x7505: // LIC005 (base=0x7500)
+							return("Unable to import as the maximum number of licenses are installed.");
+						  case 0x7506: // LIC006 (base=0x7500)
+							return("The license has expired.");
+						  case 0x7507: // LIC007 (base=0x7500)
+							return("Invalid entry: Object does not exist or cannot be found.");
+						  case 0x7508: // LIC008 (base=0x7500)
+							return("The license binding ID does not match the device unique identifier.");
+						  case 0x7509: // LIC009 (base=0x7500)
+							return("The license upgrade was unsuccessful.");
+						  case 0x750A: // LIC010 (base=0x7500)
+							return("Unable to import as the license is not applicable for the specified device.");
+						  case 0x750B: // LIC011 (base=0x7500)
+							return("A non-evaluation license cannot be replaced with an evaluation license.");
+						  case 0x750C: // LIC012 (base=0x7500)
+							return("The license file does not exist.");
+						  case 0x750D: // LIC013 (base=0x7500)
+							return("These license features are not supported by this firmware version.");
+						  case 0x750E: // LIC014 (base=0x7500)
+							return("Multiple backup or restore operations have been simultaneously attempted on the License Manager database.");
+						  case 0x750F: // LIC015 (base=0x7500)
+							return("The License Manager database restore operation failed.");
+						  case 0x7510: // LIC016 (base=0x7500)
+							return("Unable to meet the feature dependencies of the license.");
+						  case 0x7511: // LIC017 (base=0x7500)
+							return("The license file is corrupted, not unzipped, or not valid license.");
+						  case 0x7512: // LIC018 (base=0x7500)
+							return("The license is already imported.");
+						  case 0x7513: // LIC019 (base=0x7500)
+							return("A leased license cannot be imported before its start date.");
+						  case 0x7514: // LIC020 (base=0x7500)
+							return("Unable to import due to End User License Agreement (EULA) import upgrade warning.");
+						  case 0x7515: // LIC021 (base=0x7500)
+							return("Unable to import because the features contained in the evaluation license are already licensed.");
+						  case 0x7516: // LIC022 (base=0x7500)
+							return("The License Manager database is locked due to ongoing backup and restore operation.");
+						  case 0x7517: // LIC201 (base=0x7500)
+							return("License %s assigned to device %s expires in %s days.");
+						  case 0x7518: // LIC202 (base=0x7500)
+							return("Unable to perform the operation because device has not been powered off.\nPower off the device and retry the operation.");
+						  case 0x7519: // LIC203 (base=0x7500)
+							return("The license %s has encountered an error.");
+						  case 0x751A: // LIC204 (base=0x7500)
+							return("Unable to complete the License Manager database restore operation.");
+						  case 0x751B: // LIC205 (base=0x7500)
+							return("License Manager database lock has timed-out.");
+						  case 0x751C: // LIC206 (base=0x7500)
+							return("EULA warning: Importing license %s may violate the End-User License Agreement.");
+						  case 0x751D: // LIC207 (base=0x7500)
+							return("License %s on device %s has expired.");
+						  case 0x751E: // LIC208 (base=0x7500)
+							return("License %s successfully imported to device %s.");
+						  case 0x751F: // LIC209 (base=0x7500)
+							return("License %s successfully exported from the device %s.");
+						  case 0x7520: // LIC210 (base=0x7500)
+							return("License %s successfully deleted from the device %s.");
+						  case 0x7521: // LIC211 (base=0x7500)
+							return("The iDRAC feature set has changed.");
+						  case 0x7522: // LIC501 (base=0x7500)
+							return("A required license is missing or expired.");
+						  case 0x7523: // LIC502 (base=0x7500)
+							return("Features are not available.");
+						  case 0x7524: // LIC503 (base=0x7500)
+							return("A required license is missing or expired. The following features are not enabled: %s");
+						  case 0x7525: // LIC900 (base=0x7500)
+							return("The command was successful.");
+						  case 0x7526: // LIC901 (base=0x7500)
+							return("Invalid parameter value for %s.");
+						  case 0x7527: // LIC902 (base=0x7500)
+							return("Resource allocation failure.");
+						  case 0x7528: // LIC903 (base=0x7500)
+							return("Missing parameters %s.");
+						  case 0x7529: // LIC904 (base=0x7500)
+							return("Unable to connect to the network share.");
+						  case 0x752A: // LIC905 (base=0x7500)
+							return("The LicenseName value cannot exceed 64 characters.");
+						  case 0x752B: // LIC906 (base=0x7500)
+							return("License file is inaccessible on the network share.");
+						  case 0x752C: // LIC907 (base=0x7500)
+							return("Unable to perform the operation due to an unknown error in iDRAC.");
+				
+						  // Duplicate IDRAC DNS Name
+						  case 0x52100:
+							return ("Duplicate DNS Name Selected");
+				
+						  //Controller Troubleshooting Page Errors
+						  case 0x80000003: // EFI_UNSUPPORTED - Different CMC Versions
+							return("The passive CMC is not operating at the correct version. Update the passive CMC.");
+						  case 0x80000006: // EFI_NOT_READY - ActiveControllerBeingDisabled
+							return("Unable to disable RAID controller because Shared PERC8 (Integrated 2) is the active controller. \nPower cycle the chassis and retry the operation. If the error persists contact your service provider.");
+						  case 0x80000015: // EFI_ABORTED - ServersOn
+							return("Unable to enable or disable RAID controller because all servers have not been powered off.\nPower off all servers and retry the operation.");
+						  case 0x80000014: // EFI_ALREADY_STARTED - ControllerAlreadyDisabled
+							return("The opposite storage adapter is already disabled. Enable the opposite storage adater before disabling this adapter.");
+				
+						  default:
+							return ("Operation Not Successful: Error=" + v);
+						}
+						return "ERROR";
+					  }
+				
+					</script>
+				  </head>
+				  <body onload="javascript:overrideDisplayStatus();" onkeypress="javascript:return(f_keypress(event));">
+					<a name="top" id="top"></a>
+					<div xmlns="" id="pullstrip" onmousedown="javascript:pullTab.ra_resizeStart(event, this);">
+					  <div id="pulltab"></div>
+					</div>
+					<div xmlns="" id="rightside"></div>
+					<div xmlns="" class="data-area-page-title">
+					  <span id="pageTitle">Budget/Redundancy Configuration</span>
+					  <div class="toolbar">
+						<a id="A2" name="printbutton" class="print" href="javascript:window.print();" title="Print"></a>
+						<a id="A5" name="refresh" class="refresh" href="javascript:top.globalnav.f_refresh();" title="Refresh"></a>
+						<a id="A6" name="help" class="help" href="javascript:top.globalnav.f_help();" title="Help"></a>
+					  </div>
+					  <div class="da-line"></div>
+					</div>
+					<div class="table_container">
+					  <table class="container">
+						<thead>
+						  <tr>
+							<td class="topleft" width="3px"></td>
+							<td class="top">Information</td>
+							<td class="topright"></td>
+						  </tr>
+						</thead>
+						<tr>
+						  <td class="left" width="3px"></td>
+						  <td class="instructions">
+							<ul>
+							  <li>Setting changes on this page may not be reflected immediately. Refreshing the page after an appropriate delay will display the new values.</li>
+							  <li>Remote Power logging requires Remote SysLog to be enabled. See Network Services for more information.</li>
+							</ul>
+						  </td>
+						  <td class="right"></td>
+						</tr>
+						<tfoot>
+						  <tr>
+							<td class="bottomleft" width="3px"></td>
+							<td class="bottom"></td>
+							<td class="bottomright"></td>
+						  </tr>
+						</tfoot>
+					  </table>
+					</div>
+					<form onsubmit="true" action="/cgi-bin/webcgi/pwr_redundancy" name="dataarea" id="dataarea" method="post" autocomplete="off">
+					  <input xmlns="" type="hidden" value="6f12651ace76363bb9cff970c453c8df" name="ST2" id="ST2" />
+					  <div class="table_container">
+						<table class="container">
+						  <thead>
+							<tr>
+							  <td class="topleft" width="3px"></td>
+							  <td class="top borderright" width="49%">Attribute</td>
+							  <td class="top" colspan="3">Value</td>
+							  <td class="topright"></td>
+							</tr>
+						  </thead>
+						  <tbody>
+							<tr xmlns="" class="fill">
+							  <td class="left" width="3px"></td>
+							  <td nowrap="nowrap" class="contents borderright borderbottom">Enable Server Based Power Management</td>
+							  <td class="contents borderbottom" colspan="3">
+								<input type="checkbox" onClick="javascript:selectProperty(this);" name="CHASSIS_POWER_SBPMMode1" id="CHASSIS_POWER_SBPMMode1" value="&#10;    0&#10;  " />
+							  </td>
+							  <td class="right"></td>
+							</tr>
+							<tr xmlns="">
+							  <td class="left" width="3px"></td>
+							  <td nowrap="nowrap" class="contents borderright borderbottom">System Input Power Cap<br />(0-16% = 2715W - 100% = 16685W)
+					  </td>
+							  <td class="contents borderbottom" valign="middle"><input type="text" onkeypress="return isNumericKey(event);" onkeyup="onKeyUp(this);" onchange="this.value = extractNumeric(this); updateDependents(this);" onfocus="this.style.background='yellow'" onblur="this.style.background='white'" size="4" maxlength="5" name="acPowerBudget1" id="acPowerBudget1" value="16685" />W</td>
+							  <td class="contents borderbottom" valign="middle"><input type="text" onkeypress="return isNumericKey(event);" onkeyup="onKeyUp(this);" onchange="this.value = extractNumeric(this); updateDependents(this);" onfocus="this.style.background='yellow'" onblur="this.style.background='white'" size="5" maxlength="5" name="acPowerBudget2" id="acPowerBudget2" value="56931" />BTU/h</td>
+							  <td class="contents borderbottom" valign="middle"><input type="text" onkeypress="return isNumericKey(event);" onkeyup="onKeyUp(this);" onchange="this.value = extractNumeric(this); updateDependents(this);" onfocus="this.style.background='yellow'" onblur="this.style.background='white'" size="2" maxlength="3" name="acPowerBudget3" id="acPowerBudget3" value="100" />%</td>
+							  <td class="right"></td>
+							</tr>
+							<tr xmlns="" class="fill">
+							  <td class="left" width="3px"></td>
+							  <td nowrap="nowrap" class="contents borderright borderbottom">Redundancy Policy</td>
+							  <td class="contents borderbottom" colspan="3">
+								<select onchange="updateDependents(this);" name="psuRedundancy1" id="psuRedundancy1">
+								  <option value="1" selected="selected">Grid Redundancy</option>
+								  <option value="2">Power Supply Redundancy</option>
+								  <option value="0">No Redundancy</option>
+								</select>
+							  </td>
+							  <td class="right"></td>
+							</tr>
+							<tr xmlns="">
+							  <td class="left" width="3px"></td>
+							  <td nowrap="nowrap" class="contents borderright borderbottom">Enable Extended Power Performance</td>
+							  <td class="contents borderbottom" colspan="3">
+								<input type="checkbox" onClick="javascript:selectProperty(this);" name="CHASSIS_POWER_epp_enable1" id="CHASSIS_POWER_epp_enable1" value="&#10;    0&#10;  " disabled="disabled" />
+							  </td>
+							  <td class="right"></td>
+							</tr>
+							<tr xmlns="" class="fill">
+							  <td class="left" width="3px"></td>
+							  <td nowrap="nowrap" class="contents borderright borderbottom">Server Performance Over Power Redundancy</td>
+							  <td class="contents borderbottom" colspan="3">
+								<input type="checkbox" onClick="javascript:selectProperty(this);" name="CHASSIS_POWER_performance_over_redundancy1" id="CHASSIS_POWER_performance_over_redundancy1" value="&#10;    0&#10;  " />
+							  </td>
+							  <td class="right"></td>
+							</tr>
+							<tr xmlns="">
+							  <td class="left" width="3px"></td>
+							  <td nowrap="nowrap" class="contents borderright borderbottom">Enable Dynamic Power Supply Engagement</td>
+							  <td class="contents borderbottom" colspan="3">
+								<input type="checkbox" onClick="javascript:selectProperty(this);" name="psuDynEng1" id="psuDynEng1" value="&#10;    0&#10;  " />
+							  </td>
+							  <td class="right"></td>
+							</tr>
+							<tr xmlns="" class="fill">
+							  <td class="left" width="3px"></td>
+							  <td nowrap="nowrap" class="contents borderright borderbottom">Disable Chassis Power Button</td>
+							  <td class="contents borderbottom" colspan="3">
+								<input type="checkbox" onClick="javascript:selectProperty(this);" name="CHASSIS_POWER_button_disable1" id="CHASSIS_POWER_button_disable1" value="&#10;    0&#10;  " />
+							  </td>
+							  <td class="right"></td>
+							</tr>
+							<tr xmlns="">
+							  <td class="left" width="3px"></td>
+							  <td nowrap="nowrap" class="contents borderright borderbottom">Allow 110 VAC Operation</td>
+							  <td class="contents borderbottom" colspan="3">
+								<input type="checkbox" onClick="javascript:selectProperty(this);" name="CHASSIS_POWER_110V_acknowledge1" id="CHASSIS_POWER_110V_acknowledge1" value="&#10;    0&#10;  " />
+							  </td>
+							  <td class="right"></td>
+							</tr>
+							<tr xmlns="" class="fill">
+							  <td class="left" width="3px"></td>
+							  <td nowrap="nowrap" class="contents borderright borderbottom">Max Power Conservation Mode</td>
+							  <td class="contents borderbottom" colspan="3">
+								<input type="checkbox" onClick="javascript:selectProperty(this);" name="CHASSIS_POWER_UPSMode1" id="CHASSIS_POWER_UPSMode1" value="&#10;    0&#10;  " />
+							  </td>
+							  <td class="right"></td>
+							</tr>
+							<tr xmlns="">
+							  <td class="left" width="3px"></td>
+							  <td nowrap="nowrap" class="contents borderright borderbottom">Enable Remote Power Logging</td>
+							  <td class="contents borderbottom" colspan="3"><input type="checkbox" onClick="javascript:selectProperty(this);" name="CHASSIS_POWER_remote_logging_enable1" id="CHASSIS_POWER_remote_logging_enable1" value="&#10;    0&#10;  " /> 
+							<a href="#" onclick="parent.treelist.f_select_by_url('/cgi-bin/webcgi/interfaces');">Remote SysLog Configuration</a></td>
+							  <td class="right"></td>
+							</tr>
+							<tr xmlns="" class="fill">
+							  <td class="left" width="3px"></td>
+							  <td nowrap="nowrap" class="contents borderright borderbottom">Remote Power Logging Interval (1-1440)
+					  </td>
+							  <td class="contents borderbottom" colspan="3"><input type="text" size="4" maxlength="4" onkeypress="return isNumericKey(event)" onchange="this.value = extractNumeric(this)" name="CHASSIS_POWER_remote_logging_interval1" id="CHASSIS_POWER_remote_logging_interval1" value="5" disabled="disabled" />Minutes</td>
+							  <td class="right"></td>
+							</tr>
+							<tr xmlns="">
+							  <td class="left" width="3px"></td>
+							  <td nowrap="nowrap" class="contents borderright borderbottom">Disable AC Power Recovery</td>
+							  <td class="contents borderbottom" colspan="3">
+								<input type="checkbox" onClick="javascript:selectProperty(this);" name="CHASSIS_POWER_ac_recovery_enable1" id="CHASSIS_POWER_ac_recovery_enable1" value="&#10;    0&#10;  " />
+							  </td>
+							  <td class="right"></td>
+							</tr>
+						  </tbody>
+						  <tfoot>
+							<tr>
+							  <td class="bottomleftbuttons" width="3px"></td>
+							  <td class="bottombuttons" colspan="4">
+								<div class="button_clear">
+								  <a class="page_button_emphasized" href="javascript:formSubmit();">
+									<span>Apply</span>
+								  </a>
+								  <a class="page_button" href="javascript:top.globalnav.f_refresh();">
+									<span>Cancel</span>
+								  </a>
+								</div>
+							  </td>
+							  <td class="bottomrightbuttons"></td>
+							</tr>
+						  </tfoot>
+						</table>
+					  </div>
+					  <input xmlns="" id="p1" name="p1" type="hidden" value="psuAnyBlacklisted" />
+					  <input xmlns="" id="vpsuAnyBlacklisted1" name="vpsuAnyBlacklisted1" type="hidden" value="0" />
+					  <input xmlns="" id="vCountpsuAnyBlacklisted" name="vCountpsuAnyBlacklisted" type="hidden" value="1" />
+					  <input xmlns="" id="p2" name="p2" type="hidden" value="acPowerSurplus" />
+					  <input xmlns="" id="vacPowerSurplus1" name="vacPowerSurplus1" type="hidden" value="12064 W L41164 BTU/hR" />
+					  <input xmlns="" id="vCountacPowerSurplus" name="vCountacPowerSurplus" type="hidden" value="1" />
+					  <input xmlns="" id="p3" name="p3" type="hidden" value="acPowerRequired" />
+					  <input xmlns="" id="vacPowerRequired1" name="vacPowerRequired1" type="hidden" value="4621 W L15767 BTU/hR" />
+					  <input xmlns="" id="vCountacPowerRequired" name="vCountacPowerRequired" type="hidden" value="1" />
+					  <input xmlns="" id="p4" name="p4" type="hidden" value="CHASSIS_POWER_110V_used" />
+					  <input xmlns="" id="vCHASSIS_POWER_110V_used1" name="vCHASSIS_POWER_110V_used1" type="hidden" value="0" />
+					  <input xmlns="" id="vCountCHASSIS_POWER_110V_used" name="vCountCHASSIS_POWER_110V_used" type="hidden" value="1" />
+					  <input xmlns="" id="p5" name="p5" type="hidden" value="allPSUsEPPCapable" />
+					  <input xmlns="" id="vallPSUsEPPCapable1" name="vallPSUsEPPCapable1" type="hidden" value="0" />
+					  <input xmlns="" id="vCountallPSUsEPPCapable" name="vCountallPSUsEPPCapable" type="hidden" value="1" />
+					  <input xmlns="" id="p6" name="p6" type="hidden" value="anyPSUsEPPCapable" />
+					  <input xmlns="" id="vanyPSUsEPPCapable1" name="vanyPSUsEPPCapable1" type="hidden" value="0" />
+					  <input xmlns="" id="vCountanyPSUsEPPCapable" name="vCountanyPSUsEPPCapable" type="hidden" value="1" />
+					  <input xmlns="" id="p7" name="p7" type="hidden" value="EPPUpperCap" />
+					  <input xmlns="" id="vEPPUpperCap1" name="vEPPUpperCap1" type="hidden" value="5944" />
+					  <input xmlns="" id="vCountEPPUpperCap" name="vCountEPPUpperCap" type="hidden" value="1" />
+					  <input xmlns="" id="p8" name="p8" type="hidden" value="CHASSIS_type_nebs" />
+					  <input xmlns="" id="vCHASSIS_type_nebs1" name="vCHASSIS_type_nebs1" type="hidden" value="0" />
+					  <input xmlns="" id="vCountCHASSIS_type_nebs" name="vCountCHASSIS_type_nebs" type="hidden" value="1" />
+					  <input xmlns="" id="p9" name="p9" type="hidden" value="CHASSIS_type_freshair" />
+					  <input xmlns="" id="vCHASSIS_type_freshair1" name="vCHASSIS_type_freshair1" type="hidden" value="0" />
+					  <input xmlns="" id="vCountCHASSIS_type_freshair" name="vCountCHASSIS_type_freshair" type="hidden" value="1" />
+					  <input xmlns="" id="p10" name="p10" type="hidden" value="ChassisInputTypeIsDC" />
+					  <input xmlns="" id="vChassisInputTypeIsDC1" name="vChassisInputTypeIsDC1" type="hidden" value="" />
+					  <input xmlns="" id="vCountChassisInputTypeIsDC" name="vCountChassisInputTypeIsDC" type="hidden" value="1" />
+					  <input xmlns="" id="p11" name="p11" type="hidden" value="THERMAL_ecm" />
+					  <input xmlns="" id="vTHERMAL_ecm1" name="vTHERMAL_ecm1" type="hidden" value="0" />
+					  <input xmlns="" id="vCountTHERMAL_ecm" name="vCountTHERMAL_ecm" type="hidden" value="1" />
+					  <input xmlns="" id="p12" name="p12" type="hidden" value="CHASSIS_POWER_SBPMMode" />
+					  <input xmlns="" id="vCHASSIS_POWER_SBPMMode1" name="vCHASSIS_POWER_SBPMMode1" type="hidden" value="0" />
+					  <input xmlns="" id="vCountCHASSIS_POWER_SBPMMode" name="vCountCHASSIS_POWER_SBPMMode" type="hidden" value="1" />
+					  <input xmlns="" id="p13" name="p13" type="hidden" value="acPowerBudget" />
+					  <input xmlns="" id="vacPowerBudget1" name="vacPowerBudget1" type="hidden" value="16685" />
+					  <input xmlns="" id="vacPowerBudget2" name="vacPowerBudget2" type="hidden" value="56931" />
+					  <input xmlns="" id="vacPowerBudget3" name="vacPowerBudget3" type="hidden" value="100" />
+					  <input xmlns="" id="vCountacPowerBudget" name="vCountacPowerBudget" type="hidden" value="3" />
+					  <input xmlns="" id="p14" name="p14" type="hidden" value="psuRedundancy" />
+					  <input xmlns="" id="vpsuRedundancy1" name="vpsuRedundancy1" type="hidden" value="1" />
+					  <input xmlns="" id="vCountpsuRedundancy" name="vCountpsuRedundancy" type="hidden" value="1" />
+					  <input xmlns="" id="p15" name="p15" type="hidden" value="CHASSIS_POWER_epp_enable" />
+					  <input xmlns="" id="vCHASSIS_POWER_epp_enable1" name="vCHASSIS_POWER_epp_enable1" type="hidden" value="0" />
+					  <input xmlns="" id="vCountCHASSIS_POWER_epp_enable" name="vCountCHASSIS_POWER_epp_enable" type="hidden" value="1" />
+					  <input xmlns="" id="p16" name="p16" type="hidden" value="CHASSIS_POWER_performance_over_redundancy" />
+					  <input xmlns="" id="vCHASSIS_POWER_performance_over_redundancy1" name="vCHASSIS_POWER_performance_over_redundancy1" type="hidden" value="0" />
+					  <input xmlns="" id="vCountCHASSIS_POWER_performance_over_redundancy" name="vCountCHASSIS_POWER_performance_over_redundancy" type="hidden" value="1" />
+					  <input xmlns="" id="p17" name="p17" type="hidden" value="psuDynEng" />
+					  <input xmlns="" id="vpsuDynEng1" name="vpsuDynEng1" type="hidden" value="0" />
+					  <input xmlns="" id="vCountpsuDynEng" name="vCountpsuDynEng" type="hidden" value="1" />
+					  <input xmlns="" id="p18" name="p18" type="hidden" value="CHASSIS_POWER_button_disable" />
+					  <input xmlns="" id="vCHASSIS_POWER_button_disable1" name="vCHASSIS_POWER_button_disable1" type="hidden" value="0" />
+					  <input xmlns="" id="vCountCHASSIS_POWER_button_disable" name="vCountCHASSIS_POWER_button_disable" type="hidden" value="1" />
+					  <input xmlns="" id="p19" name="p19" type="hidden" value="CHASSIS_POWER_110V_acknowledge" />
+					  <input xmlns="" id="vCHASSIS_POWER_110V_acknowledge1" name="vCHASSIS_POWER_110V_acknowledge1" type="hidden" value="0" />
+					  <input xmlns="" id="vCountCHASSIS_POWER_110V_acknowledge" name="vCountCHASSIS_POWER_110V_acknowledge" type="hidden" value="1" />
+					  <input xmlns="" id="p20" name="p20" type="hidden" value="CHASSIS_POWER_UPSMode" />
+					  <input xmlns="" id="vCHASSIS_POWER_UPSMode1" name="vCHASSIS_POWER_UPSMode1" type="hidden" value="0" />
+					  <input xmlns="" id="vCountCHASSIS_POWER_UPSMode" name="vCountCHASSIS_POWER_UPSMode" type="hidden" value="1" />
+					  <input xmlns="" id="p21" name="p21" type="hidden" value="CHASSIS_POWER_remote_logging_enable" />
+					  <input xmlns="" id="vCHASSIS_POWER_remote_logging_enable1" name="vCHASSIS_POWER_remote_logging_enable1" type="hidden" value="0" />
+					  <input xmlns="" id="vCountCHASSIS_POWER_remote_logging_enable" name="vCountCHASSIS_POWER_remote_logging_enable" type="hidden" value="1" />
+					  <input xmlns="" id="p22" name="p22" type="hidden" value="CHASSIS_POWER_remote_logging_interval" />
+					  <input xmlns="" id="vCHASSIS_POWER_remote_logging_interval1" name="vCHASSIS_POWER_remote_logging_interval1" type="hidden" value="5" />
+					  <input xmlns="" id="vCountCHASSIS_POWER_remote_logging_interval" name="vCountCHASSIS_POWER_remote_logging_interval" type="hidden" value="1" />
+					  <input xmlns="" id="p23" name="p23" type="hidden" value="CHASSIS_POWER_ac_recovery_enable" />
+					  <input xmlns="" id="vCHASSIS_POWER_ac_recovery_enable1" name="vCHASSIS_POWER_ac_recovery_enable1" type="hidden" value="0" />
+					  <input xmlns="" id="vCountCHASSIS_POWER_ac_recovery_enable" name="vCountCHASSIS_POWER_ac_recovery_enable" type="hidden" value="1" />
+					  <input xmlns="" id="p24" name="p24" type="hidden" value="ChassisPSUFailure" />
+					  <input xmlns="" id="vChassisPSUFailure1" name="vChassisPSUFailure1" type="hidden" value="1" />
+					  <input xmlns="" id="vCountChassisPSUFailure" name="vCountChassisPSUFailure" type="hidden" value="1" />
+					  <input xmlns="" id="pCount" name="pCount" type="hidden" value="24" />
+					</form>
+				  </body>
+				</html>
+			`),
+		},
 		"/cgi-bin/webcgi/cmc_status": {
 			"default": []byte(`<?xml version="1.0"?>
 				<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/html4/strict.dtd">
@@ -740,6 +2086,46 @@ func TestUpdateCredentials(t *testing.T) {
 
 	if bmc.password != "newPassword" {
 		t.Fatalf("Expected password to be updated to 'newPassword' but is: %s", bmc.password)
+	}
+
+	tearDown()
+}
+
+func TestChassisIsPsuRedundant(t *testing.T) {
+	expectedAnswer := true
+
+	chassis, err := setup()
+	if err != nil {
+		t.Fatalf("Found errors during the test setup %v", err)
+	}
+
+	answer, err := chassis.IsPsuRedundant()
+	if err != nil {
+		t.Fatalf("Found errors calling chassis.Name %v", err)
+	}
+
+	if answer != expectedAnswer {
+		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+	}
+
+	tearDown()
+}
+
+func TestChassisRedundancyMode(t *testing.T) {
+	expectedAnswer := "Grid"
+
+	chassis, err := setup()
+	if err != nil {
+		t.Fatalf("Found errors during the test setup %v", err)
+	}
+
+	answer, err := chassis.PsuRedundancyMode()
+	if err != nil {
+		t.Fatalf("Found errors calling chassis.Name %v", err)
+	}
+
+	if answer != expectedAnswer {
+		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
 
 	tearDown()

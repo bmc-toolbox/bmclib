@@ -79,6 +79,8 @@ type Power struct {
 type ChassisPower struct {
 	PowerConsumed float64        `xml:"POWER_CONSUMED,omitempty"`
 	Powersupply   []*Powersupply `xml:"POWERSUPPLY,omitempty"`
+	Redundancy    string         `xml:"REDUNDANCY,omitempty"`
+	RedundancyMode string        `xml:"REDUNDANCYMODE,omitempty"`
 }
 
 // Rimp is the entry data structure for the chassis

@@ -320,17 +320,24 @@ func (c *C7000) UpdateCredentials(username string, password string) {
 	c.password = password
 }
 
-// GetConfigure returns itself as a configure interface to avoid using reflect
-func (c *C7000) GetConfigure() devices.Configure {
-	return c
+// IsPsuRedundant informs whether or not the power is currently redundant
+func (c *C7000) IsPsuRedundant() (state bool, err error) {
+	if c.Rimp.Infra2.ChassisPower.Redundancy == "REDUNDANT" {
+		return true, err
+	}
+	return false, err
 }
 
-// GetSetup returns itself as a configure interface to avoid using reflect
-func (c *C7000) GetSetup() devices.CmcSetup {
-	return c
-}
-
-// GetCollection returns itself as a configure interface to avoid using reflect
-func (c *C7000) GetCollection() devices.CmcCollection {
-	return c
+// PsuRedundancyMode returns the current redundancy mode is configured for the chassis
+func (c *C7000) PsuRedundancyMode() (mode string, err error) {
+	switch c.Rimp.Infra2.ChassisPower.RedundancyMode {
+	case "AC_REDUNDANT":
+		return devices.Grid, err
+	case "POWER_SUPPLY_REDUNDANT":
+		return devices.PowerSupply, err
+	case "NON_REDUNDANT":
+		return devices.NoRedundancy, err
+	default:
+		return devices.Unknown, err
+	}
 }

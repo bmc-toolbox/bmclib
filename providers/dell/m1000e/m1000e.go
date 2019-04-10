@@ -28,6 +28,7 @@ const (
 var (
 	macFinder = regexp.MustCompile("([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})")
 	findBmcIP = regexp.MustCompile("bladeIpAddress\">((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3})")
+	findRedundancyMode = regexp.MustCompile("selected=\"selected\">(.+)</option>")
 )
 
 // M1000e holds the status and properties of a connection to a CMC device
@@ -496,17 +497,44 @@ func (m *M1000e) UpdateCredentials(username string, password string) {
 	m.password = password
 }
 
-// GetConfigure returns itself as a configure interface to avoid using reflect
-func (m *M1000e) GetConfigure() devices.Configure {
-	return m
+// IsPsuRedundant informs whether or not the power is currently redundant
+func (m *M1000e)  IsPsuRedundant() (status bool, err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return status, err
+	}
+
+	if m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.PsuStatus.PsuRedundancy == 1 {
+		return true, err
+	}
+	return false, err
 }
 
-// GetSetup returns itself as a configure interface to avoid using reflect
-func (m *M1000e) GetSetup() devices.CmcSetup {
-	return m
-}
+// PsuRedundancyMode returns the current redundancy mode is configured for the chassis
+func (m *M1000e) PsuRedundancyMode() (mode string, err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return mode, err
+	}
 
-// GetCollection returns itself as a configure interface to avoid using reflect
-func (m *M1000e) GetCollection() devices.CmcCollection {
-	return m
+	payload, err := m.get("pwr_redundancy?cat=C00&tab=T03&id=P10")
+	if err != nil {
+		return mode, err
+	}
+
+	fnd := findRedundancyMode.FindStringSubmatch(string(payload))
+	var rm string
+	if len(fnd) > 0 {
+		rm = fnd[1]
+	}
+	switch rm {
+	case "Grid Redundancy":
+		return devices.Grid, err
+	case "Power Supply Redundancy":
+		return devices.PowerSupply, err
+	case "No Redundancy":
+		return devices.NoRedundancy, err
+	default:
+		return devices.Unknown, err
+	}
 }

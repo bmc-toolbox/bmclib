@@ -867,13 +867,3 @@ func (i *IDrac9) UpdateCredentials(username string, password string) {
 	i.username = username
 	i.password = password
 }
-
-// GetConfigure returns itself as a configure interface to avoid using reflect
-func (i *IDrac9) GetConfigure() devices.Configure {
-	return i
-}
-
-// GetCollection returns itself as a configure interface to avoid using reflect
-func (i *IDrac9) GetCollection() devices.BmcCollection {
-	return i
-}
