@@ -6,9 +6,6 @@ import (
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 )
 
-// TODO(ncode): ncode from the future try find a better way o nesting the interfaces without
-//              exploiting it as you do now.
-
 // Bmc represents all the required bmc items
 type Bmc interface {
 	// Configure interface
@@ -27,9 +24,6 @@ type Bmc interface {
 	PowerCycle() (bool, error)
 	UpdateCredentials(string, string)
 	UpdateFirmware(string, string) (bool, error)
-
-	GetConfigure() Configure
-	GetCollection() BmcCollection
 }
 
 // BmcCollection represents the requirement of items to be collected a server
@@ -82,10 +76,6 @@ type Cmc interface {
 	ReseatBlade(int) (bool, error)
 	UpdateCredentials(string, string)
 	UpdateFirmware(string, string) (bool, error)
-
-	GetConfigure() Configure
-	GetSetup() CmcSetup
-	GetCollection() CmcCollection
 }
 
 // CmcCollection represents the requirement of items to be collected from a chassis
@@ -107,6 +97,8 @@ type CmcCollection interface {
 	Psus() ([]*Psu, error)
 	Serial() (string, error)
 	Status() (string, error)
+	IsPsuRedundant() (bool, error)
+	PsuRedundancyMode() (string, error)
 	StorageBlades() ([]*StorageBlade, error)
 	TempC() (int, error)
 	Vendor() string

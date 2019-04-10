@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/go-multierror"
 
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/errors"
@@ -866,14 +866,4 @@ func (i *IDrac9) Disks() (disks []*devices.Disk, err error) {
 func (i *IDrac9) UpdateCredentials(username string, password string) {
 	i.username = username
 	i.password = password
-}
-
-// GetConfigure returns itself as a configure interface to avoid using reflect
-func (i *IDrac9) GetConfigure() devices.Configure {
-	return i
-}
-
-// GetCollection returns itself as a configure interface to avoid using reflect
-func (i *IDrac9) GetCollection() devices.BmcCollection {
-	return i
 }
