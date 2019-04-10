@@ -11,6 +11,6 @@ install:
 before_script:
 - gometalinter --disable-all --vendor --enable=vet --enable=gofmt --enable=golint --enable=ineffassign --enable=misspell --enable=deadcode ./...
 script: 
-- go test ./... -p 1
+- go test -mod=vendor ./... -p 1
 notifications:
   email: false
