@@ -83,7 +83,7 @@ var (
 								  if (vCount > 1)
 								  {
 									document.getElementById(propertyName + "1").maxLength = document.getElementById(propertyName + "1").maxLength + 1; // FF work-around
-									document.getElementById(propertyName + "1").value = propertyCurrentValue + "*"; // The '*' token is appended to allow CGI to identify which paramter/unit has been modified.
+									document.getElementById(propertyName + "1").value = propertyCurrentValue + "*"; // The '*' token is appended to allow CGI to identify which parameter/unit has been modified. 
 								  }
 								  modified = true;
 								}
@@ -965,7 +965,7 @@ var (
 							return ("Remote Service is not ready.");
 				
 						  case 0x7480: // VMACDB_NO_SERVICE_TAG                     29824
-							return ("Service tag for the selected server is not availabe.");
+							return ("Service tag for the selected server is not available.");
 						  case 0x7481: // VMACDB_INVALID_MAC_ADDR                   29825
 							return ("MAC Address format is not valid.");
 						  case 0x7484: // VMACDB_MAC_ADD_PARTIAL                    29828
