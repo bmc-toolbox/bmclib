@@ -26,8 +26,8 @@ const (
 )
 
 var (
-	macFinder = regexp.MustCompile("([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})")
-	findBmcIP = regexp.MustCompile("bladeIpAddress\">((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3})")
+	macFinder          = regexp.MustCompile("([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})")
+	findBmcIP          = regexp.MustCompile("bladeIpAddress\">((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3})")
 	findRedundancyMode = regexp.MustCompile("selected=\"selected\">(.+)</option>")
 )
 
@@ -498,7 +498,7 @@ func (m *M1000e) UpdateCredentials(username string, password string) {
 }
 
 // IsPsuRedundant informs whether or not the power is currently redundant
-func (m *M1000e)  IsPsuRedundant() (status bool, err error) {
+func (m *M1000e) IsPsuRedundant() (status bool, err error) {
 	err = m.httpLogin()
 	if err != nil {
 		return status, err

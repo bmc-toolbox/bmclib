@@ -97,8 +97,8 @@ type CmcCollection interface {
 	Psus() ([]*Psu, error)
 	Serial() (string, error)
 	Status() (string, error)
-	IsPsuRedundant()(bool, error)
-	PsuRedundancyMode()(string, error)
+	IsPsuRedundant() (bool, error)
+	PsuRedundancyMode() (string, error)
 	StorageBlades() ([]*StorageBlade, error)
 	TempC() (int, error)
 	Vendor() string

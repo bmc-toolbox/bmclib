@@ -2852,7 +2852,6 @@ func TestUpdateCredentials(t *testing.T) {
 	tearDown()
 }
 
-
 func TestChassisIsPsuRedundant(t *testing.T) {
 	expectedAnswer := true
 
