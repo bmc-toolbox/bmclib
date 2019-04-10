@@ -535,7 +535,7 @@ func (s *SupermicroX10) ServerSnapshot() (server interface{}, err error) {
 		blade.BmcAddress = s.ip
 		blade.BmcType = s.BmcType()
 
-		blade.Serial, _ = s.Serial()
+		blade.Serial, err = s.Serial()
 		if err != nil {
 			return nil, err
 		}

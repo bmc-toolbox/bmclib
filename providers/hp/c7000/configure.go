@@ -277,16 +277,6 @@ func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.L
 			}).Warn("addLdapGroup returned error.")
 			return
 		}
-
-		if err != nil {
-			log.WithFields(log.Fields{
-				"step":  "applyLdapGroupParams",
-				"IP":    c.ip,
-				"Role":  group.Role,
-				"Model": c.BmcType(),
-				"Error": err,
-			}).Warn("Unable to set LdapGroup config for role.")
-		}
 	}
 
 	log.WithFields(log.Fields{

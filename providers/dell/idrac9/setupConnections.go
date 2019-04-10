@@ -115,7 +115,7 @@ func (i *IDrac9) loadHwData() (err error) {
 		return err
 	}
 
-	if iDracInventory == nil || iDracInventory.Component == nil {
+	if iDracInventory.Component == nil {
 		return errors.ErrUnableToReadData
 	}
 
