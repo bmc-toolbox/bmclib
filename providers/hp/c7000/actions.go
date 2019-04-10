@@ -277,7 +277,7 @@ func (c *C7000) UpdateFirmware(source, file string) (status bool, err error) {
 		return false, fmt.Errorf(output)
 	}
 
-	if strings.Contains(output, "Restarting Onboard Administrator") {
+	if strings.Contains(output, "Flashing Active Onboard Administrator") {
 		return true, err
 	}
 

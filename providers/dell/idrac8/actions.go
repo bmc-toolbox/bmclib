@@ -139,7 +139,7 @@ func (i *IDrac8) UpdateFirmware(source, file string) (status bool, err error) {
 		password = "anonymous"
 	}
 
-	cmd := fmt.Sprintf("racadm fwupdate -f %s %s %s -d %s", u.Host, u.User.Username(), password, u.Path)
+	cmd := fmt.Sprintf("racadm fwupdate -f %s %s %s -d %s/%s", u.Host, u.User.Username(), password, u.Path, file)
 	output, err := i.sshClient.Run(cmd)
 	if err != nil {
 		return false, fmt.Errorf(output)
