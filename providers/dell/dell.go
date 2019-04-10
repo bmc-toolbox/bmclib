@@ -100,9 +100,10 @@ type Blade struct {
 
 // PsuStatus contains the information and power usage of the psus
 type PsuStatus struct {
-	AcPower  string    `json:"acPower"`
-	PsuCount int64     `json:"psuCount"`
-	Psus     []PsuData `json:"-"`
+	AcPower       string    `json:"acPower"`
+	PsuCount      int64     `json:"psuCount"`
+	PsuRedundancy int64     `json:"psuRedundancyState"`
+	Psus          []PsuData `json:"-"`
 }
 
 // PsuData contains information of the psu

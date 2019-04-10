@@ -2856,3 +2856,43 @@ func TestUpdateCredentials(t *testing.T) {
 
 	tearDown()
 }
+
+func TestChassisIsPsuRedundant(t *testing.T) {
+	expectedAnswer := true
+
+	chassis, err := setup()
+	if err != nil {
+		t.Fatalf("Found errors during the test setup %v", err)
+	}
+
+	answer, err := chassis.IsPsuRedundant()
+	if err != nil {
+		t.Fatalf("Found errors calling chassis.Name %v", err)
+	}
+
+	if answer != expectedAnswer {
+		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+	}
+
+	tearDown()
+}
+
+func TestChassisRedundancyMode(t *testing.T) {
+	expectedAnswer := "Grid"
+
+	chassis, err := setup()
+	if err != nil {
+		t.Fatalf("Found errors during the test setup %v", err)
+	}
+
+	answer, err := chassis.PsuRedundancyMode()
+	if err != nil {
+		t.Fatalf("Found errors calling chassis.Name %v", err)
+	}
+
+	if answer != expectedAnswer {
+		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+	}
+
+	tearDown()
+}

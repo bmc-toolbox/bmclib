@@ -1,6 +1,9 @@
 package devices
 
 const (
+	// Unknown is the constant that defines unknown things
+	Unknown = "Unknown"
+
 	// Vendor constants
 
 	// HP is the constant that defines the vendor HP
@@ -13,8 +16,17 @@ const (
 	Cloudline = "Cloudline"
 	// Common is the constant of thinks we could use across multiple vendors
 	Common = "Common"
-	// Unknown is the constant that defines Unknowns vendors
-	Unknown = "Unknown"
+
+	// Power Constants
+
+	// Grid describes the power redundancy mode when using grid redundancy
+	Grid = "Grid"
+
+	// PowerSupply describes the power redundancy mode when using power supply redundancy
+	PowerSupply = "PowerSupply"
+
+	// NoRedundancy describes the power redundancy mode we don't have redundancy
+	NoRedundancy = "NoRedundancy"
 
 	// Hardware constants
 
@@ -42,3 +54,8 @@ const (
 	//AtenSM is the constant for AtenSM bmc
 	AtenSM = "AtenSM"
 )
+
+// ListSupportedVendors  returns a list of supported vendors
+func ListSupportedVendors() []string {
+	return []string{HP, Dell, Supermicro}
+}
