@@ -671,7 +671,7 @@ func (i *IDrac9) Vendor() (vendor string) {
 }
 
 // ServerSnapshot do best effort to populate the server data and returns a blade or discrete
-func (i *IDrac9) ServerSnapshot() (server interface{}, err error) {
+func (i *IDrac9) ServerSnapshot() (server interface{}, err error) { // nolint: gocyclo
 	err = i.httpLogin()
 	if err != nil {
 		return server, err
@@ -683,7 +683,7 @@ func (i *IDrac9) ServerSnapshot() (server interface{}, err error) {
 		blade.BmcAddress = i.ip
 		blade.BmcType = i.BmcType()
 
-		blade.Serial, _ = i.Serial()
+		blade.Serial, err = i.Serial()
 		if err != nil {
 			return nil, err
 		}
