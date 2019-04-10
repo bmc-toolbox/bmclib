@@ -4,6 +4,7 @@ go:
 - 1.11.x
 env:
   global:
+    - GO111MODULE=on
     - GOARCH=amd64
 install:
 - go get github.com/alecthomas/gometalinter
