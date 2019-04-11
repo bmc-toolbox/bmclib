@@ -317,6 +317,14 @@ func (c *C7000) ChassisSnapshot() (chassis *devices.Chassis, err error) {
 	if err != nil {
 		return nil, err
 	}
+	chassis.PsuRedundancyMode, err = c.PsuRedundancyMode()
+	if err != nil {
+		return nil, err
+	}
+	chassis.IsPsuRedundant, err = c.IsPsuRedundant()
+	if err != nil {
+		return nil, err
+	}
 
 	return chassis, err
 }
