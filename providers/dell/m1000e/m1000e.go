@@ -494,6 +494,14 @@ func (m *M1000e) ChassisSnapshot() (chassis *devices.Chassis, err error) {
 	if err != nil {
 		return nil, err
 	}
+	chassis.PsuRedundancyMode, err = m.PsuRedundancyMode()
+	if err != nil {
+		return nil, err
+	}
+	chassis.IsPsuRedundant, err = m.IsPsuRedundant()
+	if err != nil {
+		return nil, err
+	}
 
 	return chassis, err
 }
