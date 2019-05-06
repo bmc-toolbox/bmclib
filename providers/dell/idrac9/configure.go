@@ -254,7 +254,7 @@ func (i *IDrac9) Ldap(cfg *cfgresources.Ldap) (err error) {
 		"Port":                 "636",
 		"UserAttribute":        "uid",
 		"GroupAttribute":       "memberUid",
-		"GroupAttributeIsDN":   "Enabled",
+		"GroupAttributeIsDN":   "Disabled",
 		"CertValidationEnable": "Disabled",
 		"SearchFilter":         "objectClass=posixAccount",
 	}
@@ -366,7 +366,7 @@ func (i *IDrac9) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.
 				}
 			}
 
-			role.DN = cfgRole.Group
+			role.DN = fmt.Sprintf("%s,%s", cfgRole.Group, cfgRole.GroupBaseDn)
 
 			//set appropriate privileges
 			if cfgRole.Role == "admin" {
