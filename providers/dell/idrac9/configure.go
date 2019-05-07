@@ -345,7 +345,13 @@ func (i *IDrac9) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.
 
 	//for each configuration ldap role group
 	for _, cfgRole := range cfg {
-		roleID, role, rExists := ldapRoleGroupInIdrac(cfgRole.Group, idracLdapRoleGroups)
+
+		// the distinguished name of the group
+		// example, if the GroupBaseDn is ou=Group,dc=example,dc=com and the Group is cn=fooUsers
+		// the groupDN will be Group+GroupBaseDn = cn=fooUsers,ou=Group,dc=example,dc=com
+		var groupDN = fmt.Sprintf("%s,%s", cfgRole.Group, cfgRole.GroupBaseDn)
+
+		roleID, role, rExists := ldapRoleGroupInIdrac(groupDN, idracLdapRoleGroups)
 
 		//role to be added/updated
 		if cfgRole.Enable {
@@ -366,7 +372,7 @@ func (i *IDrac9) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.
 				}
 			}
 
-			role.DN = fmt.Sprintf("%s,%s", cfgRole.Group, cfgRole.GroupBaseDn)
+			role.DN = groupDN
 
 			//set appropriate privileges
 			if cfgRole.Role == "admin" {
