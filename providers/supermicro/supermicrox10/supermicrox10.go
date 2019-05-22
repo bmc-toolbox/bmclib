@@ -552,6 +552,7 @@ func (s *SupermicroX10) Vendor() (vendor string) {
 }
 
 // ServerSnapshot do best effort to populate the server data and returns a blade or discrete
+// nolint: gocyclo
 func (s *SupermicroX10) ServerSnapshot() (server interface{}, err error) {
 	if isBlade, _ := s.IsBlade(); isBlade {
 		blade := &devices.Blade{}
