@@ -468,6 +468,35 @@ func (i *IDrac9) BmcVersion() (bmcVersion string, err error) {
 	return bmcVersion, err
 }
 
+// Slot returns the current slot within the chassis
+func (i *IDrac9) Slot() (slot int, err error) {
+	err = i.loadHwData()
+	if err != nil {
+		return -1, err
+	}
+
+	for _, component := range i.iDracInventory.Component {
+		if component.Classname == "DCIM_SystemView" {
+			for _, property := range component.Properties {
+				if property.Name == "BaseBoardChassisSlot" && property.Type == "string" {
+					if property.Value == "NA" {
+						return -1, err
+					}
+					v := strings.Split(property.Value, " ")
+					slot, err = strconv.Atoi(v[1])
+					if err != nil {
+						return -1, err
+					}
+
+					return slot, err
+				}
+			}
+		}
+	}
+
+	return -1, err
+}
+
 // Model returns the device model
 func (i *IDrac9) Model() (model string, err error) {
 	err = i.loadHwData()

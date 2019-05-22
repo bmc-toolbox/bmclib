@@ -591,6 +591,15 @@ func (i *Ilo) IsBlade() (isBlade bool, err error) {
 	return isBlade, err
 }
 
+// Slot returns the current slot within the chassis
+func (i *Ilo) Slot() (slot int, err error) {
+	if i.rimpBlade.BladeSystem != nil {
+		return i.rimpBlade.BladeSystem.Bay, err
+	}
+
+	return -1, err
+}
+
 // Vendor returns bmc's vendor
 func (i *Ilo) Vendor() (vendor string) {
 	return hp.VendorID

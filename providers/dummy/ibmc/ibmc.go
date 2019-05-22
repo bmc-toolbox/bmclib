@@ -166,6 +166,11 @@ func (i *Ibmc) UpdateCredentials(string, string) {
 	return
 }
 
+// Slot implements the Bmc interface
+func (i *Ibmc) Slot() (int, error) {
+	return -1, nil
+}
+
 // UpdateFirmware implements the Bmc inteface
 func (i *Ibmc) UpdateFirmware(string, string) (b bool, e error) {
 	return b, e

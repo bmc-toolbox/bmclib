@@ -4335,6 +4335,26 @@ func TestIDracIsBlade(t *testing.T) {
 	tearDown()
 }
 
+func TestIDracSlot(t *testing.T) {
+	expectedAnswer := 2
+
+	bmc, err := setup()
+	if err != nil {
+		t.Fatalf("Found errors during the test setup %v", err)
+	}
+
+	answer, err := bmc.Slot()
+	if err != nil {
+		t.Fatalf("Found errors calling bmc.Slot %v", err)
+	}
+
+	if expectedAnswer != answer {
+		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+	}
+
+	tearDown()
+}
+
 func TestIDracPoweState(t *testing.T) {
 	expectedAnswer := "on"
 

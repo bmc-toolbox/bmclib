@@ -46,6 +46,7 @@ type BmcCollection interface {
 	Status() (string, error)
 	TempC() (int, error)
 	Vendor() string
+	Slot() (int, error)
 	Screenshot() ([]byte, string, error)
 	ServerSnapshot() (interface{}, error)
 }

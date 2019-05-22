@@ -441,7 +441,31 @@ func (s *SupermicroX10) TempC() (temp int, err error) {
 
 // IsBlade returns if the current hardware is a blade or not
 func (s *SupermicroX10) IsBlade() (isBlade bool, err error) {
+	ipmi, err := s.query("Get_PlatformCap.XML=(0,0)")
+	if err != nil {
+		return isBlade, err
+	}
+
+	if ipmi.Platform.MultiNode != "0" {
+		return true, err
+	}
+
 	return false, err
+}
+
+// Slot returns the current slot within the chassis
+func (s *SupermicroX10) Slot() (slot int, err error) {
+	ipmi, err := s.query("Get_PlatformCap.XML=(0,0)")
+	if err != nil {
+		return slot, err
+	}
+
+	slot, err = strconv.Atoi(ipmi.Platform.TwinNodeNumber)
+	if err != nil {
+		return slot, err
+	}
+
+	return slot, err
 }
 
 // Nics returns all found Nics in the device
