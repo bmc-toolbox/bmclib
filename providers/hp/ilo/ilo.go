@@ -674,6 +674,10 @@ func (i *Ilo) ServerSnapshot() (server interface{}, err error) { // nolint: gocy
 		if err != nil {
 			return nil, err
 		}
+		blade.BladePosition, err = i.Slot()
+		if err != nil {
+			return nil, err
+		}
 		server = blade
 	} else {
 		discrete := &devices.Discrete{}

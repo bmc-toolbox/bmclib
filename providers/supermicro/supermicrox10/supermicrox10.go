@@ -615,6 +615,10 @@ func (s *SupermicroX10) ServerSnapshot() (server interface{}, err error) {
 		if err != nil {
 			return nil, err
 		}
+		blade.BladePosition, err = s.Slot()
+		if err != nil {
+			return nil, err
+		}
 		server = blade
 	} else {
 		discrete := &devices.Discrete{}

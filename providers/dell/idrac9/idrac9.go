@@ -768,6 +768,10 @@ func (i *IDrac9) ServerSnapshot() (server interface{}, err error) { // nolint: g
 		if err != nil {
 			return nil, err
 		}
+		blade.BladePosition, err = i.Slot()
+		if err != nil {
+			return nil, err
+		}
 		server = blade
 	} else {
 		discrete := &devices.Discrete{}
