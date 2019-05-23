@@ -5270,6 +5270,26 @@ func TestIDracSerial(t *testing.T) {
 	tearDown()
 }
 
+func TestIDracChassisSerial(t *testing.T) {
+	expectedAnswer := "65kt7j2"
+
+	bmc, err := setup()
+	if err != nil {
+		t.Fatalf("Found errors during the test setup %v", err)
+	}
+
+	answer, err := bmc.ChassisSerial()
+	if err != nil {
+		t.Fatalf("Found errors calling bmc.ChassisSerial %v", err)
+	}
+
+	if answer != expectedAnswer {
+		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+	}
+
+	tearDown()
+}
+
 func TestIDracModel(t *testing.T) {
 	expectedAnswer := "PowerEdge R630"
 

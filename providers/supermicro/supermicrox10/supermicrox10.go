@@ -256,17 +256,25 @@ func (s *SupermicroX10) Serial() (serial string, err error) {
 		return serial, err
 	}
 
+	if ipmi.FruInfo == nil || ipmi.FruInfo.Board == nil {
+		return serial, errors.ErrInvalidSerial
+	}
+
+	return strings.ToLower(ipmi.FruInfo.Board.SerialNum), err
+}
+
+// ChassisSerial returns the serial number of the chassis where the blade is attached
+func (s *SupermicroX10) ChassisSerial() (serial string, err error) {
+	ipmi, err := s.query("FRU_INFO.XML=(0,0)")
+	if err != nil {
+		return serial, err
+	}
+
 	if ipmi.FruInfo == nil || ipmi.FruInfo.Chassis == nil {
 		return serial, errors.ErrInvalidSerial
 	}
 
-	if strings.HasPrefix(ipmi.FruInfo.Chassis.SerialNum, "S") {
-		serial = strings.TrimSpace(fmt.Sprintf("%s_%s", strings.TrimSpace(ipmi.FruInfo.Chassis.SerialNum), strings.TrimSpace(ipmi.FruInfo.Board.SerialNum)))
-	} else {
-		serial = strings.TrimSpace(fmt.Sprintf("%s_%s", strings.TrimSpace(ipmi.FruInfo.Product.SerialNum), strings.TrimSpace(ipmi.FruInfo.Board.SerialNum)))
-	}
-
-	return strings.ToLower(serial), err
+	return strings.ToLower(strings.TrimSpace(ipmi.FruInfo.Chassis.SerialNum)), err
 }
 
 // BmcType returns just Model id string - supermicrox10
@@ -617,6 +625,10 @@ func (s *SupermicroX10) ServerSnapshot() (server interface{}, err error) {
 			return nil, err
 		}
 		blade.BladePosition, err = s.Slot()
+		if err != nil {
+			return nil, err
+		}
+		blade.ChassisSerial, err = s.ChassisSerial()
 		if err != nil {
 			return nil, err
 		}

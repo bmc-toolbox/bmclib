@@ -136,6 +136,11 @@ func (i *Ibmc) Serial() (string, error) {
 	return "", nil
 }
 
+// ChassisSerial implements the Bmc interface
+func (i *Ibmc) ChassisSerial() (string, error) {
+	return "", nil
+}
+
 // Status implements the Bmc interface
 func (i *Ibmc) Status() (string, error) {
 	return "", nil

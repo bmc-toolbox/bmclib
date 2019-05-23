@@ -123,7 +123,8 @@ type RimpBlade struct {
 
 // BladeSystem blade information from the hprimp of blades
 type BladeSystem struct {
-	Bay int `xml:"BAY,omitempty"`
+	Bay     int      `xml:"BAY,omitempty"`
+	Manager *Manager `xml:"MANAGER,omitempty"`
 }
 
 // HSI contains the information about the components of the blade
@@ -155,6 +156,28 @@ type Procs struct {
 		ProcNumCores   int    `json:"proc_num_cores"`
 		ProcNumThreads int    `json:"proc_num_threads"`
 	} `json:"processors"`
+}
+
+// RckInfo is the struct used to render the data from https://$ip/json/rck_info, it contains the chassis data
+type RckInfo struct {
+	IPAddr     string        `json:"ip_addr"`
+	MacAddr    string        `json:"mac_addr"`
+	SysHealth  string        `json:"sys_health"`
+	SrvLoc     string        `json:"srv_loc"`
+	BayNum     int           `json:"bay_num"`
+	EncName    string        `json:"enc_name"`
+	EncUID     string        `json:"enc_uid"`
+	EncUUID    string        `json:"enc_uuid"`
+	EncSn      string        `json:"enc_sn"`
+	RckName    string        `json:"rck_name"`
+	StaticIpv6 []interface{} `json:"static_ipv6"`
+	StaticCnt  int           `json:"static_cnt"`
+	SlaacIpv6  []struct {
+		Ipv6Address string `json:"ipv6_address"`
+	} `json:"slaac_ipv6"`
+	SlaacCnt   int           `json:"slaac_cnt"`
+	Dhcpv6Ipv6 []interface{} `json:"dhcpv6_ipv6"`
+	Dhcpv6Cnt  int           `json:"dhcpv6_cnt"`
 }
 
 // Mem is the struct used to render the data from https://$ip/json/mem_info, it contains the ram data

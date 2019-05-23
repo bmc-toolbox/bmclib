@@ -320,6 +320,25 @@ func (i *IDrac8) Serial() (serial string, err error) {
 	return serial, err
 }
 
+// ChassisSerial returns the serial number of the chassis where the blade is attached
+func (i *IDrac8) ChassisSerial() (serial string, err error) {
+	err = i.loadHwData()
+	if err != nil {
+		return serial, err
+	}
+
+	for _, component := range i.iDracInventory.Component {
+		if component.Classname == "DCIM_SystemView" {
+			for _, property := range component.Properties {
+				if property.Name == "ChassisServiceTag" && property.Type == "string" {
+					return strings.ToLower(property.Value), err
+				}
+			}
+		}
+	}
+	return serial, err
+}
+
 // Status returns health string status from the bmc
 func (i *IDrac8) Status() (status string, err error) {
 	err = i.httpLogin()
@@ -816,6 +835,10 @@ func (i *IDrac8) ServerSnapshot() (server interface{}, err error) { // nolint: g
 			return nil, err
 		}
 		blade.BladePosition, err = i.Slot()
+		if err != nil {
+			return nil, err
+		}
+		blade.ChassisSerial, err = i.ChassisSerial()
 		if err != nil {
 			return nil, err
 		}

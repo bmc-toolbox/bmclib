@@ -138,7 +138,7 @@ func tearDown() {
 }
 
 func TestSerial(t *testing.T) {
-	expectedAnswer := "a19627226a05569_vm158s009467"
+	expectedAnswer := "vm158s009467"
 
 	bmc, err := setup()
 	if err != nil {
@@ -148,6 +148,26 @@ func TestSerial(t *testing.T) {
 	answer, err := bmc.Serial()
 	if err != nil {
 		t.Fatalf("Found errors calling bmc.Serial %v", err)
+	}
+
+	if answer != expectedAnswer {
+		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+	}
+
+	tearDown()
+}
+
+func TestChassisSerial(t *testing.T) {
+	expectedAnswer := "cf414af38n50003"
+
+	bmc, err := setup()
+	if err != nil {
+		t.Fatalf("Found errors during the test setup %v", err)
+	}
+
+	answer, err := bmc.ChassisSerial()
+	if err != nil {
+		t.Fatalf("Found errors calling bmc.ChassisSerial %v", err)
 	}
 
 	if answer != expectedAnswer {

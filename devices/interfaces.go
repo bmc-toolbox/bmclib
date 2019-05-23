@@ -49,6 +49,7 @@ type BmcCollection interface {
 	Slot() (int, error)
 	Screenshot() ([]byte, string, error)
 	ServerSnapshot() (interface{}, error)
+	ChassisSerial() (string, error)
 }
 
 // Cmc represents all the required cmc items
