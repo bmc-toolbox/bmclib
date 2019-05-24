@@ -139,6 +139,7 @@ var (
 		"/json/license":            []byte(`{"key":"3353M-XKMML-D7H3P-XV794-3DXMM","name":"iLO Advanced","type":"Perpetual","expires":"","seats":0}`),
 		"/json/power_supplies":     []byte(`{"supplies":[{"unhealthy":0,"enabled":1,"mismatch":0,"ps_bay":1,"ps_present":"PS_YES","ps_condition":"PS_OK","ps_error_code":"PS_GOOD_IN_USE","ps_ipdu_capable":"PS_NO","ps_hotplug_capable":"PS_YES","ps_model":"720478-B21","ps_spare":"754377-001","ps_serial_num":"5DMWA0CLL9E56R","ps_max_cap_watts":500,"ps_fw_ver":"1.00","ps_input_volts":230,"ps_output_watts":73,"avg":72,"max":74,"supply":true,"bbu":false,"charge":0,"age":0,"battery_health":0},{"unhealthy":0,"enabled":1,"mismatch":0,"ps_bay":2,"ps_present":"PS_YES","ps_condition":"PS_OK","ps_error_code":"PS_GOOD_IN_USE","ps_ipdu_capable":"PS_NO","ps_hotplug_capable":"PS_YES","ps_model":"720478-B21","ps_spare":"754377-001","ps_serial_num":"5DMWA0CLL9E5SU","ps_max_cap_watts":500,"ps_fw_ver":"1.00","ps_input_volts":228,"ps_output_watts":70,"avg":70,"max":72,"supply":true,"bbu":false,"charge":0,"age":0,"battery_health":0}],"present_power_reading":143}`),
 		"/json/health_phy_drives":  []byte(`{"hostpwr_state":"ON","in_post":0,"ams_ready":"AMS_UNAVAILABLE","data_state":"DATA_NOT_AVAILABLE","next_page":null,"phy_drive_arrays":[{"physical_drives":[{"name":"Physical Drive in Port 1I Box 1 Bay 1","status":"OP_STATUS_OK","serial_no":"S403CRXK0000E7227365","model":"EG1200JEMDA","capacity":"1200 GB","location":"Port 1I Box 1 Bay 1","fw_version":"HPD6","phys_status":"PHYS_OK","drive_type":"PHY_ARRAY","encr_stat":"ENCR_NOT_ENCR","phys_idx":0,"drive_mediatype":"HDD"},{"name":"Physical Drive in Port 1I Box 1 Bay 2","status":"OP_STATUS_OK","serial_no":"S403D7J40000E722A3MT","model":"EG1200JEMDA","capacity":"1200 GB","location":"Port 1I Box 1 Bay 2","fw_version":"HPD6","phys_status":"PHYS_OK","drive_type":"PHY_ARRAY","encr_stat":"ENCR_NOT_ENCR","phys_idx":1,"drive_mediatype":"HDD"}],"storage_type":"SMART_ARRAY_CONTROLLER_TYPE","name":"Controller on System Board","status":"OP_STATUS_OK","hw_status":"OP_STATUS_OK","serial_no":"PDNLU0MLM55058","model":"Smart Array P246br Controller","fw_version":"5.52","accel_cond":"OP_STATUS_OK","accel_serial":"PDNLU0MLM55058","accel_tot_mem":"1048576 KB","has_accel":1,"encr_stat":"ENCR_NOT_ENABLED","encr_self_stat":"OP_STATUS_OK","encr_csp_stat":"OP_STATUS_OK","has_encrypt":1,"enclosures":[{"name":"Drive Enclosure Port 1I Box 1","status":"OP_STATUS_OK","ports":"2"}]}]}`),
+		"/json/rck_info":           []byte(`{"ip_addr":"10.193.88.117","mac_addr":"1c:98:ec:1e:ab:e1","sys_health":"OP_STATUS_OK","srv_loc":"Bay 3","bay_num":3,"enc_name":"spare-cz37018fym","enc_uid":"UID_OFF","enc_uuid":"09CZ37018FYM","enc_sn":"CZ37018FYM","rck_name":"UnnamedRack","static_ipv6":[],"static_cnt":0,"slaac_ipv6":[{"ipv6_address":"FE80::1E98:ECFF:FE1E:ABE1"},{"ipv6_address":"2A01:5041:2000:3B:1E98:ECFF:FE1E:ABE1"}],"slaac_cnt":2,"dhcpv6_ipv6":[],"dhcpv6_cnt":0}`),
 	}
 )
 
@@ -182,6 +183,26 @@ func TestIloSerial(t *testing.T) {
 	answer, err := bmc.Serial()
 	if err != nil {
 		t.Fatalf("Found errors calling bmc.Serial %v", err)
+	}
+
+	if answer != expectedAnswer {
+		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+	}
+
+	tearDown()
+}
+
+func TestIloChassisSerial(t *testing.T) {
+	expectedAnswer := "cz37018fym"
+
+	bmc, err := setup()
+	if err != nil {
+		t.Fatalf("Found errors during the test setup %v", err)
+	}
+
+	answer, err := bmc.ChassisSerial()
+	if err != nil {
+		t.Fatalf("Found errors calling bmc.ChassisSerial %v", err)
 	}
 
 	if answer != expectedAnswer {
@@ -587,6 +608,26 @@ func TestIloIsBlade(t *testing.T) {
 	answer, err := bmc.IsBlade()
 	if err != nil {
 		t.Fatalf("Found errors calling bmc.isBlade %v", err)
+	}
+
+	if expectedAnswer != answer {
+		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+	}
+
+	tearDown()
+}
+
+func TestIloSlot(t *testing.T) {
+	expectedAnswer := -1
+
+	bmc, err := setup()
+	if err != nil {
+		t.Fatalf("Found errors during the test setup %v", err)
+	}
+
+	answer, err := bmc.Slot()
+	if err != nil {
+		t.Fatalf("Found errors calling bmc.Slot %v", err)
 	}
 
 	if expectedAnswer != answer {

@@ -3944,6 +3944,26 @@ func TestIDracSerial(t *testing.T) {
 	tearDown()
 }
 
+func TestIDracChassisSerial(t *testing.T) {
+	expectedAnswer := "h1645m2"
+
+	bmc, err := setup()
+	if err != nil {
+		t.Fatalf("Found errors during the test setup %v", err)
+	}
+
+	answer, err := bmc.ChassisSerial()
+	if err != nil {
+		t.Fatalf("Found errors calling bmc.ChassisSerial %v", err)
+	}
+
+	if answer != expectedAnswer {
+		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+	}
+
+	tearDown()
+}
+
 func TestIDracModel(t *testing.T) {
 	expectedAnswer := "PowerEdge M640"
 
@@ -4326,6 +4346,26 @@ func TestIDracIsBlade(t *testing.T) {
 	answer, err := bmc.IsBlade()
 	if err != nil {
 		t.Fatalf("Found errors calling bmc.isBlade %v", err)
+	}
+
+	if expectedAnswer != answer {
+		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+	}
+
+	tearDown()
+}
+
+func TestIDracSlot(t *testing.T) {
+	expectedAnswer := 2
+
+	bmc, err := setup()
+	if err != nil {
+		t.Fatalf("Found errors during the test setup %v", err)
+	}
+
+	answer, err := bmc.Slot()
+	if err != nil {
+		t.Fatalf("Found errors calling bmc.Slot %v", err)
 	}
 
 	if expectedAnswer != answer {

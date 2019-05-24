@@ -138,7 +138,7 @@ func tearDown() {
 }
 
 func TestSerial(t *testing.T) {
-	expectedAnswer := "a19627226a05569_vm158s009467"
+	expectedAnswer := "vm158s009467"
 
 	bmc, err := setup()
 	if err != nil {
@@ -148,6 +148,26 @@ func TestSerial(t *testing.T) {
 	answer, err := bmc.Serial()
 	if err != nil {
 		t.Fatalf("Found errors calling bmc.Serial %v", err)
+	}
+
+	if answer != expectedAnswer {
+		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+	}
+
+	tearDown()
+}
+
+func TestChassisSerial(t *testing.T) {
+	expectedAnswer := "cf414af38n50003"
+
+	bmc, err := setup()
+	if err != nil {
+		t.Fatalf("Found errors during the test setup %v", err)
+	}
+
+	answer, err := bmc.ChassisSerial()
+	if err != nil {
+		t.Fatalf("Found errors calling bmc.ChassisSerial %v", err)
 	}
 
 	if answer != expectedAnswer {
@@ -433,7 +453,7 @@ func TestLicense(t *testing.T) {
 }
 
 func TestIsBlade(t *testing.T) {
-	expectedAnswer := false
+	expectedAnswer := true
 
 	bmc, err := setup()
 	if err != nil {
@@ -443,6 +463,26 @@ func TestIsBlade(t *testing.T) {
 	answer, err := bmc.IsBlade()
 	if err != nil {
 		t.Fatalf("Found errors calling bmc.IsBlade %v", err)
+	}
+
+	if answer != expectedAnswer {
+		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+	}
+
+	tearDown()
+}
+
+func TestPosition(t *testing.T) {
+	expectedAnswer := 0
+
+	bmc, err := setup()
+	if err != nil {
+		t.Fatalf("Found errors during the test setup %v", err)
+	}
+
+	answer, err := bmc.Slot()
+	if err != nil {
+		t.Fatalf("Found errors calling bmc.Position %v", err)
 	}
 
 	if answer != expectedAnswer {

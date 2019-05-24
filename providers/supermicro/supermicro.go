@@ -18,6 +18,7 @@ type IPMI struct {
 	FruInfo      *FruInfo       `xml:"FRU_INFO,omitempty"`
 	GenericInfo  *GenericInfo   `xml:"GENERIC_INFO,omitempty"`
 	PlatformInfo *PlatformInfo  `xml:"PLATFORM_INFO,omitempty"`
+	Platform     *Platform      `xml:"Platform,omitempty"`
 	PowerSupply  []*PowerSupply `xml:"PowerSupply,omitempty"`
 	PowerInfo    *PowerInfo     `xml:"POWER_INFO"`
 	NodeInfo     *NodeInfo      `xml:"NodeInfo,omitempty"`
@@ -101,6 +102,12 @@ type Generic struct {
 	BmcIP         string `xml:"BMC_IP,attr"`
 	BmcMac        string `xml:"BMC_MAC,attr"`
 	IpmiFwVersion string `xml:"IPMIFW_VERSION,attr"`
+}
+
+// Platform holds the information of the hardware type eg: fattwin or discrete
+type Platform struct {
+	MultiNode      string `xml:"EnMultiNode,attr"  json:",omitempty"`
+	TwinNodeNumber string `xml:"TwinNodeNumber,attr"  json:",omitempty"`
 }
 
 // PlatformInfo holds the hardware related information

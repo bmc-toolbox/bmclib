@@ -205,6 +205,28 @@ func (i *Ilo) Serial() (serial string, err error) {
 	return strings.ToLower(strings.TrimSpace(i.rimpBlade.HSI.Sbsn)), err
 }
 
+// ChassisSerial returns the serial number of the chassis where the blade is attached
+func (i *Ilo) ChassisSerial() (serial string, err error) {
+	err = i.httpLogin()
+	if err != nil {
+		return serial, err
+	}
+
+	url := "json/rck_info"
+	payload, err := i.get(url)
+	if err != nil {
+		return serial, err
+	}
+
+	rckInfo := &hp.RckInfo{}
+	err = json.Unmarshal(payload, rckInfo)
+	if err != nil {
+		return serial, err
+	}
+
+	return strings.ToLower(rckInfo.EncSn), err
+}
+
 // Model returns the device model
 func (i *Ilo) Model() (model string, err error) {
 	return i.rimpBlade.HSI.Spn, err
@@ -591,6 +613,15 @@ func (i *Ilo) IsBlade() (isBlade bool, err error) {
 	return isBlade, err
 }
 
+// Slot returns the current slot within the chassis
+func (i *Ilo) Slot() (slot int, err error) {
+	if i.rimpBlade.BladeSystem != nil {
+		return i.rimpBlade.BladeSystem.Bay, err
+	}
+
+	return -1, err
+}
+
 // Vendor returns bmc's vendor
 func (i *Ilo) Vendor() (vendor string) {
 	return hp.VendorID
@@ -662,6 +693,14 @@ func (i *Ilo) ServerSnapshot() (server interface{}, err error) { // nolint: gocy
 			return nil, err
 		}
 		blade.BmcLicenceType, blade.BmcLicenceStatus, err = i.License()
+		if err != nil {
+			return nil, err
+		}
+		blade.BladePosition, err = i.Slot()
+		if err != nil {
+			return nil, err
+		}
+		blade.ChassisSerial, err = i.ChassisSerial()
 		if err != nil {
 			return nil, err
 		}

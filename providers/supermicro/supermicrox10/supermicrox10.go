@@ -256,17 +256,25 @@ func (s *SupermicroX10) Serial() (serial string, err error) {
 		return serial, err
 	}
 
+	if ipmi.FruInfo == nil || ipmi.FruInfo.Board == nil {
+		return serial, errors.ErrInvalidSerial
+	}
+
+	return strings.ToLower(ipmi.FruInfo.Board.SerialNum), err
+}
+
+// ChassisSerial returns the serial number of the chassis where the blade is attached
+func (s *SupermicroX10) ChassisSerial() (serial string, err error) {
+	ipmi, err := s.query("FRU_INFO.XML=(0,0)")
+	if err != nil {
+		return serial, err
+	}
+
 	if ipmi.FruInfo == nil || ipmi.FruInfo.Chassis == nil {
 		return serial, errors.ErrInvalidSerial
 	}
 
-	if strings.HasPrefix(ipmi.FruInfo.Chassis.SerialNum, "S") {
-		serial = strings.TrimSpace(fmt.Sprintf("%s_%s", strings.TrimSpace(ipmi.FruInfo.Chassis.SerialNum), strings.TrimSpace(ipmi.FruInfo.Board.SerialNum)))
-	} else {
-		serial = strings.TrimSpace(fmt.Sprintf("%s_%s", strings.TrimSpace(ipmi.FruInfo.Product.SerialNum), strings.TrimSpace(ipmi.FruInfo.Board.SerialNum)))
-	}
-
-	return strings.ToLower(serial), err
+	return strings.ToLower(strings.TrimSpace(ipmi.FruInfo.Chassis.SerialNum)), err
 }
 
 // BmcType returns just Model id string - supermicrox10
@@ -441,7 +449,31 @@ func (s *SupermicroX10) TempC() (temp int, err error) {
 
 // IsBlade returns if the current hardware is a blade or not
 func (s *SupermicroX10) IsBlade() (isBlade bool, err error) {
+	ipmi, err := s.query("Get_PlatformCap.XML=(0,0)")
+	if err != nil {
+		return isBlade, err
+	}
+
+	if ipmi.Platform.MultiNode != "0" {
+		return true, err
+	}
+
 	return false, err
+}
+
+// Slot returns the current slot within the chassis
+func (s *SupermicroX10) Slot() (slot int, err error) {
+	ipmi, err := s.query("Get_PlatformCap.XML=(0,0)")
+	if err != nil {
+		return slot, err
+	}
+
+	slot, err = strconv.Atoi(ipmi.Platform.TwinNodeNumber)
+	if err != nil {
+		return slot, err
+	}
+
+	return slot, err
 }
 
 // Nics returns all found Nics in the device
@@ -528,6 +560,7 @@ func (s *SupermicroX10) Vendor() (vendor string) {
 }
 
 // ServerSnapshot do best effort to populate the server data and returns a blade or discrete
+// nolint: gocyclo
 func (s *SupermicroX10) ServerSnapshot() (server interface{}, err error) {
 	if isBlade, _ := s.IsBlade(); isBlade {
 		blade := &devices.Blade{}
@@ -588,6 +621,14 @@ func (s *SupermicroX10) ServerSnapshot() (server interface{}, err error) {
 			return nil, err
 		}
 		blade.BmcLicenceType, blade.BmcLicenceStatus, err = s.License()
+		if err != nil {
+			return nil, err
+		}
+		blade.BladePosition, err = s.Slot()
+		if err != nil {
+			return nil, err
+		}
+		blade.ChassisSerial, err = s.ChassisSerial()
 		if err != nil {
 			return nil, err
 		}
