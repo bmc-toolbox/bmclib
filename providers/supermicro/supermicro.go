@@ -142,8 +142,10 @@ type NodeInfo struct {
 // Node contains the power and thermal information of each board in the chassis
 type Node struct {
 	IP          string `xml:"IP,attr"`
+	ID          int    `xml:"ID,attr"`
 	Power       string `xml:"Power,attr"`
 	PowerStatus string `xml:"PowerStatus,attr"`
+	NodeSerial  string `xml:"NodeSerialNo,attr"`
 	SystemTemp  string `xml:"SystemTemp,attr"`
 }
 

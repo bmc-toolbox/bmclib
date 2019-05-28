@@ -395,8 +395,12 @@ func (s *SupermicroX10) PowerKw() (power float64, err error) {
 	}
 
 	if ipmi.NodeInfo != nil {
+		serial, err := s.Serial()
+		if err != nil {
+			return power, err
+		}
 		for _, node := range ipmi.NodeInfo.Nodes {
-			if node.IP == strings.Split(s.ip, ":")[0] {
+			if strings.ToLower(node.NodeSerial) == serial {
 				value, err := strconv.Atoi(node.Power)
 				if err != nil {
 					return power, err
@@ -432,8 +436,12 @@ func (s *SupermicroX10) TempC() (temp int, err error) {
 	}
 
 	if ipmi.NodeInfo != nil {
+		serial, err := s.Serial()
+		if err != nil {
+			return temp, err
+		}
 		for _, node := range ipmi.NodeInfo.Nodes {
-			if node.IP == strings.Split(s.ip, ":")[0] {
+			if strings.ToLower(node.NodeSerial) == serial {
 				temp, err := strconv.Atoi(node.SystemTemp)
 				if err != nil {
 					return temp, err
@@ -470,6 +478,24 @@ func (s *SupermicroX10) Slot() (slot int, err error) {
 
 	slot, err = strconv.Atoi(ipmi.Platform.TwinNodeNumber)
 	if err != nil {
+		if strings.Contains(err.Error(), "invalid syntax") {
+			ipmi, err := s.query("Get_NodeInfoReadings.XML=(0,0)")
+			if err != nil {
+				return slot, err
+			}
+
+			if ipmi.NodeInfo != nil {
+				serial, err := s.Serial()
+				if err != nil {
+					return slot, err
+				}
+				for _, node := range ipmi.NodeInfo.Nodes {
+					if strings.ToLower(node.NodeSerial) == serial {
+						return node.ID + 1, err
+					}
+				}
+			}
+		}
 		return slot, err
 	}
 
