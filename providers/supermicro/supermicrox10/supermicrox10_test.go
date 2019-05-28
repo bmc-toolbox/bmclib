@@ -26,7 +26,7 @@ var (
 			</IPMI>`),
 		"Get_PlatformCap.XML=(0,0)": []byte(`<?xml version="1.0"?>
 			<IPMI>
-			  <Platform Cap="8004c039" FanModeSupport="1b" LanModeSupport="7" EnPowerSupplyPage="81" EnStorage="0" EnECExpand="0" EnMultiNode="1" EnX10TwinProMCUUpdate="1" EnPCIeSSD="0" EnAtomHDD="0" EnLANByPassMode="0" EnDP="0" EnSMBIOS="1" SmartCoolCap="0" SmartCooling="0" EnHDDPwrCtrl="0" TwinType="a5" TwinNodeNumber="00" EnBigTwinLCMCCPLDUpdate="0" EnSmartPower="0"/>
+			  <Platform Cap="8004c039" FanModeSupport="1b" LanModeSupport="7" EnPowerSupplyPage="81" EnStorage="0" EnECExpand="0" EnMultiNode="1" EnX10TwinProMCUUpdate="1" EnPCIeSSD="0" EnAtomHDD="0" EnLANByPassMode="0" EnDP="0" EnSMBIOS="1" SmartCoolCap="0" SmartCooling="0" EnHDDPwrCtrl="0" TwinType="a5" EnBigTwinLCMCCPLDUpdate="0" EnSmartPower="0"/>
 			</IPMI>`),
 		"GENERIC_INFO.XML=(0,0)": []byte(`<?xml version="1.0"?>  <IPMI>  <GENERIC_INFO>  <GENERIC BMC_IP="010.193.171.016" BMC_MAC="0c:c4:7a:b8:22:64" WEB_VERSION="1.1" IPMIFW_TAG="BL_SUPERMICRO_X7SB3_2017-05-23_B" IPMIFW_VERSION="0325" IPMIFW_BLDTIME="05/23/2017" SESSION_TIMEOUT="00" SDR_VERSION="0000" FRU_VERSION="0000" BIOS_VERSION="        " />  <KERNAL VERSION="2.6.28.9 "/>  </GENERIC_INFO>  </IPMI>`),
 		"Get_PlatformInfo.XML=(0,0)": []byte(`<?xml version="1.0"?>
@@ -90,7 +90,7 @@ var (
 			  <NodeModule psPower="1229" psCurrent="5390" nNODE_Status="1" nNNODE="4" nMYID="3" nMCUFWVer="272" nFatTwin_bp_location="ff" nUsrDefSysName="" nSysName="SYS-F618H6-FTPTL+" nSysSerialNo="A19627226A05562" nBPID="255" nBPRevision="512" nChaName="CSE-F414IS2-R2K04BP" nChaSerialNo="CF414AF38N50022" nBPModelName="BPN-PDB-F418" nBPModelSerialNo="EB164S011414"/>
 			  <NodeInfo>
 				<Node ID="0" Present="1" PowerStatus="1" Power="270" Current="230" IP="10.193.171.12" NodePartNo="X10DRFF-CTG" NodeSerialNo="VM158S008970" CPU1Temp="57" CPU2Temp="64" SystemTemp="24"/>
-				<Node ID="1" Present="1" PowerStatus="1" Power="284" Current="231" IP="10.193.171.15" NodePartNo="X10DRFF-CTG" NodeSerialNo="VM157S014256" CPU1Temp="59" CPU2Temp="63" SystemTemp="24"/>
+				<Node ID="1" Present="1" PowerStatus="1" Power="284" Current="231" IP="10.193.171.15" NodePartNo="X10DRFF-CTG" NodeSerialNo="VM158S009467" CPU1Temp="59" CPU2Temp="63" SystemTemp="24"/>
 				<Node ID="2" Present="1" PowerStatus="1" Power="270" Current="221" IP="10.193.171.13" NodePartNo="X10DRFF-CTG" NodeSerialNo="VM156S002490" CPU1Temp="56" CPU2Temp="60" SystemTemp="24"/>
 				<Node ID="3" Present="1" PowerStatus="1" Power="252" Current="214" IP="127.0.0.1" NodePartNo="X10DRFF-CTG" NodeSerialNo="VM158S008739" CPU1Temp="55" CPU2Temp="57" SystemTemp="24"/>
 			  </NodeInfo>
@@ -349,7 +349,7 @@ func TestBiosVersion(t *testing.T) {
 }
 
 func TestPowerKW(t *testing.T) {
-	expectedAnswer := 0.252
+	expectedAnswer := 0.284
 
 	bmc, err := setup()
 	if err != nil {
@@ -473,7 +473,7 @@ func TestIsBlade(t *testing.T) {
 }
 
 func TestPosition(t *testing.T) {
-	expectedAnswer := 0
+	expectedAnswer := 2
 
 	bmc, err := setup()
 	if err != nil {
