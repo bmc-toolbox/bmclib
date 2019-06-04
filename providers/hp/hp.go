@@ -180,6 +180,16 @@ type RckInfo struct {
 	Dhcpv6Cnt  int           `json:"dhcpv6_cnt"`
 }
 
+// ChassisInfo is the struct used to render the data from https://$ip/json/chassis_info, it contains the chassis data
+type ChassisInfo struct {
+	NodeNumber   int    `json:"node_number"`
+	ChassisSn    string `json:"chassis_sn"`
+	ChassisName  string `json:"chassis_name"`
+	ChassisPn    string `json:"chassis_pn"`
+	ChassisPower int    `json:"chassis_power"`
+	NodePower    int    `json:"node_power"`
+}
+
 // Mem is the struct used to render the data from https://$ip/json/mem_info, it contains the ram data
 type Mem struct {
 	MemTotalMemSize int        `json:"mem_total_mem_size"`

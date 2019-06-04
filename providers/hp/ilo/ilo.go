@@ -224,6 +224,22 @@ func (i *Ilo) ChassisSerial() (serial string, err error) {
 		return serial, err
 	}
 
+	if rckInfo.EncSn == "Unknown" {
+		url := "json/chassis_info"
+		payload, err = i.get(url)
+		if err != nil {
+			return serial, err
+		}
+
+		chassisInfo := &hp.ChassisInfo{}
+		err = json.Unmarshal(payload, chassisInfo)
+		if err != nil {
+			return serial, err
+		}
+
+		return strings.ToLower(chassisInfo.ChassisSn), err
+	}
+
 	return strings.ToLower(rckInfo.EncSn), err
 }
 
@@ -607,7 +623,25 @@ func (i *Ilo) IsBlade() (isBlade bool, err error) {
 	if i.rimpBlade.BladeSystem != nil {
 		isBlade = true
 	} else {
-		isBlade = false
+		err = i.httpLogin()
+		if err != nil {
+			return isBlade, err
+		}
+
+		url := "json/chassis_info"
+		payload, err := i.get(url)
+		if err != nil {
+			return isBlade, err
+		}
+
+		chassisInfo := &hp.ChassisInfo{}
+		err = json.Unmarshal(payload, chassisInfo)
+		if err != nil {
+			return isBlade, err
+		}
+		if chassisInfo.ChassisSn != "" {
+			isBlade = true
+		}
 	}
 
 	return isBlade, err
