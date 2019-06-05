@@ -245,7 +245,11 @@ func (c *C7000) Blades() (blades []*devices.Blade, err error) {
 				blade.Model = hpBlade.Spn
 				blade.Name = hpBlade.Name
 				blade.BmcAddress = hpBlade.MgmtIPAddr
-				blade.BmcVersion = hpBlade.MgmtVersion
+				if strings.Contains(hpBlade.MgmtVersion, " ") {
+					blade.BmcVersion = strings.Split(hpBlade.MgmtVersion, " ")[0]
+				} else {
+					blade.BmcVersion = hpBlade.MgmtVersion
+				}
 				blade.BmcType = hpBlade.MgmtType
 				blade.BiosVersion = hpBlade.BladeRomVer
 				blades = append(blades, &blade)
