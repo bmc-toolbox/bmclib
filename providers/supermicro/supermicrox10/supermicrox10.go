@@ -496,7 +496,8 @@ func (s *SupermicroX10) Slot() (slot int, err error) {
 				}
 			}
 		}
-		return slot, err
+	} else {
+		slot = slot + 1
 	}
 
 	return slot, err
