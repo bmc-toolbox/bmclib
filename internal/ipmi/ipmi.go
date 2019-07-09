@@ -32,7 +32,7 @@ func New(username string, password string, host string) (ipmi *Ipmi, err error) 
 }
 
 func (i *Ipmi) run(command []string) (output string, err error) {
-	ipmiArgs := []string{"-I", "lanplus", "-U", i.Username, "-E", "-H", i.Host}
+	ipmiArgs := []string{"-I", "lanplus", "-U", i.Username, "-E", "-N", "5", "-H", i.Host}
 	ipmiArgs = append(ipmiArgs, command...)
 	cmd := exec.Command(i.ipmitool, ipmiArgs...)
 	cmd.Env = []string{fmt.Sprintf("IPMITOOL_PASSWORD=%s", i.Password)}
