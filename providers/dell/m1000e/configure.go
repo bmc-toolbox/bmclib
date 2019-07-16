@@ -96,7 +96,7 @@ func (m *M1000e) User(cfgUsers []*cfgresources.User) (err error) {
 
 		log.WithFields(log.Fields{
 			"IP":    m.ip,
-			"Model": m.BmcType(),
+			"Model": m.HardwareType(),
 		}).Debug("User account config parameters applied.")
 
 	}
@@ -121,7 +121,7 @@ func (m *M1000e) Syslog(cfg *cfgresources.Syslog) (err error) {
 
 	log.WithFields(log.Fields{
 		"IP":    m.ip,
-		"Model": m.BmcType(),
+		"Model": m.HardwareType(),
 	}).Debug("Interface config parameters applied.")
 	return err
 }
@@ -147,7 +147,7 @@ func (m *M1000e) Ntp(cfg *cfgresources.Ntp) (err error) {
 
 	log.WithFields(log.Fields{
 		"IP":    m.ip,
-		"Model": m.BmcType(),
+		"Model": m.HardwareType(),
 	}).Debug("DateTime config parameters applied.")
 	return err
 }
@@ -168,7 +168,7 @@ func (m *M1000e) Ldap(cfg *cfgresources.Ldap) (err error) {
 
 	log.WithFields(log.Fields{
 		"IP":    m.ip,
-		"Model": m.BmcType(),
+		"Model": m.HardwareType(),
 	}).Debug("Ldap config parameters applied.")
 	return err
 }
@@ -191,7 +191,7 @@ func (m *M1000e) applyLdapRoleCfg(cfg LdapArgParams, roleID int) (err error) {
 
 	log.WithFields(log.Fields{
 		"IP":    m.ip,
-		"Model": m.BmcType(),
+		"Model": m.HardwareType(),
 	}).Debug("Ldap Role group config parameters applied.")
 	return err
 }
@@ -208,7 +208,7 @@ func (m *M1000e) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.
 				"step":      "applyLdapGroupParams",
 				"Ldap role": group.Role,
 				"IP":        m.ip,
-				"Model":     m.BmcType(),
+				"Model":     m.HardwareType(),
 				"Error":     err,
 			}).Warn("Unable to apply Ldap role group config.")
 			return err
@@ -220,7 +220,7 @@ func (m *M1000e) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.
 				"step":      "applyLdapGroupParams",
 				"Ldap role": group.Role,
 				"IP":        m.ip,
-				"Model":     m.BmcType(),
+				"Model":     m.HardwareType(),
 				"Error":     err,
 			}).Warn("Unable to apply Ldap role group config.")
 			return err
@@ -228,7 +228,7 @@ func (m *M1000e) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.
 
 		log.WithFields(log.Fields{
 			"IP":    m.ip,
-			"Model": m.BmcType(),
+			"Model": m.HardwareType(),
 			"Role":  group.Role,
 			"Group": group.Group,
 		}).Debug("Ldap group parameters applied.")
@@ -284,7 +284,7 @@ func (m *M1000e) CurrentHTTPSCert() (c []*x509.Certificate, b bool, e error) {
 //
 //	log.WithFields(log.Fields{
 //		"IP":    m.ip,
-//		"Model": m.BmcType(),
+//		"Model": m.HardwareType(),
 //	}).Debug("SSL certs uploaded.")
 //	return err
 //}
@@ -456,7 +456,7 @@ func (m *M1000e) ApplySecurityCfg(cfg LoginSecurityParams) (err error) {
 
 	log.WithFields(log.Fields{
 		"IP":    m.ip,
-		"Model": m.BmcType(),
+		"Model": m.HardwareType(),
 	}).Debug("Security config parameters applied.")
 	return err
 

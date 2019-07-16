@@ -2441,9 +2441,9 @@ func TestHpChassisFwVersion(t *testing.T) {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
 
-	answer, err := chassis.FwVersion()
+	answer, err := chassis.Version()
 	if err != nil {
-		t.Fatalf("Found errors calling chassis.FwVersion %v", err)
+		t.Fatalf("Found errors calling chassis.Version %v", err)
 	}
 
 	if answer != expectedAnswer {
@@ -2830,7 +2830,7 @@ func TestHpChassisBmcType(t *testing.T) {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
 
-	answer := bmc.BmcType()
+	answer := bmc.HardwareType()
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}

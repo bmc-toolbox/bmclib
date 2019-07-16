@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	// BmcType defines the bmc model that is supported by this package
+	// HardwareType defines the bmc model that is supported by this package
 	BmcType = "supermicrox10"
 )
 
@@ -277,8 +277,8 @@ func (s *SupermicroX10) ChassisSerial() (serial string, err error) {
 	return strings.ToLower(strings.TrimSpace(ipmi.FruInfo.Chassis.SerialNum)), err
 }
 
-// BmcType returns just Model id string - supermicrox10
-func (s *SupermicroX10) BmcType() (model string) {
+// HardwareType returns just Model id string - supermicrox10
+func (s *SupermicroX10) HardwareType() (model string) {
 	return BmcType
 }
 
@@ -296,8 +296,8 @@ func (s *SupermicroX10) Model() (model string, err error) {
 	return model, err
 }
 
-// BmcVersion returns the version of the bmc we are running
-func (s *SupermicroX10) BmcVersion() (bmcVersion string, err error) {
+// Version returns the version of the bmc we are running
+func (s *SupermicroX10) Version() (bmcVersion string, err error) {
 	ipmi, err := s.query("GENERIC_INFO.XML=(0,0)")
 	if err != nil {
 		return bmcVersion, err
@@ -593,13 +593,13 @@ func (s *SupermicroX10) ServerSnapshot() (server interface{}, err error) {
 		blade := &devices.Blade{}
 		blade.Vendor = s.Vendor()
 		blade.BmcAddress = s.ip
-		blade.BmcType = s.BmcType()
+		blade.BmcType = s.HardwareType()
 
 		blade.Serial, err = s.Serial()
 		if err != nil {
 			return nil, err
 		}
-		blade.BmcVersion, err = s.BmcVersion()
+		blade.BmcVersion, err = s.Version()
 		if err != nil {
 			return nil, err
 		}
@@ -664,13 +664,13 @@ func (s *SupermicroX10) ServerSnapshot() (server interface{}, err error) {
 		discrete := &devices.Discrete{}
 		discrete.Vendor = s.Vendor()
 		discrete.BmcAddress = s.ip
-		discrete.BmcType = s.BmcType()
+		discrete.BmcType = s.HardwareType()
 
 		discrete.Serial, err = s.Serial()
 		if err != nil {
 			return nil, err
 		}
-		discrete.BmcVersion, err = s.BmcVersion()
+		discrete.BmcVersion, err = s.Version()
 		if err != nil {
 			return nil, err
 		}

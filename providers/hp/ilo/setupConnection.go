@@ -70,7 +70,7 @@ func (i *Ilo) httpLogin() (err error) {
 		log.WithFields(log.Fields{
 			"step":  "Login()",
 			"IP":    i.ip,
-			"Model": i.BmcType(),
+			"Model": i.HardwareType(),
 		}).Warn("Expected sessionKey cookie value not found.")
 	}
 

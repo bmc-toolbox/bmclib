@@ -460,8 +460,8 @@ func (i *IDrac8) Name() (name string, err error) {
 	return name, err
 }
 
-// BmcVersion returns the version of the bmc we are running
-func (i *IDrac8) BmcVersion() (bmcVersion string, err error) {
+// Version returns the version of the bmc we are running
+func (i *IDrac8) Version() (bmcVersion string, err error) {
 	err = i.loadHwData()
 	if err != nil {
 		return bmcVersion, err
@@ -527,8 +527,8 @@ func (i *IDrac8) Model() (model string, err error) {
 	return model, err
 }
 
-// BmcType returns the type of bmc we are talking to
-func (i *IDrac8) BmcType() (bmcType string) {
+// HardwareType returns the type of bmc we are talking to
+func (i *IDrac8) HardwareType() (bmcType string) {
 	return BMCType
 }
 
@@ -776,13 +776,13 @@ func (i *IDrac8) ServerSnapshot() (server interface{}, err error) { // nolint: g
 		blade := &devices.Blade{}
 		blade.Vendor = i.Vendor()
 		blade.BmcAddress = i.ip
-		blade.BmcType = i.BmcType()
+		blade.BmcType = i.HardwareType()
 
 		blade.Serial, err = i.Serial()
 		if err != nil {
 			return nil, err
 		}
-		blade.BmcVersion, err = i.BmcVersion()
+		blade.BmcVersion, err = i.Version()
 		if err != nil {
 			return nil, err
 		}
@@ -847,13 +847,13 @@ func (i *IDrac8) ServerSnapshot() (server interface{}, err error) { // nolint: g
 		discrete := &devices.Discrete{}
 		discrete.Vendor = i.Vendor()
 		discrete.BmcAddress = i.ip
-		discrete.BmcType = i.BmcType()
+		discrete.BmcType = i.HardwareType()
 
 		discrete.Serial, err = i.Serial()
 		if err != nil {
 			return nil, err
 		}
-		discrete.BmcVersion, err = i.BmcVersion()
+		discrete.BmcVersion, err = i.Version()
 		if err != nil {
 			return nil, err
 		}

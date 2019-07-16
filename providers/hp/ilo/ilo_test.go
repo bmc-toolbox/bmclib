@@ -241,7 +241,7 @@ func TestIloBmcType(t *testing.T) {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
 
-	answer := bmc.BmcType()
+	answer := bmc.HardwareType()
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
 	}
@@ -257,9 +257,9 @@ func TestIloBmcVersion(t *testing.T) {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
 
-	answer, err := bmc.BmcVersion()
+	answer, err := bmc.Version()
 	if err != nil {
-		t.Fatalf("Found errors calling bmc.BmcVersion %v", err)
+		t.Fatalf("Found errors calling bmc.Version %v", err)
 	}
 
 	if answer != expectedAnswer {

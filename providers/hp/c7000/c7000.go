@@ -78,8 +78,8 @@ func (c *C7000) Name() (name string, err error) {
 	return c.Rimp.Infra2.Encl, err
 }
 
-// BmcType returns the model id string - c7000
-func (c *C7000) BmcType() (model string) {
+// HardwareType returns the model id string - c7000
+func (c *C7000) HardwareType() (model string) {
 	return BMCType
 }
 
@@ -182,8 +182,8 @@ func (c *C7000) IsActive() bool {
 	return false
 }
 
-// FwVersion returns the current firmware version of the bmc
-func (c *C7000) FwVersion() (version string, err error) {
+// Version returns the current firmware version of the bmc
+func (c *C7000) Version() (version string, err error) {
 	return c.Rimp.MP.Fwri, err
 }
 
@@ -293,7 +293,7 @@ func (c *C7000) ChassisSnapshot() (chassis *devices.Chassis, err error) {
 	if err != nil {
 		return nil, err
 	}
-	chassis.FwVersion, err = c.FwVersion()
+	chassis.FwVersion, err = c.Version()
 	if err != nil {
 		return nil, err
 	}
