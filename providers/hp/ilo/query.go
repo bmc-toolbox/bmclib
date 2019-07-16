@@ -45,7 +45,7 @@ func (i *Ilo) Screenshot() (response []byte, extension string, err error) {
 	extension = "bmp"
 
 	// screen thumbnails are only available in ilo5.
-	if i.BmcType() != "ilo5" {
+	if i.HardwareType() != "ilo5" {
 		return response, extension, errors.ErrFeatureUnavailable
 	}
 
@@ -65,7 +65,7 @@ func (i *Ilo) queryDirectoryGroups() (directoryGroups []DirectoryGroups, err err
 	if err != nil {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
-			"Model":    i.BmcType(),
+			"Model":    i.HardwareType(),
 			"endpoint": endpoint,
 			"step":     helper.WhosCalling(),
 			"Error":    err,
@@ -80,7 +80,7 @@ func (i *Ilo) queryDirectoryGroups() (directoryGroups []DirectoryGroups, err err
 		log.WithFields(log.Fields{
 			"IP":    i.ip,
 			"step":  helper.WhosCalling(),
-			"Model": i.BmcType(),
+			"Model": i.HardwareType(),
 			"Error": err,
 		}).Warn("Unable to unmarshal payload.")
 		return directoryGroups, err
@@ -97,7 +97,7 @@ func (i *Ilo) queryUsers() (usersInfo []UserInfo, err error) {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
-			"Model":    i.BmcType(),
+			"Model":    i.HardwareType(),
 			"endpoint": endpoint,
 			"step":     helper.WhosCalling(),
 			"Error":    err,
@@ -113,7 +113,7 @@ func (i *Ilo) queryUsers() (usersInfo []UserInfo, err error) {
 			"step":     "queryUserInfo",
 			"resource": "User",
 			"IP":       i.ip,
-			"Model":    i.BmcType(),
+			"Model":    i.HardwareType(),
 			"Error":    err,
 		}).Warn("Unable to unmarshal payload.")
 		return usersInfo, err
@@ -130,7 +130,7 @@ func (i *Ilo) queryNetworkSntp() (networkSntp NetworkSntp, err error) {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
-			"Model":    i.BmcType(),
+			"Model":    i.HardwareType(),
 			"endpoint": endpoint,
 			"step":     helper.WhosCalling(),
 			"Error":    err,
@@ -143,7 +143,7 @@ func (i *Ilo) queryNetworkSntp() (networkSntp NetworkSntp, err error) {
 		log.WithFields(log.Fields{
 			"IP":    i.ip,
 			"step":  helper.WhosCalling(),
-			"Model": i.BmcType(),
+			"Model": i.HardwareType(),
 			"Error": err,
 		}).Warn("Unable to unmarshal payload.")
 		return networkSntp, err
@@ -162,7 +162,7 @@ func (i *Ilo) queryAccessSettings() (AccessSettings, error) {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
-			"Model":    i.BmcType(),
+			"Model":    i.HardwareType(),
 			"endpoint": endpoint,
 			"step":     helper.WhosCalling(),
 			"Error":    err,
@@ -175,7 +175,7 @@ func (i *Ilo) queryAccessSettings() (AccessSettings, error) {
 		log.WithFields(log.Fields{
 			"IP":    i.ip,
 			"step":  helper.WhosCalling(),
-			"Model": i.BmcType(),
+			"Model": i.HardwareType(),
 			"Error": err,
 		}).Warn("Unable to unmarshal payload.")
 		return accessSettings, err
@@ -194,7 +194,7 @@ func (i *Ilo) queryNetworkIPv4() (NetworkIPv4, error) {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
-			"Model":    i.BmcType(),
+			"Model":    i.HardwareType(),
 			"endpoint": endpoint,
 			"step":     helper.WhosCalling(),
 			"Error":    err,
@@ -207,7 +207,7 @@ func (i *Ilo) queryNetworkIPv4() (NetworkIPv4, error) {
 		log.WithFields(log.Fields{
 			"IP":    i.ip,
 			"step":  helper.WhosCalling(),
-			"Model": i.BmcType(),
+			"Model": i.HardwareType(),
 			"Error": err,
 		}).Warn("Unable to unmarshal payload.")
 		return networkIPv4, err

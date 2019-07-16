@@ -90,7 +90,7 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 		log.WithFields(log.Fields{
 			"step":  "applyUserParams",
 			"IP":    i.ip,
-			"Model": i.BmcType(),
+			"Model": i.HardwareType(),
 			"Error": err,
 		}).Warn(msg)
 		return errors.New(msg)
@@ -102,7 +102,7 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 		log.WithFields(log.Fields{
 			"step":  "applyUserParams",
 			"IP":    i.ip,
-			"Model": i.BmcType(),
+			"Model": i.HardwareType(),
 			"Error": err,
 		}).Warn(msg)
 		return errors.New(msg)
@@ -121,7 +121,7 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 				if err != nil {
 					log.WithFields(log.Fields{
 						"IP":    i.ip,
-						"Model": i.BmcType(),
+						"Model": i.HardwareType(),
 						"step":  helper.WhosCalling(),
 						"User":  cfgUser.Name,
 						"Error": err,
@@ -148,7 +148,7 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 			if err != nil {
 				log.WithFields(log.Fields{
 					"IP":    i.ip,
-					"Model": i.BmcType(),
+					"Model": i.HardwareType(),
 					"step":  helper.WhosCalling(),
 					"User":  cfgUser.Name,
 					"Error": err,
@@ -171,7 +171,7 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 			if err != nil {
 				log.WithFields(log.Fields{
 					"IP":    i.ip,
-					"Model": i.BmcType(),
+					"Model": i.HardwareType(),
 					"step":  helper.WhosCalling(),
 					"User":  cfgUser.Name,
 					"Error": err,
@@ -181,7 +181,7 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 
 		log.WithFields(log.Fields{
 			"IP":    i.ip,
-			"Model": i.BmcType(),
+			"Model": i.HardwareType(),
 			"User":  cfgUser.Name,
 		}).Debug("User parameters applied.")
 	}
@@ -250,7 +250,7 @@ func (i *IDrac8) Syslog(cfg *cfgresources.Syslog) (err error) {
 
 	log.WithFields(log.Fields{
 		"IP":    i.ip,
-		"Model": i.BmcType(),
+		"Model": i.HardwareType(),
 	}).Debug("Syslog parameters applied.")
 
 	return err
@@ -309,7 +309,7 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
-			"Model":    i.BmcType(),
+			"Model":    i.HardwareType(),
 			"endpoint": endpoint,
 			"step":     helper.WhosCalling(),
 			"response": string(response),
@@ -318,7 +318,7 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 
 	log.WithFields(log.Fields{
 		"IP":    i.ip,
-		"Model": i.BmcType(),
+		"Model": i.HardwareType(),
 	}).Debug("NTP servers param applied.")
 
 }
@@ -341,7 +341,7 @@ func (i *IDrac8) Ldap(cfg *cfgresources.Ldap) error {
 		msg := "Request to set ldap server failed."
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
-			"Model":    i.BmcType(),
+			"Model":    i.HardwareType(),
 			"endpoint": endpoint,
 			"step":     helper.WhosCalling(),
 			"response": string(response),
@@ -356,7 +356,7 @@ func (i *IDrac8) Ldap(cfg *cfgresources.Ldap) error {
 
 	log.WithFields(log.Fields{
 		"IP":    i.ip,
-		"Model": i.BmcType(),
+		"Model": i.HardwareType(),
 	}).Debug("Ldap server param set.")
 	return nil
 }
@@ -379,7 +379,7 @@ func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) error {
 		msg := "request to set ldap search filter failed."
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
-			"Model":    i.BmcType(),
+			"Model":    i.HardwareType(),
 			"endpoint": endpoint,
 			"step":     helper.WhosCalling(),
 			"response": string(response),
@@ -389,7 +389,7 @@ func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) error {
 
 	log.WithFields(log.Fields{
 		"IP":    i.ip,
-		"Model": i.BmcType(),
+		"Model": i.HardwareType(),
 	}).Debug("Ldap search filter param applied.")
 	return nil
 }
@@ -495,7 +495,7 @@ func (i *IDrac8) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresou
 		if err != nil {
 			log.WithFields(log.Fields{
 				"IP":       i.ip,
-				"Model":    i.BmcType(),
+				"Model":    i.HardwareType(),
 				"endpoint": endpoint,
 				"step":     "applyLdapGroupParams",
 				"response": string(response),
@@ -505,7 +505,7 @@ func (i *IDrac8) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresou
 
 		log.WithFields(log.Fields{
 			"IP":    i.ip,
-			"Model": i.BmcType(),
+			"Model": i.HardwareType(),
 			"Role":  group.Role,
 		}).Debug("Ldap GroupDN config applied.")
 
@@ -530,7 +530,7 @@ func (i *IDrac8) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresou
 	if err != nil {
 		log.WithFields(log.Fields{
 			"IP":    i.ip,
-			"Model": i.BmcType(),
+			"Model": i.HardwareType(),
 			"step":  "applyLdapGroupParams",
 		}).Warn("Unable to set Ldap Role Group Privileges.")
 		return err
@@ -568,7 +568,7 @@ func (i *IDrac8) applyLdapRoleGroupPrivParam(cfg *cfgresources.Ldap, groupPrivil
 	if err != nil || responseCode != 200 {
 		log.WithFields(log.Fields{
 			"IP":           i.ip,
-			"Model":        i.BmcType(),
+			"Model":        i.HardwareType(),
 			"endpoint":     endpoint,
 			"step":         helper.WhosCalling(),
 			"responseCode": responseCode,
@@ -579,7 +579,7 @@ func (i *IDrac8) applyLdapRoleGroupPrivParam(cfg *cfgresources.Ldap, groupPrivil
 
 	log.WithFields(log.Fields{
 		"IP":    i.ip,
-		"Model": i.BmcType(),
+		"Model": i.HardwareType(),
 	}).Debug("Ldap Group role privileges applied.")
 
 	return err
@@ -595,7 +595,7 @@ func (i *IDrac8) applyTimezoneParam(timezone string) {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
-			"Model":    i.BmcType(),
+			"Model":    i.HardwareType(),
 			"endpoint": endpoint,
 			"step":     helper.WhosCalling(),
 			"response": string(response),
@@ -604,7 +604,7 @@ func (i *IDrac8) applyTimezoneParam(timezone string) {
 
 	log.WithFields(log.Fields{
 		"IP":    i.ip,
-		"Model": i.BmcType(),
+		"Model": i.HardwareType(),
 	}).Debug("Timezone param applied.")
 
 }
@@ -648,7 +648,7 @@ func (i *IDrac8) Network(cfg *cfgresources.Network) (reset bool, err error) {
 	if err != nil || responseCode != 200 {
 		log.WithFields(log.Fields{
 			"IP":           i.ip,
-			"Model":        i.BmcType(),
+			"Model":        i.HardwareType(),
 			"endpoint":     endpoint,
 			"step":         helper.WhosCalling(),
 			"responseCode": responseCode,
@@ -659,7 +659,7 @@ func (i *IDrac8) Network(cfg *cfgresources.Network) (reset bool, err error) {
 
 	log.WithFields(log.Fields{
 		"IP":    i.ip,
-		"Model": i.BmcType(),
+		"Model": i.HardwareType(),
 	}).Debug("Network config parameters applied.")
 	return reset, err
 }
@@ -687,7 +687,7 @@ func (i *IDrac8) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, er
 	if err != nil {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
-			"Model":    i.BmcType(),
+			"Model":    i.HardwareType(),
 			"endpoint": endpoint,
 			"step":     helper.WhosCalling(),
 			"Error":    err,
@@ -745,7 +745,7 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	if err != nil || status != 201 {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
-			"Model":    i.BmcType(),
+			"Model":    i.HardwareType(),
 			"endpoint": endpoint,
 			"step":     helper.WhosCalling(),
 			"status":   status,
@@ -760,7 +760,7 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 		log.WithFields(log.Fields{
 			"step":  helper.WhosCalling(),
 			"IP":    i.ip,
-			"Model": i.BmcType(),
+			"Model": i.HardwareType(),
 			"Error": err,
 		}).Warn("Unable to unmarshal cert store response payload.")
 		return false, err
@@ -771,7 +771,7 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 		log.WithFields(log.Fields{
 			"step":  helper.WhosCalling(),
 			"IP":    i.ip,
-			"Model": i.BmcType(),
+			"Model": i.HardwareType(),
 			"Error": err,
 		}).Warn("Unable to marshal cert store resource URI.")
 		return false, err
@@ -783,7 +783,7 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	if err != nil || status != 201 {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
-			"Model":    i.BmcType(),
+			"Model":    i.HardwareType(),
 			"endpoint": endpoint,
 			"step":     helper.WhosCalling(),
 			"status":   status,

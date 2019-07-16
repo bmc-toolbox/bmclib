@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	// BmcType defines the bmc model that is supported by this package
+	// HardwareType defines the bmc model that is supported by this package
 	BmcType = "ilo"
 
 	// Ilo2 is the constant for iLO2
@@ -248,8 +248,8 @@ func (i *Ilo) Model() (model string, err error) {
 	return i.rimpBlade.HSI.Spn, err
 }
 
-// BmcType returns the type of bmc we are talking to
-func (i *Ilo) BmcType() (bmcType string) {
+// HardwareType returns the type of bmc we are talking to
+func (i *Ilo) HardwareType() (bmcType string) {
 	switch i.rimpBlade.MP.Pn {
 	case "Integrated Lights-Out 2 (iLO 2)":
 		return Ilo2
@@ -264,8 +264,8 @@ func (i *Ilo) BmcType() (bmcType string) {
 	}
 }
 
-// BmcVersion returns the version of the bmc we are running
-func (i *Ilo) BmcVersion() (bmcVersion string, err error) {
+// Version returns the version of the bmc we are running
+func (i *Ilo) Version() (bmcVersion string, err error) {
 	return i.rimpBlade.MP.Fwri, err
 }
 
@@ -672,13 +672,13 @@ func (i *Ilo) ServerSnapshot() (server interface{}, err error) { // nolint: gocy
 		blade := &devices.Blade{}
 		blade.Vendor = i.Vendor()
 		blade.BmcAddress = i.ip
-		blade.BmcType = i.BmcType()
+		blade.BmcType = i.HardwareType()
 
 		blade.Serial, err = i.Serial()
 		if err != nil {
 			return nil, err
 		}
-		blade.BmcVersion, err = i.BmcVersion()
+		blade.BmcVersion, err = i.Version()
 		if err != nil {
 			return nil, err
 		}
@@ -743,13 +743,13 @@ func (i *Ilo) ServerSnapshot() (server interface{}, err error) { // nolint: gocy
 		discrete := &devices.Discrete{}
 		discrete.Vendor = i.Vendor()
 		discrete.BmcAddress = i.ip
-		discrete.BmcType = i.BmcType()
+		discrete.BmcType = i.HardwareType()
 
 		discrete.Serial, err = i.Serial()
 		if err != nil {
 			return nil, err
 		}
-		discrete.BmcVersion, err = i.BmcVersion()
+		discrete.BmcVersion, err = i.Version()
 		if err != nil {
 			return nil, err
 		}

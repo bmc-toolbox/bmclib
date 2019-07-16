@@ -93,8 +93,8 @@ func (m *M1000e) Name() (name string, err error) {
 	return m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.ChassisStatus.CHASSISName, err
 }
 
-// BmcType returns just Model id string - m1000e
-func (m *M1000e) BmcType() (model string) {
+// HardwareType returns just Model id string - m1000e
+func (m *M1000e) HardwareType() (model string) {
 	return BMCType
 }
 
@@ -205,8 +205,8 @@ func (m *M1000e) Status() (status string, err error) {
 	return status, err
 }
 
-// FwVersion returns the current firmware version of the bmc
-func (m *M1000e) FwVersion() (version string, err error) {
+// Version returns the current firmware version of the bmc
+func (m *M1000e) Version() (version string, err error) {
 	err = m.httpLogin()
 	if err != nil {
 		return version, err
@@ -466,7 +466,7 @@ func (m *M1000e) ChassisSnapshot() (chassis *devices.Chassis, err error) {
 	if err != nil {
 		return nil, err
 	}
-	chassis.FwVersion, err = m.FwVersion()
+	chassis.FwVersion, err = m.Version()
 	if err != nil {
 		return nil, err
 	}

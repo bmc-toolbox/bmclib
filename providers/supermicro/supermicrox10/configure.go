@@ -105,7 +105,7 @@ func (s *SupermicroX10) User(users []*cfgresources.User) (err error) {
 		msg := "Unable to query current user accounts."
 		log.WithFields(log.Fields{
 			"IP":    s.ip,
-			"Model": s.BmcType(),
+			"Model": s.HardwareType(),
 			"Step":  helper.WhosCalling(),
 			"Error": err,
 		}).Warn(msg)
@@ -175,7 +175,7 @@ func (s *SupermicroX10) User(users []*cfgresources.User) (err error) {
 			msg := "POST request to set User config returned error."
 			log.WithFields(log.Fields{
 				"IP":         s.ip,
-				"Model":      s.BmcType(),
+				"Model":      s.HardwareType(),
 				"Endpoint":   endpoint,
 				"StatusCode": statusCode,
 				"Step":       helper.WhosCalling(),
@@ -186,7 +186,7 @@ func (s *SupermicroX10) User(users []*cfgresources.User) (err error) {
 
 		log.WithFields(log.Fields{
 			"IP":    s.ip,
-			"Model": s.BmcType(),
+			"Model": s.HardwareType(),
 			"User":  user.Name,
 		}).Debug("User parameters applied.")
 
@@ -232,7 +232,7 @@ func (s *SupermicroX10) Network(cfg *cfgresources.Network) (reset bool, err erro
 		msg := "POST request to set Port config returned error."
 		log.WithFields(log.Fields{
 			"IP":         s.ip,
-			"Model":      s.BmcType(),
+			"Model":      s.HardwareType(),
 			"Endpoint":   endpoint,
 			"StatusCode": statusCode,
 			"Step":       helper.WhosCalling(),
@@ -243,7 +243,7 @@ func (s *SupermicroX10) Network(cfg *cfgresources.Network) (reset bool, err erro
 
 	log.WithFields(log.Fields{
 		"IP":    s.ip,
-		"Model": s.BmcType(),
+		"Model": s.HardwareType(),
 	}).Debug("Network config parameters applied.")
 	return reset, err
 }
@@ -256,7 +256,7 @@ func (s *SupermicroX10) Ntp(cfg *cfgresources.Ntp) (err error) {
 	if cfg.Server1 == "" {
 		log.WithFields(log.Fields{
 			"step":  "applyNtpParams",
-			"Model": s.BmcType(),
+			"Model": s.HardwareType(),
 		}).Warn("NTP resource expects parameter: server1.")
 		return
 	}
@@ -264,7 +264,7 @@ func (s *SupermicroX10) Ntp(cfg *cfgresources.Ntp) (err error) {
 	if cfg.Timezone == "" {
 		log.WithFields(log.Fields{
 			"step":  "applyNtpParams",
-			"Model": s.BmcType(),
+			"Model": s.HardwareType(),
 		}).Warn("NTP resource expects parameter: timezone.")
 		return
 	}
@@ -273,7 +273,7 @@ func (s *SupermicroX10) Ntp(cfg *cfgresources.Ntp) (err error) {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"step":              "applyNtpParams",
-			"Model":             s.BmcType(),
+			"Model":             s.HardwareType(),
 			"Declared timezone": cfg.Timezone,
 			"Error":             err,
 		}).Warn("NTP resource declared parameter timezone invalid.")
@@ -285,7 +285,7 @@ func (s *SupermicroX10) Ntp(cfg *cfgresources.Ntp) (err error) {
 	if cfg.Enable != true {
 		log.WithFields(log.Fields{
 			"step":  "applyNtpParams",
-			"Model": s.BmcType(),
+			"Model": s.HardwareType(),
 		}).Debug("Ntp resource declared with enable: false.")
 		return
 	}
@@ -326,7 +326,7 @@ func (s *SupermicroX10) Ntp(cfg *cfgresources.Ntp) (err error) {
 		msg := "POST request to set Syslog config returned error."
 		log.WithFields(log.Fields{
 			"IP":         s.ip,
-			"Model":      s.BmcType(),
+			"Model":      s.HardwareType(),
 			"Endpoint":   endpoint,
 			"StatusCode": statusCode,
 			"Step":       helper.WhosCalling(),
@@ -338,7 +338,7 @@ func (s *SupermicroX10) Ntp(cfg *cfgresources.Ntp) (err error) {
 	//
 	log.WithFields(log.Fields{
 		"IP":    s.ip,
-		"Model": s.BmcType(),
+		"Model": s.HardwareType(),
 	}).Debug("NTP config parameters applied.")
 	return err
 }
@@ -363,7 +363,7 @@ func (s *SupermicroX10) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *c
 		msg := "Ldap resource parameter Server required but not declared."
 		log.WithFields(log.Fields{
 			"step":  helper.WhosCalling(),
-			"Model": s.BmcType(),
+			"Model": s.HardwareType(),
 		}).Warn(msg)
 		return errors.New(msg)
 	}
@@ -373,7 +373,7 @@ func (s *SupermicroX10) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *c
 		msg := "Ldap resource parameter Port required but not declared"
 		log.WithFields(log.Fields{
 			"step":  helper.WhosCalling(),
-			"Model": s.BmcType(),
+			"Model": s.HardwareType(),
 		}).Warn(msg)
 		return errors.New(msg)
 	}
@@ -381,7 +381,7 @@ func (s *SupermicroX10) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *c
 	if cfgLdap.Enable != true {
 		log.WithFields(log.Fields{
 			"step":  helper.WhosCalling(),
-			"Model": s.BmcType(),
+			"Model": s.HardwareType(),
 		}).Debug("Ldap resource declared with enable: false.")
 		return
 	}
@@ -392,7 +392,7 @@ func (s *SupermicroX10) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *c
 		msg := "Ldap resource parameter BaseDn required but not declared."
 		log.WithFields(log.Fields{
 			"step":  helper.WhosCalling(),
-			"Model": s.BmcType(),
+			"Model": s.HardwareType(),
 		}).Warn(msg)
 		return errors.New(msg)
 	}
@@ -402,7 +402,7 @@ func (s *SupermicroX10) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *c
 		msg := "Unable to lookup the IP for ldap server hostname."
 		log.WithFields(log.Fields{
 			"step":  helper.WhosCalling(),
-			"Model": s.BmcType(),
+			"Model": s.HardwareType(),
 		}).Warn(msg)
 		return errors.New(msg)
 	}
@@ -474,7 +474,7 @@ func (s *SupermicroX10) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *c
 			msg := "POST request to set Ldap config returned error."
 			log.WithFields(log.Fields{
 				"IP":         s.ip,
-				"Model":      s.BmcType(),
+				"Model":      s.HardwareType(),
 				"Endpoint":   endpoint,
 				"StatusCode": statusCode,
 				"Step":       helper.WhosCalling(),
@@ -486,7 +486,7 @@ func (s *SupermicroX10) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *c
 
 	log.WithFields(log.Fields{
 		"IP":    s.ip,
-		"Model": s.BmcType(),
+		"Model": s.HardwareType(),
 	}).Debug("Ldap config parameters applied.")
 	return err
 }
@@ -501,7 +501,7 @@ func (s *SupermicroX10) Syslog(cfg *cfgresources.Syslog) (err error) {
 		msg := "Syslog resource expects parameter: Server."
 		log.WithFields(log.Fields{
 			"step":  helper.WhosCalling(),
-			"Model": s.BmcType(),
+			"Model": s.HardwareType(),
 		}).Warn(msg)
 		return errors.New(msg)
 	}
@@ -509,7 +509,7 @@ func (s *SupermicroX10) Syslog(cfg *cfgresources.Syslog) (err error) {
 	if cfg.Port == 0 {
 		log.WithFields(log.Fields{
 			"step":  helper.WhosCalling(),
-			"Model": s.BmcType(),
+			"Model": s.HardwareType(),
 		}).Debug("Syslog resource port set to default: 514.")
 		port = 514
 	} else {
@@ -519,7 +519,7 @@ func (s *SupermicroX10) Syslog(cfg *cfgresources.Syslog) (err error) {
 	if cfg.Enable != true {
 		log.WithFields(log.Fields{
 			"step":  helper.WhosCalling(),
-			"Model": s.BmcType(),
+			"Model": s.HardwareType(),
 		}).Debug("Syslog resource declared with disable.")
 	}
 
@@ -528,7 +528,7 @@ func (s *SupermicroX10) Syslog(cfg *cfgresources.Syslog) (err error) {
 		msg := "Unable to lookup IP for syslog server hostname, yes supermicros requires the Syslog server IP :|."
 		log.WithFields(log.Fields{
 			"step":  helper.WhosCalling(),
-			"Model": s.BmcType(),
+			"Model": s.HardwareType(),
 		}).Warn(msg)
 		return errors.New(msg)
 	}
@@ -547,7 +547,7 @@ func (s *SupermicroX10) Syslog(cfg *cfgresources.Syslog) (err error) {
 		msg := "POST request to set Syslog config returned error."
 		log.WithFields(log.Fields{
 			"IP":         s.ip,
-			"Model":      s.BmcType(),
+			"Model":      s.HardwareType(),
 			"Endpoint":   endpoint,
 			"StatusCode": statusCode,
 			"step":       helper.WhosCalling(),
@@ -559,7 +559,7 @@ func (s *SupermicroX10) Syslog(cfg *cfgresources.Syslog) (err error) {
 
 	log.WithFields(log.Fields{
 		"IP":    s.ip,
-		"Model": s.BmcType(),
+		"Model": s.HardwareType(),
 	}).Debug("Syslog config parameters applied.")
 	return err
 }
@@ -614,7 +614,7 @@ func (s *SupermicroX10) UploadHTTPSCert(cert []byte, certFileName string, key []
 	if err != nil || status != 200 {
 		log.WithFields(log.Fields{
 			"IP":         s.ip,
-			"Model":      s.BmcType(),
+			"Model":      s.HardwareType(),
 			"Endpoint":   endpoint,
 			"StatusCode": status,
 			"Step":       helper.WhosCalling(),
@@ -656,7 +656,7 @@ func (s *SupermicroX10) validateSSL() error {
 	if err != nil || status != 200 {
 		log.WithFields(log.Fields{
 			"IP":         s.ip,
-			"Model":      s.BmcType(),
+			"Model":      s.HardwareType(),
 			"Endpoint":   endpoint,
 			"StatusCode": status,
 			"Step":       helper.WhosCalling(),
@@ -681,7 +681,7 @@ func (s *SupermicroX10) statusSSL() error {
 	if err != nil || status != 200 {
 		log.WithFields(log.Fields{
 			"IP":         s.ip,
-			"Model":      s.BmcType(),
+			"Model":      s.HardwareType(),
 			"Endpoint":   endpoint,
 			"StatusCode": status,
 			"Step":       helper.WhosCalling(),

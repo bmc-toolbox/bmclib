@@ -36,13 +36,13 @@ func (i *Ibmc) BiosVersion() (string, error) {
 	return "", nil
 }
 
-// BmcType implements the Bmc interface
-func (i *Ibmc) BmcType() string {
+// HardwareType implements the Bmc interface
+func (i *Ibmc) HardwareType() string {
 	return ""
 }
 
-// BmcVersion implements the Bmc interface
-func (i *Ibmc) BmcVersion() (string, error) {
+// Version implements the Bmc interface
+func (i *Ibmc) Version() (string, error) {
 	return "", nil
 }
 

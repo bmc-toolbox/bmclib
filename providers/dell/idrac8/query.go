@@ -79,7 +79,7 @@ func (i *IDrac8) queryUsers() (userInfo UserInfo, err error) {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
-			"Model":    i.BmcType(),
+			"Model":    i.HardwareType(),
 			"endpoint": endpoint,
 			"step":     helper.WhosCalling(),
 			"Error":    err,
@@ -94,7 +94,7 @@ func (i *IDrac8) queryUsers() (userInfo UserInfo, err error) {
 			"step":     "queryUserInfo",
 			"resource": "User",
 			"IP":       i.ip,
-			"Model":    i.BmcType(),
+			"Model":    i.HardwareType(),
 			"Error":    err,
 		}).Warn("Unable to unmarshal payload.")
 		return userInfo, err

@@ -45,7 +45,7 @@ func (s *SupermicroX10) Screenshot() (response []byte, extension string, err err
 	extension = "bmp"
 
 	// allow thumbnails only for supermicro x10s.
-	if s.BmcType() != "supermicrox10" {
+	if s.HardwareType() != "supermicrox10" {
 		return response, extension, errors.ErrFeatureUnavailable
 	}
 

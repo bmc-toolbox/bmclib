@@ -63,7 +63,7 @@ func (i *IDrac9) queryUsers() (users map[int]User, err error) {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
-			"Model":    i.BmcType(),
+			"Model":    i.HardwareType(),
 			"endpoint": endpoint,
 			"step":     helper.WhosCalling(),
 			"Error":    err,
@@ -78,7 +78,7 @@ func (i *IDrac9) queryUsers() (users map[int]User, err error) {
 			"step":     "queryUserInfo",
 			"resource": "User",
 			"IP":       i.ip,
-			"Model":    i.BmcType(),
+			"Model":    i.HardwareType(),
 			"Error":    err,
 		}).Warn("Unable to unmarshal payload.")
 		return users, err
@@ -95,7 +95,7 @@ func (i *IDrac9) queryLdapRoleGroups() (ldapRoleGroups LdapRoleGroups, err error
 	if err != nil {
 		log.WithFields(log.Fields{
 			"IP":       i.ip,
-			"Model":    i.BmcType(),
+			"Model":    i.HardwareType(),
 			"endpoint": endpoint,
 			"step":     helper.WhosCalling(),
 			"Error":    err,
@@ -110,7 +110,7 @@ func (i *IDrac9) queryLdapRoleGroups() (ldapRoleGroups LdapRoleGroups, err error
 			"step":     "queryUserInfo",
 			"resource": "User",
 			"IP":       i.ip,
-			"Model":    i.BmcType(),
+			"Model":    i.HardwareType(),
 			"Error":    err,
 		}).Warn("Unable to unmarshal payload.")
 		return ldapRoleGroups, err
