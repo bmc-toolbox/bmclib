@@ -1,7 +1,6 @@
 package c7000
 
 import (
-	"bufio"
 	"fmt"
 	"strconv"
 	"strings"
@@ -239,29 +238,6 @@ func (c *C7000) SetDynamicPower(enable bool) (status bool, err error) {
 	}
 
 	return status, fmt.Errorf(output)
-}
-
-// GetFirmwareVersion returns the chassis firmware version
-func (c *C7000) GetFirmwareVersion() (version string, err error) {
-	err = c.sshLogin()
-	if err != nil {
-		return version, err
-	}
-
-	output, err := c.sshClient.Run("SHOW OA INFO")
-	if err != nil {
-		return version, fmt.Errorf(output)
-	}
-
-	scanner := bufio.NewScanner(strings.NewReader(output))
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.Contains(line, "Firmware Ver") {
-			version = strings.Fields(line)[3]
-		}
-	}
-
-	return version, err
 }
 
 // UpdateFirmware updates the chassis firmware

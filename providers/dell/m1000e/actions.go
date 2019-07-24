@@ -1,7 +1,6 @@
 package m1000e
 
 import (
-	"bufio"
 	"fmt"
 	"net/url"
 	"strconv"
@@ -339,29 +338,6 @@ func (m *M1000e) SetFlexAddressState(position int, enable bool) (status bool, er
 	}
 
 	return status, fmt.Errorf(output)
-}
-
-// GetFirmwareVersion returns the chassis firmware version
-func (m *M1000e) GetFirmwareVersion() (version string, err error) {
-	err = m.sshLogin()
-	if err != nil {
-		return version, err
-	}
-
-	output, err := m.sshClient.Run("getversion")
-	if err != nil {
-		return version, fmt.Errorf(output)
-	}
-
-	scanner := bufio.NewScanner(strings.NewReader(output))
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.Contains(line, "cmc-1") {
-			version = strings.Fields(line)[1]
-		}
-	}
-
-	return version, err
 }
 
 // UpdateFirmware updates the chassis firmware
