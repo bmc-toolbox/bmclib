@@ -25,13 +25,16 @@ Supermicro X10 | :heavy_check_mark: | |
 Hardware      | Supported |
 :-----------  | :-------: |
 Dell M1000e   | :heavy_check_mark: |
-Dell iDRAC8   | |
-Dell iDRAC9   | |
+Dell iDRAC8   | :heavy_check_mark: |
+Dell iDRAC9   | :heavy_check_mark: |
 HP c7000      | :heavy_check_mark: |
-HP iLO3       | |
-HP iLO4       | |
-HP iLO5       | |
+HP iLO2       | :heavy_check_mark: |
+HP iLO3       | :heavy_check_mark: |
+HP iLO4       | :heavy_check_mark: |
+HP iLO5       | :heavy_check_mark: |
+Supermicro X9 | |
 Supermicro X10 | |
+Supermicro X11 | |
 
 ## Configuration support
 
