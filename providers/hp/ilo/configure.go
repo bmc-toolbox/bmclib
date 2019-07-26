@@ -65,7 +65,7 @@ func (i *Ilo) isRoleValid(role string) bool {
 func userExists(user string, usersInfo []UserInfo) (userInfo UserInfo, exists bool) {
 
 	for _, userInfo := range usersInfo {
-		if userInfo.UserName == user {
+		if userInfo.UserName == user || userInfo.LoginName == user {
 			return userInfo, true
 		}
 	}
