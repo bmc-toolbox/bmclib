@@ -93,7 +93,11 @@ type Product struct {
 
 // GenericInfo holds the bmc information
 type GenericInfo struct {
-	Generic *Generic `xml:"GENERIC,omitempty"`
+	Generic       *Generic `xml:"GENERIC,omitempty"`
+	BiosVersion   string   `xml:"BIOS_VERSION,attr"`
+	BmcIP         string   `xml:"BMC_IP,attr"`
+	BmcMac        string   `xml:"BMC_MAC,attr"`
+	IpmiFwVersion string   `xml:"IPMIFW_VERSION,attr"`
 }
 
 // Generic holds the bmc information

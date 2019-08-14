@@ -303,8 +303,12 @@ func (s *SupermicroX10) Version() (bmcVersion string, err error) {
 		return bmcVersion, err
 	}
 
-	if ipmi.GenericInfo != nil && ipmi.GenericInfo.Generic != nil {
-		return ipmi.GenericInfo.Generic.IpmiFwVersion, err
+	if ipmi.GenericInfo != nil {
+		if ipmi.GenericInfo.IpmiFwVersion != "" {
+			return ipmi.GenericInfo.IpmiFwVersion, err
+		} else if ipmi.GenericInfo.Generic != nil {
+			return ipmi.GenericInfo.Generic.IpmiFwVersion, err
+		}
 	}
 
 	return bmcVersion, err
@@ -457,16 +461,20 @@ func (s *SupermicroX10) TempC() (temp int, err error) {
 
 // IsBlade returns if the current hardware is a blade or not
 func (s *SupermicroX10) IsBlade() (isBlade bool, err error) {
-	ipmi, err := s.query("Get_PlatformCap.XML=(0,0)")
+	ipmi, err := s.query("Get_NodeInfoReadings.XML=(0,0)")
 	if err != nil {
 		return isBlade, err
 	}
 
-	if ipmi.Platform.MultiNode != "0" {
-		return true, err
+	if ipmi.NodeInfo != nil {
+		for _, node := range ipmi.NodeInfo.Nodes {
+			if node.NodeSerial != "" {
+				return true, err
+			}
+		}
 	}
 
-	return false, err
+	return isBlade, err
 }
 
 // Slot returns the current slot within the chassis
@@ -510,13 +518,20 @@ func (s *SupermicroX10) Nics() (nics []*devices.Nic, err error) {
 		return nics, err
 	}
 
-	if ipmi != nil && ipmi.GenericInfo != nil && ipmi.GenericInfo.Generic != nil {
-		bmcNic := &devices.Nic{
-			Name:       "bmc",
-			MacAddress: ipmi.GenericInfo.Generic.BmcMac,
+	if ipmi != nil && ipmi.GenericInfo != nil {
+		if ipmi.GenericInfo.BmcMac != "" {
+			bmcNic := &devices.Nic{
+				Name:       "bmc",
+				MacAddress: ipmi.GenericInfo.BmcMac,
+			}
+			nics = append(nics, bmcNic)
+		} else if ipmi.GenericInfo.Generic != nil {
+			bmcNic := &devices.Nic{
+				Name:       "bmc",
+				MacAddress: ipmi.GenericInfo.Generic.BmcMac,
+			}
+			nics = append(nics, bmcNic)
 		}
-
-		nics = append(nics, bmcNic)
 	}
 
 	ipmi, err = s.query("Get_PlatformInfo.XML=(0,0)")
