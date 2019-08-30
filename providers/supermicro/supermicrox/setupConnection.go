@@ -1,4 +1,4 @@
-package supermicrox10
+package supermicrox
 
 import (
 	"bytes"
@@ -16,8 +16,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// httpLogin initiates the connection to an SupermicroX10 device
-func (s *SupermicroX10) httpLogin() (err error) {
+// httpLogin initiates the connection to an SupermicroX device
+func (s *SupermicroX) httpLogin() (err error) {
 	if s.httpClient != nil {
 		return
 	}
@@ -61,7 +61,7 @@ func (s *SupermicroX10) httpLogin() (err error) {
 }
 
 // Close closes the connection properly
-func (s *SupermicroX10) Close() (err error) {
+func (s *SupermicroX) Close() (err error) {
 	if s.httpClient != nil {
 		bmcURL := fmt.Sprintf("https://%s/cgi/logout.cgi", s.ip)
 		log.WithFields(log.Fields{"step": "bmc connection", "vendor": supermicro.VendorID, "ip": s.ip}).Debug("logout from bmc")

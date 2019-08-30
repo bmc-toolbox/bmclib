@@ -1,4 +1,4 @@
-package supermicrox10
+package supermicrox
 
 import (
 	"crypto/tls"
@@ -15,7 +15,7 @@ import (
 // CurrentHTTPSCert returns the current x509 certficates configured on the BMC
 // the bool value returned is set to true if the BMC support CSR generation.
 // CurrentHTTPSCert implements the Configure interface.
-func (s *SupermicroX10) CurrentHTTPSCert() ([]*x509.Certificate, bool, error) {
+func (s *SupermicroX) CurrentHTTPSCert() ([]*x509.Certificate, bool, error) {
 
 	dialer := &net.Dialer{
 		Timeout: time.Duration(10) * time.Second,
@@ -37,7 +37,7 @@ func (s *SupermicroX10) CurrentHTTPSCert() ([]*x509.Certificate, bool, error) {
 // 1. request capture preview.
 // 2. sleep for 3 seconds to give ikvm time to ensure preview was captured
 // 3. request for preview.
-func (s *SupermicroX10) Screenshot() (response []byte, extension string, err error) {
+func (s *SupermicroX) Screenshot() (response []byte, extension string, err error) {
 
 	postEndpoint := "CapturePreview.cgi"
 	getEndpoint := "cgi/url_redirect.cgi?"
@@ -45,7 +45,7 @@ func (s *SupermicroX10) Screenshot() (response []byte, extension string, err err
 	extension = "bmp"
 
 	// allow thumbnails only for supermicro x10s.
-	if s.HardwareType() != "supermicrox10" {
+	if s.HardwareType() != "supermicrox" {
 		return response, extension, errors.ErrFeatureUnavailable
 	}
 

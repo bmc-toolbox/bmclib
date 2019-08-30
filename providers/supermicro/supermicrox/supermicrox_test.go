@@ -1,4 +1,4 @@
-package supermicrox10
+package supermicrox
 
 import (
 	"io/ioutil"
@@ -104,7 +104,7 @@ var (
 	}
 )
 
-func setup() (r *SupermicroX10, err error) {
+func setup() (r *SupermicroX, err error) {
 	viper.SetDefault("debug", false)
 	mux = http.NewServeMux()
 	server = httptest.NewTLSServer(mux)
@@ -198,7 +198,7 @@ func TestModel(t *testing.T) {
 }
 
 func TestBmcType(t *testing.T) {
-	expectedAnswer := "supermicrox10"
+	expectedAnswer := "x10"
 
 	bmc, err := setup()
 	if err != nil {

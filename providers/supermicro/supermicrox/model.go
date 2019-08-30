@@ -1,4 +1,4 @@
-package supermicrox10
+package supermicrox
 
 // ConfigSyslog declares payload to configure syslog parameters.
 // /cgi/op.cgi

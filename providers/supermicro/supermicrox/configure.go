@@ -1,4 +1,4 @@
-package supermicrox10
+package supermicrox
 
 import (
 	"bytes"
@@ -22,11 +22,11 @@ import (
 
 // This ensures the compiler errors if this type is missing
 // a method that should be implmented to satisfy the Configure interface.
-var _ devices.Configure = (*SupermicroX10)(nil)
+var _ devices.Configure = (*SupermicroX)(nil)
 
 // Resources returns a slice of supported resources and
 // the order they are to be applied in.
-func (s *SupermicroX10) Resources() []string {
+func (s *SupermicroX) Resources() []string {
 	return []string{
 		"user",
 		"syslog",
@@ -40,17 +40,17 @@ func (s *SupermicroX10) Resources() []string {
 
 // ApplyCfg implements the Bmc interface
 // this is to be deprecated.
-func (s *SupermicroX10) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
+func (s *SupermicroX) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 	return err
 }
 
 // SetLicense implements the Configure interface.
-func (s *SupermicroX10) SetLicense(cfg *cfgresources.License) (err error) {
+func (s *SupermicroX) SetLicense(cfg *cfgresources.License) (err error) {
 	return err
 }
 
 // Bios implements the Configure interface.
-func (s *SupermicroX10) Bios(cfg *cfgresources.Bios) (err error) {
+func (s *SupermicroX) Bios(cfg *cfgresources.Bios) (err error) {
 	return err
 }
 
@@ -62,7 +62,7 @@ func timezoneToUtcOffset(location *time.Location) (offset int) {
 }
 
 // Return bool value if the role is valid.
-func (s *SupermicroX10) isRoleValid(role string) bool {
+func (s *SupermicroX) isRoleValid(role string) bool {
 
 	validRoles := []string{"admin", "user"}
 	for _, v := range validRoles {
@@ -75,7 +75,7 @@ func (s *SupermicroX10) isRoleValid(role string) bool {
 }
 
 // returns a map of user accounts and their ids
-func (s *SupermicroX10) queryUserAccounts() (userAccounts map[string]int, err error) {
+func (s *SupermicroX) queryUserAccounts() (userAccounts map[string]int, err error) {
 
 	userAccounts = make(map[string]int)
 	ipmi, err := s.query("CONFIG_INFO.XML=(0,0)")
@@ -98,7 +98,7 @@ func (s *SupermicroX10) queryUserAccounts() (userAccounts map[string]int, err er
 // User implements the Configure interface.
 // supermicro user accounts start with 1, account 0 which is a large empty string :\.
 // nolint: gocyclo
-func (s *SupermicroX10) User(users []*cfgresources.User) (err error) {
+func (s *SupermicroX) User(users []*cfgresources.User) (err error) {
 
 	currentUsers, err := s.queryUserAccounts()
 	if err != nil {
@@ -198,7 +198,7 @@ func (s *SupermicroX10) User(users []*cfgresources.User) (err error) {
 
 // Network method implements the Configure interface
 // applies various network parameters.
-func (s *SupermicroX10) Network(cfg *cfgresources.Network) (reset bool, err error) {
+func (s *SupermicroX) Network(cfg *cfgresources.Network) (reset bool, err error) {
 
 	sshPort := 22
 
@@ -250,7 +250,7 @@ func (s *SupermicroX10) Network(cfg *cfgresources.Network) (reset bool, err erro
 
 // Ntp applies NTP configuration params
 // Ntp implements the Configure interface.
-func (s *SupermicroX10) Ntp(cfg *cfgresources.Ntp) (err error) {
+func (s *SupermicroX) Ntp(cfg *cfgresources.Ntp) (err error) {
 
 	var enable string
 	if cfg.Server1 == "" {
@@ -347,7 +347,7 @@ func (s *SupermicroX10) Ntp(cfg *cfgresources.Ntp) (err error) {
 // Ldap implements the Configure interface.
 // Configuration for LDAP is applied in the LdapGroup method,
 // since supermicros just support a single LDAP group.
-func (s *SupermicroX10) Ldap(cfgLdap *cfgresources.Ldap) error {
+func (s *SupermicroX) Ldap(cfgLdap *cfgresources.Ldap) error {
 	return nil
 }
 
@@ -355,7 +355,7 @@ func (s *SupermicroX10) Ldap(cfgLdap *cfgresources.Ldap) error {
 // LdapGroup implements the Configure interface.
 // Supermicro does not have any separate configuration for Ldap groups just for generic ldap
 // nolint: gocyclo
-func (s *SupermicroX10) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
+func (s *SupermicroX) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
 
 	var enable string
 
@@ -493,7 +493,7 @@ func (s *SupermicroX10) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *c
 
 // Syslog applies the Syslog configuration resource
 // Syslog implements the Configure interface
-func (s *SupermicroX10) Syslog(cfg *cfgresources.Syslog) (err error) {
+func (s *SupermicroX) Syslog(cfg *cfgresources.Syslog) (err error) {
 
 	var port int
 
@@ -566,7 +566,7 @@ func (s *SupermicroX10) Syslog(cfg *cfgresources.Syslog) (err error) {
 
 // GenerateCSR generates a CSR request on the BMC.
 // GenerateCSR implements the Configure interface.
-func (s *SupermicroX10) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, error) {
+func (s *SupermicroX) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, error) {
 	return []byte{}, nil
 }
 
@@ -577,7 +577,7 @@ func (s *SupermicroX10) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]b
 // 3. Get the BMC to validate the certificate: SSL_VALIDATE.XML	(0,0)
 // 4. delay for a second
 // 5. Request for the current: SSL_STATUS.XML	(0,0)
-func (s *SupermicroX10) UploadHTTPSCert(cert []byte, certFileName string, key []byte, keyFileName string) (bool, error) {
+func (s *SupermicroX) UploadHTTPSCert(cert []byte, certFileName string, key []byte, keyFileName string) (bool, error) {
 
 	endpoint := "upload_ssl.cgi"
 
@@ -646,7 +646,7 @@ func (s *SupermicroX10) UploadHTTPSCert(cert []byte, certFileName string, key []
 
 // The second part of the certificate upload process,
 // we get the BMC to validate the uploaded SSL certificate.
-func (s *SupermicroX10) validateSSL() error {
+func (s *SupermicroX) validateSSL() error {
 
 	var v = url.Values{}
 	v.Set("SSL_VALIDATE.XML", "(0,0)")
@@ -671,7 +671,7 @@ func (s *SupermicroX10) validateSSL() error {
 // The third part of the certificate upload process
 // Get the current status of the certificate.
 // POST https://10.193.251.43/cgi/ipmi.cgi SSL_STATUS.XML: (0,0)
-func (s *SupermicroX10) statusSSL() error {
+func (s *SupermicroX) statusSSL() error {
 
 	var v = url.Values{}
 	v.Add("SSL_STATUS.XML", "(0,0)")
