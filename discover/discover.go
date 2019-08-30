@@ -19,7 +19,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/providers/hp/ilo"
-	"github.com/bmc-toolbox/bmclib/providers/supermicro/supermicrox10"
+	"github.com/bmc-toolbox/bmclib/providers/supermicro/supermicrox"
 
 	// this make possible to setup logging and properties at any stage
 	_ "github.com/bmc-toolbox/bmclib/logging"
@@ -143,7 +143,7 @@ func ScanAndConnect(host string, username string, password string) (bmcConnectio
 	defer resp.Body.Close()
 
 	if resp.StatusCode == 200 {
-		return supermicrox10.New(host, username, password)
+		return supermicrox.New(host, username, password)
 	}
 
 	return bmcConnection, errors.ErrVendorUnknown

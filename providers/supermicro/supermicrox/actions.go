@@ -1,4 +1,4 @@
-package supermicrox10
+package supermicrox
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 )
 
 // PowerCycle reboots the machine via bmc
-func (s *SupermicroX10) PowerCycle() (status bool, err error) {
+func (s *SupermicroX) PowerCycle() (status bool, err error) {
 	i, err := ipmi.New(s.username, s.password, s.ip)
 	if err != nil {
 		return status, err
@@ -17,7 +17,7 @@ func (s *SupermicroX10) PowerCycle() (status bool, err error) {
 }
 
 // PowerCycleBmc reboots the bmc we are connected to
-func (s *SupermicroX10) PowerCycleBmc() (status bool, err error) {
+func (s *SupermicroX) PowerCycleBmc() (status bool, err error) {
 	i, err := ipmi.New(s.username, s.password, s.ip)
 	if err != nil {
 		return status, err
@@ -27,7 +27,7 @@ func (s *SupermicroX10) PowerCycleBmc() (status bool, err error) {
 }
 
 // PowerOn power on the machine via bmc
-func (s *SupermicroX10) PowerOn() (status bool, err error) {
+func (s *SupermicroX) PowerOn() (status bool, err error) {
 	i, err := ipmi.New(s.username, s.password, s.ip)
 	if err != nil {
 		return status, err
@@ -37,7 +37,7 @@ func (s *SupermicroX10) PowerOn() (status bool, err error) {
 }
 
 // PowerOff power off the machine via bmc
-func (s *SupermicroX10) PowerOff() (status bool, err error) {
+func (s *SupermicroX) PowerOff() (status bool, err error) {
 	i, err := ipmi.New(s.username, s.password, s.ip)
 	if err != nil {
 		return status, err
@@ -47,7 +47,7 @@ func (s *SupermicroX10) PowerOff() (status bool, err error) {
 }
 
 // PxeOnce makes the machine to boot via pxe once
-func (s *SupermicroX10) PxeOnce() (status bool, err error) {
+func (s *SupermicroX) PxeOnce() (status bool, err error) {
 	i, err := ipmi.New(s.username, s.password, s.ip)
 	if err != nil {
 		return status, err
@@ -60,7 +60,7 @@ func (s *SupermicroX10) PxeOnce() (status bool, err error) {
 }
 
 // IsOn tells if a machine is currently powered on
-func (s *SupermicroX10) IsOn() (status bool, err error) {
+func (s *SupermicroX) IsOn() (status bool, err error) {
 	i, err := ipmi.New(s.username, s.password, s.ip)
 	if err != nil {
 		return status, err
@@ -70,6 +70,6 @@ func (s *SupermicroX10) IsOn() (status bool, err error) {
 }
 
 // UpdateFirmware updates the bmc firmware
-func (s *SupermicroX10) UpdateFirmware(source, file string) (status bool, err error) {
+func (s *SupermicroX) UpdateFirmware(source, file string) (status bool, err error) {
 	return true, fmt.Errorf("not supported yet")
 }

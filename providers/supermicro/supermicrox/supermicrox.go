@@ -1,4 +1,4 @@
-package supermicrox10
+package supermicrox
 
 import (
 	"bytes"
@@ -24,24 +24,29 @@ import (
 
 const (
 	// HardwareType defines the bmc model that is supported by this package
-	BmcType = "supermicrox10"
+	BmcType = "supermicrox"
+
+	// X10 is the constant for x10 servers
+	X10 = "x10"
+	// X11 is the constant for x11 servers
+	X11 = "x11"
 )
 
-// SupermicroX10 holds the status and properties of a connection to a supermicro bmc
-type SupermicroX10 struct {
+// SupermicroX holds the status and properties of a connection to a supermicro bmc
+type SupermicroX struct {
 	ip         string
 	username   string
 	password   string
 	httpClient *http.Client
 }
 
-// New returns a new SupermicroX10 instance ready to be used
-func New(ip string, username string, password string) (sm *SupermicroX10, err error) {
-	return &SupermicroX10{ip: ip, username: username, password: password}, err
+// New returns a new SupermicroX instance ready to be used
+func New(ip string, username string, password string) (sm *SupermicroX, err error) {
+	return &SupermicroX{ip: ip, username: username, password: password}, err
 }
 
 // CheckCredentials verify whether the credentials are valid or not
-func (s *SupermicroX10) CheckCredentials() (err error) {
+func (s *SupermicroX) CheckCredentials() (err error) {
 	err = s.httpLogin()
 	if err != nil {
 		return err
@@ -50,7 +55,7 @@ func (s *SupermicroX10) CheckCredentials() (err error) {
 }
 
 // get calls a given json endpoint of the ilo and returns the data
-func (s *SupermicroX10) get(endpoint string) (payload []byte, err error) {
+func (s *SupermicroX) get(endpoint string) (payload []byte, err error) {
 
 	bmcURL := fmt.Sprintf("https://%s", s.ip)
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s", bmcURL, endpoint), nil)
@@ -109,7 +114,7 @@ func (s *SupermicroX10) get(endpoint string) (payload []byte, err error) {
 
 // posts a urlencoded form to the given endpoint
 // nolint: gocyclo
-func (s *SupermicroX10) post(endpoint string, urlValues *url.Values, form []byte, formDataContentType string) (statusCode int, err error) {
+func (s *SupermicroX) post(endpoint string, urlValues *url.Values, form []byte, formDataContentType string) (statusCode int, err error) {
 
 	err = s.httpLogin()
 	if err != nil {
@@ -184,7 +189,7 @@ func (s *SupermicroX10) post(endpoint string, urlValues *url.Values, form []byte
 	return statusCode, err
 }
 
-func (s *SupermicroX10) query(requestType string) (ipmi *supermicro.IPMI, err error) {
+func (s *SupermicroX) query(requestType string) (ipmi *supermicro.IPMI, err error) {
 	err = s.httpLogin()
 	if err != nil {
 		return ipmi, err
@@ -250,7 +255,7 @@ func (s *SupermicroX10) query(requestType string) (ipmi *supermicro.IPMI, err er
 }
 
 // Serial returns the device serial
-func (s *SupermicroX10) Serial() (serial string, err error) {
+func (s *SupermicroX) Serial() (serial string, err error) {
 	ipmi, err := s.query("FRU_INFO.XML=(0,0)")
 	if err != nil {
 		return serial, err
@@ -264,7 +269,7 @@ func (s *SupermicroX10) Serial() (serial string, err error) {
 }
 
 // ChassisSerial returns the serial number of the chassis where the blade is attached
-func (s *SupermicroX10) ChassisSerial() (serial string, err error) {
+func (s *SupermicroX) ChassisSerial() (serial string, err error) {
 	ipmi, err := s.query("FRU_INFO.XML=(0,0)")
 	if err != nil {
 		return serial, err
@@ -277,13 +282,27 @@ func (s *SupermicroX10) ChassisSerial() (serial string, err error) {
 	return strings.ToLower(strings.TrimSpace(ipmi.FruInfo.Chassis.SerialNum)), err
 }
 
-// HardwareType returns just Model id string - supermicrox10
-func (s *SupermicroX10) HardwareType() (model string) {
+// HardwareType returns just Model id string - supermicrox
+// TODO(ncode): Juliano of the future, please refactor everything related to HardwareType,
+//              so that we don't silently swallow errors like you just for this commit
+func (s *SupermicroX) HardwareType() (model string) {
+	m, err := s.Model()
+	if err != nil {
+		// Here is your sin
+		return model
+	}
+
+	if strings.Contains(strings.ToLower(m), X11) {
+		return X11
+	} else if strings.Contains(strings.ToLower(m), X10) {
+		return X10
+	}
+
 	return BmcType
 }
 
 // Model returns the device model
-func (s *SupermicroX10) Model() (model string, err error) {
+func (s *SupermicroX) Model() (model string, err error) {
 	ipmi, err := s.query("FRU_INFO.XML=(0,0)")
 	if err != nil {
 		return model, err
@@ -297,7 +316,7 @@ func (s *SupermicroX10) Model() (model string, err error) {
 }
 
 // Version returns the version of the bmc we are running
-func (s *SupermicroX10) Version() (bmcVersion string, err error) {
+func (s *SupermicroX) Version() (bmcVersion string, err error) {
 	ipmi, err := s.query("GENERIC_INFO.XML=(0,0)")
 	if err != nil {
 		return bmcVersion, err
@@ -315,7 +334,7 @@ func (s *SupermicroX10) Version() (bmcVersion string, err error) {
 }
 
 // Name returns the hostname of the machine
-func (s *SupermicroX10) Name() (name string, err error) {
+func (s *SupermicroX) Name() (name string, err error) {
 	ipmi, err := s.query("CONFIG_INFO.XML=(0,0)")
 	if err != nil {
 		return name, err
@@ -329,7 +348,7 @@ func (s *SupermicroX10) Name() (name string, err error) {
 }
 
 // Status returns health string status from the bmc
-func (s *SupermicroX10) Status() (health string, err error) {
+func (s *SupermicroX) Status() (health string, err error) {
 	ipmi, err := s.query("SENSOR_INFO_FOR_SYS_HEALTH.XML=(1,ff)")
 	if err != nil {
 		return health, err
@@ -343,7 +362,7 @@ func (s *SupermicroX10) Status() (health string, err error) {
 }
 
 // Memory returns the total amount of memory of the server
-func (s *SupermicroX10) Memory() (mem int, err error) {
+func (s *SupermicroX) Memory() (mem int, err error) {
 	ipmi, err := s.query("SMBIOS_INFO.XML=(0,0)")
 
 	for _, dimm := range ipmi.Dimm {
@@ -359,26 +378,32 @@ func (s *SupermicroX10) Memory() (mem int, err error) {
 }
 
 // CPU returns the cpu, cores and hyperthreads of the server
-func (s *SupermicroX10) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCount int, err error) {
+func (s *SupermicroX) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCount int, err error) {
 	ipmi, err := s.query("SMBIOS_INFO.XML=(0,0)")
-	for _, entry := range ipmi.CPU {
-		cpu = httpclient.StandardizeProcessorName(entry.Version)
-		cpuCount = len(ipmi.CPU)
-
-		coreCount, err = strconv.Atoi(entry.Core)
-		if err != nil {
-			return cpu, cpuCount, coreCount, hyperthreadCount, err
-		}
-
-		hyperthreadCount = coreCount
-		break
+	if err != nil {
+		return cpu, cpuCount, coreCount, hyperthreadCount, err
 	}
+
+	if len(ipmi.CPU) == 0 {
+		return cpu, cpuCount, coreCount, hyperthreadCount, err
+	}
+
+	entry := ipmi.CPU[0]
+	cpu = httpclient.StandardizeProcessorName(entry.Version)
+	cpuCount = len(ipmi.CPU)
+
+	coreCount, err = strconv.Atoi(entry.Core)
+	if err != nil {
+		return cpu, cpuCount, coreCount, hyperthreadCount, err
+	}
+
+	hyperthreadCount = coreCount
 
 	return cpu, cpuCount, coreCount, hyperthreadCount, err
 }
 
 // BiosVersion returns the current version of the bios
-func (s *SupermicroX10) BiosVersion() (version string, err error) {
+func (s *SupermicroX) BiosVersion() (version string, err error) {
 	ipmi, err := s.query("SMBIOS_INFO.XML=(0,0)")
 	if err != nil {
 		return version, err
@@ -392,7 +417,7 @@ func (s *SupermicroX10) BiosVersion() (version string, err error) {
 }
 
 // PowerKw returns the current power usage in Kw
-func (s *SupermicroX10) PowerKw() (power float64, err error) {
+func (s *SupermicroX) PowerKw() (power float64, err error) {
 	ipmi, err := s.query("Get_NodeInfoReadings.XML=(0,0)")
 	if err != nil {
 		return power, err
@@ -419,7 +444,7 @@ func (s *SupermicroX10) PowerKw() (power float64, err error) {
 }
 
 // PowerState returns the current power state of the machine
-func (s *SupermicroX10) PowerState() (state string, err error) {
+func (s *SupermicroX) PowerState() (state string, err error) {
 	ipmi, err := s.query("POWER_INFO.XML=(0,0)")
 	if err != nil {
 		return state, err
@@ -433,7 +458,7 @@ func (s *SupermicroX10) PowerState() (state string, err error) {
 }
 
 // TempC returns the current temperature of the machine
-func (s *SupermicroX10) TempC() (temp int, err error) {
+func (s *SupermicroX) TempC() (temp int, err error) {
 	ipmi, err := s.query("Get_NodeInfoReadings.XML=(0,0)")
 	if err != nil {
 		return temp, err
@@ -460,7 +485,7 @@ func (s *SupermicroX10) TempC() (temp int, err error) {
 }
 
 // IsBlade returns if the current hardware is a blade or not
-func (s *SupermicroX10) IsBlade() (isBlade bool, err error) {
+func (s *SupermicroX) IsBlade() (isBlade bool, err error) {
 	ipmi, err := s.query("Get_NodeInfoReadings.XML=(0,0)")
 	if err != nil {
 		return isBlade, err
@@ -478,7 +503,7 @@ func (s *SupermicroX10) IsBlade() (isBlade bool, err error) {
 }
 
 // Slot returns the current slot within the chassis
-func (s *SupermicroX10) Slot() (slot int, err error) {
+func (s *SupermicroX) Slot() (slot int, err error) {
 	ipmi, err := s.query("Get_PlatformCap.XML=(0,0)")
 	if err != nil {
 		return slot, err
@@ -512,7 +537,7 @@ func (s *SupermicroX10) Slot() (slot int, err error) {
 }
 
 // Nics returns all found Nics in the device
-func (s *SupermicroX10) Nics() (nics []*devices.Nic, err error) {
+func (s *SupermicroX) Nics() (nics []*devices.Nic, err error) {
 	ipmi, err := s.query("GENERIC_INFO.XML=(0,0)")
 	if err != nil {
 		return nics, err
@@ -578,7 +603,7 @@ func (s *SupermicroX10) Nics() (nics []*devices.Nic, err error) {
 }
 
 // License returns the iLO's license information
-func (s *SupermicroX10) License() (name string, licType string, err error) {
+func (s *SupermicroX) License() (name string, licType string, err error) {
 	ipmi, err := s.query("BIOS_LINCENSE_ACTIVATE.XML=(0,0)")
 	if err != nil {
 		return name, licType, err
@@ -597,13 +622,13 @@ func (s *SupermicroX10) License() (name string, licType string, err error) {
 }
 
 // Vendor returns bmc's vendor
-func (s *SupermicroX10) Vendor() (vendor string) {
+func (s *SupermicroX) Vendor() (vendor string) {
 	return supermicro.VendorID
 }
 
 // ServerSnapshot do best effort to populate the server data and returns a blade or discrete
 // nolint: gocyclo
-func (s *SupermicroX10) ServerSnapshot() (server interface{}, err error) {
+func (s *SupermicroX) ServerSnapshot() (server interface{}, err error) {
 	if isBlade, _ := s.IsBlade(); isBlade {
 		blade := &devices.Blade{}
 		blade.Vendor = s.Vendor()
@@ -744,12 +769,12 @@ func (s *SupermicroX10) ServerSnapshot() (server interface{}, err error) {
 }
 
 // Disks returns a list of disks installed on the device
-func (s *SupermicroX10) Disks() (disks []*devices.Disk, err error) {
+func (s *SupermicroX) Disks() (disks []*devices.Disk, err error) {
 	return disks, err
 }
 
 // UpdateCredentials updates login credentials
-func (s *SupermicroX10) UpdateCredentials(username string, password string) {
+func (s *SupermicroX) UpdateCredentials(username string, password string) {
 	s.username = username
 	s.password = password
 }
