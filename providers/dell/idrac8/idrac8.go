@@ -12,8 +12,6 @@ import (
 	"strconv"
 	"strings"
 
-	multierror "github.com/hashicorp/go-multierror"
-
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
@@ -259,28 +257,30 @@ func (i *IDrac8) Nics() (nics []*devices.Nic, err error) {
 		if component.Classname == "DCIM_NICView" {
 			var speed string
 			var up bool
+			var macAddress string
+			var name string
 			for _, property := range component.Properties {
 				if property.Name == "LinkSpeed" && property.Type == "uint8" && property.DisplayValue != "Unknown" {
 					speed = property.DisplayValue
 					up = true
+				} else if property.Name == "PermanentMACAddress" && property.Type == "string" {
+					macAddress = strings.ToLower(property.Value)
 				} else if property.Name == "ProductName" && property.Type == "string" {
-					data := strings.Split(property.Value, " - ")
-					if len(data) == 2 {
-						if nics == nil {
-							nics = make([]*devices.Nic, 0)
-						}
-
-						n := &devices.Nic{
-							Name:       data[0],
-							Speed:      speed,
-							Up:         up,
-							MacAddress: strings.ToLower(data[1]),
-						}
-						nics = append(nics, n)
-					} else {
-						err = multierror.Append(err, fmt.Errorf("invalid network card %s, please review", data))
-					}
+					name = strings.Split(property.Value, " - ")[0]
 				}
+			}
+
+			if macAddress != "" {
+				if nics == nil {
+					nics = make([]*devices.Nic, 0)
+				}
+				n := &devices.Nic{
+					Name:       name,
+					Speed:      speed,
+					Up:         up,
+					MacAddress: macAddress,
+				}
+				nics = append(nics, n)
 			}
 		} else if component.Classname == "DCIM_iDRACCardView" {
 			for _, property := range component.Properties {
