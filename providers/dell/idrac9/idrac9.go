@@ -3,7 +3,6 @@ package idrac9
 import (
 	"bytes"
 	"encoding/json"
-	"encoding/xml"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -275,28 +274,30 @@ func (i *IDrac9) Nics() (nics []*devices.Nic, err error) {
 		if component.Classname == "DCIM_NICView" {
 			var speed string
 			var up bool
+			var macAddress string
+			var name string
 			for _, property := range component.Properties {
 				if property.Name == "LinkSpeed" && property.Type == "uint8" && property.DisplayValue != "Unknown" {
 					speed = property.DisplayValue
 					up = true
+				} else if property.Name == "PermanentMACAddress" && property.Type == "string" {
+					macAddress = strings.ToLower(property.Value)
 				} else if property.Name == "ProductName" && property.Type == "string" {
-					data := strings.Split(property.Value, " - ")
-					if len(data) == 2 {
-						if nics == nil {
-							nics = make([]*devices.Nic, 0)
-						}
-
-						n := &devices.Nic{
-							Name:       data[0],
-							Speed:      speed,
-							Up:         up,
-							MacAddress: strings.ToLower(data[1]),
-						}
-						nics = append(nics, n)
-					} else {
-						err = multierror.Append(err, fmt.Errorf("invalid network card %s, please review", data))
-					}
+					name = strings.Split(property.Value, " - ")[0]
 				}
+			}
+
+			if macAddress != "" {
+				if nics == nil {
+					nics = make([]*devices.Nic, 0)
+				}
+				n := &devices.Nic{
+					Name:       name,
+					Speed:      speed,
+					Up:         up,
+					MacAddress: macAddress,
+				}
+				nics = append(nics, n)
 			}
 		} else if component.Classname == "DCIM_iDRACCardView" {
 			for _, property := range component.Properties {
@@ -400,13 +401,17 @@ func (i *IDrac9) PowerKw() (power float64, err error) {
 		return power, err
 	}
 
-	iDracPowerData := &dell.IDracPowerData{}
+	iDracPowerData := &dell.IDrac9PowerData{}
 	err = json.Unmarshal(payload, iDracPowerData)
 	if err != nil {
 		return power, err
 	}
 
-	return iDracPowerData.Root.Powermonitordata.PresentReading.Reading.Reading / 1000.00, err
+	if len(iDracPowerData.Root.Powermonitordata.PresentReading.Reading) == 0 {
+		return power, err
+	}
+
+	return iDracPowerData.Root.Powermonitordata.PresentReading.Reading[0].Reading / 1000.00, err
 }
 
 // PowerState returns the current power state of the machine
@@ -676,35 +681,41 @@ func (i *IDrac9) Psus() (psus []*devices.Psu, err error) {
 		return psus, err
 	}
 
-	url := "data?get=powerSupplies"
-	payload, err := i.get(url, nil)
+	extraHeaders := &map[string]string{
+		"X-SYSMGMT-OPTIMIZE": "true",
+	}
+
+	url := "sysmgmt/2013/server/sensor/powersupplyunit"
+	payload, err := i.get(url, extraHeaders)
 	if err != nil {
 		return psus, err
 	}
 
-	iDracRoot := &dell.IDracRoot{}
-	err = xml.Unmarshal(payload, iDracRoot)
+	iDracPowersupplyunit := &dell.IDracPowersupplyunit{}
+	err = json.Unmarshal(payload, iDracPowersupplyunit)
 	if err != nil {
 		return psus, err
 	}
 
 	serial, _ := i.Serial()
 
-	for _, psu := range iDracRoot.PsSensorList {
+	for _, psu := range iDracPowersupplyunit.Powersupplyunits {
 		if psus == nil {
 			psus = make([]*devices.Psu, 0)
 		}
+
 		var status string
-		if psu.SensorHealth == 2 {
+		if psu.Health == 2 {
 			status = "OK"
 		} else {
 			status = "BROKEN"
 		}
 
 		p := &devices.Psu{
-			Serial:     fmt.Sprintf("%s_%s", serial, strings.Split(psu.Name, " ")[0]),
+			Serial:     strings.ToLower(fmt.Sprintf("%s_%s", serial, strings.Split(psu.Name, " ")[0])),
 			Status:     status,
-			CapacityKw: float64(psu.MaxWattage) / 1000.00,
+			PartNumber: strings.ToLower(psu.PartNumber),
+			CapacityKw: float64(psu.OutputWattage) / 1000.00,
 		}
 
 		psus = append(psus, p)

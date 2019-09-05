@@ -3890,10 +3890,11 @@ var (
 			}
 			}
 			}`),
-		"/sysmgmt/2012/server/temperature":     []byte(`{"Statistics":"/sysmgmt/2012/server/temperature/statistics","Temperatures":{"iDRAC.Embedded.1#CPU1Temp":{"max_failure":90,"max_warning":"NA","max_warning_settable":0,"min_failure":3,"min_warning":"NA","min_warning_settable":0,"name":"CPU1 Temp","reading":38,"status":2},"iDRAC.Embedded.1#CPU2Temp":{"max_failure":90,"max_warning":"NA","max_warning_settable":0,"min_failure":3,"min_warning":"NA","min_warning_settable":0,"name":"CPU2 Temp","reading":36,"status":2},"iDRAC.Embedded.1#SystemBoardInletTemp":{"max_failure":47,"max_warning":43,"max_warning_settable":1,"min_failure":-7,"min_warning":3,"min_warning_settable":1,"name":"System Board Inlet Temp","reading":22,"status":2}},"is_fresh_air_compliant":1}`),
-		"/sysmgmt/2016/server/extended_health": []byte(`{"healthStatus":[2,2,0,0,0,0,2,0,2,2,2,2,2,2,0,2,2,2]}`),
-		"/sysmgmt/2015/bmc/session/logout":     []byte(``),
-		"/sysmgmt/2015/bmc/session":            []byte(`{"authResult":0}`),
+		"/sysmgmt/2012/server/temperature":            []byte(`{"Statistics":"/sysmgmt/2012/server/temperature/statistics","Temperatures":{"iDRAC.Embedded.1#CPU1Temp":{"max_failure":90,"max_warning":"NA","max_warning_settable":0,"min_failure":3,"min_warning":"NA","min_warning_settable":0,"name":"CPU1 Temp","reading":38,"status":2},"iDRAC.Embedded.1#CPU2Temp":{"max_failure":90,"max_warning":"NA","max_warning_settable":0,"min_failure":3,"min_warning":"NA","min_warning_settable":0,"name":"CPU2 Temp","reading":36,"status":2},"iDRAC.Embedded.1#SystemBoardInletTemp":{"max_failure":47,"max_warning":43,"max_warning_settable":1,"min_failure":-7,"min_warning":3,"min_warning_settable":1,"name":"System Board Inlet Temp","reading":22,"status":2}},"is_fresh_air_compliant":1}`),
+		"/sysmgmt/2016/server/extended_health":        []byte(`{"healthStatus":[2,2,0,0,0,0,2,0,2,2,2,2,2,2,0,2,2,2]}`),
+		"/sysmgmt/2015/bmc/session/logout":            []byte(``),
+		"/sysmgmt/2015/bmc/session":                   []byte(`{"authResult":0}`),
+		"/sysmgmt/2013/server/sensor/powersupplyunit": []byte(`{"Powersupplyunit":{"0x15||PSU.Slot.1":{"fw_version":"0.11.1a","health":2,"input_wattage":2260,"line_status":"n/a","max_output_wattage":"n/a","name":"PS1 Status","output_wattage":2000,"part_number":"0J5WMGA02","status":1,"type":0},"0x15||PSU.Slot.2":{"fw_version":"0.11.1a","health":2,"input_wattage":2260,"line_status":"n/a","max_output_wattage":"n/a","name":"PS2 Status","output_wattage":2000,"part_number":"0J5WMGA02","status":1,"type":0}}}`),
 	}
 )
 
@@ -4296,44 +4297,44 @@ func TestDiskDisks(t *testing.T) {
 	tearDown()
 }
 
-// func TestIDracPsu(t *testing.T) {
-// 	expectedAnswer := []*devices.Psu{
-// 		&devices.Psu{
-// 			Serial:     "65kt7j2_PS1",
-// 			CapacityKw: 0.75,
-// 			Status:     "OK",
-// 			PowerKw:    0.0,
-// 		},
-// 		&devices.Psu{
-// 			Serial:     "65kt7j2_PS2",
-// 			CapacityKw: 0.75,
-// 			Status:     "OK",
-// 			PowerKw:    0.0,
-// 		},
-// 	}
+func TestIDracPsu(t *testing.T) {
+	expectedAnswer := []*devices.Psu{
+		&devices.Psu{
+			Serial:     "h16z4m2_ps1",
+			CapacityKw: 2,
+			Status:     "OK",
+			PowerKw:    0.0,
+		},
+		&devices.Psu{
+			Serial:     "h16z4m2_ps2",
+			CapacityKw: 2,
+			Status:     "OK",
+			PowerKw:    0.0,
+		},
+	}
 
-// 	bmc, err := setup()
-// 	if err != nil {
-// 		t.Fatalf("Found errors during the test hpChassisSetup %v", err)
-// 	}
+	bmc, err := setup()
+	if err != nil {
+		t.Fatalf("Found errors during the test TestIDracPsu %v", err)
+	}
 
-// 	psus, err := bmc.Psus()
-// 	if err != nil {
-// 		t.Fatalf("Found errors calling chassis.Psus %v", err)
-// 	}
+	psus, err := bmc.Psus()
+	if err != nil {
+		t.Fatalf("Found errors calling bmc.Psus %v", err)
+	}
 
-// 	if len(psus) != len(expectedAnswer) {
-// 		t.Fatalf("Expected %v psus: found %v psus", len(expectedAnswer), len(psus))
-// 	}
+	if len(psus) != len(expectedAnswer) {
+		t.Fatalf("Expected %v psus: found %v psus", len(expectedAnswer), len(psus))
+	}
 
-// 	for pos, psu := range psus {
-// 		if psu.Serial != expectedAnswer[pos].Serial || psu.CapacityKw != expectedAnswer[pos].CapacityKw || psu.PowerKw != expectedAnswer[pos].PowerKw || psu.Status != expectedAnswer[pos].Status {
-// 			t.Errorf("Expected answer %v: found %v", expectedAnswer[pos], psu)
-// 		}
-// 	}
+	for pos, psu := range psus {
+		if psu.Serial != expectedAnswer[pos].Serial || psu.CapacityKw != expectedAnswer[pos].CapacityKw || psu.PowerKw != expectedAnswer[pos].PowerKw || psu.Status != expectedAnswer[pos].Status {
+			t.Errorf("Expected answer %v: found %v", expectedAnswer[pos], psu)
+		}
+	}
 
-// 	tearDown()
-// }
+	tearDown()
+}
 
 func TestIDracIsBlade(t *testing.T) {
 	expectedAnswer := true
