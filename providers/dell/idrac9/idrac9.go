@@ -662,13 +662,18 @@ func (i *IDrac9) IsBlade() (isBlade bool, err error) {
 		return isBlade, err
 	}
 
-	model, err := i.Model()
+	serial, err := i.Serial()
 	if err != nil {
 		return isBlade, err
 	}
 
-	if strings.HasPrefix(model, "PowerEdge M") {
-		isBlade = true
+	chassisSerial, err := i.ChassisSerial()
+	if err != nil {
+		return isBlade, err
+	}
+
+	if serial != chassisSerial {
+		return true, err
 	}
 
 	return isBlade, err
