@@ -779,7 +779,7 @@ func (i *IDrac8) ServerSnapshot() (server interface{}, err error) { // nolint: g
 		blade.BmcType = i.HardwareType()
 
 		blade.Serial, err = i.Serial()
-		if err != nil {
+		if err != nil {''
 			return nil, err
 		}
 		blade.BmcVersion, err = i.Version()

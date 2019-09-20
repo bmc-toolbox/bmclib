@@ -91,9 +91,9 @@ func (i *Ilo) PxeOnce() (status bool, err error) {
 	if err != nil {
 		return status, err
 	}
-	// Just to be clear. I didn't choose to do this
-	// HP is not reliable to boot a machine and pxe (HAHAHAHA)
-	// so this is the only usable solution.
+	// PXE using uefi, does't work for some models
+	// directly. It only works if you pxe, powercycle and
+	// power on.
 	status, err = im.PxeOnceEfi()
 	if err != nil {
 		return false, err

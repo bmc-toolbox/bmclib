@@ -14,7 +14,6 @@ type Bmc interface {
 	// BmcCollection interface
 	BmcCollection
 
-	ApplyCfg(*cfgresources.ResourcesConfig) error
 	CheckCredentials() error
 	Close() error
 	PowerOn() (bool, error)

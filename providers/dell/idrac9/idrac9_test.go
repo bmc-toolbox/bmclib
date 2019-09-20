@@ -3667,12 +3667,14 @@ func TestIDracPsu(t *testing.T) {
 		&devices.Psu{
 			Serial:     "h16z4m2_ps1",
 			CapacityKw: 2,
+			PartNumber: "0j5wmga02",
 			Status:     "OK",
 			PowerKw:    0.0,
 		},
 		&devices.Psu{
 			Serial:     "h16z4m2_ps2",
 			CapacityKw: 2,
+			PartNumber: "0j5wmga02",
 			Status:     "OK",
 			PowerKw:    0.0,
 		},
