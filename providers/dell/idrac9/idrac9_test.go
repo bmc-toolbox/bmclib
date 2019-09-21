@@ -3259,7 +3259,7 @@ var (
 		"/sysmgmt/2016/server/extended_health":        []byte(`{"healthStatus":[2,2,0,0,0,0,2,0,2,2,2,2,2,2,0,2,2,2]}`),
 		"/sysmgmt/2015/bmc/session/logout":            []byte(``),
 		"/sysmgmt/2015/bmc/session":                   []byte(`{"authResult":0}`),
-		"/sysmgmt/2013/server/sensor/powersupplyunit": []byte(`{"Powersupplyunit":{"0x15||PSU.Slot.1":{"fw_version":"0.11.1a","health":2,"input_wattage":2260,"line_status":"n/a","max_output_wattage":"n/a","name":"PS1 Status","output_wattage":2000,"part_number":"0J5WMGA02","status":1,"type":0},"0x15||PSU.Slot.2":{"fw_version":"0.11.1a","health":2,"input_wattage":2260,"line_status":"n/a","max_output_wattage":"n/a","name":"PS2 Status","output_wattage":2000,"part_number":"0J5WMGA02","status":1,"type":0}}}`),
+		"/sysmgmt/2013/server/sensor/powersupplyunit": []byte(`{"Powersupplyunit":{"0x15||PSU.Slot.1":{"fw_version":"0.11.1a","health":2,"input_wattage":2260,"line_status":"n/a","max_output_wattage":"n/a","name":"PS1 Status","output_wattage":2000,"part_number":"0J5WMGA02","status":1,"type":0}}}`),
 	}
 )
 
