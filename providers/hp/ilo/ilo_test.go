@@ -619,7 +619,7 @@ func TestIloIsBlade(t *testing.T) {
 }
 
 func TestIloSlot(t *testing.T) {
-	expectedAnswer := -1
+	expectedAnswer := 1
 
 	bmc, err := setup()
 	if err != nil {
