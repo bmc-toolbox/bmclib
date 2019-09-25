@@ -653,6 +653,27 @@ func (i *Ilo) Slot() (slot int, err error) {
 		return i.rimpBlade.BladeSystem.Bay, err
 	}
 
+	err = i.httpLogin()
+	if err != nil {
+		return -1, err
+	}
+
+	url := "json/chassis_info"
+	payload, err := i.get(url)
+	if err != nil {
+		return -1, err
+	}
+
+	chassisInfo := &hp.ChassisInfo{}
+	err = json.Unmarshal(payload, chassisInfo)
+	if err != nil {
+		return -1, err
+	}
+
+	if chassisInfo.NodeNumber != 0 {
+		return chassisInfo.NodeNumber, err
+	}
+
 	return -1, err
 }
 
