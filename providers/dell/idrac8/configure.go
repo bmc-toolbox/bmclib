@@ -35,12 +35,6 @@ func (i *IDrac8) Resources() []string {
 	}
 }
 
-// ApplyCfg implements the Bmc interface
-// this is to be deprecated.
-func (i *IDrac8) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
-	return err
-}
-
 // SetLicense implements the Configure interface.
 func (i *IDrac8) SetLicense(cfg *cfgresources.License) (err error) {
 	return err

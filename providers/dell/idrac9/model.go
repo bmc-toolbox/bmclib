@@ -111,6 +111,470 @@ type certStore struct {
 	} `json:"File"`
 }
 
+// AlertEnable is the payload to enable/disable Alerts
+type AlertEnable struct {
+	Enabled string `json:"AlertEnable"`
+}
+
+//  alertConfigPayload basically sets up the alert configuration,
+// 1. disable informational messages and enables warning/critical messages
+// 2. send all of these messages to remote syslog
+// If we are to enable events to be sent over Email or SNMP or Redfish, this would need updating
+// endpoint: /sysmgmt/2012/server/eventpolicy
+// method: PUT
+var alertConfigPayload = []byte(`{
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#AMP_1_3": {
+	  "filter_actions": 1,
+	  "category": 1,
+	  "severity": 3,
+	  "subcategory": "AMP"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#BAT_1_3": {
+	  "filter_actions": 1,
+	  "category": 1,
+	  "severity": 3,
+	  "subcategory": "BAT"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#BAT_2_1": {
+	  "filter_actions": 257,
+	  "category": 2,
+	  "severity": 1,
+	  "subcategory": "BAT"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#BAT_2_2": {
+	  "filter_actions": 257,
+	  "category": 2,
+	  "severity": 2,
+	  "subcategory": "BAT"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#BAT_2_3": {
+	  "filter_actions": 257,
+	  "category": 2,
+	  "severity": 3,
+	  "subcategory": "BAT"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#CPU_1_3": {
+	  "filter_actions": 1,
+	  "category": 1,
+	  "severity": 3,
+	  "subcategory": "CPU"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#CTL_2_1": {
+	  "filter_actions": 257,
+	  "category": 2,
+	  "severity": 1,
+	  "subcategory": "CTL"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#CTL_2_2": {
+	  "filter_actions": 259,
+	  "category": 2,
+	  "severity": 2,
+	  "subcategory": "CTL"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#CTL_2_3": {
+	  "filter_actions": 259,
+	  "category": 2,
+	  "severity": 3,
+	  "subcategory": "CTL"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#CTL_5_3": {
+	  "filter_actions": 256,
+	  "category": 5,
+	  "severity": 3,
+	  "subcategory": "CTL"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#DIS_5_3": {
+	  "filter_actions": 257,
+	  "category": 5,
+	  "severity": 3,
+	  "subcategory": "DIS"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#ENC_2_1": {
+	  "filter_actions": 257,
+	  "category": 2,
+	  "severity": 1,
+	  "subcategory": "ENC"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#ENC_2_2": {
+	  "filter_actions": 257,
+	  "category": 2,
+	  "severity": 2,
+	  "subcategory": "ENC"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#ENC_2_3": {
+	  "filter_actions": 257,
+	  "category": 2,
+	  "severity": 3,
+	  "subcategory": "ENC"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#FAN_1_3": {
+	  "filter_actions": 1,
+	  "category": 1,
+	  "severity": 3,
+	  "subcategory": "FAN"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#FAN_2_1": {
+	  "filter_actions": 257,
+	  "category": 2,
+	  "severity": 1,
+	  "subcategory": "FAN"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#FAN_2_3": {
+	  "filter_actions": 257,
+	  "category": 2,
+	  "severity": 3,
+	  "subcategory": "FAN"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#FC_1_3": {
+	  "filter_actions": 1,
+	  "category": 1,
+	  "severity": 3,
+	  "subcategory": "FC"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#GMGR_5_3": {
+	  "filter_actions": 257,
+	  "category": 5,
+	  "severity": 3,
+	  "subcategory": "GMGR"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#HWC_1_3": {
+	  "filter_actions": 1,
+	  "category": 1,
+	  "severity": 3,
+	  "subcategory": "HWC"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#IOID_5_2": {
+	  "filter_actions": 257,
+	  "category": 5,
+	  "severity": 2,
+	  "subcategory": "IOID"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#IOID_5_3": {
+	  "filter_actions": 257,
+	  "category": 5,
+	  "severity": 3,
+	  "subcategory": "IOID"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#IOV_1_3": {
+	  "filter_actions": 1,
+	  "category": 1,
+	  "severity": 3,
+	  "subcategory": "IOV"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#IOV_5_3": {
+	  "filter_actions": 256,
+	  "category": 5,
+	  "severity": 3,
+	  "subcategory": "IOV"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#IPA_5_3": {
+	  "filter_actions": 257,
+	  "category": 5,
+	  "severity": 3,
+	  "subcategory": "IPA"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#JCP_5_3": {
+	  "filter_actions": 257,
+	  "category": 5,
+	  "severity": 3,
+	  "subcategory": "JCP"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#LNK_1_3": {
+	  "filter_actions": 1,
+	  "category": 1,
+	  "severity": 3,
+	  "subcategory": "LNK"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#MEM_1_3": {
+	  "filter_actions": 1,
+	  "category": 1,
+	  "severity": 3,
+	  "subcategory": "MEM"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#NIC_1_3": {
+	  "filter_actions": 1,
+	  "category": 1,
+	  "severity": 3,
+	  "subcategory": "NIC"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#PCI_1_3": {
+	  "filter_actions": 1,
+	  "category": 1,
+	  "severity": 3,
+	  "subcategory": "PCI"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#PCI_5_3": {
+	  "filter_actions": 257,
+	  "category": 5,
+	  "severity": 3,
+	  "subcategory": "PCI"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#PDR_1_3": {
+	  "filter_actions": 1,
+	  "category": 1,
+	  "severity": 3,
+	  "subcategory": "PDR"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#PDR_2_1": {
+	  "filter_actions": 257,
+	  "category": 2,
+	  "severity": 1,
+	  "subcategory": "PDR"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#PDR_2_2": {
+	  "filter_actions": 257,
+	  "category": 2,
+	  "severity": 2,
+	  "subcategory": "PDR"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#PDR_2_3": {
+	  "filter_actions": 257,
+	  "category": 2,
+	  "severity": 3,
+	  "subcategory": "PDR"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#PSU_1_3": {
+	  "filter_actions": 1,
+	  "category": 1,
+	  "severity": 3,
+	  "subcategory": "PSU"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#PSU_2_1": {
+	  "filter_actions": 257,
+	  "category": 2,
+	  "severity": 1,
+	  "subcategory": "PSU"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#PSU_2_3": {
+	  "filter_actions": 257,
+	  "category": 2,
+	  "severity": 3,
+	  "subcategory": "PSU"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#PWR_1_3": {
+	  "filter_actions": 1,
+	  "category": 1,
+	  "severity": 3,
+	  "subcategory": "PWR"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#PWR_5_3": {
+	  "filter_actions": 257,
+	  "category": 5,
+	  "severity": 3,
+	  "subcategory": "PWR"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#RAC_3_3": {
+	  "filter_actions": 257,
+	  "category": 3,
+	  "severity": 3,
+	  "subcategory": "RAC"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#RAC_5_2": {
+	  "filter_actions": 256,
+	  "category": 5,
+	  "severity": 2,
+	  "subcategory": "RAC"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#RAC_5_3": {
+	  "filter_actions": 257,
+	  "category": 5,
+	  "severity": 3,
+	  "subcategory": "RAC"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#RDU_1_3": {
+	  "filter_actions": 1,
+	  "category": 1,
+	  "severity": 3,
+	  "subcategory": "RDU"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#RED_3_1": {
+	  "filter_actions": 257,
+	  "category": 3,
+	  "severity": 1,
+	  "subcategory": "RED"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#RED_3_2": {
+	  "filter_actions": 257,
+	  "category": 3,
+	  "severity": 2,
+	  "subcategory": "RED"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#RED_3_3": {
+	  "filter_actions": 257,
+	  "category": 3,
+	  "severity": 3,
+	  "subcategory": "RED"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#RFL_1_3": {
+	  "filter_actions": 1,
+	  "category": 1,
+	  "severity": 3,
+	  "subcategory": "RFL"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#RRDU_1_3": {
+	  "filter_actions": 1,
+	  "category": 1,
+	  "severity": 3,
+	  "subcategory": "RRDU"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#SEC_2_1": {
+	  "filter_actions": 257,
+	  "category": 2,
+	  "severity": 1,
+	  "subcategory": "SEC"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#SEC_2_2": {
+	  "filter_actions": 257,
+	  "category": 2,
+	  "severity": 2,
+	  "subcategory": "SEC"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#SEC_2_3": {
+	  "filter_actions": 257,
+	  "category": 2,
+	  "severity": 3,
+	  "subcategory": "SEC"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#SEC_5_2": {
+	  "filter_actions": 257,
+	  "category": 5,
+	  "severity": 2,
+	  "subcategory": "SEC"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#SSD_2_2": {
+	  "filter_actions": 257,
+	  "category": 2,
+	  "severity": 2,
+	  "subcategory": "SSD"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#STOR_2_1": {
+	  "filter_actions": 257,
+	  "category": 2,
+	  "severity": 1,
+	  "subcategory": "STOR"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#STOR_2_2": {
+	  "filter_actions": 257,
+	  "category": 2,
+	  "severity": 2,
+	  "subcategory": "STOR"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#STOR_2_3": {
+	  "filter_actions": 257,
+	  "category": 2,
+	  "severity": 3,
+	  "subcategory": "STOR"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#SWC_1_3": {
+	  "filter_actions": 1,
+	  "category": 1,
+	  "severity": 3,
+	  "subcategory": "SWC"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#SWC_5_1": {
+	  "filter_actions": 257,
+	  "category": 5,
+	  "severity": 1,
+	  "subcategory": "SWC"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#SWC_5_2": {
+	  "filter_actions": 257,
+	  "category": 5,
+	  "severity": 2,
+	  "subcategory": "SWC"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#SWU_3_2": {
+	  "filter_actions": 257,
+	  "category": 3,
+	  "severity": 2,
+	  "subcategory": "SWU"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#TMP_1_3": {
+	  "filter_actions": 1,
+	  "category": 1,
+	  "severity": 3,
+	  "subcategory": "TMP"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#TMP_2_1": {
+	  "filter_actions": 257,
+	  "category": 2,
+	  "severity": 1,
+	  "subcategory": "TMP"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#TMP_2_2": {
+	  "filter_actions": 257,
+	  "category": 2,
+	  "severity": 2,
+	  "subcategory": "TMP"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#TMP_2_3": {
+	  "filter_actions": 257,
+	  "category": 2,
+	  "severity": 3,
+	  "subcategory": "TMP"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#UEFI_3_2": {
+	  "filter_actions": 257,
+	  "category": 3,
+	  "severity": 2,
+	  "subcategory": "UEFI"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#UEFI_3_3": {
+	  "filter_actions": 257,
+	  "category": 3,
+	  "severity": 3,
+	  "subcategory": "UEFI"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#UEFI_5_1": {
+	  "filter_actions": 257,
+	  "category": 5,
+	  "severity": 1,
+	  "subcategory": "UEFI"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#UEFI_5_3": {
+	  "filter_actions": 257,
+	  "category": 5,
+	  "severity": 3,
+	  "subcategory": "UEFI"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#VDR_2_1": {
+	  "filter_actions": 257,
+	  "category": 2,
+	  "severity": 1,
+	  "subcategory": "VDR"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#VDR_2_2": {
+	  "filter_actions": 257,
+	  "category": 2,
+	  "severity": 2,
+	  "subcategory": "VDR"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#VDR_2_3": {
+	  "filter_actions": 257,
+	  "category": 2,
+	  "severity": 3,
+	  "subcategory": "VDR"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#VFLA_1_3": {
+	  "filter_actions": 1,
+	  "category": 1,
+	  "severity": 3,
+	  "subcategory": "VFLA"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#VFL_1_3": {
+	  "filter_actions": 1,
+	  "category": 1,
+	  "severity": 3,
+	  "subcategory": "VFL"
+	},
+	"iDRAC.Embedded.1#RACEvtFilterCfgRoot#VLT_1_3": {
+	  "filter_actions": 1,
+	  "category": 1,
+	  "severity": 3,
+	  "subcategory": "VLT"
+	}
+  }`)
+
 // Timezones declares all known timezones, taken from the idrac web interface.
 var Timezones = map[string]string{
 	"Africa/Abidjan":                   "Africa/Abidjan",

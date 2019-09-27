@@ -337,3 +337,37 @@ func (i *IDrac9) putCSR(csrInfo CSRInfo) (err error) {
 
 	return err
 }
+
+// putAlertConfig sets up alert filtering/sysloging
+// see alertConfigPayload listed in model.go for payload.
+func (i *IDrac9) putAlertConfig() (err error) {
+
+	endpoint := fmt.Sprintf("sysmgmt/2012/server/eventpolicy")
+	statusCode, _, err := i.put(endpoint, alertConfigPayload)
+	if err != nil || statusCode != 200 {
+		msg := fmt.Sprintf("PUT request to set attributes returned: %d", statusCode)
+		return errors.New(msg)
+	}
+
+	return err
+}
+
+// putAlertEnable - enables/disables alerts
+func (i *IDrac9) putAlertEnable(alertEnable AlertEnable) (err error) {
+
+	m := map[string]AlertEnable{"iDRAC.IPMILan": alertEnable}
+	payload, err := json.Marshal(m)
+	if err != nil {
+		msg := fmt.Sprintf("Error marshalling payload: %s", err)
+		return errors.New(msg)
+	}
+
+	endpoint := fmt.Sprintf("sysmgmt/2012/server/configgroup/iDRAC.IPMILAN")
+	statusCode, _, err := i.put(endpoint, payload)
+	if err != nil || statusCode != 200 {
+		msg := fmt.Sprintf("PUT request to set attributes returned: %d", statusCode)
+		return errors.New(msg)
+	}
+
+	return err
+}
