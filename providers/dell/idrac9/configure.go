@@ -512,6 +512,11 @@ func (i *IDrac9) Ntp(cfg *cfgresources.Ntp) (err error) {
 
 // Syslog applies the Syslog configuration resource
 // Syslog implements the Configure interface
+//
+// As part of Syslog we enable alerts and alert filters to syslog,
+// the iDrac will not send out any messages over syslog unless this is enabled,
+// and since not all BMCs currently support configuring filtering for alerts,
+// for now the configuration for alert filters/enabling is managed through this method.
 func (i *IDrac9) Syslog(cfg *cfgresources.Syslog) (err error) {
 
 	var port int
@@ -560,10 +565,34 @@ func (i *IDrac9) Syslog(cfg *cfgresources.Syslog) (err error) {
 		return err
 	}
 
+	// Enable alerts
+	err = i.putAlertEnable(AlertEnable{"Enabled"})
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IP":    i.ip,
+			"Model": i.HardwareType(),
+			"step":  helper.WhosCalling(),
+			"Error": err,
+		}).Warn("PUT to enable Alerts failed request failed.")
+		return err
+	}
+
+	// Configure alerts
+	err = i.putAlertConfig()
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IP":    i.ip,
+			"Model": i.HardwareType(),
+			"step":  helper.WhosCalling(),
+			"Error": err,
+		}).Warn("PUT to configure alerts failed request failed.")
+		return err
+	}
+
 	log.WithFields(log.Fields{
 		"IP":    i.ip,
 		"Model": i.HardwareType(),
-	}).Debug("Syslog parameters applied.")
+	}).Debug("Syslog and alert parameters applied.")
 	return err
 }
 
