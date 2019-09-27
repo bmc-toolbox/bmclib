@@ -185,6 +185,11 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 
 // Syslog applies the Syslog configuration resource
 // Syslog implements the Configure interface
+//
+// As part of Syslog we enable alerts and alert filters to syslog,
+// the iDrac will not send out any messages over syslog unless this is enabled,
+// and since not all BMCs currently support configuring filtering for alerts,
+// for now the configuration for alert filters/enabling is managed through this method.
 func (i *IDrac8) Syslog(cfg *cfgresources.Syslog) (err error) {
 
 	var port int
@@ -238,7 +243,31 @@ func (i *IDrac8) Syslog(cfg *cfgresources.Syslog) (err error) {
 			"endpoint": endpoint,
 			"step":     helper.WhosCalling(),
 			"response": string(response),
-		}).Warn("PUT request failed.")
+		}).Warn("request to set syslog configuration failed.")
+		return err
+	}
+
+	// enable alerts
+	endpoint = "data?set=alertStatus:1"
+	response, _, err = i.post(endpoint, []byte{}, "")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"endpoint": endpoint,
+			"step":     helper.WhosCalling(),
+			"response": string(response),
+		}).Warn("request to enable alerts failed.")
+		return err
+	}
+
+	// setup alert filters
+	endpoint = "data?set=" + setAlertFilterPayload
+	response, _, err = i.post(endpoint, []byte{}, "")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"endpoint": endpoint,
+			"step":     helper.WhosCalling(),
+			"response": string(response),
+		}).Warn("request to set alerts filter configuration failed.")
 		return err
 	}
 
