@@ -493,6 +493,7 @@ func (s *SupermicroX) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfg
 
 // Syslog applies the Syslog configuration resource
 // Syslog implements the Configure interface
+// this also enables alerts from the BMC
 func (s *SupermicroX) Syslog(cfg *cfgresources.Syslog) (err error) {
 
 	var port int
@@ -540,8 +541,10 @@ func (s *SupermicroX) Syslog(cfg *cfgresources.Syslog) (err error) {
 		Enable:      cfg.Enable,
 	}
 
-	endpoint := fmt.Sprintf("op.cgi")
+	endpoint := "op.cgi"
 	form, _ := query.Values(configSyslog)
+
+	//returns okStarting Syslog daemon if successful
 	statusCode, err := s.post(endpoint, &form, []byte{}, "")
 	if err != nil || statusCode != 200 {
 		msg := "POST request to set Syslog config returned error."
@@ -555,7 +558,26 @@ func (s *SupermicroX) Syslog(cfg *cfgresources.Syslog) (err error) {
 		}).Warn(msg)
 		return errors.New(msg)
 	}
-	//returns okStarting Syslog daemon if successful
+
+	// enable maintenance events
+	endpoint = "system_event_log.cgi"
+
+	form = make(url.Values)
+	form.Add("enable", "1")
+
+	statusCode, err = s.post(endpoint, &form, []byte{}, "")
+	if err != nil || statusCode != 200 {
+		msg := "POST request to enable maintenance alerts returned error."
+		log.WithFields(log.Fields{
+			"IP":         s.ip,
+			"Model":      s.HardwareType(),
+			"Endpoint":   endpoint,
+			"StatusCode": statusCode,
+			"step":       helper.WhosCalling(),
+			"Error":      err,
+		}).Warn(msg)
+		return errors.New(msg)
+	}
 
 	log.WithFields(log.Fields{
 		"IP":    s.ip,
