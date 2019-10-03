@@ -197,6 +197,16 @@ func (m *M1000e) Status() (status string, err error) {
 	if err != nil {
 		return "", err
 	}
+
+	for _, entry := range m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.ActiveAlerts.Chassis {
+		if entry.CriticalCount != 0 {
+			for _, alert := range entry.Critical {
+				status = fmt.Sprintf("%s %s", alert, status)
+			}
+			return status, err
+		}
+	}
+
 	if m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.CMCStatus.CMCActiveError == "No Errors" {
 		status = "OK"
 	} else {

@@ -49,6 +49,14 @@ type ChassisGroupMemberHealthBlob struct {
 	ChassisStatus *ChassisStatus    `json:"chassis_status"`
 	CMCStatus     *CMCStatus        `json:"cmc_status"`
 	Fans          map[string]*Fan   `json:"fans_status"`
+	ActiveAlerts  struct {
+		Chassis map[string]*Alerts `json:"Chassis"`
+	} `json:"active_alerts"`
+}
+
+type Alerts struct {
+	CriticalCount int               `json:"criticalCount"`
+	Critical      map[string]string `json:"critical"`
 }
 
 // Fan contains dell fan data
