@@ -533,7 +533,7 @@ func (i *IDrac9) Slot() (slot int, err error) {
 // slotC6420 returns the current slot for the C6420 blade within the chassis
 func (i *IDrac9) slotC6420() (slot int, err error) {
 
-	var url = "/sysmgmt/2012/server/configgroup/System.ServerTopology"
+	var url = "sysmgmt/2012/server/configgroup/System.ServerTopology"
 	payload, err := i.get(url, nil)
 	if err != nil {
 		return -1, err
@@ -545,7 +545,7 @@ func (i *IDrac9) slotC6420() (slot int, err error) {
 		return -1, err
 	}
 
-	if iDracSystemTopology.SystemServerTopology.BladeSlotNumInChassis == "0" {
+	if iDracSystemTopology.SystemServerTopology.BladeSlotNumInChassis == "" {
 		return -1, err
 	}
 
