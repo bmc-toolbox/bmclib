@@ -499,6 +499,15 @@ func (i *IDrac9) Slot() (slot int, err error) {
 		return -1, err
 	}
 
+	model, err := i.Model()
+	if err != nil {
+		return -1, err
+	}
+
+	if model == "PowerEdge C6420" {
+		return i.slotC6420()
+	}
+
 	for _, component := range i.iDracInventory.Component {
 		if component.Classname == "DCIM_SystemView" {
 			for _, property := range component.Properties {
@@ -519,6 +528,33 @@ func (i *IDrac9) Slot() (slot int, err error) {
 	}
 
 	return -1, err
+}
+
+// slotC6420 returns the current slot for the C6420 blade within the chassis
+func (i *IDrac9) slotC6420() (slot int, err error) {
+
+	var url = "sysmgmt/2012/server/configgroup/System.ServerTopology"
+	payload, err := i.get(url, nil)
+	if err != nil {
+		return -1, err
+	}
+
+	iDracSystemTopology := &dell.SystemTopology{}
+	err = json.Unmarshal(payload, iDracSystemTopology)
+	if err != nil {
+		return -1, err
+	}
+
+	if iDracSystemTopology.SystemServerTopology.BladeSlotNumInChassis == "" {
+		return -1, err
+	}
+
+	slot, err = strconv.Atoi(iDracSystemTopology.SystemServerTopology.BladeSlotNumInChassis)
+	if err != nil {
+		return -1, err
+	}
+
+	return slot, err
 }
 
 // Model returns the device model
