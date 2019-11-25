@@ -458,3 +458,16 @@ type HwDetection struct {
 		Status         string `json:"status"`
 	} `json:"aimGetProp"`
 }
+
+// SystemTopology struct contains details on the blade slot for the C6420
+type SystemTopology struct {
+	SystemServerTopology struct {
+		AisleName              string `json:"AisleName"`
+		BladeSlotNumInChassis  string `json:"BladeSlotNumInChassis"`
+		DataCenterName         string `json:"DataCenterName"`
+		RackName               string `json:"RackName"`
+		RackSlot               string `json:"RackSlot"`
+		RoomName               string `json:"RoomName"`
+		SizeOfManagedSystemInU string `json:"SizeOfManagedSystemInU"`
+	} `json:"System.ServerTopology"`
+}
