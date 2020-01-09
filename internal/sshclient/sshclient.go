@@ -77,7 +77,12 @@ func New(host string, username string, password string) (connection *SSHClient, 
 		host,
 		&ssh.ClientConfig{
 			User: username,
-			Auth: []ssh.AuthMethod{ssh.Password(password)},
+			Auth: []ssh.AuthMethod{
+				ssh.Password(password),
+				ssh.KeyboardInteractive(func(user, instruction string, questions []string, echos []bool) ([]string, error) {
+					return []string{}, nil
+				}),
+			},
 			HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 				return nil
 			},
