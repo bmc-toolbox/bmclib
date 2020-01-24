@@ -57,6 +57,11 @@ func (c *C7000) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 	return nil
 }
 
+// Power implemented the Configure interface
+func (c *C7000) Power(cfg *cfgresources.Power) (err error) {
+	return err
+}
+
 // Ldap applies LDAP configuration params.
 // Ldap implements the Configure interface.
 //1. apply ldap group params

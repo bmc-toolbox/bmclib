@@ -26,6 +26,7 @@ func (i *Ilo) Resources() []string {
 		"ldap_group",
 		"ldap",
 		"network",
+		"power",
 		"https_cert",
 	}
 }
@@ -810,6 +811,71 @@ func (i *Ilo) Network(cfg *cfgresources.Network) (reset bool, err error) {
 	}
 
 	return reset, nil
+}
+
+func (i *Ilo) Power(cfg *cfgresources.Power) error {
+
+	if cfg.HPE == nil {
+		return nil
+	}
+
+	// map of valid power_settings attributes to params passed to the iLO API
+	var powerRegulatorModes = map[string]string{
+		"dynamic":     "dyn",
+		"static_low":  "min",
+		"static_high": "max",
+		"os_control":  "osc",
+	}
+
+	configMode, exists := powerRegulatorModes[cfg.HPE.PowerRegulator]
+	if cfg.HPE.PowerRegulator == "" || !exists {
+		return fmt.Errorf("power regulator parameter must be one of dynamic, static_log, static_high, os_control")
+	}
+
+	// check if a configuration update is required based on current setting
+	config, changeRequired, err := i.cmpPowerSettings(configMode)
+	if err != nil {
+		return err
+	}
+
+	if !changeRequired {
+		log.WithFields(log.Fields{
+			"IP":            i.ip,
+			"current mode":  config.PowerMode,
+			"expected mode": configMode,
+			"Model":         i.HardwareType(),
+		}).Trace("Power regulator config - no change required.")
+		return nil
+	}
+
+	log.WithFields(log.Fields{
+		"IP":            i.ip,
+		"current mode":  config.PowerMode,
+		"to apply mode": configMode,
+		"Model":         i.HardwareType(),
+	}).Trace("Power regulator change to be applied.")
+
+	config.SessionKey = i.sessionKey
+	config.Method = "set"
+	config.PowerMode = configMode
+
+	payload, err := json.Marshal(config)
+	if err != nil {
+		return fmt.Errorf("Error marshaling PowerRegulator payload: %s", err)
+	}
+
+	endpoint := "json/power_regulator"
+	statusCode, _, err := i.post(endpoint, payload)
+	if err != nil || statusCode != 200 {
+		return fmt.Errorf("Error/non 200 response calling power_regulator, status: %d, error: %s", statusCode, err)
+	}
+
+	log.WithFields(log.Fields{
+		"IP":    i.ip,
+		"Model": i.HardwareType(),
+	}).Debug("Power regulator config applied.")
+
+	return nil
 }
 
 // Bios method implements the Configure interface

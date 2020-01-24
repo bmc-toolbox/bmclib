@@ -44,6 +44,11 @@ func (s *SupermicroX) ApplyCfg(config *cfgresources.ResourcesConfig) (err error)
 	return err
 }
 
+// Power implemented the Configure interface
+func (s *SupermicroX) Power(cfg *cfgresources.Power) (err error) {
+	return err
+}
+
 // SetLicense implements the Configure interface.
 func (s *SupermicroX) SetLicense(cfg *cfgresources.License) (err error) {
 	return err

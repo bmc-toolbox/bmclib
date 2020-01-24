@@ -6,8 +6,35 @@ import (
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 )
 
+// cmdPowerSettings
+func (i *Ilo) cmpPowerSettings(regulatorMode string) (PowerRegulator, bool, error) {
+
+	// get current config
+	currentConfig, err := i.queryPowerRegulator()
+	if err != nil {
+		return PowerRegulator{}, false, fmt.Errorf("Unable to query existing Power regulator config")
+
+	}
+
+	settingsMatch := func() bool {
+		if currentConfig.PowerMode != regulatorMode {
+			return false
+		}
+
+		return true
+	}
+
+	if settingsMatch() {
+		return PowerRegulator{}, false, nil
+	}
+
+	// configuration update required.
+	return currentConfig, true, nil
+
+}
+
 // compares the current Network IPv4 config with the given Network configuration
-func (i Ilo) cmpNetworkIPv4Settings(cfg *cfgresources.Network) (NetworkIPv4, bool, error) {
+func (i *Ilo) cmpNetworkIPv4Settings(cfg *cfgresources.Network) (NetworkIPv4, bool, error) {
 
 	// setup some params as int for comparison
 	var dnsFromDHCP, dhcpEnable, ddnsEnable int

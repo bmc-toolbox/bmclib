@@ -208,6 +208,13 @@ type ipv4 struct {
 	Ipv4IP string `json:"ipv4_ip"`
 }
 
+// PowerRegulator declares json payload to set power regulator mode
+type PowerRegulator struct {
+	PowerMode  string `json:"prmode"`
+	SessionKey string `json:"session_key"`
+	Method     string `json:"method"`
+}
+
 // TimezonesIlo5 declares valid timezone for ilo5 devices.
 var TimezonesIlo5 = map[string]int{
 	"Etc/GMT+12":                     0,

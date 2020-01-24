@@ -23,8 +23,14 @@ type ResourcesConfig struct {
 	HTTPSCert    *HTTPSCert    `yaml:"httpsCert"`
 	Ntp          *Ntp          `yaml:"ntp"`
 	Bios         *Bios         `yaml:"bios"`
+	Power        *Power        `yaml:"power"`
 	Supermicro   *Supermicro   `yaml:"supermicro"` //supermicro specific config, example of issue #34
 	SetupChassis *SetupChassis `yaml:"setupChassis"`
+}
+
+// Power struct holds Power settings configuration for each vendor.
+type Power struct {
+	HPE *HPE `yaml:"hpe"`
 }
 
 // Bios struct holds bios configuration for each vendor.

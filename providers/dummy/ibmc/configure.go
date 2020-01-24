@@ -19,6 +19,11 @@ func (i *Ibmc) Resources() []string {
 	}
 }
 
+// Power implemented the Configure interface
+func (i *Ibmc) Power(cfg *cfgresources.Power) (err error) {
+	return err
+}
+
 // User method implements the Configure interface
 func (i *Ibmc) User(cfg []*cfgresources.User) error {
 	return nil

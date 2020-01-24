@@ -53,6 +53,11 @@ func (m *M1000e) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 	return err
 }
 
+// Power implemented the Configure interface
+func (m *M1000e) Power(cfg *cfgresources.Power) (err error) {
+	return err
+}
+
 // SetLicense implements the Configure interface.
 func (m *M1000e) SetLicense(cfg *cfgresources.License) (err error) {
 	return err
