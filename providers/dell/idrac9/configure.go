@@ -41,6 +41,11 @@ func (i *IDrac9) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 	return err
 }
 
+// Power implemented the Configure interface
+func (i *IDrac9) Power(cfg *cfgresources.Power) (err error) {
+	return err
+}
+
 // Bios sets up Bios configuration
 // Bios implements the Configure interface
 func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {

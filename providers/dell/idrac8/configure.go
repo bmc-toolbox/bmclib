@@ -35,6 +35,11 @@ func (i *IDrac8) Resources() []string {
 	}
 }
 
+// Power implemented the Configure interface
+func (i *IDrac8) Power(cfg *cfgresources.Power) error {
+	return nil
+}
+
 // SetLicense implements the Configure interface.
 func (i *IDrac8) SetLicense(cfg *cfgresources.License) (err error) {
 	return err
