@@ -128,6 +128,7 @@ type Configure interface {
 	Network(*cfgresources.Network) (bool, error)
 	SetLicense(*cfgresources.License) error
 	Bios(*cfgresources.Bios) error
+	Power(*cfgresources.Power) error
 	CurrentHTTPSCert() ([]*x509.Certificate, bool, error)
 	GenerateCSR(*cfgresources.HTTPSCertAttributes) ([]byte, error)
 	UploadHTTPSCert([]byte, string, []byte, string) (bool, error)
