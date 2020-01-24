@@ -215,3 +215,35 @@ func (i *Ilo) queryNetworkIPv4() (NetworkIPv4, error) {
 
 	return networkIPv4, err
 }
+
+func (i *Ilo) queryPowerRegulator() (PowerRegulator, error) {
+
+	endpoint := "json/power_regulator"
+
+	var powerRegulator PowerRegulator
+
+	payload, err := i.get(endpoint)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IP":       i.ip,
+			"Model":    i.HardwareType(),
+			"endpoint": endpoint,
+			"step":     helper.WhosCalling(),
+			"Error":    err,
+		}).Warn("GET request failed.")
+		return PowerRegulator{}, err
+	}
+
+	err = json.Unmarshal(payload, &powerRegulator)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IP":    i.ip,
+			"step":  helper.WhosCalling(),
+			"Model": i.HardwareType(),
+			"Error": err,
+		}).Warn("Unable to unmarshal payload.")
+		return PowerRegulator{}, err
+	}
+
+	return powerRegulator, err
+}
