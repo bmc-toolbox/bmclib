@@ -25,7 +25,7 @@ func (i *Ilo) cmpPowerSettings(regulatorMode string) (PowerRegulator, bool, erro
 	}
 
 	if settingsMatch() {
-		return PowerRegulator{}, false, nil
+		return currentConfig, false, nil
 	}
 
 	// configuration update required.
