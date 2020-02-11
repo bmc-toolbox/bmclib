@@ -1,6 +1,12 @@
 package hp
 
-import "github.com/bmc-toolbox/bmclib/devices"
+import (
+	"github.com/bmc-toolbox/bmclib/devices"
+
+	_ "github.com/bmc-toolbox/bmclib/logging"
+)
+
+type Hp struct{}
 
 const (
 	// VendorID represents the id of the vendor across all packages

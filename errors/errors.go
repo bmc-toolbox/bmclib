@@ -33,4 +33,7 @@ var (
 
 	// Err401Redfish indicates auth failure
 	Err401Redfish = errors.New("Redfish authorization failed")
+
+	// ErrDeviceNotMatched is the error returned when the device was not a type it was probed for
+	ErrDeviceNotMatched = errors.New("the vendor device did not match the probe")
 )
