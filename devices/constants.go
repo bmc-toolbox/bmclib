@@ -14,6 +14,8 @@ const (
 	Supermicro = "Supermicro"
 	// Cloudline is the constant that defines the cloudlines
 	Cloudline = "Cloudline"
+	// Quanta is the contant to identify Quanta hardware
+	Quanta = "Quanta"
 	// Common is the constant of thinks we could use across multiple vendors
 	Common = "Common"
 

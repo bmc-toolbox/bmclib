@@ -225,3 +225,26 @@ func (p *Probe) supermicrox() (bmcConnection interface{}, err error) {
 
 	return bmcConnection, errors.ErrDeviceNotMatched
 }
+
+func (p *Probe) quanta() (bmcConnection interface{}, err error) {
+	resp, err := p.client.Get(fmt.Sprintf("https://%s/page/login.html", p.host))
+	if err != nil {
+		return bmcConnection, err
+	}
+
+	defer resp.Body.Close()
+	defer io.Copy(ioutil.Discard, resp.Body)
+
+	payload, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return bmcConnection, err
+	}
+
+	// ensure the response we got included a png
+	if resp.StatusCode == 200 && bytes.Contains(payload, []byte("Quanta")) {
+		log.WithFields(log.Fields{"step": "ScanAndConnect", "host": p.host, "vendor": devices.Quanta}).Debug("it's a quanta")
+		return bmcConnection, errors.NewErrUnsupportedHardware("quanta hardware not supported")
+	}
+
+	return bmcConnection, errors.ErrDeviceNotMatched
+}

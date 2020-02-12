@@ -33,9 +33,10 @@ func ScanAndConnect(host string, username string, password string) (bmcConnectio
 		probe.hpIlo,
 		probe.idrac8,
 		probe.idrac9,
-		probe.hpC7000, //doesn't work
-		probe.m1000e,
 		probe.supermicrox,
+		probe.hpC7000,
+		probe.m1000e,
+		probe.quanta,
 		probe.hpCl100,
 	}
 
@@ -50,7 +51,7 @@ func ScanAndConnect(host string, username string, password string) (bmcConnectio
 			continue
 		}
 
-		// if theres a bmc connection error, return the error
+		// at this point it could be a connection error or a errors.ErrUnsupportedHardware
 		if err != nil {
 			return bmcConnection, err
 		}
