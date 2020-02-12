@@ -1,6 +1,9 @@
 package errors
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 var (
 	// ErrLoginFailed is returned when we fail to login to a bmc
@@ -37,3 +40,15 @@ var (
 	// ErrDeviceNotMatched is the error returned when the device was not a type it was probed for
 	ErrDeviceNotMatched = errors.New("the vendor device did not match the probe")
 )
+
+type ErrUnsupportedHardware struct {
+	msg string
+}
+
+func (e *ErrUnsupportedHardware) Error() string {
+	return fmt.Sprintf("Hardware not supported: %s", e.msg)
+}
+
+func NewErrUnsupportedHardware(s string) error {
+	return &ErrUnsupportedHardware{s}
+}
