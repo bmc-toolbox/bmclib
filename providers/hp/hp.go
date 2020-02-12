@@ -2,7 +2,7 @@ package hp
 
 import (
 	"github.com/bmc-toolbox/bmclib/devices"
-
+	// this make possible to setup logging and properties at any stage
 	_ "github.com/bmc-toolbox/bmclib/logging"
 )
 
