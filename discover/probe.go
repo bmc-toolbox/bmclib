@@ -101,7 +101,6 @@ func (p *Probe) hpC7000() (bmcConnection interface{}, err error) {
 
 		if iloXMLC.Infra2 != nil {
 			log.WithFields(log.Fields{"step": "ScanAndConnect", "host": p.host, "vendor": devices.HP}).Debug("it's a chassis")
-			fmt.Println("c7000")
 			return c7000.New(p.host, p.username, p.password)
 		}
 
@@ -129,7 +128,7 @@ func (p *Probe) hpCl100() (bmcConnection interface{}, err error) {
 	// ensure the response we got included a png
 	if resp.StatusCode == 200 && bytes.Contains(firstBytes, []byte("PNG")) {
 		log.WithFields(log.Fields{"step": "ScanAndConnect", "host": p.host, "vendor": devices.Cloudline}).Debug("it's a discrete")
-		return bmcConnection, errors.ErrVendorNotSupported
+		return bmcConnection, errors.NewErrUnsupportedHardware("hpe cl100 not supported")
 	}
 
 	return bmcConnection, errors.ErrDeviceNotMatched
@@ -146,7 +145,13 @@ func (p *Probe) idrac8() (bmcConnection interface{}, err error) {
 	defer resp.Body.Close()
 	defer io.Copy(ioutil.Discard, resp.Body)
 
-	if resp.StatusCode == 200 {
+	payload, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return bmcConnection, err
+	}
+
+	if resp.StatusCode == 200 && bytes.Contains(payload, []byte("PowerEdge M630")) {
+		log.WithFields(log.Fields{"step": "connection", "host": p.host, "vendor": devices.Dell}).Debug("it's a idrac8")
 		return idrac8.New(p.host, p.username, p.password)
 	}
 
@@ -163,7 +168,12 @@ func (p *Probe) idrac9() (bmcConnection interface{}, err error) {
 	defer resp.Body.Close()
 	defer io.Copy(ioutil.Discard, resp.Body)
 
-	if resp.StatusCode == 200 {
+	payload, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return bmcConnection, err
+	}
+
+	if resp.StatusCode == 200 && bytes.Contains(payload, []byte("PowerEdge M640")) {
 		log.WithFields(log.Fields{"step": "connection", "host": p.host, "vendor": devices.Dell}).Debug("it's a idrac9")
 		return idrac9.New(p.host, p.username, p.password)
 	}
@@ -180,7 +190,12 @@ func (p *Probe) m1000e() (bmcConnection interface{}, err error) {
 	defer resp.Body.Close()
 	defer io.Copy(ioutil.Discard, resp.Body)
 
-	if resp.StatusCode == 200 {
+	payload, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return bmcConnection, err
+	}
+
+	if resp.StatusCode == 200 && bytes.Contains(payload, []byte("PowerEdge M1000e")) {
 		log.WithFields(log.Fields{"step": "connection", "host": p.host, "vendor": devices.Dell}).Debug("it's a m1000e chassis")
 		return m1000e.New(p.host, p.username, p.password)
 	}
@@ -197,8 +212,14 @@ func (p *Probe) supermicrox() (bmcConnection interface{}, err error) {
 	defer resp.Body.Close()
 	defer io.Copy(ioutil.Discard, resp.Body)
 
-	if resp.StatusCode == 200 {
-		log.WithFields(log.Fields{"step": "connection", "host": p.host, "vendor": devices.Dell}).Debug("it's a supermicro")
+	payload, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return bmcConnection, err
+	}
+
+	// looking for ATEN in the response payload isn't the most ideal way, although it is unique to Supermicros
+	if resp.StatusCode == 200 && bytes.Contains(payload, []byte("ATEN International")) {
+		log.WithFields(log.Fields{"step": "connection", "host": p.host, "vendor": devices.Supermicro}).Debug("it's a supermicro")
 		return supermicrox.New(p.host, p.username, p.password)
 	}
 
