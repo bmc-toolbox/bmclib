@@ -186,12 +186,12 @@ var (
 									<MGMTIPADDR>10.213.34.213</MGMTIPADDR>
 									<MGMTIPV6ADDR_LL>fe80::7210:6fff:feb0:ec02/64</MGMTIPV6ADDR_LL>
 									<MGMTIPV6ADDR_SLAAC>2a01:5041:4000:18:7210:6fff:feb0:ec02/64</MGMTIPV6ADDR_SLAAC>
-									<MGMTDNSNAME>***REMOVED***</MGMTDNSNAME>
+									<MGMTDNSNAME>example.lom.com</MGMTDNSNAME>
 									<MGMTPN>iLO4</MGMTPN>
 									<MGMTFWVERSION>2.70 May 07 2019</MGMTFWVERSION>
 									<PN>813198-B21</PN>
 									<BLADEROMVER>I36 09/12/2016</BLADEROMVER>
-									<NAME>***REMOVED***</NAME>
+									<NAME>example.lom.com</NAME>
 									<PWRM>1.0.9</PWRM>
 									<VLAN>1</VLAN>
 									<SPN>ProLiant BL460c Gen9</SPN>
