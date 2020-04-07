@@ -115,8 +115,13 @@ func (i *IDrac9) IsOn() (status bool, err error) {
 	if err != nil {
 		return false, fmt.Errorf("%v: %v", err, output)
 	}
+
 	if strings.Contains(output, "Server power status: ON") {
-		return true, err
+		return true, nil
+	}
+
+	if strings.Contains(output, "Server power status: OFF") {
+		return false, nil
 	}
 
 	return status, fmt.Errorf(output)
