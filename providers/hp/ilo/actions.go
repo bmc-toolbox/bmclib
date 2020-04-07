@@ -117,9 +117,15 @@ func (i *Ilo) IsOn() (status bool, err error) {
 	if err != nil {
 		return false, fmt.Errorf("%v: %v", err, output)
 	}
+
 	if strings.Contains(output, "currently: On") {
-		return true, err
+		return true, nil
 	}
+
+	if strings.Contains(output, "currently: Off") {
+		return true, nil
+	}
+
 	return status, fmt.Errorf(output)
 }
 
