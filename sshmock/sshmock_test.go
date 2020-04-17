@@ -6,16 +6,20 @@ import (
 	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 )
 
-func TestServer(t *testing.T) {
-	expectedAnswer := `world`
+func Test_Server(t *testing.T) {
+	expectedAnswer := "world"
 	command := "hello"
 	answers := map[string][]byte{command: []byte(expectedAnswer)}
 
-	s, err := New(answers, true)
+	s, err := New(answers)
 	if err != nil {
-		t.Fatalf("found errors during setup Server %s", err.Error())
+		t.Fatalf(err.Error())
 	}
-	address := s.Address()
+	shutdown, address, err := s.ListenAndServe()
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	defer shutdown()
 
 	sshClient, err := sshclient.New(address, "super", "test")
 	if err != nil {
@@ -29,10 +33,5 @@ func TestServer(t *testing.T) {
 
 	if answer != expectedAnswer {
 		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
-	}
-
-	err = s.Close()
-	if err != nil {
-		t.Fatalf("unable to close the ssh server %s", err.Error())
 	}
 }

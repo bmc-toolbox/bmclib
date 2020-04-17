@@ -6,8 +6,12 @@ import (
 	"github.com/bmc-toolbox/bmclib/sshmock"
 )
 
+const (
+	sshUsername = "super"
+	sshPassword = "test"
+)
+
 var (
-	sshServer  *sshmock.Server
 	sshAnswers = map[string][]byte{
 		"racadm racreset": []byte(`CMC reset operation initiated successfully. It may take up to a minute 
 			for the CMC to come back online again.
@@ -106,308 +110,295 @@ var (
 	}
 )
 
-func setupSSH() (bmc *M1000e, err error) {
-	username := "super"
-	password := "test"
-
-	sshServer, err = sshmock.New(sshAnswers, true)
+func setupBMC() (func(), *M1000e, error) {
+	ssh, err := sshmock.New(sshAnswers)
 	if err != nil {
-		return bmc, err
+		return nil, nil, err
 	}
-	address := sshServer.Address()
-
-	bmc, err = New(address, username, password)
+	tearDown, address, err := ssh.ListenAndServe()
 	if err != nil {
-		return bmc, err
+		return nil, nil, err
 	}
 
-	return bmc, err
+	bmc, err := New(address, sshUsername, sshPassword)
+	if err != nil {
+		tearDown()
+		return nil, nil, err
+	}
+
+	return tearDown, bmc, err
 }
 
-func tearDownSSH() {
-	sshServer.Close()
+func Test_chassisBMC(t *testing.T) {
+	tearDown, bmc, err := setupBMC()
+	if err != nil {
+		t.Fatalf("failed to setup BMC: %v", err)
+	}
+	defer tearDown()
+
+	tests := []struct {
+		name      string
+		bmcMethod func() (bool, error)
+		want      bool
+		wantErr   bool
+	}{
+		{
+			name:      "PowerCycle",
+			bmcMethod: bmc.PowerCycle,
+			want:      true,
+			wantErr:   false,
+		},
+		{
+			name:      "PowerOn",
+			bmcMethod: bmc.PowerOn,
+			want:      true,
+			wantErr:   false,
+		},
+		{
+			name:      "PowerOff",
+			bmcMethod: bmc.PowerOff,
+			want:      true,
+			wantErr:   false,
+		},
+		{
+			name:      "IsOn",
+			bmcMethod: bmc.IsOn,
+			want:      true,
+			wantErr:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.bmcMethod()
+
+			if (err != nil) != tt.wantErr {
+				t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("got = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
 
-func TestChassisPowerCycle(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
+func Test_FindBladePosition(t *testing.T) {
+	tearDown, bmc, err := setupBMC()
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
-	defer tearDownSSH()
+	defer tearDown()
 
-	answer, err := bmc.PowerCycle()
+	want, wantErr := 2, false
+
+	got, err := bmc.FindBladePosition("74XXX72")
+
 	if err != nil {
-		t.Fatalf("Found errors calling bmc.PowerCycle %v", err)
+		t.Errorf("error = %v, wantErr %v", got, wantErr)
 	}
 
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+	if got != want {
+		t.Errorf("got = %v, want %v", got, want)
 	}
 }
 
-func TestChassisPowerOn(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
+func Test_PowerCycleBlade(t *testing.T) {
+	tearDown, bmc, err := setupBMC()
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
-	defer tearDownSSH()
+	defer tearDown()
 
-	answer, err := bmc.PowerOn()
+	want, wantErr := true, false
+
+	got, err := bmc.PowerCycleBlade(2)
+
 	if err != nil {
-		t.Fatalf("Found errors calling bmc.PowerOn %v", err)
+		t.Errorf("error = %v, wantErr %v", got, wantErr)
 	}
 
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+	if got != want {
+		t.Errorf("got = %v, want %v", got, want)
 	}
 }
 
-func TestChassisPowerOff(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
+func Test_ReseatBlade(t *testing.T) {
+	tearDown, bmc, err := setupBMC()
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
-	defer tearDownSSH()
+	defer tearDown()
 
-	answer, err := bmc.PowerOff()
+	want, wantErr := true, false
+
+	got, err := bmc.ReseatBlade(2)
+
 	if err != nil {
-		t.Fatalf("Found errors calling bmc.PowerOff %v", err)
+		t.Errorf("error = %v, wantErr %v", got, wantErr)
 	}
 
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+	if got != want {
+		t.Errorf("got = %v, want %v", got, want)
 	}
 }
 
-func TestChassisIsOn(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
+func Test_PowerOnBlade(t *testing.T) {
+	tearDown, bmc, err := setupBMC()
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
-	defer tearDownSSH()
+	defer tearDown()
 
-	answer, err := bmc.IsOn()
+	want, wantErr := true, false
+
+	got, err := bmc.PowerOnBlade(2)
+
 	if err != nil {
-		t.Fatalf("Found errors calling bmc.IsOn %v", err)
+		t.Errorf("error = %v, wantErr %v", got, wantErr)
 	}
 
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
-	}
-}
-func TestChassisFindBladePosition(t *testing.T) {
-	expectedAnswer := 2
-
-	bmc, err := setupSSH()
-	if err != nil {
-		t.Fatalf("Found errors during the test setup %v", err)
-	}
-	defer tearDownSSH()
-
-	answer, err := bmc.FindBladePosition("74XXX72")
-	if err != nil {
-		t.Fatalf("Found errors calling bmc.FindBladePosition %v", err)
-	}
-
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+	if got != want {
+		t.Errorf("got = %v, want %v", got, want)
 	}
 }
 
-func TestChassisPowerCycleBlade(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
+func Test_PowerOffBlade(t *testing.T) {
+	tearDown, bmc, err := setupBMC()
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
-	defer tearDownSSH()
+	defer tearDown()
 
-	answer, err := bmc.PowerCycleBlade(2)
+	want, wantErr := true, false
+
+	got, err := bmc.PowerOffBlade(2)
+
 	if err != nil {
-		t.Fatalf("Found errors calling bmc.PowerCycleBlade %v", err)
+		t.Errorf("error = %v, wantErr %v", got, wantErr)
 	}
 
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+	if got != want {
+		t.Errorf("got = %v, want %v", got, want)
 	}
 }
 
-func TestChassisReseatBlade(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
+func Test_IsOnBlade(t *testing.T) {
+	tearDown, bmc, err := setupBMC()
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
-	defer tearDownSSH()
+	defer tearDown()
 
-	answer, err := bmc.ReseatBlade(2)
+	want, wantErr := true, false
+
+	got, err := bmc.IsOnBlade(2)
+
 	if err != nil {
-		t.Fatalf("Found errors calling bmc.ReseatBlade %v", err)
+		t.Errorf("error = %v, wantErr %v", got, wantErr)
 	}
 
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+	if got != want {
+		t.Errorf("got = %v, want %v", got, want)
 	}
 }
 
-func TestChassisPowerOnBlade(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
+func Test_PowerCycleBmcBlade(t *testing.T) {
+	tearDown, bmc, err := setupBMC()
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
-	defer tearDownSSH()
+	defer tearDown()
 
-	answer, err := bmc.PowerOnBlade(2)
+	want, wantErr := true, false
+
+	got, err := bmc.PowerCycleBmcBlade(2)
+
 	if err != nil {
-		t.Fatalf("Found errors calling bmc.PowerOnBlade %v", err)
+		t.Errorf("error = %v, wantErr %v", got, wantErr)
 	}
 
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+	if got != want {
+		t.Errorf("got = %v, want %v", got, want)
 	}
 }
 
-func TestChassisPowerOffBlade(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
+func Test_PxeOnceBlade(t *testing.T) {
+	tearDown, bmc, err := setupBMC()
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
-	defer tearDownSSH()
+	defer tearDown()
 
-	answer, err := bmc.PowerOffBlade(2)
+	want, wantErr := true, false
+
+	got, err := bmc.PxeOnceBlade(2)
+
 	if err != nil {
-		t.Fatalf("Found errors calling bmc.PowerOffBlade %v", err)
+		t.Errorf("error = %v, wantErr %v", got, wantErr)
 	}
 
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+	if got != want {
+		t.Errorf("got = %v, want %v", got, want)
 	}
 }
 
-func TestChassisIsOnBlade(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
+func Test_SetIpmiOverLan(t *testing.T) {
+	tearDown, bmc, err := setupBMC()
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
-	defer tearDownSSH()
+	defer tearDown()
 
-	answer, err := bmc.IsOnBlade(2)
+	want, wantErr := true, false
+
+	got, err := bmc.SetIpmiOverLan(2, true)
+
 	if err != nil {
-		t.Fatalf("Found errors calling bmc.IsOnBlade %v", err)
+		t.Errorf("error = %v, wantErr %v", got, wantErr)
 	}
 
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+	if got != want {
+		t.Errorf("got = %v, want %v", got, want)
 	}
 }
 
-func TestChassisPowerCycleBmcBlade(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
+func Test_SetDynamicPower(t *testing.T) {
+	tearDown, bmc, err := setupBMC()
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
-	defer tearDownSSH()
+	defer tearDown()
 
-	answer, err := bmc.PowerCycleBmcBlade(2)
+	want, wantErr := true, false
+
+	got, err := bmc.SetDynamicPower(true)
+
 	if err != nil {
-		t.Fatalf("Found errors calling bmc.PowerCycleBmcBlade %v", err)
+		t.Errorf("error = %v, wantErr %v", got, wantErr)
 	}
 
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+	if got != want {
+		t.Errorf("got = %v, want %v", got, want)
 	}
 }
 
-func TestChassisPxeOnceBlade(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
+func Test_SetFlexAddressState(t *testing.T) {
+	tearDown, bmc, err := setupBMC()
 	if err != nil {
 		t.Fatalf("Found errors during the test setup %v", err)
 	}
-	defer tearDownSSH()
+	defer tearDown()
 
-	answer, err := bmc.PxeOnceBlade(2)
+	want, wantErr := true, false
+
+	got, err := bmc.SetFlexAddressState(1, false)
+
 	if err != nil {
-		t.Fatalf("Found errors calling bmc.PxeOnceBlade %v", err)
+		t.Errorf("error = %v, wantErr %v", got, wantErr)
 	}
 
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
-	}
-}
-
-func TestChassisSetIpmiOverLan(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
-	if err != nil {
-		t.Fatalf("Found errors during the test setup %v", err)
-	}
-	defer tearDownSSH()
-
-	answer, err := bmc.SetIpmiOverLan(2, true)
-	if err != nil {
-		t.Fatalf("Found errors calling bmc.PxeOnceBlade %v", err)
-	}
-
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
-	}
-}
-
-func TestChassisSetDynamicPower(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
-	if err != nil {
-		t.Fatalf("Found errors during the test setup %v", err)
-	}
-	defer tearDownSSH()
-
-	answer, err := bmc.SetDynamicPower(true)
-	if err != nil {
-		t.Fatalf("Found errors calling bmc.SetDynamicPower %v", err)
-	}
-
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
-	}
-}
-
-func TestChassisSetFlexAddressState(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
-	if err != nil {
-		t.Fatalf("Found errors during the test setup %v", err)
-	}
-	defer tearDownSSH()
-
-	answer, err := bmc.SetFlexAddressState(1, false)
-	if err != nil {
-		t.Fatalf("Found errors calling bmc.SetFlexAddressState %v", err)
-	}
-
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+	if got != want {
+		t.Errorf("got = %v, want %v", got, want)
 	}
 }

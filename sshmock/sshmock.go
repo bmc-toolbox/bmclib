@@ -16,107 +16,83 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+const (
+	privateKeyBitSize           = 2048
+	maxAttemptsToCreateListener = 10
+)
+
+// Server is the basic struct for the sshMock server
+type Server struct {
+	config  *ssh.ServerConfig
+	answers map[string][]byte
+}
+
 // Test server based on:
 // http://grokbase.com/t/gg/golang-nuts/165yek1eje/go-nuts-creating-an-ssh-server-instance-for-tests
 
 // New creates a new sshmock instance
-func New(answers map[string][]byte, randomPort bool) (s *Server, err error) {
-	mrand.Seed(time.Now().Unix())
-
+func New(answers map[string][]byte) (*Server, error) {
 	config := &ssh.ServerConfig{
 		PasswordCallback: func(c ssh.ConnMetadata, pass []byte) (*ssh.Permissions, error) {
 			return nil, nil
 		},
 	}
 
-	port := 22
-	if randomPort {
-		port = mrand.Intn(20000-2000) + 2000
+	privateKey, err := generateHostKey()
+	if err != nil {
+		return nil, err
 	}
 
-	s = &Server{
-		address: fmt.Sprintf("127.0.0.1:%d", port),
-		wait:    make(chan interface{}),
+	config.AddHostKey(privateKey)
+
+	server := &Server{
+		config:  config,
 		answers: answers,
 	}
 
-	key, err := s.generatePrivateKey(2048)
-	if err != nil {
-		return s, fmt.Errorf("failed to load private key: %s", err.Error())
-	}
-
-	private, err := ssh.ParsePrivateKey(s.encodePrivateKeyToPEM(key))
-	if err != nil {
-		return s, fmt.Errorf("failed to parse private key: %s", err.Error())
-	}
-
-	config.AddHostKey(private)
-
-	go s.run(config)
-	<-s.wait
-
-	return s, err
+	return server, err
 }
 
-// Server is the basic struct for the sshMock server
-type Server struct {
-	address string
-	ssh     net.Listener
-	answers map[string][]byte
-	wait    chan interface{}
-}
-
-// Address returns the current sshmock server address
-func (s *Server) Address() string {
-	return s.address
-}
-
-func (s *Server) encodePrivateKeyToPEM(pk *rsa.PrivateKey) (payload []byte) {
-	block := pem.Block{
-		Type:    "RSA PRIVATE KEY",
-		Headers: nil,
-		Bytes:   x509.MarshalPKCS1PrivateKey(pk),
-	}
-	return pem.EncodeToMemory(&block)
-}
-
-func (s *Server) generatePrivateKey(bitSize int) (pk *rsa.PrivateKey, err error) {
-	pk, err = rsa.GenerateKey(rand.Reader, bitSize)
+func (s *Server) ListenAndServe() (func(), string, error) {
+	listener, err := createListener()
 	if err != nil {
-		return pk, err
+		return nil, "", err
 	}
 
-	err = pk.Validate()
-	if err != nil {
-		return pk, err
-	}
+	addr := listener.Addr().String()
+	shutdown := func() { listener.Close() }
 
-	return pk, err
+	go s.run(listener)
+
+	return shutdown, addr, nil
 }
 
-func (s *Server) run(config *ssh.ServerConfig) {
-	sshServer, err := net.Listen("tcp", s.address)
-	if err != nil {
-		log.Fatalf("Failed to listen on %s (%s)", s.address, err)
-	}
-	s.ssh = sshServer
-
-	close(s.wait)
+func (s *Server) run(listener net.Listener) {
 	for {
-		conn, err := s.ssh.Accept()
+		conn, err := listener.Accept()
 		if err != nil {
-			break
-		}
-
-		_, chans, reqs, err := ssh.NewServerConn(conn, config)
-		if err != nil {
-			log.Printf("Failed to handshake (%s)", err)
+			log.Printf("failed to accept: %v", err)
 			continue
 		}
 
-		go ssh.DiscardRequests(reqs)
-		go s.handleChannels(chans)
+		if err := s.handleConnection(conn); err != nil {
+			log.Printf("failed to handle connection: %v", err)
+		}
 	}
+}
+
+func (s *Server) handleConnection(conn net.Conn) error {
+	defer conn.Close()
+	serverConn, chans, reqs, err := ssh.NewServerConn(conn, s.config)
+	if err != nil {
+		return err
+	}
+	defer serverConn.Close()
+
+	go ssh.DiscardRequests(reqs)
+	s.handleChannels(chans)
+
+	return nil
 }
 
 func (s *Server) handleChannels(chans <-chan ssh.NewChannel) {
@@ -139,46 +115,95 @@ func (s *Server) handleChannel(newChannel ssh.NewChannel) {
 
 	// Sessions have out-of-band requests such as "shell", "pty-req" and "exec"
 	// We just want to handle "exec".
-	go func() {
-		for req := range requests {
-			switch req.Type {
-			case "exec":
-				var reqCmd struct{ Text string }
-				if err := ssh.Unmarshal(req.Payload, &reqCmd); err != nil {
+	for req := range requests {
+		if req.Type != "exec" {
+			continue
+		}
+		var reqCmd struct{ Text string }
+		if err := ssh.Unmarshal(req.Payload, &reqCmd); err != nil {
+			log.Printf("failed: %v\n", err)
+		}
+		if answer, ok := s.answers[reqCmd.Text]; ok {
+			if len(answer) == 0 {
+				channel.Stderr().Write([]byte(fmt.Sprintf("answer empty for %s", reqCmd.Text)))
+				req.Reply(req.WantReply, nil)
+				if _, err := channel.SendRequest("exit-status", false, []byte{0, 0, 0, 1}); err != nil {
 					log.Printf("failed: %v\n", err)
 				}
-				if answer, ok := s.answers[reqCmd.Text]; ok {
-					if len(answer) == 0 {
-						channel.Stderr().Write([]byte(fmt.Sprintf("answer empty for %s", reqCmd.Text)))
-						req.Reply(req.WantReply, nil)
-						if _, err := channel.SendRequest("exit-status", false, []byte{0, 0, 0, 1}); err != nil {
-							log.Printf("failed: %v\n", err)
-						}
-					} else {
-						channel.Write(answer)
-						req.Reply(req.WantReply, nil)
-						if _, err := channel.SendRequest("exit-status", false, []byte{0, 0, 0, 0}); err != nil {
-							log.Printf("failed: %v\n", err)
-						}
-					}
-				} else {
-					channel.Stderr().Write([]byte(fmt.Sprintf("answer not found for %s", reqCmd.Text)))
-					req.Reply(req.WantReply, nil)
-					if _, err := channel.SendRequest("exit-status", false, []byte{0, 0, 0, 1}); err != nil {
-						log.Printf("failed: %v\n", err)
-					}
-				}
-				if err := channel.Close(); err != nil {
+			} else {
+				channel.Write(answer)
+				req.Reply(req.WantReply, nil)
+				if _, err := channel.SendRequest("exit-status", false, []byte{0, 0, 0, 0}); err != nil {
 					log.Printf("failed: %v\n", err)
 				}
-			default:
-				fmt.Println(req.Type)
+			}
+		} else {
+			channel.Stderr().Write([]byte(fmt.Sprintf("answer not found for %s", reqCmd.Text)))
+			req.Reply(req.WantReply, nil)
+			if _, err := channel.SendRequest("exit-status", false, []byte{0, 0, 0, 1}); err != nil {
+				log.Printf("failed: %v\n", err)
 			}
 		}
-	}()
+		if err := channel.Close(); err != nil {
+			log.Printf("failed: %v\n", err)
+		}
+	}
 }
 
-// Close shutdown the current ssh server
-func (s *Server) Close() error {
-	return s.ssh.Close()
+func generateHostKey() (ssh.Signer, error) {
+	key, err := generatePrivateKey(privateKeyBitSize)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load private key: %s", err.Error())
+	}
+
+	private, err := ssh.ParsePrivateKey(encodePrivateKeyToPEM(key))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse private key: %s", err.Error())
+	}
+	return private, nil
+}
+
+func generatePrivateKey(bitSize int) (*rsa.PrivateKey, error) {
+	pk, err := rsa.GenerateKey(rand.Reader, bitSize)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = pk.Validate(); err != nil {
+		return nil, err
+	}
+
+	return pk, nil
+}
+
+func encodePrivateKeyToPEM(pk *rsa.PrivateKey) (payload []byte) {
+	block := pem.Block{
+		Type:    "RSA PRIVATE KEY",
+		Headers: nil,
+		Bytes:   x509.MarshalPKCS1PrivateKey(pk),
+	}
+	return pem.EncodeToMemory(&block)
+}
+
+func createListener() (net.Listener, error) {
+	mrand.Seed(time.Now().Unix())
+
+	var lastErr error
+
+	for i := 0; i < maxAttemptsToCreateListener; i++ {
+		var l net.Listener
+
+		l, lastErr = net.Listen("tcp", fmt.Sprintf("localhost:%d", randomPort()))
+		if lastErr != nil {
+			continue
+		}
+
+		return l, nil
+	}
+
+	return nil, lastErr
+}
+
+func randomPort() int {
+	return mrand.Intn(20000-2000) + 2000
 }

@@ -29,12 +29,12 @@ func (c *C7000) PowerCycle() (status bool, err error) {
 
 // PowerOn power on the chassis
 func (c *C7000) PowerOn() (status bool, err error) {
-	return status, fmt.Errorf("Unsupported action")
+	return status, errors.ErrFeatureUnavailable
 }
 
 // PowerOff power off the chassis
 func (c *C7000) PowerOff() (status bool, err error) {
-	return status, fmt.Errorf("Unsupported action")
+	return status, errors.ErrFeatureUnavailable
 }
 
 // IsOn tells if a machine is currently powered on
@@ -62,7 +62,7 @@ func (c *C7000) FindBladePosition(serial string) (position int, err error) {
 		return position, err
 	}
 
-	for _, line := range strings.Split(string(output), "\n") {
+	for _, line := range strings.Split(output, "\n") {
 		line = strings.Replace(line, "Server-", "", -1)
 		data := strings.FieldsFunc(line, sshclient.IsntLetterOrNumber)
 		for _, field := range data {
@@ -382,11 +382,11 @@ end_marker`
 
 // SetFlexAddressState Enable/Disable FlexAddress disables flex Addresses for blades
 // FlexAddress is a virtual addressing scheme
-func (c *C7000) SetFlexAddressState(position int, enable bool) (status bool, err error) {
+func (c *C7000) SetFlexAddressState(_ int, _ bool) (status bool, err error) {
 	return status, errors.ErrNotImplemented
 }
 
 // SetIpmiOverLan Enable/Disable IPMI over lan parameter per blade in chassis
-func (c *C7000) SetIpmiOverLan(position int, enable bool) (status bool, err error) {
+func (c *C7000) SetIpmiOverLan(_ int, _ bool) (status bool, err error) {
 	return status, errors.ErrNotImplemented
 }
