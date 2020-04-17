@@ -1,29 +1,20 @@
 package ilo
 
 import (
-	"time"
-
 	"github.com/bmc-toolbox/bmclib/sshmock"
 
-	mrand "math/rand"
-
-	"fmt"
 	"testing"
 )
 
 // Test server based on:
 // http://grokbase.com/t/gg/golang-nuts/165yek1eje/go-nuts-creating-an-ssh-server-instance-for-tests
 
-func init() {
-	mrand.Seed(time.Now().Unix())
-}
-
-func sshServerAddress(min, max int) string {
-	return fmt.Sprintf("127.0.0.1:%d", mrand.Intn(max-min)+min)
-}
+const (
+	sshUsername = "super"
+	sshPassword = "test"
+)
 
 var (
-	sshServer  *sshmock.Server
 	sshAnswers = map[string][]byte{
 		"power reset":    []byte(`Server resetting .......`),
 		"reset /map1":    []byte(`Resetting iLO`),
@@ -33,118 +24,81 @@ var (
 	}
 )
 
-func setupSSH() (bmc *Ilo, err error) {
-	sshServer, err = sshmock.New(sshAnswers, true)
+func setupBMC() (func(), *Ilo, error) {
+	ssh, err := sshmock.New(sshAnswers)
 	if err != nil {
-		return bmc, err
+		return nil, nil, err
 	}
-	address := sshServer.Address()
-
-	bmc, err = setup()
+	tearDown, address, err := ssh.ListenAndServe()
 	if err != nil {
-		return bmc, err
+		return nil, nil, err
 	}
-	bmc.ip = address
 
-	return bmc, err
+	bmc := &Ilo{
+		ip:       address,
+		username: sshUsername,
+		password: sshPassword,
+	}
+
+	return tearDown, bmc, err
 }
 
-func tearDownSSH() {
-	tearDown()
-	sshServer.Close()
-}
-
-func TestIloPowerCycle(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
+func Test_ilo(t *testing.T) {
+	tearDown, bmc, err := setupBMC()
 	if err != nil {
-		t.Fatalf("Found errors during the test setup %v", err)
+		t.Fatalf("failed to setup BMC: %v", err)
 	}
-	defer tearDownSSH()
+	defer tearDown()
 
-	answer, err := bmc.PowerCycle()
-	if err != nil {
-		t.Fatalf("Found errors calling bmc.PowerCycle %v", err)
-	}
-
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
-	}
-}
-
-func TestIloPowerCycleBmc(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
-	if err != nil {
-		t.Fatalf("Found errors during the test setup %v", err)
-	}
-	defer tearDownSSH()
-
-	answer, err := bmc.PowerCycleBmc()
-	if err != nil {
-		t.Fatalf("Found errors calling bmc.PowerCycleBmc %v", err)
-	}
-
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
-	}
-}
-
-func TestIloPowerOn(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
-	if err != nil {
-		t.Fatalf("Found errors during the test setup %v", err)
-	}
-	defer tearDownSSH()
-
-	answer, err := bmc.PowerOn()
-	if err != nil {
-		t.Fatalf("Found errors calling bmc.PowerOn %v", err)
+	tests := []struct {
+		name      string
+		bmcMethod func() (bool, error)
+		want      bool
+		wantErr   bool
+	}{
+		{
+			name:      "PowerCycle",
+			bmcMethod: bmc.PowerCycle,
+			want:      true,
+			wantErr:   false,
+		},
+		{
+			name:      "PowerCycleBmc",
+			bmcMethod: bmc.PowerCycleBmc,
+			want:      true,
+			wantErr:   false,
+		},
+		{
+			name:      "PowerOn",
+			bmcMethod: bmc.PowerOn,
+			want:      true,
+			wantErr:   false,
+		},
+		{
+			name:      "PowerOff",
+			bmcMethod: bmc.PowerOff,
+			want:      true,
+			wantErr:   false,
+		},
+		{
+			name:      "IsOn",
+			bmcMethod: bmc.IsOn,
+			want:      true,
+			wantErr:   false,
+		},
 	}
 
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
-	}
-}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.bmcMethod()
 
-func TestIloPowerOff(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
-	if err != nil {
-		t.Fatalf("Found errors during the test setup %v", err)
-	}
-	defer tearDownSSH()
-
-	answer, err := bmc.PowerOff()
-	if err != nil {
-		t.Fatalf("Found errors calling bmc.PowerOff %v", err)
-	}
-
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
-	}
-}
-
-func TestIloIsOn(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
-	if err != nil {
-		t.Fatalf("Found errors during the test setup %v", err)
-	}
-	defer tearDownSSH()
-
-	answer, err := bmc.IsOn()
-	if err != nil {
-		t.Fatalf("Found errors calling bmc.IsOn %v", err)
-	}
-
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("got = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

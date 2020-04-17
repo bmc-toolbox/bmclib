@@ -6,8 +6,12 @@ import (
 	"github.com/bmc-toolbox/bmclib/sshmock"
 )
 
+const (
+	sshUsername = "super"
+	sshPassword = "test"
+)
+
 var (
-	sshServer  *sshmock.Server
 	sshAnswers = map[string][]byte{
 		"racadm serveraction hardreset": []byte(`Server power operation successful`),
 		"racadm racreset hard": []byte(`RAC reset operation initiated successfully. It may take a few
@@ -39,144 +43,87 @@ var (
 	}
 )
 
-func setupSSH() (bmc *IDrac9, err error) {
-	username := "super"
-	password := "test"
-
-	sshServer, err = sshmock.New(sshAnswers, true)
+func setupBMC() (func(), *IDrac9, error) {
+	ssh, err := sshmock.New(sshAnswers)
 	if err != nil {
-		return bmc, err
+		return nil, nil, err
 	}
-	address := sshServer.Address()
-
-	bmc, err = New(address, username, password)
+	tearDown, address, err := ssh.ListenAndServe()
 	if err != nil {
-		return bmc, err
+		return nil, nil, err
 	}
 
-	return bmc, err
+	bmc, err := New(address, sshUsername, sshPassword)
+	if err != nil {
+		tearDown()
+		return nil, nil, err
+	}
+
+	return tearDown, bmc, err
 }
 
-func tearDownSSH() {
-	sshServer.Close()
-}
-
-func TestIDracPowerCycle(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
+func Test_IDrac9(t *testing.T) {
+	tearDown, bmc, err := setupBMC()
 	if err != nil {
-		t.Fatalf("Found errors during the test setup %v", err)
+		t.Fatalf("failed to setup BMC: %v", err)
+	}
+	defer tearDown()
+
+	tests := []struct {
+		name      string
+		bmcMethod func() (bool, error)
+		want      bool
+		wantErr   bool
+	}{
+		{
+			name:      "PowerCycle",
+			bmcMethod: bmc.PowerCycle,
+			want:      true,
+			wantErr:   false,
+		},
+		{
+			name:      "PowerCycleBmc",
+			bmcMethod: bmc.PowerCycleBmc,
+			want:      true,
+			wantErr:   false,
+		},
+		{
+			name:      "PowerOn",
+			bmcMethod: bmc.PowerOn,
+			want:      true,
+			wantErr:   false,
+		},
+		{
+			name:      "PowerOff",
+			bmcMethod: bmc.PowerOff,
+			want:      true,
+			wantErr:   false,
+		},
+		{
+			name:      "PxeOnce",
+			bmcMethod: bmc.PxeOnce,
+			want:      true,
+			wantErr:   false,
+		},
+		{
+			name:      "IsOn",
+			bmcMethod: bmc.IsOn,
+			want:      true,
+			wantErr:   false,
+		},
 	}
 
-	answer, err := bmc.PowerCycle()
-	if err != nil {
-		t.Fatalf("Found errors calling bmc.PowerCycle %v", err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.bmcMethod()
+
+			if (err != nil) != tt.wantErr {
+				t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("got = %v, want %v", got, tt.want)
+			}
+		})
 	}
-
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
-	}
-
-	tearDownSSH()
-}
-
-func TestIDracPowerCycleBmc(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
-	if err != nil {
-		t.Fatalf("Found errors during the test setup %v", err)
-	}
-
-	answer, err := bmc.PowerCycleBmc()
-	if err != nil {
-		t.Fatalf("Found errors calling bmc.PowerCycleBmc %v", err)
-	}
-
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
-	}
-
-	tearDownSSH()
-}
-
-func TestIDracPowerOn(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
-	if err != nil {
-		t.Fatalf("Found errors during the test setup %v", err)
-	}
-
-	answer, err := bmc.PowerOn()
-	if err != nil {
-		t.Fatalf("Found errors calling bmc.PowerOn %v", err)
-	}
-
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
-	}
-
-	tearDownSSH()
-}
-
-func TestIDracPowerOff(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
-	if err != nil {
-		t.Fatalf("Found errors during the test setup %v", err)
-	}
-
-	answer, err := bmc.PowerOff()
-	if err != nil {
-		t.Fatalf("Found errors calling bmc.PowerOff %v", err)
-	}
-
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
-	}
-
-	tearDownSSH()
-}
-
-func TestIDracPxeOnce(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
-	if err != nil {
-		t.Fatalf("Found errors during the test setup %v", err)
-	}
-
-	answer, err := bmc.PxeOnce()
-	if err != nil {
-		t.Fatalf("Found errors calling bmc.PxeOnce %v", err)
-	}
-
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
-	}
-
-	tearDownSSH()
-}
-
-func TestIDracIsOn(t *testing.T) {
-	expectedAnswer := true
-
-	bmc, err := setupSSH()
-	if err != nil {
-		t.Fatalf("Found errors during the test setup %v", err)
-	}
-
-	answer, err := bmc.IsOn()
-	if err != nil {
-		t.Fatalf("Found errors calling bmc.IsOn %v", err)
-	}
-
-	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
-	}
-
-	tearDownSSH()
 }
