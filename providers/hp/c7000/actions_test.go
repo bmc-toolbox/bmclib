@@ -1,6 +1,7 @@
 package c7000
 
 import (
+	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/sshmock"
 
 	"testing"
@@ -105,10 +106,16 @@ func setupBMC() (func(), *C7000, error) {
 		return nil, nil, err
 	}
 
+	sshClient, err := sshclient.New(address, sshUsername, sshPassword)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	bmc := &C7000{
-		ip:       address,
-		username: sshUsername,
-		password: sshPassword,
+		ip:        address,
+		username:  sshUsername,
+		password:  sshPassword,
+		sshClient: sshClient,
 	}
 
 	return tearDown, bmc, err
@@ -180,7 +187,7 @@ func Test_FindBladePosition(t *testing.T) {
 	got, err := bmc.FindBladePosition("CZXXXXXXEK")
 
 	if err != nil {
-		t.Errorf("error = %v, wantErr %v", got, wantErr)
+		t.Errorf("error = %v, wantErr %v", err, wantErr)
 	}
 
 	if (err != nil) != wantErr {
@@ -200,7 +207,7 @@ func Test_PowerCycleBlade(t *testing.T) {
 	got, err := bmc.PowerCycleBlade(1)
 
 	if (err != nil) != wantErr {
-		t.Errorf("error = %v, wantErr %v", got, wantErr)
+		t.Errorf("error = %v, wantErr %v", err, wantErr)
 	}
 
 	if got != want {
@@ -220,7 +227,7 @@ func Test_ReseatBlade(t *testing.T) {
 	got, err := bmc.ReseatBlade(1)
 
 	if (err != nil) != wantErr {
-		t.Errorf("error = %v, wantErr %v", got, wantErr)
+		t.Errorf("error = %v, wantErr %v", err, wantErr)
 	}
 
 	if got != want {
@@ -240,7 +247,7 @@ func Test_PowerOnBlade(t *testing.T) {
 	got, err := bmc.PowerOnBlade(1)
 
 	if (err != nil) != wantErr {
-		t.Errorf("error = %v, wantErr %v", got, wantErr)
+		t.Errorf("error = %v, wantErr %v", err, wantErr)
 	}
 
 	if got != want {
@@ -260,7 +267,7 @@ func Test_PowerOffBlade(t *testing.T) {
 	got, err := bmc.PowerOffBlade(1)
 
 	if (err != nil) != wantErr {
-		t.Errorf("error = %v, wantErr %v", got, wantErr)
+		t.Errorf("error = %v, wantErr %v", err, wantErr)
 	}
 
 	if got != want {
@@ -280,7 +287,7 @@ func Test_IsOnBlade(t *testing.T) {
 	got, err := bmc.IsOnBlade(1)
 
 	if (err != nil) != wantErr {
-		t.Errorf("error = %v, wantErr %v", got, wantErr)
+		t.Errorf("error = %v, wantErr %v", err, wantErr)
 	}
 
 	if got != want {
@@ -300,7 +307,7 @@ func Test_PowerCycleBmcBlade(t *testing.T) {
 	got, err := bmc.PowerCycleBmcBlade(1)
 
 	if (err != nil) != wantErr {
-		t.Errorf("error = %v, wantErr %v", got, wantErr)
+		t.Errorf("error = %v, wantErr %v", err, wantErr)
 	}
 
 	if got != want {
@@ -320,7 +327,7 @@ func Test_PxeOnceBlade(t *testing.T) {
 	got, err := bmc.PxeOnceBlade(1)
 
 	if (err != nil) != wantErr {
-		t.Errorf("error = %v, wantErr %v", got, wantErr)
+		t.Errorf("error = %v, wantErr %v", err, wantErr)
 	}
 
 	if got != want {
@@ -340,7 +347,7 @@ func Test_SetIpmiOverLan(t *testing.T) {
 	got, err := bmc.SetIpmiOverLan(1, true)
 
 	if (err != nil) != wantErr {
-		t.Errorf("error = %v, wantErr %v", got, wantErr)
+		t.Errorf("error = %v, wantErr %v", err, wantErr)
 	}
 
 	if got != want {
@@ -360,7 +367,7 @@ func Test_SetDynamicPower(t *testing.T) {
 	got, err := bmc.SetDynamicPower(false)
 
 	if (err != nil) != wantErr {
-		t.Errorf("error = %v, wantErr %v", got, wantErr)
+		t.Errorf("error = %v, wantErr %v", err, wantErr)
 	}
 
 	if got != want {
@@ -380,11 +387,10 @@ func Test_SetFlexAddressState(t *testing.T) {
 	got, err := bmc.SetFlexAddressState(1, false)
 
 	if (err != nil) != wantErr {
-		t.Errorf("error = %v, wantErr %v", got, wantErr)
+		t.Errorf("error = %v, wantErr %v", err, wantErr)
 	}
 
 	if got != want {
 		t.Errorf("got = %v, want %v", got, want)
 	}
 }
-

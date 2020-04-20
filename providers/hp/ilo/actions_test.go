@@ -1,6 +1,7 @@
 package ilo
 
 import (
+	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/sshmock"
 
 	"testing"
@@ -34,10 +35,16 @@ func setupBMC() (func(), *Ilo, error) {
 		return nil, nil, err
 	}
 
+	sshClient, err := sshclient.New(address, sshUsername, sshPassword)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	bmc := &Ilo{
-		ip:       address,
-		username: sshUsername,
-		password: sshPassword,
+		ip:        address,
+		username:  sshUsername,
+		password:  sshPassword,
+		sshClient: sshClient,
 	}
 
 	return tearDown, bmc, err

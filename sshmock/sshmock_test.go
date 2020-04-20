@@ -9,12 +9,16 @@ import (
 func Test_Server(t *testing.T) {
 	expectedAnswer := "world"
 	command := "hello"
-	answers := map[string][]byte{command: []byte(expectedAnswer)}
+	answers := map[string][]byte{
+		command: []byte(expectedAnswer),
+		"exit":  []byte("see you"),
+	}
 
 	s, err := New(answers)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
+
 	shutdown, address, err := s.ListenAndServe()
 	if err != nil {
 		t.Fatalf(err.Error())
@@ -23,15 +27,19 @@ func Test_Server(t *testing.T) {
 
 	sshClient, err := sshclient.New(address, "super", "test")
 	if err != nil {
-		t.Fatalf("unable to connect to ssh server %s", err.Error())
+		t.Fatalf("unable to connect to ssh server: %v", err)
 	}
 
 	answer, err := sshClient.Run(command)
 	if err != nil {
-		t.Fatalf("unable to run command %s: %s", command, err.Error())
+		t.Fatalf("unable to run command %s: %v", command, err)
 	}
 
 	if answer != expectedAnswer {
-		t.Errorf("Expected answer %v: found %v", expectedAnswer, answer)
+		t.Errorf("expected answer %v: found %v", expectedAnswer, answer)
+	}
+
+	if err := sshClient.Close(); err != nil {
+		t.Errorf("Close() returns an error:%v", err)
 	}
 }

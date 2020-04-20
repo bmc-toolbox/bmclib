@@ -12,7 +12,6 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/providers/hp"
 
 	multierror "github.com/hashicorp/go-multierror"
@@ -102,33 +101,19 @@ func (i *Ilo) httpLogin() (err error) {
 	return err
 }
 
-// Login initiates the connection to a bmc device
-func (i *Ilo) sshLogin() (err error) {
-	if i.sshClient != nil {
-		return
-	}
-
-	log.WithFields(log.Fields{"step": "bmc connection", "vendor": hp.VendorID, "ip": i.ip}).Debug("connecting to bmc")
-	i.sshClient, err = sshclient.New(i.ip, i.username, i.password)
-	if err != nil {
-		return err
-	}
-
-	return err
-}
-
 // Close closes the connection properly
-func (i *Ilo) Close() (err error) {
+func (i *Ilo) Close() error {
+	var multiErr error
+
 	if i.httpClient != nil {
 		log.WithFields(log.Fields{"step": "bmc connection", "vendor": hp.VendorID, "ip": i.ip}).Debug("logout from bmc http")
 
 		data := []byte(fmt.Sprintf(`{"method":"logout", "session_key": "%s"}`, i.sessionKey))
 
-		req, e := http.NewRequest("POST", i.loginURL.String(), bytes.NewBuffer(data))
-		if e != nil {
-			err = multierror.Append(e, err)
+		req, err := http.NewRequest("POST", i.loginURL.String(), bytes.NewBuffer(data))
+		if err != nil {
+			multiErr = multierror.Append(multiErr, err)
 		} else {
-
 			req.Header.Set("Content-Type", "application/json")
 
 			if log.GetLevel() == log.TraceLevel {
@@ -141,13 +126,13 @@ func (i *Ilo) Close() (err error) {
 				}
 			}
 
-			resp, e := i.httpClient.Do(req)
-			if e != nil {
-				err = multierror.Append(e, err)
+			resp, err := i.httpClient.Do(req)
+			if err != nil {
+				multiErr = multierror.Append(multiErr, err)
 			} else {
 				defer resp.Body.Close()
-
 				defer io.Copy(ioutil.Discard, resp.Body)
+
 				if log.GetLevel() == log.TraceLevel {
 					dump, err := httputil.DumpResponse(resp, true)
 					if err == nil {
@@ -162,14 +147,9 @@ func (i *Ilo) Close() (err error) {
 		}
 	}
 
-	if i.sshClient != nil {
-		log.WithFields(log.Fields{"step": "bmc connection", "vendor": hp.VendorID, "ip": i.ip}).Debug("logout from bmc ssh")
-
-		e := i.sshClient.Close()
-		if e != nil {
-			err = multierror.Append(e, err)
-		}
+	if err := i.sshClient.Close(); err != nil {
+		multiErr = multierror.Append(multiErr, err)
 	}
 
-	return err
+	return multiErr
 }

@@ -79,6 +79,6 @@ func (i *Ibmc) UploadHTTPSCert(cert []byte, certFileName string, key []byte, key
 // CurrentHTTPSCert returns the current x509 certficates configured on the BMC
 // The bool value returned indicates if the BMC supports CSR generation.
 // CurrentHTTPSCert implements the Configure interface.
-func (i *Ibmc) CurrentHTTPSCert() (c []*x509.Certificate, b bool, e error) {
-	return c, b, e
+func (i *Ibmc) CurrentHTTPSCert() ([]*x509.Certificate, bool, error) {
+	return nil, false, nil
 }

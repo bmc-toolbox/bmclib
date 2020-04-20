@@ -11,7 +11,6 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/providers/dell"
 	multierror "github.com/hashicorp/go-multierror"
 
@@ -106,39 +105,23 @@ func (i *IDrac8) loadHwData() (err error) {
 	return err
 }
 
-// sshLogin initiates the connection to a bmc device
-func (i *IDrac8) sshLogin() (err error) {
-	if i.sshClient != nil {
-		return
-	}
-
-	log.WithFields(log.Fields{"step": "bmc connection", "vendor": dell.VendorID, "ip": i.ip}).Debug("connecting to bmc")
-	i.sshClient, err = sshclient.New(i.ip, i.username, i.password)
-	if err != nil {
-		return err
-	}
-
-	return err
-}
-
 // Close closes the connection properly
-func (i *IDrac8) Close() (err error) {
+func (i *IDrac8) Close() error {
+	var multiErr error
+
 	if i.httpClient != nil {
-		resp, e := i.httpClient.Get(fmt.Sprintf("https://%s/data/logout", i.ip))
-		if e != nil {
-			err = multierror.Append(e, err)
+		resp, err := i.httpClient.Get(fmt.Sprintf("https://%s/data/logout", i.ip))
+		if err != nil {
+			multiErr = multierror.Append(multiErr, err)
 		} else {
 			defer resp.Body.Close()
 			defer io.Copy(ioutil.Discard, resp.Body)
 		}
 	}
 
-	if i.sshClient != nil {
-		e := i.sshClient.Close()
-		if e != nil {
-			err = multierror.Append(e, err)
-		}
+	if err := i.sshClient.Close(); err != nil {
+		multiErr = multierror.Append(multiErr, err)
 	}
 
-	return err
+	return multiErr
 }

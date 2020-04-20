@@ -11,7 +11,6 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	multierror "github.com/hashicorp/go-multierror"
 
 	"github.com/bmc-toolbox/bmclib/providers/dell"
@@ -128,36 +127,19 @@ func (m *M1000e) httpLogin() (err error) {
 	return err
 }
 
-// sshLogin initiates the connection to a chassis device
-func (m *M1000e) sshLogin() (err error) {
-	if m.sshClient != nil {
-		return
-	}
-
-	log.WithFields(log.Fields{"step": "chassis connection", "vendor": dell.VendorID, "ip": m.ip}).Debug("connecting to chassis")
-	m.sshClient, err = sshclient.New(m.ip, m.username, m.password)
-	if err != nil {
-		return err
-	}
-
-	return err
-}
-
 // Close closes the connection properly
-func (m *M1000e) Close() (err error) {
+func (m *M1000e) Close() error {
+	var multiErr error
 	if m.httpClient != nil {
-		_, e := m.httpClient.Get(fmt.Sprintf("https://%s/cgi-bin/webcgi/logout", m.ip))
-		if e != nil {
-			err = multierror.Append(e, err)
+		_, err := m.httpClient.Get(fmt.Sprintf("https://%s/cgi-bin/webcgi/logout", m.ip))
+		if err != nil {
+			multiErr = multierror.Append(multiErr, err)
 		}
 	}
 
-	if m.sshClient != nil {
-		e := m.sshClient.Close()
-		if e != nil {
-			err = multierror.Append(e, err)
-		}
+	if err := m.sshClient.Close(); err != nil {
+		multiErr = multierror.Append(multiErr, err)
 	}
 
-	return err
+	return multiErr
 }

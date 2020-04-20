@@ -41,8 +41,13 @@ type IDrac9 struct {
 }
 
 // New returns a new IDrac9 ready to be used
-func New(ip string, username string, password string) (iDrac *IDrac9, err error) {
-	return &IDrac9{ip: ip, username: username, password: password}, err
+func New(host string, username string, password string) (*IDrac9, error) {
+	sshClient, err := sshclient.New(host, username, password)
+	if err != nil {
+		return nil, err
+	}
+
+	return &IDrac9{ip: host, username: username, password: password, sshClient: sshClient}, nil
 }
 
 // CheckCredentials verify whether the credentials are valid or not

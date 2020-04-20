@@ -34,34 +34,39 @@ type C7000 struct {
 }
 
 // New returns a connection to C7000
-func New(ip string, username string, password string) (chassis *C7000, err error) {
+func New(host string, username string, password string) (*C7000, error) {
 	client, err := httpclient.Build()
 	if err != nil {
-		return chassis, err
+		return nil, err
 	}
 
-	url := fmt.Sprintf("https://%s/xmldata?item=all", ip)
+	url := fmt.Sprintf("https://%s/xmldata?item=all", host)
 	resp, err := client.Get(url)
 	if err != nil {
-		return chassis, err
+		return nil, err
 	}
 	payload, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return chassis, err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	Rimp := &hp.Rimp{}
 	err = xml.Unmarshal(payload, Rimp)
 	if err != nil {
-		return chassis, err
+		return nil, err
 	}
 
 	if Rimp.Infra2 == nil {
-		return chassis, errors.ErrUnableToReadData
+		return nil, errors.ErrUnableToReadData
 	}
 
-	return &C7000{ip: ip, username: username, password: password, Rimp: Rimp}, err
+	sshClient, err := sshclient.New(host, username, password)
+	if err != nil {
+		return nil, err
+	}
+
+	return &C7000{ip: host, username: username, password: password, Rimp: Rimp, sshClient: sshClient}, nil
 }
 
 // CheckCredentials verify whether the credentials are valid or not

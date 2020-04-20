@@ -49,36 +49,49 @@ type Ilo struct {
 }
 
 // New returns a new Ilo ready to be used
-func New(ip string, username string, password string) (ilo *Ilo, err error) {
-	loginURL, err := url.Parse(fmt.Sprintf("https://%s/json/login_session", ip))
+func New(host string, username string, password string) (*Ilo, error) {
+	loginURL, err := url.Parse(fmt.Sprintf("https://%s/json/login_session", host))
 	if err != nil {
 		return nil, err
 	}
 
 	client, err := httpclient.Build()
 	if err != nil {
-		return ilo, err
+		return nil, err
 	}
 
-	xmlURL := fmt.Sprintf("https://%s/xmldata?item=all", ip)
+	xmlURL := fmt.Sprintf("https://%s/xmldata?item=all", host)
 	resp, err := client.Get(xmlURL)
 	if err != nil {
-		return ilo, err
+		return nil, err
 	}
 
 	payload, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return ilo, err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	rimpBlade := &hp.RimpBlade{}
 	err = xml.Unmarshal(payload, rimpBlade)
 	if err != nil {
-		return ilo, err
+		return nil, err
 	}
 
-	return &Ilo{ip: ip, username: username, password: password, loginURL: loginURL, rimpBlade: rimpBlade}, err
+	sshClient, err := sshclient.New(host, username, password)
+	if err != nil {
+		return nil, err
+	}
+
+	ilo := &Ilo{
+		ip:        host,
+		username:  username,
+		password:  password,
+		loginURL:  loginURL,
+		rimpBlade: rimpBlade,
+		sshClient: sshClient,
+	}
+	return ilo, nil
 }
 
 // CheckCredentials verify whether the credentials are valid or not

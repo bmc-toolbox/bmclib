@@ -11,9 +11,6 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/internal/sshclient"
-	"github.com/bmc-toolbox/bmclib/providers/hp"
-
 	multierror "github.com/hashicorp/go-multierror"
 	log "github.com/sirupsen/logrus"
 )
@@ -96,37 +93,21 @@ func (c *C7000) httpLogin() (err error) {
 	return err
 }
 
-// Login initiates the connection to a chassis device
-func (c *C7000) sshLogin() (err error) {
-	if c.sshClient != nil {
-		return
-	}
-
-	log.WithFields(log.Fields{"step": "chassis connection", "vendor": hp.VendorID, "ip": c.ip}).Debug("connecting to chassis")
-	c.sshClient, err = sshclient.New(c.ip, c.username, c.password)
-	if err != nil {
-		return err
-	}
-
-	return err
-}
-
 // Close closes the connection properly
-func (c *C7000) Close() (err error) {
+func (c *C7000) Close() error {
+	var miltiErr error
+
 	if c.httpClient != nil {
 		payload := UserLogout{}
-		_, _, e := c.postXML(payload)
-		if e != nil {
-			err = multierror.Append(e, err)
+		_, _, err := c.postXML(payload)
+		if err != nil {
+			miltiErr = multierror.Append(miltiErr, err)
 		}
 	}
 
-	if c.sshClient != nil {
-		e := c.sshClient.Close()
-		if e != nil {
-			err = multierror.Append(e, err)
-		}
+	if err := c.sshClient.Close(); err != nil {
+		miltiErr = multierror.Append(miltiErr, err)
 	}
 
-	return err
+	return miltiErr
 }
