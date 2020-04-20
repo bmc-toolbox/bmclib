@@ -21,6 +21,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var (
+	idrac8SysDesc = []string{"PowerEdge M630", "PowerEdge R630"}
+	idrac9SysDesc = []string{"PowerEdge M640", "PowerEdge R640"}
+	m1000eSysDesc = []string{"PowerEdge M1000e"}
+)
+
 type Probe struct {
 	client   *http.Client
 	host     string
@@ -150,7 +156,7 @@ func (p *Probe) idrac8() (bmcConnection interface{}, err error) {
 		return bmcConnection, err
 	}
 
-	if resp.StatusCode == 200 && bytes.Contains(payload, []byte("PowerEdge M630")) {
+	if resp.StatusCode == 200 && containsAnySubStr(payload, idrac8SysDesc) {
 		log.WithFields(log.Fields{"step": "connection", "host": p.host, "vendor": devices.Dell}).Debug("it's a idrac8")
 		return idrac8.New(p.host, p.username, p.password)
 	}
@@ -173,7 +179,7 @@ func (p *Probe) idrac9() (bmcConnection interface{}, err error) {
 		return bmcConnection, err
 	}
 
-	if resp.StatusCode == 200 && bytes.Contains(payload, []byte("PowerEdge M640")) {
+	if resp.StatusCode == 200 && containsAnySubStr(payload, idrac9SysDesc) {
 		log.WithFields(log.Fields{"step": "connection", "host": p.host, "vendor": devices.Dell}).Debug("it's a idrac9")
 		return idrac9.New(p.host, p.username, p.password)
 	}
@@ -195,7 +201,7 @@ func (p *Probe) m1000e() (bmcConnection interface{}, err error) {
 		return bmcConnection, err
 	}
 
-	if resp.StatusCode == 200 && bytes.Contains(payload, []byte("PowerEdge M1000e")) {
+	if resp.StatusCode == 200 && containsAnySubStr(payload, m1000eSysDesc) {
 		log.WithFields(log.Fields{"step": "connection", "host": p.host, "vendor": devices.Dell}).Debug("it's a m1000e chassis")
 		return m1000e.New(p.host, p.username, p.password)
 	}
@@ -247,4 +253,13 @@ func (p *Probe) quanta() (bmcConnection interface{}, err error) {
 	}
 
 	return bmcConnection, errors.ErrDeviceNotMatched
+}
+
+func containsAnySubStr(data []byte, subStrs []string) bool {
+	for _, subStr := range subStrs {
+		if bytes.Contains(data, []byte(subStr)) {
+			return true
+		}
+	}
+	return false
 }
