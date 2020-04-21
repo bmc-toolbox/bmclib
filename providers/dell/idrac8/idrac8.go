@@ -41,8 +41,13 @@ type IDrac8 struct {
 }
 
 // New returns a new IDrac8 ready to be used
-func New(ip string, username string, password string) (iDrac *IDrac8, err error) {
-	return &IDrac8{ip: ip, username: username, password: password}, err
+func New(host string, username string, password string) (*IDrac8, error) {
+	sshClient, err := sshclient.New(host, username, password)
+	if err != nil {
+		return nil, err
+	}
+
+	return &IDrac8{ip: host, username: username, password: password, sshClient: sshClient}, err
 }
 
 // CheckCredentials verify whether the credentials are valid or not
@@ -115,7 +120,6 @@ func (i *IDrac8) put(endpoint string, payload []byte) (statusCode int, response 
 
 // posts the payload to the given endpoint
 func (i *IDrac8) post(endpoint string, data []byte, formDataContentType string) (statusCode int, body []byte, err error) {
-
 	u, err := url.Parse(fmt.Sprintf("https://%s/%s", i.ip, endpoint))
 	if err != nil {
 		return 0, []byte{}, err

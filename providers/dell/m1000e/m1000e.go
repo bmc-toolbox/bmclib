@@ -45,8 +45,13 @@ type M1000e struct {
 }
 
 // New returns a connection to M1000e
-func New(ip string, username string, password string) (chassis *M1000e, err error) {
-	return &M1000e{ip: ip, username: username, password: password}, err
+func New(host string, username string, password string) (*M1000e, error) {
+	sshClient, err := sshclient.New(host, username, password)
+	if err != nil {
+		return nil, err
+	}
+
+	return &M1000e{ip: host, username: username, password: password, sshClient: sshClient}, nil
 }
 
 // CheckCredentials verify whether the credentials are valid or not
