@@ -1,9 +1,9 @@
 package discover
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -16,104 +16,127 @@ import (
 	"github.com/spf13/viper"
 )
 
-func setup(answers map[string][]byte) (bmc interface{}, err error) {
+// setup creates a test server and returns a curried ScanAndConnect() function and a teardown func.
+func setup(answers map[string][]byte) (scanAndConnectCurry func(opts ...Option) (bmc interface{}, err error), cancel func()) {
 	viper.SetDefault("debug", true)
-	mux = http.NewServeMux()
-	server = httptest.NewTLSServer(mux)
+
+	mux := http.NewServeMux()
+	server := httptest.NewTLSServer(mux)
 	ip := strings.TrimPrefix(server.URL, "https://")
 	username := "super"
 	password := "test"
 
 	for url := range answers {
 		url := url
+
 		mux.HandleFunc(url, func(w http.ResponseWriter, r *http.Request) {
 			w.Write(answers[url])
 		})
 	}
 
-	bmc, err = ScanAndConnect(ip, username, password)
-	if err != nil {
-		return bmc, err
-	}
-
-	return bmc, err
+	return func(opts ...Option) (bmc interface{}, err error) {
+			return ScanAndConnect(ip, username, password, opts...)
+		},
+		server.Close
 }
 
-func tearDown() {
-	server.Close()
+func TestProbes(t *testing.T) {
+	testt := []struct {
+		name     string
+		wantHint string
+		wantType interface{}
+	}{
+		{
+			name:     "SupermicroX",
+			wantHint: Probe_supermicrox,
+			wantType: (*supermicrox.SupermicroX)(nil),
+		},
+		{
+			name:     "IDrac9",
+			wantHint: Probe_idrac9,
+			wantType: (*idrac9.IDrac9)(nil),
+		},
+		{
+			name:     "IDrac8",
+			wantHint: Probe_idrac8,
+			wantType: (*idrac8.IDrac8)(nil),
+		},
+		{
+			name:     "C7000",
+			wantHint: Probe_hpC7000,
+			wantType: (*c7000.C7000)(nil),
+		},
+		{
+			name:     "Ilo",
+			wantHint: Probe_hpIlo,
+			wantType: (*ilo.Ilo)(nil),
+		},
+	}
+
+	for _, tt := range testt {
+		tt := tt
+
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			scanAndConnect, cancel := setup(_answers[tt.name])
+			defer cancel()
+
+			hintCallBack := checkHint(t, tt.wantHint)
+
+			for _, hint := range _hints {
+				bmc, err := scanAndConnect(WithProbeHint(hint), WithHintCallBack(hintCallBack))
+				if err != nil {
+					t.Fatalf("error calling ScanAndConnect(): %v", err)
+				}
+
+				if reflect.TypeOf(tt.wantType) != reflect.TypeOf(bmc) {
+					t.Errorf("Want %T, got %T", tt.wantType, bmc)
+
+				}
+			}
+
+			// just for completeness and backward compatibility, do it again w/o optional params
+			bmc, err := scanAndConnect()
+			if err != nil {
+				t.Fatalf("error calling ScanAndConnect(): %v", err)
+			}
+
+			if reflect.TypeOf(tt.wantType) != reflect.TypeOf(bmc) {
+				t.Errorf("Want %T, got %T", tt.wantType, bmc)
+
+			}
+		})
+	}
 }
 
-func TestProbeHpIlo(t *testing.T) {
-	bmc, err := setup(answers["Ilo"])
-	if err != nil {
-		t.Fatalf("Found errors during the test setup: %v", err)
+func checkHint(t *testing.T, want string) func(string) error {
+	return func(got string) error {
+		t.Helper()
+
+		if got != want {
+			t.Errorf("hint call back returned wrong hint: want: %q, got: %q", want, got)
+		}
+
+		return nil
 	}
-	defer tearDown()
-
-	if answer, ok := bmc.(*ilo.Ilo); !ok {
-		fmt.Println(ok)
-		t.Errorf("Expected answer %T: found %T", &ilo.Ilo{}, answer)
-	}
-
-}
-
-func TestProbeHpC7000(t *testing.T) {
-	bmc, err := setup(answers["C7000"])
-	if err != nil {
-		t.Fatalf("Found errors during the test setup: %v", err)
-	}
-
-	if answer, ok := bmc.(*c7000.C7000); !ok {
-		fmt.Println(ok)
-		t.Errorf("Expected answer %T: found %T", &c7000.C7000{}, answer)
-	}
-
-	tearDown()
-}
-
-func TestProbeIDrac8(t *testing.T) {
-	bmc, err := setup(answers["IDrac8"])
-	if err != nil {
-		t.Fatalf("Found errors during the test setup %v", err)
-	}
-
-	if answer, ok := bmc.(*idrac8.IDrac8); !ok {
-		t.Errorf("Expected answer %T: found %T", &idrac8.IDrac8{}, answer)
-	}
-
-	tearDown()
-}
-
-func TestProbeIDrac9(t *testing.T) {
-	bmc, err := setup(answers["IDrac9"])
-	if err != nil {
-		t.Fatalf("Found errors during the test setup %v", err)
-	}
-
-	if answer, ok := bmc.(*idrac9.IDrac9); !ok {
-		t.Errorf("Expected answer %T: found %T", &idrac9.IDrac9{}, answer)
-	}
-
-	tearDown()
-}
-
-func TestProbeSupermicroX10(t *testing.T) {
-	bmc, err := setup(answers["SupermicroX"])
-	if err != nil {
-		t.Fatalf("Found errors during the test setup %v", err)
-	}
-
-	if answer, ok := bmc.(*supermicrox.SupermicroX); !ok {
-		t.Errorf("Expected answer %T: found %T", &supermicrox.SupermicroX{}, answer)
-	}
-
-	tearDown()
 }
 
 var (
-	mux     *http.ServeMux
-	server  *httptest.Server
-	answers = map[string]map[string][]byte{
+	_hints = []string{
+		"",
+		"garbage",
+		Probe_hpIlo,
+		Probe_idrac8,
+		Probe_idrac9,
+		Probe_supermicrox,
+		Probe_hpC7000,
+		Probe_m1000e,
+		Probe_quanta,
+		Probe_hpCl100,
+	}
+
+	_answers = map[string]map[string][]byte{
 		"IDrac8":      {"/session": []byte(`{"aimGetProp" : {"hostname" :"machine","gui_str_title_bar" :"","OEMHostName" :"machine.example.com","fwVersion" :"2.50.33","sysDesc" :"PowerEdge M630","status" : "OK"}}`)},
 		"IDrac9":      {"/sysmgmt/2015/bmc/info": []byte(`{"Attributes":{"ADEnabled":"Disabled","BuildVersion":"37","FwVer":"3.15.15.15","GUITitleBar":"spare-H16Z4M2","IsOEMBranded":"0","License":"Enterprise","SSOEnabled":"Disabled","SecurityPolicyMessage":"By accessing this computer, you confirm that such access complies with your organization's security policy.","ServerGen":"14G","SrvPrcName":"NULL","SystemLockdown":"Disabled","SystemModelName":"PowerEdge M640","TFAEnabled":"Disabled","iDRACName":"spare-H16Z4M2"}}`)},
 		"SupermicroX": {"/cgi/login.cgi": []byte("ATEN International")},
