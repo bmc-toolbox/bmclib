@@ -228,15 +228,13 @@ func (p *Probe) supermicrox(ctx context.Context, log logr.Logger) (bmcConnection
 
 	// looking for ATEN in the response payload isn't the most ideal way, although it is unique to Supermicros
 	if resp.StatusCode == 200 && bytes.Contains(payload, []byte("ATEN International")) {
-		log.V(1).Info("it's a supermicro", "step", "connection", "host", p.host, "vendor", string(devices.Supermicro))
+		log.V(1).Info("it's a supermicro", "step", "connection", "host", p.host, "vendor", devices.Supermicro, "hardwareType", supermicrox.X10)
 		conn, err := supermicrox.New(ctx, p.host, p.username, p.password, log)
 		if err != nil {
 			return bmcConnection, err
 		}
-		switch conn.HardwareType() {
-		case supermicrox.BmcType:
-			return conn, err
-		case supermicrox.X10:
+		hwType := conn.HardwareType()
+		if hwType == supermicrox.X10 {
 			return conn, err
 		}
 	}
@@ -249,9 +247,7 @@ func (p *Probe) supermicrox11(ctx context.Context, log logr.Logger) (bmcConnecti
 	if err != nil {
 		return bmcConnection, err
 	}
-
 	defer resp.Body.Close()
-	defer io.Copy(ioutil.Discard, resp.Body)
 
 	payload, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -260,14 +256,14 @@ func (p *Probe) supermicrox11(ctx context.Context, log logr.Logger) (bmcConnecti
 
 	// looking for ATEN in the response payload isn't the most ideal way, although it is unique to Supermicros
 	if resp.StatusCode == 200 && bytes.Contains(payload, []byte("ATEN International")) {
-		log.V(1).Info("it's a supermicrox11", "step", "connection", "host", p.host, "vendor", string(devices.Supermicro))
+		log.V(1).Info("it's a supermicrox11", "step", "connection", "host", p.host, "vendor", devices.Supermicro, "hardwareType", supermicrox11.X11)
 
 		conn, err := supermicrox11.New(ctx, p.host, p.username, p.password, log)
 		if err != nil {
 			return bmcConnection, err
 		}
-		switch conn.HardwareType() {
-		case supermicrox.X11:
+		hwType := conn.HardwareType()
+		if hwType == supermicrox11.X11 {
 			return conn, err
 		}
 	}

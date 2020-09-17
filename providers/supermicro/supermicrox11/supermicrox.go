@@ -18,18 +18,12 @@ import (
 	"github.com/go-logr/logr"
 
 	"github.com/bmc-toolbox/bmclib/providers/supermicro"
-
-	// this make possible to setup logging and properties at any stage
-	_ "github.com/bmc-toolbox/bmclib/logging"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
-	// HardwareType defines the bmc model that is supported by this package
+	// BmcType defines the bmc model that is supported by this package
 	BmcType = "supermicrox"
 
-	// X10 is the constant for x10 servers
-	X10 = "x10"
 	// X11 is the constant for x11 servers
 	X11 = "x11"
 )
@@ -54,6 +48,15 @@ func New(ctx context.Context, ip string, username string, password string, log l
 		log:      log}, err
 }
 
+// Connect to the BMC and add the client to SupermicroX
+func (s *SupermicroX) Connect() (err error) {
+	err = s.httpLogin()
+	if err != nil {
+		return err
+	}
+	return err
+}
+
 // CheckCredentials verify whether the credentials are valid or not
 func (s *SupermicroX) CheckCredentials() (err error) {
 	err = s.httpLogin()
@@ -66,8 +69,8 @@ func (s *SupermicroX) CheckCredentials() (err error) {
 // get calls a given json endpoint of the ilo and returns the data
 func (s *SupermicroX) get(endpoint string) (payload []byte, err error) {
 
-	bmcURL := fmt.Sprintf("https://%s", s.ip)
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s", bmcURL, endpoint), nil)
+	bmcURL := fmt.Sprintf("https://%s/%s", s.ip, endpoint)
+	req, err := http.NewRequest("GET", bmcURL, nil)
 	if err != nil {
 		return payload, err
 	}
@@ -83,13 +86,8 @@ func (s *SupermicroX) get(endpoint string) (payload []byte, err error) {
 		}
 	}
 
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpRequestOut(req, true)
-		if err == nil {
-			log.Println(fmt.Sprintf("[Request] %s/%s", bmcURL, endpoint))
-			log.Printf("%s", dump)
-		}
-	}
+	reqDump, _ := httputil.DumpRequestOut(req, true)
+	s.log.V(2).Info("trace", "url", bmcURL, "requestDump", string(reqDump))
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
@@ -97,13 +95,8 @@ func (s *SupermicroX) get(endpoint string) (payload []byte, err error) {
 	}
 	defer resp.Body.Close()
 
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpResponse(resp, true)
-		if err == nil {
-			log.Println("[Response]")
-			log.Printf("%s", dump)
-		}
-	}
+	respDump, _ := httputil.DumpResponse(resp, true)
+	s.log.V(2).Info("", "responseDump", string(respDump))
 
 	payload, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -119,16 +112,16 @@ func (s *SupermicroX) get(endpoint string) (payload []byte, err error) {
 
 // posts a urlencoded form to the given endpoint
 // nolint: gocyclo
-func (s *SupermicroX) post(endpoint string, urlValues *url.Values, form []byte, formDataContentType string) (statusCode int, err error) {
-
+func (s *SupermicroX) post(endpoint string, urlValues *url.Values, form []byte, formDataContentType string) (response string, statusCode int, err error) {
 	err = s.httpLogin()
 	if err != nil {
-		return statusCode, err
+		return response, statusCode, err
 	}
 
-	u, err := url.Parse(fmt.Sprintf("https://%s/cgi/%s", s.ip, endpoint))
+	bmcURL := fmt.Sprintf("https://%s/cgi/%s", s.ip, endpoint)
+	u, err := url.Parse(bmcURL)
 	if err != nil {
-		return statusCode, err
+		return response, statusCode, err
 	}
 
 	var req *http.Request
@@ -137,7 +130,7 @@ func (s *SupermicroX) post(endpoint string, urlValues *url.Values, form []byte, 
 
 		req, err = http.NewRequest("POST", u.String(), strings.NewReader(urlValues.Encode()))
 		if err != nil {
-			return statusCode, err
+			return response, statusCode, err
 		}
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
@@ -145,7 +138,7 @@ func (s *SupermicroX) post(endpoint string, urlValues *url.Values, form []byte, 
 
 		req, err = http.NewRequest("POST", u.String(), bytes.NewReader(form))
 		if err != nil {
-			return statusCode, err
+			return response, statusCode, err
 		}
 		// Set multipart form content type
 		req.Header.Set("Content-Type", formDataContentType)
@@ -157,35 +150,24 @@ func (s *SupermicroX) post(endpoint string, urlValues *url.Values, form []byte, 
 		}
 	}
 
-	if log.GetLevel() == log.TraceLevel {
-		fmt.Println(fmt.Sprintf("https://%s/cgi/%s", s.ip, endpoint))
-		dump, err := httputil.DumpRequestOut(req, true)
-		if err == nil {
-			log.Println("[Request]")
-			log.Printf("%s", dump)
-		}
-	}
+	reqDump, _ := httputil.DumpRequestOut(req, true)
+	s.log.V(2).Info("trace", "url", bmcURL, "requestDump", string(reqDump))
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
-		return statusCode, err
+		return response, statusCode, err
 	}
 	defer resp.Body.Close()
 
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpResponse(resp, true)
-		if err == nil {
-			log.Println("[Response]")
-			log.Printf("%s", dump)
-		}
-	}
+	respDump, _ := httputil.DumpResponse(resp, true)
+	s.log.V(2).Info("", "responseDump", string(respDump))
 
 	statusCode = resp.StatusCode
-	_, err = ioutil.ReadAll(resp.Body)
+	respPayload, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return statusCode, err
+		return response, statusCode, err
 	}
-	return statusCode, err
+	return string(respPayload), statusCode, err
 }
 
 func (s *SupermicroX) query(requestType string) (ipmi *supermicro.IPMI, err error) {
@@ -195,7 +177,7 @@ func (s *SupermicroX) query(requestType string) (ipmi *supermicro.IPMI, err erro
 	}
 
 	bmcURL := fmt.Sprintf("https://%s/cgi/ipmi.cgi", s.ip)
-	log.WithFields(log.Fields{"step": "bmc connection", "vendor": supermicro.VendorID, "ip": s.ip}).Debug("retrieving data from bmc")
+	s.log.V(1).Info("retrieving data from bmc", "step", "bmc connection", "vendor", supermicro.VendorID, "ip", s.ip)
 
 	req, err := http.NewRequest("POST", bmcURL, bytes.NewBufferString(requestType))
 	if err != nil {
@@ -211,17 +193,9 @@ func (s *SupermicroX) query(requestType string) (ipmi *supermicro.IPMI, err erro
 			req.AddCookie(cookie)
 		}
 	}
-	if log.GetLevel() == log.TraceLevel {
-		log.Trace(fmt.Sprintf("%s/cgi/%s", bmcURL, s.ip))
-		dump, err := httputil.DumpRequestOut(req, true)
-		if err == nil {
-			log.WithFields(log.Fields{
-				"type": "Request",
-				"when": "Before HTTP Action",
-				"dump": string(dump),
-			}).Trace()
-		}
-	}
+
+	reqDump, _ := httputil.DumpRequestOut(req, true)
+	s.log.V(2).Info("trace", "url", bmcURL, "requestDump", string(reqDump))
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
@@ -233,18 +207,8 @@ func (s *SupermicroX) query(requestType string) (ipmi *supermicro.IPMI, err erro
 	if err != nil {
 		return ipmi, err
 	}
-
-	if log.GetLevel() == log.TraceLevel {
-		log.Trace(fmt.Sprintf("%s/cgi/%s", bmcURL, s.ip))
-		dump, err := httputil.DumpRequestOut(req, true)
-		if err == nil {
-			log.WithFields(log.Fields{
-				"type": "Request",
-				"when": "After HTTP Action",
-				"dump": string(dump),
-			}).Trace()
-		}
-	}
+	respDump, _ := httputil.DumpResponse(resp, true)
+	s.log.V(2).Info("", "responseDump", string(respDump))
 
 	ipmi = &supermicro.IPMI{}
 	err = xml.Unmarshal(payload, ipmi)
@@ -295,8 +259,6 @@ func (s *SupermicroX) HardwareType() (model string) {
 
 	if strings.Contains(strings.ToLower(m), X11) {
 		return X11
-	} else if strings.Contains(strings.ToLower(m), X10) {
-		return X10
 	}
 
 	return BmcType

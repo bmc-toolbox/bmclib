@@ -12,7 +12,9 @@ import (
 	"github.com/bmc-toolbox/bmclib/providers/hp/c7000"
 	"github.com/bmc-toolbox/bmclib/providers/hp/ilo"
 	"github.com/bmc-toolbox/bmclib/providers/supermicro/supermicrox"
-
+	"github.com/bmc-toolbox/bmclib/providers/supermicro/supermicrox11"
+	"github.com/bombsimon/logrusr"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -22,8 +24,29 @@ func init() {
 	}
 }
 
+var Answers = map[string][]byte{
+	"op=FRU_INFO.XML&r=(0,0)": []byte(`<?xml version="1.0"?>
+		<IPMI>
+			<FRU_INFO RES="1">
+				<DEVICE ID="0"/>
+				<CHASSIS TYPE="1" PART_NUM="CSE-813MFTS-R407CBP" SERIAL_NUM="C813MLI52NF0380"/>
+				<BOARD LAN="0" MFG_DATE="2020/05/05 03:51:00" PROD_NAME="X11SCM-F" MFC_NAME="Supermicro" SERIAL_NUM="WM205S000401" PART_NUM="X11SCM-F"/>
+				<PRODUCT LAN="0" MFC_NAME="Supermicro" PROD_NAME="" PART_NUM="SYS-5019C-MR-PH004" VERSION="NONE" SERIAL_NUM="S402854X0700021" ASSET_TAG=""/>
+			</FRU_INFO>
+		</IPMI>`),
+	"FRU_INFO.XML=(0,0)": []byte(`<?xml version="1.0"?>
+		<IPMI>
+		  <FRU_INFO RES="1">
+			<DEVICE ID="0"/>
+			<CHASSIS TYPE="1" PART_NUM="CSE-F414IS2-R2K04BP" SERIAL_NUM="CF414AF38N50003"/>
+			<BOARD LAN="0" MFG_DATE="1996/01/01 00:00:00" PROD_NAME="X10DRFF-CTG" MFC_NAME="Supermicro" SERIAL_NUM="VM158S009467" PART_NUM="X10DRFF-CTG"/>
+			<PRODUCT LAN="0" MFC_NAME="Supermicro" PROD_NAME="NONE" PART_NUM="SYS-F618H6-FTPTL+" VERSION="NONE" SERIAL_NUM="A19627226A05569" ASSET_TAG="NONE"/>
+		  </FRU_INFO>
+		</IPMI>`),
+}
+
 // setup creates a test server and returns a curried ScanAndConnect() function and a teardown func.
-func setup(answers map[string][]byte) (scanAndConnectCurry func(opts ...Option) (bmc interface{}, err error), cancel func()) {
+func setup(vendor string, answers map[string][]byte) (scanAndConnectCurry func(opts ...Option) (bmc interface{}, err error), cancel func()) {
 	mux := http.NewServeMux()
 	server := httptest.NewTLSServer(mux)
 	ip := strings.TrimPrefix(server.URL, "https://")
@@ -34,11 +57,19 @@ func setup(answers map[string][]byte) (scanAndConnectCurry func(opts ...Option) 
 		url := url
 
 		mux.HandleFunc(url, func(w http.ResponseWriter, r *http.Request) {
-			_, _ = w.Write(answers[url])
+			_ = r.ParseForm()
+			if url == "/cgi/login.cgi" && r.Method == http.MethodPost && r.Form.Get("name") != "" {
+				_, _ = w.Write([]byte("../cgi/url_redirect.cgi?url_name=mainmenu"))
+			} else {
+				_, _ = w.Write(answers[url])
+			}
 		})
 	}
 
 	return func(opts ...Option) (bmc interface{}, err error) {
+			l := logrus.New()
+			//l.Level = logrus.TraceLevel
+			opts = append(opts, WithLogger(logrusr.NewLogger(l)))
 			return ScanAndConnect(ip, username, password, opts...)
 		},
 		server.Close
@@ -54,6 +85,11 @@ func TestProbes(t *testing.T) {
 			name:     "SupermicroX",
 			wantHint: ProbeSupermicrox,
 			wantType: (*supermicrox.SupermicroX)(nil),
+		},
+		{
+			name:     "SupermicroX11",
+			wantHint: ProbeSupermicrox11,
+			wantType: (*supermicrox11.SupermicroX)(nil),
 		},
 		{
 			name:     "IDrac9",
@@ -83,7 +119,7 @@ func TestProbes(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			scanAndConnect, cancel := setup(_answers[tt.name])
+			scanAndConnect, cancel := setup(tt.name, _answers[tt.name])
 			defer cancel()
 
 			hintCallBack := checkHint(t, tt.wantHint)
@@ -100,16 +136,18 @@ func TestProbes(t *testing.T) {
 				}
 			}
 
-			// just for completeness and backward compatibility, do it again w/o optional params
-			bmc, err := scanAndConnect()
-			if err != nil {
-				t.Fatalf("error calling ScanAndConnect(): %v", err)
-			}
+			/*
+				// just for completeness and backward compatibility, do it again w/o optional params
+				bmc, err := scanAndConnect()
+				if err != nil {
+					t.Fatalf("error calling ScanAndConnect(): %v", err)
+				}
 
-			if reflect.TypeOf(tt.wantType) != reflect.TypeOf(bmc) {
-				t.Errorf("Want %T, got %T", tt.wantType, bmc)
+				if reflect.TypeOf(tt.wantType) != reflect.TypeOf(bmc) {
+					t.Errorf("Want %T, got %T", tt.wantType, bmc)
 
-			}
+				}
+			*/
 		})
 	}
 }
@@ -134,6 +172,7 @@ var (
 		ProbeIdrac8,
 		ProbeIdrac9,
 		ProbeSupermicrox,
+		ProbeSupermicrox11,
 		ProbeHpC7000,
 		ProbeM1000e,
 		ProbeQuanta,
@@ -146,8 +185,27 @@ var (
 			"/sysmgmt/2015/bmc/info":    []byte(`{"Attributes":{"ADEnabled":"Disabled","BuildVersion":"37","FwVer":"3.15.15.15","GUITitleBar":"spare-H16Z4M2","IsOEMBranded":"0","License":"Enterprise","SSOEnabled":"Disabled","SecurityPolicyMessage":"By accessing this computer, you confirm that such access complies with your organization's security policy.","ServerGen":"14G","SrvPrcName":"NULL","SystemLockdown":"Disabled","SystemModelName":"PowerEdge M640","TFAEnabled":"Disabled","iDRACName":"spare-H16Z4M2"}}`),
 			"/sysmgmt/2015/bmc/session": []byte(`{"status": "good", "authResult": 7, "forwardUrl": "something", "errorMsg": "none"}`),
 		},
-		"SupermicroX": {"/cgi/login.cgi": []byte("ATEN International")},
-		"Quanta":      {"/page/login.html": []byte("Quanta")},
+		"SupermicroX": {"/cgi/login.cgi": []byte("ATEN International"),
+			"/cgi/ipmi.cgi": []byte(`<?xml version="1.0"?>
+		<IPMI>
+		  <FRU_INFO RES="1">
+			<DEVICE ID="0"/>
+			<CHASSIS TYPE="1" PART_NUM="CSE-F414IS2-R2K04BP" SERIAL_NUM="CF414AF38N50003"/>
+			<BOARD LAN="0" MFG_DATE="1996/01/01 00:00:00" PROD_NAME="X10DRFF-CTG" MFC_NAME="Supermicro" SERIAL_NUM="VM158S009467" PART_NUM="X10DRFF-CTG"/>
+			<PRODUCT LAN="0" MFC_NAME="Supermicro" PROD_NAME="NONE" PART_NUM="SYS-F618H6-FTPTL+" VERSION="NONE" SERIAL_NUM="A19627226A05569" ASSET_TAG="NONE"/>
+		  </FRU_INFO>
+		</IPMI>`)},
+		"SupermicroX11": {"/cgi/login.cgi": []byte("ATEN International"), "/cgi/ipmi.cgi": []byte(`<?xml version="1.0"?>
+		<IPMI>
+			<FRU_INFO RES="1">
+				<DEVICE ID="0"/>
+				<CHASSIS TYPE="1" PART_NUM="CSE-813MFTS-R407CBP" SERIAL_NUM="C813MLI52NF0380"/>
+				<BOARD LAN="0" MFG_DATE="2020/05/05 03:51:00" PROD_NAME="X11SCM-F" MFC_NAME="Supermicro" SERIAL_NUM="WM205S000401" PART_NUM="X11SCM-F"/>
+				<PRODUCT LAN="0" MFC_NAME="Supermicro" PROD_NAME="" PART_NUM="SYS-5019C-MR-PH004" VERSION="NONE" SERIAL_NUM="S402854X0700021" ASSET_TAG=""/>
+			</FRU_INFO>
+		</IPMI>`)},
+
+		"Quanta": {"/page/login.html": []byte("Quanta")},
 		"C7000": {
 			"/xmldata": []byte(`<RIMP>
 			<MP>

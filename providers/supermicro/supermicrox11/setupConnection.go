@@ -88,7 +88,7 @@ func (s *SupermicroX) Close() (err error) {
 					"type": "Request",
 					"when": "Before HTTP Action",
 					"dump": string(dump),
-				}).Trace()
+				}).Trace("")
 			}
 		}
 
@@ -108,7 +108,7 @@ func (s *SupermicroX) Close() (err error) {
 					"type": "Request",
 					"when": "After HTTP Action",
 					"dump": string(dump),
-				}).Trace()
+				}).Trace("")
 			}
 		}
 

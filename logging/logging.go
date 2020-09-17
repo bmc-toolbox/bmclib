@@ -19,6 +19,7 @@ func DefaultLogger() logr.Logger {
 		logrusLog.SetLevel(logrus.DebugLevel)
 	case "trace":
 		logrusLog.SetLevel(logrus.TraceLevel)
+		logrusLog.SetReportCaller(true)
 	default:
 		logrusLog.SetLevel(logrus.InfoLevel)
 	}

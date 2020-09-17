@@ -90,7 +90,7 @@ func (s *SupermicroX) queryUserAccounts() (userAccounts map[string]int, err erro
 	}
 
 	for idx, account := range ipmi.ConfigInfo.UserAccounts {
-		idx++
+		//idx++
 		if account.Name != "" {
 			userAccounts[account.Name] = idx
 		}
@@ -118,8 +118,16 @@ func (s *SupermicroX) User(users []*cfgresources.User) (err error) {
 		return errors.New(msg)
 	}
 
-	userID := 1
+	numUsers := len(currentUsers)
 	for _, user := range users {
+		/* TODO x11 only has 10 users available
+		if numUsers > 10 {
+			log.WithFields(log.Fields{
+				"user": user.Name,
+			}).Debug("user creation skipped, max users (10) reached.")
+			break
+		}
+		*/
 
 		if user.Name == "" {
 			msg := "User resource expects parameter: Name."
@@ -148,31 +156,24 @@ func (s *SupermicroX) User(users []*cfgresources.User) (err error) {
 		}
 
 		configUser := ConfigUser{}
-
-		// TODO handle new and existing users
-		//if the user is enabled setup parameters
-		if user.Enable {
-			configUser.Username = user.Name
-			configUser.Password = user.Password
-			configUser.UserID = userID
-
-			if user.Role == "admin" {
-				configUser.NewPrivilege = 4
-			} else if user.Role == "user" {
-				configUser.NewPrivilege = 3
-			}
+		configUser.Username = user.Name
+		configUser.Password = user.Password
+		if user.Role == "admin" {
+			configUser.NewPrivilege = 4
+		} else if user.Role == "user" {
+			configUser.NewPrivilege = 3
+		}
+		if existingUserID, exists := currentUsers[user.Name]; exists {
+			//configUser.UserID = existingUserID - 1
+			configUser.UserID = existingUserID
 		} else {
-			_, uexists := currentUsers[user.Name]
-			//if the user exists, delete it
-			//this is done by sending an empty username along with,
-			//the respective userid
-			if uexists {
-				configUser.Username = ""
-				configUser.UserID = currentUsers[user.Name]
-			} else {
-				userID++
-				continue
-			}
+			configUser.UserID = numUsers
+			numUsers++
+		}
+		// remove a user if disable is false. removes the ability to keep a user/password combo but have it disabled
+		// maybe rethink this.
+		if !user.Enable {
+			configUser.Username = ""
 		}
 
 		configUser.Op = "config_user"
@@ -180,10 +181,10 @@ func (s *SupermicroX) User(users []*cfgresources.User) (err error) {
 		form, _ := query.Values(configUser)
 		// user config updates appear to return 200 regardless if successful
 		// for example. post with a password that doesnt meet the complexity requirement gets a
-		// 200 with this response: esult=LANG_CONFUSER_COMMON_ERR7
+		// 200 with this response: result=LANG_CONFUSER_COMMON_ERR7
 		// post with a good password complexity gets a
 		// 200 with this response: result=LANG_CONFUSR_RESULT_OK
-		statusCode, err := s.post(endpoint, &form, []byte{}, "")
+		response, statusCode, err := s.post(endpoint, &form, []byte{}, "")
 		if err != nil || statusCode != 200 {
 			msg := "POST request to set User config returned error."
 			log.WithFields(log.Fields{
@@ -196,6 +197,15 @@ func (s *SupermicroX) User(users []*cfgresources.User) (err error) {
 			}).Warn(msg)
 			return errors.New(msg)
 		}
+		if strings.Contains(response, "LANG_CONFUSER_COMMON_ERR7") {
+			msg := "password did not meet complexity requirements"
+			log.WithFields(log.Fields{
+				"IP":       s.ip,
+				"Model":    s.HardwareType(),
+				"Response": response,
+			}).Debug(msg)
+			return errors.New(msg)
+		}
 
 		log.WithFields(log.Fields{
 			"IP":    s.ip,
@@ -203,7 +213,6 @@ func (s *SupermicroX) User(users []*cfgresources.User) (err error) {
 			"User":  user.Name,
 		}).Debug("User parameters applied.")
 
-		userID++
 	}
 
 	return err
@@ -240,7 +249,7 @@ func (s *SupermicroX) Network(cfg *cfgresources.Network) (reset bool, err error)
 
 	endpoint := fmt.Sprintf("op.cgi")
 	form, _ := query.Values(configPort)
-	statusCode, err := s.post(endpoint, &form, []byte{}, "")
+	_, statusCode, err := s.post(endpoint, &form, []byte{}, "")
 	if err != nil || statusCode != 200 {
 		msg := "POST request to set Port config returned error."
 		log.WithFields(log.Fields{
@@ -334,7 +343,7 @@ func (s *SupermicroX) Ntp(cfg *cfgresources.Ntp) (err error) {
 
 	endpoint := fmt.Sprintf("op.cgi")
 	form, _ := query.Values(configDateTime)
-	statusCode, err := s.post(endpoint, &form, []byte{}, "")
+	_, statusCode, err := s.post(endpoint, &form, []byte{}, "")
 	if err != nil || statusCode != 200 {
 		msg := "POST request to set Syslog config returned error."
 		log.WithFields(log.Fields{
@@ -482,7 +491,7 @@ func (s *SupermicroX) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfg
 
 		endpoint := "op.cgi"
 		form, _ := query.Values(configLdap)
-		statusCode, err := s.post(endpoint, &form, []byte{}, "")
+		_, statusCode, err := s.post(endpoint, &form, []byte{}, "")
 		if err != nil || statusCode != 200 {
 			msg := "POST request to set Ldap config returned error."
 			log.WithFields(log.Fields{
@@ -558,7 +567,7 @@ func (s *SupermicroX) Syslog(cfg *cfgresources.Syslog) (err error) {
 	form, _ := query.Values(configSyslog)
 
 	//returns okStarting Syslog daemon if successful
-	statusCode, err := s.post(endpoint, &form, []byte{}, "")
+	_, statusCode, err := s.post(endpoint, &form, []byte{}, "")
 	if err != nil || statusCode != 200 {
 		msg := "POST request to set Syslog config returned error."
 		log.WithFields(log.Fields{
@@ -578,7 +587,7 @@ func (s *SupermicroX) Syslog(cfg *cfgresources.Syslog) (err error) {
 	form = make(url.Values)
 	form.Add("enable", "1")
 
-	statusCode, err = s.post(endpoint, &form, []byte{}, "")
+	_, statusCode, err = s.post(endpoint, &form, []byte{}, "")
 	if err != nil || statusCode != 200 {
 		msg := "POST request to enable maintenance alerts returned error."
 		log.WithFields(log.Fields{
@@ -645,7 +654,7 @@ func (s *SupermicroX) UploadHTTPSCert(cert []byte, certFileName string, key []by
 	w.Close()
 
 	// 1. upload
-	status, err := s.post(endpoint, &url.Values{}, form.Bytes(), w.FormDataContentType())
+	_, status, err := s.post(endpoint, &url.Values{}, form.Bytes(), w.FormDataContentType())
 	if err != nil || status != 200 {
 		log.WithFields(log.Fields{
 			"IP":         s.ip,
@@ -688,7 +697,7 @@ func (s *SupermicroX) validateSSL() error {
 	v.Set("r", "(0,0)")
 
 	var endpoint = "ipmi.cgi"
-	status, err := s.post(endpoint, &v, []byte{}, "")
+	_, status, err := s.post(endpoint, &v, []byte{}, "")
 	if err != nil || status != 200 {
 		log.WithFields(log.Fields{
 			"IP":         s.ip,
@@ -714,7 +723,7 @@ func (s *SupermicroX) statusSSL() error {
 	v.Set("r", "(0,0)")
 
 	var endpoint = "ipmi.cgi"
-	status, err := s.post(endpoint, &v, []byte{}, "")
+	_, status, err := s.post(endpoint, &v, []byte{}, "")
 	if err != nil || status != 200 {
 		log.WithFields(log.Fields{
 			"IP":         s.ip,

@@ -247,12 +247,10 @@ func (s *SupermicroX) HardwareType() (model string) {
 	m, err := s.Model()
 	if err != nil {
 		// Here is your sin
+		s.log.V(1).Info("error getting hardwaretype", "err", err.Error())
 		return model
 	}
-
-	if strings.Contains(strings.ToLower(m), X11) {
-		return X11
-	} else if strings.Contains(strings.ToLower(m), X10) {
+	if strings.Contains(strings.ToLower(m), X10) {
 		return X10
 	}
 

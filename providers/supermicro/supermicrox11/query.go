@@ -68,7 +68,7 @@ func (s *SupermicroX) Screenshot() (response []byte, extension string, err error
 	}
 
 	form, _ := query.Values(capturePreview)
-	statusCode, err := s.post(postEndpoint, &form, []byte{}, "")
+	_, statusCode, err := s.post(postEndpoint, &form, []byte{}, "")
 	if err != nil {
 		return response, extension, err
 	}
