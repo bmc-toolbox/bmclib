@@ -13,14 +13,15 @@ import (
 )
 
 const (
-	ProbeHpIlo       = "hpilo"
-	ProbeIdrac8      = "idrac8"
-	ProbeIdrac9      = "idrac9"
-	ProbeSupermicrox = "supermicrox"
-	ProbeHpC7000     = "hpc7000"
-	ProbeM1000e      = "m1000e"
-	ProbeQuanta      = "quanta"
-	ProbeHpCl100     = "hpcl100"
+	ProbeHpIlo         = "hpilo"
+	ProbeIdrac8        = "idrac8"
+	ProbeIdrac9        = "idrac9"
+	ProbeSupermicrox   = "supermicrox"
+	ProbeSupermicrox11 = "supermicrox11"
+	ProbeHpC7000       = "hpc7000"
+	ProbeM1000e        = "m1000e"
+	ProbeQuanta        = "quanta"
+	ProbeHpCl100       = "hpcl100"
 )
 
 // ScanAndConnect will scan the bmc trying to learn the device type and return a working connection.
@@ -50,14 +51,15 @@ func ScanAndConnect(host string, username string, password string, options ...Op
 	var probe = Probe{client: client, username: username, password: password, host: host}
 
 	var devices = map[string]func(context.Context, logr.Logger) (interface{}, error){
-		ProbeHpIlo:       probe.hpIlo,
-		ProbeIdrac8:      probe.idrac8,
-		ProbeIdrac9:      probe.idrac9,
-		ProbeSupermicrox: probe.supermicrox,
-		ProbeHpC7000:     probe.hpC7000,
-		ProbeM1000e:      probe.m1000e,
-		ProbeQuanta:      probe.quanta,
-		ProbeHpCl100:     probe.hpCl100,
+		ProbeHpIlo:         probe.hpIlo,
+		ProbeIdrac8:        probe.idrac8,
+		ProbeIdrac9:        probe.idrac9,
+		ProbeSupermicrox:   probe.supermicrox,
+		ProbeSupermicrox11: probe.supermicrox11,
+		ProbeHpC7000:       probe.hpC7000,
+		ProbeM1000e:        probe.m1000e,
+		ProbeQuanta:        probe.quanta,
+		ProbeHpCl100:       probe.hpCl100,
 	}
 
 	order := []string{ProbeHpIlo,

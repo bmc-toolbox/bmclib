@@ -19,6 +19,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/providers/hp/c7000"
 	"github.com/bmc-toolbox/bmclib/providers/hp/ilo"
 	"github.com/bmc-toolbox/bmclib/providers/supermicro/supermicrox"
+	"github.com/bmc-toolbox/bmclib/providers/supermicro/supermicrox11"
 	"github.com/go-logr/logr"
 )
 
@@ -228,7 +229,47 @@ func (p *Probe) supermicrox(ctx context.Context, log logr.Logger) (bmcConnection
 	// looking for ATEN in the response payload isn't the most ideal way, although it is unique to Supermicros
 	if resp.StatusCode == 200 && bytes.Contains(payload, []byte("ATEN International")) {
 		log.V(1).Info("it's a supermicro", "step", "connection", "host", p.host, "vendor", string(devices.Supermicro))
-		return supermicrox.New(ctx, p.host, p.username, p.password, log)
+		conn, err := supermicrox.New(ctx, p.host, p.username, p.password, log)
+		if err != nil {
+			return bmcConnection, err
+		}
+		switch conn.HardwareType() {
+		case supermicrox.BmcType:
+			return conn, err
+		case supermicrox.X10:
+			return conn, err
+		}
+	}
+
+	return bmcConnection, errors.ErrDeviceNotMatched
+}
+
+func (p *Probe) supermicrox11(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {
+	resp, err := p.client.Get(fmt.Sprintf("https://%s/cgi/login.cgi", p.host))
+	if err != nil {
+		return bmcConnection, err
+	}
+
+	defer resp.Body.Close()
+	defer io.Copy(ioutil.Discard, resp.Body)
+
+	payload, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return bmcConnection, err
+	}
+
+	// looking for ATEN in the response payload isn't the most ideal way, although it is unique to Supermicros
+	if resp.StatusCode == 200 && bytes.Contains(payload, []byte("ATEN International")) {
+		log.V(1).Info("it's a supermicrox11", "step", "connection", "host", p.host, "vendor", string(devices.Supermicro))
+
+		conn, err := supermicrox11.New(ctx, p.host, p.username, p.password, log)
+		if err != nil {
+			return bmcConnection, err
+		}
+		switch conn.HardwareType() {
+		case supermicrox.X11:
+			return conn, err
+		}
 	}
 
 	return bmcConnection, errors.ErrDeviceNotMatched
