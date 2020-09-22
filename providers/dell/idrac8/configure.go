@@ -247,7 +247,7 @@ func (i *IDrac8) Syslog(cfg *cfgresources.Syslog) (err error) {
 		log.WithFields(log.Fields{
 			"endpoint": endpoint,
 			"step":     helper.WhosCalling(),
-			"response": string(response),
+			"response": fmt.Sprint(response),
 		}).Warn("request to set syslog configuration failed.")
 		return err
 	}
@@ -259,7 +259,7 @@ func (i *IDrac8) Syslog(cfg *cfgresources.Syslog) (err error) {
 		log.WithFields(log.Fields{
 			"endpoint": endpoint,
 			"step":     helper.WhosCalling(),
-			"response": string(response),
+			"response": fmt.Sprint(response),
 		}).Warn("request to enable alerts failed.")
 		return err
 	}
@@ -271,7 +271,7 @@ func (i *IDrac8) Syslog(cfg *cfgresources.Syslog) (err error) {
 		log.WithFields(log.Fields{
 			"endpoint": endpoint,
 			"step":     helper.WhosCalling(),
-			"response": string(response),
+			"response": fmt.Sprint(response),
 		}).Warn("request to set alerts filter configuration failed.")
 		return err
 	}
