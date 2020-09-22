@@ -29,15 +29,15 @@ func ScanAndConnect(host string, username string, password string, options ...Op
 	for _, optFn := range options {
 		optFn(opts)
 	}
-	if opts.Log == nil {
+	if opts.Logger == nil {
 		// create a default logger
-		opts.Log = logging.DefaultLogger()
+		opts.Logger = logging.DefaultLogger()
 	}
-	opts.Log.V(1).Info("detecting vendor", "step", "ScanAndConnect", "host", host)
+	opts.Logger.V(1).Info("detecting vendor", "step", "ScanAndConnect", "host", host)
 
 	// return a connection to our dummy device.
 	if os.Getenv("BMCLIB_TEST") == "1" {
-		opts.Log.V(1).Info("returning connection to dummy ibmc device.", "step", "ScanAndConnect", "host", host)
+		opts.Logger.V(1).Info("returning connection to dummy ibmc device.", "step", "ScanAndConnect", "host", host)
 		bmc, err := ibmc.New(host, username, password)
 		return bmc, err
 	}
@@ -77,9 +77,9 @@ func ScanAndConnect(host string, username string, password string, options ...Op
 	for _, probeID := range order {
 		probeDevice := devices[probeID]
 
-		opts.Log.V(1).Info("probing to identify device", "step", "ScanAndConnect", "host", host)
+		opts.Logger.V(1).Info("probing to identify device", "step", "ScanAndConnect", "host", host)
 
-		bmcConnection, err := probeDevice(opts.Context, opts.Log)
+		bmcConnection, err := probeDevice(opts.Context, opts.Logger)
 
 		// if the device didn't match continue to probe
 		if err != nil && (err == errors.ErrDeviceNotMatched) {
@@ -112,7 +112,7 @@ type Options struct {
 	// If your code persists the hint as "best effort", always return a nil error.  Callback is
 	// synchronous.
 	HintCallback func(string) error
-	Log          logr.Logger
+	Logger       logr.Logger
 	Context      context.Context
 }
 
@@ -129,7 +129,7 @@ func WithHintCallBack(fn func(string) error) Option {
 }
 
 // WithLogger sets the Options.Logger option
-func WithLogger(log logr.Logger) Option { return func(args *Options) { args.Log = log } }
+func WithLogger(log logr.Logger) Option { return func(args *Options) { args.Logger = log } }
 
 // WithContext sets the Options.Context option
 func WithContext(ctx context.Context) Option { return func(args *Options) { args.Context = ctx } }
