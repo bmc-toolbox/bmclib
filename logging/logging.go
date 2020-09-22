@@ -16,10 +16,8 @@ func DefaultLogger() logr.Logger {
 
 	switch os.Getenv("BMCLIB_LOG_LEVEL") {
 	case "debug":
-		//logrusLog.SetReportCaller(true)
 		logrusLog.SetLevel(logrus.DebugLevel)
 	case "trace":
-		//logrusLog.SetReportCaller(true)
 		logrusLog.SetLevel(logrus.TraceLevel)
 	default:
 		logrusLog.SetLevel(logrus.InfoLevel)
