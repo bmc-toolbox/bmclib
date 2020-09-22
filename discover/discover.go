@@ -102,6 +102,7 @@ func ScanAndConnect(host string, username string, password string, options ...Op
 	return nil, errors.ErrVendorUnknown
 }
 
+// Options to pass in
 type Options struct {
 	// Hint is a probe ID that hints which probe should be probed first.
 	Hint string
@@ -127,8 +128,8 @@ func WithHintCallBack(fn func(string) error) Option {
 	return func(args *Options) { args.HintCallback = fn }
 }
 
-// WithLog sets the Options.Log option
-func WithLog(userLog logr.Logger) Option { return func(args *Options) { args.Log = userLog } }
+// WithLogger sets the Options.Logger option
+func WithLogger(log logr.Logger) Option { return func(args *Options) { args.Log = log } }
 
 // WithContext sets the Options.Context option
 func WithContext(ctx context.Context) Option { return func(args *Options) { args.Context = ctx } }
