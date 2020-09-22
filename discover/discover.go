@@ -50,14 +50,14 @@ func ScanAndConnect(host string, username string, password string, options ...Op
 	var probe = Probe{client: client, username: username, password: password, host: host}
 
 	var devices = map[string]func(context.Context, logr.Logger) (interface{}, error){
-		Probe_hpIlo:       probe.hpIlo,
-		Probe_idrac8:      probe.idrac8,
-		Probe_idrac9:      probe.idrac9,
-		Probe_supermicrox: probe.supermicrox,
-		Probe_hpC7000:     probe.hpC7000,
-		Probe_m1000e:      probe.m1000e,
-		Probe_quanta:      probe.quanta,
-		Probe_hpCl100:     probe.hpCl100,
+		ProbeHpIlo:       probe.hpIlo,
+		ProbeIdrac8:      probe.idrac8,
+		ProbeIdrac9:      probe.idrac9,
+		ProbeSupermicrox: probe.supermicrox,
+		ProbeHpC7000:     probe.hpC7000,
+		ProbeM1000e:      probe.m1000e,
+		ProbeQuanta:      probe.quanta,
+		ProbeHpCl100:     probe.hpCl100,
 	}
 
 	order := []string{ProbeHpIlo,
