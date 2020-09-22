@@ -48,27 +48,27 @@ func TestProbes(t *testing.T) {
 	}{
 		{
 			name:     "SupermicroX",
-			wantHint: Probe_supermicrox,
+			wantHint: ProbeSupermicrox,
 			wantType: (*supermicrox.SupermicroX)(nil),
 		},
 		{
 			name:     "IDrac9",
-			wantHint: Probe_idrac9,
+			wantHint: ProbeIdrac9,
 			wantType: (*idrac9.IDrac9)(nil),
 		},
 		{
 			name:     "IDrac8",
-			wantHint: Probe_idrac8,
+			wantHint: ProbeIdrac8,
 			wantType: (*idrac8.IDrac8)(nil),
 		},
 		{
 			name:     "C7000",
-			wantHint: Probe_hpC7000,
+			wantHint: ProbeHpC7000,
 			wantType: (*c7000.C7000)(nil),
 		},
 		{
 			name:     "Ilo",
-			wantHint: Probe_hpIlo,
+			wantHint: ProbeHpIlo,
 			wantType: (*ilo.Ilo)(nil),
 		},
 	}
@@ -126,14 +126,14 @@ var (
 	_hints = []string{
 		"",
 		"garbage",
-		Probe_hpIlo,
-		Probe_idrac8,
-		Probe_idrac9,
-		Probe_supermicrox,
-		Probe_hpC7000,
-		Probe_m1000e,
-		Probe_quanta,
-		Probe_hpCl100,
+		ProbeHpIlo,
+		ProbeIdrac8,
+		ProbeIdrac9,
+		ProbeSupermicrox,
+		ProbeHpC7000,
+		ProbeM1000e,
+		ProbeQuanta,
+		ProbeHpCl100,
 	}
 
 	_answers = map[string]map[string][]byte{

@@ -288,7 +288,7 @@ func (i *IDrac9) Ldap(cfg *cfgresources.Ldap) (err error) {
 	}
 
 	if cfg.Port == 0 {
-		params["Port"] = string(cfg.Port)
+		params["Port"] = fmt.Sprint(cfg.Port)
 	}
 
 	if cfg.UserAttribute != "" {

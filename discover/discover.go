@@ -13,14 +13,14 @@ import (
 )
 
 const (
-	Probe_hpIlo       = "hpilo"
-	Probe_idrac8      = "idrac8"
-	Probe_idrac9      = "idrac9"
-	Probe_supermicrox = "supermicrox"
-	Probe_hpC7000     = "hpc7000"
-	Probe_m1000e      = "m1000e"
-	Probe_quanta      = "quanta"
-	Probe_hpCl100     = "hpcl100"
+	ProbeHpIlo       = "hpilo"
+	ProbeIdrac8      = "idrac8"
+	ProbeIdrac9      = "idrac9"
+	ProbeSupermicrox = "supermicrox"
+	ProbeHpC7000     = "hpc7000"
+	ProbeM1000e      = "m1000e"
+	ProbeQuanta      = "quanta"
+	ProbeHpCl100     = "hpcl100"
 )
 
 // ScanAndConnect will scan the bmc trying to learn the device type and return a working connection.
@@ -60,14 +60,14 @@ func ScanAndConnect(host string, username string, password string, options ...Op
 		Probe_hpCl100:     probe.hpCl100,
 	}
 
-	order := []string{Probe_hpIlo,
-		Probe_idrac8,
-		Probe_idrac9,
-		Probe_supermicrox,
-		Probe_hpC7000,
-		Probe_m1000e,
-		Probe_quanta,
-		Probe_hpCl100,
+	order := []string{ProbeHpIlo,
+		ProbeIdrac8,
+		ProbeIdrac9,
+		ProbeSupermicrox,
+		ProbeHpC7000,
+		ProbeM1000e,
+		ProbeQuanta,
+		ProbeHpCl100,
 	}
 
 	if opts.Hint != "" {
