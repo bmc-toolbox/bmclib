@@ -160,7 +160,7 @@ func (p *Probe) idrac8(ctx context.Context, log logr.Logger) (bmcConnection inte
 
 	if resp.StatusCode == 200 && containsAnySubStr(payload, idrac8SysDesc) {
 		log.V(1).Info("step", "connection", "host", p.host, "vendor", string(devices.Dell), "msg", "it's a idrac8")
-		return idrac8.New(p.host, p.username, p.password)
+		return idrac8.New(ctx, p.host, p.username, p.password, log)
 	}
 
 	return bmcConnection, errors.ErrDeviceNotMatched

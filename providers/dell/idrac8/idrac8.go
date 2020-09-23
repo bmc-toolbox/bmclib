@@ -2,6 +2,7 @@ package idrac8
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -17,10 +18,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/providers/dell"
-
-	// this make possible to setup logging and properties at any stage
-	_ "github.com/bmc-toolbox/bmclib/logging"
-	log "github.com/sirupsen/logrus"
+	"github.com/go-logr/logr"
 )
 
 const (
@@ -38,16 +36,18 @@ type IDrac8 struct {
 	st1            string
 	st2            string
 	iDracInventory *dell.IDracInventory
+	ctx            context.Context
+	log            logr.Logger
 }
 
 // New returns a new IDrac8 ready to be used
-func New(host string, username string, password string) (*IDrac8, error) {
+func New(ctx context.Context, host string, username string, password string, log logr.Logger) (*IDrac8, error) {
 	sshClient, err := sshclient.New(host, username, password)
 	if err != nil {
 		return nil, err
 	}
 
-	return &IDrac8{ip: host, username: username, password: password, sshClient: sshClient}, err
+	return &IDrac8{ip: host, username: username, password: password, sshClient: sshClient, ctx: ctx, log: log}, err
 }
 
 // CheckCredentials verify whether the credentials are valid or not
@@ -80,15 +80,8 @@ func (i *IDrac8) put(endpoint string, payload []byte) (statusCode int, response 
 		}
 	}
 
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpRequestOut(req, true)
-		if err == nil {
-			log.Println(fmt.Sprintf("[Request] %s/%s", bmcURL, endpoint))
-			log.Println(">>>>>>>>>>>>>>>")
-			log.Printf("%s\n\n", dump)
-			log.Println(">>>>>>>>>>>>>>>")
-		}
-	}
+	reqDump, _ := httputil.DumpRequestOut(req, true)
+	i.log.V(2).Info("requestTrace", "requestDump", string(reqDump), "url", fmt.Sprintf("%s/%s", bmcURL, endpoint))
 
 	resp, err := i.httpClient.Do(req)
 	if err != nil {
@@ -96,15 +89,8 @@ func (i *IDrac8) put(endpoint string, payload []byte) (statusCode int, response 
 	}
 	defer resp.Body.Close()
 
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpResponse(resp, true)
-		if err == nil {
-			log.Println("[Response]")
-			log.Println("<<<<<<<<<<<<<<")
-			log.Printf("%s\n\n", dump)
-			log.Println("<<<<<<<<<<<<<<")
-		}
-	}
+	respDump, _ := httputil.DumpResponse(resp, true)
+	i.log.V(2).Info("responseTrace", "responseDump", string(respDump))
 
 	response, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -153,30 +139,16 @@ func (i *IDrac8) post(endpoint string, data []byte, formDataContentType string) 
 		req.AddCookie(c)
 	}
 
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpRequestOut(req, true)
-		if err == nil {
-			log.Println(fmt.Sprintf("[Request] https://%s/%s", i.ip, endpoint))
-			log.Println(">>>>>>>>>>>>>>>")
-			log.Printf("%s\n\n", dump)
-			log.Println(">>>>>>>>>>>>>>>")
-		}
-	}
+	reqDump, _ := httputil.DumpRequestOut(req, true)
+	i.log.V(2).Info("requestTrace", "requestDump", string(reqDump), "url", fmt.Sprintf("https://%s/%s", i.ip, endpoint))
 
 	resp, err := i.httpClient.Do(req)
 	if err != nil {
 		return 0, []byte{}, err
 	}
 	defer resp.Body.Close()
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpResponse(resp, true)
-		if err == nil {
-			log.Println("[Response]")
-			log.Println("<<<<<<<<<<<<<<")
-			log.Printf("%s\n\n", dump)
-			log.Println("<<<<<<<<<<<<<<")
-		}
-	}
+	respDump, _ := httputil.DumpResponse(resp, true)
+	i.log.V(2).Info("responseTrace", "responseDump", string(respDump))
 
 	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -189,7 +161,7 @@ func (i *IDrac8) post(endpoint string, data []byte, formDataContentType string) 
 
 // get calls a given json endpoint of the ilo and returns the data
 func (i *IDrac8) get(endpoint string, extraHeaders *map[string]string) (payload []byte, err error) {
-	log.WithFields(log.Fields{"step": "bmc connection", "vendor": dell.VendorID, "ip": i.ip, "endpoint": endpoint}).Debug("retrieving data from bmc")
+	i.log.V(1).Info("retrieving data from bmc", "step", "bmc connection", "vendor", dell.VendorID, "ip", i.ip, "endpoint", endpoint)
 
 	bmcURL := fmt.Sprintf("https://%s", i.ip)
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s", bmcURL, endpoint), nil)
@@ -213,30 +185,16 @@ func (i *IDrac8) get(endpoint string, extraHeaders *map[string]string) (payload 
 			req.AddCookie(cookie)
 		}
 	}
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpRequestOut(req, true)
-		if err == nil {
-			log.Println(fmt.Sprintf("[Request] https://%s/%s", bmcURL, endpoint))
-			log.Println(">>>>>>>>>>>>>>>")
-			log.Printf("%s\n\n", dump)
-			log.Println(">>>>>>>>>>>>>>>")
-		}
-	}
+	reqDump, _ := httputil.DumpRequestOut(req, true)
+	i.log.V(2).Info("requestTrace", "requestDump", string(reqDump), "url", fmt.Sprintf("%s/%s", bmcURL, endpoint))
 
 	resp, err := i.httpClient.Do(req)
 	if err != nil {
 		return payload, err
 	}
 	defer resp.Body.Close()
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpResponse(resp, true)
-		if err == nil {
-			log.Println("[Response]")
-			log.Println("<<<<<<<<<<<<<<")
-			log.Printf("%s\n\n", dump)
-			log.Println("<<<<<<<<<<<<<<")
-		}
-	}
+	respDump, _ := httputil.DumpResponse(resp, true)
+	i.log.V(2).Info("responseTrace", "responseDump", string(respDump))
 
 	payload, err = ioutil.ReadAll(resp.Body)
 	if err != nil {

@@ -14,7 +14,6 @@ import (
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/internal/helper"
-	log "github.com/sirupsen/logrus"
 )
 
 // This ensures the compiler errors if this type is missing
@@ -86,25 +85,27 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 	err = i.validateUserCfg(cfgUsers)
 	if err != nil {
 		msg := "User config validation failed."
-		log.WithFields(log.Fields{
-			"step":  "applyUserParams",
-			"IP":    i.ip,
-			"Model": i.HardwareType(),
-			"Error": err,
-		}).Warn(msg)
-		return errors.New(msg)
+		err = errors.New(msg)
+		i.log.V(1).Error(err, msg,
+			"step", "applyUserParams",
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"Error", err.Error(),
+		)
+		return err
 	}
 
 	idracUsers, err := i.queryUsers()
 	if err != nil {
 		msg := "Unable to query existing users"
-		log.WithFields(log.Fields{
-			"step":  "applyUserParams",
-			"IP":    i.ip,
-			"Model": i.HardwareType(),
-			"Error": err,
-		}).Warn(msg)
-		return errors.New(msg)
+		err = errors.New(msg)
+		i.log.V(1).Error(err, msg,
+			"step", "applyUserParams",
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"Error", err.Error(),
+		)
+		return err
 	}
 
 	////for each configuration user
@@ -118,13 +119,13 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 			if uExists == false {
 				userID, userInfo, err = getEmptyUserSlot(idracUsers)
 				if err != nil {
-					log.WithFields(log.Fields{
-						"IP":    i.ip,
-						"Model": i.HardwareType(),
-						"step":  helper.WhosCalling(),
-						"User":  cfgUser.Name,
-						"Error": err,
-					}).Warn("Unable to add new User.")
+					i.log.V(1).Info("Unable to add new User.",
+						"IP", i.ip,
+						"Model", i.HardwareType(),
+						"step", helper.WhosCalling(),
+						"User", cfgUser.Name,
+						"Error", err.Error(),
+					)
 					continue
 				}
 			}
@@ -145,13 +146,13 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 
 			err = i.putUser(userID, userInfo)
 			if err != nil {
-				log.WithFields(log.Fields{
-					"IP":    i.ip,
-					"Model": i.HardwareType(),
-					"step":  helper.WhosCalling(),
-					"User":  cfgUser.Name,
-					"Error": err,
-				}).Warn("Add/Update user request failed.")
+				i.log.V(1).Info("Add/Update user request failed.",
+					"IP", i.ip,
+					"Model", i.HardwareType(),
+					"step", helper.WhosCalling(),
+					"User", cfgUser.Name,
+					"Error", err.Error(),
+				)
 				continue
 			}
 
@@ -168,21 +169,17 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 
 			err = i.putUser(userID, userInfo)
 			if err != nil {
-				log.WithFields(log.Fields{
-					"IP":    i.ip,
-					"Model": i.HardwareType(),
-					"step":  helper.WhosCalling(),
-					"User":  cfgUser.Name,
-					"Error": err,
-				}).Warn("Disable user request failed.")
+				i.log.V(1).Info("Disable user request failed.",
+					"IP", i.ip,
+					"Model", i.HardwareType(),
+					"step", helper.WhosCalling(),
+					"User", cfgUser.Name,
+					"Error", err.Error(),
+				)
 			}
 		}
 
-		log.WithFields(log.Fields{
-			"IP":    i.ip,
-			"Model": i.HardwareType(),
-			"User":  cfgUser.Name,
-		}).Debug("User parameters applied.")
+		i.log.V(1).Info("User parameters applied.", "IP", i.ip, "Model", i.HardwareType(), "User", cfgUser.Name)
 	}
 
 	return err
@@ -201,16 +198,12 @@ func (i *IDrac8) Syslog(cfg *cfgresources.Syslog) (err error) {
 	enable := "Enabled"
 
 	if cfg.Server == "" {
-		log.WithFields(log.Fields{
-			"step": helper.WhosCalling(),
-		}).Warn("Syslog resource expects parameter: Server.")
+		i.log.V(1).Info("Syslog resource expects parameter: Server.", "step", helper.WhosCalling())
 		return
 	}
 
 	if cfg.Port == 0 {
-		log.WithFields(log.Fields{
-			"step": helper.WhosCalling(),
-		}).Debug("Syslog resource port set to default: 514.")
+		i.log.V(1).Info("Syslog resource port set to default: 514.", "step", helper.WhosCalling())
 		port = 514
 	} else {
 		port = cfg.Port
@@ -218,9 +211,7 @@ func (i *IDrac8) Syslog(cfg *cfgresources.Syslog) (err error) {
 
 	if cfg.Enable != true {
 		enable = "Disabled"
-		log.WithFields(log.Fields{
-			"step": helper.WhosCalling(),
-		}).Debug("Syslog resource declared with enable: false.")
+		i.log.V(1).Info("Syslog resource declared with enable: false.", "step", helper.WhosCalling())
 	}
 
 	data := make(map[string]Syslog)
@@ -235,20 +226,18 @@ func (i *IDrac8) Syslog(cfg *cfgresources.Syslog) (err error) {
 
 	payload, err := json.Marshal(data)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"step": helper.WhosCalling(),
-		}).Warn("Unable to marshal syslog payload.")
+		i.log.V(1).Error(err, "Unable to marshal syslog payload.", "step", helper.WhosCalling())
 		return err
 	}
 
 	endpoint := "sysmgmt/2012/server/configgroup/iDRAC.SysLog"
 	response, _, err := i.put(endpoint, payload)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"endpoint": endpoint,
-			"step":     helper.WhosCalling(),
-			"response": fmt.Sprint(response),
-		}).Warn("request to set syslog configuration failed.")
+		i.log.V(1).Error(err, "request to set syslog configuration failed.",
+			"endpoint", endpoint,
+			"step", helper.WhosCalling(),
+			"response", fmt.Sprint(response),
+		)
 		return err
 	}
 
@@ -256,11 +245,11 @@ func (i *IDrac8) Syslog(cfg *cfgresources.Syslog) (err error) {
 	endpoint = "data?set=alertStatus:1"
 	response, _, err = i.post(endpoint, []byte{}, "")
 	if err != nil {
-		log.WithFields(log.Fields{
-			"endpoint": endpoint,
-			"step":     helper.WhosCalling(),
-			"response": fmt.Sprint(response),
-		}).Warn("request to enable alerts failed.")
+		i.log.V(1).Error(err, "request to enable alerts failed.",
+			"endpoint", endpoint,
+			"step", helper.WhosCalling(),
+			"response", fmt.Sprint(response),
+		)
 		return err
 	}
 
@@ -268,18 +257,15 @@ func (i *IDrac8) Syslog(cfg *cfgresources.Syslog) (err error) {
 	endpoint = "data?set=" + setAlertFilterPayload
 	response, _, err = i.post(endpoint, []byte{}, "")
 	if err != nil {
-		log.WithFields(log.Fields{
-			"endpoint": endpoint,
-			"step":     helper.WhosCalling(),
-			"response": fmt.Sprint(response),
-		}).Warn("request to set alerts filter configuration failed.")
+		i.log.V(1).Error(err, "request to set alerts filter configuration failed.",
+			"endpoint", endpoint,
+			"step", helper.WhosCalling(),
+			"response", fmt.Sprint(response),
+		)
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    i.ip,
-		"Model": i.HardwareType(),
-	}).Debug("Syslog parameters applied.")
+	i.log.V(1).Info("Syslog parameters applied.", "IP", i.ip, "Model", i.HardwareType())
 
 	return err
 }
@@ -289,16 +275,12 @@ func (i *IDrac8) Syslog(cfg *cfgresources.Syslog) (err error) {
 func (i *IDrac8) Ntp(cfg *cfgresources.Ntp) (err error) {
 
 	if cfg.Server1 == "" {
-		log.WithFields(log.Fields{
-			"step": "apply-ntp-cfg",
-		}).Warn("NTP resource expects parameter: server1.")
+		i.log.V(1).Info("NTP resource expects parameter: server1.", "step", "apply-ntp-cfg")
 		return
 	}
 
 	if cfg.Timezone == "" {
-		log.WithFields(log.Fields{
-			"step": "apply-ntp-cfg",
-		}).Warn("NTP resource expects parameter: timezone.")
+		i.log.V(1).Info("NTP resource expects parameter: timezone.", "step", "apply-ntp-cfg")
 		return
 	}
 
@@ -312,9 +294,7 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 
 	var enable int
 	if cfg.Enable != true {
-		log.WithFields(log.Fields{
-			"step": helper.WhosCalling(),
-		}).Debug("Ntp resource declared with enable: false.")
+		i.log.V(1).Info("Ntp resource declared with enable: false.", "step", helper.WhosCalling())
 		enable = 0
 	} else {
 		enable = 1
@@ -335,19 +315,16 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 	endpoint := fmt.Sprintf("data?%s", queryStr)
 	response, err := i.get(endpoint, nil)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"IP":       i.ip,
-			"Model":    i.HardwareType(),
-			"endpoint": endpoint,
-			"step":     helper.WhosCalling(),
-			"response": string(response),
-		}).Warn("GET request failed.")
+		i.log.V(1).Info("GET request failed.",
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"endpoint", endpoint,
+			"step", helper.WhosCalling(),
+			"response", string(response),
+		)
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    i.ip,
-		"Model": i.HardwareType(),
-	}).Debug("NTP servers param applied.")
+	i.log.V(1).Info("NTP servers param applied.", "IP", i.ip, "Model", i.HardwareType())
 
 }
 
@@ -356,25 +333,25 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 func (i *IDrac8) Ldap(cfg *cfgresources.Ldap) error {
 
 	if cfg.Server == "" {
-		msg := "Ldap resource parameter Server required but not declared."
-		log.WithFields(log.Fields{
-			"step": "applyLdapServerParam",
-		}).Warn(msg)
-		return errors.New(msg)
+		msg := "ldap resource parameter Server required but not declared."
+		err := errors.New(msg)
+		i.log.V(1).Error(err, msg, "step", "applyLdapServerParam")
+		return err
 	}
 
 	endpoint := fmt.Sprintf("data?set=xGLServer:%s", cfg.Server)
 	response, err := i.get(endpoint, nil)
 	if err != nil {
 		msg := "Request to set ldap server failed."
-		log.WithFields(log.Fields{
-			"IP":       i.ip,
-			"Model":    i.HardwareType(),
-			"endpoint": endpoint,
-			"step":     helper.WhosCalling(),
-			"response": string(response),
-		}).Warn(msg)
-		return errors.New(msg)
+		err = errors.New(msg)
+		i.log.V(1).Error(err, msg,
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"endpoint", endpoint,
+			"step", helper.WhosCalling(),
+			"response", string(response),
+		)
+		return err
 	}
 
 	err = i.applyLdapSearchFilterParam(cfg)
@@ -382,10 +359,7 @@ func (i *IDrac8) Ldap(cfg *cfgresources.Ldap) error {
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    i.ip,
-		"Model": i.HardwareType(),
-	}).Debug("Ldap server param set.")
+	i.log.V(1).Info("Ldap server param set.", "IP", i.ip, "Model", i.HardwareType())
 	return nil
 }
 
@@ -395,30 +369,26 @@ func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) error {
 
 	if cfg.SearchFilter == "" {
 		msg := "Ldap resource parameter SearchFilter required but not declared."
-		log.WithFields(log.Fields{
-			"step": "applyLdapSearchFilterParam",
-		}).Warn(msg)
-		return errors.New(msg)
+		err := errors.New(msg)
+		i.log.V(1).Error(err, msg, "step", "applyLdapSearchFilterParam")
+		return err
 	}
 
 	endpoint := fmt.Sprintf("data?set=xGLSearchFilter:%s", escapeLdapString(cfg.SearchFilter))
 	response, err := i.get(endpoint, nil)
 	if err != nil {
 		msg := "request to set ldap search filter failed."
-		log.WithFields(log.Fields{
-			"IP":       i.ip,
-			"Model":    i.HardwareType(),
-			"endpoint": endpoint,
-			"step":     helper.WhosCalling(),
-			"response": string(response),
-		}).Warn(msg)
-		return errors.New(msg)
+		i.log.V(1).Error(err, msg,
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"endpoint", endpoint,
+			"step", helper.WhosCalling(),
+			"response", string(response),
+		)
+		return err
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    i.ip,
-		"Model": i.HardwareType(),
-	}).Debug("Ldap search filter param applied.")
+	i.log.V(1).Info("Ldap search filter param applied.", "IP", i.ip, "Model", i.HardwareType())
 	return nil
 }
 
@@ -440,34 +410,30 @@ func (i *IDrac8) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresou
 	//first some preliminary checks
 	if cfgLdap.Port == 0 {
 		msg := "Ldap resource parameter Port required but not declared"
-		log.WithFields(log.Fields{
-			"step": "applyLdapRoleGroupPrivParam",
-		}).Warn(msg)
-		return errors.New(msg)
+		err = errors.New(msg)
+		i.log.V(1).Error(err, msg, "step", "applyLdapRoleGroupPrivParam")
+		return err
 	}
 
 	if cfgLdap.BaseDn == "" {
 		msg := "Ldap resource parameter BaseDn required but not declared."
-		log.WithFields(log.Fields{
-			"step": "applyLdapRoleGroupPrivParam",
-		}).Warn(msg)
-		return errors.New(msg)
+		err = errors.New(msg)
+		i.log.V(1).Error(err, msg, "step", "applyLdapRoleGroupPrivParam")
+		return err
 	}
 
 	if cfgLdap.UserAttribute == "" {
 		msg := "Ldap resource parameter userAttribute required but not declared."
-		log.WithFields(log.Fields{
-			"step": "applyLdapRoleGroupPrivParam",
-		}).Warn(msg)
-		return errors.New(msg)
+		err = errors.New(msg)
+		i.log.V(1).Error(err, msg, "step", "applyLdapRoleGroupPrivParam")
+		return err
 	}
 
 	if cfgLdap.GroupAttribute == "" {
 		msg := "Ldap resource parameter groupAttribute required but not declared."
-		log.WithFields(log.Fields{
-			"step": "applyLdapRoleGroupPrivParam",
-		}).Warn(msg)
-		return errors.New(msg)
+		err = errors.New(msg)
+		i.log.V(1).Error(err, msg, "step", "applyLdapRoleGroupPrivParam")
+		return err
 	}
 
 	//for each ldap group
@@ -481,38 +447,29 @@ func (i *IDrac8) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresou
 
 		if group.Role == "" {
 			msg := "Ldap resource parameter Role required but not declared."
-			log.WithFields(log.Fields{
-				"Role": group.Role,
-				"step": "applyLdapGroupParams",
-			}).Warn(msg)
+			i.log.V(1).Info(msg, "Role", group.Role, "step", "applyLdapGroupParams")
 			continue
 		}
 
 		if group.Group == "" {
 			msg := "Ldap resource parameter Group required but not declared."
-			log.WithFields(log.Fields{
-				"Role": group.Role,
-				"step": "applyLdapGroupParams",
-			}).Warn(msg)
-			return errors.New(msg)
+			err = errors.New(msg)
+			i.log.V(1).Error(err, msg, "Role", group.Role, "step", "applyLdapGroupParams")
+			return err
 		}
 
 		if group.GroupBaseDn == "" {
 			msg := "Ldap resource parameter GroupBaseDn required but not declared."
-			log.WithFields(log.Fields{
-				"Role": group.Role,
-				"step": "applyLdapGroupParams",
-			}).Warn(msg)
-			return errors.New(msg)
+			err = errors.New(msg)
+			i.log.V(1).Error(err, msg, "Role", group.Role, "step", "applyLdapGroupParams")
+			return err
 		}
 
 		if !i.isRoleValid(group.Role) {
 			msg := "Ldap resource Role must be a valid role: admin OR user."
-			log.WithFields(log.Fields{
-				"Role": group.Role,
-				"step": "applyLdapGroupParams",
-			}).Warn(msg)
-			return errors.New(msg)
+			err = errors.New(msg)
+			i.log.V(1).Error(err, msg, "Role", group.Role, "step", "applyLdapGroupParams")
+			return err
 		}
 
 		groupDn := fmt.Sprintf("%s,%s", group.Group, group.GroupBaseDn)
@@ -521,21 +478,21 @@ func (i *IDrac8) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresou
 		endpoint := fmt.Sprintf("data?set=xGLGroup%dName:%s", groupID, groupDn)
 		response, err := i.get(endpoint, nil)
 		if err != nil {
-			log.WithFields(log.Fields{
-				"IP":       i.ip,
-				"Model":    i.HardwareType(),
-				"endpoint": endpoint,
-				"step":     "applyLdapGroupParams",
-				"response": string(response),
-			}).Warn("GET request failed.")
+			i.log.V(1).Error(err, "GET request failed.",
+				"IP", i.ip,
+				"Model", i.HardwareType(),
+				"endpoint", endpoint,
+				"step", "applyLdapGroupParams",
+				"response", string(response),
+			)
 			return err
 		}
 
-		log.WithFields(log.Fields{
-			"IP":    i.ip,
-			"Model": i.HardwareType(),
-			"Role":  group.Role,
-		}).Debug("Ldap GroupDN config applied.")
+		i.log.V(1).Info("Ldap GroupDN config applied.",
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"Role", group.Role,
+		)
 
 		switch group.Role {
 		case "user":
@@ -556,11 +513,11 @@ func (i *IDrac8) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresou
 
 	err = i.applyLdapRoleGroupPrivParam(cfgLdap, groupPrivilegeParam)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"IP":    i.ip,
-			"Model": i.HardwareType(),
-			"step":  "applyLdapGroupParams",
-		}).Warn("Unable to set Ldap Role Group Privileges.")
+		i.log.V(1).Error(err, "Unable to set Ldap Role Group Privileges.",
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"step", "applyLdapGroupParams",
+		)
 		return err
 	}
 	return err
@@ -594,21 +551,18 @@ func (i *IDrac8) applyLdapRoleGroupPrivParam(cfg *cfgresources.Ldap, groupPrivil
 	endpoint := "postset?ldapconf"
 	responseCode, responseBody, err := i.post(endpoint, []byte(payload), "")
 	if err != nil || responseCode != 200 {
-		log.WithFields(log.Fields{
-			"IP":           i.ip,
-			"Model":        i.HardwareType(),
-			"endpoint":     endpoint,
-			"step":         helper.WhosCalling(),
-			"responseCode": responseCode,
-			"response":     string(responseBody),
-		}).Warn("POST request failed.")
+		i.log.V(1).Error(err, "POST request failed.",
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"endpoint", endpoint,
+			"step", helper.WhosCalling(),
+			"responseCode", responseCode,
+			"response", string(responseBody),
+		)
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    i.ip,
-		"Model": i.HardwareType(),
-	}).Debug("Ldap Group role privileges applied.")
+	i.log.V(1).Info("Ldap Group role privileges applied.", "IP", i.ip, "Model", i.HardwareType())
 
 	return err
 }
@@ -621,19 +575,16 @@ func (i *IDrac8) applyTimezoneParam(timezone string) {
 	endpoint := fmt.Sprintf("data?set=tm_tz_str_zone:%s", timezone)
 	response, err := i.get(endpoint, nil)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"IP":       i.ip,
-			"Model":    i.HardwareType(),
-			"endpoint": endpoint,
-			"step":     helper.WhosCalling(),
-			"response": string(response),
-		}).Warn("GET request failed.")
+		i.log.V(1).Info("GET request failed.",
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"endpoint", endpoint,
+			"step", helper.WhosCalling(),
+			"response", string(response),
+		)
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    i.ip,
-		"Model": i.HardwareType(),
-	}).Debug("Timezone param applied.")
+	i.log.V(1).Info("Timezone param applied.", "IP", i.ip, "Model", i.HardwareType())
 
 }
 
@@ -674,21 +625,18 @@ func (i *IDrac8) Network(cfg *cfgresources.Network) (reset bool, err error) {
 
 	responseCode, responseBody, err := i.post(endpoint, []byte(payload), "")
 	if err != nil || responseCode != 200 {
-		log.WithFields(log.Fields{
-			"IP":           i.ip,
-			"Model":        i.HardwareType(),
-			"endpoint":     endpoint,
-			"step":         helper.WhosCalling(),
-			"responseCode": responseCode,
-			"response":     string(responseBody),
-		}).Warn("POST request to set Network params failed.")
+		i.log.V(1).Error(err, "POST request to set Network params failed.",
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"endpoint", endpoint,
+			"step", helper.WhosCalling(),
+			"responseCode", responseCode,
+			"response", string(responseBody),
+		)
 		return reset, err
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    i.ip,
-		"Model": i.HardwareType(),
-	}).Debug("Network config parameters applied.")
+	i.log.V(1).Info("Network config parameters applied.", "IP", i.ip, "Model", i.HardwareType())
 	return reset, err
 }
 
@@ -713,13 +661,13 @@ func (i *IDrac8) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, er
 
 	body, err := i.get(queryString, nil)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"IP":       i.ip,
-			"Model":    i.HardwareType(),
-			"endpoint": endpoint,
-			"step":     helper.WhosCalling(),
-			"Error":    err,
-		}).Warn("GET request failed.")
+		i.log.V(1).Error(err, "GET request failed.",
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"endpoint", endpoint,
+			"step", helper.WhosCalling(),
+			"Error", err.Error(),
+		)
 		return []byte{}, err
 	}
 
@@ -771,13 +719,13 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	// 1. POST upload x509 cert
 	status, body, err := i.post(endpoint, form.Bytes(), w.FormDataContentType())
 	if err != nil || status != 201 {
-		log.WithFields(log.Fields{
-			"IP":       i.ip,
-			"Model":    i.HardwareType(),
-			"endpoint": endpoint,
-			"step":     helper.WhosCalling(),
-			"status":   status,
-		}).Warn("Cert form upload POST request failed, expected 201.")
+		i.log.V(1).Error(err, "Cert form upload POST request failed, expected 201.",
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"endpoint", endpoint,
+			"step", helper.WhosCalling(),
+			"status", status,
+		)
 		return false, err
 	}
 
@@ -785,23 +733,23 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	var certStore = new(certStore)
 	err = json.Unmarshal(body, certStore)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"step":  helper.WhosCalling(),
-			"IP":    i.ip,
-			"Model": i.HardwareType(),
-			"Error": err,
-		}).Warn("Unable to unmarshal cert store response payload.")
+		i.log.V(1).Error(err, "Unable to unmarshal cert store response payload.",
+			"step", helper.WhosCalling(),
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"Error", err.Error(),
+		)
 		return false, err
 	}
 
 	resourceURI, err := json.Marshal(certStore.File)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"step":  helper.WhosCalling(),
-			"IP":    i.ip,
-			"Model": i.HardwareType(),
-			"Error": err,
-		}).Warn("Unable to marshal cert store resource URI.")
+		i.log.V(1).Error(err, "Unable to marshal cert store resource URI.",
+			"step", helper.WhosCalling(),
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"Error", err.Error(),
+		)
 		return false, err
 	}
 
@@ -809,13 +757,13 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	endpoint = "sysmgmt/2012/server/network/ssl/cert"
 	status, _, err = i.post(endpoint, []byte(resourceURI), "")
 	if err != nil || status != 201 {
-		log.WithFields(log.Fields{
-			"IP":       i.ip,
-			"Model":    i.HardwareType(),
-			"endpoint": endpoint,
-			"step":     helper.WhosCalling(),
-			"status":   status,
-		}).Warn("Cert form upload POST request failed, expected 201.")
+		i.log.V(1).Error(err, "Cert form upload POST request failed, expected 201.",
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"endpoint", endpoint,
+			"step", helper.WhosCalling(),
+			"status", status,
+		)
 		return false, err
 	}
 
