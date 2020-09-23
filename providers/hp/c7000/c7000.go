@@ -1,6 +1,7 @@
 package c7000
 
 import (
+	"context"
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
@@ -12,9 +13,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/providers/hp"
-
-	// this make possible to setup logging and properties at any stage
-	_ "github.com/bmc-toolbox/bmclib/logging"
+	"github.com/go-logr/logr"
 )
 
 const (
@@ -31,10 +30,12 @@ type C7000 struct {
 	httpClient *http.Client
 	sshClient  *sshclient.SSHClient
 	Rimp       *hp.Rimp
+	ctx        context.Context
+	log        logr.Logger
 }
 
 // New returns a connection to C7000
-func New(host string, username string, password string) (*C7000, error) {
+func New(ctx context.Context, host string, username string, password string, log logr.Logger) (*C7000, error) {
 	client, err := httpclient.Build()
 	if err != nil {
 		return nil, err
@@ -66,7 +67,7 @@ func New(host string, username string, password string) (*C7000, error) {
 		return nil, err
 	}
 
-	return &C7000{ip: host, username: username, password: password, Rimp: Rimp, sshClient: sshClient}, nil
+	return &C7000{ip: host, username: username, password: password, Rimp: Rimp, sshClient: sshClient, ctx: ctx, log: log}, nil
 }
 
 // CheckCredentials verify whether the credentials are valid or not

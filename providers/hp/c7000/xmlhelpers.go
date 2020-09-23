@@ -11,8 +11,6 @@ import (
 	"net/url"
 	"strings"
 	"time"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // wraps the XML to be sent in the SOAP envelope
@@ -83,13 +81,8 @@ func (c *C7000) postXML(data interface{}) (statusCode int, body []byte, err erro
 
 	//	req.Header.Add("Content-Type", "application/soap+xml; charset=utf-8")
 	req.Header.Add("Content-Type", "text/plain;charset=UTF-8")
-	if log.GetLevel() == log.DebugLevel {
-		log.Println(fmt.Sprintf("https://%s/hpoa", c.ip))
-		dump, err := httputil.DumpRequestOut(req, true)
-		if err == nil {
-			log.Printf("%s\n\n", dump)
-		}
-	}
+	reqDump, _ := httputil.DumpRequestOut(req, true)
+	c.log.V(1).Info("requestDebug", "requestDump", string(reqDump), "url", fmt.Sprintf("https://%s/hpoa", c.ip))
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -97,12 +90,8 @@ func (c *C7000) postXML(data interface{}) (statusCode int, body []byte, err erro
 	}
 	defer resp.Body.Close()
 
-	if log.GetLevel() == log.DebugLevel {
-		dump, err := httputil.DumpResponse(resp, true)
-		if err == nil {
-			log.Printf("%s\n\n", dump)
-		}
-	}
+	respDump, _ := httputil.DumpResponse(resp, true)
+	c.log.V(1).Info("responseTrace", "responseDump", string(respDump))
 
 	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {

@@ -109,7 +109,7 @@ func (p *Probe) hpC7000(ctx context.Context, log logr.Logger) (bmcConnection int
 
 		if iloXMLC.Infra2 != nil {
 			log.V(1).Info("step", "ScanAndConnect", "host", p.host, "vendor", string(devices.HP), "msg", "it's a chassis")
-			return c7000.New(p.host, p.username, p.password)
+			return c7000.New(ctx, p.host, p.username, p.password, log)
 		}
 
 	}
