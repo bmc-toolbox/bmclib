@@ -8,7 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// DefaultLogger is no client logger is defined
+// DefaultLogger if no client logger is defined
 func DefaultLogger() logr.Logger {
 	logrusLog := logrus.New()
 	logrusLog.SetFormatter(&logrus.JSONFormatter{})
