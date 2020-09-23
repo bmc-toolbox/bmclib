@@ -12,10 +12,6 @@ import (
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/providers/dell"
 	multierror "github.com/hashicorp/go-multierror"
-
-	// this make possible to setup logging and properties at any stage
-	_ "github.com/bmc-toolbox/bmclib/logging"
-	log "github.com/sirupsen/logrus"
 )
 
 func (i *IDrac9) httpLogin() (err error) {
@@ -28,7 +24,7 @@ func (i *IDrac9) httpLogin() (err error) {
 		return err
 	}
 
-	log.WithFields(log.Fields{"step": "bmc connection", "vendor": dell.VendorID, "ip": i.ip}).Debug("connecting to bmc")
+	i.log.V(1).Info("connecting to bmc", "step", "bmc connection", "vendor", dell.VendorID, "ip", i.ip)
 
 	url := fmt.Sprintf("https://%s/sysmgmt/2015/bmc/session", i.ip)
 	req, err := http.NewRequest("POST", url, nil)
@@ -38,15 +34,8 @@ func (i *IDrac9) httpLogin() (err error) {
 	req.Header.Add("user", fmt.Sprintf("\"%s\"", i.username))
 	req.Header.Add("password", fmt.Sprintf("\"%s\"", i.password))
 
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpRequestOut(req, true)
-		if err == nil {
-			log.Println(fmt.Sprintf("[Request] %s", url))
-			log.Println(">>>>>>>>>>>>>>>")
-			log.Printf("%s\n\n", dump)
-			log.Println(">>>>>>>>>>>>>>>")
-		}
-	}
+	reqDump, _ := httputil.DumpRequestOut(req, true)
+	i.log.V(2).Info("requestTrace", "requestDump", string(reqDump), "url", url)
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
@@ -68,15 +57,8 @@ func (i *IDrac9) httpLogin() (err error) {
 	}
 	defer resp.Body.Close()
 
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpResponse(resp, false)
-		if err == nil {
-			log.Println("[Response]")
-			log.Println("<<<<<<<<<<<<<<")
-			log.Printf("%s\n\n", dump)
-			log.Println("<<<<<<<<<<<<<<")
-		}
-	}
+	respDump, _ := httputil.DumpResponse(resp, true)
+	i.log.V(2).Info("responseTrace", "responseDump", string(respDump))
 
 	iDracAuth := &dell.IDracAuth{}
 	err = json.Unmarshal(payload, iDracAuth)

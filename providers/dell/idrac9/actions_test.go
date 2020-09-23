@@ -1,9 +1,12 @@
 package idrac9
 
 import (
+	"context"
 	"testing"
 
 	"github.com/bmc-toolbox/bmclib/sshmock"
+	"github.com/bombsimon/logrusr"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -53,7 +56,8 @@ func setupBMC() (func(), *IDrac9, error) {
 		return nil, nil, err
 	}
 
-	bmc, err := New(address, sshUsername, sshPassword)
+	testLogger := logrus.New()
+	bmc, err := New(context.TODO(), address, sshUsername, sshPassword, logrusr.NewLogger(testLogger))
 	if err != nil {
 		tearDown()
 		return nil, nil, err

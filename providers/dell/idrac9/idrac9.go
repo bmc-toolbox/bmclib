@@ -2,6 +2,7 @@ package idrac9
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -11,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/go-logr/logr"
 	"github.com/hashicorp/go-multierror"
 
 	"github.com/bmc-toolbox/bmclib/devices"
@@ -18,10 +20,6 @@ import (
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/providers/dell"
-
-	// this make possible to setup logging and properties at any stage
-	_ "github.com/bmc-toolbox/bmclib/logging"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -38,16 +36,18 @@ type IDrac9 struct {
 	httpClient     *http.Client
 	sshClient      *sshclient.SSHClient
 	iDracInventory *dell.IDracInventory
+	ctx            context.Context
+	log            logr.Logger
 }
 
 // New returns a new IDrac9 ready to be used
-func New(host string, username string, password string) (*IDrac9, error) {
+func New(ctx context.Context, host string, username string, password string, log logr.Logger) (*IDrac9, error) {
 	sshClient, err := sshclient.New(host, username, password)
 	if err != nil {
 		return nil, err
 	}
 
-	return &IDrac9{ip: host, username: username, password: password, sshClient: sshClient}, nil
+	return &IDrac9{ip: host, username: username, password: password, sshClient: sshClient, ctx: ctx, log: log}, nil
 }
 
 // CheckCredentials verify whether the credentials are valid or not
@@ -61,7 +61,7 @@ func (i *IDrac9) CheckCredentials() (err error) {
 
 // get calls a given json endpoint of the ilo and returns the data
 func (i *IDrac9) get(endpoint string, extraHeaders *map[string]string) (payload []byte, err error) {
-	log.WithFields(log.Fields{"step": "bmc connection", "vendor": dell.VendorID, "ip": i.ip, "endpoint": endpoint}).Debug("retrieving data from bmc")
+	i.log.V(1).Info("retrieving data from bmc", "step", "bmc connection", "vendor", dell.VendorID, "ip", i.ip, "endpoint", endpoint)
 
 	bmcURL := fmt.Sprintf("https://%s", i.ip)
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s", bmcURL, endpoint), nil)
@@ -77,15 +77,8 @@ func (i *IDrac9) get(endpoint string, extraHeaders *map[string]string) (payload 
 		}
 	}
 
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpRequestOut(req, true)
-		if err == nil {
-			log.Println(fmt.Sprintf("[Request] %s/%s", bmcURL, endpoint))
-			log.Println(">>>>>>>>>>>>>>>")
-			log.Printf("%s\n\n", dump)
-			log.Println(">>>>>>>>>>>>>>>")
-		}
-	}
+	reqDump, _ := httputil.DumpRequestOut(req, true)
+	i.log.V(2).Info("requestTrace", "requestDump", string(reqDump), "url", fmt.Sprintf("%s/%s", bmcURL, endpoint))
 
 	resp, err := i.httpClient.Do(req)
 	if err != nil {
@@ -93,15 +86,8 @@ func (i *IDrac9) get(endpoint string, extraHeaders *map[string]string) (payload 
 	}
 	defer resp.Body.Close()
 
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpResponse(resp, true)
-		if err == nil {
-			log.Println("[Response]")
-			log.Println("<<<<<<<<<<<<<<")
-			log.Printf("%s\n\n", dump)
-			log.Println("<<<<<<<<<<<<<<")
-		}
-	}
+	respDump, _ := httputil.DumpResponse(resp, true)
+	i.log.V(2).Info("responseTrace", "responseDump", string(respDump))
 
 	payload, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -126,15 +112,8 @@ func (i *IDrac9) put(endpoint string, payload []byte) (statusCode int, response 
 
 	req.Header.Add("XSRF-TOKEN", i.xsrfToken)
 
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpRequestOut(req, true)
-		if err == nil {
-			log.Println(fmt.Sprintf("[Request] %s/%s", bmcURL, endpoint))
-			log.Println(">>>>>>>>>>>>>>>")
-			log.Printf("%s\n\n", dump)
-			log.Println(">>>>>>>>>>>>>>>")
-		}
-	}
+	reqDump, _ := httputil.DumpRequestOut(req, true)
+	i.log.V(2).Info("requestTrace", "requestDump", string(reqDump), "url", fmt.Sprintf("%s/%s", bmcURL, endpoint))
 
 	resp, err := i.httpClient.Do(req)
 	if err != nil {
@@ -142,15 +121,8 @@ func (i *IDrac9) put(endpoint string, payload []byte) (statusCode int, response 
 	}
 	defer resp.Body.Close()
 
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpResponse(resp, true)
-		if err == nil {
-			log.Println("[Response]")
-			log.Println("<<<<<<<<<<<<<<")
-			log.Printf("%s\n\n", dump)
-			log.Println("<<<<<<<<<<<<<<")
-		}
-	}
+	respDump, _ := httputil.DumpResponse(resp, true)
+	i.log.V(2).Info("responseTrace", "responseDump", string(respDump))
 
 	response, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -176,15 +148,8 @@ func (i *IDrac9) delete(endpoint string) (statusCode int, payload []byte, err er
 
 	req.Header.Add("XSRF-TOKEN", i.xsrfToken)
 
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpRequestOut(req, true)
-		if err == nil {
-			log.Println(fmt.Sprintf("[Request] %s", fmt.Sprintf("%s/%s", bmcURL, endpoint)))
-			log.Println(">>>>>>>>>>>>>>>")
-			log.Printf("%s\n\n", dump)
-			log.Println(">>>>>>>>>>>>>>>")
-		}
-	}
+	reqDump, _ := httputil.DumpRequestOut(req, true)
+	i.log.V(2).Info("requestTrace", "requestDump", string(reqDump), "url", fmt.Sprintf("%s/%s", bmcURL, endpoint))
 
 	resp, err := i.httpClient.Do(req)
 	if err != nil {
@@ -192,15 +157,8 @@ func (i *IDrac9) delete(endpoint string) (statusCode int, payload []byte, err er
 	}
 	defer resp.Body.Close()
 
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpResponse(resp, true)
-		if err == nil {
-			log.Println("[Response]")
-			log.Println("<<<<<<<<<<<<<<")
-			log.Printf("%s\n\n", dump)
-			log.Println("<<<<<<<<<<<<<<")
-		}
-	}
+	respDump, _ := httputil.DumpResponse(resp, true)
+	i.log.V(2).Info("responseTrace", "responseDump", string(respDump))
 
 	payload, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -235,30 +193,16 @@ func (i *IDrac9) post(endpoint string, data []byte, formDataContentType string) 
 		req.Header.Set("Content-Type", formDataContentType)
 	}
 
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpRequestOut(req, true)
-		if err == nil {
-			log.Println(fmt.Sprintf("[Request] https://%s/%s", i.ip, endpoint))
-			log.Println(">>>>>>>>>>>>>>>")
-			log.Printf("%s\n\n", dump)
-			log.Println(">>>>>>>>>>>>>>>")
-		}
-	}
+	reqDump, _ := httputil.DumpRequestOut(req, true)
+	i.log.V(2).Info("requestTrace", "requestDump", string(reqDump), "url", fmt.Sprintf("https://%s/%s", i.ip, endpoint))
 
 	resp, err := i.httpClient.Do(req)
 	if err != nil {
 		return 0, []byte{}, err
 	}
 	defer resp.Body.Close()
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpResponse(resp, true)
-		if err == nil {
-			log.Println("[Response]")
-			log.Println("<<<<<<<<<<<<<<")
-			log.Printf("%s\n\n", dump)
-			log.Println("<<<<<<<<<<<<<<")
-		}
-	}
+	respDump, _ := httputil.DumpResponse(resp, true)
+	i.log.V(2).Info("responseTrace", "responseDump", string(respDump))
 
 	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
