@@ -9,8 +9,6 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/helper"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // CurrentHTTPSCert returns the current x509 certficates configured on the BMC
@@ -63,13 +61,14 @@ func (i *Ilo) queryDirectoryGroups() (directoryGroups []DirectoryGroups, err err
 
 	payload, err := i.get(endpoint)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"IP":       i.ip,
-			"Model":    i.HardwareType(),
-			"endpoint": endpoint,
-			"step":     helper.WhosCalling(),
-			"Error":    err,
-		}).Warn("GET request failed.")
+		msg := "GET request failed."
+		i.log.V(1).Info(msg,
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"endpoint", endpoint,
+			"step", helper.WhosCalling(),
+			"Error", err.Error(),
+		)
 		return directoryGroups, err
 	}
 
@@ -77,12 +76,13 @@ func (i *Ilo) queryDirectoryGroups() (directoryGroups []DirectoryGroups, err err
 	//fmt.Printf("--> %+v\n", userinfo["users"])
 	err = json.Unmarshal(payload, &directoryGroupAccts)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"IP":    i.ip,
-			"step":  helper.WhosCalling(),
-			"Model": i.HardwareType(),
-			"Error": err,
-		}).Warn("Unable to unmarshal payload.")
+		msg := "Unable to unmarshal payload."
+		i.log.V(1).Info(msg,
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"step", helper.WhosCalling(),
+			"Error", err.Error(),
+		)
 		return directoryGroups, err
 	}
 
@@ -95,13 +95,14 @@ func (i *Ilo) queryUsers() (usersInfo []UserInfo, err error) {
 
 	payload, err := i.get(endpoint)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"IP":       i.ip,
-			"Model":    i.HardwareType(),
-			"endpoint": endpoint,
-			"step":     helper.WhosCalling(),
-			"Error":    err,
-		}).Warn("GET request failed.")
+		msg := "GET request failed."
+		i.log.V(1).Info(msg,
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"endpoint", endpoint,
+			"step", helper.WhosCalling(),
+			"Error", err.Error(),
+		)
 		return usersInfo, err
 	}
 
@@ -109,13 +110,14 @@ func (i *Ilo) queryUsers() (usersInfo []UserInfo, err error) {
 	//fmt.Printf("--> %+v\n", userinfo["users"])
 	err = json.Unmarshal(payload, &users)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"step":     "queryUserInfo",
-			"resource": "User",
-			"IP":       i.ip,
-			"Model":    i.HardwareType(),
-			"Error":    err,
-		}).Warn("Unable to unmarshal payload.")
+		msg := "Unable to unmarshal payload."
+		i.log.V(1).Info(msg,
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"resource", "User",
+			"step", "queryUserInfo",
+			"Error", err.Error(),
+		)
 		return usersInfo, err
 	}
 
@@ -128,24 +130,26 @@ func (i *Ilo) queryNetworkSntp() (networkSntp NetworkSntp, err error) {
 
 	payload, err := i.get(endpoint)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"IP":       i.ip,
-			"Model":    i.HardwareType(),
-			"endpoint": endpoint,
-			"step":     helper.WhosCalling(),
-			"Error":    err,
-		}).Warn("GET request failed.")
+		msg := "GET request failed."
+		i.log.V(1).Info(msg,
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"endpoint", endpoint,
+			"step", helper.WhosCalling(),
+			"Error", err.Error(),
+		)
 		return networkSntp, err
 	}
 
 	err = json.Unmarshal(payload, &networkSntp)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"IP":    i.ip,
-			"step":  helper.WhosCalling(),
-			"Model": i.HardwareType(),
-			"Error": err,
-		}).Warn("Unable to unmarshal payload.")
+		msg := "Unable to unmarshal payload."
+		i.log.V(1).Info(msg,
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"step", helper.WhosCalling(),
+			"Error", err.Error(),
+		)
 		return networkSntp, err
 	}
 
@@ -160,24 +164,26 @@ func (i *Ilo) queryAccessSettings() (AccessSettings, error) {
 
 	payload, err := i.get(endpoint)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"IP":       i.ip,
-			"Model":    i.HardwareType(),
-			"endpoint": endpoint,
-			"step":     helper.WhosCalling(),
-			"Error":    err,
-		}).Warn("GET request failed.")
+		msg := "GET request failed."
+		i.log.V(1).Info(msg,
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"endpoint", endpoint,
+			"step", helper.WhosCalling(),
+			"Error", err.Error(),
+		)
 		return accessSettings, err
 	}
 
 	err = json.Unmarshal(payload, &accessSettings)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"IP":    i.ip,
-			"step":  helper.WhosCalling(),
-			"Model": i.HardwareType(),
-			"Error": err,
-		}).Warn("Unable to unmarshal payload.")
+		msg := "Unable to unmarshal payload."
+		i.log.V(1).Info(msg,
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"step", helper.WhosCalling(),
+			"Error", err.Error(),
+		)
 		return accessSettings, err
 	}
 
@@ -192,24 +198,26 @@ func (i *Ilo) queryNetworkIPv4() (NetworkIPv4, error) {
 
 	payload, err := i.get(endpoint)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"IP":       i.ip,
-			"Model":    i.HardwareType(),
-			"endpoint": endpoint,
-			"step":     helper.WhosCalling(),
-			"Error":    err,
-		}).Warn("GET request failed.")
+		msg := "GET request failed."
+		i.log.V(1).Info(msg,
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"endpoint", endpoint,
+			"step", helper.WhosCalling(),
+			"Error", err.Error(),
+		)
 		return networkIPv4, err
 	}
 
 	err = json.Unmarshal(payload, &networkIPv4)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"IP":    i.ip,
-			"step":  helper.WhosCalling(),
-			"Model": i.HardwareType(),
-			"Error": err,
-		}).Warn("Unable to unmarshal payload.")
+		msg := "Unable to unmarshal payload."
+		i.log.V(1).Info(msg,
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"step", helper.WhosCalling(),
+			"Error", err.Error(),
+		)
 		return networkIPv4, err
 	}
 
@@ -224,24 +232,26 @@ func (i *Ilo) queryPowerRegulator() (PowerRegulator, error) {
 
 	payload, err := i.get(endpoint)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"IP":       i.ip,
-			"Model":    i.HardwareType(),
-			"endpoint": endpoint,
-			"step":     helper.WhosCalling(),
-			"Error":    err,
-		}).Warn("GET request failed.")
+		msg := "GET request failed."
+		i.log.V(1).Info(msg,
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"endpoint", endpoint,
+			"step", helper.WhosCalling(),
+			"Error", err.Error(),
+		)
 		return PowerRegulator{}, err
 	}
 
 	err = json.Unmarshal(payload, &powerRegulator)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"IP":    i.ip,
-			"step":  helper.WhosCalling(),
-			"Model": i.HardwareType(),
-			"Error": err,
-		}).Warn("Unable to unmarshal payload.")
+		msg := "Unable to unmarshal payload."
+		i.log.V(1).Info(msg,
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"step", helper.WhosCalling(),
+			"Error", err.Error(),
+		)
 		return PowerRegulator{}, err
 	}
 

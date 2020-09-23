@@ -70,7 +70,7 @@ func (p *Probe) hpIlo(ctx context.Context, log logr.Logger) (bmcConnection inter
 		if iloXML.HSI != nil {
 			if strings.HasPrefix(iloXML.MP.Pn, "Integrated Lights-Out") {
 				log.V(1).Info("step", "ScanAndConnect", "host", p.host, "vendor", string(devices.HP), "msg", "it's a HP with iLo")
-				return ilo.New(p.host, p.username, p.password)
+				return ilo.New(ctx, p.host, p.username, p.password, log)
 			}
 
 			return bmcConnection, fmt.Errorf("it's an HP, but I cound't not identify the hardware type. Please verify")

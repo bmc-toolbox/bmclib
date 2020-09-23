@@ -15,7 +15,6 @@ import (
 	"github.com/bmc-toolbox/bmclib/providers/hp"
 
 	multierror "github.com/hashicorp/go-multierror"
-	log "github.com/sirupsen/logrus"
 )
 
 // Login initiates the connection to a bmc device
@@ -29,7 +28,7 @@ func (i *Ilo) httpLogin() (err error) {
 		return err
 	}
 
-	log.WithFields(log.Fields{"step": "bmc connection", "vendor": hp.VendorID, "ip": i.ip}).Debug("connecting to bmc")
+	i.log.V(1).Info("connecting to bmc", "step", "bmc connection", "vendor", hp.VendorID, "ip", i.ip)
 
 	data := fmt.Sprintf("{\"method\":\"login\", \"user_login\":\"%s\", \"password\":\"%s\" }", i.username, i.password)
 
@@ -38,6 +37,9 @@ func (i *Ilo) httpLogin() (err error) {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	
+	reqDump, _ := httputil.DumpRequestOut(req, true)
+	i.log.V(2).Info("requestTrace", "requestDump", string(reqDump), "url", i.loginURL.String())
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
@@ -55,22 +57,8 @@ func (i *Ilo) httpLogin() (err error) {
 		}
 	}
 
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpRequestOut(req, true)
-		if err == nil {
-			log.Println(fmt.Sprintf("[Request] %s", i.loginURL.String()))
-			log.Println(">>>>>>>>>>>>>>>")
-			log.Printf("%s\n\n", dump)
-			log.Println(">>>>>>>>>>>>>>>")
-		}
-	}
-
 	if i.sessionKey == "" {
-		log.WithFields(log.Fields{
-			"step":  "Login()",
-			"IP":    i.ip,
-			"Model": i.HardwareType(),
-		}).Warn("Expected sessionKey cookie value not found.")
+		i.log.V(1).Info("Expected sessionKey cookie value not found.", "step", "Login()", "IP", i.ip, "Model", i.HardwareType())
 	}
 
 	if resp.StatusCode == 404 {
@@ -82,15 +70,8 @@ func (i *Ilo) httpLogin() (err error) {
 		return err
 	}
 	defer resp.Body.Close()
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpResponse(resp, true)
-		if err == nil {
-			log.Println("[Response]")
-			log.Println("<<<<<<<<<<<<<<")
-			log.Printf("%s\n\n", dump)
-			log.Println("<<<<<<<<<<<<<<")
-		}
-	}
+	respDump, _ := httputil.DumpResponse(resp, true)
+	i.log.V(2).Info("responseTrace", "responseDump", string(respDump))
 
 	if strings.Contains(string(payload), "Invalid login attempt") {
 		return errors.ErrLoginFailed
@@ -106,7 +87,7 @@ func (i *Ilo) Close() error {
 	var multiErr error
 
 	if i.httpClient != nil {
-		log.WithFields(log.Fields{"step": "bmc connection", "vendor": hp.VendorID, "ip": i.ip}).Debug("logout from bmc http")
+		i.log.V(1).Info("logout from bmc http", "step", "bmc connection", "vendor", hp.VendorID, "ip", i.ip)
 
 		data := []byte(fmt.Sprintf(`{"method":"logout", "session_key": "%s"}`, i.sessionKey))
 
@@ -116,15 +97,8 @@ func (i *Ilo) Close() error {
 		} else {
 			req.Header.Set("Content-Type", "application/json")
 
-			if log.GetLevel() == log.TraceLevel {
-				dump, err := httputil.DumpRequestOut(req, true)
-				if err == nil {
-					log.Println(fmt.Sprintf("[Request] %s", i.loginURL.String()))
-					log.Println(">>>>>>>>>>>>>>>")
-					log.Printf("%s\n\n", dump)
-					log.Println(">>>>>>>>>>>>>>>")
-				}
-			}
+			reqDump, _ := httputil.DumpRequestOut(req, true)
+			i.log.V(2).Info("requestTrace", "requestDump", string(reqDump), "url", i.loginURL.String())
 
 			resp, err := i.httpClient.Do(req)
 			if err != nil {
@@ -133,15 +107,8 @@ func (i *Ilo) Close() error {
 				defer resp.Body.Close()
 				defer io.Copy(ioutil.Discard, resp.Body)
 
-				if log.GetLevel() == log.TraceLevel {
-					dump, err := httputil.DumpResponse(resp, true)
-					if err == nil {
-						log.Println("[Response]")
-						log.Println("<<<<<<<<<<<<<<")
-						log.Printf("%s\n\n", dump)
-						log.Println("<<<<<<<<<<<<<<")
-					}
-				}
+				respDump, _ := httputil.DumpResponse(resp, true)
+				i.log.V(2).Info("responseTrace", "responseDump", string(respDump))
 
 			}
 		}

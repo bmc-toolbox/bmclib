@@ -8,7 +8,6 @@ import (
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/internal/helper"
-	log "github.com/sirupsen/logrus"
 )
 
 // This ensures the compiler errors if this type is missing
@@ -38,11 +37,11 @@ func (i *Ilo) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 	//check sessionKey is available
 	if i.sessionKey == "" {
 		msg := "Expected sessionKey not found, unable to configure BMC."
-		log.WithFields(log.Fields{
-			"step":  "Login()",
-			"IP":    i.ip,
-			"Model": i.HardwareType(),
-		}).Warn(msg)
+		i.log.V(1).Info(msg,
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"step", "Login()",
+		)
 		return errors.New(msg)
 	}
 
@@ -95,12 +94,12 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 	existingUsers, err := i.queryUsers()
 	if err != nil {
 		msg := "Unable to query existing users"
-		log.WithFields(log.Fields{
-			"step":  "applyUserParams",
-			"IP":    i.ip,
-			"Model": i.HardwareType(),
-			"Error": err,
-		}).Warn(msg)
+		i.log.V(1).Info(msg,
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"step", "applyUserParams",
+			"Error", err.Error(),
+		)
 		return errors.New(msg)
 	}
 
@@ -110,27 +109,19 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 
 		if user.Name == "" {
 			msg := "User resource expects parameter: Name."
-			log.WithFields(log.Fields{
-				"step": "applyUserParams",
-			}).Warn(msg)
+			i.log.V(1).Info(msg, "step", "applyUserParams")
 			return errors.New(msg)
 		}
 
 		if user.Password == "" {
 			msg := "User resource expects parameter: Password."
-			log.WithFields(log.Fields{
-				"step":     "applyUserParams",
-				"Username": user.Name,
-			}).Warn(msg)
+			i.log.V(1).Info(msg, "step", "applyUserParams", "Username", user.Name)
 			return errors.New(msg)
 		}
 
 		if !i.isRoleValid(user.Role) {
 			msg := "User resource Role must be declared and a must be a valid role: 'admin' OR 'user'."
-			log.WithFields(log.Fields{
-				"step":     "applyUserParams",
-				"Username": user.Name,
-			}).Warn(msg)
+			i.log.V(1).Info(msg, "step", "applyUserParams", "Username", user.Name)
 			return errors.New(msg)
 		}
 
@@ -176,48 +167,52 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 		if user.Enable == false && uexists {
 			userinfo.Method = "del_user"
 			userinfo.UserID = userinfo.ID
-			log.WithFields(log.Fields{
-				"IP":    i.ip,
-				"Model": i.HardwareType(),
-				"User":  user.Name,
-			}).Debug("User disabled in config, will be removed.")
+			msg := "User disabled in config, will be removed."
+			i.log.V(1).Info(msg,
+				"IP", i.ip,
+				"Model", i.HardwareType(),
+				"User", user.Name,
+			)
 			postPayload = true
 		}
 
 		if postPayload {
 			payload, err := json.Marshal(userinfo)
 			if err != nil {
-				log.WithFields(log.Fields{
-					"IP":    i.ip,
-					"Model": i.HardwareType(),
-					"step":  helper.WhosCalling(),
-					"User":  user.Name,
-					"Error": err,
-				}).Warn("Unable to marshal userInfo payload to set User config.")
+				msg := "Unable to marshal userInfo payload to set User config."
+				i.log.V(1).Info(msg,
+					"IP", i.ip,
+					"Model", i.HardwareType(),
+					"step", helper.WhosCalling(),
+					"User", user.Name,
+					"Error", err.Error(),
+				)
 				continue
 			}
 
 			endpoint := "json/user_info"
 			statusCode, response, err := i.post(endpoint, payload)
 			if err != nil || statusCode != 200 {
-				log.WithFields(log.Fields{
-					"IP":         i.ip,
-					"Model":      i.HardwareType(),
-					"endpoint":   endpoint,
-					"step":       helper.WhosCalling(),
-					"User":       user.Name,
-					"StatusCode": statusCode,
-					"response":   string(response),
-					"Error":      err,
-				}).Warn("POST request to set User config returned error.")
+				msg := "POST request to set User config returned error."
+				i.log.V(1).Info(msg,
+					"IP", i.ip,
+					"Model", i.HardwareType(),
+					"endpoint", endpoint,
+					"step", helper.WhosCalling(),
+					"User", user.Name,
+					"StatusCode", statusCode,
+					"response", string(response),
+					"Error", err.Error(),
+				)
+
 				continue
 			}
 
-			log.WithFields(log.Fields{
-				"IP":    i.ip,
-				"Model": i.HardwareType(),
-				"User":  user.Name,
-			}).Debug("User parameters applied.")
+			i.log.V(1).Info("User parameters applied.",
+				"IP", i.ip,
+				"Model", i.HardwareType(),
+				"User", user.Name,
+			)
 
 		}
 	}
@@ -234,16 +229,12 @@ func (i *Ilo) Syslog(cfg *cfgresources.Syslog) (err error) {
 
 	if cfg.Server == "" {
 		msg := "Syslog resource expects parameter: Server."
-		log.WithFields(log.Fields{
-			"step": helper.WhosCalling(),
-		}).Warn(msg)
+		i.log.V(1).Info(msg, "step", helper.WhosCalling())
 		return errors.New(msg)
 	}
 
 	if cfg.Port == 0 {
-		log.WithFields(log.Fields{
-			"step": helper.WhosCalling(),
-		}).Debug("Syslog resource port set to default: 514.")
+		i.log.V(1).Info("Syslog resource port set to default: 514.", "step", helper.WhosCalling())
 		port = 514
 	} else {
 		port = cfg.Port
@@ -251,9 +242,7 @@ func (i *Ilo) Syslog(cfg *cfgresources.Syslog) (err error) {
 
 	if cfg.Enable != true {
 		enable = 0
-		log.WithFields(log.Fields{
-			"step": helper.WhosCalling(),
-		}).Debug("Syslog resource declared with disable.")
+		i.log.V(1).Info("Syslog resource declared with disable.", "step", helper.WhosCalling())
 	}
 
 	remoteSyslog := RemoteSyslog{
@@ -267,12 +256,12 @@ func (i *Ilo) Syslog(cfg *cfgresources.Syslog) (err error) {
 	payload, err := json.Marshal(remoteSyslog)
 	if err != nil {
 		msg := "Unable to marshal RemoteSyslog payload to set Syslog config."
-		log.WithFields(log.Fields{
-			"IP":    i.ip,
-			"Model": i.HardwareType(),
-			"step":  helper.WhosCalling(),
-			"Error": err,
-		}).Warn(msg)
+		i.log.V(1).Info(msg,
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"step", helper.WhosCalling(),
+			"Error", err.Error(),
+		)
 		return errors.New(msg)
 	}
 
@@ -280,22 +269,19 @@ func (i *Ilo) Syslog(cfg *cfgresources.Syslog) (err error) {
 	statusCode, response, err := i.post(endpoint, payload)
 	if err != nil || statusCode != 200 {
 		msg := "POST request to set User config returned error."
-		log.WithFields(log.Fields{
-			"IP":         i.ip,
-			"Model":      i.HardwareType(),
-			"endpoint":   endpoint,
-			"step":       helper.WhosCalling(),
-			"StatusCode": statusCode,
-			"response":   string(response),
-			"Error":      err,
-		}).Warn(msg)
+		i.log.V(1).Info(msg,
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"endpoint", endpoint,
+			"step", helper.WhosCalling(),
+			"StatusCode", statusCode,
+			"response", string(response),
+			"Error", err.Error(),
+		)
 		return errors.New(msg)
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    i.ip,
-		"Model": i.HardwareType(),
-	}).Debug("Syslog parameters applied.")
+	i.log.V(1).Info("Syslog parameters applied.", "IP", i.ip, "Model", i.HardwareType())
 
 	return err
 }
@@ -306,9 +292,7 @@ func (i *Ilo) SetLicense(cfg *cfgresources.License) (err error) {
 
 	if cfg.Key == "" {
 		msg := "License resource expects parameter: Key."
-		log.WithFields(log.Fields{
-			"step": helper.WhosCalling(),
-		}).Warn(msg)
+		i.log.V(1).Info(msg, "step", helper.WhosCalling())
 		return errors.New(msg)
 	}
 
@@ -321,12 +305,12 @@ func (i *Ilo) SetLicense(cfg *cfgresources.License) (err error) {
 	payload, err := json.Marshal(license)
 	if err != nil {
 		msg := "Unable to marshal License payload to activate License."
-		log.WithFields(log.Fields{
-			"IP":    i.ip,
-			"Model": i.HardwareType(),
-			"step":  helper.WhosCalling(),
-			"Error": err,
-		}).Warn(msg)
+		i.log.V(1).Info(msg,
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"step", helper.WhosCalling(),
+			"Error", err.Error(),
+		)
 		return errors.New(msg)
 	}
 
@@ -334,22 +318,19 @@ func (i *Ilo) SetLicense(cfg *cfgresources.License) (err error) {
 	statusCode, response, err := i.post(endpoint, payload)
 	if err != nil || statusCode != 200 {
 		msg := "POST request to set User config returned error."
-		log.WithFields(log.Fields{
-			"IP":         i.ip,
-			"Model":      i.HardwareType(),
-			"endpoint":   endpoint,
-			"step":       helper.WhosCalling(),
-			"StatusCode": statusCode,
-			"response":   string(response),
-			"Error":      err,
-		}).Warn(msg)
+		i.log.V(1).Info(msg,
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"endpoint", endpoint,
+			"step", helper.WhosCalling(),
+			"StatusCode", statusCode,
+			"response", string(response),
+			"Error", err.Error(),
+		)
 		return errors.New(msg)
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    i.ip,
-		"Model": i.HardwareType(),
-	}).Debug("License activated.")
+	i.log.V(1).Info("License activated.", "IP", i.ip, "Model", i.HardwareType())
 
 	return err
 }
@@ -361,17 +342,13 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 	enable := 1
 	if cfg.Server1 == "" {
 		msg := "NTP resource expects parameter: server1."
-		log.WithFields(log.Fields{
-			"step": helper.WhosCalling(),
-		}).Warn(msg)
+		i.log.V(1).Info(msg, "step", helper.WhosCalling())
 		return errors.New(msg)
 	}
 
 	if cfg.Timezone == "" {
 		msg := "NTP resource expects parameter: timezone."
-		log.WithFields(log.Fields{
-			"step": helper.WhosCalling(),
-		}).Warn(msg)
+		i.log.V(1).Info(msg, "step", helper.WhosCalling())
 		return errors.New(msg)
 	}
 
@@ -388,29 +365,24 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 	_, validTimezone := timezones[cfg.Timezone]
 	if !validTimezone {
 		msg := "NTP resource a valid timezone parameter, for valid timezones see hp/ilo/model.go"
-		log.WithFields(log.Fields{
-			"step":             helper.WhosCalling(),
-			"Unknown Timezone": cfg.Timezone,
-		}).Warn(msg)
+		i.log.V(1).Info(msg, "step", helper.WhosCalling(), "UnknownTimezone", cfg.Timezone)
 		return errors.New(msg)
 	}
 
 	if cfg.Enable != true {
 		enable = 0
-		log.WithFields(log.Fields{
-			"step": helper.WhosCalling(),
-		}).Debug("NTP resource declared with disable.")
+		i.log.V(1).Info("NTP resource declared with disable.", "step", helper.WhosCalling())
 	}
 
 	existingConfig, err := i.queryNetworkSntp()
 	if err != nil {
 		msg := "Unable to query existing config"
-		log.WithFields(log.Fields{
-			"step":  helper.WhosCalling(),
-			"IP":    i.ip,
-			"Model": i.HardwareType(),
-			"Error": err,
-		}).Warn(msg)
+		i.log.V(1).Info(msg,
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"step", helper.WhosCalling(),
+			"Error", err.Error(),
+		)
 		return errors.New(msg)
 	}
 
@@ -438,12 +410,12 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 	payload, err := json.Marshal(networkSntp)
 	if err != nil {
 		msg := "Unable to marshal NetworkSntp payload to set NTP config."
-		log.WithFields(log.Fields{
-			"IP":    i.ip,
-			"Model": i.HardwareType(),
-			"step":  helper.WhosCalling(),
-			"Error": err,
-		}).Warn(msg)
+		i.log.V(1).Info(msg,
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"step", helper.WhosCalling(),
+			"Error", err.Error(),
+		)
 		return errors.New(msg)
 	}
 
@@ -451,22 +423,19 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 	statusCode, response, err := i.post(endpoint, payload)
 	if err != nil || statusCode != 200 {
 		msg := "POST request to set NTP config returned error."
-		log.WithFields(log.Fields{
-			"IP":         i.ip,
-			"Model":      i.HardwareType(),
-			"endpoint":   endpoint,
-			"step":       helper.WhosCalling(),
-			"StatusCode": statusCode,
-			"response":   string(response),
-			"Error":      err,
-		}).Warn(msg)
+		i.log.V(1).Info(msg,
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"endpoint", endpoint,
+			"step", helper.WhosCalling(),
+			"StatusCode", statusCode,
+			"response", string(response),
+			"Error", err.Error(),
+		)
 		return errors.New(msg)
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    i.ip,
-		"Model": i.HardwareType(),
-	}).Debug("NTP parameters applied.")
+	i.log.V(1).Info("NTP parameters applied.", "IP", i.ip, "Model", i.HardwareType())
 
 	return err
 }
@@ -479,12 +448,12 @@ func (i *Ilo) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Lda
 	directoryGroups, err := i.queryDirectoryGroups()
 	if err != nil {
 		msg := "Unable to query existing Ldap groups"
-		log.WithFields(log.Fields{
-			"IP":    i.ip,
-			"Model": i.HardwareType(),
-			"Step":  helper.WhosCalling(),
-			"Error": err,
-		}).Warn(msg)
+		i.log.V(1).Info(msg,
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"step", helper.WhosCalling(),
+			"Error", err.Error(),
+		)
 		return errors.New(msg)
 	}
 
@@ -493,21 +462,21 @@ func (i *Ilo) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Lda
 		var postPayload bool
 		if group.Group == "" {
 			msg := "Ldap resource parameter Group required but not declared."
-			log.WithFields(log.Fields{
-				"Model":     i.HardwareType(),
-				"step":      helper.WhosCalling,
-				"Ldap role": group.Role,
-			}).Warn(msg)
+			i.log.V(1).Info(msg,
+				"Model",    i.HardwareType(),
+				"step",      helper.WhosCalling(),
+				"Ldap role", group.Role,
+			)
 			return errors.New(msg)
 		}
 
 		if !i.isRoleValid(group.Role) {
 			msg := "Ldap resource Role must be a valid role: admin OR user."
-			log.WithFields(log.Fields{
-				"Model":     i.HardwareType(),
-				"step":      helper.WhosCalling(),
-				"Ldap role": group.Role,
-			}).Warn(msg)
+			i.log.V(1).Info(msg,
+				"Model",    i.HardwareType(),
+				"step",      helper.WhosCalling(),
+				"Ldap role", group.Role,
+			)
 			return errors.New(msg)
 		}
 
@@ -547,48 +516,48 @@ func (i *Ilo) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Lda
 		//if the group is disabled remove it
 		if group.Enable == false && gexists {
 			directoryGroup.Method = "del_group"
-			log.WithFields(log.Fields{
-				"IP":    i.ip,
-				"Model": i.HardwareType(),
-				"User":  group.Group,
-			}).Debug("Ldap role group disabled in config, will be removed.")
+			i.log.V(1).Info("Ldap role group disabled in config, will be removed.",
+				"IP",       i.ip,
+				"Model",    i.HardwareType(),
+				"User",     group.Group,
+			)
 			postPayload = true
 		}
 
 		if postPayload {
 			payload, err := json.Marshal(directoryGroup)
 			if err != nil {
-				log.WithFields(log.Fields{
-					"IP":    i.ip,
-					"Model": i.HardwareType(),
-					"Step":  helper.WhosCalling(),
-					"Group": group.Group,
-					"Error": err,
-				}).Warn("Unable to marshal directoryGroup payload to set LdapGroup config.")
+				i.log.V(1).Info("Unable to marshal directoryGroup payload to set LdapGroup config.",
+					"IP",       i.ip,
+					"Model",    i.HardwareType(),
+					"step",     helper.WhosCalling(),
+					"Group",   group.Group,
+					"Error",    err.Error(),
+				)
 				continue
 			}
 
 			endpoint := "json/directory_groups"
 			statusCode, response, err := i.post(endpoint, payload)
 			if err != nil || statusCode != 200 {
-				log.WithFields(log.Fields{
-					"IP":         i.ip,
-					"Model":      i.HardwareType(),
-					"endpoint":   endpoint,
-					"step":       helper.WhosCalling(),
-					"Group":      group.Group,
-					"StatusCode": statusCode,
-					"response":   string(response),
-					"Error":      err,
-				}).Warn("POST request to set User config returned error.")
+				i.log.V(1).Info("POST request to set User config returned error.",
+					"IP",       i.ip,
+					"Model",    i.HardwareType(),
+					"endpoint", endpoint,
+					"step",     helper.WhosCalling(),
+					"Group",      group.Group,
+					"StatusCode", statusCode,
+					"response",   string(response),
+					"Error",    err.Error(),
+				)
 				continue
 			}
 
-			log.WithFields(log.Fields{
-				"IP":    i.ip,
-				"Model": i.HardwareType(),
-				"User":  group.Group,
-			}).Debug("LdapGroup parameters applied.")
+			i.log.V(1).Info("LdapGroup parameters applied.",
+				"IP",       i.ip,
+				"Model",    i.HardwareType(),
+				"User",  group.Group,
+			)
 
 		}
 
@@ -603,28 +572,28 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 
 	if cfg.Server == "" {
 		msg := "Ldap resource parameter Server required but not declared."
-		log.WithFields(log.Fields{
-			"Model": i.HardwareType(),
-			"step":  helper.WhosCalling,
-		}).Warn(msg)
+		i.log.V(1).Info(msg,
+			"Model",    i.HardwareType(),
+			"step",     helper.WhosCalling(),
+		)
 		return errors.New(msg)
 	}
 
 	if cfg.Port == 0 {
 		msg := "Ldap resource parameter Port required but not declared."
-		log.WithFields(log.Fields{
-			"Model": i.HardwareType(),
-			"step":  helper.WhosCalling,
-		}).Warn(msg)
+		i.log.V(1).Info(msg,
+			"Model",    i.HardwareType(),
+			"step",     helper.WhosCalling(),
+		)
 		return errors.New(msg)
 	}
 
 	if cfg.BaseDn == "" {
 		msg := "Ldap resource parameter BaseDn required but not declared."
-		log.WithFields(log.Fields{
-			"Model": i.HardwareType(),
-			"step":  helper.WhosCalling,
-		}).Warn(msg)
+		i.log.V(1).Info(msg,
+			"Model",    i.HardwareType(),
+			"step",     helper.WhosCalling(),
+		)
 		return errors.New(msg)
 	}
 
@@ -650,12 +619,12 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 
 	payload, err := json.Marshal(directory)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"IP":    i.ip,
-			"Model": i.HardwareType(),
-			"Step":  helper.WhosCalling(),
-			"Error": err,
-		}).Warn("Unable to marshal directory payload to set Ldap config.")
+		i.log.V(1).Info("Unable to marshal directory payload to set Ldap config.",
+			"IP",       i.ip,
+			"Model",    i.HardwareType(),
+			"step",     helper.WhosCalling(),
+			"Error",    err.Error(),
+		)
 		return err
 	}
 
@@ -663,22 +632,19 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 	statusCode, response, err := i.post(endpoint, payload)
 	if err != nil || statusCode != 200 {
 		msg := "POST request to set Ldap config returned error."
-		log.WithFields(log.Fields{
-			"IP":         i.ip,
-			"Model":      i.HardwareType(),
-			"endpoint":   endpoint,
-			"step":       helper.WhosCalling(),
-			"StatusCode": statusCode,
-			"response":   string(response),
-			"Error":      err,
-		}).Warn(msg)
+		i.log.V(1).Info(msg,
+			"IP",       i.ip,
+			"Model",    i.HardwareType(),
+			"endpoint", endpoint,
+			"step",     helper.WhosCalling(),
+			"StatusCode", statusCode,
+			"response",   string(response),
+			"Error",    err.Error(),
+		)
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    i.ip,
-		"Model": i.HardwareType(),
-	}).Debug("Ldap parameters applied.")
+	i.log.V(1).Info("Ldap parameters applied.", "IP", i.ip, "Model", i.HardwareType())
 
 	return err
 
@@ -813,6 +779,7 @@ func (i *Ilo) Network(cfg *cfgresources.Network) (reset bool, err error) {
 	return reset, nil
 }
 
+// Power settings
 func (i *Ilo) Power(cfg *cfgresources.Power) error {
 
 	if cfg.HPE == nil {
@@ -839,21 +806,21 @@ func (i *Ilo) Power(cfg *cfgresources.Power) error {
 	}
 
 	if !changeRequired {
-		log.WithFields(log.Fields{
-			"IP":            i.ip,
-			"current mode":  config.PowerMode,
-			"expected mode": configMode,
-			"Model":         i.HardwareType(),
-		}).Trace("Power regulator config - no change required.")
+		i.log.V(2).Info("Power regulator config - no change required.",
+			"IP",       i.ip,
+			"Model",    i.HardwareType(),
+			"current mode",  config.PowerMode,
+			"expected mode", configMode,
+		)
 		return nil
 	}
 
-	log.WithFields(log.Fields{
-		"IP":            i.ip,
-		"current mode":  config.PowerMode,
-		"to apply mode": configMode,
-		"Model":         i.HardwareType(),
-	}).Trace("Power regulator change to be applied.")
+	i.log.V(2).Info("Power regulator change to be applied.",
+		"IP",       i.ip,
+		"Model",    i.HardwareType(),
+		"current mode",  config.PowerMode,
+		"expected mode", configMode,
+	)
 
 	config.SessionKey = i.sessionKey
 	config.Method = "set"
@@ -870,10 +837,10 @@ func (i *Ilo) Power(cfg *cfgresources.Power) error {
 		return fmt.Errorf("Error/non 200 response calling power_regulator, status: %d, error: %s", statusCode, err)
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    i.ip,
-		"Model": i.HardwareType(),
-	}).Debug("Power regulator config applied.")
+	i.log.V(1).Info("Power regulator config applied.",
+		"IP",       i.ip,
+		"Model",    i.HardwareType(),
+	)
 
 	return nil
 }
