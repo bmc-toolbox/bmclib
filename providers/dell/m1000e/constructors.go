@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
-	log "github.com/sirupsen/logrus"
 )
 
 //func (m *M1000e) newSslCfg(ssl *cfgresources.Ssl) (MFormParams map[string]string) {
@@ -27,15 +26,17 @@ import (
 func (m *M1000e) newDatetimeCfg(ntp *cfgresources.Ntp) DatetimeParams {
 
 	if ntp.Timezone == "" {
-		log.WithFields(log.Fields{
-			"step": "apply-ntp-cfg",
-		}).Fatal("Ntp resource parameter timezone required but not declared.")
+		// TODO update method with error return and return err in this if, was doing logrus.Fatal here
+		msg := "ntp resource parameter timezone required but not declared"
+		err := errors.New(msg)
+		m.log.V(0).Error(err, msg, "step", "apply-ntp-cfg")
 	}
 
 	if ntp.Server1 == "" {
-		log.WithFields(log.Fields{
-			"step": "apply-ntp-cfg",
-		}).Fatal("Ntp resource parameter server1 required but not declared.")
+		// TODO update method with error return and return err in this if, was doing logrus.Fatal here
+		msg := "ntp resource parameter server1 required but not declared."
+		err := errors.New(msg)
+		m.log.V(0).Error(err, msg, "step", "apply-ntp-cfg")
 	}
 
 	dateTime := DatetimeParams{
@@ -60,21 +61,15 @@ func (m *M1000e) newDirectoryServicesCfg(ldap *cfgresources.Ldap) DirectoryServi
 
 	var userAttribute, groupAttribute string
 	if ldap.Server == "" {
-		log.WithFields(log.Fields{
-			"step": "newDirectoryServicesCfg",
-		}).Warn("Ldap resource parameter Server required but not declared.")
+		m.log.V(1).Info("Ldap resource parameter Server required but not declared.", "step", "newDirectoryServicesCfg")
 	}
 
 	if ldap.Port == 0 {
-		log.WithFields(log.Fields{
-			"step": "newDirectoryServicesCfg",
-		}).Warn("Ldap resource parameter Port required but not declared.")
+		m.log.V(1).Info("Ldap resource parameter Port required but not declared.", "step", "newDirectoryServicesCfg")
 	}
 
 	if ldap.BaseDn == "" {
-		log.WithFields(log.Fields{
-			"step": "newDirectoryServicesCfg",
-		}).Warn("Ldap resource parameter baseDn required but not declared.")
+		m.log.V(1).Info("Ldap resource parameter baseDn required but not declared.", "step", "newDirectoryServicesCfg")
 	}
 
 	if ldap.UserAttribute == "" {
@@ -154,29 +149,23 @@ func (m *M1000e) newLdapRoleCfg(cfg *cfgresources.LdapGroup, roleID int) (ldapAr
 
 	if cfg.Group == "" {
 		msg := "Ldap resource parameter Group required but not declared."
-		log.WithFields(log.Fields{
-			"Role": cfg.Role,
-			"step": "newLdapRoleCfg",
-		}).Warn(msg)
-		return ldapArgCfg, errors.New(msg)
+		err = errors.New(msg)
+		m.log.V(1).Error(err, msg, "Role", cfg.Role, "step", "newLdapRoleCfg")
+		return ldapArgCfg, err
 	}
 
 	if cfg.GroupBaseDn == "" && cfg.Enable {
 		msg := "Ldap resource parameter GroupBaseDn required but not declared."
-		log.WithFields(log.Fields{
-			"Role": cfg.Role,
-			"step": "newLdapRoleCfg",
-		}).Warn(msg)
-		return ldapArgCfg, errors.New(msg)
+		err = errors.New(msg)
+		m.log.V(1).Error(err, msg, "Role", cfg.Role, "step", "newLdapRoleCfg")
+		return ldapArgCfg, err
 	}
 
 	if !m.isRoleValid(cfg.Role) {
 		msg := "Ldap resource Role must be a valid role: admin OR user."
-		log.WithFields(log.Fields{
-			"Role": cfg.Role,
-			"step": "newLdapRoleCfg",
-		}).Warn(msg)
-		return ldapArgCfg, errors.New(msg)
+		err = errors.New(msg)
+		m.log.V(1).Error(err, msg, "Role", cfg.Role, "step", "newLdapRoleCfg")
+		return ldapArgCfg, err
 	}
 
 	groupDn := fmt.Sprintf("cn=%s,%s", cfg.Group, cfg.GroupBaseDn)
@@ -219,9 +208,10 @@ func (m *M1000e) newInterfaceCfg(syslog *cfgresources.Syslog) InterfaceParams {
 	var syslogPort int
 
 	if syslog.Server == "" {
-		log.WithFields(log.Fields{
-			"step": "apply-interface-cfg",
-		}).Fatal("Syslog resource expects parameter: Server.")
+		// TODO update method with error return and return err in this if, was doing logrus.Fatal here
+		msg := "syslog resource expects parameter: Server"
+		err := errors.New(msg)
+		m.log.V(0).Error(err, msg, "step", "apply-interface-cfg")
 	}
 
 	if syslog.Port == 0 {
@@ -276,22 +266,24 @@ func (m *M1000e) newUserCfg(user *cfgresources.User, userID int) UserParams {
 	var cmcGroup, privilege int
 
 	if user.Name == "" {
-		log.WithFields(log.Fields{
-			"step": "apply-user-cfg",
-		}).Fatal("User resource expects parameter: Name.")
+		// TODO update method with error return and return err in this if, was doing logrus.Fatal here
+		msg := "user resource expects parameter: Name"
+		err := errors.New(msg)
+		m.log.V(0).Error(err, msg, "step", "apply-user-cfg")
 	}
 
 	if user.Password == "" {
-		log.WithFields(log.Fields{
-			"step": "apply-user-cfg",
-		}).Fatal("User resource expects parameter: Password.")
+		// TODO update method with error return and return err in this if, was doing logrus.Fatal here
+		msg := "user resource expects parameter: Password"
+		err := errors.New(msg)
+		m.log.V(0).Error(err, msg, "step", "apply-user-cfg")
 	}
 
 	if m.isRoleValid(user.Role) == false {
-		log.WithFields(log.Fields{
-			"step": "apply-user-cfg",
-			"role": user.Role,
-		}).Fatal("User resource Role must be declared and a valid role: admin.")
+		// TODO update method with error return and return err in this if, was doing logrus.Fatal here
+		msg := "user resource Role must be declared and a valid role: admin"
+		err := errors.New(msg)
+		m.log.V(0).Error(err, msg, "step", "apply-user-cfg", "role", user.Role)
 	}
 
 	if user.Role == "admin" {

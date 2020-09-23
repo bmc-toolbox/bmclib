@@ -14,7 +14,6 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 
 	"github.com/bmc-toolbox/bmclib/providers/dell"
-	log "github.com/sirupsen/logrus"
 )
 
 // retrieves ST2 which is required to submit form data
@@ -69,7 +68,7 @@ func (m *M1000e) httpLogin() (err error) {
 	if m.httpClient != nil {
 		return
 	}
-	log.WithFields(log.Fields{"step": "chassis connection", "vendor": dell.VendorID, "ip": m.ip}).Debug("connecting to chassis")
+	m.log.V(1).Info("connecting to chassis", "step", "chassis connection", "vendor", string(dell.VendorID), "ip", m.ip)
 
 	form := url.Values{}
 	form.Add("user", m.username)

@@ -205,7 +205,7 @@ func (p *Probe) m1000e(ctx context.Context, log logr.Logger) (bmcConnection inte
 
 	if resp.StatusCode == 200 && containsAnySubStr(payload, m1000eSysDesc) {
 		log.V(1).Info("step", "connection", "host", p.host, "vendor", string(devices.Dell), "msg", "it's a m1000e chassis")
-		return m1000e.New(p.host, p.username, p.password)
+		return m1000e.New(ctx, p.host, p.username, p.password, log)
 	}
 
 	return bmcConnection, errors.ErrDeviceNotMatched
