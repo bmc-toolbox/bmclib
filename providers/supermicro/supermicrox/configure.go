@@ -236,25 +236,25 @@ func (s *SupermicroX) Ntp(cfg *cfgresources.Ntp) (err error) {
 	var enable string
 	if cfg.Server1 == "" {
 		s.log.V(1).Info("NTP resource expects parameter: server1.",
-		"step", "applyNtpParams",
-		"model", s.HardwareType())
+			"step", "applyNtpParams",
+			"model", s.HardwareType())
 		return
 	}
 
 	if cfg.Timezone == "" {
 		s.log.V(1).Info("NTP resource expects parameter: timezone.",
-		"step", "applyNtpParams",
-		"model", s.HardwareType())
+			"step", "applyNtpParams",
+			"model", s.HardwareType())
 		return
 	}
 
 	tzLocation, err := time.LoadLocation(cfg.Timezone)
 	if err != nil {
 		s.log.V(1).Info("NTP resource declared parameter timezone invalid.",
-		"step", "applyNtpParams",
-		"model", s.HardwareType(),
-		"declaredTtimezone", cfg.Timezone,
-		"error", err.Error())
+			"step", "applyNtpParams",
+			"model", s.HardwareType(),
+			"declaredTtimezone", cfg.Timezone,
+			"error", err.Error())
 		return
 	}
 
@@ -262,8 +262,8 @@ func (s *SupermicroX) Ntp(cfg *cfgresources.Ntp) (err error) {
 
 	if cfg.Enable != true {
 		s.log.V(1).Info("Ntp resource declared with enable: false.",
-		"step", "applyNtpParams",
-		"model", s.HardwareType())
+			"step", "applyNtpParams",
+			"model", s.HardwareType())
 		return
 	}
 
@@ -302,12 +302,12 @@ func (s *SupermicroX) Ntp(cfg *cfgresources.Ntp) (err error) {
 	if err != nil || statusCode != 200 {
 		msg := "POST request to set Syslog config returned error."
 		s.log.V(1).Info(msg,
-		"ip", s.ip,
-		"model", s.HardwareType(),
-		"endpoint", endpoint,
-		"statusCode", statusCode,
-		"step", helper.WhosCalling(),
-		"error", err.Error())
+			"ip", s.ip,
+			"model", s.HardwareType(),
+			"endpoint", endpoint,
+			"statusCode", statusCode,
+			"step", helper.WhosCalling(),
+			"error", err.Error())
 		return errors.New(msg)
 	}
 
@@ -349,7 +349,7 @@ func (s *SupermicroX) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfg
 	}
 
 	if cfgLdap.Enable != true {
-		s.log.V(1).Info("Ldap resource declared with enable: false.", 
+		s.log.V(1).Info("Ldap resource declared with enable: false.",
 			"step", helper.WhosCalling(),
 			"model", s.HardwareType())
 		return
@@ -396,7 +396,7 @@ func (s *SupermicroX) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfg
 
 		if group.GroupBaseDn == "" {
 			msg := "Ldap resource parameter GroupBaseDn required but not declared."
-			s.log.V(1).Info(msg, 
+			s.log.V(1).Info(msg,
 				"step", helper.WhosCalling(),
 				"group", group.Group,
 				"role", group.Role)

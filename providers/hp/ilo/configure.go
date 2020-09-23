@@ -463,8 +463,8 @@ func (i *Ilo) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Lda
 		if group.Group == "" {
 			msg := "Ldap resource parameter Group required but not declared."
 			i.log.V(1).Info(msg,
-				"Model",    i.HardwareType(),
-				"step",      helper.WhosCalling(),
+				"Model", i.HardwareType(),
+				"step", helper.WhosCalling(),
 				"Ldap role", group.Role,
 			)
 			return errors.New(msg)
@@ -473,8 +473,8 @@ func (i *Ilo) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Lda
 		if !i.isRoleValid(group.Role) {
 			msg := "Ldap resource Role must be a valid role: admin OR user."
 			i.log.V(1).Info(msg,
-				"Model",    i.HardwareType(),
-				"step",      helper.WhosCalling(),
+				"Model", i.HardwareType(),
+				"step", helper.WhosCalling(),
 				"Ldap role", group.Role,
 			)
 			return errors.New(msg)
@@ -517,9 +517,9 @@ func (i *Ilo) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Lda
 		if group.Enable == false && gexists {
 			directoryGroup.Method = "del_group"
 			i.log.V(1).Info("Ldap role group disabled in config, will be removed.",
-				"IP",       i.ip,
-				"Model",    i.HardwareType(),
-				"User",     group.Group,
+				"IP", i.ip,
+				"Model", i.HardwareType(),
+				"User", group.Group,
 			)
 			postPayload = true
 		}
@@ -528,11 +528,11 @@ func (i *Ilo) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Lda
 			payload, err := json.Marshal(directoryGroup)
 			if err != nil {
 				i.log.V(1).Info("Unable to marshal directoryGroup payload to set LdapGroup config.",
-					"IP",       i.ip,
-					"Model",    i.HardwareType(),
-					"step",     helper.WhosCalling(),
-					"Group",   group.Group,
-					"Error",    err.Error(),
+					"IP", i.ip,
+					"Model", i.HardwareType(),
+					"step", helper.WhosCalling(),
+					"Group", group.Group,
+					"Error", err.Error(),
 				)
 				continue
 			}
@@ -541,22 +541,22 @@ func (i *Ilo) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Lda
 			statusCode, response, err := i.post(endpoint, payload)
 			if err != nil || statusCode != 200 {
 				i.log.V(1).Info("POST request to set User config returned error.",
-					"IP",       i.ip,
-					"Model",    i.HardwareType(),
+					"IP", i.ip,
+					"Model", i.HardwareType(),
 					"endpoint", endpoint,
-					"step",     helper.WhosCalling(),
-					"Group",      group.Group,
+					"step", helper.WhosCalling(),
+					"Group", group.Group,
 					"StatusCode", statusCode,
-					"response",   string(response),
-					"Error",    err.Error(),
+					"response", string(response),
+					"Error", err.Error(),
 				)
 				continue
 			}
 
 			i.log.V(1).Info("LdapGroup parameters applied.",
-				"IP",       i.ip,
-				"Model",    i.HardwareType(),
-				"User",  group.Group,
+				"IP", i.ip,
+				"Model", i.HardwareType(),
+				"User", group.Group,
 			)
 
 		}
@@ -573,8 +573,8 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 	if cfg.Server == "" {
 		msg := "Ldap resource parameter Server required but not declared."
 		i.log.V(1).Info(msg,
-			"Model",    i.HardwareType(),
-			"step",     helper.WhosCalling(),
+			"Model", i.HardwareType(),
+			"step", helper.WhosCalling(),
 		)
 		return errors.New(msg)
 	}
@@ -582,8 +582,8 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 	if cfg.Port == 0 {
 		msg := "Ldap resource parameter Port required but not declared."
 		i.log.V(1).Info(msg,
-			"Model",    i.HardwareType(),
-			"step",     helper.WhosCalling(),
+			"Model", i.HardwareType(),
+			"step", helper.WhosCalling(),
 		)
 		return errors.New(msg)
 	}
@@ -591,8 +591,8 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 	if cfg.BaseDn == "" {
 		msg := "Ldap resource parameter BaseDn required but not declared."
 		i.log.V(1).Info(msg,
-			"Model",    i.HardwareType(),
-			"step",     helper.WhosCalling(),
+			"Model", i.HardwareType(),
+			"step", helper.WhosCalling(),
 		)
 		return errors.New(msg)
 	}
@@ -620,10 +620,10 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 	payload, err := json.Marshal(directory)
 	if err != nil {
 		i.log.V(1).Info("Unable to marshal directory payload to set Ldap config.",
-			"IP",       i.ip,
-			"Model",    i.HardwareType(),
-			"step",     helper.WhosCalling(),
-			"Error",    err.Error(),
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"step", helper.WhosCalling(),
+			"Error", err.Error(),
 		)
 		return err
 	}
@@ -633,13 +633,13 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 	if err != nil || statusCode != 200 {
 		msg := "POST request to set Ldap config returned error."
 		i.log.V(1).Info(msg,
-			"IP",       i.ip,
-			"Model",    i.HardwareType(),
+			"IP", i.ip,
+			"Model", i.HardwareType(),
 			"endpoint", endpoint,
-			"step",     helper.WhosCalling(),
+			"step", helper.WhosCalling(),
 			"StatusCode", statusCode,
-			"response",   string(response),
-			"Error",    err.Error(),
+			"response", string(response),
+			"Error", err.Error(),
 		)
 		return err
 	}
@@ -807,18 +807,18 @@ func (i *Ilo) Power(cfg *cfgresources.Power) error {
 
 	if !changeRequired {
 		i.log.V(2).Info("Power regulator config - no change required.",
-			"IP",       i.ip,
-			"Model",    i.HardwareType(),
-			"current mode",  config.PowerMode,
+			"IP", i.ip,
+			"Model", i.HardwareType(),
+			"current mode", config.PowerMode,
 			"expected mode", configMode,
 		)
 		return nil
 	}
 
 	i.log.V(2).Info("Power regulator change to be applied.",
-		"IP",       i.ip,
-		"Model",    i.HardwareType(),
-		"current mode",  config.PowerMode,
+		"IP", i.ip,
+		"Model", i.HardwareType(),
+		"current mode", config.PowerMode,
 		"expected mode", configMode,
 	)
 
@@ -838,8 +838,8 @@ func (i *Ilo) Power(cfg *cfgresources.Power) error {
 	}
 
 	i.log.V(1).Info("Power regulator config applied.",
-		"IP",       i.ip,
-		"Model",    i.HardwareType(),
+		"IP", i.ip,
+		"Model", i.HardwareType(),
 	)
 
 	return nil

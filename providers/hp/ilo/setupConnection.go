@@ -37,7 +37,7 @@ func (i *Ilo) httpLogin() (err error) {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	
+
 	reqDump, _ := httputil.DumpRequestOut(req, true)
 	i.log.V(2).Info("requestTrace", "requestDump", string(reqDump), "url", i.loginURL.String())
 
