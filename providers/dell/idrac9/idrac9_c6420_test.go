@@ -1,11 +1,14 @@
 package idrac9
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/bombsimon/logrusr"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -3883,8 +3886,13 @@ var (
 	}
 )
 
+func init() {
+	if viper.GetBool("debug") != true {
+		viper.SetDefault("debug", true)
+	}
+}
+
 func setupC6420() (bmc *IDrac9, err error) {
-	viper.SetDefault("debug", true)
 	muxC6420 = http.NewServeMux()
 	serverC6420 = httptest.NewTLSServer(muxC6420)
 	ip := strings.TrimPrefix(serverC6420.URL, "https://")
@@ -3898,7 +3906,8 @@ func setupC6420() (bmc *IDrac9, err error) {
 		})
 	}
 
-	bmc, err = New(ip, username, password)
+	testLogger := logrus.New()
+	bmc, err = New(context.TODO(), ip, username, password, logrusr.NewLogger(testLogger))
 	if err != nil {
 		return bmc, err
 	}

@@ -1,37 +1,27 @@
 package logging
 
 import (
-	"io"
 	"os"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/bombsimon/logrusr"
+	"github.com/go-logr/logr"
+	"github.com/sirupsen/logrus"
 )
 
-func init() {
-	log.SetFormatter(&log.JSONFormatter{})
-	log.SetOutput(os.Stdout)
+// DefaultLogger if no client logger is defined
+func DefaultLogger() logr.Logger {
+	logrusLog := logrus.New()
+	logrusLog.SetFormatter(&logrus.JSONFormatter{})
+	logrusLog.SetOutput(os.Stdout)
 
 	switch os.Getenv("BMCLIB_LOG_LEVEL") {
 	case "debug":
-		log.SetLevel(log.DebugLevel)
+		logrusLog.SetLevel(logrus.DebugLevel)
 	case "trace":
-		log.SetLevel(log.TraceLevel)
+		logrusLog.SetLevel(logrus.TraceLevel)
 	default:
-		log.SetLevel(log.InfoLevel)
+		logrusLog.SetLevel(logrus.InfoLevel)
 	}
-}
 
-// SetFormatter allows to format logrus formater
-func SetFormatter(formater log.Formatter) {
-	log.SetFormatter(formater)
-}
-
-// SetOutput allows to set logrus output
-func SetOutput(out io.Writer) {
-	log.SetOutput(out)
-}
-
-// SetLevel allows to set logrus loglevel
-func SetLevel(level log.Level) {
-	log.SetLevel(level)
+	return logrusr.NewLogger(logrusLog)
 }

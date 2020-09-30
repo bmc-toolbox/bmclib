@@ -1,12 +1,15 @@
 package idrac9
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"github.com/bmc-toolbox/bmclib/devices"
+	"github.com/bombsimon/logrusr"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -3264,8 +3267,13 @@ var (
 	}
 )
 
+func init() {
+	if viper.GetBool("debug") != true {
+		viper.SetDefault("debug", true)
+	}
+}
+
 func setup() (bmc *IDrac9, err error) {
-	viper.SetDefault("debug", true)
 	mux = http.NewServeMux()
 	server = httptest.NewTLSServer(mux)
 	ip := strings.TrimPrefix(server.URL, "https://")
@@ -3279,7 +3287,8 @@ func setup() (bmc *IDrac9, err error) {
 		})
 	}
 
-	bmc, err = New(ip, username, password)
+	testLogger := logrus.New()
+	bmc, err = New(context.TODO(), ip, username, password, logrusr.NewLogger(testLogger))
 	if err != nil {
 		return bmc, err
 	}
@@ -3665,7 +3674,7 @@ func TestDiskDisks(t *testing.T) {
 
 func TestIDracPsu(t *testing.T) {
 	expectedAnswer := []*devices.Psu{
-		&devices.Psu{
+		{
 			Serial:     "h16z4m2_ps1",
 			CapacityKw: 2,
 			PartNumber: "0j5wmga02",

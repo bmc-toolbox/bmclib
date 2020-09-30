@@ -1,12 +1,15 @@
 package ilo
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"github.com/bmc-toolbox/bmclib/devices"
+	"github.com/bombsimon/logrusr"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -144,8 +147,13 @@ var (
 	}
 )
 
+func init() {
+	if viper.GetBool("debug") != true {
+		viper.SetDefault("debug", true)
+	}
+}
+
 func setup() (bmc *Ilo, err error) {
-	viper.SetDefault("debug", true)
 	mux = http.NewServeMux()
 	server = httptest.NewTLSServer(mux)
 	ip := strings.TrimPrefix(server.URL, "https://")
@@ -161,7 +169,8 @@ func setup() (bmc *Ilo, err error) {
 		})
 	}
 
-	bmc, err = New(ip, username, password)
+	testLog := logrus.New()
+	bmc, err = New(context.TODO(), ip, username, password, logrusr.NewLogger(testLog))
 	if err != nil {
 		return bmc, err
 	}

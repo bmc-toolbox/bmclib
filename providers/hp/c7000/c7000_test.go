@@ -1,12 +1,15 @@
 package c7000
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"github.com/bmc-toolbox/bmclib/devices"
+	"github.com/bombsimon/logrusr"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -2404,8 +2407,13 @@ var (
 	}
 )
 
+func init() {
+	if viper.GetBool("debug") != true {
+		viper.SetDefault("debug", true)
+	}
+}
+
 func setup() (r *C7000, err error) {
-	viper.SetDefault("debug", true)
 	mux = http.NewServeMux()
 	server = httptest.NewTLSServer(mux)
 	ip := strings.TrimPrefix(server.URL, "https://")
@@ -2421,7 +2429,8 @@ func setup() (r *C7000, err error) {
 		})
 	}
 
-	r, err = New(ip, username, password)
+	testLogger := logrus.New()
+	r, err = New(context.TODO(), ip, username, password, logrusr.NewLogger(testLogger))
 	if err != nil {
 		return r, err
 	}

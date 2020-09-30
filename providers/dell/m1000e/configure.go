@@ -12,7 +12,6 @@ import (
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/google/go-querystring/query"
-	log "github.com/sirupsen/logrus"
 )
 
 // This ensures the compiler errors if this type is missing
@@ -99,10 +98,7 @@ func (m *M1000e) User(cfgUsers []*cfgresources.User) (err error) {
 			return err
 		}
 
-		log.WithFields(log.Fields{
-			"IP":    m.ip,
-			"Model": m.HardwareType(),
-		}).Debug("User account config parameters applied.")
+		m.log.V(1).Info("User account config parameters applied.", "IP", m.ip, "Model", m.HardwareType())
 
 	}
 
@@ -124,10 +120,7 @@ func (m *M1000e) Syslog(cfg *cfgresources.Syslog) (err error) {
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    m.ip,
-		"Model": m.HardwareType(),
-	}).Debug("Interface config parameters applied.")
+	m.log.V(1).Info("Interface config parameters applied.", "IP", m.ip, "Model", m.HardwareType())
 	return err
 }
 
@@ -150,10 +143,7 @@ func (m *M1000e) Ntp(cfg *cfgresources.Ntp) (err error) {
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    m.ip,
-		"Model": m.HardwareType(),
-	}).Debug("DateTime config parameters applied.")
+	m.log.V(1).Info("DateTime config parameters applied.", "IP", m.ip, "Model", m.HardwareType())
 	return err
 }
 
@@ -171,10 +161,7 @@ func (m *M1000e) Ldap(cfg *cfgresources.Ldap) (err error) {
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    m.ip,
-		"Model": m.HardwareType(),
-	}).Debug("Ldap config parameters applied.")
+	m.log.V(1).Info("Ldap config parameters applied.", "IP", m.ip, "Model", m.HardwareType())
 	return err
 }
 
@@ -194,10 +181,7 @@ func (m *M1000e) applyLdapRoleCfg(cfg LdapArgParams, roleID int) (err error) {
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    m.ip,
-		"Model": m.HardwareType(),
-	}).Debug("Ldap Role group config parameters applied.")
+	m.log.V(1).Info("Ldap Role group config parameters applied.", "IP", m.ip, "Model", m.HardwareType())
 	return err
 }
 
@@ -209,34 +193,34 @@ func (m *M1000e) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.
 	for _, group := range cfg {
 		ldapRoleParams, err := m.newLdapRoleCfg(group, roleID)
 		if err != nil {
-			log.WithFields(log.Fields{
-				"step":      "applyLdapGroupParams",
-				"Ldap role": group.Role,
-				"IP":        m.ip,
-				"Model":     m.HardwareType(),
-				"Error":     err,
-			}).Warn("Unable to apply Ldap role group config.")
+			m.log.V(1).Error(err, "Unable to apply Ldap role group config.",
+				"step", "applyLdapGroupParams",
+				"Ldap role", group.Role,
+				"IP", m.ip,
+				"Model", m.HardwareType(),
+				"Error", err.Error(),
+			)
 			return err
 		}
 
 		err = m.applyLdapRoleCfg(ldapRoleParams, roleID)
 		if err != nil {
-			log.WithFields(log.Fields{
-				"step":      "applyLdapGroupParams",
-				"Ldap role": group.Role,
-				"IP":        m.ip,
-				"Model":     m.HardwareType(),
-				"Error":     err,
-			}).Warn("Unable to apply Ldap role group config.")
+			m.log.V(1).Error(err, "Unable to apply Ldap role group config.",
+				"step", "applyLdapGroupParams",
+				"Ldap role", group.Role,
+				"IP", m.ip,
+				"Model", m.HardwareType(),
+				"Error", err,
+			)
 			return err
 		}
 
-		log.WithFields(log.Fields{
-			"IP":    m.ip,
-			"Model": m.HardwareType(),
-			"Role":  group.Role,
-			"Group": group.Group,
-		}).Debug("Ldap group parameters applied.")
+		m.log.V(1).Info("Ldap group parameters applied.",
+			"IP", m.ip,
+			"Model", m.HardwareType(),
+			"Role", group.Role,
+			"Group", group.Group,
+		)
 
 		roleID++
 	}
@@ -287,7 +271,7 @@ func (m *M1000e) CurrentHTTPSCert() (c []*x509.Certificate, b bool, e error) {
 //		return err
 //	}
 //
-//	log.WithFields(log.Fields{
+//	m.log.V(1).Info("",
 //		"IP":    m.ip,
 //		"Model": m.HardwareType(),
 //	}).Debug("SSL certs uploaded.")
@@ -304,7 +288,7 @@ func (m *M1000e) CurrentHTTPSCert() (c []*x509.Certificate, b bool, e error) {
 //
 //	file, err := os.Open(SslKey)
 //	if err != nil {
-//		log.WithFields(log.Fields{
+//		m.log.V(1).Info("",
 //			"step": "ssl-multipart-upload",
 //		}).Fatal("Declared SSL key file doesnt exist: ", SslKey)
 //		return err
@@ -334,7 +318,7 @@ func (m *M1000e) CurrentHTTPSCert() (c []*x509.Certificate, b bool, e error) {
 //
 //	file, err = os.Open(SslCert)
 //	if err != nil {
-//		log.WithFields(log.Fields{
+//		m.log.V(1).Info("",
 //			"step": "ssl-multipart-upload",
 //		}).Fatal("Declared SSL cert file doesnt exist: ", SslCert)
 //		return err
@@ -409,15 +393,9 @@ func (m *M1000e) post(endpoint string, form *url.Values) (err error) {
 		return err
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpRequestOut(req, true)
-		if err == nil {
-			log.Println(fmt.Sprintf("[Request] https://%s/cgi-bin/webcgi/%s", m.ip, endpoint))
-			log.Println(">>>>>>>>>>>>>>>")
-			log.Printf("%s\n\n", dump)
-			log.Println(">>>>>>>>>>>>>>>")
-		}
-	}
+
+	reqDump, _ := httputil.DumpRequestOut(req, true)
+	m.log.V(2).Info("requestTrace", "requestDump", string(reqDump), "url", fmt.Sprintf("https://%s/cgi-bin/webcgi/%s", m.ip, endpoint))
 
 	//XXX to debug
 	//fmt.Printf("--> %+v\n", form.Encode())
@@ -427,15 +405,8 @@ func (m *M1000e) post(endpoint string, form *url.Values) (err error) {
 		return err
 	}
 	defer resp.Body.Close()
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpResponse(resp, true)
-		if err == nil {
-			log.Println("[Response]")
-			log.Println("<<<<<<<<<<<<<<")
-			log.Printf("%s\n\n", dump)
-			log.Println("<<<<<<<<<<<<<<")
-		}
-	}
+	respDump, _ := httputil.DumpResponse(resp, true)
+	m.log.V(2).Info("responseTrace", "responseDump", string(respDump))
 
 	_, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -459,10 +430,7 @@ func (m *M1000e) ApplySecurityCfg(cfg LoginSecurityParams) (err error) {
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    m.ip,
-		"Model": m.HardwareType(),
-	}).Debug("Security config parameters applied.")
+	m.log.V(1).Info("Security config parameters applied.", "IP", m.ip, "Model", m.HardwareType())
 	return err
 
 }

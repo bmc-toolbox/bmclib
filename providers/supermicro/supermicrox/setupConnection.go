@@ -13,7 +13,6 @@ import (
 	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/providers/supermicro"
-	log "github.com/sirupsen/logrus"
 )
 
 // httpLogin initiates the connection to an SupermicroX device
@@ -27,7 +26,7 @@ func (s *SupermicroX) httpLogin() (err error) {
 		return err
 	}
 
-	log.WithFields(log.Fields{"step": "bmc connection", "vendor": supermicro.VendorID, "ip": s.ip}).Debug("connecting to bmc")
+	s.log.V(1).Info("connecting to bmc", "step", "bmc connection", "vendor", supermicro.VendorID, "ip", s.ip)
 
 	data := fmt.Sprintf("name=%s&pwd=%s", s.username, s.password)
 	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/cgi/login.cgi", s.ip), bytes.NewBufferString(data))
@@ -64,7 +63,7 @@ func (s *SupermicroX) httpLogin() (err error) {
 func (s *SupermicroX) Close() (err error) {
 	if s.httpClient != nil {
 		bmcURL := fmt.Sprintf("https://%s/cgi/logout.cgi", s.ip)
-		log.WithFields(log.Fields{"step": "bmc connection", "vendor": supermicro.VendorID, "ip": s.ip}).Debug("logout from bmc")
+		s.log.V(1).Info("logout from bmc", "step", "bmc connection", "vendor", supermicro.VendorID, "ip", s.ip)
 
 		req, err := http.NewRequest("POST", bmcURL, nil)
 		if err != nil {
@@ -80,16 +79,8 @@ func (s *SupermicroX) Close() (err error) {
 				req.AddCookie(cookie)
 			}
 		}
-		if log.GetLevel() == log.TraceLevel {
-			log.Println(fmt.Sprintf("https://%s/cgi/%s", bmcURL, s.ip))
-			dump, err := httputil.DumpRequestOut(req, true)
-			if err == nil {
-				log.Println("[Request]")
-				log.Println(">>>>>>>>>>>>>>>")
-				log.Printf("%s\n\n", dump)
-				log.Println(">>>>>>>>>>>>>>>")
-			}
-		}
+		reqDump, _ := httputil.DumpRequestOut(req, true)
+		s.log.V(2).Info("request", "url", fmt.Sprintf("https://%s/cgi/%s", bmcURL, s.ip), "requestDump", reqDump)
 
 		resp, err := s.httpClient.Do(req)
 		if err != nil {
@@ -98,17 +89,6 @@ func (s *SupermicroX) Close() (err error) {
 
 		defer resp.Body.Close()
 		defer io.Copy(ioutil.Discard, resp.Body)
-
-		if log.GetLevel() == log.TraceLevel {
-			log.Println(fmt.Sprintf("https://%s/cgi/%s", bmcURL, s.ip))
-			dump, err := httputil.DumpRequestOut(req, true)
-			if err == nil {
-				log.Println("[Request]")
-				log.Println(">>>>>>>>>>>>>>>")
-				log.Printf("%s\n\n", dump)
-				log.Println(">>>>>>>>>>>>>>>")
-			}
-		}
 
 		return err
 	}

@@ -1,6 +1,7 @@
 package supermicrox
 
 import (
+	"context"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -8,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/bmc-toolbox/bmclib/devices"
+	"github.com/bombsimon/logrusr"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -104,8 +107,13 @@ var (
 	}
 )
 
+func init() {
+	if viper.GetBool("debug") != true {
+		viper.SetDefault("debug", true)
+	}
+}
+
 func setup() (r *SupermicroX, err error) {
-	viper.SetDefault("debug", false)
 	mux = http.NewServeMux()
 	server = httptest.NewTLSServer(mux)
 	ip := strings.TrimPrefix(server.URL, "https://")
@@ -125,7 +133,8 @@ func setup() (r *SupermicroX, err error) {
 		w.Write([]byte("../cgi/url_redirect.cgi?url_name=mainmenu"))
 	})
 
-	r, err = New(ip, username, password)
+	testLog := logrus.New()
+	r, err = New(context.TODO(), ip, username, password, logrusr.NewLogger(testLog))
 	if err != nil {
 		return r, err
 	}

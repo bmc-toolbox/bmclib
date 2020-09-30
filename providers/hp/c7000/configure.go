@@ -2,10 +2,10 @@ package c7000
 
 import (
 	"crypto/x509"
+	"errors"
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
-	log "github.com/sirupsen/logrus"
 )
 
 // This ensures the compiler errors if this type is missing
@@ -70,25 +70,25 @@ func (c *C7000) Power(cfg *cfgresources.Power) (err error) {
 func (c *C7000) Ldap(cfg *cfgresources.Ldap) (err error) {
 	err = c.applysetLdapInfo4(cfg)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"step":     "applyLdapParams",
-			"resource": "Ldap",
-			"IP":       c.ip,
-			"Model":    c.HardwareType(),
-			"Error":    err,
-		}).Warn("applyLdapParams returned error.")
+		c.log.V(1).Info("applyLdapParams returned error.",
+			"step", "applyLdapParams",
+			"resource", "Ldap",
+			"IP", c.ip,
+			"Model", c.HardwareType(),
+			"Error", err.Error(),
+		)
 		return err
 	}
 
 	err = c.applyEnableLdapAuth(cfg.Enable)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"step":     "applyLdapParams",
-			"resource": "Ldap",
-			"IP":       c.ip,
-			"Model":    c.HardwareType(),
-			"Error":    err,
-		}).Warn("applyLdapParams returned error.")
+		c.log.V(1).Info("applyLdapParams returned error.",
+			"step", "applyLdapParams",
+			"resource", "Ldap",
+			"IP", c.ip,
+			"Model", c.HardwareType(),
+			"Error", err.Error(),
+		)
 		return err
 	}
 
@@ -115,25 +115,25 @@ func (c *C7000) Ldap(cfg *cfgresources.Ldap) (err error) {
 // </hpoa:setLdapInfo4>
 func (c *C7000) applysetLdapInfo4(cfg *cfgresources.Ldap) (err error) {
 	if cfg.Server == "" {
-		log.WithFields(log.Fields{
-			"step":  "applysetLdapInfo4",
-			"Model": c.HardwareType(),
-		}).Warn("Ldap resource parameter Server required but not declared.")
+		c.log.V(1).Info("Ldap resource parameter Server required but not declared.",
+			"step", "applysetLdapInfo4",
+			"Model", c.HardwareType(),
+		)
 		return err
 	}
 
 	if cfg.Port == 0 {
-		log.WithFields(log.Fields{
-			"step":  "applysetLdapInfo4",
-			"Model": c.HardwareType(),
-		}).Warn("Ldap resource parameter Port required but not declared.")
+		c.log.V(1).Info("Ldap resource parameter Port required but not declared.",
+			"step", "applysetLdapInfo4",
+			"Model", c.HardwareType(),
+		)
 		return err
 	}
 
 	if cfg.BaseDn == "" {
-		log.WithFields(log.Fields{
-			"step": "applysetLdapInfo4",
-		}).Warn("Ldap resource parameter BaseDn required but not declared.")
+		c.log.V(1).Info("Ldap resource parameter BaseDn required but not declared.",
+			"step", "applysetLdapInfo4",
+		)
 		return err
 	}
 
@@ -156,20 +156,20 @@ func (c *C7000) applysetLdapInfo4(cfg *cfgresources.Ldap) (err error) {
 
 	statusCode, _, err := c.postXML(payload)
 	if statusCode != 200 || err != nil {
-		log.WithFields(log.Fields{
-			"step":       "applysetLdapInfo4",
-			"IP":         c.ip,
-			"Model":      c.HardwareType(),
-			"statusCode": statusCode,
-			"Error":      err,
-		}).Warn("Ldap applysetLdapInfo4 apply request returned non 200.")
+		c.log.V(1).Info("Ldap applysetLdapInfo4 apply request returned non 200.",
+			"step", "applysetLdapInfo4",
+			"IP", c.ip,
+			"Model", c.HardwareType(),
+			"statusCode", statusCode,
+			"Error", err.Error(),
+		)
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    c.ip,
-		"Model": c.HardwareType(),
-	}).Debug("Ldap Server parameters applied.")
+	c.log.V(1).Info("Ldap Server parameters applied.",
+		"IP", c.ip,
+		"Model", c.HardwareType(),
+	)
 	return err
 }
 
@@ -182,20 +182,20 @@ func (c *C7000) applyEnableLdapAuth(enable bool) (err error) {
 	payload := enableLdapAuthentication{EnableLdap: enable, EnableLocalUsers: true}
 	statusCode, _, err := c.postXML(payload)
 	if statusCode != 200 || err != nil {
-		log.WithFields(log.Fields{
-			"step":       "applyEnableLdapAuth",
-			"IP":         c.ip,
-			"Model":      c.HardwareType(),
-			"statusCode": statusCode,
-			"Error":      err,
-		}).Warn("Ldap applyEnableLdapAuth apply request returned non 200.")
+		c.log.V(1).Info("Ldap applyEnableLdapAuth apply request returned non 200.",
+			"step", "applyEnableLdapAuth",
+			"IP", c.ip,
+			"Model", c.HardwareType(),
+			"statusCode", statusCode,
+			"Error", err.Error(),
+		)
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    c.ip,
-		"Model": c.HardwareType(),
-	}).Debug("Ldap Enabled.")
+	c.log.V(1).Info("Ldap Enabled.",
+		"IP", c.ip,
+		"Model", c.HardwareType(),
+	)
 	return err
 }
 
@@ -210,11 +210,11 @@ func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.L
 	for _, group := range cfg {
 
 		if group.Group == "" {
-			log.WithFields(log.Fields{
-				"step":      "applyLdapGroupParams",
-				"Model":     c.HardwareType(),
-				"Ldap role": group.Role,
-			}).Warn("Ldap resource parameter Group required but not declared.")
+			c.log.V(1).Info("Ldap resource parameter Group required but not declared.",
+				"step", "applyLdapGroupParams",
+				"Model", c.HardwareType(),
+				"Ldap role", group.Role,
+			)
 			return
 		}
 
@@ -222,13 +222,13 @@ func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.L
 		if !group.Enable {
 			c.applyRemoveLdapGroup(group.Group)
 			if err != nil {
-				log.WithFields(log.Fields{
-					"step":     "applyRemoveLdapGroup",
-					"resource": "Ldap",
-					"IP":       c.ip,
-					"Model":    c.HardwareType(),
-					"Error":    err,
-				}).Warn("Remove Ldap Group returned error.")
+				c.log.V(1).Info("Remove Ldap Group returned error.",
+					"step", "applyRemoveLdapGroup",
+					"resource", "Ldap",
+					"IP", c.ip,
+					"Model", c.HardwareType(),
+					"Error", err.Error(),
+				)
 				return
 			}
 
@@ -236,58 +236,58 @@ func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.L
 		}
 
 		if !c.isRoleValid(group.Role) {
-			log.WithFields(log.Fields{
-				"step":  "applyLdapGroupParams",
-				"role":  group.Role,
-				"Model": c.HardwareType(),
-			}).Warn("Ldap resource Role must be a valid role: admin OR user.")
+			c.log.V(1).Info("Ldap resource Role must be a valid role: admin OR user.",
+				"step", "applyLdapGroupParams",
+				"role", group.Role,
+				"Model", c.HardwareType(),
+			)
 			return
 		}
 
 		//1. addLdapGroup
 		err = c.applyAddLdapGroup(group.Group)
 		if err != nil {
-			log.WithFields(log.Fields{
-				"step":     "applyAddLdapGroup",
-				"resource": "Ldap",
-				"IP":       c.ip,
-				"Model":    c.HardwareType(),
-				"Error":    err,
-			}).Warn("addLdapGroup returned error.")
+			c.log.V(1).Info("addLdapGroup returned error.",
+				"step", "applyAddLdapGroup",
+				"resource", "Ldap",
+				"IP", c.ip,
+				"Model", c.HardwareType(),
+				"Error", err.Error(),
+			)
 			return
 		}
 
 		//2. setLdapGroupBayACL
 		err = c.applyLdapGroupBayACL(group.Role, group.Group)
 		if err != nil {
-			log.WithFields(log.Fields{
-				"step":     "setLdapGroupBayACL",
-				"resource": "Ldap",
-				"IP":       c.ip,
-				"Model":    c.HardwareType(),
-				"Error":    err,
-			}).Warn("addLdapGroup returned error.")
+			c.log.V(1).Info("addLdapGroup returned error.",
+				"step", "setLdapGroupBayACL",
+				"resource", "Ldap",
+				"IP", c.ip,
+				"Model", c.HardwareType(),
+				"Error", err.Error(),
+			)
 			return
 		}
 
 		//3. applyAddLdapGroupBayAccess
 		err = c.applyAddLdapGroupBayAccess(group.Group)
 		if err != nil {
-			log.WithFields(log.Fields{
-				"step":     "applyAddLdapGroupBayAccess",
-				"resource": "Ldap",
-				"IP":       c.ip,
-				"Model":    c.HardwareType(),
-				"Error":    err,
-			}).Warn("addLdapGroup returned error.")
+			c.log.V(1).Info("addLdapGroup returned error.",
+				"step", "applyAddLdapGroupBayAccess",
+				"resource", "Ldap",
+				"IP", c.ip,
+				"Model", c.HardwareType(),
+				"Error", err.Error(),
+			)
 			return
 		}
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    c.ip,
-		"Model": c.HardwareType(),
-	}).Debug("Ldap config applied")
+	c.log.V(1).Info("Ldap config applied",
+		"IP", c.ip,
+		"Model", c.HardwareType(),
+	)
 	return
 }
 
@@ -300,30 +300,30 @@ func (c *C7000) applyRemoveLdapGroup(group string) (err error) {
 	payload := removeLdapGroup{LdapGroup: ldapGroup{Text: group}}
 	statusCode, _, err := c.postXML(payload)
 	if statusCode == 200 || statusCode == 500 { // 500 indicates the group exists.
-		log.WithFields(log.Fields{
-			"step":       "applyRemoveLdapGroup",
-			"IP":         c.ip,
-			"Model":      c.HardwareType(),
-			"statusCode": statusCode,
-		}).Debug("Ldap applyRemoveLdapGroup applied.")
+		c.log.V(1).Info("Ldap applyRemoveLdapGroup applied.",
+			"step", "applyRemoveLdapGroup",
+			"IP", c.ip,
+			"Model", c.HardwareType(),
+			"statusCode", statusCode,
+		)
 		return nil
 	}
 
 	if statusCode >= 300 || err != nil {
-		log.WithFields(log.Fields{
-			"step":       "applyRemoveLdapGroup",
-			"IP":         c.ip,
-			"Model":      c.HardwareType(),
-			"statusCode": statusCode,
-		}).Warn("Ldap applyRemoveLdapGroup request returned non 200.")
+		c.log.V(1).Info("Ldap applyRemoveLdapGroup request returned non 200.",
+			"step", "applyRemoveLdapGroup",
+			"IP", c.ip,
+			"Model", c.HardwareType(),
+			"statusCode", statusCode,
+		)
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    c.ip,
-		"Model": c.HardwareType(),
-		"Group": group,
-	}).Debug("Ldap group removed.")
+	c.log.V(1).Info("Ldap group removed.",
+		"IP", c.ip,
+		"Model", c.HardwareType(),
+		"Group", group,
+	)
 	return nil
 }
 
@@ -336,29 +336,29 @@ func (c *C7000) applyAddLdapGroup(group string) (err error) {
 	payload := addLdapGroup{LdapGroup: ldapGroup{Text: group}}
 	statusCode, _, err := c.postXML(payload)
 	if statusCode == 200 || statusCode == 500 { // 500 indicates the group exists.
-		log.WithFields(log.Fields{
-			"step":       "applyAddLdapGroup",
-			"IP":         c.ip,
-			"Model":      c.HardwareType(),
-			"statusCode": statusCode,
-		}).Debug("Ldap applyAddLdapGroup applied.")
+		c.log.V(1).Info("Ldap applyAddLdapGroup applied.",
+			"step", "applyAddLdapGroup",
+			"IP", c.ip,
+			"Model", c.HardwareType(),
+			"statusCode", statusCode,
+		)
 		return nil
 	}
 
 	if statusCode >= 300 || err != nil {
-		log.WithFields(log.Fields{
-			"step":       "applyAddLdapGroup",
-			"IP":         c.ip,
-			"Model":      c.HardwareType(),
-			"statusCode": statusCode,
-		}).Warn("Ldap applyAddLdapGroup request returned non 200.")
+		c.log.V(1).Info("Ldap applyAddLdapGroup request returned non 200.",
+			"step", "applyAddLdapGroup",
+			"IP", c.ip,
+			"Model", c.HardwareType(),
+			"statusCode", statusCode,
+		)
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    c.ip,
-		"Model": c.HardwareType(),
-	}).Debug("Ldap group added.")
+	c.log.V(1).Info("Ldap group added.",
+		"IP", c.ip,
+		"Model", c.HardwareType(),
+	)
 	return nil
 }
 
@@ -380,22 +380,22 @@ func (c *C7000) applyLdapGroupBayACL(role string, group string) (err error) {
 	payload := setLdapGroupBayACL{LdapGroup: ldapGroup{Text: group}, ACL: ACL{Text: userACL}}
 	statusCode, _, err := c.postXML(payload)
 	if statusCode != 200 || err != nil {
-		log.WithFields(log.Fields{
-			"step":       "applyLdapGroupBayACL",
-			"IP":         c.ip,
-			"Model":      c.HardwareType(),
-			"statusCode": statusCode,
-			"Error":      err,
-		}).Warn("LDAP applyLdapGroupBayACL request returned non 200.")
+		c.log.V(1).Info("LDAP applyLdapGroupBayACL request returned non 200.",
+			"step", "applyLdapGroupBayACL",
+			"IP", c.ip,
+			"Model", c.HardwareType(),
+			"statusCode", statusCode,
+			"Error", err.Error(),
+		)
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    c.ip,
-		"Model": c.HardwareType(),
-		"Role":  role,
-		"Group": group,
-	}).Debug("Ldap group ACL added.")
+	c.log.V(1).Info("Ldap group ACL added.",
+		"IP", c.ip,
+		"Model", c.HardwareType(),
+		"Role", role,
+		"Group", group,
+	)
 	return err
 }
 
@@ -465,21 +465,21 @@ func (c *C7000) applyAddLdapGroupBayAccess(group string) (err error) {
 
 	statusCode, _, err := c.postXML(payload)
 	if statusCode != 200 || err != nil {
-		log.WithFields(log.Fields{
-			"step":       "applyAddLdapGroupBayAccess",
-			"IP":         c.ip,
-			"Model":      c.HardwareType(),
-			"statusCode": statusCode,
-			"Error":      err,
-		}).Warn("LDAP applyAddLdapGroupBayAccess apply request returned non 200.")
+		c.log.V(1).Info("LDAP applyAddLdapGroupBayAccess apply request returned non 200.",
+			"step", "applyAddLdapGroupBayAccess",
+			"IP", c.ip,
+			"Model", c.HardwareType(),
+			"statusCode", statusCode,
+			"Error", err.Error(),
+		)
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    c.ip,
-		"Model": c.HardwareType(),
-		"Group": group,
-	}).Debug("Ldap interconnect and bay ACLs added.")
+	c.log.V(1).Info("Ldap interconnect and bay ACLs added.",
+		"IP", c.ip,
+		"Model", c.HardwareType(),
+		"Group", group,
+	)
 	return err
 }
 
@@ -490,25 +490,31 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 
 	for _, cfg := range users {
 		if cfg.Name == "" {
-			log.WithFields(log.Fields{
-				"step":  "applyUserParams",
-				"Model": c.HardwareType(),
-			}).Fatal("User resource expects parameter: Name.")
+			err = errors.New("user resource expects parameter: Name")
+			c.log.V(1).Error(err, "user resource expects parameter: Name",
+				"step", "applyUserParams",
+				"Model", c.HardwareType(),
+			)
+			return err
 		}
 
 		if cfg.Password == "" {
-			log.WithFields(log.Fields{
-				"step":  "applyUserParams",
-				"Model": c.HardwareType(),
-			}).Fatal("User resource expects parameter: Password.")
+			err = errors.New("user resource expects parameter: Password")
+			c.log.V(1).Error(err, "user resource expects parameter: Password",
+				"step", "applyUserParams",
+				"Model", c.HardwareType(),
+			)
+			return err
 		}
 
 		if c.isRoleValid(cfg.Role) == false {
-			log.WithFields(log.Fields{
-				"step":  "applyUserParams",
-				"Model": c.HardwareType(),
-				"Role":  cfg.Role,
-			}).Fatal("User resource Role must be declared and a valid role: admin.")
+			err = errors.New("user resource Role must be declared and a valid role: admin")
+			c.log.V(1).Error(err, "user resource Role must be declared and a valid role: admin",
+				"step", "applyUserParams",
+				"Model", c.HardwareType(),
+				"Role", cfg.Role,
+			)
+			return err
 		}
 
 		username := Username{Text: cfg.Name}
@@ -524,11 +530,11 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 				return err
 			}
 
-			log.WithFields(log.Fields{
-				"IP":    c.ip,
-				"Model": c.HardwareType(),
-				"User":  cfg.Name,
-			}).Debug("User removed.")
+			c.log.V(1).Info("User removed.",
+				"IP", c.ip,
+				"Model", c.HardwareType(),
+				"User", cfg.Name,
+			)
 
 			//user exists and was removed.
 			return err
@@ -542,13 +548,13 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 
 		//user exists
 		if statusCode == 400 {
-			log.WithFields(log.Fields{
-				"step":        "applyUserParams",
-				"user":        cfg.Name,
-				"IP":          c.ip,
-				"Model":       c.HardwareType(),
-				"Return code": statusCode,
-			}).Debug("User already exists, setting password.")
+			c.log.V(1).Info("User already exists, setting password.",
+				"step", "applyUserParams",
+				"user", cfg.Name,
+				"IP", c.ip,
+				"Model", c.HardwareType(),
+				"Return code", statusCode,
+			)
 
 			//update user password
 			err := c.setUserPassword(cfg.Name, cfg.Password)
@@ -570,11 +576,11 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 
 		}
 
-		log.WithFields(log.Fields{
-			"IP":    c.ip,
-			"Model": c.HardwareType(),
-			"user":  cfg.Name,
-		}).Debug("User cfg applied.")
+		c.log.V(1).Info("User cfg applied.",
+			"IP", c.ip,
+			"Model", c.HardwareType(),
+			"user", cfg.Name,
+		)
 
 	}
 	return err
@@ -588,22 +594,22 @@ func (c *C7000) setUserPassword(user string, password string) (err error) {
 
 	statusCode, _, err := c.postXML(payload)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"step":        "setUserPassword",
-			"user":        user,
-			"IP":          c.ip,
-			"Model":       c.HardwareType(),
-			"return code": statusCode,
-			"Error":       err,
-		}).Warn("Unable to set user password.")
+		c.log.V(1).Error(err, "unable to set user password.",
+			"step", "setUserPassword",
+			"user", user,
+			"IP", c.ip,
+			"Model", c.HardwareType(),
+			"return code", statusCode,
+			"Error", err.Error(),
+		)
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    c.ip,
-		"Model": c.HardwareType(),
-		"user":  user,
-	}).Debug("User password set.")
+	c.log.V(1).Info("User password set.",
+		"IP", c.ip,
+		"Model", c.HardwareType(),
+		"user", user,
+	)
 	return err
 }
 
@@ -623,24 +629,24 @@ func (c *C7000) setUserACL(user string, role string) (err error) {
 
 	statusCode, _, err := c.postXML(payload)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"step":        "setUserACL",
-			"user":        user,
-			"ACL":         role,
-			"IP":          c.ip,
-			"Model":       c.HardwareType(),
-			"return code": statusCode,
-			"Error":       err,
-		}).Warn("Unable to set user ACL.")
+		c.log.V(1).Error(err, "unable to set user ACL.",
+			"step", "setUserACL",
+			"user", user,
+			"ACL", role,
+			"IP", c.ip,
+			"Model", c.HardwareType(),
+			"return code", statusCode,
+			"Error", err.Error(),
+		)
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    c.ip,
-		"Model": c.HardwareType(),
-		"User":  user,
-		"ACL":   role,
-	}).Debug("User ACL set.")
+	c.log.V(1).Info("User ACL set.",
+		"IP", c.ip,
+		"Model", c.HardwareType(),
+		"User", user,
+		"ACL", role,
+	)
 	return err
 }
 
@@ -686,22 +692,22 @@ func (c *C7000) applyAddUserBayAccess(user string) (err error) {
 
 	statusCode, _, err := c.postXML(payload)
 	if statusCode != 200 || err != nil {
-		log.WithFields(log.Fields{
-			"step":       "applyAddUserBayAccess",
-			"IP":         c.ip,
-			"Model":      c.HardwareType(),
-			"statusCode": statusCode,
-			"Error":      err,
-		}).Warn("LDAP applyAddUserBayAccess apply request returned non 200.")
+		c.log.V(1).Error(err, "LDAP applyAddUserBayAccess apply request returned non 200.",
+			"step", "applyAddUserBayAccess",
+			"IP", c.ip,
+			"Model", c.HardwareType(),
+			"statusCode", statusCode,
+			"Error", err.Error(),
+		)
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"step":  "applyAddUserBayAccess",
-		"IP":    c.ip,
-		"Model": c.HardwareType(),
-		"user":  user,
-	}).Debug("User account related interconnect and bay ACLs added.")
+	c.log.V(1).Info("User account related interconnect and bay ACLs added.",
+		"step", "applyAddUserBayAccess",
+		"IP", c.ip,
+		"Model", c.HardwareType(),
+		"user", user,
+	)
 	return err
 }
 
@@ -723,26 +729,26 @@ func (c *C7000) applyAddUserBayAccess(user string) (err error) {
 func (c *C7000) Ntp(cfg *cfgresources.Ntp) (err error) {
 
 	if cfg.Server1 == "" {
-		log.WithFields(log.Fields{
-			"step":  "applyNtpParams",
-			"Model": c.HardwareType(),
-		}).Warn("NTP resource expects parameter: server1.")
+		c.log.V(1).Info("NTP resource expects parameter: server1.",
+			"step", "applyNtpParams",
+			"Model", c.HardwareType(),
+		)
 		return
 	}
 
 	if cfg.Timezone == "" {
-		log.WithFields(log.Fields{
-			"step":  "applyNtpParams",
-			"Model": c.HardwareType(),
-		}).Warn("NTP resource expects parameter: timezone.")
+		c.log.V(1).Info("NTP resource expects parameter: timezone.",
+			"step", "applyNtpParams",
+			"Model", c.HardwareType(),
+		)
 		return
 	}
 
 	if cfg.Enable != true {
-		log.WithFields(log.Fields{
-			"step":  "applyNtpParams",
-			"Model": c.HardwareType(),
-		}).Debug("Ntp resource declared with enable: false.")
+		c.log.V(1).Info("Ntp resource declared with enable: false.",
+			"step", "applyNtpParams",
+			"Model", c.HardwareType(),
+		)
 		return
 	}
 
@@ -755,31 +761,31 @@ func (c *C7000) Ntp(cfg *cfgresources.Ntp) (err error) {
 	//fmt.Printf("%s\n", output)
 	statusCode, _, err := c.postXML(payload)
 	if err != nil || statusCode != 200 {
-		log.WithFields(log.Fields{
-			"step":       "applyNtpParams",
-			"IP":         c.ip,
-			"Model":      c.HardwareType(),
-			"StatusCode": statusCode,
-			"Error":      err,
-		}).Warn("NTP apply request returned non 200.")
+		c.log.V(1).Info("NTP apply request returned non 200.",
+			"step", "applyNtpParams",
+			"IP", c.ip,
+			"Model", c.HardwareType(),
+			"StatusCode", statusCode,
+			"Error", err.Error(),
+		)
 		return err
 	}
 
 	err = c.applyNtpTimezoneParam(cfg.Timezone)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"step":  "applyNtpParams",
-			"IP":    c.ip,
-			"Model": c.HardwareType(),
-			"Error": err,
-		}).Warn("Unable to apply NTP timezone config.")
+		c.log.V(1).Info("Unable to apply NTP timezone config.",
+			"step", "applyNtpParams",
+			"IP", c.ip,
+			"Model", c.HardwareType(),
+			"Error", err.Error(),
+		)
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    c.ip,
-		"Model": c.HardwareType(),
-	}).Debug("Date and time config applied.")
+	c.log.V(1).Info("Date and time config applied.",
+		"IP", c.ip,
+		"Model", c.HardwareType(),
+	)
 	return err
 }
 
@@ -792,20 +798,20 @@ func (c *C7000) applyNtpTimezoneParam(timezone string) (err error) {
 
 	statusCode, _, err := c.postXML(payload)
 	if err != nil || statusCode != 200 {
-		log.WithFields(log.Fields{
-			"step":       "applyNtpTimezoneParam",
-			"IP":         c.ip,
-			"Model":      c.HardwareType(),
-			"Error":      err,
-			"StatusCode": statusCode,
-		}).Warn("NTP applyNtpTimezoneParam request returned non 200.")
+		c.log.V(1).Info("NTP applyNtpTimezoneParam request returned non 200.",
+			"step", "applyNtpTimezoneParam",
+			"IP", c.ip,
+			"Model", c.HardwareType(),
+			"Error", err.Error(),
+			"StatusCode", statusCode,
+		)
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    c.ip,
-		"Model": c.HardwareType(),
-	}).Debug("Timezone config applied.")
+	c.log.V(1).Info("Timezone config applied.",
+		"IP", c.ip,
+		"Model", c.HardwareType(),
+	)
 	return err
 }
 
@@ -820,41 +826,41 @@ func (c *C7000) Syslog(cfg *cfgresources.Syslog) (err error) {
 
 	var port int
 	if cfg.Server == "" {
-		log.WithFields(log.Fields{
-			"step":  "applySyslogParams",
-			"IP":    c.ip,
-			"Model": c.HardwareType(),
-		}).Warn("Syslog resource expects parameter: Server.")
+		c.log.V(1).Info("Syslog resource expects parameter: Server.",
+			"step", "applySyslogParams",
+			"IP", c.ip,
+			"Model", c.HardwareType(),
+		)
 		return
 	}
 
 	if cfg.Port == 0 {
-		log.WithFields(log.Fields{
-			"step":  "applySyslogParams",
-			"IP":    c.ip,
-			"Model": c.HardwareType(),
-		}).Debug("Syslog resource port set to default: 514.")
+		c.log.V(1).Info("Syslog resource port set to default: 514.",
+			"step", "applySyslogParams",
+			"IP", c.ip,
+			"Model", c.HardwareType(),
+		)
 		port = 514
 	} else {
 		port = cfg.Port
 	}
 
 	if cfg.Enable != true {
-		log.WithFields(log.Fields{
-			"step":  "applySyslogParams",
-			"IP":    c.ip,
-			"Model": c.HardwareType(),
-		}).Debug("Syslog resource declared with enable: false.")
+		c.log.V(1).Info("Syslog resource declared with enable: false.",
+			"step", "applySyslogParams",
+			"IP", c.ip,
+			"Model", c.HardwareType(),
+		)
 	}
 
 	c.applySyslogServer(cfg.Server)
 	c.applySyslogPort(port)
 	c.applySyslogEnabled(cfg.Enable)
 
-	log.WithFields(log.Fields{
-		"IP":    c.ip,
-		"Model": c.HardwareType(),
-	}).Debug("Syslog config applied.")
+	c.log.V(1).Info("Syslog config applied.",
+		"IP", c.ip,
+		"Model", c.HardwareType(),
+	)
 	return err
 }
 
@@ -867,20 +873,20 @@ func (c *C7000) applySyslogServer(server string) {
 	payload := SetRemoteSyslogServer{Server: server}
 	statusCode, _, err := c.postXML(payload)
 	if err != nil || statusCode != 200 {
-		log.WithFields(log.Fields{
-			"step":       "applySyslogServer",
-			"IP":         c.ip,
-			"Model":      c.HardwareType(),
-			"Error":      err,
-			"StatusCode": statusCode,
-		}).Warn("Syslog set server request returned non 200.")
+		c.log.V(1).Error(err, "Syslog set server request returned non 200.",
+			"step", "applySyslogServer",
+			"IP", c.ip,
+			"Model", c.HardwareType(),
+			"Error", err.Error(),
+			"StatusCode", statusCode,
+		)
 		return
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    c.ip,
-		"Model": c.HardwareType(),
-	}).Debug("Syslog server set.")
+	c.log.V(1).Info("Syslog server set.",
+		"IP", c.ip,
+		"Model", c.HardwareType(),
+	)
 	return
 }
 
@@ -892,20 +898,20 @@ func (c *C7000) applySyslogPort(port int) {
 	payload := SetRemoteSyslogPort{Port: port}
 	statusCode, _, err := c.postXML(payload)
 	if err != nil || statusCode != 200 {
-		log.WithFields(log.Fields{
-			"step":       "applySyslogPort",
-			"IP":         c.ip,
-			"Model":      c.HardwareType(),
-			"Error":      err,
-			"StatusCode": statusCode,
-		}).Warn("Syslog set port request returned non 200.")
+		c.log.V(1).Error(err, "Syslog set port request returned non 200.",
+			"step", "applySyslogPort",
+			"IP", c.ip,
+			"Model", c.HardwareType(),
+			"Error", err.Error(),
+			"StatusCode", statusCode,
+		)
 		return
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    c.ip,
-		"Model": c.HardwareType(),
-	}).Debug("Syslog port set.")
+	c.log.V(1).Info("Syslog port set.",
+		"IP", c.ip,
+		"Model", c.HardwareType(),
+	)
 	return
 }
 
@@ -918,20 +924,20 @@ func (c *C7000) applySyslogEnabled(enabled bool) {
 	payload := SetRemoteSyslogEnabled{Enabled: enabled}
 	statusCode, _, err := c.postXML(payload)
 	if err != nil || statusCode != 200 {
-		log.WithFields(log.Fields{
-			"step":       "SetRemoteSyslogEnabled",
-			"IP":         c.ip,
-			"Model":      c.HardwareType(),
-			"Error":      err,
-			"StatusCode": statusCode,
-		}).Warn("Syslog enable request returned non 200.")
+		c.log.V(1).Error(err, "Syslog enable request returned non 200.",
+			"step", "SetRemoteSyslogEnabled",
+			"IP", c.ip,
+			"Model", c.HardwareType(),
+			"Error", err.Error(),
+			"StatusCode", statusCode,
+		)
 		return
 	}
 
-	log.WithFields(log.Fields{
-		"IP":    c.ip,
-		"Model": c.HardwareType(),
-	}).Debug("Syslog enabled.")
+	c.log.V(1).Info("Syslog enabled.",
+		"IP", c.ip,
+		"Model", c.HardwareType(),
+	)
 	return
 
 }

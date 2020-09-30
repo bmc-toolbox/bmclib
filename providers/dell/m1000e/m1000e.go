@@ -2,6 +2,7 @@ package m1000e
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -14,10 +15,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/providers/dell"
-
-	// this make possible to setup logging and properties at any stage
-	_ "github.com/bmc-toolbox/bmclib/logging"
-	log "github.com/sirupsen/logrus"
+	"github.com/go-logr/logr"
 )
 
 const (
@@ -42,16 +40,18 @@ type M1000e struct {
 	cmcTemp      *dell.CMCTemp
 	cmcWWN       *dell.CMCWWN
 	SessionToken string //required to set config
+	ctx          context.Context
+	log          logr.Logger
 }
 
 // New returns a connection to M1000e
-func New(host string, username string, password string) (*M1000e, error) {
+func New(ctx context.Context, host string, username string, password string, log logr.Logger) (*M1000e, error) {
 	sshClient, err := sshclient.New(host, username, password)
 	if err != nil {
 		return nil, err
 	}
 
-	return &M1000e{ip: host, username: username, password: password, sshClient: sshClient}, nil
+	return &M1000e{ip: host, username: username, password: password, sshClient: sshClient, ctx: ctx, log: log}, nil
 }
 
 // CheckCredentials verify whether the credentials are valid or not
@@ -64,7 +64,7 @@ func (m *M1000e) CheckCredentials() (err error) {
 }
 
 func (m *M1000e) get(endpoint string) (payload []byte, err error) {
-	log.WithFields(log.Fields{"step": "chassis connection", "vendor": dell.VendorID, "ip": m.ip, "endpoint": endpoint}).Debug("retrieving data from chassis")
+	m.log.V(1).Info("retrieving data from chassis", "step", "chassis connection", "vendor", string(dell.VendorID), "ip", m.ip, "endpoint", endpoint)
 
 	resp, err := m.httpClient.Get(fmt.Sprintf("https://%s/cgi-bin/webcgi/%s", m.ip, endpoint))
 	if err != nil {
@@ -345,7 +345,13 @@ func (m *M1000e) StorageBlades() (storageBlades []*devices.StorageBlade, err err
 			storageBlade.PowerKw = float64(dellBlade.ActualPwrConsump) / 1000
 			temp, err := strconv.Atoi(dellBlade.BladeTemperature)
 			if err != nil {
-				log.WithFields(log.Fields{"operation": "connection", "ip": m.ip, "position": storageBlade.BladePosition, "type": "chassis", "error": err}).Warning("Auditing blade")
+				m.log.V(1).Info("Auditing blade",
+					"operation", "connection",
+					"ip", m.ip,
+					"position", storageBlade.BladePosition,
+					"type", "chassis",
+					"error", err.Error(),
+				)
 				continue
 			}
 			storageBlade.TempC = temp
@@ -385,7 +391,12 @@ func (m *M1000e) Blades() (blades []*devices.Blade, err error) {
 			blade.PowerKw = float64(dellBlade.ActualPwrConsump) / 1000
 			temp, err := strconv.Atoi(dellBlade.BladeTemperature)
 			if err != nil {
-				log.WithFields(log.Fields{"operation": "connection", "ip": m.ip, "position": blade.BladePosition, "type": "chassis"}).Warning(err)
+				m.log.V(1).Info(err.Error(),
+					"operation", "connection",
+					"ip", m.ip,
+					"position", blade.BladePosition,
+					"type", "chassis",
+				)
 				continue
 			} else {
 				blade.TempC = temp
@@ -421,7 +432,12 @@ func (m *M1000e) Blades() (blades []*devices.Blade, err error) {
 			if strings.HasPrefix(blade.BmcAddress, "[") {
 				payload, err := m.get(fmt.Sprintf("blade_status?id=%d&cat=C10&tab=T41&id=P78", blade.BladePosition))
 				if err != nil {
-					log.WithFields(log.Fields{"operation": "connection", "ip": m.ip, "position": blade.BladePosition, "type": "chassis"}).Warning(err)
+					m.log.V(1).Info(err.Error(),
+						"operation", "connection",
+						"ip", m.ip,
+						"position", blade.BladePosition,
+						"type", "chassis",
+					)
 				} else {
 					ip := findBmcIP.FindStringSubmatch(string(payload))
 					if len(ip) > 0 {
@@ -432,7 +448,12 @@ func (m *M1000e) Blades() (blades []*devices.Blade, err error) {
 
 			for _, nic := range dellBlade.Nics {
 				if nic.BladeNicName == "" {
-					log.WithFields(log.Fields{"operation": "connection", "ip": m.ip, "position": blade.BladePosition, "type": "chassis"}).Error("Network card information missing, please verify")
+					m.log.V(1).Info("Network card information missing, please verify",
+						"operation", "connection",
+						"ip", m.ip,
+						"position", blade.BladePosition,
+						"type", "chassis",
+					)
 					continue
 				}
 				n := &devices.Nic{
