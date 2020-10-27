@@ -83,8 +83,7 @@ func (m *M1000e) User(cfgUsers []*cfgresources.User) (err error) {
 		return err
 	}
 
-	id := 1
-	for _, cfgUser := range cfgUsers {
+	for id, cfgUser := range cfgUsers {
 
 		userID := id + 1
 		//setup params to post
