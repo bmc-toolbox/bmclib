@@ -227,7 +227,7 @@ func (p *Probe) supermicrox(ctx context.Context, log logr.Logger) (bmcConnection
 
 	// looking for ATEN in the response payload isn't the most ideal way, although it is unique to Supermicros
 	if resp.StatusCode == 200 && bytes.Contains(payload, []byte("ATEN International")) {
-		log.V(1).Info("step", "connection", "host", p.host, "vendor", string(devices.Supermicro), "msg", "it's a supermicro")
+		log.V(1).Info("it's a supermicro", "step", "connection", "host", p.host, "vendor", string(devices.Supermicro))
 		return supermicrox.New(ctx, p.host, p.username, p.password, log)
 	}
 
