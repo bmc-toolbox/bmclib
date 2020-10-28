@@ -16,10 +16,14 @@ import (
 	"github.com/spf13/viper"
 )
 
+func init() {
+	if viper.GetBool("debug") != true {
+		viper.SetDefault("debug", true)
+	}
+}
+
 // setup creates a test server and returns a curried ScanAndConnect() function and a teardown func.
 func setup(answers map[string][]byte) (scanAndConnectCurry func(opts ...Option) (bmc interface{}, err error), cancel func()) {
-	viper.SetDefault("debug", true)
-
 	mux := http.NewServeMux()
 	server := httptest.NewTLSServer(mux)
 	ip := strings.TrimPrefix(server.URL, "https://")
