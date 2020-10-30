@@ -83,7 +83,7 @@ func (s *SupermicroX) queryUserAccounts() (userAccounts map[string]int, err erro
 	userAccounts = make(map[string]int)
 	ipmi, err := s.query("CONFIG_INFO.XML=(0,0)")
 	if err != nil {
-		fmt.Println(err)
+		s.log.V(1).Info("error querying user accounts", "error", err.Error())
 		return userAccounts, err
 	}
 
