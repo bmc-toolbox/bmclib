@@ -47,7 +47,13 @@ func New(ctx context.Context, host string, username string, password string, log
 		return nil, err
 	}
 
-	return &IDrac9{ip: host, username: username, password: password, sshClient: sshClient, ctx: ctx, log: log}, nil
+	idrac := &IDrac9{ip: host, username: username, password: password, sshClient: sshClient, ctx: ctx, log: log}
+	err = idrac.httpLogin()
+	if err != nil {
+		return nil, err
+	}
+
+	return idrac, nil
 }
 
 // CheckCredentials verify whether the credentials are valid or not

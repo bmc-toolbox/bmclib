@@ -46,11 +46,8 @@ func main() {
 
 func withUserDefinedLogger(ip, user, pass string, logger *logrus.Logger) (interface{}, error) {
 	myLog := logrusr.NewLogger(logger)
-	opts := func(o *discover.Options) {
-		o.Logger = myLog
-	}
 
-	return discover.ScanAndConnect(ip, user, pass, opts)
+	return discover.ScanAndConnect(ip, user, pass, discover.WithLogger(myLog))
 }
 
 func withDefaultBuiltinLogger(ip, user, pass string) (interface{}, error) {
@@ -58,9 +55,9 @@ func withDefaultBuiltinLogger(ip, user, pass string) (interface{}, error) {
 }
 
 func printStatus(connection interface{}, logger *logrus.Logger) {
-	switch connection.(type) {
+	switch con := connection.(type) {
 	case devices.Bmc:
-		conn := connection.(devices.Bmc)
+		conn := con
 		defer conn.Close()
 
 		sr, err := conn.Serial()
@@ -97,7 +94,8 @@ func printStatus(connection interface{}, logger *logrus.Logger) {
 		logger.WithFields(logrus.Fields{"state": state}).Info("state")
 
 	case devices.Cmc:
-		cmc := connection.(devices.Cmc)
+		cmc := con
+		defer cmc.Close()
 		sts, err := cmc.Status()
 		if err != nil {
 			logger.Fatal(err)
