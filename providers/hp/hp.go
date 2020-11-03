@@ -10,7 +10,9 @@ type Hp struct{}
 
 const (
 	// VendorID represents the id of the vendor across all packages
-	VendorID = devices.HP
+	VendorID          = devices.HP
+	ChassisInfoOldURL = "json/chassis_info"
+	ChassisInfoNewURL = "redfish/v1/Chassis/1"
 )
 
 // Blade contains the unmarshalled data from the hp chassis
@@ -188,12 +190,19 @@ type RckInfo struct {
 
 // ChassisInfo is the struct used to render the data from https://$ip/json/chassis_info, it contains the chassis data
 type ChassisInfo struct {
+	// Old URL
 	NodeNumber   int    `json:"node_number"`
 	ChassisSn    string `json:"chassis_sn"`
-	ChassisName  string `json:"chassis_name"`
-	ChassisPn    string `json:"chassis_pn"`
 	ChassisPower int    `json:"chassis_power"`
-	NodePower    int    `json:"node_power"`
+
+	// New URL
+	SerialNumber string `json:"SerialNumber"`
+	ChassisType  string `json:"ChassisType"`
+	Oem          struct {
+		Hpe struct {
+			BayNumber int
+		}
+	} `json:"Oem"`
 }
 
 // Mem is the struct used to render the data from https://$ip/json/mem_info, it contains the ram data
