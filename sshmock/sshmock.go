@@ -9,10 +9,12 @@ import (
 	mrand "math/rand"
 
 	"fmt"
-	"log"
 	"net"
 	"time"
 
+	"github.com/bombsimon/logrusr"
+	"github.com/go-logr/logr"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -25,13 +27,14 @@ const (
 type Server struct {
 	config  *ssh.ServerConfig
 	answers map[string][]byte
+	log     logr.Logger
 }
 
 // Test server based on:
 // http://grokbase.com/t/gg/golang-nuts/165yek1eje/go-nuts-creating-an-ssh-server-instance-for-tests
 
 // New creates a new sshmock instance
-func New(answers map[string][]byte) (*Server, error) {
+func New(answers map[string][]byte, log logr.Logger) (*Server, error) {
 	config := &ssh.ServerConfig{
 		PasswordCallback: func(c ssh.ConnMetadata, pass []byte) (*ssh.Permissions, error) {
 			return nil, nil
@@ -44,10 +47,15 @@ func New(answers map[string][]byte) (*Server, error) {
 	}
 
 	config.AddHostKey(privateKey)
+	if log == nil {
+		l := logrus.New()
+		log = logrusr.NewLogger(l)
+	}
 
 	server := &Server{
 		config:  config,
 		answers: answers,
+		log:     log,
 	}
 
 	return server, err
@@ -71,12 +79,12 @@ func (s *Server) run(listener net.Listener) {
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			log.Printf("failed to accept: %v", err)
+			s.log.V(1).Info("msg", "failed to accept: %v", err.Error())
 			continue
 		}
 
 		if err := s.handleConnection(conn); err != nil {
-			log.Printf("failed to handle connection: %v", err)
+			s.log.V(1).Info("msg", "failed to handle connection: %v", err)
 		}
 	}
 }
@@ -109,7 +117,7 @@ func (s *Server) handleChannel(newChannel ssh.NewChannel) {
 
 	channel, requests, err := newChannel.Accept()
 	if err != nil {
-		log.Printf("Could not accept channel (%s)", err)
+		s.log.V(1).Info("msg", "Could not accept channel (%s)", err)
 		return
 	}
 
@@ -121,31 +129,31 @@ func (s *Server) handleChannel(newChannel ssh.NewChannel) {
 		}
 		var reqCmd struct{ Text string }
 		if err := ssh.Unmarshal(req.Payload, &reqCmd); err != nil {
-			log.Printf("failed: %v\n", err)
+			s.log.V(1).Info("msg", "failed: %v\n", err)
 		}
 		if answer, ok := s.answers[reqCmd.Text]; ok {
 			if len(answer) == 0 {
 				_, _ = channel.Stderr().Write([]byte(fmt.Sprintf("answer empty for %s", reqCmd.Text)))
 				_ = req.Reply(req.WantReply, nil)
 				if _, err := channel.SendRequest("exit-status", false, []byte{0, 0, 0, 1}); err != nil {
-					log.Printf("failed: %v\n", err)
+					s.log.V(1).Info("msg", "failed: %v\n", err)
 				}
 			} else {
 				_, _ = channel.Write(answer)
 				_ = req.Reply(req.WantReply, nil)
 				if _, err := channel.SendRequest("exit-status", false, []byte{0, 0, 0, 0}); err != nil {
-					log.Printf("failed: %v\n", err)
+					s.log.V(1).Info("msg", "failed: %v\n", err)
 				}
 			}
 		} else {
 			_, _ = channel.Stderr().Write([]byte(fmt.Sprintf("answer not found for %s", reqCmd.Text)))
 			_ = req.Reply(req.WantReply, nil)
 			if _, err := channel.SendRequest("exit-status", false, []byte{0, 0, 0, 1}); err != nil {
-				log.Printf("failed: %v\n", err)
+				s.log.V(1).Info("msg", "failed: %v\n", err)
 			}
 		}
 		if err := channel.Close(); err != nil {
-			log.Printf("failed: %v\n", err)
+			s.log.V(1).Info("msg", "failed: %v\n", err)
 		}
 	}
 }

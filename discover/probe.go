@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/bmc-toolbox/bmclib/devices"
+
 	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/providers/dell/idrac8"
 	"github.com/bmc-toolbox/bmclib/providers/dell/idrac9"

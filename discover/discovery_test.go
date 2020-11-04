@@ -24,27 +24,6 @@ func init() {
 	}
 }
 
-var Answers = map[string][]byte{
-	"op=FRU_INFO.XML&r=(0,0)": []byte(`<?xml version="1.0"?>
-		<IPMI>
-			<FRU_INFO RES="1">
-				<DEVICE ID="0"/>
-				<CHASSIS TYPE="1" PART_NUM="CSE-813MFTS-R407CBP" SERIAL_NUM="C813MLI52NF0380"/>
-				<BOARD LAN="0" MFG_DATE="2020/05/05 03:51:00" PROD_NAME="X11SCM-F" MFC_NAME="Supermicro" SERIAL_NUM="WM205S000401" PART_NUM="X11SCM-F"/>
-				<PRODUCT LAN="0" MFC_NAME="Supermicro" PROD_NAME="" PART_NUM="SYS-5019C-MR-PH004" VERSION="NONE" SERIAL_NUM="S402854X0700021" ASSET_TAG=""/>
-			</FRU_INFO>
-		</IPMI>`),
-	"FRU_INFO.XML=(0,0)": []byte(`<?xml version="1.0"?>
-		<IPMI>
-		  <FRU_INFO RES="1">
-			<DEVICE ID="0"/>
-			<CHASSIS TYPE="1" PART_NUM="CSE-F414IS2-R2K04BP" SERIAL_NUM="CF414AF38N50003"/>
-			<BOARD LAN="0" MFG_DATE="1996/01/01 00:00:00" PROD_NAME="X10DRFF-CTG" MFC_NAME="Supermicro" SERIAL_NUM="VM158S009467" PART_NUM="X10DRFF-CTG"/>
-			<PRODUCT LAN="0" MFC_NAME="Supermicro" PROD_NAME="NONE" PART_NUM="SYS-F618H6-FTPTL+" VERSION="NONE" SERIAL_NUM="A19627226A05569" ASSET_TAG="NONE"/>
-		  </FRU_INFO>
-		</IPMI>`),
-}
-
 // setup creates a test server and returns a curried ScanAndConnect() function and a teardown func.
 func setup(vendor string, answers map[string][]byte) (scanAndConnectCurry func(opts ...Option) (bmc interface{}, err error), cancel func()) {
 	mux := http.NewServeMux()
