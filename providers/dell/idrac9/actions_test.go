@@ -2,6 +2,9 @@ package idrac9
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/bmc-toolbox/bmclib/sshmock"
@@ -46,6 +49,11 @@ var (
 	}
 )
 
+var _answers = map[string][]byte{
+	"/sysmgmt/2015/bmc/info":    []byte(`{"Attributes":{"ADEnabled":"Disabled","BuildVersion":"37","FwVer":"3.15.15.15","GUITitleBar":"spare-H16Z4M2","IsOEMBranded":"0","License":"Enterprise","SSOEnabled":"Disabled","SecurityPolicyMessage":"By accessing this computer, you confirm that such access complies with your organization's security policy.","ServerGen":"14G","SrvPrcName":"NULL","SystemLockdown":"Disabled","SystemModelName":"PowerEdge M640","TFAEnabled":"Disabled","iDRACName":"spare-H16Z4M2"}}`),
+	"/sysmgmt/2015/bmc/session": []byte(`{"status": "good", "authResult": 7, "forwardUrl": "something", "errorMsg": "none"}`),
+}
+
 func setupBMC() (func(), *IDrac9, error) {
 	ssh, err := sshmock.New(sshAnswers)
 	if err != nil {
@@ -55,9 +63,20 @@ func setupBMC() (func(), *IDrac9, error) {
 	if err != nil {
 		return nil, nil, err
 	}
+	mux := http.NewServeMux()
+	server := httptest.NewTLSServer(mux)
+	ip := strings.TrimPrefix(server.URL, "https://")
+
+	for url := range _answers {
+		url := url
+
+		mux.HandleFunc(url, func(w http.ResponseWriter, r *http.Request) {
+			_, _ = w.Write(_answers[url])
+		})
+	}
 
 	testLogger := logrus.New()
-	bmc, err := New(context.TODO(), address, sshUsername, sshPassword, logrusr.NewLogger(testLogger))
+	bmc, err := New(context.TODO(), address, ip, sshUsername, sshPassword, logrusr.NewLogger(testLogger))
 	if err != nil {
 		tearDown()
 		return nil, nil, err

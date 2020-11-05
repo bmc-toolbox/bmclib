@@ -5,7 +5,7 @@ import (
 	"runtime"
 )
 
-var basename = regexp.MustCompile("^.+\\.(.*$)")
+var basename = regexp.MustCompile(`^.+\.(.*$)`)
 
 // WhosCalling returns the current caller of the functions
 func WhosCalling() string {

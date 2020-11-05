@@ -92,7 +92,7 @@ func (i *Ipmi) PowerOn() (status bool, err error) {
 		return false, err
 	}
 
-	if s == true {
+	if s {
 		return false, fmt.Errorf("server is already on")
 	}
 
@@ -127,7 +127,7 @@ func (i *Ipmi) PowerOff() (status bool, err error) {
 		return false, err
 	}
 
-	if s == false {
+	if !s {
 		return false, fmt.Errorf("server is already off")
 	}
 

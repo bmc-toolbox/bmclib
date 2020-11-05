@@ -5242,7 +5242,7 @@ func setup() (bmc *IDrac8, err error) {
 	for url := range answers {
 		url := url
 		mux.HandleFunc(url, func(w http.ResponseWriter, r *http.Request) {
-			w.Write(answers[url])
+			_, _ = w.Write(answers[url])
 		})
 	}
 

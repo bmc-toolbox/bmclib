@@ -103,7 +103,7 @@ func (s *Server) handleChannels(chans <-chan ssh.NewChannel) {
 
 func (s *Server) handleChannel(newChannel ssh.NewChannel) {
 	if t := newChannel.ChannelType(); t != "session" {
-		newChannel.Reject(ssh.UnknownChannelType, fmt.Sprintf("unknown channel type: %s", t))
+		_ = newChannel.Reject(ssh.UnknownChannelType, fmt.Sprintf("unknown channel type: %s", t))
 		return
 	}
 
@@ -125,21 +125,21 @@ func (s *Server) handleChannel(newChannel ssh.NewChannel) {
 		}
 		if answer, ok := s.answers[reqCmd.Text]; ok {
 			if len(answer) == 0 {
-				channel.Stderr().Write([]byte(fmt.Sprintf("answer empty for %s", reqCmd.Text)))
-				req.Reply(req.WantReply, nil)
+				_, _ = channel.Stderr().Write([]byte(fmt.Sprintf("answer empty for %s", reqCmd.Text)))
+				_ = req.Reply(req.WantReply, nil)
 				if _, err := channel.SendRequest("exit-status", false, []byte{0, 0, 0, 1}); err != nil {
 					log.Printf("failed: %v\n", err)
 				}
 			} else {
-				channel.Write(answer)
-				req.Reply(req.WantReply, nil)
+				_, _ = channel.Write(answer)
+				_ = req.Reply(req.WantReply, nil)
 				if _, err := channel.SendRequest("exit-status", false, []byte{0, 0, 0, 0}); err != nil {
 					log.Printf("failed: %v\n", err)
 				}
 			}
 		} else {
-			channel.Stderr().Write([]byte(fmt.Sprintf("answer not found for %s", reqCmd.Text)))
-			req.Reply(req.WantReply, nil)
+			_, _ = channel.Stderr().Write([]byte(fmt.Sprintf("answer not found for %s", reqCmd.Text)))
+			_ = req.Reply(req.WantReply, nil)
 			if _, err := channel.SendRequest("exit-status", false, []byte{0, 0, 0, 1}); err != nil {
 				log.Printf("failed: %v\n", err)
 			}

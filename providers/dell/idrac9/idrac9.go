@@ -41,13 +41,13 @@ type IDrac9 struct {
 }
 
 // New returns a new IDrac9 ready to be used
-func New(ctx context.Context, host string, username string, password string, log logr.Logger) (*IDrac9, error) {
+func New(ctx context.Context, host string, httpHost string, username string, password string, log logr.Logger) (*IDrac9, error) {
 	sshClient, err := sshclient.New(host, username, password)
 	if err != nil {
 		return nil, err
 	}
 
-	idrac := &IDrac9{ip: host, username: username, password: password, sshClient: sshClient, ctx: ctx, log: log}
+	idrac := &IDrac9{ip: httpHost, username: username, password: password, sshClient: sshClient, ctx: ctx, log: log}
 	err = idrac.httpLogin()
 	if err != nil {
 		return nil, err

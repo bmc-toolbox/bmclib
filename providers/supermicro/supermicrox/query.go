@@ -49,7 +49,7 @@ func (s *SupermicroX) Screenshot() (response []byte, extension string, err error
 		return response, extension, errors.ErrFeatureUnavailable
 	}
 
-	tzLocation, err := time.LoadLocation("CET")
+	tzLocation, _ := time.LoadLocation("CET")
 	t := time.Now().In(tzLocation)
 
 	//Fri Jun 06 2018 14:28:25 GMT+0100 (CET)

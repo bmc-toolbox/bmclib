@@ -406,7 +406,7 @@ type CMCSlotMacWwn struct {
 
 // UnmarshalJSON custom unmarshalling for this "special" data structure
 func (d *CMCSlotMacWwn) UnmarshalJSON(data []byte) error {
-	d.SlotMacWwnList = make(map[int]CMCWWNBlade, 0)
+	d.SlotMacWwnList = make(map[int]CMCWWNBlade)
 	var slotMacWwn map[string]json.RawMessage
 	if err := json.Unmarshal(data, &slotMacWwn); err != nil {
 		return err

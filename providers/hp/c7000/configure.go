@@ -220,7 +220,7 @@ func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.L
 
 		//0. removeLdapGroup
 		if !group.Enable {
-			c.applyRemoveLdapGroup(group.Group)
+			err = c.applyRemoveLdapGroup(group.Group)
 			if err != nil {
 				c.log.V(1).Info("Remove Ldap Group returned error.",
 					"step", "applyRemoveLdapGroup",
@@ -507,7 +507,7 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 			return err
 		}
 
-		if c.isRoleValid(cfg.Role) == false {
+		if !c.isRoleValid(cfg.Role) {
 			err = errors.New("user resource Role must be declared and a valid role: admin")
 			c.log.V(1).Error(err, "user resource Role must be declared and a valid role: admin",
 				"step", "applyUserParams",
@@ -521,7 +521,7 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 		password := Password{Text: cfg.Password}
 
 		//if user account is disabled, remove the user
-		if cfg.Enable == false {
+		if !cfg.Enable {
 			payload := RemoveUser{Username: username}
 			statusCode, _, _ := c.postXML(payload)
 
@@ -744,7 +744,7 @@ func (c *C7000) Ntp(cfg *cfgresources.Ntp) (err error) {
 		return
 	}
 
-	if cfg.Enable != true {
+	if !cfg.Enable {
 		c.log.V(1).Info("Ntp resource declared with enable: false.",
 			"step", "applyNtpParams",
 			"Model", c.HardwareType(),
@@ -845,7 +845,7 @@ func (c *C7000) Syslog(cfg *cfgresources.Syslog) (err error) {
 		port = cfg.Port
 	}
 
-	if cfg.Enable != true {
+	if !cfg.Enable {
 		c.log.V(1).Info("Syslog resource declared with enable: false.",
 			"step", "applySyslogParams",
 			"IP", c.ip,
@@ -887,7 +887,6 @@ func (c *C7000) applySyslogServer(server string) {
 		"IP", c.ip,
 		"Model", c.HardwareType(),
 	)
-	return
 }
 
 // Sets syslog port
@@ -912,7 +911,6 @@ func (c *C7000) applySyslogPort(port int) {
 		"IP", c.ip,
 		"Model", c.HardwareType(),
 	)
-	return
 }
 
 // Enables syslogging
@@ -938,8 +936,6 @@ func (c *C7000) applySyslogEnabled(enabled bool) {
 		"IP", c.ip,
 		"Model", c.HardwareType(),
 	)
-	return
-
 }
 
 // Network method implements the Configure interface

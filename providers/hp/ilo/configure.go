@@ -164,7 +164,7 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 		}
 
 		//if the user is disabled remove it
-		if user.Enable == false && uexists {
+		if !user.Enable && uexists {
 			userinfo.Method = "del_user"
 			userinfo.UserID = userinfo.ID
 			msg := "User disabled in config, will be removed."
@@ -240,7 +240,7 @@ func (i *Ilo) Syslog(cfg *cfgresources.Syslog) (err error) {
 		port = cfg.Port
 	}
 
-	if cfg.Enable != true {
+	if !cfg.Enable {
 		enable = 0
 		i.log.V(1).Info("Syslog resource declared with disable.", "step", helper.WhosCalling())
 	}
@@ -369,7 +369,7 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 		return errors.New(msg)
 	}
 
-	if cfg.Enable != true {
+	if !cfg.Enable {
 		enable = 0
 		i.log.V(1).Info("NTP resource declared with disable.", "step", helper.WhosCalling())
 	}
@@ -514,7 +514,7 @@ func (i *Ilo) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Lda
 		}
 
 		//if the group is disabled remove it
-		if group.Enable == false && gexists {
+		if !group.Enable && gexists {
 			directoryGroup.Method = "del_group"
 			i.log.V(1).Info("Ldap role group disabled in config, will be removed.",
 				"IP", i.ip,
@@ -598,7 +598,7 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 	}
 
 	var enable int
-	if cfg.Enable == false {
+	if !cfg.Enable {
 		enable = 0
 	} else {
 		enable = 1

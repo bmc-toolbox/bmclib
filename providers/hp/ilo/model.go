@@ -23,7 +23,7 @@ type LicenseInfo struct {
 // POST
 // https://10.193.251.48/json/user_info
 type UserInfo struct {
-	ID               int    `json:"id,int,omitempty"`
+	ID               int    `json:"id,omitempty"`
 	LoginName        string `json:"login_name,omitempty"`
 	UserName         string `json:"user_name,omitempty"`
 	Password         string `json:"password,omitempty"`
@@ -34,7 +34,7 @@ type UserInfo struct {
 	UserPriv         int    `json:"user_priv,omitempty"`
 	LoginPriv        int    `json:"login_priv,omitempty"`
 	Method           string `json:"method"` //mod_user, add_user, del_user
-	UserID           int    `json:"user_id,int,omitempty"`
+	UserID           int    `json:"user_id,omitempty"`
 	SessionKey       string `json:"session_key,omitempty"`
 }
 

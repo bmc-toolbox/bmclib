@@ -135,7 +135,7 @@ func (m *M1000e) Ntp(cfg *cfgresources.Ntp) (err error) {
 	datetimeParams := m.newDatetimeCfg(cfg)
 
 	datetimeParams.SessionToken = m.SessionToken
-	path := fmt.Sprintf("datetime")
+	path := "datetime"
 	form, _ := query.Values(datetimeParams)
 	err = m.post(path, &form)
 	if err != nil {
@@ -153,7 +153,7 @@ func (m *M1000e) Ldap(cfg *cfgresources.Ldap) (err error) {
 	directoryServicesParams := m.newDirectoryServicesCfg(cfg)
 
 	directoryServicesParams.SessionToken = m.SessionToken
-	path := fmt.Sprintf("dirsvcs")
+	path := "dirsvcs"
 	form, _ := query.Values(directoryServicesParams)
 	err = m.post(path, &form)
 	if err != nil {

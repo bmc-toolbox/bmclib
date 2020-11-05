@@ -126,11 +126,11 @@ func setup() (r *SupermicroX, err error) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		w.Write(Answers[string(query)])
+		_, _ = w.Write(Answers[string(query)])
 	})
 
 	mux.HandleFunc("/cgi/login.cgi", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("../cgi/url_redirect.cgi?url_name=mainmenu"))
+		_, _ = w.Write([]byte("../cgi/url_redirect.cgi?url_name=mainmenu"))
 	})
 
 	testLog := logrus.New()

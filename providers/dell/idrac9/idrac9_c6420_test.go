@@ -3902,12 +3902,12 @@ func setupC6420() (bmc *IDrac9, err error) {
 	for url := range AnswersC6420 {
 		url := url
 		muxC6420.HandleFunc(url, func(w http.ResponseWriter, r *http.Request) {
-			w.Write(AnswersC6420[url])
+			_, _ = w.Write(AnswersC6420[url])
 		})
 	}
 
 	testLogger := logrus.New()
-	bmc, err = New(context.TODO(), ip, username, password, logrusr.NewLogger(testLogger))
+	bmc, err = New(context.TODO(), ip, ip, username, password, logrusr.NewLogger(testLogger))
 	if err != nil {
 		return bmc, err
 	}

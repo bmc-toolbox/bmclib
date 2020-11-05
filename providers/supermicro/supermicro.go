@@ -1,9 +1,5 @@
 package supermicro
 
-import (
-	"net/http"
-)
-
 const (
 	// VendorID represents the id of the vendor across all packages
 	VendorID = "Supermicro"
@@ -128,14 +124,6 @@ type PowerSupply struct {
 	Location  string `xml:"LOCATION,attr"`
 	Status    string `xml:"STATUS,attr"`
 	Unplugged string `xml:"UNPLUGGED,attr"`
-}
-
-// Reader holds the status and properties of a connection to a supermicro bmc
-type Reader struct {
-	ip       *string
-	username *string
-	password *string
-	client   *http.Client
 }
 
 // NodeInfo contains a lists of boards in the chassis

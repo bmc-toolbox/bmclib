@@ -3283,12 +3283,12 @@ func setup() (bmc *IDrac9, err error) {
 	for url := range Answers {
 		url := url
 		mux.HandleFunc(url, func(w http.ResponseWriter, r *http.Request) {
-			w.Write(Answers[url])
+			_, _ = w.Write(Answers[url])
 		})
 	}
 
 	testLogger := logrus.New()
-	bmc, err = New(context.TODO(), ip, username, password, logrusr.NewLogger(testLogger))
+	bmc, err = New(context.TODO(), ip, ip, username, password, logrusr.NewLogger(testLogger))
 	if err != nil {
 		return bmc, err
 	}
