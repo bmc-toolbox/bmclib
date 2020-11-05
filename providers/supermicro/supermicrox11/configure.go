@@ -247,7 +247,7 @@ func (s *SupermicroX) Network(cfg *cfgresources.Network) (reset bool, err error)
 		SslRedirectEnable: true,
 	}
 
-	endpoint := fmt.Sprintf("op.cgi")
+	endpoint := "op.cgi"
 	form, _ := query.Values(configPort)
 	_, statusCode, err := s.post(endpoint, &form, []byte{}, "")
 	if err != nil || statusCode != 200 {
@@ -304,7 +304,7 @@ func (s *SupermicroX) Ntp(cfg *cfgresources.Ntp) (err error) {
 
 	tzUtcOffset := timezoneToUtcOffset(tzLocation)
 
-	if cfg.Enable != true {
+	if !cfg.Enable {
 		log.WithFields(log.Fields{
 			"step":  "applyNtpParams",
 			"Model": s.HardwareType(),
@@ -341,7 +341,7 @@ func (s *SupermicroX) Ntp(cfg *cfgresources.Ntp) (err error) {
 		TimeStamp:          ts,
 	}
 
-	endpoint := fmt.Sprintf("op.cgi")
+	endpoint := "op.cgi"
 	form, _ := query.Values(configDateTime)
 	_, statusCode, err := s.post(endpoint, &form, []byte{}, "")
 	if err != nil || statusCode != 200 {
@@ -400,7 +400,7 @@ func (s *SupermicroX) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfg
 		return errors.New(msg)
 	}
 
-	if cfgLdap.Enable != true {
+	if !cfgLdap.Enable {
 		log.WithFields(log.Fields{
 			"step":  helper.WhosCalling(),
 			"Model": s.HardwareType(),
@@ -482,7 +482,7 @@ func (s *SupermicroX) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfg
 			Op:           "config_ldap",
 			Enable:       enable,
 			EnableSsl:    true,
-			LdapIP:       fmt.Sprintf("%s", serverIP[0]),
+			LdapIP:       string(serverIP[0]),
 			BaseDn:       group.Group,
 			LdapPort:     cfgLdap.Port,
 			BindDn:       cfgLdap.BindDn,
@@ -539,7 +539,7 @@ func (s *SupermicroX) Syslog(cfg *cfgresources.Syslog) (err error) {
 		port = cfg.Port
 	}
 
-	if cfg.Enable != true {
+	if !cfg.Enable {
 		log.WithFields(log.Fields{
 			"step":  helper.WhosCalling(),
 			"Model": s.HardwareType(),
@@ -558,7 +558,7 @@ func (s *SupermicroX) Syslog(cfg *cfgresources.Syslog) (err error) {
 
 	configSyslog := ConfigSyslog{
 		Op:          "config_syslog",
-		SyslogIP1:   fmt.Sprintf("%s", serverIP[0]),
+		SyslogIP1:   string(serverIP[0]),
 		SyslogPort1: port,
 		Enable:      cfg.Enable,
 	}

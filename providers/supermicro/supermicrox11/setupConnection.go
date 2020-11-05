@@ -55,6 +55,14 @@ func (s *SupermicroX) httpLogin() (err error) {
 		return errors.ErrLoginFailed
 	}
 
+	for _, cookie := range resp.Cookies() {
+		if cookie.Name == "SID" && cookie.Value != "" {
+			s.sid = cookie
+		} else {
+			s.sid = &http.Cookie{}
+		}
+	}
+
 	s.httpClient = httpClient
 
 	return err
@@ -98,7 +106,7 @@ func (s *SupermicroX) Close() (err error) {
 		}
 
 		defer resp.Body.Close()
-		defer io.Copy(ioutil.Discard, resp.Body)
+		defer io.Copy(ioutil.Discard, resp.Body) // nolint
 
 		if log.GetLevel() == log.TraceLevel {
 			log.Trace(fmt.Sprintf("%s/cgi/%s", bmcURL, s.ip))

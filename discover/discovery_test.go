@@ -47,7 +47,6 @@ func setup(vendor string, answers map[string][]byte) (scanAndConnectCurry func(o
 
 	return func(opts ...Option) (bmc interface{}, err error) {
 			l := logrus.New()
-			//l.Level = logrus.TraceLevel
 			opts = append(opts, WithLogger(logrusr.NewLogger(l)))
 			return ScanAndConnect(ip, username, password, opts...)
 		},
@@ -115,18 +114,17 @@ func TestProbes(t *testing.T) {
 				}
 			}
 
-			/*
-				// just for completeness and backward compatibility, do it again w/o optional params
-				bmc, err := scanAndConnect()
-				if err != nil {
-					t.Fatalf("error calling ScanAndConnect(): %v", err)
-				}
+			// just for completeness and backward compatibility, do it again w/o optional params
+			bmc, err := scanAndConnect()
+			if err != nil {
+				t.Fatalf("error calling ScanAndConnect(): %v", err)
+			}
 
-				if reflect.TypeOf(tt.wantType) != reflect.TypeOf(bmc) {
-					t.Errorf("Want %T, got %T", tt.wantType, bmc)
+			if reflect.TypeOf(tt.wantType) != reflect.TypeOf(bmc) {
+				t.Errorf("Want %T, got %T", tt.wantType, bmc)
 
-				}
-			*/
+			}
+
 		})
 	}
 }

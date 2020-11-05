@@ -460,33 +460,23 @@ func (s *SupermicroX) IsBlade() (isBlade bool, err error) {
 
 // Slot returns the current slot within the chassis
 func (s *SupermicroX) Slot() (slot int, err error) {
-	ipmi, err := s.query("Get_PlatformCap.XML=(0,0)")
+	slot = 1
+	ipmi, err := s.query("Get_NodeInfoReadings.XML=(0,0)")
 	if err != nil {
 		return slot, err
 	}
 
-	slot, err = strconv.Atoi(ipmi.Platform.TwinNodeNumber)
+	if ipmi.NodeInfo == nil {
+		return slot, errors.ErrUnableToReadData
+	}
+	serial, err := s.Serial()
 	if err != nil {
-		if strings.Contains(err.Error(), "invalid syntax") {
-			ipmi, err := s.query("Get_NodeInfoReadings.XML=(0,0)")
-			if err != nil {
-				return slot, err
-			}
-
-			if ipmi.NodeInfo != nil {
-				serial, err := s.Serial()
-				if err != nil {
-					return slot, err
-				}
-				for _, node := range ipmi.NodeInfo.Nodes {
-					if strings.ToLower(node.NodeSerial) == serial {
-						return node.ID + 1, err
-					}
-				}
-			}
+		return slot, err
+	}
+	for _, node := range ipmi.NodeInfo.Nodes {
+		if strings.ToLower(node.NodeSerial) == serial {
+			slot = node.ID + 1
 		}
-	} else {
-		slot = slot + 1
 	}
 
 	return slot, err

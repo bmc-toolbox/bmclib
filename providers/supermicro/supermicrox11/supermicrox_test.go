@@ -82,22 +82,97 @@ var (
 			  <PSItem psStatus="0" psUnitType="Power Supply" psPMBusState="Not present" psBBPState="Not present" acInVoltage="0" acInCurrent="0" dc12OutVoltage="0" dc12OutCurrent="0" temp1="0" temp2="0" fan1="0" fan2="0" dcOutPower="0" acInPower="0" isDCPower="0" PSname=""/>
 		  </PSInfo>
 			</IPMI>`),
+		"op=POWER_CONSUMPTION.XML&r=(0,0)": []byte(`<?xml version="1.0"?>
+		<IPMI>
+		  <POWER HAVERAGE="43" DAVERAGE="88" WAVERAGE="88" HMINIMUM="23" DMINIMUM="41" WMINIMUM="41" HMINTIME="2020/07/10 09:12:13" DMINTIME="2020/07/10 09:12:13" WMINTIME="2020/07/09 16:44:46" HMAXIMUM="62" DMAXIMUM="144" WMAXIMUM="144" HMAXTIME="2020/07/10 09:13:12" DMAXTIME="2020/07/09 21:56:33" WMAXTIME="2020/07/09 21:56:33"/>
+		  <HOUR>
+			<FMINS0 MAX="58" AVR="57" MIN="56"/>
+			<FMINS1 MAX="58" AVR="56" MIN="55"/>
+			<FMINS2 MAX="62" AVR="44" MIN="23"/>
+			<FMINS3 MAX="41" AVR="41" MIN="41"/>
+			<FMINS4 MAX="44" AVR="42" MIN="41"/>
+			<FMINS5 MAX="41" AVR="41" MIN="41"/>
+			<FMINS6 MAX="44" AVR="41" MIN="41"/>
+			<FMINS7 MAX="41" AVR="41" MIN="41"/>
+			<FMINS8 MAX="41" AVR="41" MIN="41"/>
+			<FMINS9 MAX="42" AVR="41" MIN="41"/>
+			<FMINS10 MAX="41" AVR="41" MIN="41"/>
+			<FMINS11 MAX="42" AVR="41" MIN="41"/>
+		  </HOUR>
+		  <DAY>
+			<HOUR0 MAX="62" AVR="43" MIN="23"/>
+			<HOUR1 MAX="56" AVR="41" MIN="40"/>
+			<HOUR2 MAX="47" AVR="41" MIN="40"/>
+			<HOUR3 MAX="44" AVR="41" MIN="40"/>
+			<HOUR4 MAX="51" AVR="41" MIN="41"/>
+			<HOUR5 MAX="44" AVR="41" MIN="41"/>
+			<HOUR6 MAX="63" AVR="41" MIN="41"/>
+			<HOUR7 MAX="44" AVR="41" MIN="41"/>
+			<HOUR8 MAX="62" AVR="41" MIN="41"/>
+			<HOUR9 MAX="143" AVR="78" MIN="41"/>
+			<HOUR10 MAX="143" AVR="142" MIN="142"/>
+			<HOUR11 MAX="144" AVR="135" MIN="41"/>
+			<HOUR12 MAX="136" AVR="123" MIN="42"/>
+			<HOUR13 MAX="136" AVR="122" MIN="42"/>
+			<HOUR14 MAX="135" AVR="123" MIN="42"/>
+			<HOUR15 MAX="136" AVR="110" MIN="42"/>
+			<HOUR16 MAX="140" AVR="68" MIN="41"/>
+			<HOUR17 MAX="0" AVR="0" MIN="0"/>
+			<HOUR18 MAX="0" AVR="0" MIN="0"/>
+			<HOUR19 MAX="0" AVR="0" MIN="0"/>
+			<HOUR20 MAX="0" AVR="0" MIN="0"/>
+			<HOUR21 MAX="0" AVR="0" MIN="0"/>
+			<HOUR22 MAX="0" AVR="0" MIN="0"/>
+			<HOUR23 MAX="0" AVR="0" MIN="0"/>
+		  </DAY>
+		  <WEEK>
+			<DAY0 MAX="144" AVR="88" MIN="41"/>
+			<DAY1 MAX="0" AVR="0" MIN="0"/>
+			<DAY2 MAX="0" AVR="0" MIN="0"/>
+			<DAY3 MAX="0" AVR="0" MIN="0"/>
+			<DAY4 MAX="0" AVR="0" MIN="0"/>
+			<DAY5 MAX="0" AVR="0" MIN="0"/>
+			<DAY6 MAX="0" AVR="0" MIN="0"/>
+			<DAY7 MAX="0" AVR="0" MIN="0"/>
+			<DAY8 MAX="0" AVR="0" MIN="0"/>
+			<DAY9 MAX="0" AVR="0" MIN="0"/>
+			<DAY10 MAX="0" AVR="0" MIN="0"/>
+			<DAY11 MAX="0" AVR="0" MIN="0"/>
+			<DAY12 MAX="0" AVR="0" MIN="0"/>
+			<DAY13 MAX="0" AVR="0" MIN="0"/>
+		  </WEEK>
+		  <NOW MAX="58" AVR="14" MIN="56"/>
+		  <PEAK MAX="144" MIN="23" Current="43" PMAXTIME="2020/07/09 21:56:33" PMINTIME="2020/07/10 09:12:13"/>
+		  <BBP TIMEOUT="0" BBPSUPPORT="0"/>
+		</IPMI>`),
+		"op=POWER_INFO.XML&r=(0,0)":             []byte(`<?xml version="1.0"?>  <IPMI>  <POWER_INFO>  <POWER STATUS="ON"/>  </POWER_INFO>  </IPMI>`),
+		"op=SYS_HEALTH.XML&r=(1,ff)":            []byte(`<?xml version="1.0"?>  <IPMI>  <SYS_HEALTH STATUS="3"/> </IPMI>`),
+		"op=BIOS_LINCENSE_ACTIVATE.XML&r=(0,0)": []byte(`<?xml version="1.0"?> <IPMI> <BIOS_LINCESNE CHECK="0"/> </IPMI>`),
+		"op=SENSOR_INFO.XML&r=(1,ff)": []byte(`<?xml version="1.0"?>
+		<IPMI>
+		  <SENSOR_INFO>
+			<SENSOR ID="001" NUMBER="01" NAME="CPU Temp" READING="1ec000" OPTION="c0" UNR="64" UC="64" UNC="5f" LNC="0a" LC="05" LNR="05" STYPE="01" RTYPE="01" ERTYPE="01" UNIT1="00" UNIT="01" L="00" M="0100" B="0000" RB="00"/>
+			<SENSOR ID="002" NUMBER="0a" NAME="PCH Temp" READING="22c000" OPTION="c0" UNR="69" UC="5a" UNC="55" LNC="0a" LC="05" LNR="05" STYPE="01" RTYPE="01" ERTYPE="01" UNIT1="00" UNIT="01" L="00" M="0100" B="0000" RB="00"/>
+			<SENSOR ID="003" NUMBER="0b" NAME="System Temp" READING="19c000" OPTION="c0" UNR="5a" UC="55" UNC="50" LNC="0a" LC="05" LNR="05" STYPE="01" RTYPE="01" ERTYPE="01" UNIT1="00" UNIT="01" L="00" M="0100" B="0000" RB="00"/>
+			<SENSOR ID="004" NUMBER="0c" NAME="Peripheral Temp" READING="1dc000" OPTION="c0" UNR="5a" UC="55" UNC="50" LNC="0a" LC="05" LNR="05" STYPE="01" RTYPE="01" ERTYPE="01" UNIT1="00" UNIT="01" L="00" M="0100" B="0000" RB="00"/>
+			<SENSOR ID="005" NUMBER="10" NAME="VcpuVRM Temp" READING="1fc000" OPTION="c0" UNR="69" UC="64" UNC="5f" LNC="0a" LC="05" LNR="05" STYPE="01" RTYPE="01" ERTYPE="01" UNIT1="00" UNIT="01" L="00" M="0100" B="0000" RB="00"/>
+			<SENSOR ID="006" NUMBER="4b" NAME="M2NVMeSSD Temp1" READING="000000" OPTION="00" UNR="4b" UC="46" UNC="41" LNC="0a" LC="05" LNR="05" STYPE="01" RTYPE="01" ERTYPE="01" UNIT1="00" UNIT="01" L="00" M="0100" B="0000" RB="00"/>
+			<SENSOR ID="007" NUMBER="4c" NAME="M2NVMeSSD Temp2" READING="000000" OPTION="00" UNR="4b" UC="46" UNC="41" LNC="0a" LC="05" LNR="05" STYPE="01" RTYPE="01" ERTYPE="01" UNIT1="00" UNIT="01" L="00" M="0100" B="0000" RB="00"/>
+			<SENSOR ID="008" NUMBER="b0" NAME="DIMMA1 Temp" READING="000000" OPTION="00" UNR="5a" UC="55" UNC="50" LNC="0a" LC="05" LNR="05" STYPE="01" RTYPE="01" ERTYPE="01" UNIT1="00" UNIT="01" L="00" M="0100" B="0000" RB="00"/>
+			<SENSOR ID="009" NUMBER="b1" NAME="DIMMA2 Temp" READING="1dc000" OPTION="c0" UNR="5a" UC="55" UNC="50" LNC="0a" LC="05" LNR="05" STYPE="01" RTYPE="01" ERTYPE="01" UNIT1="00" UNIT="01" L="00" M="0100" B="0000" RB="00"/>
+			<SENSOR ID="00a" NUMBER="b2" NAME="DIMMB1 Temp" READING="000000" OPTION="00" UNR="5a" UC="55" UNC="50" LNC="0a" LC="05" LNR="05" STYPE="01" RTYPE="01" ERTYPE="01" UNIT1="00" UNIT="01" L="00" M="0100" B="0000" RB="00"/>  
+		  </SENSOR_INFO>
+		</IPMI>`),
 		"op=Get_NodeInfoReadings.XML&r=(0,0)": []byte(`<?xml version="1.0"?>
-			<IPMI>
-			  <NodeModule nCONFIG_ID="0" nMYID="0" nMCUFWVer="0.00" nFatTwin_bp_location="0" nUsrDefSysName="" nSysName="" nSysSerialNo="" nBPID="0" nBPRevision="0.00" nChaName="" nChaSerialNo="" nBPModelName="" nBPModelSerialNo="" nFanAlert="0" TwinType="0"/>
-			  <NodeInfo>
-			    <Node ID="1" Present="0" PowerStatus="0" Power="0" Current="0" IP="0.0.0.0" NodePartNo="" NodeSerialNo="" CPU1Temp="0" CPU2Temp="0" SystemTemp="0" FanSpeed="0"/>
-			    <Node ID="2" Present="0" PowerStatus="0" Power="0" Current="0" IP="0.0.0.0" NodePartNo="" NodeSerialNo="" CPU1Temp="0" CPU2Temp="0" SystemTemp="0" FanSpeed="0"/>
-			    <Node ID="3" Present="0" PowerStatus="0" Power="0" Current="0" IP="0.0.0.0" NodePartNo="" NodeSerialNo="" CPU1Temp="0" CPU2Temp="0" SystemTemp="0" FanSpeed="0"/>
-			    <Node ID="4" Present="0" PowerStatus="0" Power="0" Current="0" IP="0.0.0.0" NodePartNo="" NodeSerialNo="" CPU1Temp="0" CPU2Temp="0" SystemTemp="0" FanSpeed="0"/>
-			  </NodeInfo>
-			  </IPMI>`),
-		"op=BIOS_LINCENSE_ACTIVATE.XML&r=(0,0)": []byte(`<?xml version="1.0"?>
-			<IPMI>
-			  <BIOS_LINCESNE CHECK="0"/>
-			</IPMI>`),
-		"op=POWER_INFO.XML&r=(0,0)":  []byte(`<?xml version="1.0"?>  <IPMI>  <POWER_INFO>  <POWER STATUS="ON"/>  </POWER_INFO>  </IPMI>`),
-		"op=SYS_HEALTH.XML&r=(1,ff)": []byte(`<?xml version="1.0"?>  <IPMI>  <SYS_HEALTH STATUS="3"/> </IPMI>`),
+		<IPMI>
+		  <NodeModule nCONFIG_ID="0" nMYID="0" nMCUFWVer="0.00" nFatTwin_bp_location="0" nUsrDefSysName="" nSysName="" nSysSerialNo="" nBPID="0" nBPRevision="0.00" nChaName="" nChaSerialNo="" nBPModelName="" nBPModelSerialNo="" nFanAlert="0" TwinType="0"/>
+		  <NodeInfo>
+			<Node ID="1" Present="0" PowerStatus="0" Power="0" Current="0" IP="0.0.0.0" NodePartNo="" NodeSerialNo="" CPU1Temp="0" CPU2Temp="0" SystemTemp="0" FanSpeed="0"/>
+			<Node ID="2" Present="0" PowerStatus="0" Power="0" Current="0" IP="0.0.0.0" NodePartNo="" NodeSerialNo="" CPU1Temp="0" CPU2Temp="0" SystemTemp="0" FanSpeed="0"/>
+			<Node ID="3" Present="0" PowerStatus="0" Power="0" Current="0" IP="0.0.0.0" NodePartNo="" NodeSerialNo="" CPU1Temp="0" CPU2Temp="0" SystemTemp="0" FanSpeed="0"/>
+			<Node ID="4" Present="0" PowerStatus="0" Power="0" Current="0" IP="0.0.0.0" NodePartNo="" NodeSerialNo="" CPU1Temp="0" CPU2Temp="0" SystemTemp="0" FanSpeed="0"/>
+		  </NodeInfo>
+		</IPMI>`),
 	}
 )
 
@@ -120,11 +195,11 @@ func setup() (r *SupermicroX, err error) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		w.Write(Answers[string(query)])
+		_, _ = w.Write(Answers[string(query)])
 	})
 
 	mux.HandleFunc("/cgi/login.cgi", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("../cgi/url_redirect.cgi?url_name=mainmenu"))
+		_, _ = w.Write([]byte("../cgi/url_redirect.cgi?url_name=mainmenu"))
 	})
 
 	testLog := logrus.New()
@@ -352,8 +427,7 @@ func TestBiosVersion(t *testing.T) {
 }
 
 func TestPowerKW(t *testing.T) {
-	t.Skip("skipping until PowerKw is updated for x11")
-	expectedAnswer := 0.284
+	expectedAnswer := 0.043
 
 	bmc, err := setup()
 	if err != nil {
@@ -373,8 +447,7 @@ func TestPowerKW(t *testing.T) {
 }
 
 func TestTempC(t *testing.T) {
-	t.Skip("skipping until PowerKw is updated for x11")
-	expectedAnswer := 24
+	expectedAnswer := 19
 
 	bmc, err := setup()
 	if err != nil {
@@ -477,9 +550,8 @@ func TestIsBlade(t *testing.T) {
 	tearDown()
 }
 
-func TestPosition(t *testing.T) {
-	t.Skip("needs updating for x11")
-	expectedAnswer := 2
+func TestSlot(t *testing.T) {
+	expectedAnswer := 1
 
 	bmc, err := setup()
 	if err != nil {

@@ -33,6 +33,7 @@ type SupermicroX struct {
 	ip         string
 	username   string
 	password   string
+	sid        *http.Cookie
 	httpClient *http.Client
 	ctx        context.Context
 	log        logr.Logger
@@ -46,15 +47,6 @@ func New(ctx context.Context, ip string, username string, password string, log l
 		password: password,
 		ctx:      ctx,
 		log:      log}, err
-}
-
-// Connect to the BMC and add the client to SupermicroX
-func (s *SupermicroX) Connect() (err error) {
-	err = s.httpLogin()
-	if err != nil {
-		return err
-	}
-	return err
 }
 
 // CheckCredentials verify whether the credentials are valid or not
@@ -75,16 +67,19 @@ func (s *SupermicroX) get(endpoint string) (payload []byte, err error) {
 		return payload, err
 	}
 
-	u, err := url.Parse(bmcURL)
-	if err != nil {
-		return payload, err
-	}
-
-	for _, cookie := range s.httpClient.Jar.Cookies(u) {
-		if cookie.Name == "SID" && cookie.Value != "" {
-			req.AddCookie(cookie)
+	/*
+		u, err := url.Parse(bmcURL)
+		if err != nil {
+			return payload, err
 		}
-	}
+
+		for _, cookie := range s.httpClient.Jar.Cookies(u) {
+			if cookie.Name == "SID" && cookie.Value != "" {
+				req.AddCookie(cookie)
+			}
+		}
+	*/
+	req.AddCookie(s.sid)
 
 	reqDump, _ := httputil.DumpRequestOut(req, true)
 	s.log.V(2).Info("trace", "url", bmcURL, "requestDump", string(reqDump))
@@ -144,11 +139,14 @@ func (s *SupermicroX) post(endpoint string, urlValues *url.Values, form []byte, 
 		req.Header.Set("Content-Type", formDataContentType)
 	}
 
-	for _, cookie := range s.httpClient.Jar.Cookies(u) {
-		if cookie.Name == "SID" && cookie.Value != "" {
-			req.AddCookie(cookie)
+	/*
+		for _, cookie := range s.httpClient.Jar.Cookies(u) {
+			if cookie.Name == "SID" && cookie.Value != "" {
+				req.AddCookie(cookie)
+			}
 		}
-	}
+	*/
+	req.AddCookie(s.sid)
 
 	reqDump, _ := httputil.DumpRequestOut(req, true)
 	s.log.V(2).Info("trace", "url", bmcURL, "requestDump", string(reqDump))
@@ -389,26 +387,19 @@ func (s *SupermicroX) BiosVersion() (version string, err error) {
 // PowerKw returns the current power usage in Kw
 // TODO update for x11, getting all zeros with this
 func (s *SupermicroX) PowerKw() (power float64, err error) {
-	ipmi, err := s.query("op=Get_NodeInfoReadings.XML&r=(0,0)")
+	ipmi, err := s.query("op=POWER_CONSUMPTION.XML&r=(0,0)")
 	if err != nil {
 		return power, err
 	}
 
-	if ipmi.NodeInfo != nil {
-		serial, err := s.Serial()
+	if ipmi.Power != nil {
+		p, err := strconv.Atoi(ipmi.POWER.HAVERAGE)
 		if err != nil {
-			return power, err
+			return power, errors.ErrUnableToReadData
 		}
-		for _, node := range ipmi.NodeInfo.Nodes {
-			if strings.ToLower(node.NodeSerial) == serial {
-				value, err := strconv.Atoi(node.Power)
-				if err != nil {
-					return power, err
-				}
-
-				return float64(value) / 1000.00, err
-			}
-		}
+		power = float64(p) / 1000.00
+	} else {
+		err = errors.ErrUnableToReadData
 	}
 
 	return power, err
@@ -425,25 +416,23 @@ func (s *SupermicroX) PowerState() (state string, err error) {
 		return strings.ToLower(ipmi.PowerInfo.Power.Status), err
 	}
 
-	return "unknow", err
+	return "unknown", err
 }
 
 // TempC returns the current temperature of the machine
-// TODO update for x11, getting all zeros with this
 func (s *SupermicroX) TempC() (temp int, err error) {
-	ipmi, err := s.query("op=Get_NodeInfoReadings.XML&r=(0,0)")
+	ipmi, err := s.query("op=SENSOR_INFO.XML&r=(1,ff)")
 	if err != nil {
 		return temp, err
 	}
 
-	if ipmi.NodeInfo != nil {
-		serial, err := s.Serial()
-		if err != nil {
-			return temp, err
-		}
-		for _, node := range ipmi.NodeInfo.Nodes {
-			if strings.ToLower(node.NodeSerial) == serial {
-				temp, err := strconv.Atoi(node.SystemTemp)
+	if ipmi.SensorInfo != nil {
+		for _, elem := range ipmi.SensorInfo.SENSOR {
+			if elem.NAME == "System Temp" {
+				// supermicro temperature reading format = 44C/111F
+				// the reading comes in as 00c000
+				reading := strings.Split(elem.READING, "c")
+				temp, err := strconv.Atoi(reading[0])
 				if err != nil {
 					return temp, err
 				}
@@ -475,35 +464,24 @@ func (s *SupermicroX) IsBlade() (isBlade bool, err error) {
 }
 
 // Slot returns the current slot within the chassis
-// TODO investigate for x11
 func (s *SupermicroX) Slot() (slot int, err error) {
-	ipmi, err := s.query("op=Get_PlatformCap.XML&r=(0,0)")
+	slot = 1
+	ipmi, err := s.query("op=Get_NodeInfoReadings.XML&r=(0,0)")
 	if err != nil {
 		return slot, err
 	}
 
-	slot, err = strconv.Atoi(ipmi.Platform.TwinNodeNumber)
+	if ipmi.NodeInfo == nil {
+		return slot, errors.ErrUnableToReadData
+	}
+	serial, err := s.Serial()
 	if err != nil {
-		if strings.Contains(err.Error(), "invalid syntax") {
-			ipmi, err := s.query("op=Get_NodeInfoReadings.XML&r=(0,0)")
-			if err != nil {
-				return slot, err
-			}
-
-			if ipmi.NodeInfo != nil {
-				serial, err := s.Serial()
-				if err != nil {
-					return slot, err
-				}
-				for _, node := range ipmi.NodeInfo.Nodes {
-					if strings.ToLower(node.NodeSerial) == serial {
-						return node.ID + 1, err
-					}
-				}
-			}
+		return slot, err
+	}
+	for _, node := range ipmi.NodeInfo.Nodes {
+		if strings.ToLower(node.NodeSerial) == serial {
+			slot = node.ID + 1
 		}
-	} else {
-		slot = slot + 1
 	}
 
 	return slot, err
