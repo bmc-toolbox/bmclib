@@ -234,8 +234,7 @@ func (p *Probe) supermicrox(ctx context.Context, log logr.Logger) (bmcConnection
 		if err != nil {
 			return bmcConnection, err
 		}
-		hwType := conn.HardwareType()
-		if hwType == supermicrox.X10 {
+		if conn.HardwareType() == supermicrox.X10 {
 			return conn, err
 		}
 	}
@@ -258,13 +257,11 @@ func (p *Probe) supermicrox11(ctx context.Context, log logr.Logger) (bmcConnecti
 	// looking for ATEN in the response payload isn't the most ideal way, although it is unique to Supermicros
 	if resp.StatusCode == 200 && bytes.Contains(payload, []byte("ATEN International")) {
 		log.V(1).Info("it's a supermicrox11", "step", "connection", "host", p.host, "vendor", devices.Supermicro, "hardwareType", supermicrox11.X11)
-
 		conn, err := supermicrox11.New(ctx, p.host, p.username, p.password, log)
 		if err != nil {
 			return bmcConnection, err
 		}
-		hwType := conn.HardwareType()
-		if hwType == supermicrox11.X11 {
+		if conn.HardwareType() == supermicrox11.X11 {
 			return conn, err
 		}
 	}
