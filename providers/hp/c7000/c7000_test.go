@@ -2425,7 +2425,7 @@ func setup() (r *C7000, err error) {
 		mux.HandleFunc(url, func(w http.ResponseWriter, r *http.Request) {
 			cookie := http.Cookie{Name: "sessionKey", Value: "sessionKey_test"}
 			http.SetCookie(w, &cookie)
-			w.Write(answers[url])
+			_, _ = w.Write(answers[url])
 		})
 	}
 

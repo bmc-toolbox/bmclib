@@ -88,7 +88,7 @@ func (s *SupermicroX) Close() (err error) {
 		}
 
 		defer resp.Body.Close()
-		defer io.Copy(ioutil.Discard, resp.Body)
+		defer io.Copy(ioutil.Discard, resp.Body) // nolint
 
 		return err
 	}

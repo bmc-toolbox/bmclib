@@ -279,7 +279,7 @@ func (m *M1000e) newUserCfg(user *cfgresources.User, userID int) UserParams {
 		m.log.V(0).Error(err, msg, "step", "apply-user-cfg")
 	}
 
-	if m.isRoleValid(user.Role) == false {
+	if !m.isRoleValid(user.Role) {
 		// TODO update method with error return and return err in this if, was doing logrus.Fatal here
 		msg := "user resource Role must be declared and a valid role: admin"
 		err := errors.New(msg)

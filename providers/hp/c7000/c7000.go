@@ -200,7 +200,7 @@ func (c *C7000) PassThru() (passthru string, err error) {
 		if strings.Contains(hpswitch.Spn, "10G") {
 			passthru = "10G"
 		}
-		break
+		break // nolint
 	}
 	return passthru, err
 }

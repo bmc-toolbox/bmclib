@@ -52,7 +52,7 @@ func (c *C7000) FindBladePosition(serial string) (int, error) {
 		line = strings.Replace(line, "Server-", "", -1)
 		data := strings.FieldsFunc(line, internal.IsntLetterOrNumber)
 		for _, field := range data {
-			if strings.ToLower(serial) == strings.ToLower(field) {
+			if strings.EqualFold(serial, field) {
 				return strconv.Atoi(data[0])
 			}
 		}

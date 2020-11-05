@@ -34,7 +34,7 @@ func setup(answers map[string][]byte) (scanAndConnectCurry func(opts ...Option) 
 		url := url
 
 		mux.HandleFunc(url, func(w http.ResponseWriter, r *http.Request) {
-			w.Write(answers[url])
+			_, _ = w.Write(answers[url])
 		})
 	}
 

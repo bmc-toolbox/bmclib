@@ -71,7 +71,7 @@ func setupBMC() (func(), *IDrac9, error) {
 		url := url
 
 		mux.HandleFunc(url, func(w http.ResponseWriter, r *http.Request) {
-			w.Write(_answers[url])
+			_, _ = w.Write(_answers[url])
 		})
 	}
 

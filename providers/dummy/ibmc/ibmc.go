@@ -168,7 +168,6 @@ func (i *Ibmc) ServerSnapshot() (interface{}, error) {
 
 // UpdateCredentials implements the Bmc interface
 func (i *Ibmc) UpdateCredentials(string, string) {
-	return
 }
 
 // Slot implements the Bmc interface

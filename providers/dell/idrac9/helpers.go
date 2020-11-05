@@ -107,7 +107,7 @@ func (i *IDrac9) putLdap(ldap Ldap) (err error) {
 		return errors.New(msg)
 	}
 
-	endpoint := fmt.Sprintf("sysmgmt/2012/server/configgroup/iDRAC.LDAP")
+	endpoint := "sysmgmt/2012/server/configgroup/iDRAC.LDAP"
 	statusCode, _, err := i.put(endpoint, payload)
 	if err != nil || statusCode != 200 {
 		msg := fmt.Sprintf("PUT request to set User config returned error, return code: %d", statusCode)
@@ -176,7 +176,7 @@ func (i *IDrac9) putTimezone(timezone Timezone) (err error) {
 		return errors.New(msg)
 	}
 
-	endpoint := fmt.Sprintf("sysmgmt/2012/server/configgroup/iDRAC.Time")
+	endpoint := "sysmgmt/2012/server/configgroup/iDRAC.Time"
 	statusCode, _, err := i.put(endpoint, payload)
 	if err != nil || statusCode != 200 {
 		msg := fmt.Sprintf("PUT request to set Timezone config returned error, return code: %d", statusCode)
@@ -198,7 +198,7 @@ func (i *IDrac9) putNtpConfig(ntpConfig NtpConfig) (err error) {
 		return errors.New(msg)
 	}
 
-	endpoint := fmt.Sprintf("sysmgmt/2012/server/configgroup/iDRAC.NTPConfigGroup")
+	endpoint := "sysmgmt/2012/server/configgroup/iDRAC.NTPConfigGroup"
 	statusCode, _, err := i.put(endpoint, payload)
 	if err != nil || statusCode != 200 {
 		msg := fmt.Sprintf("PUT request to set Timezone config returned error, return code: %d", statusCode)
@@ -220,7 +220,7 @@ func (i *IDrac9) putSyslog(syslog Syslog) (err error) {
 		return errors.New(msg)
 	}
 
-	endpoint := fmt.Sprintf("sysmgmt/2012/server/configgroup/iDRAC.Syslog")
+	endpoint := "sysmgmt/2012/server/configgroup/iDRAC.Syslog"
 	statusCode, _, err := i.put(endpoint, payload)
 	if err != nil || statusCode != 200 {
 		msg := fmt.Sprintf("PUT request to set Syslog config returned error, return code: %d", statusCode)
@@ -242,7 +242,7 @@ func (i *IDrac9) putIPv4(ipv4 Ipv4) (err error) {
 		return errors.New(msg)
 	}
 
-	endpoint := fmt.Sprintf("sysmgmt/2012/server/configgroup/iDRAC.IPv4")
+	endpoint := "sysmgmt/2012/server/configgroup/iDRAC.IPv4"
 	statusCode, _, err := i.put(endpoint, payload)
 	if err != nil || statusCode != 200 {
 		msg := fmt.Sprintf("PUT request to set IPv4 config returned error, return code: %d", statusCode)
@@ -264,7 +264,7 @@ func (i *IDrac9) putSerialOverLan(serialOverLan SerialOverLan) (err error) {
 		return errors.New(msg)
 	}
 
-	endpoint := fmt.Sprintf("sysmgmt/2012/server/configgroup/iDRAC.IPMISOL")
+	endpoint := "sysmgmt/2012/server/configgroup/iDRAC.IPMISOL"
 	statusCode, _, err := i.put(endpoint, payload)
 	if err != nil || statusCode != 200 {
 		msg := fmt.Sprintf("PUT request to set SerialOverLan config returned error, return code: %d", statusCode)
@@ -286,7 +286,7 @@ func (i *IDrac9) putSerialRedirection(serialRedirection SerialRedirection) (err 
 		return errors.New(msg)
 	}
 
-	endpoint := fmt.Sprintf("sysmgmt/2012/server/configgroup/iDRAC.SerialRedirection")
+	endpoint := "sysmgmt/2012/server/configgroup/iDRAC.SerialRedirection"
 	statusCode, _, err := i.put(endpoint, payload)
 	if err != nil || statusCode != 200 {
 		msg := fmt.Sprintf("PUT request to set serialRedirection config returned error, return code: %d", statusCode)
@@ -308,7 +308,7 @@ func (i *IDrac9) putIpmiOverLan(ipmiOverLan IpmiOverLan) (err error) {
 		return errors.New(msg)
 	}
 
-	endpoint := fmt.Sprintf("sysmgmt/2012/server/configgroup/iDRAC.IPMILAN")
+	endpoint := "sysmgmt/2012/server/configgroup/iDRAC.IPMILAN"
 	statusCode, _, err := i.put(endpoint, payload)
 	if err != nil || statusCode != 200 {
 		msg := fmt.Sprintf("PUT request to set IpmiOverLan config returned error, return code: %d", statusCode)
@@ -328,7 +328,7 @@ func (i *IDrac9) putCSR(csrInfo CSRInfo) (err error) {
 		return errors.New(msg)
 	}
 
-	endpoint := fmt.Sprintf("sysmgmt/2012/server/configgroup/iDRAC.Security")
+	endpoint := "sysmgmt/2012/server/configgroup/iDRAC.Security"
 	statusCode, _, err := i.put(endpoint, payload)
 	if err != nil || statusCode != 200 {
 		msg := fmt.Sprintf("PUT request to set CSR attributes returned: %d", statusCode)
@@ -342,7 +342,7 @@ func (i *IDrac9) putCSR(csrInfo CSRInfo) (err error) {
 // see alertConfigPayload listed in model.go for payload.
 func (i *IDrac9) putAlertConfig() (err error) {
 
-	endpoint := fmt.Sprintf("sysmgmt/2012/server/eventpolicy")
+	endpoint := "sysmgmt/2012/server/eventpolicy"
 	statusCode, _, err := i.put(endpoint, alertConfigPayload)
 	if err != nil || statusCode != 200 {
 		msg := fmt.Sprintf("PUT request to set attributes returned: %d", statusCode)
@@ -362,7 +362,7 @@ func (i *IDrac9) putAlertEnable(alertEnable AlertEnable) (err error) {
 		return errors.New(msg)
 	}
 
-	endpoint := fmt.Sprintf("sysmgmt/2012/server/configgroup/iDRAC.IPMILAN")
+	endpoint := "sysmgmt/2012/server/configgroup/iDRAC.IPMILAN"
 	statusCode, _, err := i.put(endpoint, payload)
 	if err != nil || statusCode != 200 {
 		msg := fmt.Sprintf("PUT request to set attributes returned: %d", statusCode)

@@ -1702,9 +1702,9 @@ func setup() (r *M1000e, err error) {
 			if url == "/cgi-bin/webcgi/json" {
 				urlQuery := r.URL.Query()
 				query := urlQuery.Get("method")
-				w.Write(dellChassisAnswers[url][query])
+				_, _ = w.Write(dellChassisAnswers[url][query])
 			} else {
-				w.Write(dellChassisAnswers[url]["default"])
+				_, _ = w.Write(dellChassisAnswers[url]["default"])
 			}
 		})
 	}

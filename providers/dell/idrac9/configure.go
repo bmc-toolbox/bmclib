@@ -177,7 +177,7 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 		if cfgUser.Enable {
 
 			//new user to be added
-			if uExists == false {
+			if !uExists {
 				userID, userInfo, err = getEmptyUserSlot(idracUsers)
 				if err != nil {
 					i.log.V(1).Error(err, "Unable to add new User.",
@@ -220,7 +220,7 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 		} // end if cfgUser.Enable
 
 		//if the user exists but is disabled in our config, remove the user
-		if cfgUser.Enable == false && uExists == true {
+		if !cfgUser.Enable && uExists {
 			endpoint := fmt.Sprintf("sysmgmt/2017/server/user?userid=%d", userID)
 			statusCode, response, err := i.delete(endpoint)
 			if err != nil {
@@ -363,7 +363,7 @@ func (i *IDrac9) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.
 		if cfgRole.Enable {
 
 			//new role to be added
-			if rExists == false {
+			if !rExists {
 				roleID, role, err = getEmptyLdapRoleGroupSlot(idracLdapRoleGroups)
 				if err != nil {
 					i.log.V(1).Error(err, "Unable to add new Ldap Role Group.",
@@ -403,7 +403,7 @@ func (i *IDrac9) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.
 		} // end if cfgUser.Enable
 
 		//if the role exists but is disabled in our config, remove the role
-		if cfgRole.Enable == false && rExists == true {
+		if !cfgRole.Enable && rExists {
 
 			role.DN = ""
 			role.Privilege = "0"
@@ -547,7 +547,7 @@ func (i *IDrac9) Syslog(cfg *cfgresources.Syslog) (err error) {
 		port = cfg.Port
 	}
 
-	if cfg.Enable != true {
+	if !cfg.Enable {
 		enable = "Disabled"
 		i.log.V(1).Info("Syslog resource declared with enable: false.", "step", helper.WhosCalling())
 	}
@@ -611,16 +611,16 @@ func (i *IDrac9) Network(cfg *cfgresources.Network) (reset bool, err error) {
 		"EnableIpmiOverLan":       "Enabled",
 	}
 
-	if cfg.DNSFromDHCP == false {
+	if !cfg.DNSFromDHCP {
 		params["DNSFromDHCP"] = "Disabled"
 	}
 
-	if cfg.SolEnable == false {
+	if !cfg.SolEnable {
 		params["EnableSerialOverLan"] = "Disabled"
 		params["EnableSerialRedirection"] = "Disabled"
 	}
 
-	if cfg.IpmiEnable == false {
+	if !cfg.IpmiEnable {
 		params["EnableIpmiOverLan"] = "Disabled"
 	}
 

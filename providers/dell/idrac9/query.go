@@ -40,7 +40,7 @@ func (i *IDrac9) Screenshot() (response []byte, extension string, err error) {
 
 	extension = "png"
 	endpoint1 := "sysmgmt/2015/server/preview"
-	response, err = i.get(endpoint1, &map[string]string{})
+	_, err = i.get(endpoint1, &map[string]string{})
 	if err != nil {
 		return []byte{}, extension, err
 	}

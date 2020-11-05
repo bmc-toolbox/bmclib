@@ -37,7 +37,6 @@ type M1000e struct {
 	httpClient   *http.Client
 	sshClient    *sshclient.SSHClient
 	cmcJSON      *dell.CMC
-	cmcTemp      *dell.CMCTemp
 	cmcWWN       *dell.CMCWWN
 	SessionToken string //required to set config
 	ctx          context.Context
@@ -409,8 +408,8 @@ func (m *M1000e) Blades() (blades []*devices.Blade, err error) {
 			blade.Vendor = dell.VendorID
 			blade.BiosVersion = dellBlade.BladeBIOSver
 			blade.Name = dellBlade.BladeName
-			idracURL := strings.TrimLeft(dellBlade.IdracURL, "https://")
-			idracURL = strings.TrimLeft(idracURL, "http://")
+			idracURL := strings.TrimPrefix(dellBlade.IdracURL, "https://")
+			idracURL = strings.TrimPrefix(idracURL, "http://")
 			idracURL = strings.Split(idracURL, ":")[0]
 			blade.BmcAddress = idracURL
 			blade.BmcVersion = dellBlade.BladeUSCVer

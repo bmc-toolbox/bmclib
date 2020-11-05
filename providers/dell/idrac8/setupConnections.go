@@ -111,7 +111,7 @@ func (i *IDrac8) Close() error {
 			multiErr = multierror.Append(multiErr, err)
 		} else {
 			defer resp.Body.Close()
-			defer io.Copy(ioutil.Discard, resp.Body)
+			defer io.Copy(ioutil.Discard, resp.Body) // nolint
 		}
 	}
 

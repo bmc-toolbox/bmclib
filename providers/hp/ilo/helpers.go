@@ -17,11 +17,7 @@ func (i *Ilo) cmpPowerSettings(regulatorMode string) (PowerRegulator, bool, erro
 	}
 
 	settingsMatch := func() bool {
-		if currentConfig.PowerMode != regulatorMode {
-			return false
-		}
-
-		return true
+		return currentConfig.PowerMode == regulatorMode
 	}
 
 	if settingsMatch() {
@@ -97,15 +93,15 @@ func (i *Ilo) cmpAccessSettings(cfg *cfgresources.Network) (AccessSettings, bool
 	// setup some params as int for comparison
 	var sshEnable, ipmiEnable, serialEnable int
 
-	if cfg.SSHEnable == true {
+	if cfg.SSHEnable {
 		sshEnable = 1
 	}
 
-	if cfg.IpmiEnable == true {
+	if cfg.IpmiEnable {
 		ipmiEnable = 1
 	}
 
-	if cfg.SolEnable == true {
+	if cfg.SolEnable {
 		// enable with Auth
 		serialEnable = 2
 	}

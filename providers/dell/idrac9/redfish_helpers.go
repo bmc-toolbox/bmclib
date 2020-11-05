@@ -3,7 +3,6 @@ package idrac9
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -13,6 +12,7 @@ import (
 	"strings"
 
 	bmclibErrors "github.com/bmc-toolbox/bmclib/errors"
+	"github.com/pkg/errors"
 )
 
 //diffs two BiosSettings and returns a BiosSettings with the difference.
@@ -69,6 +69,7 @@ func (i *IDrac9) getBiosSettings() (biosSettings *BiosSettings, err error) {
 
 }
 
+/*
 //returns the bios settings pending reboot
 func (i *IDrac9) biosSettingsPendingReboot() (pendingBiosSettings *BiosSettings, err error) {
 
@@ -92,6 +93,7 @@ func (i *IDrac9) biosSettingsPendingReboot() (pendingBiosSettings *BiosSettings,
 	return oData.Attributes, err
 
 }
+*/
 
 // PATCHs Bios settings, queues setting to be applied at next boot.
 func (i *IDrac9) setBiosSettings(biosSettings *BiosSettings) (err error) {
@@ -185,7 +187,6 @@ func (i *IDrac9) purgeJobsForBiosSettings() (err error) {
 
 //Purges jobs of the given type - if they are in the "Scheduled" state
 func (i *IDrac9) purgeJobsByType(jobIDs []string, jobType string) (err error) {
-
 	for _, jobID := range jobIDs {
 		jState, jType, err := i.getJob(jobID)
 		if err != nil {
@@ -196,7 +197,7 @@ func (i *IDrac9) purgeJobsByType(jobIDs []string, jobType string) (err error) {
 			return i.purgeJob(jobID)
 		}
 
-		return fmt.Errorf(fmt.Sprintf("Job not in Scheduled state cannot be purged, state: %s, id: %s", jState, jobID))
+		return errors.Wrapf(err, "Job not in Scheduled state cannot be purged, state: %s, id: %s", jState, jobID) // nolint
 	}
 
 	return err

@@ -116,7 +116,7 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 		if cfgUser.Enable {
 
 			//new user to be added
-			if uExists == false {
+			if !uExists {
 				userID, userInfo, err = getEmptyUserSlot(idracUsers)
 				if err != nil {
 					i.log.V(1).Info("Unable to add new User.",
@@ -159,7 +159,7 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 		} // end if cfgUser.Enable
 
 		//if the user exists but is disabled in our config, remove the user
-		if cfgUser.Enable == false && uExists == true {
+		if !cfgUser.Enable && uExists {
 
 			userInfo.Enable = "Disabled"
 			userInfo.SolEnable = "Disabled"
@@ -209,7 +209,7 @@ func (i *IDrac8) Syslog(cfg *cfgresources.Syslog) (err error) {
 		port = cfg.Port
 	}
 
-	if cfg.Enable != true {
+	if !cfg.Enable {
 		enable = "Disabled"
 		i.log.V(1).Info("Syslog resource declared with enable: false.", "step", helper.WhosCalling())
 	}
@@ -293,7 +293,7 @@ func (i *IDrac8) Ntp(cfg *cfgresources.Ntp) (err error) {
 func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 
 	var enable int
-	if cfg.Enable != true {
+	if !cfg.Enable {
 		i.log.V(1).Info("Ntp resource declared with enable: false.", "step", helper.WhosCalling())
 		enable = 0
 	} else {
@@ -618,10 +618,10 @@ func (i *IDrac8) Network(cfg *cfgresources.Network) (reset bool, err error) {
 	payload := fmt.Sprintf("dhcpForDNSDomain:%d,", params["DNSFromDHCP"])
 	payload += fmt.Sprintf("ipmiLAN:%d,", params["EnableIpmiOverLan"])
 	payload += fmt.Sprintf("serialOverLanEnabled:%d,", params["EnableSerialOverLan"])
-	payload += fmt.Sprintf("serialOverLanBaud:3,") //115.2 kbps
-	payload += fmt.Sprintf("serialOverLanPriv:0,") //Administrator
+	payload += "serialOverLanBaud:3," //115.2 kbps
+	payload += "serialOverLanPriv:0," //Administrator
 	payload += fmt.Sprintf("racRedirectEna:%d,", params["EnableSerialRedirection"])
-	payload += fmt.Sprintf("racEscKey:^\\\\")
+	payload += "racEscKey:^\\\\"
 
 	responseCode, responseBody, err := i.post(endpoint, []byte(payload), "")
 	if err != nil || responseCode != 200 {

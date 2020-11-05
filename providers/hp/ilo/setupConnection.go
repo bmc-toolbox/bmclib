@@ -105,7 +105,7 @@ func (i *Ilo) Close() error {
 				multiErr = multierror.Append(multiErr, err)
 			} else {
 				defer resp.Body.Close()
-				defer io.Copy(ioutil.Discard, resp.Body)
+				defer io.Copy(ioutil.Discard, resp.Body) // nolint
 
 				respDump, _ := httputil.DumpResponse(resp, true)
 				i.log.V(2).Info("responseTrace", "responseDump", string(respDump))

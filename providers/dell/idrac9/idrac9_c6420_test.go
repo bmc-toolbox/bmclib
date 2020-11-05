@@ -3902,7 +3902,7 @@ func setupC6420() (bmc *IDrac9, err error) {
 	for url := range AnswersC6420 {
 		url := url
 		muxC6420.HandleFunc(url, func(w http.ResponseWriter, r *http.Request) {
-			w.Write(AnswersC6420[url])
+			_, _ = w.Write(AnswersC6420[url])
 		})
 	}
 
