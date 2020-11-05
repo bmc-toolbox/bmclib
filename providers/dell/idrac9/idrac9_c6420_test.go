@@ -3907,7 +3907,7 @@ func setupC6420() (bmc *IDrac9, err error) {
 	}
 
 	testLogger := logrus.New()
-	bmc, err = New(context.TODO(), ip, username, password, logrusr.NewLogger(testLogger))
+	bmc, err = New(context.TODO(), ip, ip, username, password, logrusr.NewLogger(testLogger))
 	if err != nil {
 		return bmc, err
 	}
