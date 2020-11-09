@@ -55,7 +55,7 @@ var _answers = map[string][]byte{
 }
 
 func setupBMC() (func(), *IDrac9, error) {
-	ssh, err := sshmock.New(sshAnswers)
+	ssh, err := sshmock.New(sshAnswers, nil)
 	if err != nil {
 		return nil, nil, err
 	}

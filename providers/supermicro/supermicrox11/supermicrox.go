@@ -1,4 +1,4 @@
-package supermicrox
+package supermicrox11
 
 import (
 	"bytes"
@@ -24,8 +24,6 @@ const (
 	// BmcType defines the bmc model that is supported by this package
 	BmcType = "supermicrox"
 
-	// X10 is the constant for x10 servers
-	X10 = "x10"
 	// X11 is the constant for x11 servers
 	X11 = "x11"
 )
@@ -35,6 +33,7 @@ type SupermicroX struct {
 	ip         string
 	username   string
 	password   string
+	sid        *http.Cookie
 	httpClient *http.Client
 	ctx        context.Context
 	log        logr.Logger
@@ -62,25 +61,28 @@ func (s *SupermicroX) CheckCredentials() (err error) {
 // get calls a given json endpoint of the ilo and returns the data
 func (s *SupermicroX) get(endpoint string) (payload []byte, err error) {
 
-	bmcURL := fmt.Sprintf("https://%s", s.ip)
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s", bmcURL, endpoint), nil)
+	bmcURL := fmt.Sprintf("https://%s/%s", s.ip, endpoint)
+	req, err := http.NewRequest("GET", bmcURL, nil)
 	if err != nil {
 		return payload, err
 	}
 
-	u, err := url.Parse(bmcURL)
-	if err != nil {
-		return payload, err
-	}
-
-	for _, cookie := range s.httpClient.Jar.Cookies(u) {
-		if cookie.Name == "SID" && cookie.Value != "" {
-			req.AddCookie(cookie)
+	/*
+		u, err := url.Parse(bmcURL)
+		if err != nil {
+			return payload, err
 		}
-	}
+
+		for _, cookie := range s.httpClient.Jar.Cookies(u) {
+			if cookie.Name == "SID" && cookie.Value != "" {
+				req.AddCookie(cookie)
+			}
+		}
+	*/
+	req.AddCookie(s.sid)
 
 	reqDump, _ := httputil.DumpRequestOut(req, true)
-	s.log.V(2).Info("", "request", fmt.Sprintf("https://%s/%s", bmcURL, endpoint), "requestDump", string(reqDump))
+	s.log.V(2).Info("trace", "url", bmcURL, "requestDump", string(reqDump))
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
@@ -105,16 +107,16 @@ func (s *SupermicroX) get(endpoint string) (payload []byte, err error) {
 
 // posts a urlencoded form to the given endpoint
 // nolint: gocyclo
-func (s *SupermicroX) post(endpoint string, urlValues *url.Values, form []byte, formDataContentType string) (statusCode int, err error) {
-
+func (s *SupermicroX) post(endpoint string, urlValues *url.Values, form []byte, formDataContentType string) (response string, statusCode int, err error) {
 	err = s.httpLogin()
 	if err != nil {
-		return statusCode, err
+		return response, statusCode, err
 	}
 
-	u, err := url.Parse(fmt.Sprintf("https://%s/cgi/%s", s.ip, endpoint))
+	bmcURL := fmt.Sprintf("https://%s/cgi/%s", s.ip, endpoint)
+	u, err := url.Parse(bmcURL)
 	if err != nil {
-		return statusCode, err
+		return response, statusCode, err
 	}
 
 	var req *http.Request
@@ -123,7 +125,7 @@ func (s *SupermicroX) post(endpoint string, urlValues *url.Values, form []byte, 
 
 		req, err = http.NewRequest("POST", u.String(), strings.NewReader(urlValues.Encode()))
 		if err != nil {
-			return statusCode, err
+			return response, statusCode, err
 		}
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
@@ -131,24 +133,27 @@ func (s *SupermicroX) post(endpoint string, urlValues *url.Values, form []byte, 
 
 		req, err = http.NewRequest("POST", u.String(), bytes.NewReader(form))
 		if err != nil {
-			return statusCode, err
+			return response, statusCode, err
 		}
 		// Set multipart form content type
 		req.Header.Set("Content-Type", formDataContentType)
 	}
 
-	for _, cookie := range s.httpClient.Jar.Cookies(u) {
-		if cookie.Name == "SID" && cookie.Value != "" {
-			req.AddCookie(cookie)
+	/*
+		for _, cookie := range s.httpClient.Jar.Cookies(u) {
+			if cookie.Name == "SID" && cookie.Value != "" {
+				req.AddCookie(cookie)
+			}
 		}
-	}
+	*/
+	req.AddCookie(s.sid)
 
 	reqDump, _ := httputil.DumpRequestOut(req, true)
-	s.log.V(2).Info("", "url", fmt.Sprintf("https://%s/cgi/%s", s.ip, endpoint), "requestDump", string(reqDump))
+	s.log.V(2).Info("trace", "url", bmcURL, "requestDump", string(reqDump))
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
-		return statusCode, err
+		return response, statusCode, err
 	}
 	defer resp.Body.Close()
 
@@ -156,11 +161,11 @@ func (s *SupermicroX) post(endpoint string, urlValues *url.Values, form []byte, 
 	s.log.V(2).Info("", "responseDump", string(respDump))
 
 	statusCode = resp.StatusCode
-	_, err = ioutil.ReadAll(resp.Body)
+	respPayload, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return statusCode, err
+		return response, statusCode, err
 	}
-	return statusCode, err
+	return string(respPayload), statusCode, err
 }
 
 func (s *SupermicroX) query(requestType string) (ipmi *supermicro.IPMI, err error) {
@@ -170,7 +175,7 @@ func (s *SupermicroX) query(requestType string) (ipmi *supermicro.IPMI, err erro
 	}
 
 	bmcURL := fmt.Sprintf("https://%s/cgi/ipmi.cgi", s.ip)
-	s.log.V(1).Info("retrieving data from bmc", "step", "bmc connection", "vendor", string(supermicro.VendorID), "ip", s.ip)
+	s.log.V(1).Info("retrieving data from bmc", "step", "bmc connection", "vendor", supermicro.VendorID, "ip", s.ip)
 
 	req, err := http.NewRequest("POST", bmcURL, bytes.NewBufferString(requestType))
 	if err != nil {
@@ -186,8 +191,9 @@ func (s *SupermicroX) query(requestType string) (ipmi *supermicro.IPMI, err erro
 			req.AddCookie(cookie)
 		}
 	}
+
 	reqDump, _ := httputil.DumpRequestOut(req, true)
-	s.log.V(2).Info("trace", "url", fmt.Sprintf("https://%s/cgi/%s", bmcURL, s.ip), "requestDump", string(reqDump))
+	s.log.V(2).Info("trace", "url", bmcURL, "requestDump", string(reqDump))
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
@@ -199,7 +205,6 @@ func (s *SupermicroX) query(requestType string) (ipmi *supermicro.IPMI, err erro
 	if err != nil {
 		return ipmi, err
 	}
-
 	respDump, _ := httputil.DumpResponse(resp, true)
 	s.log.V(2).Info("", "responseDump", string(respDump))
 
@@ -214,7 +219,7 @@ func (s *SupermicroX) query(requestType string) (ipmi *supermicro.IPMI, err erro
 
 // Serial returns the device serial
 func (s *SupermicroX) Serial() (serial string, err error) {
-	ipmi, err := s.query("FRU_INFO.XML=(0,0)")
+	ipmi, err := s.query("op=FRU_INFO.XML&r=(0,0)")
 	if err != nil {
 		return serial, err
 	}
@@ -228,7 +233,7 @@ func (s *SupermicroX) Serial() (serial string, err error) {
 
 // ChassisSerial returns the serial number of the chassis where the blade is attached
 func (s *SupermicroX) ChassisSerial() (serial string, err error) {
-	ipmi, err := s.query("FRU_INFO.XML=(0,0)")
+	ipmi, err := s.query("op=FRU_INFO.XML&r=(0,0)")
 	if err != nil {
 		return serial, err
 	}
@@ -247,11 +252,11 @@ func (s *SupermicroX) HardwareType() (model string) {
 	m, err := s.Model()
 	if err != nil {
 		// Here is your sin
-		s.log.V(1).Info("error getting hardwaretype", "err", err.Error())
 		return model
 	}
-	if strings.Contains(strings.ToLower(m), X10) {
-		return X10
+
+	if strings.Contains(strings.ToLower(m), X11) {
+		return X11
 	}
 
 	return BmcType
@@ -259,7 +264,7 @@ func (s *SupermicroX) HardwareType() (model string) {
 
 // Model returns the device model
 func (s *SupermicroX) Model() (model string, err error) {
-	ipmi, err := s.query("FRU_INFO.XML=(0,0)")
+	ipmi, err := s.query("op=FRU_INFO.XML&r=(0,0)")
 	if err != nil {
 		return model, err
 	}
@@ -273,7 +278,7 @@ func (s *SupermicroX) Model() (model string, err error) {
 
 // Version returns the version of the bmc we are running
 func (s *SupermicroX) Version() (bmcVersion string, err error) {
-	ipmi, err := s.query("GENERIC_INFO.XML=(0,0)")
+	ipmi, err := s.query("op=GENERIC_INFO.XML&r=(0,0)")
 	if err != nil {
 		return bmcVersion, err
 	}
@@ -291,7 +296,7 @@ func (s *SupermicroX) Version() (bmcVersion string, err error) {
 
 // Name returns the hostname of the machine
 func (s *SupermicroX) Name() (name string, err error) {
-	ipmi, err := s.query("CONFIG_INFO.XML=(0,0)")
+	ipmi, err := s.query("op=CONFIG_INFO.XML&r=(0,0)")
 	if err != nil {
 		return name, err
 	}
@@ -305,7 +310,14 @@ func (s *SupermicroX) Name() (name string, err error) {
 
 // Status returns health string status from the bmc
 func (s *SupermicroX) Status() (health string, err error) {
-	ipmi, err := s.query("SENSOR_INFO_FOR_SYS_HEALTH.XML=(1,ff)")
+	// TODO x11 returns status codes, need to find where those are documented
+	/*
+			<?xml version="1.0"?>
+			<IPMI>
+		  		<SYS_HEALTH Status="3"/>
+			</IPMI>
+	*/
+	ipmi, err := s.query("op=SYS_HEALTH.XML&r=(1,ff)")
 	if err != nil {
 		return health, err
 	}
@@ -319,10 +331,10 @@ func (s *SupermicroX) Status() (health string, err error) {
 
 // Memory returns the total amount of memory of the server
 func (s *SupermicroX) Memory() (mem int, err error) {
-	ipmi, err := s.query("SMBIOS_INFO.XML=(0,0)")
+	ipmi, err := s.query("op=SMBIOS_INFO.XML&r=(0,0)")
 
 	for _, dimm := range ipmi.Dimm {
-		dimm := strings.TrimSuffix(dimm.Size, " MB")
+		dimm := strings.TrimSuffix(dimm.Size, " MiB")
 		size, err := strconv.Atoi(dimm)
 		if err != nil {
 			return mem, err
@@ -335,7 +347,7 @@ func (s *SupermicroX) Memory() (mem int, err error) {
 
 // CPU returns the cpu, cores and hyperthreads of the server
 func (s *SupermicroX) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCount int, err error) {
-	ipmi, err := s.query("SMBIOS_INFO.XML=(0,0)")
+	ipmi, err := s.query("op=SMBIOS_INFO.XML&r=(0,0)")
 	if err != nil {
 		return cpu, cpuCount, coreCount, hyperthreadCount, err
 	}
@@ -360,7 +372,7 @@ func (s *SupermicroX) CPU() (cpu string, cpuCount int, coreCount int, hyperthrea
 
 // BiosVersion returns the current version of the bios
 func (s *SupermicroX) BiosVersion() (version string, err error) {
-	ipmi, err := s.query("SMBIOS_INFO.XML=(0,0)")
+	ipmi, err := s.query("op=SMBIOS_INFO.XML&r=(0,0)")
 	if err != nil {
 		return version, err
 	}
@@ -373,27 +385,21 @@ func (s *SupermicroX) BiosVersion() (version string, err error) {
 }
 
 // PowerKw returns the current power usage in Kw
+// TODO update for x11, getting all zeros with this
 func (s *SupermicroX) PowerKw() (power float64, err error) {
-	ipmi, err := s.query("Get_NodeInfoReadings.XML=(0,0)")
+	ipmi, err := s.query("op=POWER_CONSUMPTION.XML&r=(0,0)")
 	if err != nil {
 		return power, err
 	}
 
-	if ipmi.NodeInfo != nil {
-		serial, err := s.Serial()
+	if ipmi.Power != nil {
+		p, err := strconv.Atoi(ipmi.POWER.HAVERAGE)
 		if err != nil {
-			return power, err
+			return power, errors.ErrUnableToReadData
 		}
-		for _, node := range ipmi.NodeInfo.Nodes {
-			if strings.ToLower(node.NodeSerial) == serial {
-				value, err := strconv.Atoi(node.Power)
-				if err != nil {
-					return power, err
-				}
-
-				return float64(value) / 1000.00, err
-			}
-		}
+		power = float64(p) / 1000.00
+	} else {
+		err = errors.ErrUnableToReadData
 	}
 
 	return power, err
@@ -401,7 +407,7 @@ func (s *SupermicroX) PowerKw() (power float64, err error) {
 
 // PowerState returns the current power state of the machine
 func (s *SupermicroX) PowerState() (state string, err error) {
-	ipmi, err := s.query("POWER_INFO.XML=(0,0)")
+	ipmi, err := s.query("op=POWER_INFO.XML&r=(0,0)")
 	if err != nil {
 		return state, err
 	}
@@ -410,24 +416,23 @@ func (s *SupermicroX) PowerState() (state string, err error) {
 		return strings.ToLower(ipmi.PowerInfo.Power.Status), err
 	}
 
-	return "unknow", err
+	return "unknown", err
 }
 
 // TempC returns the current temperature of the machine
 func (s *SupermicroX) TempC() (temp int, err error) {
-	ipmi, err := s.query("Get_NodeInfoReadings.XML=(0,0)")
+	ipmi, err := s.query("op=SENSOR_INFO.XML&r=(1,ff)")
 	if err != nil {
 		return temp, err
 	}
 
-	if ipmi.NodeInfo != nil {
-		serial, err := s.Serial()
-		if err != nil {
-			return temp, err
-		}
-		for _, node := range ipmi.NodeInfo.Nodes {
-			if strings.ToLower(node.NodeSerial) == serial {
-				temp, err := strconv.Atoi(node.SystemTemp)
+	if ipmi.SensorInfo != nil {
+		for _, elem := range ipmi.SensorInfo.SENSOR {
+			if elem.NAME == "System Temp" {
+				// supermicro temperature reading format = 44C/111F
+				// the reading comes in as 00c000
+				reading := strings.Split(elem.READING, "c")
+				temp, err := strconv.Atoi(reading[0])
 				if err != nil {
 					return temp, err
 				}
@@ -442,7 +447,7 @@ func (s *SupermicroX) TempC() (temp int, err error) {
 
 // IsBlade returns if the current hardware is a blade or not
 func (s *SupermicroX) IsBlade() (isBlade bool, err error) {
-	ipmi, err := s.query("Get_NodeInfoReadings.XML=(0,0)")
+	ipmi, err := s.query("op=Get_NodeInfoReadings.XML&r=(0,0)")
 	if err != nil {
 		return isBlade, err
 	}
@@ -461,7 +466,7 @@ func (s *SupermicroX) IsBlade() (isBlade bool, err error) {
 // Slot returns the current slot within the chassis
 func (s *SupermicroX) Slot() (slot int, err error) {
 	slot = 1
-	ipmi, err := s.query("Get_NodeInfoReadings.XML=(0,0)")
+	ipmi, err := s.query("op=Get_NodeInfoReadings.XML&r=(0,0)")
 	if err != nil {
 		return slot, err
 	}
@@ -484,7 +489,7 @@ func (s *SupermicroX) Slot() (slot int, err error) {
 
 // Nics returns all found Nics in the device
 func (s *SupermicroX) Nics() (nics []*devices.Nic, err error) {
-	ipmi, err := s.query("GENERIC_INFO.XML=(0,0)")
+	ipmi, err := s.query("op=GENERIC_INFO.XML&r=(0,0)")
 	if err != nil {
 		return nics, err
 	}
@@ -505,7 +510,7 @@ func (s *SupermicroX) Nics() (nics []*devices.Nic, err error) {
 		}
 	}
 
-	ipmi, err = s.query("Get_PlatformInfo.XML=(0,0)")
+	ipmi, err = s.query("op=Get_PlatformInfo.XML&r=(0,0)")
 	if err != nil {
 		return nics, err
 	}
@@ -550,7 +555,7 @@ func (s *SupermicroX) Nics() (nics []*devices.Nic, err error) {
 
 // License returns the iLO's license information
 func (s *SupermicroX) License() (name string, licType string, err error) {
-	ipmi, err := s.query("BIOS_LINCENSE_ACTIVATE.XML=(0,0)")
+	ipmi, err := s.query("op=BIOS_LINCENSE_ACTIVATE.XML&r=(0,0)")
 	if err != nil {
 		return name, licType, err
 	}

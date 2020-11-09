@@ -481,7 +481,7 @@ func TestIsBlade(t *testing.T) {
 	tearDown()
 }
 
-func TestPosition(t *testing.T) {
+func TestSlot(t *testing.T) {
 	expectedAnswer := 2
 
 	bmc, err := setup()

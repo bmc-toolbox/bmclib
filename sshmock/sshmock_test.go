@@ -14,7 +14,7 @@ func Test_Server(t *testing.T) {
 		"exit":  []byte("see you"),
 	}
 
-	s, err := New(answers)
+	s, err := New(answers, nil)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}

@@ -47,7 +47,7 @@ var (
 )
 
 func setupBMC() (func(), *IDrac8, error) {
-	ssh, err := sshmock.New(sshAnswers)
+	ssh, err := sshmock.New(sshAnswers, nil)
 	if err != nil {
 		return nil, nil, err
 	}
