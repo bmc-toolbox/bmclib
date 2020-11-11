@@ -1,10 +1,13 @@
 package ipmi
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 // Ipmi holds the date for an ipmi connection
@@ -31,16 +34,23 @@ func New(username string, password string, host string) (ipmi *Ipmi, err error) 
 	return ipmi, err
 }
 
-func (i *Ipmi) run(command []string) (output string, err error) {
+func (i *Ipmi) run(ctx context.Context, command []string) (output string, err error) {
 	ipmiArgs := []string{"-I", "lanplus", "-U", i.Username, "-E", "-N", "5", "-H", i.Host}
 	ipmiArgs = append(ipmiArgs, command...)
-	cmd := exec.Command(i.ipmitool, ipmiArgs...)
+	cmd := exec.CommandContext(ctx, i.ipmitool, ipmiArgs...)
 	cmd.Env = []string{fmt.Sprintf("IPMITOOL_PASSWORD=%s", i.Password)}
 	out, err := cmd.CombinedOutput()
+	if ctx.Err() == context.DeadlineExceeded {
+		return string(out), ctx.Err()
+	}
 	return string(out), err
 }
 
 func (i *Ipmi) findBin(binary string) (binaryPath string, err error) {
+	path, err := exec.LookPath(binary)
+	if err == nil {
+		return path, nil
+	}
 	locations := []string{"/bin", "/sbin", "/usr/bin", "/usr/sbin", "/usr/local/sbin"}
 
 	for _, path := range locations {
@@ -61,7 +71,7 @@ func (i *Ipmi) findBin(binary string) (binaryPath string, err error) {
 
 // PowerCycle reboots the machine via bmc
 func (i *Ipmi) PowerCycle() (status bool, err error) {
-	output, err := i.run([]string{"chassis", "power", "reset"})
+	output, err := i.run(context.Background(), []string{"chassis", "power", "reset"})
 	if err != nil {
 		return false, fmt.Errorf("%v: %v", err, output)
 	}
@@ -74,7 +84,7 @@ func (i *Ipmi) PowerCycle() (status bool, err error) {
 
 // PowerCycleBmc reboots the bmc we are connected to
 func (i *Ipmi) PowerCycleBmc() (status bool, err error) {
-	output, err := i.run([]string{"mc", "reset", "cold"})
+	output, err := i.run(context.Background(), []string{"mc", "reset", "cold"})
 	if err != nil {
 		return false, fmt.Errorf("%v: %v", err, output)
 	}
@@ -93,10 +103,10 @@ func (i *Ipmi) PowerOn() (status bool, err error) {
 	}
 
 	if s {
-		return false, fmt.Errorf("server is already on")
+		return true, nil
 	}
 
-	output, err := i.run([]string{"chassis", "power", "on"})
+	output, err := i.run(context.Background(), []string{"chassis", "power", "on"})
 	if err != nil {
 		return false, fmt.Errorf("%v: %v", err, output)
 	}
@@ -109,7 +119,7 @@ func (i *Ipmi) PowerOn() (status bool, err error) {
 
 // PowerOnForce power on the machine via bmc even when the machine is already on (Thanks HP!)
 func (i *Ipmi) PowerOnForce() (status bool, err error) {
-	output, err := i.run([]string{"chassis", "power", "on"})
+	output, err := i.run(context.Background(), []string{"chassis", "power", "on"})
 	if err != nil {
 		return false, fmt.Errorf("%v: %v", err, output)
 	}
@@ -128,10 +138,10 @@ func (i *Ipmi) PowerOff() (status bool, err error) {
 	}
 
 	if !s {
-		return false, fmt.Errorf("server is already off")
+		return true, nil
 	}
 
-	output, err := i.run([]string{"chassis", "power", "off"})
+	output, err := i.run(context.Background(), []string{"chassis", "power", "off"})
 	if strings.Contains(output, "Chassis Power Control: Down/Off") {
 		return true, err
 	}
@@ -140,7 +150,7 @@ func (i *Ipmi) PowerOff() (status bool, err error) {
 
 // PxeOnceEfi makes the machine to boot via pxe once using EFI
 func (i *Ipmi) PxeOnceEfi() (status bool, err error) {
-	output, err := i.run([]string{"chassis", "bootdev", "pxe", "options=efiboot"})
+	output, err := i.run(context.Background(), []string{"chassis", "bootdev", "pxe", "options=efiboot"})
 	if err != nil {
 		return false, fmt.Errorf("%v: %v", err, output)
 	}
@@ -151,9 +161,22 @@ func (i *Ipmi) PxeOnceEfi() (status bool, err error) {
 	return false, fmt.Errorf("%v: %v", err, output)
 }
 
+// BootDevice sets a next boot device with options
+func (i *Ipmi) BootDevice(ctx context.Context, device string, options []string) (bool, error) {
+	output, err := i.run(context.Background(), []string{"chassis", "bootdev", device, fmt.Sprintf("options=%v", strings.Join(options, ","))})
+	if err != nil {
+		return false, errors.Wrapf(err, "output: %v", output)
+	}
+
+	if !strings.Contains(output, fmt.Sprintf("Set Boot Device to %v", device)) {
+		return false, errors.New(fmt.Sprintf("unexpected output: %v", output))
+	}
+	return true, nil
+}
+
 // PxeOnceMbr makes the machine to boot via pxe once using MBR
 func (i *Ipmi) PxeOnceMbr() (status bool, err error) {
-	output, err := i.run([]string{"chassis", "bootdev", "pxe"})
+	output, err := i.run(context.Background(), []string{"chassis", "bootdev", "pxe"})
 	if err != nil {
 		return false, fmt.Errorf("%v: %v", err, output)
 	}
@@ -171,7 +194,7 @@ func (i *Ipmi) PxeOnce() (status bool, err error) {
 
 // IsOn tells if a machine is currently powered on
 func (i *Ipmi) IsOn() (status bool, err error) {
-	output, err := i.run([]string{"chassis", "power", "status"})
+	output, err := i.run(context.Background(), []string{"chassis", "power", "status"})
 	if err != nil {
 		return false, fmt.Errorf("%v: %v", err, output)
 	}
@@ -180,4 +203,22 @@ func (i *Ipmi) IsOn() (status bool, err error) {
 		return true, err
 	}
 	return false, err
+}
+
+// CreateUser via ipmitool
+func (i *Ipmi) CreateUser(ctx context.Context) (status bool, err error) {
+	return false, errors.New("not implemented")
+}
+
+// Info about BMC
+func (i *Ipmi) Info(ctx context.Context) error {
+	output, err := i.run(ctx, []string{"bmc", "info"})
+	if err != nil {
+		return errors.Wrap(err, "error getting bmc info")
+	}
+
+	if !strings.Contains(output, "IPMI Version              : 2.0") {
+		return errors.New(fmt.Sprintf("unexpected output: %v", output))
+	}
+	return nil
 }

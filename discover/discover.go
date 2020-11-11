@@ -7,6 +7,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/logging"
+	"github.com/hashicorp/go-multierror"
 
 	"github.com/bmc-toolbox/bmclib/providers/dummy/ibmc"
 	"github.com/go-logr/logr"
@@ -22,6 +23,7 @@ const (
 	ProbeM1000e        = "m1000e"
 	ProbeQuanta        = "quanta"
 	ProbeHpCl100       = "hpcl100"
+	ProbeGeneric       = "generic"
 )
 
 // ScanAndConnect will scan the bmc trying to learn the device type and return a working connection.
@@ -33,6 +35,9 @@ func ScanAndConnect(host string, username string, password string, options ...Op
 	if opts.Logger == nil {
 		// create a default logger
 		opts.Logger = logging.DefaultLogger()
+	}
+	if opts.Context == nil {
+		opts.Context = context.Background()
 	}
 	opts.Logger.V(1).Info("detecting vendor", "step", "ScanAndConnect", "host", host)
 
@@ -60,6 +65,7 @@ func ScanAndConnect(host string, username string, password string, options ...Op
 		ProbeM1000e:        probe.m1000e,
 		ProbeQuanta:        probe.quanta,
 		ProbeHpCl100:       probe.hpCl100,
+		ProbeGeneric:       probe.generic,
 	}
 
 	order := []string{ProbeHpIlo,
@@ -71,6 +77,7 @@ func ScanAndConnect(host string, username string, password string, options ...Op
 		ProbeM1000e,
 		ProbeQuanta,
 		ProbeHpCl100,
+		ProbeGeneric,
 	}
 
 	if opts.Hint != "" {
@@ -80,29 +87,25 @@ func ScanAndConnect(host string, username string, password string, options ...Op
 	for _, probeID := range order {
 		probeDevice := devices[probeID]
 
-		opts.Logger.V(1).Info("probing to identify device", "step", "ScanAndConnect", "host", host)
+		opts.Logger.V(1).Info("probing to identify device", "step", "ScanAndConnect", "host", host, "probe", probeID)
 
-		bmcConnection, err := probeDevice(opts.Context, opts.Logger)
+		bmcConnection, probeErr := probeDevice(opts.Context, opts.Logger)
 
 		// if the device didn't match continue to probe
-		if err != nil && (err == errors.ErrDeviceNotMatched) {
+		if probeErr != nil {
+			// capture all errors for return if no probes return successful
+			err = multierror.Append(err, probeErr)
 			continue
 		}
-
-		// at this point it could be a connection error or a errors.ErrUnsupportedHardware
-		if err != nil {
-			return nil, err
+		if hintErr := opts.HintCallback(probeID); hintErr != nil {
+			return nil, hintErr
 		}
-
-		if err := opts.HintCallback(probeID); err != nil {
-			return nil, err
-		}
-
 		// return a bmcConnection
-		return bmcConnection, nil
+		if bmcConnection != nil && probeErr == nil {
+			return bmcConnection, nil
+		}
 	}
-
-	return nil, errors.ErrVendorUnknown
+	return nil, multierror.Append(err, errors.ErrVendorUnknown)
 }
 
 // Options to pass in

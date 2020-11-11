@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"os"
+	"time"
 
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/discover"
-	"github.com/bombsimon/logrusr"
+	"github.com/go-logr/zapr"
 	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 )
 
 // bmc lib takes in its opts a logger (https://github.com/go-logr/logr).
@@ -25,36 +28,42 @@ func main() {
 	pass := "password"
 
 	logger := logrus.New()
-	logger.SetLevel(logrus.DebugLevel)
 	//logger.SetFormatter(&logrus.JSONFormatter{})
 
-	logger.Info("printing status with a user defined logger")
-	conn, err := withUserDefinedLogger(ip, user, pass, logger)
-	if err != nil {
-		logger.Fatal(err)
-	}
-	printStatus(conn, logger)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
 	logger.Info("printing status with the default builtin logger")
-	os.Setenv("BMCLIB_LOG_LEVEL", "debug")
-	conn, err = withDefaultBuiltinLogger(ip, user, pass)
+	os.Setenv("BMCLIB_LOG_LEVEL", "info")
+	conn, err := withDefaultBuiltinLogger(ctx, ip, user, pass)
 	if err != nil {
 		logger.Fatal(err)
 	}
-	printStatus(conn, logger)
+	printStatus(ctx, conn, logger)
+
+	logger.Info("printing status with a user defined logger")
+	conn, err = withUserDefinedLogger(ctx, ip, user, pass, logger)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	printStatus(ctx, conn, logger)
+
 }
 
-func withUserDefinedLogger(ip, user, pass string, logger *logrus.Logger) (interface{}, error) {
-	myLog := logrusr.NewLogger(logger)
-
-	return discover.ScanAndConnect(ip, user, pass, discover.WithLogger(myLog))
+func withUserDefinedLogger(ctx context.Context, ip, user, pass string, logger *logrus.Logger) (interface{}, error) {
+	z, err := zap.NewProduction()
+	if err != nil {
+		return nil, err
+	}
+	log := zapr.NewLogger(z)
+	return discover.ScanAndConnect(ip, user, pass, discover.WithLogger(log), discover.WithContext(ctx))
 }
 
-func withDefaultBuiltinLogger(ip, user, pass string) (interface{}, error) {
-	return discover.ScanAndConnect(ip, user, pass)
+func withDefaultBuiltinLogger(ctx context.Context, ip, user, pass string) (interface{}, error) {
+	return discover.ScanAndConnect(ip, user, pass, discover.WithContext(ctx))
 }
 
-func printStatus(connection interface{}, logger *logrus.Logger) {
+func printStatus(ctx context.Context, connection interface{}, logger *logrus.Logger) {
 	switch con := connection.(type) {
 	case devices.Bmc:
 		conn := con
@@ -101,6 +110,13 @@ func printStatus(connection interface{}, logger *logrus.Logger) {
 			logger.Fatal(err)
 		}
 		logger.WithFields(logrus.Fields{"status": sts}).Info("status")
+	case devices.BmcWorker:
+		conn := con
+		state, err := conn.DataRequest(ctx, devices.SystemState)
+		if err != nil {
+			logger.Fatal(err)
+		}
+		logger.WithFields(logrus.Fields{"state": state.Value}).Info("state")
 	default:
 		logger.Fatal("Unknown device")
 	}

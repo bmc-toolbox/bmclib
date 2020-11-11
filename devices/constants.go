@@ -19,6 +19,9 @@ const (
 	// Common is the constant of thinks we could use across multiple vendors
 	Common = "Common"
 
+	// Generic device connection
+	Generic = "Generic"
+
 	// Power Constants
 
 	// Grid describes the power redundancy mode when using grid redundancy

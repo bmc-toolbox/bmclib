@@ -16,12 +16,14 @@ import (
 	"github.com/bmc-toolbox/bmclib/providers/dell/idrac8"
 	"github.com/bmc-toolbox/bmclib/providers/dell/idrac9"
 	"github.com/bmc-toolbox/bmclib/providers/dell/m1000e"
+	"github.com/bmc-toolbox/bmclib/providers/generic"
 	"github.com/bmc-toolbox/bmclib/providers/hp"
 	"github.com/bmc-toolbox/bmclib/providers/hp/c7000"
 	"github.com/bmc-toolbox/bmclib/providers/hp/ilo"
 	"github.com/bmc-toolbox/bmclib/providers/supermicro/supermicrox"
 	"github.com/bmc-toolbox/bmclib/providers/supermicro/supermicrox11"
 	"github.com/go-logr/logr"
+	errs "github.com/pkg/errors"
 )
 
 var (
@@ -71,7 +73,7 @@ func (p *Probe) hpIlo(ctx context.Context, log logr.Logger) (bmcConnection inter
 
 		if iloXML.HSI != nil {
 			if strings.HasPrefix(iloXML.MP.Pn, "Integrated Lights-Out") {
-				log.V(1).Info("step", "ScanAndConnect", "host", p.host, "vendor", string(devices.HP), "msg", "it's a HP with iLo")
+				log.V(1).Info("it's a HP with iLo", "step", "ScanAndConnect", "host", p.host, "vendor", string(devices.HP))
 				return ilo.New(ctx, p.host, p.username, p.password, log)
 			}
 
@@ -110,7 +112,7 @@ func (p *Probe) hpC7000(ctx context.Context, log logr.Logger) (bmcConnection int
 		}
 
 		if iloXMLC.Infra2 != nil {
-			log.V(1).Info("step", "ScanAndConnect", "host", p.host, "vendor", string(devices.HP), "msg", "it's a chassis")
+			log.V(1).Info("it's a chassis", "step", "ScanAndConnect", "host", p.host, "vendor", string(devices.HP))
 			return c7000.New(ctx, p.host, p.username, p.password, log)
 		}
 
@@ -137,7 +139,7 @@ func (p *Probe) hpCl100(ctx context.Context, log logr.Logger) (bmcConnection int
 	}
 	// ensure the response we got included a png
 	if resp.StatusCode == 200 && bytes.Contains(firstBytes, []byte("PNG")) {
-		log.V(1).Info("step", "ScanAndConnect", "host", p.host, "vendor", string(devices.Cloudline), "msg", "it's a discrete")
+		log.V(1).Info("it's a discrete", "step", "ScanAndConnect", "host", p.host, "vendor", string(devices.Cloudline))
 		return bmcConnection, errors.NewErrUnsupportedHardware("hpe cl100 not supported")
 	}
 
@@ -161,7 +163,7 @@ func (p *Probe) idrac8(ctx context.Context, log logr.Logger) (bmcConnection inte
 	}
 
 	if resp.StatusCode == 200 && containsAnySubStr(payload, idrac8SysDesc) {
-		log.V(1).Info("step", "connection", "host", p.host, "vendor", string(devices.Dell), "msg", "it's a idrac8")
+		log.V(1).Info("it's a idrac8", "step", "connection", "host", p.host, "vendor", string(devices.Dell))
 		return idrac8.New(ctx, p.host, p.username, p.password, log)
 	}
 
@@ -184,7 +186,7 @@ func (p *Probe) idrac9(ctx context.Context, log logr.Logger) (bmcConnection inte
 	}
 
 	if resp.StatusCode == 200 && containsAnySubStr(payload, idrac9SysDesc) {
-		log.V(1).Info("step", "connection", "host", p.host, "vendor", string(devices.Dell), "msg", "it's a idrac9")
+		log.V(1).Info("it's a idrac9", "step", "connection", "host", p.host, "vendor", string(devices.Dell))
 		return idrac9.New(ctx, p.host, p.host, p.username, p.password, log)
 	}
 
@@ -206,7 +208,7 @@ func (p *Probe) m1000e(ctx context.Context, log logr.Logger) (bmcConnection inte
 	}
 
 	if resp.StatusCode == 200 && containsAnySubStr(payload, m1000eSysDesc) {
-		log.V(1).Info("step", "connection", "host", p.host, "vendor", string(devices.Dell), "msg", "it's a m1000e chassis")
+		log.V(1).Info("it's a m1000e chassis", "step", "connection", "host", p.host, "vendor", string(devices.Dell))
 		return m1000e.New(ctx, p.host, p.username, p.password, log)
 	}
 
@@ -285,11 +287,26 @@ func (p *Probe) quanta(ctx context.Context, log logr.Logger) (bmcConnection inte
 
 	// ensure the response we got included a png
 	if resp.StatusCode == 200 && bytes.Contains(payload, []byte("Quanta")) {
-		log.V(1).Info("step", "ScanAndConnect", "host", p.host, "vendor", string(devices.Quanta), "msg", "it's a quanta")
+		log.V(1).Info("it's a quanta", "step", "ScanAndConnect", "host", p.host, "vendor", string(devices.Quanta))
 		return bmcConnection, errors.NewErrUnsupportedHardware("quanta hardware not supported")
 	}
 
 	return bmcConnection, errors.ErrDeviceNotMatched
+}
+
+func (p *Probe) generic(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {
+	var bmc devices.BmcWorker
+	bmc, err = generic.New(log, p.host, p.username, p.password)
+	if err != nil {
+		return bmcConnection, errs.Wrapf(err, errors.ErrDeviceNotMatched.Error())
+	}
+	err = bmc.Open(ctx)
+	if err != nil {
+		return bmcConnection, errs.Wrapf(err, errors.ErrDeviceNotMatched.Error())
+	}
+
+	log.V(1).Info("using a generic device interaction", "step", "ScanAndConnect", "host", p.host, "vendor", string(devices.Generic))
+	return bmc, err
 }
 
 func containsAnySubStr(data []byte, subStrs []string) bool {
