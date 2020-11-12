@@ -43,6 +43,18 @@ type M1000e struct {
 	log          logr.Logger
 }
 
+func (m *M1000e) Connect(ctx context.Context) (bool, error) {
+	err := m.CheckCredentials()
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (m *M1000e) Title() string {
+	return BMCType
+}
+
 // New returns a connection to M1000e
 func New(ctx context.Context, host string, username string, password string, log logr.Logger) (*M1000e, error) {
 	sshClient, err := sshclient.New(host, username, password)

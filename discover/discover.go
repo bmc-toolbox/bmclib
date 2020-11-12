@@ -80,28 +80,24 @@ func ScanAndConnect(host string, username string, password string, options ...Op
 	for _, probeID := range order {
 		probeDevice := devices[probeID]
 
-		opts.Logger.V(1).Info("probing to identify device", "step", "ScanAndConnect", "host", host)
+		opts.Logger.V(1).Info("probing to identify device", "step", "ScanAndConnect", "host", host, "vendor", probeID)
 
-		bmcConnection, err := probeDevice(opts.Context, opts.Logger)
+		bmcConnection, probeErr := probeDevice(opts.Context, opts.Logger)
 
 		// if the device didn't match continue to probe
-		if err != nil && (err == errors.ErrDeviceNotMatched) {
+		if probeErr != nil {
+			// log error if probe is not successful
+			opts.Logger.V(1).Info("probe failed", "host", host, "vendor", probeID, "error", probeErr)
 			continue
 		}
-
-		// at this point it could be a connection error or a errors.ErrUnsupportedHardware
-		if err != nil {
-			return nil, err
+		if hintErr := opts.HintCallback(probeID); hintErr != nil {
+			return nil, hintErr
 		}
-
-		if err := opts.HintCallback(probeID); err != nil {
-			return nil, err
-		}
-
 		// return a bmcConnection
-		return bmcConnection, nil
+		if bmcConnection != nil && probeErr == nil {
+			return bmcConnection, nil
+		}
 	}
-
 	return nil, errors.ErrVendorUnknown
 }
 

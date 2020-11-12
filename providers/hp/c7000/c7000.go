@@ -34,6 +34,18 @@ type C7000 struct {
 	log        logr.Logger
 }
 
+func (c *C7000) Connect(ctx context.Context) (bool, error) {
+	err := c.CheckCredentials()
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (c *C7000) Title() string {
+	return BMCType
+}
+
 // New returns a connection to C7000
 func New(ctx context.Context, host string, username string, password string, log logr.Logger) (*C7000, error) {
 	client, err := httpclient.Build()

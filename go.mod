@@ -6,7 +6,9 @@ require (
 	github.com/bombsimon/logrusr v1.0.0
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-logr/logr v0.3.0
+	github.com/go-logr/zapr v0.3.0
 	github.com/go-playground/universal-translator v0.17.0 // indirect
+	github.com/google/go-cmp v0.3.0
 	github.com/google/go-querystring v1.0.0
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.0
@@ -21,6 +23,7 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.7.1
+	go.uber.org/zap v1.10.0
 	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
 	golang.org/x/net v0.0.0-20201031054903-ff519b6c9102
 	golang.org/x/sys v0.0.0-20201101102859-da207088b7d1 // indirect
