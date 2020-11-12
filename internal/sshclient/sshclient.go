@@ -29,7 +29,13 @@ func New(addr string, username string, password string) (*SSHClient, error) {
 		Auth: []ssh.AuthMethod{
 			ssh.Password(password),
 			ssh.KeyboardInteractive(func(user, instruction string, questions []string, echos []bool) ([]string, error) {
-				return []string{}, nil
+				if len(questions) == 0 {
+					return []string{}, nil
+				}
+				if len(questions) == 1 {
+					return []string{password}, nil
+				}
+				return []string{}, fmt.Errorf("unsupported keyboard-interactive auth")
 			}),
 		},
 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
