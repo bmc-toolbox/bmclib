@@ -26,7 +26,7 @@ import (
 
 var (
 	idrac8SysDesc = []string{"PowerEdge M630", "PowerEdge R630"}
-	idrac9SysDesc = []string{"PowerEdge M640", "PowerEdge R640", "PowerEdge R6415", "PowerEdge R6515"}
+	idrac9SysDesc = []string{"PowerEdge M640", "PowerEdge R640", "PowerEdge R6415", "PowerEdge R6515", "PowerEdge R740xd"}
 	m1000eSysDesc = []string{"PowerEdge M1000e"}
 )
 
