@@ -48,11 +48,6 @@ func New(ctx context.Context, host string, httpHost string, username string, pas
 	}
 
 	idrac := &IDrac9{ip: httpHost, username: username, password: password, sshClient: sshClient, ctx: ctx, log: log}
-	err = idrac.httpLogin()
-	if err != nil {
-		return nil, err
-	}
-
 	return idrac, nil
 }
 
