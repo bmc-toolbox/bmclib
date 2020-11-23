@@ -15,12 +15,12 @@ jobs:
       uses: actions/setup-go@v2
       with:
         go-version: '1.15'
+    - name: golangci-lint
+      uses: golangci/golangci-lint-action@v2
+      with:
+        version: v1.32
+        args: -v -D errcheck
     - name: goimports
       run: go get golang.org/x/tools/cmd/goimports && make goimports-check
-    - name: golangci-lint
-      uses: golangci/golangci-lint-action@v1
-      with:
-        version: v1.31
-        args: -v -D errcheck
     - name: go test
       run: make test
