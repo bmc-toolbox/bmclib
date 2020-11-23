@@ -197,7 +197,7 @@ func (m *M1000e) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.
 				"Ldap role", group.Role,
 				"IP", m.ip,
 				"Model", m.HardwareType(),
-				"Error", err.Error(),
+				"Error", err,
 			)
 			return err
 		}

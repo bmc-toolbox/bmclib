@@ -98,7 +98,7 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 			"IP", i.ip,
 			"Model", i.HardwareType(),
 			"step", "applyUserParams",
-			"Error", err.Error(),
+			"Error", err,
 		)
 		return errors.New(msg)
 	}
@@ -185,7 +185,7 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 					"Model", i.HardwareType(),
 					"step", helper.WhosCalling(),
 					"User", user.Name,
-					"Error", err.Error(),
+					"Error", err,
 				)
 				continue
 			}
@@ -202,7 +202,7 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 					"User", user.Name,
 					"StatusCode", statusCode,
 					"response", string(response),
-					"Error", err.Error(),
+					"Error", err,
 				)
 
 				continue
@@ -260,7 +260,7 @@ func (i *Ilo) Syslog(cfg *cfgresources.Syslog) (err error) {
 			"IP", i.ip,
 			"Model", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", err,
 		)
 		return errors.New(msg)
 	}
@@ -276,7 +276,7 @@ func (i *Ilo) Syslog(cfg *cfgresources.Syslog) (err error) {
 			"step", helper.WhosCalling(),
 			"StatusCode", statusCode,
 			"response", string(response),
-			"Error", err.Error(),
+			"Error", err,
 		)
 		return errors.New(msg)
 	}
@@ -309,7 +309,7 @@ func (i *Ilo) SetLicense(cfg *cfgresources.License) (err error) {
 			"IP", i.ip,
 			"Model", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", err,
 		)
 		return errors.New(msg)
 	}
@@ -325,7 +325,7 @@ func (i *Ilo) SetLicense(cfg *cfgresources.License) (err error) {
 			"step", helper.WhosCalling(),
 			"StatusCode", statusCode,
 			"response", string(response),
-			"Error", err.Error(),
+			"Error", err,
 		)
 		return errors.New(msg)
 	}
@@ -381,7 +381,7 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 			"IP", i.ip,
 			"Model", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", err,
 		)
 		return errors.New(msg)
 	}
@@ -414,7 +414,7 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 			"IP", i.ip,
 			"Model", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", err,
 		)
 		return errors.New(msg)
 	}
@@ -430,7 +430,7 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 			"step", helper.WhosCalling(),
 			"StatusCode", statusCode,
 			"response", string(response),
-			"Error", err.Error(),
+			"Error", err,
 		)
 		return errors.New(msg)
 	}
@@ -452,7 +452,7 @@ func (i *Ilo) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Lda
 			"IP", i.ip,
 			"Model", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", err,
 		)
 		return errors.New(msg)
 	}
@@ -532,7 +532,7 @@ func (i *Ilo) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Lda
 					"Model", i.HardwareType(),
 					"step", helper.WhosCalling(),
 					"Group", group.Group,
-					"Error", err.Error(),
+					"Error", err,
 				)
 				continue
 			}
@@ -548,7 +548,7 @@ func (i *Ilo) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Lda
 					"Group", group.Group,
 					"StatusCode", statusCode,
 					"response", string(response),
-					"Error", err.Error(),
+					"Error", err,
 				)
 				continue
 			}
@@ -623,7 +623,7 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 			"IP", i.ip,
 			"Model", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", err,
 		)
 		return err
 	}
@@ -639,7 +639,7 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 			"step", helper.WhosCalling(),
 			"StatusCode", statusCode,
 			"response", string(response),
-			"Error", err.Error(),
+			"Error", err,
 		)
 		return err
 	}

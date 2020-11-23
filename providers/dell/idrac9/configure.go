@@ -55,7 +55,7 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 	validate := validator.New()
 	err = validate.Struct(newBiosSettings)
 	if err != nil {
-		i.log.V(1).Error(err, "Config validation failed.", "step", "applyBiosParams", "Error", err.Error())
+		i.log.V(1).Error(err, "Config validation failed.", "step", "applyBiosParams", "Error", err)
 		return err
 	}
 
@@ -67,7 +67,7 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 			"IP", i.ip,
 			"Model", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", err,
 		)
 		return errors.New(msg)
 	}
@@ -82,7 +82,7 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 				"IP", i.ip,
 				"Model", i.HardwareType(),
 				"step", helper.WhosCalling(),
-				"Error", err.Error(),
+				"Error", err,
 			)
 			return err
 		}
@@ -103,7 +103,7 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 				"resource", "Bios",
 				"IP", i.ip,
 				"Model", i.HardwareType(),
-				"Bios settings pending", err.Error(),
+				"Bios settings pending", err,
 			)
 		}
 
@@ -114,7 +114,7 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 				"IP", i.ip,
 				"Model", i.HardwareType(),
 				"step", helper.WhosCalling(),
-				"Error", err.Error(),
+				"Error", err,
 			)
 			return errors.New(msg)
 		}
@@ -151,7 +151,7 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 			"step", "applyUserParams",
 			"IP", i.ip,
 			"Model", i.HardwareType(),
-			"Error", err.Error(),
+			"Error", err,
 		)
 		return errors.New(msg)
 	}
@@ -163,7 +163,7 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 			"step", "applyUserParams",
 			"IP", i.ip,
 			"Model", i.HardwareType(),
-			"Error", err.Error(),
+			"Error", err,
 		)
 		return errors.New(msg)
 	}
@@ -185,7 +185,7 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 						"Model", i.HardwareType(),
 						"step", helper.WhosCalling(),
 						"User", cfgUser.Name,
-						"Error", err.Error(),
+						"Error", err,
 					)
 					continue
 				}
@@ -212,7 +212,7 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 					"Model", i.HardwareType(),
 					"step", helper.WhosCalling(),
 					"User", cfgUser.Name,
-					"Error", err.Error(),
+					"Error", err,
 				)
 				continue
 			}
@@ -229,7 +229,7 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 					"Model", i.HardwareType(),
 					"step", helper.WhosCalling(),
 					"User", cfgUser.Name,
-					"Error", err.Error(),
+					"Error", err,
 					"StatusCode", statusCode,
 					"Response", response,
 				)
@@ -323,7 +323,7 @@ func (i *IDrac9) Ldap(cfg *cfgresources.Ldap) (err error) {
 			"IP", i.ip,
 			"Model", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", err,
 		)
 		return err
 	}
@@ -344,7 +344,7 @@ func (i *IDrac9) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.
 			"step", "applyUserParams",
 			"IP", i.ip,
 			"Model", i.HardwareType(),
-			"Error", err.Error(),
+			"Error", err,
 		)
 		return err
 	}
@@ -372,7 +372,7 @@ func (i *IDrac9) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.
 						"step", helper.WhosCalling(),
 						"Ldap Role Group", cfgRole.Group,
 						"Role Group DN", cfgRole.Role,
-						"Error", err.Error(),
+						"Error", err,
 					)
 					continue
 				}
@@ -395,7 +395,7 @@ func (i *IDrac9) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.
 					"step", helper.WhosCalling(),
 					"Ldap Role Group", cfgRole.Group,
 					"Role Group DN", cfgRole.Role,
-					"Error", err.Error(),
+					"Error", err,
 				)
 				continue
 			}
@@ -415,7 +415,7 @@ func (i *IDrac9) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.
 					"step", helper.WhosCalling(),
 					"Ldap Role Group", cfgRole.Group,
 					"Role Group DN", cfgRole.Role,
-					"Error", err.Error(),
+					"Error", err,
 				)
 				continue
 			}
@@ -488,7 +488,7 @@ func (i *IDrac9) Ntp(cfg *cfgresources.Ntp) (err error) {
 			"Model", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Timezone", cfg.Timezone,
-			"Error", err.Error(),
+			"Error", err,
 		)
 		return err
 	}
@@ -506,7 +506,7 @@ func (i *IDrac9) Ntp(cfg *cfgresources.Ntp) (err error) {
 			"IP", i.ip,
 			"Model", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", err,
 		)
 		return err
 	}
@@ -565,7 +565,7 @@ func (i *IDrac9) Syslog(cfg *cfgresources.Syslog) (err error) {
 			"IP", i.ip,
 			"Model", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", err,
 		)
 		return err
 	}
@@ -577,7 +577,7 @@ func (i *IDrac9) Syslog(cfg *cfgresources.Syslog) (err error) {
 			"IP", i.ip,
 			"Model", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", err,
 		)
 		return err
 	}
@@ -589,7 +589,7 @@ func (i *IDrac9) Syslog(cfg *cfgresources.Syslog) (err error) {
 			"IP", i.ip,
 			"Model", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", err,
 		)
 		return err
 	}
@@ -653,7 +653,7 @@ func (i *IDrac9) Network(cfg *cfgresources.Network) (reset bool, err error) {
 			"IP", i.ip,
 			"Model", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", err,
 		)
 	}
 
@@ -663,7 +663,7 @@ func (i *IDrac9) Network(cfg *cfgresources.Network) (reset bool, err error) {
 			"IP", i.ip,
 			"Model", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", err,
 		)
 	}
 
@@ -673,7 +673,7 @@ func (i *IDrac9) Network(cfg *cfgresources.Network) (reset bool, err error) {
 			"IP", i.ip,
 			"Model", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", err,
 		)
 	}
 
@@ -683,7 +683,7 @@ func (i *IDrac9) Network(cfg *cfgresources.Network) (reset bool, err error) {
 			"IP", i.ip,
 			"Model", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", err,
 		)
 	}
 
@@ -776,7 +776,7 @@ func (i *IDrac9) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 			"step", helper.WhosCalling(),
 			"IP", i.ip,
 			"Model", i.HardwareType(),
-			"Error", err.Error(),
+			"Error", err,
 		)
 		return false, err
 	}
@@ -787,7 +787,7 @@ func (i *IDrac9) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 			"step", helper.WhosCalling(),
 			"IP", i.ip,
 			"Model", i.HardwareType(),
-			"Error", err.Error(),
+			"Error", err,
 		)
 		return false, err
 	}

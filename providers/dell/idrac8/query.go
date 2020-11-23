@@ -81,7 +81,7 @@ func (i *IDrac8) queryUsers() (userInfo UserInfo, err error) {
 			"Model", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", err,
 		)
 		return userInfo, err
 	}
@@ -94,7 +94,7 @@ func (i *IDrac8) queryUsers() (userInfo UserInfo, err error) {
 			"resource", "User",
 			"IP", i.ip,
 			"Model", i.HardwareType(),
-			"Error", err.Error(),
+			"Error", err,
 		)
 		return userInfo, err
 	}
