@@ -8,6 +8,7 @@ import (
 
 	//_ "github.com/bmc-toolbox/bmclib/providers/ipmitool"
 
+	"github.com/bmc-toolbox/bmclib/registry"
 	"github.com/go-logr/logr"
 	"github.com/go-logr/zapr"
 	"go.uber.org/zap"
@@ -44,10 +45,11 @@ func TestBMC(t *testing.T) {
 	user := "ADMIN"
 	pass := "ADMIN"
 
-	cl := NewClient(host, user, pass, WithLogger(log))
+	reg := registry.All()
+	cl := NewClient(host, user, pass, WithLogger(log), WithRegistry(reg))
 	err := cl.AddVendorSpecificToRegistry(ctx)
 	if err != nil {
-		t.Fatal(err)
+		t.Log(err)
 	}
 
 	state, err := cl.GetPowerState(ctx)

@@ -49,7 +49,8 @@ func NewClient(host, user, pass string, opts ...Option) *Client {
 	var (
 		defaultLogger = logging.DefaultLogger()
 		defaultClient = &Client{
-			Logger: defaultLogger,
+			Logger:   defaultLogger,
+			Registry: registry.All(),
 		}
 	)
 	for _, opt := range opts {
@@ -59,7 +60,7 @@ func NewClient(host, user, pass string, opts ...Option) *Client {
 	defaultClient.Auth.Host = host
 	defaultClient.Auth.User = user
 	defaultClient.Auth.Pass = pass
-	defaultClient.Registry = registry.All()
+
 	return defaultClient
 }
 
