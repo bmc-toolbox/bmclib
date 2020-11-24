@@ -11,6 +11,7 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
+	"github.com/bmc-toolbox/bmclib/internal"
 	"github.com/google/go-querystring/query"
 )
 
@@ -197,7 +198,7 @@ func (m *M1000e) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.
 				"Ldap role", group.Role,
 				"IP", m.ip,
 				"Model", m.HardwareType(),
-				"Error", err.Error(),
+				"Error", internal.ErrStringOrEmpty(err),
 			)
 			return err
 		}
