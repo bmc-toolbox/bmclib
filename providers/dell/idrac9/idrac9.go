@@ -60,6 +60,7 @@ func New(ctx context.Context, host string, httpHost string, username string, pas
 	}
 
 	idrac := &IDrac9{ip: httpHost, username: username, password: password, sshClient: sshClient, ctx: ctx, log: log}
+
 	return idrac, nil
 }
 

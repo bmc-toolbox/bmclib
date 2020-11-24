@@ -8,8 +8,8 @@ import (
 	"github.com/bmc-toolbox/bmclib/internal/ipmi"
 )
 
-// PowerState gets the power state of a BMC machine
-func (c *Conn) PowerState(ctx context.Context) (state string, err error) {
+// PowerStateGet gets the power state of a BMC machine
+func (c *Conn) PowerStateGet(ctx context.Context) (state string, err error) {
 	i, err := ipmi.New(c.User, c.Pass, c.Host)
 	if err != nil {
 		return state, err

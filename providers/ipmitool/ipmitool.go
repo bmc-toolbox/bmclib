@@ -1,10 +1,12 @@
 package ipmitool
 
 import (
+	"github.com/bmc-toolbox/bmclib/registry"
 	"github.com/go-logr/logr"
 )
 
-const DriverName = "ipmitool"
+// ProviderName for the implementation
+const ProviderName = "ipmitool"
 
 // Conn for Ipmitool connection details
 type Conn struct {
@@ -13,4 +15,11 @@ type Conn struct {
 	User string
 	Pass string
 	Log  logr.Logger
+}
+
+func init() {
+	registry.Register("generic", ProviderName, func(host, user, pass string) (interface{}, error) {
+		port := "623"
+		return &Conn{Host: host, User: user, Pass: pass, Port: port}, nil
+	}, []string{"power", "userRead"})
 }
