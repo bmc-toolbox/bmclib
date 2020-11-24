@@ -8,14 +8,18 @@ import (
 	"github.com/hashicorp/go-multierror"
 )
 
-// PowerStateSetter get power state and set power state
-type PowerStateSetter interface {
-	PowerState(ctx context.Context) (state string, err error)
+// PowerSetter sets the power state of a BMC
+type PowerSetter interface {
 	PowerSet(ctx context.Context, state string) (ok bool, err error)
 }
 
+// PowerStateGetter gets the power state of a BMC
+type PowerStateGetter interface {
+	PowerStateGet(ctx context.Context) (state string, err error)
+}
+
 // SetPowerState sets the power state for a BMC, trying all interface implementations passed in
-func SetPowerState(ctx context.Context, state string, p []PowerStateSetter) (ok bool, err error) {
+func SetPowerState(ctx context.Context, state string, p []PowerSetter) (ok bool, err error) {
 	for _, elem := range p {
 		if elem != nil {
 			ok, setErr := elem.PowerSet(ctx, state)
@@ -35,25 +39,27 @@ func SetPowerState(ctx context.Context, state string, p []PowerStateSetter) (ok 
 
 // SetPowerStateFromInterfaces pass through to library function
 func SetPowerStateFromInterfaces(ctx context.Context, state string, generic []interface{}) (ok bool, err error) {
-	var powerStateSetters []PowerStateSetter
+	var powerSetter []PowerSetter
 	for _, elem := range generic {
 		switch p := elem.(type) {
-		case PowerStateSetter:
-			powerStateSetters = append(powerStateSetters, p)
+		case PowerSetter:
+			powerSetter = append(powerSetter, p)
 		default:
+			e := fmt.Sprintf("not a PowerSetter implementation: %T", p)
+			err = multierror.Append(err, errors.New(e))
 		}
 	}
-	if len(powerStateSetters) == 0 {
-		return ok, errors.New("no PowerStateSetter implementations found")
+	if len(powerSetter) == 0 {
+		return ok, multierror.Append(err, errors.New("no PowerSetter implementations found"))
 	}
-	return SetPowerState(ctx, state, powerStateSetters)
+	return SetPowerState(ctx, state, powerSetter)
 }
 
 // GetPowerState sets the power state for a BMC, trying all interface implementations passed in
-func GetPowerState(ctx context.Context, p []PowerStateSetter) (state string, err error) {
+func GetPowerState(ctx context.Context, p []PowerStateGetter) (state string, err error) {
 	for _, elem := range p {
 		if elem != nil {
-			state, stateErr := elem.PowerState(ctx)
+			state, stateErr := elem.PowerStateGet(ctx)
 			if stateErr != nil {
 				err = multierror.Append(err, stateErr)
 				continue
@@ -67,18 +73,19 @@ func GetPowerState(ctx context.Context, p []PowerStateSetter) (state string, err
 
 // GetPowerStateFromInterfaces pass through to library function
 func GetPowerStateFromInterfaces(ctx context.Context, generic []interface{}) (state string, err error) {
-	var powerStateSetters []PowerStateSetter
+	var powerStateGetter []PowerStateGetter
 	for _, elem := range generic {
+
 		switch p := elem.(type) {
-		case PowerStateSetter:
-			powerStateSetters = append(powerStateSetters, p)
+		case PowerStateGetter:
+			powerStateGetter = append(powerStateGetter, p)
 		default:
-			e := fmt.Sprintf("not a PowerStateSetter implementation: %T", p)
-			err = multierror.Append(errors.New(e))
+			e := fmt.Sprintf("not a PowerStateGetter implementation: %T", p)
+			err = multierror.Append(err, errors.New(e))
 		}
 	}
-	if len(powerStateSetters) == 0 {
-		return state, multierror.Append(err, errors.New("no PowerStateSetter implementations found"))
+	if len(powerStateGetter) == 0 {
+		return state, multierror.Append(err, errors.New("no PowerStateGetter implementations found"))
 	}
-	return GetPowerState(ctx, powerStateSetters)
+	return GetPowerState(ctx, powerStateGetter)
 }

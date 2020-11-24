@@ -1,3 +1,5 @@
+// Package bmclib client.go is the public API. Its intent is to make
+// interacting with bmclib as friendly as possible.
 package bmclib
 
 import (
@@ -10,7 +12,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/hashicorp/go-multierror"
 
-	// for registering provider
+	// register providers here
 	_ "github.com/bmc-toolbox/bmclib/providers/ipmitool"
 )
 
@@ -18,7 +20,7 @@ import (
 type Client struct {
 	Auth     Auth
 	Logger   logr.Logger
-	Registry registry.RegistryCollection
+	Registry registry.Collection
 }
 
 // Auth details for connecting to a BMC
@@ -38,7 +40,7 @@ func WithLogger(logger logr.Logger) Option {
 }
 
 // WithRegistry sets the Registry
-func WithRegistry(registry registry.RegistryCollection) Option {
+func WithRegistry(registry registry.Collection) Option {
 	return func(args *Client) { args.Registry = registry }
 }
 
@@ -57,13 +59,14 @@ func NewClient(host, user, pass string, opts ...Option) *Client {
 	defaultClient.Auth.Host = host
 	defaultClient.Auth.User = user
 	defaultClient.Auth.Pass = pass
-
+	defaultClient.Registry = registry.All()
 	return defaultClient
 }
 
-// SetDefaultRegistry updates the registry to the default implementations
-func (c *Client) SetDefaultRegistry(ctx context.Context, regs registry.RegistryCollection) (err error) {
-	// try discovering and registering a vendor specifc provider
+// AddVendorSpecificToRegistry will probe the BMC for a specific vendor and if it successfully
+// identifies a vendor, that interface will be added to the registry.
+func (c *Client) AddVendorSpecificToRegistry(ctx context.Context) (err error) {
+	// try discovering and registering a vendor specific provider
 	vendor, scanErr := discover.ScanAndConnect(c.Auth.Host, c.Auth.User, c.Auth.Pass, discover.WithContext(ctx), discover.WithLogger(c.Logger))
 	if scanErr != nil {
 		c.Logger.V(1).Info("no vendor specific controller discovered", "error", scanErr.Error())
@@ -72,65 +75,48 @@ func (c *Client) SetDefaultRegistry(ctx context.Context, regs registry.RegistryC
 		registry.Register("vendor", "vendor", func(host, user, pass string) (interface{}, error) {
 			return vendor, nil
 		}, []string{"power", "userRead"})
+		c.Registry = registry.All()
 	}
 
-	/*
-		for _, reg := range regs {
-			i, _ := reg.InitFn(c.Auth.Host, c.Auth.User, c.Auth.Pass)
-			switch it := i.(type) {
-			case bmc.PowerStateSetter:
-				reg.Functionality.Power = it
-			default:
-			}
-		}
-	*/
-	c.Registry = registry.All()
-
-	return nil
+	return err
 }
 
-/*
-// GetPowerState pass through to library function
-func (c *Client) GetPowerState(ctx context.Context) (state string, err error) {
-	var results []bmc.PowerStateSetter
-	for _, elem := range registry.All() {
-		results = append(results, elem.Functionality.Power)
+// GetProviders returns a slice of interfaces for all registered implementations
+func (c *Client) GetProviders() []interface{} {
+	var results []interface{}
+	for _, reg := range registry.All() {
+		i, _ := reg.InitFn(c.Auth.Host, c.Auth.User, c.Auth.Pass)
+		results = append(results, i)
 	}
-	return bmc.GetPowerState(ctx, results)
+	return results
 }
-*/
 
 // GetPowerState pass through to library function
 func (c *Client) GetPowerState(ctx context.Context) (state string, err error) {
-	return bmc.GetPowerStateFromInterfaces(ctx, registry.GetProviders(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Registry))
+	return bmc.GetPowerStateFromInterfaces(ctx, c.GetProviders())
 }
 
 // SetPowerState pass through to library function
 func (c *Client) SetPowerState(ctx context.Context, state string) (ok bool, err error) {
-	return bmc.SetPowerStateFromInterfaces(ctx, state, registry.GetProviders(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Registry))
+	return bmc.SetPowerStateFromInterfaces(ctx, state, c.GetProviders())
 }
 
 // CreateUser pass through to library function
 func (c *Client) CreateUser(ctx context.Context, user, pass, role string) (ok bool, err error) {
-	return bmc.CreateUserFromInterfaces(ctx, user, pass, role, registry.GetProviders(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Registry))
+	return bmc.CreateUserFromInterfaces(ctx, user, pass, role, c.GetProviders())
 }
 
 // UpdateUser pass through to library function
 func (c *Client) UpdateUser(ctx context.Context, user, pass, role string) (ok bool, err error) {
-	return bmc.UpdateUserFromInterfaces(ctx, user, pass, role, registry.GetProviders(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Registry))
+	return bmc.UpdateUserFromInterfaces(ctx, user, pass, role, c.GetProviders())
 }
 
 // DeleteUser pass through to library function
 func (c *Client) DeleteUser(ctx context.Context, user string) (ok bool, err error) {
-	return bmc.DeleteUserFromInterfaces(ctx, user, registry.GetProviders(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Registry))
+	return bmc.DeleteUserFromInterfaces(ctx, user, c.GetProviders())
 }
 
 // ReadUsers pass through to library function
 func (c *Client) ReadUsers(ctx context.Context) (users []map[string]string, err error) {
-	return bmc.ReadUsersFromInterfaces(ctx, registry.GetProviders(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Registry))
-	/*var results []bmc.UserReader
-	for _, elem := range registry.All() {
-		results = append(results, elem.Functionality.UserRead)
-	}
-	return bmc.ReadUsers(ctx, results)*/
+	return bmc.ReadUsersFromInterfaces(ctx, c.GetProviders())
 }

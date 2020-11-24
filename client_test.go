@@ -7,7 +7,7 @@ import (
 	"time"
 
 	//_ "github.com/bmc-toolbox/bmclib/providers/ipmitool"
-	"github.com/bmc-toolbox/bmclib/registry"
+
 	"github.com/go-logr/logr"
 	"github.com/go-logr/zapr"
 	"go.uber.org/zap"
@@ -37,19 +37,19 @@ func TestMain(m *testing.M) {
 }
 
 func TestBMC(t *testing.T) {
-	//t.Skip("needs ipmitool and real ipmi server")
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	t.Skip("needs ipmitool and real ipmi server")
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()
 	host := "127.0.0.1"
 	user := "ADMIN"
 	pass := "ADMIN"
 
 	cl := NewClient(host, user, pass, WithLogger(log))
-	err := cl.SetDefaultRegistry(ctx, registry.All())
+	err := cl.AddVendorSpecificToRegistry(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
-	//cl.Registry = registry.All()
+
 	state, err := cl.GetPowerState(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -61,5 +61,6 @@ func TestBMC(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(users)
+
 	t.Fatal()
 }

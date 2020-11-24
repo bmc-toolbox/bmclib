@@ -32,13 +32,13 @@ type UserReader interface {
 func CreateUser(ctx context.Context, user, pass, role string, u []UserCreator) (ok bool, err error) {
 	for _, elem := range u {
 		if elem != nil {
-			ok, err = elem.UserCreate(ctx, user, pass, role)
-			if err != nil {
-				err = multierror.Append(err, err)
+			ok, createErr := elem.UserCreate(ctx, user, pass, role)
+			if createErr != nil {
+				err = multierror.Append(err, createErr)
 				continue
 			}
 			if !ok {
-				err = multierror.Append(err, err)
+				err = multierror.Append(err, errors.New("failed to create user"))
 				continue
 			}
 			return ok, err
@@ -55,10 +55,12 @@ func CreateUserFromInterfaces(ctx context.Context, user, pass, role string, gene
 		case UserCreator:
 			userCreators = append(userCreators, u)
 		default:
+			e := fmt.Sprintf("not a UserCreator implementation: %T", u)
+			err = multierror.Append(err, errors.New(e))
 		}
 	}
 	if len(userCreators) == 0 {
-		return ok, errors.New("no UserCreator implementations found")
+		return ok, multierror.Append(err, errors.New("no UserCreator implementations found"))
 	}
 	return CreateUser(ctx, user, pass, role, userCreators)
 }
@@ -67,13 +69,13 @@ func CreateUserFromInterfaces(ctx context.Context, user, pass, role string, gene
 func UpdateUser(ctx context.Context, user, pass, role string, u []UserUpdater) (ok bool, err error) {
 	for _, elem := range u {
 		if elem != nil {
-			ok, err = elem.UserUpdate(ctx, user, pass, role)
-			if err != nil {
-				err = multierror.Append(err, err)
+			ok, UpdateErr := elem.UserUpdate(ctx, user, pass, role)
+			if UpdateErr != nil {
+				err = multierror.Append(err, UpdateErr)
 				continue
 			}
 			if !ok {
-				err = multierror.Append(err, err)
+				err = multierror.Append(err, errors.New("failed to update user"))
 				continue
 			}
 			return ok, err
@@ -90,10 +92,12 @@ func UpdateUserFromInterfaces(ctx context.Context, user, pass, role string, gene
 		case UserUpdater:
 			userUpdaters = append(userUpdaters, u)
 		default:
+			e := fmt.Sprintf("not a UserUpdater implementation: %T", u)
+			err = multierror.Append(err, errors.New(e))
 		}
 	}
 	if len(userUpdaters) == 0 {
-		return ok, errors.New("no UserUpdater implementations found")
+		return ok, multierror.Append(err, errors.New("no UserUpdater implementations found"))
 	}
 	return UpdateUser(ctx, user, pass, role, userUpdaters)
 }
@@ -102,13 +106,13 @@ func UpdateUserFromInterfaces(ctx context.Context, user, pass, role string, gene
 func DeleteUser(ctx context.Context, user string, u []UserDeleter) (ok bool, err error) {
 	for _, elem := range u {
 		if elem != nil {
-			ok, err = elem.UserDelete(ctx, user)
-			if err != nil {
-				err = multierror.Append(err, err)
+			ok, deleteErr := elem.UserDelete(ctx, user)
+			if deleteErr != nil {
+				err = multierror.Append(err, deleteErr)
 				continue
 			}
 			if !ok {
-				err = multierror.Append(err, err)
+				err = multierror.Append(err, errors.New("failed to delete user"))
 				continue
 			}
 			return ok, err
@@ -125,10 +129,12 @@ func DeleteUserFromInterfaces(ctx context.Context, user string, generic []interf
 		case UserDeleter:
 			userDeleters = append(userDeleters, u)
 		default:
+			e := fmt.Sprintf("not a UserDeleter implementation: %T", u)
+			err = multierror.Append(err, errors.New(e))
 		}
 	}
 	if len(userDeleters) == 0 {
-		return ok, errors.New("no UserDeleter implementations found")
+		return ok, multierror.Append(err, errors.New("no UserDeleter implementations found"))
 	}
 	return DeleteUser(ctx, user, userDeleters)
 }
@@ -137,9 +143,9 @@ func DeleteUserFromInterfaces(ctx context.Context, user string, generic []interf
 func ReadUsers(ctx context.Context, u []UserReader) (users []map[string]string, err error) {
 	for _, elem := range u {
 		if elem != nil {
-			users, err = elem.UserRead(ctx)
-			if err != nil {
-				err = multierror.Append(err, err)
+			users, readErr := elem.UserRead(ctx)
+			if readErr != nil {
+				err = multierror.Append(err, readErr)
 				continue
 			}
 			return users, err
