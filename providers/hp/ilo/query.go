@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/bmc-toolbox/bmclib/errors"
+	"github.com/bmc-toolbox/bmclib/internal"
 	"github.com/bmc-toolbox/bmclib/internal/helper"
 )
 
@@ -67,7 +68,7 @@ func (i *Ilo) queryDirectoryGroups() (directoryGroups []DirectoryGroups, err err
 			"Model", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return directoryGroups, err
 	}
@@ -81,7 +82,7 @@ func (i *Ilo) queryDirectoryGroups() (directoryGroups []DirectoryGroups, err err
 			"IP", i.ip,
 			"Model", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return directoryGroups, err
 	}
@@ -101,7 +102,7 @@ func (i *Ilo) queryUsers() (usersInfo []UserInfo, err error) {
 			"Model", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return usersInfo, err
 	}
@@ -116,7 +117,7 @@ func (i *Ilo) queryUsers() (usersInfo []UserInfo, err error) {
 			"Model", i.HardwareType(),
 			"resource", "User",
 			"step", "queryUserInfo",
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return usersInfo, err
 	}
@@ -136,7 +137,7 @@ func (i *Ilo) queryNetworkSntp() (networkSntp NetworkSntp, err error) {
 			"Model", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return networkSntp, err
 	}
@@ -148,7 +149,7 @@ func (i *Ilo) queryNetworkSntp() (networkSntp NetworkSntp, err error) {
 			"IP", i.ip,
 			"Model", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return networkSntp, err
 	}
@@ -170,7 +171,7 @@ func (i *Ilo) queryAccessSettings() (AccessSettings, error) {
 			"Model", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return accessSettings, err
 	}
@@ -182,7 +183,7 @@ func (i *Ilo) queryAccessSettings() (AccessSettings, error) {
 			"IP", i.ip,
 			"Model", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return accessSettings, err
 	}
@@ -204,7 +205,7 @@ func (i *Ilo) queryNetworkIPv4() (NetworkIPv4, error) {
 			"Model", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return networkIPv4, err
 	}
@@ -216,7 +217,7 @@ func (i *Ilo) queryNetworkIPv4() (NetworkIPv4, error) {
 			"IP", i.ip,
 			"Model", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return networkIPv4, err
 	}
@@ -238,7 +239,7 @@ func (i *Ilo) queryPowerRegulator() (PowerRegulator, error) {
 			"Model", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return PowerRegulator{}, err
 	}
@@ -250,7 +251,7 @@ func (i *Ilo) queryPowerRegulator() (PowerRegulator, error) {
 			"IP", i.ip,
 			"Model", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return PowerRegulator{}, err
 	}

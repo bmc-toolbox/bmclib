@@ -6,6 +6,7 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
+	"github.com/bmc-toolbox/bmclib/internal"
 )
 
 // This ensures the compiler errors if this type is missing
@@ -75,7 +76,7 @@ func (c *C7000) Ldap(cfg *cfgresources.Ldap) (err error) {
 			"resource", "Ldap",
 			"IP", c.ip,
 			"Model", c.HardwareType(),
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
@@ -87,7 +88,7 @@ func (c *C7000) Ldap(cfg *cfgresources.Ldap) (err error) {
 			"resource", "Ldap",
 			"IP", c.ip,
 			"Model", c.HardwareType(),
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
@@ -161,7 +162,7 @@ func (c *C7000) applysetLdapInfo4(cfg *cfgresources.Ldap) (err error) {
 			"IP", c.ip,
 			"Model", c.HardwareType(),
 			"statusCode", statusCode,
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
@@ -187,7 +188,7 @@ func (c *C7000) applyEnableLdapAuth(enable bool) (err error) {
 			"IP", c.ip,
 			"Model", c.HardwareType(),
 			"statusCode", statusCode,
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
@@ -227,7 +228,7 @@ func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.L
 					"resource", "Ldap",
 					"IP", c.ip,
 					"Model", c.HardwareType(),
-					"Error", err.Error(),
+					"Error", internal.ErrStringOrEmpty(err),
 				)
 				return
 			}
@@ -252,7 +253,7 @@ func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.L
 				"resource", "Ldap",
 				"IP", c.ip,
 				"Model", c.HardwareType(),
-				"Error", err.Error(),
+				"Error", internal.ErrStringOrEmpty(err),
 			)
 			return
 		}
@@ -265,7 +266,7 @@ func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.L
 				"resource", "Ldap",
 				"IP", c.ip,
 				"Model", c.HardwareType(),
-				"Error", err.Error(),
+				"Error", internal.ErrStringOrEmpty(err),
 			)
 			return
 		}
@@ -278,7 +279,7 @@ func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.L
 				"resource", "Ldap",
 				"IP", c.ip,
 				"Model", c.HardwareType(),
-				"Error", err.Error(),
+				"Error", internal.ErrStringOrEmpty(err),
 			)
 			return
 		}
@@ -385,7 +386,7 @@ func (c *C7000) applyLdapGroupBayACL(role string, group string) (err error) {
 			"IP", c.ip,
 			"Model", c.HardwareType(),
 			"statusCode", statusCode,
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
@@ -470,7 +471,7 @@ func (c *C7000) applyAddLdapGroupBayAccess(group string) (err error) {
 			"IP", c.ip,
 			"Model", c.HardwareType(),
 			"statusCode", statusCode,
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
@@ -600,7 +601,7 @@ func (c *C7000) setUserPassword(user string, password string) (err error) {
 			"IP", c.ip,
 			"Model", c.HardwareType(),
 			"return code", statusCode,
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
@@ -636,7 +637,7 @@ func (c *C7000) setUserACL(user string, role string) (err error) {
 			"IP", c.ip,
 			"Model", c.HardwareType(),
 			"return code", statusCode,
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
@@ -697,7 +698,7 @@ func (c *C7000) applyAddUserBayAccess(user string) (err error) {
 			"IP", c.ip,
 			"Model", c.HardwareType(),
 			"statusCode", statusCode,
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
@@ -766,7 +767,7 @@ func (c *C7000) Ntp(cfg *cfgresources.Ntp) (err error) {
 			"IP", c.ip,
 			"Model", c.HardwareType(),
 			"StatusCode", statusCode,
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
@@ -777,7 +778,7 @@ func (c *C7000) Ntp(cfg *cfgresources.Ntp) (err error) {
 			"step", "applyNtpParams",
 			"IP", c.ip,
 			"Model", c.HardwareType(),
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
@@ -802,7 +803,7 @@ func (c *C7000) applyNtpTimezoneParam(timezone string) (err error) {
 			"step", "applyNtpTimezoneParam",
 			"IP", c.ip,
 			"Model", c.HardwareType(),
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 			"StatusCode", statusCode,
 		)
 		return err
@@ -877,7 +878,7 @@ func (c *C7000) applySyslogServer(server string) {
 			"step", "applySyslogServer",
 			"IP", c.ip,
 			"Model", c.HardwareType(),
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 			"StatusCode", statusCode,
 		)
 		return
@@ -901,7 +902,7 @@ func (c *C7000) applySyslogPort(port int) {
 			"step", "applySyslogPort",
 			"IP", c.ip,
 			"Model", c.HardwareType(),
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 			"StatusCode", statusCode,
 		)
 		return
@@ -926,7 +927,7 @@ func (c *C7000) applySyslogEnabled(enabled bool) {
 			"step", "SetRemoteSyslogEnabled",
 			"IP", c.ip,
 			"Model", c.HardwareType(),
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 			"StatusCode", statusCode,
 		)
 		return

@@ -13,6 +13,7 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/errors"
+	"github.com/bmc-toolbox/bmclib/internal"
 	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/providers/dell"
 	"github.com/go-logr/logr"
@@ -349,7 +350,7 @@ func (m *M1000e) StorageBlades() (storageBlades []*devices.StorageBlade, err err
 					"ip", m.ip,
 					"position", storageBlade.BladePosition,
 					"type", "chassis",
-					"error", err.Error(),
+					"error", internal.ErrStringOrEmpty(err),
 				)
 				continue
 			}
@@ -390,7 +391,7 @@ func (m *M1000e) Blades() (blades []*devices.Blade, err error) {
 			blade.PowerKw = float64(dellBlade.ActualPwrConsump) / 1000
 			temp, err := strconv.Atoi(dellBlade.BladeTemperature)
 			if err != nil {
-				m.log.V(1).Info(err.Error(),
+				m.log.V(1).Info(internal.ErrStringOrEmpty(err),
 					"operation", "connection",
 					"ip", m.ip,
 					"position", blade.BladePosition,
@@ -431,7 +432,7 @@ func (m *M1000e) Blades() (blades []*devices.Blade, err error) {
 			if strings.HasPrefix(blade.BmcAddress, "[") {
 				payload, err := m.get(fmt.Sprintf("blade_status?id=%d&cat=C10&tab=T41&id=P78", blade.BladePosition))
 				if err != nil {
-					m.log.V(1).Info(err.Error(),
+					m.log.V(1).Info(internal.ErrStringOrEmpty(err),
 						"operation", "connection",
 						"ip", m.ip,
 						"position", blade.BladePosition,

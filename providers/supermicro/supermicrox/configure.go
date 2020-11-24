@@ -13,6 +13,7 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
+	"github.com/bmc-toolbox/bmclib/internal"
 	"github.com/bmc-toolbox/bmclib/internal/helper"
 
 	"github.com/google/go-querystring/query"
@@ -83,7 +84,7 @@ func (s *SupermicroX) queryUserAccounts() (userAccounts map[string]int, err erro
 	userAccounts = make(map[string]int)
 	ipmi, err := s.query("CONFIG_INFO.XML=(0,0)")
 	if err != nil {
-		s.log.V(1).Info("error querying user accounts", "error", err.Error())
+		s.log.V(1).Info("error querying user accounts", "error", internal.ErrStringOrEmpty(err))
 		return userAccounts, err
 	}
 
@@ -106,7 +107,7 @@ func (s *SupermicroX) User(users []*cfgresources.User) (err error) {
 	currentUsers, err := s.queryUserAccounts()
 	if err != nil {
 		msg := "Unable to query current user accounts."
-		s.log.V(1).Info(msg, "ip", s.ip, "model", s.HardwareType(), "step", helper.WhosCalling(), "error", err.Error())
+		s.log.V(1).Info(msg, "ip", s.ip, "model", s.HardwareType(), "step", helper.WhosCalling(), "error", internal.ErrStringOrEmpty(err))
 		return errors.New(msg)
 	}
 
@@ -169,7 +170,7 @@ func (s *SupermicroX) User(users []*cfgresources.User) (err error) {
 				"endpoint", endpoint,
 				"statusCode", statusCode,
 				"step", helper.WhosCalling(),
-				"error", err.Error())
+				"error", internal.ErrStringOrEmpty(err))
 			return errors.New(msg)
 		}
 
@@ -221,7 +222,7 @@ func (s *SupermicroX) Network(cfg *cfgresources.Network) (reset bool, err error)
 			"endpoint", endpoint,
 			"statusCode", statusCode,
 			"step", helper.WhosCalling(),
-			"error", err.Error())
+			"error", internal.ErrStringOrEmpty(err))
 		return reset, errors.New(msg)
 	}
 
@@ -254,7 +255,7 @@ func (s *SupermicroX) Ntp(cfg *cfgresources.Ntp) (err error) {
 			"step", "applyNtpParams",
 			"model", s.HardwareType(),
 			"declaredTtimezone", cfg.Timezone,
-			"error", err.Error())
+			"error", internal.ErrStringOrEmpty(err))
 		return
 	}
 
@@ -307,7 +308,7 @@ func (s *SupermicroX) Ntp(cfg *cfgresources.Ntp) (err error) {
 			"endpoint", endpoint,
 			"statusCode", statusCode,
 			"step", helper.WhosCalling(),
-			"error", err.Error())
+			"error", internal.ErrStringOrEmpty(err))
 		return errors.New(msg)
 	}
 
@@ -431,7 +432,7 @@ func (s *SupermicroX) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfg
 				"model", s.HardwareType(),
 				"endpoint", endpoint,
 				"statusCode", statusCode,
-				"error", err.Error())
+				"error", internal.ErrStringOrEmpty(err))
 			return errors.New(msg)
 		}
 	}
@@ -493,7 +494,7 @@ func (s *SupermicroX) Syslog(cfg *cfgresources.Syslog) (err error) {
 			"model", s.HardwareType(),
 			"endpoint", endpoint,
 			"statusCode", statusCode,
-			"error", err.Error())
+			"error", internal.ErrStringOrEmpty(err))
 		return errors.New(msg)
 	}
 
@@ -512,7 +513,7 @@ func (s *SupermicroX) Syslog(cfg *cfgresources.Syslog) (err error) {
 			"model", s.HardwareType(),
 			"endpoint", endpoint,
 			"statusCode", statusCode,
-			"error", err.Error())
+			"error", internal.ErrStringOrEmpty(err))
 		return errors.New(msg)
 	}
 
@@ -575,7 +576,7 @@ func (s *SupermicroX) UploadHTTPSCert(cert []byte, certFileName string, key []by
 			"model", s.HardwareType(),
 			"endpoint", endpoint,
 			"statusCode", status,
-			"error", err.Error())
+			"error", internal.ErrStringOrEmpty(err))
 		return false, err
 	}
 
@@ -617,7 +618,7 @@ func (s *SupermicroX) validateSSL() error {
 			"model", s.HardwareType(),
 			"endpoint", endpoint,
 			"statusCode", status,
-			"error", err.Error())
+			"error", internal.ErrStringOrEmpty(err))
 		return err
 	}
 
@@ -642,7 +643,7 @@ func (s *SupermicroX) statusSSL() error {
 			"model", s.HardwareType(),
 			"endpoint", endpoint,
 			"statusCode", status,
-			"error", err.Error())
+			"error", internal.ErrStringOrEmpty(err))
 		return err
 	}
 

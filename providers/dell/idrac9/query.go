@@ -7,6 +7,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/bmc-toolbox/bmclib/internal"
 	"github.com/bmc-toolbox/bmclib/internal/helper"
 )
 
@@ -65,7 +66,7 @@ func (i *IDrac9) queryUsers() (users map[int]User, err error) {
 			"Model", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return users, err
 	}
@@ -78,7 +79,7 @@ func (i *IDrac9) queryUsers() (users map[int]User, err error) {
 			"Model", i.HardwareType(),
 			"resource", "User",
 			"step", "queryUserInfo",
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return users, err
 	}
@@ -97,7 +98,7 @@ func (i *IDrac9) queryLdapRoleGroups() (ldapRoleGroups LdapRoleGroups, err error
 			"Model", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return ldapRoleGroups, err
 	}
@@ -110,7 +111,7 @@ func (i *IDrac9) queryLdapRoleGroups() (ldapRoleGroups LdapRoleGroups, err error
 			"Model", i.HardwareType(),
 			"resource", "User",
 			"step", "queryUserInfo",
-			"Error", err.Error(),
+			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return ldapRoleGroups, err
 	}
