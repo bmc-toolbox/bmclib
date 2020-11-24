@@ -143,7 +143,10 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 // Iterate over iDrac users and adds/removes/modifies user accounts
 // nolint: gocyclo
 func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
-
+	err = i.httpLogin()
+	if err != nil {
+		return err
+	}
 	err = i.validateCfg(cfgUsers)
 	if err != nil {
 		msg := "Config validation failed."
