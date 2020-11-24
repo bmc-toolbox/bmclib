@@ -18,8 +18,8 @@ type Conn struct {
 }
 
 func init() {
-	registry.Register("generic", ProviderName, func(host, user, pass string) (interface{}, error) {
+	registry.Register(ProviderName, "ipmi", func(host, user, pass string) (interface{}, error) {
 		port := "623"
 		return &Conn{Host: host, User: user, Pass: pass, Port: port}, nil
-	}, []string{"power", "userRead"})
+	}, []registry.Feature{registry.FeaturePowerSetting, registry.FeaturePowerState, registry.FeatureUserRead})
 }

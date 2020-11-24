@@ -4,8 +4,23 @@ var (
 	registries Collection
 )
 
+const (
+	// FeaturePowerState represents the powerstate functionality
+	// an implementation will use these when they have implemented
+	// corresponding interface.
+	FeaturePowerState   Feature = "powerstate"
+	FeaturePowerSetting Feature = "powersetting"
+	FeatureUserCreate   Feature = "usercreate"
+	FeatureUserDelete   Feature = "userdelete"
+	FeatureUserUpdate   Feature = "userupdate"
+	FeatureUserRead     Feature = "userread"
+)
+
 // Features holds the features a provider supports
-type Features []string
+type Features []Feature
+
+// Feature represents a single feature available
+type Feature string
 
 // Collection holds a slice of Registry types
 type Collection []*Registry
@@ -22,11 +37,11 @@ type Registry struct {
 }
 
 // Include does the actual work of filtering for specific features
-func (rf Features) Include(features ...string) bool {
+func (rf Features) Include(features ...Feature) bool {
 	if len(features) > len(rf) {
 		return false
 	}
-	fKeys := make(map[string]bool)
+	fKeys := make(map[Feature]bool)
 	for _, v := range rf {
 		fKeys[v] = true
 	}
@@ -39,7 +54,7 @@ func (rf Features) Include(features ...string) bool {
 }
 
 // Supports does the actual work of filtering for specific features
-func (rc Collection) Supports(features ...string) Collection {
+func (rc Collection) Supports(features ...Feature) Collection {
 	supportedRegistries := make(Collection, 0)
 	for _, reg := range rc {
 		if reg.Features.Include(features...) {
@@ -78,7 +93,7 @@ func All() Collection {
 
 // Supports will filter the registry collection for providers that support a specific
 // implemented feature
-func Supports(features ...string) Collection {
+func Supports(features ...Feature) Collection {
 	return All().Supports(features...)
 }
 
@@ -93,7 +108,7 @@ func For(provider string) Collection {
 }
 
 // Register will add a provider with details to the main registryCollection
-func Register(provider, protocol string, initfn InitRegistry, features []string) {
+func Register(provider, protocol string, initfn InitRegistry, features []Feature) {
 	regFeatures := make(Features, len(features))
 	for i, v := range features {
 		regFeatures[i] = v

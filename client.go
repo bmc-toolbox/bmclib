@@ -75,7 +75,7 @@ func (c *Client) AddVendorSpecificToRegistry(ctx context.Context) (err error) {
 	} else {
 		registry.Register("vendor", "vendor", func(host, user, pass string) (interface{}, error) {
 			return vendor, nil
-		}, []string{"power", "userRead"})
+		}, []registry.Feature{registry.FeaturePowerSetting, registry.FeaturePowerState, registry.FeatureUserRead})
 		c.Registry = registry.All()
 	}
 

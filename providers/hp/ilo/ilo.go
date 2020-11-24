@@ -48,18 +48,6 @@ type Ilo struct {
 	log        logr.Logger
 }
 
-func (i *Ilo) Connect(ctx context.Context) (bool, error) {
-	err := i.CheckCredentials()
-	if err != nil {
-		return false, err
-	}
-	return true, nil
-}
-
-func (i *Ilo) Title() string {
-	return BmcType
-}
-
 // New returns a new Ilo ready to be used
 func New(ctx context.Context, host string, username string, password string, log logr.Logger) (*Ilo, error) {
 	loginURL, err := url.Parse(fmt.Sprintf("https://%s/json/login_session", host))
