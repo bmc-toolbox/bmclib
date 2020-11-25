@@ -40,18 +40,6 @@ type IDrac9 struct {
 	log            logr.Logger
 }
 
-func (i *IDrac9) Connect(ctx context.Context) (bool, error) {
-	err := i.CheckCredentials()
-	if err != nil {
-		return false, err
-	}
-	return true, nil
-}
-
-func (i *IDrac9) Title() string {
-	return BMCType
-}
-
 // New returns a new IDrac9 ready to be used
 func New(ctx context.Context, host string, httpHost string, username string, password string, log logr.Logger) (*IDrac9, error) {
 	sshClient, err := sshclient.New(host, username, password)
@@ -60,7 +48,6 @@ func New(ctx context.Context, host string, httpHost string, username string, pas
 	}
 
 	idrac := &IDrac9{ip: httpHost, username: username, password: password, sshClient: sshClient, ctx: ctx, log: log}
-
 	return idrac, nil
 }
 

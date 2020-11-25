@@ -65,7 +65,7 @@ func (s *SupermicroX) IsOn() (status bool, err error) {
 	if err != nil {
 		return status, err
 	}
-	status, err = i.IsOn(s.ctx)
+	status, err = i.IsOn()
 	return status, err
 }
 

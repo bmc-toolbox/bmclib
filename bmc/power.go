@@ -10,6 +10,17 @@ import (
 
 // PowerSetter sets the power state of a BMC
 type PowerSetter interface {
+	// PowerSet sets the power state of a Machine through a BMC.
+	// While the state's accepted are ultimately up to what the implementation
+	// expects, implementations should generally try to provide support for the following
+	// states, modeled after the functionality available in `ipmitool chassis power`.
+	//
+	// "on": Power up chassis. should not error if the machine is already on
+	// "off": Hard powers down chassis. should not error if the machine is already off
+	// "soft": Initiate a soft-shutdown of OS via ACPI.
+	// "reset": soft down and then power on. simulates a reboot from the host OS.
+	// "cycle": hard power down followed by a power on. simulates pressing a power button
+	// to turn the machine off then pressing the button again to turn it on.
 	PowerSet(ctx context.Context, state string) (ok bool, err error)
 }
 

@@ -40,18 +40,6 @@ type SupermicroX struct {
 	log        logr.Logger
 }
 
-func (s *SupermicroX) Connect(ctx context.Context) (bool, error) {
-	err := s.CheckCredentials()
-	if err != nil {
-		return false, err
-	}
-	return true, nil
-}
-
-func (s *SupermicroX) Title() string {
-	return BmcType + X10
-}
-
 // New returns a new SupermicroX instance ready to be used
 func New(ctx context.Context, ip string, username string, password string, log logr.Logger) (sm *SupermicroX, err error) {
 	return &SupermicroX{
