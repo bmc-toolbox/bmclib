@@ -1,6 +1,7 @@
 package supermicrox
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/bmc-toolbox/bmclib/internal/ipmi"
@@ -12,7 +13,7 @@ func (s *SupermicroX) PowerCycle() (status bool, err error) {
 	if err != nil {
 		return status, err
 	}
-	status, err = i.PowerCycle()
+	status, err = i.PowerCycle(context.Background())
 	return status, err
 }
 
@@ -22,7 +23,7 @@ func (s *SupermicroX) PowerCycleBmc() (status bool, err error) {
 	if err != nil {
 		return status, err
 	}
-	status, err = i.PowerCycleBmc()
+	status, err = i.PowerCycleBmc(context.Background())
 	return status, err
 }
 
@@ -32,7 +33,7 @@ func (s *SupermicroX) PowerOn() (status bool, err error) {
 	if err != nil {
 		return status, err
 	}
-	status, err = i.PowerOn()
+	status, err = i.PowerOn(context.Background())
 	return status, err
 }
 
@@ -42,7 +43,7 @@ func (s *SupermicroX) PowerOff() (status bool, err error) {
 	if err != nil {
 		return status, err
 	}
-	status, err = i.PowerOff()
+	status, err = i.PowerOff(context.Background())
 	return status, err
 }
 
@@ -52,11 +53,11 @@ func (s *SupermicroX) PxeOnce() (status bool, err error) {
 	if err != nil {
 		return status, err
 	}
-	_, err = i.PxeOnceEfi()
+	_, err = i.PxeOnceEfi(context.Background())
 	if err != nil {
 		return false, err
 	}
-	return i.PowerCycle()
+	return i.PowerCycle(context.Background())
 }
 
 // IsOn tells if a machine is currently powered on
@@ -65,7 +66,7 @@ func (s *SupermicroX) IsOn() (status bool, err error) {
 	if err != nil {
 		return status, err
 	}
-	status, err = i.IsOn()
+	status, err = i.IsOn(context.Background())
 	return status, err
 }
 

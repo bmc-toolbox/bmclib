@@ -1,6 +1,7 @@
 package ilo
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -76,15 +77,15 @@ func (i *Ilo) PxeOnce() (bool, error) {
 	// PXE using uefi, does't work for some models
 	// directly. It only works if you pxe, powercycle and
 	// power on.
-	if _, err = im.PxeOnceEfi(); err != nil {
+	if _, err = im.PxeOnceEfi(context.Background()); err != nil {
 		return false, err
 	}
 
-	if _, err := im.PowerCycle(); err != nil {
+	if _, err := im.PowerCycle(context.Background()); err != nil {
 		return false, err
 	}
 
-	return im.PowerOnForce()
+	return im.PowerOnForce(context.Background())
 }
 
 // IsOn tells if a machine is currently powered on
