@@ -16,11 +16,11 @@ type Bmc interface {
 
 	CheckCredentials() error
 	Close() error
-	PowerOn() (bool, error)
-	PowerOff() (bool, error)
-	PxeOnce() (bool, error)
-	PowerCycleBmc() (bool, error)
-	PowerCycle() (bool, error)
+	PowerOn() (bool, error)       // PowerSetter
+	PowerOff() (bool, error)      // PowerSetter
+	PxeOnce() (bool, error)       // BootDeviceSetter
+	PowerCycleBmc() (bool, error) // BMCResetter
+	PowerCycle() (bool, error)    // PowerSetter
 	UpdateCredentials(string, string)
 	UpdateFirmware(string, string) (bool, error)
 }
@@ -39,8 +39,8 @@ type BmcCollection interface {
 	Name() (string, error)
 	Nics() ([]*Nic, error)
 	PowerKw() (float64, error)
-	PowerState() (string, error)
-	IsOn() (bool, error)
+	PowerState() (string, error) // PowerStateGetter
+	IsOn() (bool, error)         // PowerStateGetter
 	Serial() (string, error)
 	Status() (string, error)
 	TempC() (int, error)
@@ -66,12 +66,12 @@ type Cmc interface {
 	ChassisSnapshot() (*Chassis, error)
 	CheckCredentials() error
 	Close() error
-	PowerCycle() (bool, error)
+	PowerCycle() (bool, error) // PowerSetter
 	PowerCycleBlade(int) (bool, error)
 	PowerCycleBmcBlade(int) (bool, error)
-	PowerOff() (bool, error)
+	PowerOff() (bool, error) // PowerSetter
 	PowerOffBlade(int) (bool, error)
-	PowerOn() (bool, error)
+	PowerOn() (bool, error) // PowerSetter
 	PowerOnBlade(int) (bool, error)
 	PxeOnceBlade(int) (bool, error)
 	ReseatBlade(int) (bool, error)
@@ -87,7 +87,7 @@ type CmcCollection interface {
 	Version() (string, error)
 	Fans() ([]*Fan, error)
 	IsActive() bool
-	IsOn() (bool, error)
+	IsOn() (bool, error) // PowerStateGetter
 	IsOnBlade(int) (bool, error)
 	Model() (string, error)
 	Name() (string, error)
@@ -120,7 +120,7 @@ type CmcSetup interface {
 // to apply configuration to BMCs.
 type Configure interface {
 	Resources() []string
-	User([]*cfgresources.User) error
+	User([]*cfgresources.User) error // UserCreator, UserUpdater, UserDeleter, UserReader
 	Syslog(*cfgresources.Syslog) error
 	Ntp(*cfgresources.Ntp) error
 	Ldap(*cfgresources.Ldap) error
