@@ -6,9 +6,11 @@ import (
 	"context"
 
 	"github.com/bmc-toolbox/bmclib/bmc"
+	"github.com/bmc-toolbox/bmclib/discover"
 	"github.com/bmc-toolbox/bmclib/logging"
 	"github.com/bmc-toolbox/bmclib/registry"
 	"github.com/go-logr/logr"
+	"github.com/hashicorp/go-multierror"
 	// register providers here
 	//_ "github.com/bmc-toolbox/bmclib/providers/ipmitool"
 )
@@ -59,6 +61,23 @@ func NewClient(host, user, pass string, opts ...Option) *Client {
 	defaultClient.Auth.Pass = pass
 
 	return defaultClient
+}
+
+// DiscoverProviders probes a BMC to discover what providers are compatible
+func (c *Client) DiscoverProviders(ctx context.Context) (err error) {
+	// try discovering and registering a vendor specific provider
+	vendor, scanErr := discover.ScanAndConnect(c.Auth.Host, c.Auth.User, c.Auth.Pass, discover.WithContext(ctx), discover.WithLogger(c.Logger))
+	if scanErr != nil {
+		c.Logger.V(1).Info("no vendor specific controller discovered", "error", scanErr.Error())
+		err = multierror.Append(err, scanErr)
+	} else {
+		registry.Register("vendor", "vendor", func(host, user, pass string) (interface{}, error) {
+			return vendor, nil
+		}, []registry.Feature{})
+		c.Registry = registry.All()
+	}
+
+	return err
 }
 
 // getProviders returns a slice of interfaces for all registered implementations

@@ -12,11 +12,15 @@ func TestBMC(t *testing.T) {
 	t.Skip("needs ipmitool and real ipmi server")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	host := "127.0.0.1"
-	user := "ADMIN"
-	pass := "ADMIN"
+	host := "10.250.29.57"
+	user := "root"
+	pass := "calvin"
 
 	cl := NewClient(host, user, pass, WithLogger(logging.DefaultLogger()))
+	dErr := cl.DiscoverProviders(ctx)
+	if dErr != nil {
+		t.Fatal(dErr)
+	}
 	state, err := cl.GetPowerState(ctx)
 	if err != nil {
 		t.Fatal(err)
