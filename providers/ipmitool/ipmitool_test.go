@@ -14,9 +14,8 @@ func TestPowerState(t *testing.T) {
 		Port: "623",
 		User: "ADMIN",
 		Pass: "ADMIN",
-		Log:  logging.DefaultLogger(),
 	}
-	state, err := i.PowerStateGet(context.Background())
+	state, err := i.PowerStateGet(context.Background(), logging.DefaultLogger())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -32,9 +31,8 @@ func TestPowerSet(t *testing.T) {
 		Port: "623",
 		User: "ADMIN",
 		Pass: "ADMIN",
-		Log:  logging.DefaultLogger(),
 	}
-	state, err := i.PowerSet(context.Background(), "soft")
+	state, err := i.PowerSet(context.Background(), logging.DefaultLogger(), "soft")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,9 +48,8 @@ func TestBootDeviceSet(t *testing.T) {
 		Port: "623",
 		User: "ADMIN",
 		Pass: "ADMIN",
-		Log:  logging.DefaultLogger(),
 	}
-	state, err := i.BootDeviceSet(context.Background(), "disk", false, false)
+	state, err := i.BootDeviceSet(context.Background(), logging.DefaultLogger(), "disk", false, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,9 +65,8 @@ func TestBMCReset(t *testing.T) {
 		Port: "623",
 		User: "ADMIN",
 		Pass: "ADMIN",
-		Log:  logging.DefaultLogger(),
 	}
-	state, err := i.BmcReset(context.Background(), "warm")
+	state, err := i.BmcReset(context.Background(), logging.DefaultLogger(), "warm")
 	if err != nil {
 		t.Fatal(err)
 	}

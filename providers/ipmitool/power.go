@@ -6,10 +6,11 @@ import (
 	"strings"
 
 	"github.com/bmc-toolbox/bmclib/internal/ipmi"
+	"github.com/go-logr/logr"
 )
 
 // PowerStateGet gets the power state of a BMC machine
-func (c *Conn) PowerStateGet(ctx context.Context) (state string, err error) {
+func (c *Conn) PowerStateGet(ctx context.Context, log logr.Logger) (state string, err error) {
 	i, err := ipmi.New(c.User, c.Pass, c.Host+":"+c.Port)
 	if err != nil {
 		return state, err
@@ -18,7 +19,7 @@ func (c *Conn) PowerStateGet(ctx context.Context) (state string, err error) {
 }
 
 // PowerSet sets the power state of a BMC machine
-func (c *Conn) PowerSet(ctx context.Context, state string) (ok bool, err error) {
+func (c *Conn) PowerSet(ctx context.Context, log logr.Logger, state string) (ok bool, err error) {
 	i, err := ipmi.New(c.User, c.Pass, c.Host+":"+c.Port)
 	if err != nil {
 		return ok, err

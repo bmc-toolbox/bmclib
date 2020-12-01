@@ -2,7 +2,6 @@ package ipmitool
 
 import (
 	"github.com/bmc-toolbox/bmclib/registry"
-	"github.com/go-logr/logr"
 )
 
 const (
@@ -18,7 +17,6 @@ type Conn struct {
 	Port string
 	User string
 	Pass string
-	Log  logr.Logger
 }
 
 func init() {
