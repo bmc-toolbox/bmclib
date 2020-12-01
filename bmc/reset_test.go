@@ -5,6 +5,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/bmc-toolbox/bmclib/logging"
+	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/go-multierror"
 )
@@ -14,7 +16,7 @@ type resetTester struct {
 	MakeErrorOut bool
 }
 
-func (r *resetTester) BmcReset(ctx context.Context, resetType string) (ok bool, err error) {
+func (r *resetTester) BmcReset(ctx context.Context, log logr.Logger, resetType string) (ok bool, err error) {
 	if r.MakeErrorOut {
 		return ok, errors.New("bmc reset failed")
 	}
@@ -37,13 +39,13 @@ func TestResetBMC(t *testing.T) {
 		{name: "not ok return", resetType: "warm", want: false, makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("failed to reset BMC"), errors.New("failed to reset BMC")}}},
 		{name: "error", resetType: "cold", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("bmc reset failed"), errors.New("failed to reset BMC")}}},
 	}
-
+	log := logging.DefaultLogger()
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			testImplementation := resetTester{MakeErrorOut: tc.makeErrorOut, MakeNotOK: tc.makeNotOk}
 			expectedResult := tc.want
-			result, err := ResetBMC(context.Background(), tc.resetType, []BMCResetter{&testImplementation})
+			result, err := ResetBMC(context.Background(), log, tc.resetType, []BMCResetter{&testImplementation})
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {
@@ -72,7 +74,7 @@ func TestResetBMCFromInterfaces(t *testing.T) {
 		{name: "success", resetType: "cold", want: true},
 		{name: "no implementations found", resetType: "warm", want: false, badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a BMCResetter implementation: *struct {}"), errors.New("no BMCResetter implementations found")}}},
 	}
-
+	log := logging.DefaultLogger()
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
@@ -85,7 +87,7 @@ func TestResetBMCFromInterfaces(t *testing.T) {
 				generic = []interface{}{&testImplementation}
 			}
 			expectedResult := tc.want
-			result, err := ResetBMCFromInterfaces(context.Background(), tc.resetType, generic)
+			result, err := ResetBMCFromInterfaces(context.Background(), log, tc.resetType, generic)
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {

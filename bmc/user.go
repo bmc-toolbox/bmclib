@@ -5,34 +5,35 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/go-logr/logr"
 	"github.com/hashicorp/go-multierror"
 )
 
 // UserCreator creates a user on a BMC
 type UserCreator interface {
-	UserCreate(ctx context.Context, user, pass, role string) (ok bool, err error)
+	UserCreate(ctx context.Context, log logr.Logger, user, pass, role string) (ok bool, err error)
 }
 
 // UserUpdater updates a user on a BMC
 type UserUpdater interface {
-	UserUpdate(ctx context.Context, user, pass, role string) (ok bool, err error)
+	UserUpdate(ctx context.Context, log logr.Logger, user, pass, role string) (ok bool, err error)
 }
 
 // UserDeleter deletes a user on a BMC
 type UserDeleter interface {
-	UserDelete(ctx context.Context, user string) (ok bool, err error)
+	UserDelete(ctx context.Context, log logr.Logger, user string) (ok bool, err error)
 }
 
 // UserReader lists all users on a BMC
 type UserReader interface {
-	UserRead(ctx context.Context) (users []map[string]string, err error)
+	UserRead(ctx context.Context, log logr.Logger) (users []map[string]string, err error)
 }
 
 // CreateUser creates a user using the passed in implementation
-func CreateUser(ctx context.Context, user, pass, role string, u []UserCreator) (ok bool, err error) {
+func CreateUser(ctx context.Context, log logr.Logger, user, pass, role string, u []UserCreator) (ok bool, err error) {
 	for _, elem := range u {
 		if elem != nil {
-			ok, createErr := elem.UserCreate(ctx, user, pass, role)
+			ok, createErr := elem.UserCreate(ctx, log, user, pass, role)
 			if createErr != nil {
 				err = multierror.Append(err, createErr)
 				continue
@@ -48,7 +49,7 @@ func CreateUser(ctx context.Context, user, pass, role string, u []UserCreator) (
 }
 
 // CreateUserFromInterfaces pass through to library function
-func CreateUserFromInterfaces(ctx context.Context, user, pass, role string, generic []interface{}) (ok bool, err error) {
+func CreateUserFromInterfaces(ctx context.Context, log logr.Logger, user, pass, role string, generic []interface{}) (ok bool, err error) {
 	var userCreators []UserCreator
 	for _, elem := range generic {
 		switch u := elem.(type) {
@@ -62,14 +63,14 @@ func CreateUserFromInterfaces(ctx context.Context, user, pass, role string, gene
 	if len(userCreators) == 0 {
 		return ok, multierror.Append(err, errors.New("no UserCreator implementations found"))
 	}
-	return CreateUser(ctx, user, pass, role, userCreators)
+	return CreateUser(ctx, log, user, pass, role, userCreators)
 }
 
 // UpdateUser updates a user's settings
-func UpdateUser(ctx context.Context, user, pass, role string, u []UserUpdater) (ok bool, err error) {
+func UpdateUser(ctx context.Context, log logr.Logger, user, pass, role string, u []UserUpdater) (ok bool, err error) {
 	for _, elem := range u {
 		if elem != nil {
-			ok, UpdateErr := elem.UserUpdate(ctx, user, pass, role)
+			ok, UpdateErr := elem.UserUpdate(ctx, log, user, pass, role)
 			if UpdateErr != nil {
 				err = multierror.Append(err, UpdateErr)
 				continue
@@ -85,7 +86,7 @@ func UpdateUser(ctx context.Context, user, pass, role string, u []UserUpdater) (
 }
 
 // UpdateUserFromInterfaces pass through to library function
-func UpdateUserFromInterfaces(ctx context.Context, user, pass, role string, generic []interface{}) (ok bool, err error) {
+func UpdateUserFromInterfaces(ctx context.Context, log logr.Logger, user, pass, role string, generic []interface{}) (ok bool, err error) {
 	var userUpdaters []UserUpdater
 	for _, elem := range generic {
 		switch u := elem.(type) {
@@ -99,14 +100,14 @@ func UpdateUserFromInterfaces(ctx context.Context, user, pass, role string, gene
 	if len(userUpdaters) == 0 {
 		return ok, multierror.Append(err, errors.New("no UserUpdater implementations found"))
 	}
-	return UpdateUser(ctx, user, pass, role, userUpdaters)
+	return UpdateUser(ctx, log, user, pass, role, userUpdaters)
 }
 
 // DeleteUser deletes a user from a BMC
-func DeleteUser(ctx context.Context, user string, u []UserDeleter) (ok bool, err error) {
+func DeleteUser(ctx context.Context, log logr.Logger, user string, u []UserDeleter) (ok bool, err error) {
 	for _, elem := range u {
 		if elem != nil {
-			ok, deleteErr := elem.UserDelete(ctx, user)
+			ok, deleteErr := elem.UserDelete(ctx, log, user)
 			if deleteErr != nil {
 				err = multierror.Append(err, deleteErr)
 				continue
@@ -122,7 +123,7 @@ func DeleteUser(ctx context.Context, user string, u []UserDeleter) (ok bool, err
 }
 
 // DeleteUserFromInterfaces pass through to library function
-func DeleteUserFromInterfaces(ctx context.Context, user string, generic []interface{}) (ok bool, err error) {
+func DeleteUserFromInterfaces(ctx context.Context, log logr.Logger, user string, generic []interface{}) (ok bool, err error) {
 	var userDeleters []UserDeleter
 	for _, elem := range generic {
 		switch u := elem.(type) {
@@ -136,14 +137,14 @@ func DeleteUserFromInterfaces(ctx context.Context, user string, generic []interf
 	if len(userDeleters) == 0 {
 		return ok, multierror.Append(err, errors.New("no UserDeleter implementations found"))
 	}
-	return DeleteUser(ctx, user, userDeleters)
+	return DeleteUser(ctx, log, user, userDeleters)
 }
 
 // ReadUsers returns all users from a BMC
-func ReadUsers(ctx context.Context, u []UserReader) (users []map[string]string, err error) {
+func ReadUsers(ctx context.Context, log logr.Logger, u []UserReader) (users []map[string]string, err error) {
 	for _, elem := range u {
 		if elem != nil {
-			users, readErr := elem.UserRead(ctx)
+			users, readErr := elem.UserRead(ctx, log)
 			if readErr != nil {
 				err = multierror.Append(err, readErr)
 				continue
@@ -155,7 +156,7 @@ func ReadUsers(ctx context.Context, u []UserReader) (users []map[string]string, 
 }
 
 // ReadUsersFromInterfaces pass through to library function
-func ReadUsersFromInterfaces(ctx context.Context, generic []interface{}) (users []map[string]string, err error) {
+func ReadUsersFromInterfaces(ctx context.Context, log logr.Logger, generic []interface{}) (users []map[string]string, err error) {
 	var userReaders []UserReader
 	for _, elem := range generic {
 		switch u := elem.(type) {
@@ -169,5 +170,5 @@ func ReadUsersFromInterfaces(ctx context.Context, generic []interface{}) (users 
 	if len(userReaders) == 0 {
 		return users, multierror.Append(err, errors.New("no UserReader implementations found"))
 	}
-	return ReadUsers(ctx, userReaders)
+	return ReadUsers(ctx, log, userReaders)
 }

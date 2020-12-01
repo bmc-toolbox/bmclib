@@ -16,18 +16,19 @@ func TestBMC(t *testing.T) {
 	user := "ADMIN"
 	pass := "ADMIN"
 
-	cl := NewClient(host, user, pass, WithLogger(logging.DefaultLogger()))
-	dErr := cl.DiscoverProviders(ctx)
+	log := logging.DefaultLogger()
+	cl := NewClient(host, user, pass)
+	dErr := cl.DiscoverProviders(ctx, log)
 	if dErr != nil {
 		t.Fatal(dErr)
 	}
-	state, err := cl.GetPowerState(ctx)
+	state, err := cl.GetPowerState(ctx, log)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log(state)
 
-	users, err := cl.ReadUsers(ctx)
+	users, err := cl.ReadUsers(ctx, log)
 	if err != nil {
 		t.Fatal(err)
 	}

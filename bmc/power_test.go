@@ -5,6 +5,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/bmc-toolbox/bmclib/logging"
+	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/go-multierror"
 )
@@ -14,7 +16,7 @@ type powerTester struct {
 	MakeErrorOut bool
 }
 
-func (p *powerTester) PowerSet(ctx context.Context, state string) (ok bool, err error) {
+func (p *powerTester) PowerSet(ctx context.Context, log logr.Logger, state string) (ok bool, err error) {
 	if p.MakeErrorOut {
 		return ok, errors.New("power set failed")
 	}
@@ -24,7 +26,7 @@ func (p *powerTester) PowerSet(ctx context.Context, state string) (ok bool, err 
 	return true, nil
 }
 
-func (p *powerTester) PowerStateGet(ctx context.Context) (state string, err error) {
+func (p *powerTester) PowerStateGet(ctx context.Context, log logr.Logger) (state string, err error) {
 	if p.MakeErrorOut {
 		return state, errors.New("power state get failed")
 	}
@@ -44,13 +46,13 @@ func TestSetPowerState(t *testing.T) {
 		{name: "not ok return", state: "off", want: false, makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("failed to set power state"), errors.New("failed to set power state")}}},
 		{name: "error", state: "off", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("power set failed"), errors.New("failed to set power state")}}},
 	}
-
+	log := logging.DefaultLogger()
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			testImplementation := powerTester{MakeErrorOut: tc.makeErrorOut, MakeNotOK: tc.makeNotOk}
 			expectedResult := tc.want
-			result, err := SetPowerState(context.Background(), tc.state, []PowerSetter{&testImplementation})
+			result, err := SetPowerState(context.Background(), log, tc.state, []PowerSetter{&testImplementation})
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {
@@ -79,7 +81,7 @@ func TestSetPowerStateFromInterfaces(t *testing.T) {
 		{name: "success", state: "off", want: true},
 		{name: "no implementations found", state: "on", want: false, badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a PowerSetter implementation: *struct {}"), errors.New("no PowerSetter implementations found")}}},
 	}
-
+	log := logging.DefaultLogger()
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
@@ -92,7 +94,7 @@ func TestSetPowerStateFromInterfaces(t *testing.T) {
 				generic = []interface{}{&testImplementation}
 			}
 			expectedResult := tc.want
-			result, err := SetPowerStateFromInterfaces(context.Background(), tc.state, generic)
+			result, err := SetPowerStateFromInterfaces(context.Background(), log, tc.state, generic)
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {
@@ -120,13 +122,13 @@ func TestGetPowerState(t *testing.T) {
 		{name: "success", state: "on", err: nil},
 		{name: "failure", state: "on", makeFail: true, err: &multierror.Error{Errors: []error{errors.New("power state get failed"), errors.New("failed to get power state")}}},
 	}
-
+	log := logging.DefaultLogger()
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			testImplementation := powerTester{MakeErrorOut: tc.makeFail}
 			expectedResult := tc.state
-			result, err := GetPowerState(context.Background(), []PowerStateGetter{&testImplementation})
+			result, err := GetPowerState(context.Background(), log, []PowerStateGetter{&testImplementation})
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {
@@ -155,7 +157,7 @@ func TestGetPowerStateFromInterfaces(t *testing.T) {
 		{name: "success", state: "on", want: "on"},
 		{name: "no implementations found", state: "on", want: "", badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a PowerStateGetter implementation: *struct {}"), errors.New("no PowerStateGetter implementations found")}}},
 	}
-
+	log := logging.DefaultLogger()
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
@@ -168,7 +170,7 @@ func TestGetPowerStateFromInterfaces(t *testing.T) {
 				generic = []interface{}{&testImplementation}
 			}
 			expectedResult := tc.want
-			result, err := GetPowerStateFromInterfaces(context.Background(), generic)
+			result, err := GetPowerStateFromInterfaces(context.Background(), log, generic)
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {

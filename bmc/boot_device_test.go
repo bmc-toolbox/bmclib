@@ -5,6 +5,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/bmc-toolbox/bmclib/logging"
+	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/go-multierror"
 )
@@ -14,7 +16,7 @@ type bootDeviceTester struct {
 	MakeErrorOut bool
 }
 
-func (b *bootDeviceTester) BootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
+func (b *bootDeviceTester) BootDeviceSet(ctx context.Context, log logr.Logger, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
 	if b.MakeErrorOut {
 		return ok, errors.New("boot device set failed")
 	}
@@ -37,13 +39,13 @@ func TestSetBootDevice(t *testing.T) {
 		{name: "not ok return", bootDevice: "pxe", want: false, makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("failed to set boot device"), errors.New("failed to set boot device")}}},
 		{name: "error", bootDevice: "pxe", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("boot device set failed"), errors.New("failed to set boot device")}}},
 	}
-
+	log := logging.DefaultLogger()
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			testImplementation := bootDeviceTester{MakeErrorOut: tc.makeErrorOut, MakeNotOK: tc.makeNotOk}
 			expectedResult := tc.want
-			result, err := SetBootDevice(context.Background(), tc.bootDevice, false, false, []BootDeviceSetter{&testImplementation})
+			result, err := SetBootDevice(context.Background(), log, tc.bootDevice, false, false, []BootDeviceSetter{&testImplementation})
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {
@@ -72,7 +74,7 @@ func TestSetBootDeviceFromInterfaces(t *testing.T) {
 		{name: "success", bootDevice: "pxe", want: true},
 		{name: "no implementations found", bootDevice: "pxe", want: false, badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a BootDeviceSetter implementation: *struct {}"), errors.New("no BootDeviceSetter implementations found")}}},
 	}
-
+	log := logging.DefaultLogger()
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
@@ -85,7 +87,7 @@ func TestSetBootDeviceFromInterfaces(t *testing.T) {
 				generic = []interface{}{&testImplementation}
 			}
 			expectedResult := tc.want
-			result, err := SetBootDeviceFromInterfaces(context.Background(), tc.bootDevice, false, false, generic)
+			result, err := SetBootDeviceFromInterfaces(context.Background(), log, tc.bootDevice, false, false, generic)
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {

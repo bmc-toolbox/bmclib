@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/go-logr/logr"
 	"github.com/hashicorp/go-multierror"
 )
 
@@ -21,19 +22,19 @@ type PowerSetter interface {
 	// "reset": soft down and then power on. simulates a reboot from the host OS.
 	// "cycle": hard power down followed by a power on. simulates pressing a power button
 	// to turn the machine off then pressing the button again to turn it on.
-	PowerSet(ctx context.Context, state string) (ok bool, err error)
+	PowerSet(ctx context.Context, log logr.Logger, state string) (ok bool, err error)
 }
 
 // PowerStateGetter gets the power state of a BMC
 type PowerStateGetter interface {
-	PowerStateGet(ctx context.Context) (state string, err error)
+	PowerStateGet(ctx context.Context, log logr.Logger) (state string, err error)
 }
 
 // SetPowerState sets the power state for a BMC, trying all interface implementations passed in
-func SetPowerState(ctx context.Context, state string, p []PowerSetter) (ok bool, err error) {
+func SetPowerState(ctx context.Context, log logr.Logger, state string, p []PowerSetter) (ok bool, err error) {
 	for _, elem := range p {
 		if elem != nil {
-			ok, setErr := elem.PowerSet(ctx, state)
+			ok, setErr := elem.PowerSet(ctx, log, state)
 			if setErr != nil {
 				err = multierror.Append(err, setErr)
 				continue
@@ -49,7 +50,7 @@ func SetPowerState(ctx context.Context, state string, p []PowerSetter) (ok bool,
 }
 
 // SetPowerStateFromInterfaces pass through to library function
-func SetPowerStateFromInterfaces(ctx context.Context, state string, generic []interface{}) (ok bool, err error) {
+func SetPowerStateFromInterfaces(ctx context.Context, log logr.Logger, state string, generic []interface{}) (ok bool, err error) {
 	var powerSetter []PowerSetter
 	for _, elem := range generic {
 		switch p := elem.(type) {
@@ -63,14 +64,14 @@ func SetPowerStateFromInterfaces(ctx context.Context, state string, generic []in
 	if len(powerSetter) == 0 {
 		return ok, multierror.Append(err, errors.New("no PowerSetter implementations found"))
 	}
-	return SetPowerState(ctx, state, powerSetter)
+	return SetPowerState(ctx, log, state, powerSetter)
 }
 
 // GetPowerState sets the power state for a BMC, trying all interface implementations passed in
-func GetPowerState(ctx context.Context, p []PowerStateGetter) (state string, err error) {
+func GetPowerState(ctx context.Context, log logr.Logger, p []PowerStateGetter) (state string, err error) {
 	for _, elem := range p {
 		if elem != nil {
-			state, stateErr := elem.PowerStateGet(ctx)
+			state, stateErr := elem.PowerStateGet(ctx, log)
 			if stateErr != nil {
 				err = multierror.Append(err, stateErr)
 				continue
@@ -83,10 +84,9 @@ func GetPowerState(ctx context.Context, p []PowerStateGetter) (state string, err
 }
 
 // GetPowerStateFromInterfaces pass through to library function
-func GetPowerStateFromInterfaces(ctx context.Context, generic []interface{}) (state string, err error) {
+func GetPowerStateFromInterfaces(ctx context.Context, log logr.Logger, generic []interface{}) (state string, err error) {
 	var powerStateGetter []PowerStateGetter
 	for _, elem := range generic {
-
 		switch p := elem.(type) {
 		case PowerStateGetter:
 			powerStateGetter = append(powerStateGetter, p)
@@ -98,5 +98,5 @@ func GetPowerStateFromInterfaces(ctx context.Context, generic []interface{}) (st
 	if len(powerStateGetter) == 0 {
 		return state, multierror.Append(err, errors.New("no PowerStateGetter implementations found"))
 	}
-	return GetPowerState(ctx, powerStateGetter)
+	return GetPowerState(ctx, log, powerStateGetter)
 }

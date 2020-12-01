@@ -5,19 +5,20 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/go-logr/logr"
 	"github.com/hashicorp/go-multierror"
 )
 
 // BootDeviceSetter sets the next boot device for a machine
 type BootDeviceSetter interface {
-	BootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error)
+	BootDeviceSet(ctx context.Context, log logr.Logger, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error)
 }
 
 // SetBootDevice sets the boot device. Next boot only unless setPersistent=true
-func SetBootDevice(ctx context.Context, bootDevice string, setPersistent, efiBoot bool, b []BootDeviceSetter) (ok bool, err error) {
+func SetBootDevice(ctx context.Context, log logr.Logger, bootDevice string, setPersistent, efiBoot bool, b []BootDeviceSetter) (ok bool, err error) {
 	for _, elem := range b {
 		if elem != nil {
-			ok, setErr := elem.BootDeviceSet(ctx, bootDevice, setPersistent, efiBoot)
+			ok, setErr := elem.BootDeviceSet(ctx, log, bootDevice, setPersistent, efiBoot)
 			if setErr != nil {
 				err = multierror.Append(err, setErr)
 				continue
@@ -33,7 +34,7 @@ func SetBootDevice(ctx context.Context, bootDevice string, setPersistent, efiBoo
 }
 
 // SetBootDeviceFromInterfaces pass through to library function
-func SetBootDeviceFromInterfaces(ctx context.Context, bootDevice string, setPersistent, efiBoot bool, generic []interface{}) (ok bool, err error) {
+func SetBootDeviceFromInterfaces(ctx context.Context, log logr.Logger, bootDevice string, setPersistent, efiBoot bool, generic []interface{}) (ok bool, err error) {
 	var bdSetters []BootDeviceSetter
 	for _, elem := range generic {
 		switch p := elem.(type) {
@@ -47,5 +48,5 @@ func SetBootDeviceFromInterfaces(ctx context.Context, bootDevice string, setPers
 	if len(bdSetters) == 0 {
 		return ok, multierror.Append(err, errors.New("no BootDeviceSetter implementations found"))
 	}
-	return SetBootDevice(ctx, bootDevice, setPersistent, efiBoot, bdSetters)
+	return SetBootDevice(ctx, log, bootDevice, setPersistent, efiBoot, bdSetters)
 }

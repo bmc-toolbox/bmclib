@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/go-logr/logr"
 	"github.com/hashicorp/go-multierror"
 )
 
@@ -12,14 +13,14 @@ import (
 // resetType: "warm" resets the management console without rebooting the BMC
 // resetType: "cold" reboots the BMC
 type BMCResetter interface {
-	BmcReset(ctx context.Context, resetType string) (ok bool, err error)
+	BmcReset(ctx context.Context, log logr.Logger, resetType string) (ok bool, err error)
 }
 
 // ResetBMC tries all implementations for a success BMC reset
-func ResetBMC(ctx context.Context, resetType string, b []BMCResetter) (ok bool, err error) {
+func ResetBMC(ctx context.Context, log logr.Logger, resetType string, b []BMCResetter) (ok bool, err error) {
 	for _, elem := range b {
 		if elem != nil {
-			ok, setErr := elem.BmcReset(ctx, resetType)
+			ok, setErr := elem.BmcReset(ctx, log, resetType)
 			if setErr != nil {
 				err = multierror.Append(err, setErr)
 				continue
@@ -35,7 +36,7 @@ func ResetBMC(ctx context.Context, resetType string, b []BMCResetter) (ok bool, 
 }
 
 // ResetBMCFromInterfaces pass through to library function
-func ResetBMCFromInterfaces(ctx context.Context, resetType string, generic []interface{}) (ok bool, err error) {
+func ResetBMCFromInterfaces(ctx context.Context, log logr.Logger, resetType string, generic []interface{}) (ok bool, err error) {
 	var bmcSetters []BMCResetter
 	for _, elem := range generic {
 		switch p := elem.(type) {
@@ -49,5 +50,5 @@ func ResetBMCFromInterfaces(ctx context.Context, resetType string, generic []int
 	if len(bmcSetters) == 0 {
 		return ok, multierror.Append(err, errors.New("no BMCResetter implementations found"))
 	}
-	return ResetBMC(ctx, resetType, bmcSetters)
+	return ResetBMC(ctx, log, resetType, bmcSetters)
 }
