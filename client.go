@@ -11,8 +11,9 @@ import (
 	"github.com/bmc-toolbox/bmclib/registry"
 	"github.com/go-logr/logr"
 	"github.com/hashicorp/go-multierror"
+
 	// register providers here
-	//_ "github.com/bmc-toolbox/bmclib/providers/ipmitool"
+	_ "github.com/bmc-toolbox/bmclib/providers/ipmitool"
 )
 
 // Client for BMC interactions
