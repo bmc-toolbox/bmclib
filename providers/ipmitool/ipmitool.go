@@ -22,8 +22,8 @@ type Conn struct {
 }
 
 func init() {
-	registry.Register(ProviderName, ProviderProtocol, func(host, user, pass string) (interface{}, error) {
-		return &Conn{Host: host, User: user, Pass: pass, Port: "623"}, nil
+	registry.Register(ProviderName, ProviderProtocol, func(host, port, user, pass string) (interface{}, error) {
+		return &Conn{Host: host, User: user, Pass: pass, Port: port}, nil
 	}, []registry.Feature{
 		registry.FeaturePowerSet,
 		registry.FeaturePowerState,
