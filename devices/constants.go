@@ -16,6 +16,8 @@ const (
 	Cloudline = "Cloudline"
 	// Quanta is the contant to identify Quanta hardware
 	Quanta = "Quanta"
+
+	OpenBmc = "OpenBMC"
 	// Common is the constant of thinks we could use across multiple vendors
 	Common = "Common"
 

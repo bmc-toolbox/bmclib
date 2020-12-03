@@ -19,6 +19,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/providers/hp"
 	"github.com/bmc-toolbox/bmclib/providers/hp/c7000"
 	"github.com/bmc-toolbox/bmclib/providers/hp/ilo"
+	"github.com/bmc-toolbox/bmclib/providers/openbmc"
 	"github.com/bmc-toolbox/bmclib/providers/supermicro/supermicrox"
 	"github.com/bmc-toolbox/bmclib/providers/supermicro/supermicrox11"
 	"github.com/go-logr/logr"
@@ -287,6 +288,28 @@ func (p *Probe) quanta(ctx context.Context, log logr.Logger) (bmcConnection inte
 	if resp.StatusCode == 200 && bytes.Contains(payload, []byte("Quanta")) {
 		log.V(1).Info("step", "ScanAndConnect", "host", p.host, "vendor", string(devices.Quanta), "msg", "it's a quanta")
 		return bmcConnection, errors.NewErrUnsupportedHardware("quanta hardware not supported")
+	}
+
+	return bmcConnection, errors.ErrDeviceNotMatched
+}
+
+func (p *Probe) openBmc(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {
+	resp, err := p.client.Get(fmt.Sprintf("https://%s/", p.host))
+	if err != nil {
+		return bmcConnection, err
+	}
+
+	defer resp.Body.Close()
+	defer io.Copy(ioutil.Discard, resp.Body) // nolint
+
+	payload, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return bmcConnection, err
+	}
+
+	if resp.StatusCode == 200 && bytes.Contains(payload, []byte("OpenBMC")) {
+		log.V(1).Info("step", "ScanAndConnect", "host", p.host, "vendor", string(devices.OpenBmc), "msg", "it's obmc")
+		return openbmc.New(ctx, p.host, p.username, p.password, log)
 	}
 
 	return bmcConnection, errors.ErrDeviceNotMatched
