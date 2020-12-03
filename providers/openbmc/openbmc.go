@@ -4,13 +4,17 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
+	"net/http/httputil"
 	"time"
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
+	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 
 	"github.com/go-logr/logr"
 )
@@ -22,6 +26,37 @@ type OpenBmc struct {
 	httpClient *http.Client
 	ctx        context.Context
 	log        logr.Logger
+}
+
+func (b *OpenBmc) http_get(endpoint string) (payload []byte, err error) {
+	url := fmt.Sprintf("https://%s:%s@%s/%s", b.username, b.password, b.ip, endpoint)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return payload, err
+	}
+
+	reqDump, _ := httputil.DumpRequestOut(req, true)
+	b.log.V(2).Info("requestTrace", "requestDump", string(reqDump), "url", url)
+
+	resp, err := b.httpClient.Do(req)
+	if err != nil {
+		return payload, err
+	}
+	defer resp.Body.Close()
+
+	respDump, _ := httputil.DumpResponse(resp, true)
+	b.log.V(2).Info("responseTRace", "responseDump", string(respDump))
+
+	payload, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return payload, err
+	}
+
+	return payload, err
+}
+
+func (b *OpenBmc) redfish_get(endpoint string) (payload []byte, err error) {
+	return b.http_get("redfish/v1/" + endpoint)
 }
 
 func (b *OpenBmc) Bios(cfg *cfgresources.Bios) (err error) {
@@ -75,7 +110,7 @@ func (b *OpenBmc) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, e
 }
 
 func (b *OpenBmc) HardwareType() (model string) {
-	return model
+	return "OpenBMC" // FIXME: what's this supposed to mean?
 }
 
 func (b *OpenBmc) IsBlade() (isBlade bool, err error) {
@@ -99,11 +134,45 @@ func (b *OpenBmc) License() (name string, licType string, err error) {
 }
 
 func (b *OpenBmc) Memory() (mem int, err error) {
-	return mem, err
+	type Memory struct {
+		TotalSystemMemoryGiB int `json:"TotalSystemMemoryGiB"`
+	}
+
+	type OBmcSystemMemorySummary struct {
+		MemorySummary Memory `json:"MemorySummary"`
+	}
+
+	data, err := b.redfish_get("Systems/system")
+	if err != nil {
+		return mem, err
+	}
+
+	memsum := &OBmcSystemMemorySummary{}
+	err = json.Unmarshal(data, memsum)
+	if err != nil {
+		return mem, err
+	}
+
+	return memsum.MemorySummary.TotalSystemMemoryGiB * 1024, err
 }
 
 func (b *OpenBmc) Model() (model string, err error) {
-	return model, err
+	type OBmcSystemModel struct {
+		Model string `json:"Model"`
+	}
+
+	data, err := b.redfish_get("Systems/system")
+	if err != nil {
+		return model, err
+	}
+
+	mod := &OBmcSystemModel{}
+	err = json.Unmarshal(data, mod)
+	if err != nil {
+		return model, err
+	}
+
+	return mod.Model, err
 }
 
 func (b *OpenBmc) Name() (name string, err error) {
@@ -147,7 +216,22 @@ func (b *OpenBmc) PowerOff() (status bool, err error) {
 }
 
 func (b *OpenBmc) PowerState() (state string, err error) {
-	return state, err
+	type OBmcSystemPowerState struct {
+		PowerState string `json:"PowerState"`
+	}
+
+	data, err := b.redfish_get("Systems/system")
+	if err != nil {
+		return state, err
+	}
+
+	ps := &OBmcSystemPowerState{}
+	err = json.Unmarshal(data, ps)
+	if err != nil {
+		return state, err
+	}
+
+	return ps.PowerState, err
 }
 
 func (b *OpenBmc) PxeOnce() (status bool, err error) {
@@ -163,7 +247,22 @@ func (b *OpenBmc) Screenshot() (response []byte, extension string, err error) {
 }
 
 func (b *OpenBmc) Serial() (serial string, err error) {
-	return serial, err
+	type OBmcSystemSerial struct {
+		SerialNumber string `json:"SerialNumber"`
+	}
+
+	data, err := b.redfish_get("Systems/system")
+	if err != nil {
+		return serial, err
+	}
+
+	ser := &OBmcSystemSerial{}
+	err = json.Unmarshal(data, ser)
+	if err != nil {
+		return serial, err
+	}
+
+	return ser.SerialNumber, err
 }
 
 func (b *OpenBmc) ServerSnapshot() (server interface{}, err error) {
@@ -179,7 +278,26 @@ func (b *OpenBmc) Slot() (slot int, err error) {
 }
 
 func (b *OpenBmc) Status() (health string, err error) {
-	return health, err
+	type StatusHealth struct {
+		Health string `json:"Health"`
+	}
+
+	type OBmcSystemStatus struct {
+		Status StatusHealth `json:"Status"`
+	}
+
+	data, err := b.redfish_get("Systems/system")
+	if err != nil {
+		return health, err
+	}
+
+	stat := &OBmcSystemStatus{}
+	err = json.Unmarshal(data, stat)
+	if err != nil {
+		return health, err
+	}
+
+	return stat.Status.Health, err
 }
 
 func (b *OpenBmc) Syslog(cfg *cfgresources.Syslog) (err error) {
@@ -216,12 +334,17 @@ func (b *OpenBmc) Version() (bmcVersion string, err error) {
 }
 
 func New(ctx context.Context, ip string, username string, password string, log logr.Logger) (obmc *OpenBmc, err error) {
-	var _ devices.Bmc = &OpenBmc{}
+	client, err := httpclient.Build()
+	if err != nil {
+		return obmc, err
+	}
+
 	return &OpenBmc{
-		ip:       ip,
-		username: username,
-		password: password,
-		ctx:      ctx,
-		log:      log,
+		ip:         ip,
+		username:   username,
+		password:   password,
+		httpClient: client,
+		ctx:        ctx,
+		log:        log,
 	}, err
 }
