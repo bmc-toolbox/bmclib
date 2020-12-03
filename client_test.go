@@ -13,10 +13,11 @@ func TestBMC(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	host := "127.0.0.1"
+	port := "623"
 	user := "ADMIN"
 	pass := "ADMIN"
 
-	cl := NewClient(host, user, pass, WithLogger(logging.DefaultLogger()))
+	cl := NewClient(host, port, user, pass, WithLogger(logging.DefaultLogger()))
 	dErr := cl.DiscoverProviders(ctx)
 	if dErr != nil {
 		t.Fatal(dErr)

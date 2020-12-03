@@ -45,7 +45,7 @@ func WithRegistry(registry registry.Collection) Option {
 }
 
 // NewClient returns a new Client struct
-func NewClient(host, user, pass string, opts ...Option) *Client {
+func NewClient(host, port, user, pass string, opts ...Option) *Client {
 	var (
 		defaultLogger = logging.DefaultLogger()
 		defaultClient = &Client{
@@ -58,6 +58,7 @@ func NewClient(host, user, pass string, opts ...Option) *Client {
 	}
 
 	defaultClient.Auth.Host = host
+	defaultClient.Auth.Port = port
 	defaultClient.Auth.User = user
 	defaultClient.Auth.Pass = pass
 
@@ -72,7 +73,7 @@ func (c *Client) DiscoverProviders(ctx context.Context) (err error) {
 		c.Logger.V(1).Info("no vendor specific controller discovered", "error", scanErr.Error())
 		err = multierror.Append(err, scanErr)
 	} else {
-		registry.Register("vendor", "vendor", func(host, user, pass string) (interface{}, error) {
+		registry.Register("vendor", "vendor", func(host, port, user, pass string) (interface{}, error) {
 			return vendor, nil
 		}, []registry.Feature{})
 		c.Registry = registry.All()
@@ -85,7 +86,7 @@ func (c *Client) DiscoverProviders(ctx context.Context) (err error) {
 func (c *Client) getProviders() []interface{} {
 	var results []interface{}
 	for _, reg := range c.Registry {
-		i, _ := reg.InitFn(c.Auth.Host, c.Auth.User, c.Auth.Pass)
+		i, _ := reg.InitFn(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass)
 		results = append(results, i)
 	}
 	return results

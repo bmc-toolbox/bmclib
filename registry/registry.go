@@ -28,7 +28,7 @@ type Feature string
 type Collection []*Registry
 
 // InitRegistry function for setting connection details of a provider
-type InitRegistry func(host, user, pass string) (interface{}, error)
+type InitRegistry func(host, port, user, pass string) (interface{}, error)
 
 // Registry holds the info about a provider
 type Registry struct {
