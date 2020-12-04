@@ -84,12 +84,44 @@ func (b *OpenBmc) http_post(endpoint string, data string) (response []byte, err 
 	return ioutil.ReadAll(resp.Body)
 }
 
+func (b *OpenBmc) http_patch(endpoint string, data string) (response []byte, err error) {
+	url := fmt.Sprintf("https://%s:%s@%s/%s", b.username, b.password, b.ip, endpoint)
+	req, err := http.NewRequest("PATCH", url, bytes.NewBuffer([]byte(data)))
+	if err != nil {
+		return response, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	reqDump, _ := httputil.DumpRequestOut(req, true)
+	b.log.V(2).Info("requestTrace", "requestDump", string(reqDump), "url", url)
+
+	resp, err := b.httpClient.Do(req)
+	if err != nil {
+		return response, err
+	}
+	defer resp.Body.Close()
+
+	respDump, _ := httputil.DumpResponse(resp, true)
+	b.log.V(2).Info("responseTRace", "responseDump", string(respDump))
+
+	if resp.StatusCode != 200 {
+		err = fmt.Errorf("HTTP PATCH to %s failed, status: %s", endpoint, resp.Status)
+		return response, err
+	}
+
+	return ioutil.ReadAll(resp.Body)
+}
+
 func (b *OpenBmc) redfish_get(endpoint string) (payload []byte, err error) {
 	return b.http_get("redfish/v1/" + endpoint)
 }
 
 func (b *OpenBmc) redfish_post(endpoint string, data string) (response []byte, err error) {
 	return b.http_post("redfish/v1/" + endpoint, data)
+}
+
+func (b *OpenBmc) redfish_patch(endpoint string, data string) (response []byte, err error) {
+	return b.http_patch("redfish/v1/" + endpoint, data)
 }
 
 func (b *OpenBmc) Bios(cfg *cfgresources.Bios) (err error) {
@@ -284,7 +316,16 @@ func (b *OpenBmc) PowerState() (state string, err error) {
 }
 
 func (b *OpenBmc) PxeOnce() (status bool, err error) {
-	return status, err
+	d := `{"Boot":{"BootSourceOverrideEnabled":"Once","BootSourceOverrideTarget":"Pxe"}}`
+	_, err = b.redfish_patch("Systems/system", d)
+	if err != nil {
+		return false, err
+	}
+
+	// FIXME: if the above succeeds but this fails, should we go
+	// back and try to clean up the state change to leave things
+	// as they were?
+	return b.PowerCycle()
 }
 
 func (b *OpenBmc) Resources() []string {
