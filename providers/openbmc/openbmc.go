@@ -1,6 +1,7 @@
 package openbmc
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
@@ -55,8 +56,40 @@ func (b *OpenBmc) http_get(endpoint string) (payload []byte, err error) {
 	return payload, err
 }
 
+func (b *OpenBmc) http_post(endpoint string, data string) (response []byte, err error) {
+	url := fmt.Sprintf("https://%s:%s@%s/%s", b.username, b.password, b.ip, endpoint)
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(data)))
+	if err != nil {
+		return response, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	reqDump, _ := httputil.DumpRequestOut(req, true)
+	b.log.V(2).Info("requestTrace", "requestDump", string(reqDump), "url", url)
+
+	resp, err := b.httpClient.Do(req)
+	if err != nil {
+		return response, err
+	}
+	defer resp.Body.Close()
+
+	respDump, _ := httputil.DumpResponse(resp, true)
+	b.log.V(2).Info("responseTRace", "responseDump", string(respDump))
+
+	if resp.StatusCode != 200 {
+		err = fmt.Errorf("HTTP POST to %s failed, status: %s", endpoint, resp.Status)
+		return response, err
+	}
+
+	return ioutil.ReadAll(resp.Body)
+}
+
 func (b *OpenBmc) redfish_get(endpoint string) (payload []byte, err error) {
 	return b.http_get("redfish/v1/" + endpoint)
+}
+
+func (b *OpenBmc) redfish_post(endpoint string, data string) (response []byte, err error) {
+	return b.http_post("redfish/v1/" + endpoint, data)
 }
 
 func (b *OpenBmc) Bios(cfg *cfgresources.Bios) (err error) {
@@ -195,12 +228,26 @@ func (b *OpenBmc) Power(cfg *cfgresources.Power) (err error) {
 	return err
 }
 
+func (b *OpenBmc) do_reset(action string) (err error) {
+	_, err = b.redfish_post("Systems/system/Action/ComputerSystem.Reset",
+	                        fmt.Sprintf(`{"ResetType":"%s"}`, action))
+	return err
+}
+
+func (b *OpenBmc) do_bmc_reset(action string) (err error) {
+	_, err = b.redfish_post("Managers/bmc/Action/Manager.Reset",
+	                        fmt.Sprintf(`{"ResetType":"%s"}`, action))
+	return err
+}
+
 func (b *OpenBmc) PowerCycle() (status bool, err error) {
-	return status, err
+	err = b.do_reset("PowerCycle")
+	return err == nil, err
 }
 
 func (b *OpenBmc) PowerCycleBmc() (status bool, err error) {
-	return status, err
+	err = b.do_bmc_reset("GracefulRestart")
+	return err == nil, err
 }
 
 func (b *OpenBmc) PowerKw() (power float64, err error) {
@@ -208,11 +255,13 @@ func (b *OpenBmc) PowerKw() (power float64, err error) {
 }
 
 func (b *OpenBmc) PowerOn() (status bool, err error) {
-	return status, err
+	err = b.do_reset("On")
+	return err == nil, err
 }
 
 func (b *OpenBmc) PowerOff() (status bool, err error) {
-	return status, err
+	err = b.do_reset("ForceOff")
+	return err == nil, err
 }
 
 func (b *OpenBmc) PowerState() (state string, err error) {
