@@ -84,11 +84,11 @@ func (c *Client) DiscoverProviders(ctx context.Context) (err error) {
 
 // getProviders returns a slice of interfaces for all registered implementations
 func (c *Client) getProviders() []interface{} {
-	var results []interface{}
-	for _, reg := range c.Registry {
-		i, _ := reg.InitFn(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass)
-		results = append(results, i)
+	results := make([]interface{}, len(c.Registry))
+	for index, elem := range c.Registry {
+		results[index], _ = elem.InitFn(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass)
 	}
+
 	return results
 }
 

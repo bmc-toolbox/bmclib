@@ -17,12 +17,23 @@ func TestBMC(t *testing.T) {
 	user := "ADMIN"
 	pass := "ADMIN"
 
-	cl := NewClient(host, port, user, pass, WithLogger(logging.DefaultLogger()))
+	log := logging.DefaultLogger()
+	cl := NewClient(host, port, user, pass, WithLogger(log))
+
 	dErr := cl.DiscoverProviders(ctx)
 	if dErr != nil {
-		t.Fatal(dErr)
+		t.Log(dErr)
 	}
+
+	cl.Registry = cl.Registry.PreferProtocol("web")
 	state, err := cl.GetPowerState(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(state)
+
+	cl.Registry = cl.Registry.PreferProtocol("ipmi")
+	state, err = cl.GetPowerState(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}

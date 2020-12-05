@@ -1,5 +1,7 @@
 package registry
 
+import "strings"
+
 var (
 	registries Collection
 )
@@ -88,6 +90,48 @@ func (rc Collection) For(provider string) Collection {
 	return supportedRegistries
 }
 
+// deduplicate returns a new slice with duplicates values removed.
+func deduplicate(s []string) []string {
+	if len(s) <= 1 {
+		return s
+	}
+	result := []string{}
+	seen := make(map[string]struct{})
+	for _, val := range s {
+		val := strings.ToLower(val)
+		if _, ok := seen[val]; !ok {
+			result = append(result, val)
+			seen[val] = struct{}{}
+		}
+	}
+	return result
+}
+
+// PreferProtocol does the actual work of moving preferred protocols to the start of the collection
+func (rc Collection) PreferProtocol(protocols ...string) Collection {
+	var final Collection
+	var leftOver Collection
+	tracking := make(map[int]Collection)
+	protocols = deduplicate(protocols)
+	for _, registry := range rc {
+		var movedToTracking bool
+		for index, pName := range protocols {
+			if strings.EqualFold(registry.Protocol, pName) {
+				tracking[index] = append(tracking[index], registry)
+				movedToTracking = true
+			}
+		}
+		if !movedToTracking {
+			leftOver = append(leftOver, registry)
+		}
+	}
+	for x := 0; x <= len(tracking); x++ {
+		final = append(final, tracking[x]...)
+	}
+	final = append(final, leftOver...)
+	return final
+}
+
 // All returns all the providers in the registry collection
 func All() Collection {
 	return registries
@@ -107,6 +151,11 @@ func Using(proto string) Collection {
 // For will filter the registry collection for the name of a specific type of provider
 func For(provider string) Collection {
 	return All().For(provider)
+}
+
+// PreferProtocol will move preferred protocols to the start of the collection
+func PreferProtocol(protocols ...string) Collection {
+	return All().PreferProtocol(protocols...)
 }
 
 // Register will add a provider with details to the main registryCollection

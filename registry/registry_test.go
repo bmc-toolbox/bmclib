@@ -307,3 +307,87 @@ func TestForFn(t *testing.T) {
 		})
 	}
 }
+
+func TestPrefer(t *testing.T) {
+	unorderedCollection := Collection{
+		{
+			Provider: "dell",
+			Protocol: "web",
+			InitFn:   nil,
+			Features: []Feature{FeatureUserCreate},
+		},
+		{
+			Provider: "ipmitool",
+			Protocol: "ipmi",
+			InitFn:   nil,
+			Features: []Feature{FeatureUserCreate},
+		},
+		{
+			Provider: "smc",
+			Protocol: "web",
+			InitFn:   nil,
+			Features: []Feature{FeatureUserCreate},
+		},
+	}
+	testCases := []struct {
+		name         string
+		addARegistry bool
+		protocol     []string
+		want         Collection
+	}{
+		{name: "empty collection", want: unorderedCollection},
+		{name: "collection", protocol: []string{"web"}, addARegistry: true, want: Collection{
+			{
+				Provider: "dell",
+				Protocol: "web",
+				InitFn:   nil,
+				Features: []Feature{FeatureUserCreate},
+			},
+			{
+				Provider: "smc",
+				Protocol: "web",
+				InitFn:   nil,
+				Features: []Feature{FeatureUserCreate},
+			},
+			{
+				Provider: "ipmitool",
+				Protocol: "ipmi",
+				InitFn:   nil,
+				Features: []Feature{FeatureUserCreate},
+			},
+		}},
+		{name: "collection with duplicate protocols", protocol: []string{"web", "web"}, addARegistry: true, want: Collection{
+			{
+				Provider: "dell",
+				Protocol: "web",
+				InitFn:   nil,
+				Features: []Feature{FeatureUserCreate},
+			},
+			{
+				Provider: "smc",
+				Protocol: "web",
+				InitFn:   nil,
+				Features: []Feature{FeatureUserCreate},
+			},
+			{
+				Provider: "ipmitool",
+				Protocol: "ipmi",
+				InitFn:   nil,
+				Features: []Feature{FeatureUserCreate},
+			},
+		}},
+	}
+	registries = nil
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			// register
+			registries = unorderedCollection
+			result := PreferProtocol(tc.protocol...)
+			diff := cmp.Diff(tc.want, result)
+			if diff != "" {
+				t.Fatal(diff)
+			}
+		})
+	}
+}
