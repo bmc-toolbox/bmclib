@@ -1,6 +1,10 @@
 package registry
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/go-logr/logr"
+)
 
 var (
 	registries Collection
@@ -30,7 +34,7 @@ type Feature string
 type Collection []*Registry
 
 // InitRegistry function for setting connection details of a provider
-type InitRegistry func(host, port, user, pass string) (interface{}, error)
+type InitRegistry func(host, port, user, pass string, log logr.Logger) (interface{}, error)
 
 // Registry holds the info about a provider
 type Registry struct {
