@@ -41,7 +41,7 @@ func CreateUser(ctx context.Context, user, pass, role string, u []UserCreator) (
 				err = multierror.Append(err, errors.New("failed to create user"))
 				continue
 			}
-			return ok, err
+			return ok, nil
 		}
 	}
 	return ok, multierror.Append(err, errors.New("failed to create user"))
@@ -78,7 +78,7 @@ func UpdateUser(ctx context.Context, user, pass, role string, u []UserUpdater) (
 				err = multierror.Append(err, errors.New("failed to update user"))
 				continue
 			}
-			return ok, err
+			return ok, nil
 		}
 	}
 	return ok, multierror.Append(err, errors.New("failed to update user"))
@@ -115,7 +115,7 @@ func DeleteUser(ctx context.Context, user string, u []UserDeleter) (ok bool, err
 				err = multierror.Append(err, errors.New("failed to delete user"))
 				continue
 			}
-			return ok, err
+			return ok, nil
 		}
 	}
 	return ok, multierror.Append(err, errors.New("failed to delete user"))

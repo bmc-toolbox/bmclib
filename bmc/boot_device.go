@@ -26,7 +26,7 @@ func SetBootDevice(ctx context.Context, bootDevice string, setPersistent, efiBoo
 				err = multierror.Append(err, errors.New("failed to set boot device"))
 				continue
 			}
-			return ok, err
+			return ok, nil
 		}
 	}
 	return ok, multierror.Append(err, errors.New("failed to set boot device"))

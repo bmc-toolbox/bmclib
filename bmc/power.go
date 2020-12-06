@@ -42,7 +42,7 @@ func SetPowerState(ctx context.Context, state string, p []PowerSetter) (ok bool,
 				err = multierror.Append(err, errors.New("failed to set power state"))
 				continue
 			}
-			return ok, err
+			return ok, nil
 		}
 	}
 	return ok, multierror.Append(err, errors.New("failed to set power state"))
@@ -75,7 +75,7 @@ func GetPowerState(ctx context.Context, p []PowerStateGetter) (state string, err
 				err = multierror.Append(err, stateErr)
 				continue
 			}
-			return state, err
+			return state, nil
 		}
 	}
 
@@ -86,7 +86,6 @@ func GetPowerState(ctx context.Context, p []PowerStateGetter) (state string, err
 func GetPowerStateFromInterfaces(ctx context.Context, generic []interface{}) (state string, err error) {
 	var powerStateGetter []PowerStateGetter
 	for _, elem := range generic {
-
 		switch p := elem.(type) {
 		case PowerStateGetter:
 			powerStateGetter = append(powerStateGetter, p)
