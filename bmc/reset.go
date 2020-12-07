@@ -28,7 +28,7 @@ func ResetBMC(ctx context.Context, resetType string, b []BMCResetter) (ok bool, 
 				err = multierror.Append(err, errors.New("failed to reset BMC"))
 				continue
 			}
-			return ok, err
+			return ok, nil
 		}
 	}
 	return ok, multierror.Append(err, errors.New("failed to reset BMC"))
