@@ -3,11 +3,11 @@ help:
 
 .PHONY: test
 test: ## Run unit tests
-	go test -v -covermode=count ./...
+	go test -gcflags=-l -v -covermode=count ./...
 
 .PHONY: cover
 cover: ## Run unit tests with coverage report
-	go test -coverprofile=cover.out ./...
+	go test -gcflags=-l -coverprofile=cover.out ./...
 	go tool cover -func=cover.out
 	rm -rf cover.out
 
