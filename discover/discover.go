@@ -34,6 +34,9 @@ func ScanAndConnect(host string, username string, password string, options ...Op
 		// create a default logger
 		opts.Logger = logging.DefaultLogger()
 	}
+	if opts.Context == nil {
+		opts.Context = context.Background()
+	}
 	opts.Logger.V(1).Info("detecting vendor", "step", "ScanAndConnect", "host", host)
 
 	// return a connection to our dummy device.

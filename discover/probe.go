@@ -38,11 +38,15 @@ type Probe struct {
 }
 
 func (p *Probe) hpIlo(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {
-
-	resp, err := p.client.Get(fmt.Sprintf("https://%s/xmldata?item=all", p.host))
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("https://%s/xmldata?item=all", p.host), nil)
 	if err != nil {
 		return bmcConnection, err
 	}
+	resp, err := p.client.Do(req)
+	if err != nil {
+		return bmcConnection, err
+	}
+
 	defer resp.Body.Close()
 	defer io.Copy(ioutil.Discard, resp.Body) // nolint
 
@@ -83,8 +87,11 @@ func (p *Probe) hpIlo(ctx context.Context, log logr.Logger) (bmcConnection inter
 }
 
 func (p *Probe) hpC7000(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {
-
-	resp, err := p.client.Get(fmt.Sprintf("https://%s/xmldata?item=all", p.host))
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("https://%s/xmldata?item=all", p.host), nil)
+	if err != nil {
+		return bmcConnection, err
+	}
+	resp, err := p.client.Do(req)
 	if err != nil {
 		return bmcConnection, err
 	}
@@ -122,7 +129,11 @@ func (p *Probe) hpC7000(ctx context.Context, log logr.Logger) (bmcConnection int
 func (p *Probe) hpCl100(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {
 
 	// HPE Cloudline CL100
-	resp, err := p.client.Get(fmt.Sprintf("https://%s/res/ok.png", p.host))
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("https://%s/res/ok.png", p.host), nil)
+	if err != nil {
+		return bmcConnection, err
+	}
+	resp, err := p.client.Do(req)
 	if err != nil {
 		return bmcConnection, err
 	}
@@ -146,8 +157,11 @@ func (p *Probe) hpCl100(ctx context.Context, log logr.Logger) (bmcConnection int
 }
 
 func (p *Probe) idrac8(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {
-
-	resp, err := p.client.Get(fmt.Sprintf("https://%s/session?aimGetProp=hostname,gui_str_title_bar,OEMHostName,fwVersion,sysDesc", p.host))
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("https://%s/session?aimGetProp=hostname,gui_str_title_bar,OEMHostName,fwVersion,sysDesc", p.host), nil)
+	if err != nil {
+		return bmcConnection, err
+	}
+	resp, err := p.client.Do(req)
 	if err != nil {
 		return bmcConnection, err
 	}
@@ -169,8 +183,11 @@ func (p *Probe) idrac8(ctx context.Context, log logr.Logger) (bmcConnection inte
 }
 
 func (p *Probe) idrac9(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {
-
-	resp, err := p.client.Get(fmt.Sprintf("https://%s/sysmgmt/2015/bmc/info", p.host))
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("https://%s/sysmgmt/2015/bmc/info", p.host), nil)
+	if err != nil {
+		return bmcConnection, err
+	}
+	resp, err := p.client.Do(req)
 	if err != nil {
 		return bmcConnection, err
 	}
@@ -192,7 +209,11 @@ func (p *Probe) idrac9(ctx context.Context, log logr.Logger) (bmcConnection inte
 }
 
 func (p *Probe) m1000e(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {
-	resp, err := p.client.Get(fmt.Sprintf("https://%s/cgi-bin/webcgi/login", p.host))
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("https://%s/cgi-bin/webcgi/login", p.host), nil)
+	if err != nil {
+		return bmcConnection, err
+	}
+	resp, err := p.client.Do(req)
 	if err != nil {
 		return bmcConnection, err
 	}
@@ -214,7 +235,11 @@ func (p *Probe) m1000e(ctx context.Context, log logr.Logger) (bmcConnection inte
 }
 
 func (p *Probe) supermicrox(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {
-	resp, err := p.client.Get(fmt.Sprintf("https://%s/cgi/login.cgi", p.host))
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("https://%s/cgi/login.cgi", p.host), nil)
+	if err != nil {
+		return bmcConnection, err
+	}
+	resp, err := p.client.Do(req)
 	if err != nil {
 		return bmcConnection, err
 	}
@@ -243,10 +268,15 @@ func (p *Probe) supermicrox(ctx context.Context, log logr.Logger) (bmcConnection
 }
 
 func (p *Probe) supermicrox11(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {
-	resp, err := p.client.Get(fmt.Sprintf("https://%s/cgi/login.cgi", p.host))
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("https://%s/cgi/login.cgi", p.host), nil)
 	if err != nil {
 		return bmcConnection, err
 	}
+	resp, err := p.client.Do(req)
+	if err != nil {
+		return bmcConnection, err
+	}
+
 	defer resp.Body.Close()
 
 	payload, err := ioutil.ReadAll(resp.Body)
@@ -270,7 +300,11 @@ func (p *Probe) supermicrox11(ctx context.Context, log logr.Logger) (bmcConnecti
 }
 
 func (p *Probe) quanta(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {
-	resp, err := p.client.Get(fmt.Sprintf("https://%s/page/login.html", p.host))
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("https://%s/page/login.html", p.host), nil)
+	if err != nil {
+		return bmcConnection, err
+	}
+	resp, err := p.client.Do(req)
 	if err != nil {
 		return bmcConnection, err
 	}
