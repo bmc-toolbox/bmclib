@@ -31,18 +31,25 @@ type PowerStateGetter interface {
 
 // SetPowerState sets the power state for a BMC, trying all interface implementations passed in
 func SetPowerState(ctx context.Context, state string, p []PowerSetter) (ok bool, err error) {
+Loop:
 	for _, elem := range p {
-		if elem != nil {
-			ok, setErr := elem.PowerSet(ctx, state)
-			if setErr != nil {
-				err = multierror.Append(err, setErr)
-				continue
+		select {
+		case <-ctx.Done():
+			err = multierror.Append(err, ctx.Err())
+			break Loop
+		default:
+			if elem != nil {
+				ok, setErr := elem.PowerSet(ctx, state)
+				if setErr != nil {
+					err = multierror.Append(err, setErr)
+					continue
+				}
+				if !ok {
+					err = multierror.Append(err, errors.New("failed to set power state"))
+					continue
+				}
+				return ok, nil
 			}
-			if !ok {
-				err = multierror.Append(err, errors.New("failed to set power state"))
-				continue
-			}
-			return ok, nil
 		}
 	}
 	return ok, multierror.Append(err, errors.New("failed to set power state"))
@@ -68,17 +75,23 @@ func SetPowerStateFromInterfaces(ctx context.Context, state string, generic []in
 
 // GetPowerState sets the power state for a BMC, trying all interface implementations passed in
 func GetPowerState(ctx context.Context, p []PowerStateGetter) (state string, err error) {
+Loop:
 	for _, elem := range p {
-		if elem != nil {
-			state, stateErr := elem.PowerStateGet(ctx)
-			if stateErr != nil {
-				err = multierror.Append(err, stateErr)
-				continue
+		select {
+		case <-ctx.Done():
+			err = multierror.Append(err, ctx.Err())
+			break Loop
+		default:
+			if elem != nil {
+				state, stateErr := elem.PowerStateGet(ctx)
+				if stateErr != nil {
+					err = multierror.Append(err, stateErr)
+					continue
+				}
+				return state, nil
 			}
-			return state, nil
 		}
 	}
-
 	return state, multierror.Append(err, errors.New("failed to get power state"))
 }
 

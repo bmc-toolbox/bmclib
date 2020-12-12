@@ -17,18 +17,25 @@ type BMCResetter interface {
 
 // ResetBMC tries all implementations for a success BMC reset
 func ResetBMC(ctx context.Context, resetType string, b []BMCResetter) (ok bool, err error) {
+Loop:
 	for _, elem := range b {
-		if elem != nil {
-			ok, setErr := elem.BmcReset(ctx, resetType)
-			if setErr != nil {
-				err = multierror.Append(err, setErr)
-				continue
+		select {
+		case <-ctx.Done():
+			err = multierror.Append(err, ctx.Err())
+			break Loop
+		default:
+			if elem != nil {
+				ok, setErr := elem.BmcReset(ctx, resetType)
+				if setErr != nil {
+					err = multierror.Append(err, setErr)
+					continue
+				}
+				if !ok {
+					err = multierror.Append(err, errors.New("failed to reset BMC"))
+					continue
+				}
+				return ok, nil
 			}
-			if !ok {
-				err = multierror.Append(err, errors.New("failed to reset BMC"))
-				continue
-			}
-			return ok, nil
 		}
 	}
 	return ok, multierror.Append(err, errors.New("failed to reset BMC"))
