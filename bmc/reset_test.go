@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/go-multierror"
@@ -32,10 +33,12 @@ func TestResetBMC(t *testing.T) {
 		makeNotOk    bool
 		want         bool
 		err          error
+		ctxTimeout   time.Duration
 	}{
 		{name: "success", resetType: "cold", want: true},
 		{name: "not ok return", resetType: "warm", want: false, makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("failed to reset BMC"), errors.New("failed to reset BMC")}}},
 		{name: "error", resetType: "cold", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("bmc reset failed"), errors.New("failed to reset BMC")}}},
+		{name: "error context timeout", resetType: "cold", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to reset BMC")}}, ctxTimeout: time.Nanosecond * 1},
 	}
 
 	for _, tc := range testCases {
@@ -43,7 +46,12 @@ func TestResetBMC(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			testImplementation := resetTester{MakeErrorOut: tc.makeErrorOut, MakeNotOK: tc.makeNotOk}
 			expectedResult := tc.want
-			result, err := ResetBMC(context.Background(), tc.resetType, []BMCResetter{&testImplementation})
+			if tc.ctxTimeout == 0 {
+				tc.ctxTimeout = time.Second * 3
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
+			defer cancel()
+			result, err := ResetBMC(ctx, tc.resetType, []BMCResetter{&testImplementation})
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {

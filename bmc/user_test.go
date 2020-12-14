@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/go-multierror"
@@ -68,10 +69,12 @@ func TestUserCreate(t *testing.T) {
 		makeNotOk    bool
 		want         bool
 		err          error
+		ctxTimeout   time.Duration
 	}{
 		{name: "success", want: true},
 		{name: "not ok return", want: false, makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("failed to create user"), errors.New("failed to create user")}}},
 		{name: "error", makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("create user failed"), errors.New("failed to create user")}}},
+		{name: "error context timeout", makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to create user")}}, ctxTimeout: time.Nanosecond * 1},
 	}
 
 	for _, tc := range testCases {
@@ -82,7 +85,12 @@ func TestUserCreate(t *testing.T) {
 			user := "ADMIN"
 			pass := "ADMIN"
 			role := "admin"
-			result, err := CreateUser(context.Background(), user, pass, role, []UserCreator{&testImplementation})
+			if tc.ctxTimeout == 0 {
+				tc.ctxTimeout = time.Second * 3
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
+			defer cancel()
+			result, err := CreateUser(ctx, user, pass, role, []UserCreator{&testImplementation})
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {
@@ -151,10 +159,12 @@ func TestUpdateUser(t *testing.T) {
 		makeNotOk    bool
 		want         bool
 		err          error
+		ctxTimeout   time.Duration
 	}{
 		{name: "success", want: true},
 		{name: "not ok return", want: false, makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("failed to update user"), errors.New("failed to update user")}}},
 		{name: "error", makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("update user failed"), errors.New("failed to update user")}}},
+		{name: "error context timeout", makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to update user")}}, ctxTimeout: time.Nanosecond * 1},
 	}
 
 	for _, tc := range testCases {
@@ -165,7 +175,12 @@ func TestUpdateUser(t *testing.T) {
 			user := "ADMIN"
 			pass := "ADMIN"
 			role := "admin"
-			result, err := UpdateUser(context.Background(), user, pass, role, []UserUpdater{&testImplementation})
+			if tc.ctxTimeout == 0 {
+				tc.ctxTimeout = time.Second * 3
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
+			defer cancel()
+			result, err := UpdateUser(ctx, user, pass, role, []UserUpdater{&testImplementation})
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {
@@ -234,10 +249,12 @@ func TestDeleteUser(t *testing.T) {
 		makeNotOk    bool
 		want         bool
 		err          error
+		ctxTimeout   time.Duration
 	}{
 		{name: "success", want: true},
 		{name: "not ok return", want: false, makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("failed to delete user"), errors.New("failed to delete user")}}},
 		{name: "error", makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("delete user failed"), errors.New("failed to delete user")}}},
+		{name: "error context timeout", makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to delete user")}}, ctxTimeout: time.Nanosecond * 1},
 	}
 
 	for _, tc := range testCases {
@@ -246,7 +263,12 @@ func TestDeleteUser(t *testing.T) {
 			testImplementation := userTester{MakeErrorOut: tc.makeErrorOut, MakeNotOK: tc.makeNotOk}
 			expectedResult := tc.want
 			user := "ADMIN"
-			result, err := DeleteUser(context.Background(), user, []UserDeleter{&testImplementation})
+			if tc.ctxTimeout == 0 {
+				tc.ctxTimeout = time.Second * 3
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
+			defer cancel()
+			result, err := DeleteUser(ctx, user, []UserDeleter{&testImplementation})
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {
@@ -312,9 +334,11 @@ func TestReadUsers(t *testing.T) {
 		makeErrorOut bool
 		want         bool
 		err          error
+		ctxTimeout   time.Duration
 	}{
 		{name: "success", want: true},
 		{name: "not ok return", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("read users failed"), errors.New("failed to read users")}}},
+		{name: "not ok return", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to read users")}}, ctxTimeout: time.Nanosecond * 1},
 	}
 
 	users := []map[string]string{
@@ -331,7 +355,12 @@ func TestReadUsers(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			testImplementation := userTester{MakeErrorOut: tc.makeErrorOut}
 			expectedResult := users
-			result, err := ReadUsers(context.Background(), []UserReader{&testImplementation})
+			if tc.ctxTimeout == 0 {
+				tc.ctxTimeout = time.Second * 3
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
+			defer cancel()
+			result, err := ReadUsers(ctx, []UserReader{&testImplementation})
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {

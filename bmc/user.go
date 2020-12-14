@@ -30,18 +30,25 @@ type UserReader interface {
 
 // CreateUser creates a user using the passed in implementation
 func CreateUser(ctx context.Context, user, pass, role string, u []UserCreator) (ok bool, err error) {
+Loop:
 	for _, elem := range u {
-		if elem != nil {
-			ok, createErr := elem.UserCreate(ctx, user, pass, role)
-			if createErr != nil {
-				err = multierror.Append(err, createErr)
-				continue
+		select {
+		case <-ctx.Done():
+			err = multierror.Append(err, ctx.Err())
+			break Loop
+		default:
+			if elem != nil {
+				ok, createErr := elem.UserCreate(ctx, user, pass, role)
+				if createErr != nil {
+					err = multierror.Append(err, createErr)
+					continue
+				}
+				if !ok {
+					err = multierror.Append(err, errors.New("failed to create user"))
+					continue
+				}
+				return ok, nil
 			}
-			if !ok {
-				err = multierror.Append(err, errors.New("failed to create user"))
-				continue
-			}
-			return ok, nil
 		}
 	}
 	return ok, multierror.Append(err, errors.New("failed to create user"))
@@ -67,18 +74,25 @@ func CreateUserFromInterfaces(ctx context.Context, user, pass, role string, gene
 
 // UpdateUser updates a user's settings
 func UpdateUser(ctx context.Context, user, pass, role string, u []UserUpdater) (ok bool, err error) {
+Loop:
 	for _, elem := range u {
-		if elem != nil {
-			ok, UpdateErr := elem.UserUpdate(ctx, user, pass, role)
-			if UpdateErr != nil {
-				err = multierror.Append(err, UpdateErr)
-				continue
+		select {
+		case <-ctx.Done():
+			err = multierror.Append(err, ctx.Err())
+			break Loop
+		default:
+			if elem != nil {
+				ok, UpdateErr := elem.UserUpdate(ctx, user, pass, role)
+				if UpdateErr != nil {
+					err = multierror.Append(err, UpdateErr)
+					continue
+				}
+				if !ok {
+					err = multierror.Append(err, errors.New("failed to update user"))
+					continue
+				}
+				return ok, nil
 			}
-			if !ok {
-				err = multierror.Append(err, errors.New("failed to update user"))
-				continue
-			}
-			return ok, nil
 		}
 	}
 	return ok, multierror.Append(err, errors.New("failed to update user"))
@@ -104,18 +118,25 @@ func UpdateUserFromInterfaces(ctx context.Context, user, pass, role string, gene
 
 // DeleteUser deletes a user from a BMC
 func DeleteUser(ctx context.Context, user string, u []UserDeleter) (ok bool, err error) {
+Loop:
 	for _, elem := range u {
-		if elem != nil {
-			ok, deleteErr := elem.UserDelete(ctx, user)
-			if deleteErr != nil {
-				err = multierror.Append(err, deleteErr)
-				continue
+		select {
+		case <-ctx.Done():
+			err = multierror.Append(err, ctx.Err())
+			break Loop
+		default:
+			if elem != nil {
+				ok, deleteErr := elem.UserDelete(ctx, user)
+				if deleteErr != nil {
+					err = multierror.Append(err, deleteErr)
+					continue
+				}
+				if !ok {
+					err = multierror.Append(err, errors.New("failed to delete user"))
+					continue
+				}
+				return ok, nil
 			}
-			if !ok {
-				err = multierror.Append(err, errors.New("failed to delete user"))
-				continue
-			}
-			return ok, nil
 		}
 	}
 	return ok, multierror.Append(err, errors.New("failed to delete user"))
@@ -141,14 +162,21 @@ func DeleteUserFromInterfaces(ctx context.Context, user string, generic []interf
 
 // ReadUsers returns all users from a BMC
 func ReadUsers(ctx context.Context, u []UserReader) (users []map[string]string, err error) {
+Loop:
 	for _, elem := range u {
-		if elem != nil {
-			users, readErr := elem.UserRead(ctx)
-			if readErr != nil {
-				err = multierror.Append(err, readErr)
-				continue
+		select {
+		case <-ctx.Done():
+			err = multierror.Append(err, ctx.Err())
+			break Loop
+		default:
+			if elem != nil {
+				users, readErr := elem.UserRead(ctx)
+				if readErr != nil {
+					err = multierror.Append(err, readErr)
+					continue
+				}
+				return users, nil
 			}
-			return users, err
 		}
 	}
 	return users, multierror.Append(err, errors.New("failed to read users"))
