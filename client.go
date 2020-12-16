@@ -4,13 +4,12 @@ package bmclib
 
 import (
 	"context"
+	"sync"
 
 	"github.com/bmc-toolbox/bmclib/bmc"
-	"github.com/bmc-toolbox/bmclib/discover"
 	"github.com/bmc-toolbox/bmclib/logging"
 	"github.com/bmc-toolbox/bmclib/registry"
 	"github.com/go-logr/logr"
-	"github.com/hashicorp/go-multierror"
 
 	// register providers here
 	_ "github.com/bmc-toolbox/bmclib/providers/ipmitool"
@@ -68,7 +67,7 @@ func NewClient(host, port, user, pass string, opts ...Option) *Client {
 // setProviders updates the Registry with corresponding interfaces for all registered implementations
 func (c *Client) setProviders() {
 	for _, elem := range c.Registry {
-		elem.ProviderInterface, _ = elem.InitFn(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger)
+		elem.ProviderInterface, _, _ = elem.InitFn(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger)
 	}
 }
 
@@ -81,23 +80,6 @@ func (c *Client) getProviders() []interface{} {
 	return results
 }
 
-// DiscoverProviders probes a BMC to discover what providers are compatible
-func (c *Client) DiscoverProviders(ctx context.Context) (err error) {
-	// try discovering and registering a vendor specific provider
-	vendor, scanErr := discover.ScanAndConnect(c.Auth.Host, c.Auth.User, c.Auth.Pass, discover.WithContext(ctx), discover.WithLogger(c.Logger))
-	if scanErr != nil {
-		c.Logger.V(1).Info("no vendor specific controller discovered", "error", scanErr.Error())
-		err = multierror.Append(err, scanErr)
-	} else {
-		registry.Register("vendor", "vendor", func(host, port, user, pass string, log logr.Logger) (interface{}, error) {
-			return vendor, nil
-		}, []registry.Feature{})
-		c.Registry = registry.All()
-	}
-
-	return err
-}
-
 // Open pass through to library function
 func (c *Client) Open(ctx context.Context) (err error) {
 	return bmc.OpenConnectionFromInterfaces(ctx, c.getProviders())
@@ -106,6 +88,28 @@ func (c *Client) Open(ctx context.Context) (err error) {
 // Close pass through to library function
 func (c *Client) Close(ctx context.Context) (err error) {
 	return bmc.CloseConnectionFromInterfaces(ctx, c.getProviders())
+}
+
+// DiscoverCompatible updates the registry with only compatible BMCs
+func (c *Client) DiscoverCompatible(ctx context.Context) {
+	var wg sync.WaitGroup
+	var result registry.Collection
+	for _, elem := range c.Registry {
+		wg.Add(1)
+		go func(reg *registry.Registry, wg *sync.WaitGroup) {
+			_, compat, err := reg.InitFn(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger)
+			if err != nil {
+				wg.Done()
+				return
+			}
+			if compat(ctx) {
+				result = append(result, reg)
+			}
+			wg.Done()
+		}(elem, &wg)
+	}
+	wg.Wait()
+	c.Registry = result
 }
 
 // GetPowerState pass through to library function

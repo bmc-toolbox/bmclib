@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"context"
 	"strings"
 
 	"github.com/go-logr/logr"
@@ -34,7 +35,11 @@ type Feature string
 type Collection []*Registry
 
 // InitRegistry function for setting connection details of a provider
-type InitRegistry func(host, port, user, pass string, log logr.Logger) (interface{}, error)
+// The return values are as follows:
+// interface{} -> the implementation specific struct
+// func(context.Context) bool -> a function that determines if the implementation is compatible with a given BMC
+// error -> standard error if the initRegistry function fails
+type InitRegistry func(host, port, user, pass string, log logr.Logger) (interface{}, func(context.Context) bool, error)
 
 // Registry holds the info about a provider
 type Registry struct {
