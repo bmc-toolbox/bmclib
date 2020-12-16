@@ -29,6 +29,9 @@ type Conn struct {
 
 func init() {
 	registry.Register(ProviderName, ProviderProtocol, func(host, port, user, pass string, log logr.Logger) (interface{}, error) {
+		if port == "" {
+			port = "623"
+		}
 		i, err := ipmi.New(user, pass, host+":"+port)
 		return &Conn{Host: host, User: user, Pass: pass, Port: port, Log: log, con: i}, err
 	}, []registry.Feature{
@@ -38,6 +41,16 @@ func init() {
 		registry.FeatureBmcReset,
 		registry.FeatureBootDeviceSet,
 	})
+}
+
+// Open a connection to a BMC
+func (c *Conn) Open(ctx context.Context) (err error) {
+	return nil
+}
+
+// Close a connection to a BMC
+func (c *Conn) Close(ctx context.Context) (err error) {
+	return nil
 }
 
 // BootDeviceSet sets the next boot device with options
