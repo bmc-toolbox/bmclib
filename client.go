@@ -60,8 +60,25 @@ func NewClient(host, port, user, pass string, opts ...Option) *Client {
 	defaultClient.Auth.Port = port
 	defaultClient.Auth.User = user
 	defaultClient.Auth.Pass = pass
+	defaultClient.setProviders()
 
 	return defaultClient
+}
+
+// setProviders updates the Registry with corresponding interfaces for all registered implementations
+func (c *Client) setProviders() {
+	for _, elem := range c.Registry {
+		elem.ProviderInterface, _ = elem.InitFn(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger)
+	}
+}
+
+// getProviders returns a slice of interfaces for the implementations in the Registry
+func (c *Client) getProviders() []interface{} {
+	results := make([]interface{}, len(c.Registry))
+	for _, elem := range c.Registry {
+		results = append(results, elem.ProviderInterface)
+	}
+	return results
 }
 
 // DiscoverProviders probes a BMC to discover what providers are compatible
@@ -81,14 +98,14 @@ func (c *Client) DiscoverProviders(ctx context.Context) (err error) {
 	return err
 }
 
-// getProviders returns a slice of interfaces for all registered implementations
-func (c *Client) getProviders() []interface{} {
-	results := make([]interface{}, len(c.Registry))
-	for index, elem := range c.Registry {
-		results[index], _ = elem.InitFn(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger)
-	}
+// Open pass through to library function
+func (c *Client) Open(ctx context.Context) (err error) {
+	return bmc.OpenConnectionFromInterfaces(ctx, c.getProviders())
+}
 
-	return results
+// Close pass through to library function
+func (c *Client) Close(ctx context.Context) (err error) {
+	return bmc.CloseConnectionFromInterfaces(ctx, c.getProviders())
 }
 
 // GetPowerState pass through to library function

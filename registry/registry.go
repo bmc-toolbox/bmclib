@@ -38,10 +38,11 @@ type InitRegistry func(host, port, user, pass string, log logr.Logger) (interfac
 
 // Registry holds the info about a provider
 type Registry struct {
-	Provider string
-	Protocol string
-	InitFn   InitRegistry
-	Features Features
+	Provider          string
+	Protocol          string
+	InitFn            InitRegistry
+	Features          Features
+	ProviderInterface interface{}
 }
 
 // Include does the actual work of filtering for specific features
