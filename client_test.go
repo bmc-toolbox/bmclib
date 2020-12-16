@@ -19,13 +19,13 @@ func TestBMC(t *testing.T) {
 
 	log := logging.DefaultLogger()
 	cl := NewClient(host, port, user, pass, WithLogger(log))
-
-	dErr := cl.DiscoverProviders(ctx)
-	if dErr != nil {
-		t.Log(dErr)
+	err := cl.Open(ctx)
+	if err != nil {
+		t.Fatal(err)
 	}
+	defer cl.Close(ctx)
 
-	cl.Registry = cl.Registry.PreferProtocol("web")
+	cl.Registry = cl.Registry.PreferProtocol("redfish")
 	state, err := cl.GetPowerState(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -33,6 +33,9 @@ func TestBMC(t *testing.T) {
 	t.Log(state)
 
 	cl.Registry = cl.Registry.PreferProtocol("ipmi")
+	if err != nil {
+		t.Log(err)
+	}
 	state, err = cl.GetPowerState(ctx)
 	if err != nil {
 		t.Fatal(err)
