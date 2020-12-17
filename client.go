@@ -72,11 +72,16 @@ func (c *Client) setProviders() {
 	}
 }
 
-// getProviders returns a slice of interfaces for the implementations in the Registry
+// getProviders returns a slice of interfaces for all registered implementations
 func (c *Client) getProviders() []interface{} {
 	results := make([]interface{}, len(c.Registry))
-	for _, elem := range c.Registry {
-		results = append(results, elem.ProviderInterface)
+	for index, elem := range c.Registry {
+		r, err := elem.InitFn(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger)
+		if err != nil {
+			c.Logger.V(0).Info("provider registration error", "error", err.Error(), "provider", elem.Provider)
+			continue
+		}
+		results[index] = r
 	}
 	return results
 }
