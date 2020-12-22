@@ -19,6 +19,7 @@ func TestBMC(t *testing.T) {
 
 	log := logging.DefaultLogger()
 	cl := NewClient(host, port, user, pass, WithLogger(log))
+	cl.DiscoverCompatible(ctx)
 	err := cl.Open(ctx)
 	if err != nil {
 		t.Fatal(err)

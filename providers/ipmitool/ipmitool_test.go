@@ -2,7 +2,10 @@ package ipmitool
 
 import (
 	"context"
+	"errors"
+	"reflect"
 	"testing"
+	"time"
 
 	"bou.ke/monkey"
 	"github.com/bmc-toolbox/bmclib/internal/ipmi"
@@ -30,11 +33,52 @@ func TestInit(t *testing.T) {
 		return ipm, nil
 	})
 	r := registry.All()
-	i, _ := r[0].InitFn(host, port, user, pass, nil)
+	i, _, _ := r[0].InitFn(host, port, user, pass, nil)
 	n := i.(*Conn)
 	diff := cmp.Diff(want, n, cmpopts.IgnoreUnexported(Conn{}))
 	if diff != "" {
 		t.Fatal(diff)
+	}
+}
+
+func TestIsCompatible(t *testing.T) {
+	testCases := []struct {
+		name string
+		ok   bool
+	}{
+		{"true", true},
+		{"false", false},
+	}
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			var ipm *ipmi.Ipmi
+			monkey.PatchInstanceMethod(reflect.TypeOf(ipm), "IsOn", func(_ *ipmi.Ipmi, _ context.Context) (status bool, err error) {
+				if !tc.ok {
+					err = errors.New("not compatible")
+				}
+				return true, err
+			})
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
+			user := "ADMIN"
+			pass := "ADMIN"
+			host := "127.1.1.1"
+			port := "623"
+			i, _ := ipmi.New(user, pass, host+":"+port)
+			c := Conn{
+				Host: host,
+				Port: port,
+				User: user,
+				Pass: pass,
+				Log:  logging.DefaultLogger(),
+				con:  i,
+			}
+			ok := c.isCompatible(ctx)
+			if ok != tc.ok {
+				t.Fatalf("got: %v, expected: %v", ok, tc.ok)
+			}
+		})
 	}
 }
 
