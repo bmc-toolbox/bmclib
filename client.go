@@ -75,7 +75,7 @@ func (c *Client) setProviders() {
 func (c *Client) getProviders() []interface{} {
 	results := make([]interface{}, len(c.Registry))
 	for index, elem := range c.Registry {
-		r, err := elem.InitFn(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger)
+		r, _, err := elem.InitFn(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger)
 		if err != nil {
 			c.Logger.V(0).Info("provider registration error", "error", err.Error(), "provider", elem.Provider)
 			continue
