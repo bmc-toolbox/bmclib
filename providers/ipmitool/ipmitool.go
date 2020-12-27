@@ -28,7 +28,7 @@ type Conn struct {
 }
 
 func init() {
-	registry.Register(ProviderName, ProviderProtocol, func(host, port, user, pass string, log logr.Logger) (interface{}, func(context.Context) bool, error) {
+	registry.Register(ProviderName, ProviderProtocol, func(host, port, user, pass string, log logr.Logger) (interface{}, registry.IsCompatibleFn, error) {
 		if port == "" {
 			port = "623"
 		}

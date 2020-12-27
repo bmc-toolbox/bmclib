@@ -45,12 +45,10 @@ func WithRegistry(registry registry.Collection) Option {
 
 // NewClient returns a new Client struct
 func NewClient(host, port, user, pass string, opts ...Option) *Client {
-	var (
-		defaultClient = &Client{
-			Logger:   logging.DefaultLogger(),
-			Registry: registry.All(),
-		}
-	)
+	var defaultClient = &Client{
+		Logger:   logging.DefaultLogger(),
+		Registry: registry.All(),
+	}
 	for _, opt := range opts {
 		opt(defaultClient)
 	}
@@ -67,12 +65,13 @@ func NewClient(host, port, user, pass string, opts ...Option) *Client {
 // setProviders updates the Registry with corresponding interfaces for all registered implementations
 func (c *Client) setProviders() {
 	for _, elem := range c.Registry {
-		r, _, err := elem.InitFn(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger)
+		providerInterface, isCompatFn, err := elem.InitFn(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger)
 		if err != nil {
 			c.Logger.V(0).Info("provider registration error", "error", err.Error(), "provider", elem.Provider)
 			continue
 		}
-		elem.ProviderInterface = r
+		elem.ProviderInterface = providerInterface
+		elem.IsCompatibleFn = isCompatFn
 	}
 }
 
@@ -85,6 +84,23 @@ func (c *Client) getProviders() []interface{} {
 	return results
 }
 
+// DiscoverCompatible updates the registry with only compatible BMCs
+func (c *Client) DiscoverCompatible(ctx context.Context) {
+	var wg sync.WaitGroup
+	var result registry.Collection
+	for _, elem := range c.Registry {
+		wg.Add(1)
+		go func(isCompat registry.IsCompatibleFn, reg *registry.Registry, wg *sync.WaitGroup) {
+			if isCompat(ctx) {
+				result = append(result, reg)
+			}
+			wg.Done()
+		}(elem.IsCompatibleFn, elem, &wg)
+	}
+	wg.Wait()
+	c.Registry = result
+}
+
 // Open pass through to library function
 func (c *Client) Open(ctx context.Context) (err error) {
 	return bmc.OpenConnectionFromInterfaces(ctx, c.getProviders())
@@ -93,28 +109,6 @@ func (c *Client) Open(ctx context.Context) (err error) {
 // Close pass through to library function
 func (c *Client) Close(ctx context.Context) (err error) {
 	return bmc.CloseConnectionFromInterfaces(ctx, c.getProviders())
-}
-
-// DiscoverCompatible updates the registry with only compatible BMCs
-func (c *Client) DiscoverCompatible(ctx context.Context) {
-	var wg sync.WaitGroup
-	var result registry.Collection
-	for _, elem := range c.Registry {
-		wg.Add(1)
-		go func(reg *registry.Registry, wg *sync.WaitGroup) {
-			_, compat, err := reg.InitFn(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger)
-			if err != nil {
-				wg.Done()
-				return
-			}
-			if compat(ctx) {
-				result = append(result, reg)
-			}
-			wg.Done()
-		}(elem, &wg)
-	}
-	wg.Wait()
-	c.Registry = result
 }
 
 // GetPowerState pass through to library function
