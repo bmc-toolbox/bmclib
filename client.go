@@ -67,20 +67,20 @@ func NewClient(host, port, user, pass string, opts ...Option) *Client {
 // setProviders updates the Registry with corresponding interfaces for all registered implementations
 func (c *Client) setProviders() {
 	for _, elem := range c.Registry {
-		elem.ProviderInterface, _, _ = elem.InitFn(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger)
+		r, _, err := elem.InitFn(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger)
+		if err != nil {
+			c.Logger.V(0).Info("provider registration error", "error", err.Error(), "provider", elem.Provider)
+			continue
+		}
+		elem.ProviderInterface = r
 	}
 }
 
 // getProviders returns a slice of interfaces for all registered implementations
 func (c *Client) getProviders() []interface{} {
 	results := make([]interface{}, len(c.Registry))
-	for index, elem := range c.Registry {
-		r, _, err := elem.InitFn(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger)
-		if err != nil {
-			c.Logger.V(0).Info("provider registration error", "error", err.Error(), "provider", elem.Provider)
-			continue
-		}
-		results[index] = r
+	for _, elem := range c.Registry {
+		results = append(results, elem.ProviderInterface)
 	}
 	return results
 }
