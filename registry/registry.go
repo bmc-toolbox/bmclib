@@ -34,12 +34,16 @@ type Feature string
 // Collection holds a slice of Registry types
 type Collection []*Registry
 
+// IsCompatibleFn a function that determines if the
+// implementation is compatible with a given BMC
+type IsCompatibleFn func(context.Context) bool
+
 // InitRegistry function for setting connection details of a provider
 // The return values are as follows:
 // interface{} -> the implementation specific struct
 // func(context.Context) bool -> a function that determines if the implementation is compatible with a given BMC
 // error -> standard error if the initRegistry function fails
-type InitRegistry func(host, port, user, pass string, log logr.Logger) (interface{}, func(context.Context) bool, error)
+type InitRegistry func(host, port, user, pass string, log logr.Logger) (interface{}, IsCompatibleFn, error)
 
 // Registry holds the info about a provider
 type Registry struct {
@@ -48,6 +52,7 @@ type Registry struct {
 	InitFn            InitRegistry
 	Features          Features
 	ProviderInterface interface{}
+	IsCompatibleFn    IsCompatibleFn
 }
 
 // Include does the actual work of filtering for specific features
