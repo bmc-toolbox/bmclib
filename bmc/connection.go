@@ -46,7 +46,7 @@ Loop:
 
 // OpenConnectionFromInterfaces pass through to library function
 func OpenConnectionFromInterfaces(ctx context.Context, generic []interface{}) (err error) {
-	var openers []Opener
+	openers := make([]Opener, 0)
 	for _, elem := range generic {
 		switch p := elem.(type) {
 		case Opener:
@@ -90,7 +90,7 @@ Loop:
 
 // CloseConnectionFromInterfaces pass through to library function
 func CloseConnectionFromInterfaces(ctx context.Context, generic []interface{}) (err error) {
-	var closers []Closer
+	closers := make([]Closer, 0)
 	for _, elem := range generic {
 		switch p := elem.(type) {
 		case Closer:

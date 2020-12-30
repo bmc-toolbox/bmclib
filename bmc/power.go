@@ -57,7 +57,7 @@ Loop:
 
 // SetPowerStateFromInterfaces pass through to library function
 func SetPowerStateFromInterfaces(ctx context.Context, state string, generic []interface{}) (ok bool, err error) {
-	var powerSetter []PowerSetter
+	powerSetter := make([]PowerSetter, 0)
 	for _, elem := range generic {
 		switch p := elem.(type) {
 		case PowerSetter:
@@ -97,7 +97,7 @@ Loop:
 
 // GetPowerStateFromInterfaces pass through to library function
 func GetPowerStateFromInterfaces(ctx context.Context, generic []interface{}) (state string, err error) {
-	var powerStateGetter []PowerStateGetter
+	powerStateGetter := make([]PowerStateGetter, 0)
 	for _, elem := range generic {
 		switch p := elem.(type) {
 		case PowerStateGetter:
