@@ -56,7 +56,7 @@ Loop:
 
 // CreateUserFromInterfaces pass through to library function
 func CreateUserFromInterfaces(ctx context.Context, user, pass, role string, generic []interface{}) (ok bool, err error) {
-	var userCreators []UserCreator
+	userCreators := make([]UserCreator, 0)
 	for _, elem := range generic {
 		switch u := elem.(type) {
 		case UserCreator:
@@ -100,7 +100,7 @@ Loop:
 
 // UpdateUserFromInterfaces pass through to library function
 func UpdateUserFromInterfaces(ctx context.Context, user, pass, role string, generic []interface{}) (ok bool, err error) {
-	var userUpdaters []UserUpdater
+	userUpdaters := make([]UserUpdater, 0)
 	for _, elem := range generic {
 		switch u := elem.(type) {
 		case UserUpdater:
@@ -144,7 +144,7 @@ Loop:
 
 // DeleteUserFromInterfaces pass through to library function
 func DeleteUserFromInterfaces(ctx context.Context, user string, generic []interface{}) (ok bool, err error) {
-	var userDeleters []UserDeleter
+	userDeleters := make([]UserDeleter, 0)
 	for _, elem := range generic {
 		switch u := elem.(type) {
 		case UserDeleter:
@@ -184,7 +184,7 @@ Loop:
 
 // ReadUsersFromInterfaces pass through to library function
 func ReadUsersFromInterfaces(ctx context.Context, generic []interface{}) (users []map[string]string, err error) {
-	var userReaders []UserReader
+	userReaders := make([]UserReader, 0)
 	for _, elem := range generic {
 		switch u := elem.(type) {
 		case UserReader:

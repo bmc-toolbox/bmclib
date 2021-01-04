@@ -87,7 +87,7 @@ func (c *Client) getProviders() []interface{} {
 // DiscoverCompatible updates the registry with only compatible BMCs
 func (c *Client) DiscoverCompatible(ctx context.Context) {
 	var wg sync.WaitGroup
-	var result registry.Collection
+	result := make(registry.Collection, 0)
 	for _, elem := range c.Registry {
 		wg.Add(1)
 		go func(isCompat registry.IsCompatibleFn, reg *registry.Registry, wg *sync.WaitGroup) {

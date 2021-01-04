@@ -43,7 +43,7 @@ Loop:
 
 // ResetBMCFromInterfaces pass through to library function
 func ResetBMCFromInterfaces(ctx context.Context, resetType string, generic []interface{}) (ok bool, err error) {
-	var bmcSetters []BMCResetter
+	bmcSetters := make([]BMCResetter, 0)
 	for _, elem := range generic {
 		switch p := elem.(type) {
 		case BMCResetter:

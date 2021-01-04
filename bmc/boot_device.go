@@ -41,7 +41,7 @@ Loop:
 
 // SetBootDeviceFromInterfaces pass through to library function
 func SetBootDeviceFromInterfaces(ctx context.Context, bootDevice string, setPersistent, efiBoot bool, generic []interface{}) (ok bool, err error) {
-	var bdSetters []BootDeviceSetter
+	bdSetters := make([]BootDeviceSetter, 0)
 	for _, elem := range generic {
 		switch p := elem.(type) {
 		case BootDeviceSetter:
