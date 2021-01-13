@@ -18,6 +18,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+var ()
+
 func init() {
 	if viper.GetBool("debug") != true {
 		viper.SetDefault("debug", true)
@@ -37,6 +39,28 @@ func setup(vendor string, answers map[string][]byte) (scanAndConnectCurry func(o
 
 		mux.HandleFunc(url, func(w http.ResponseWriter, r *http.Request) {
 			_ = r.ParseForm()
+
+			if url == "/cgi/ipmi.cgi" {
+				if r.Form.Get("op") == "FRU_INFO.XML" && vendor == "SupermicroX11" {
+					_, _ = w.Write(answers[url])
+					return
+				} else if r.Form.Get("op") == "" && vendor == "SupermicroX11" {
+					w.WriteHeader(http.StatusNotFound)
+					return
+				}
+
+				if r.Form.Get("op") == "FRU_INFO.XML" && vendor == "SupermicroX" {
+					w.WriteHeader(http.StatusNotFound)
+					return
+				} else if r.Form.Get("op") == "" && vendor == "SupermicroX" {
+					_, _ = w.Write(answers[url])
+					return
+				}
+
+				w.WriteHeader(http.StatusServiceUnavailable)
+				return
+			}
+
 			if url == "/cgi/login.cgi" && r.Method == http.MethodPost && r.Form.Get("name") != "" {
 				_, _ = w.Write([]byte("../cgi/url_redirect.cgi?url_name=mainmenu"))
 			} else {
@@ -107,7 +131,7 @@ func TestProbes(t *testing.T) {
 				if err != nil {
 					t.Fatalf("error calling ScanAndConnect(): %v", err)
 				}
-
+				t.Log(hint)
 				if reflect.TypeOf(tt.wantType) != reflect.TypeOf(bmc) {
 					t.Errorf("Want %T, got %T", tt.wantType, bmc)
 
