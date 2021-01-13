@@ -47,7 +47,11 @@ func getEmptyUserSlot(idracUsers UserInfo) (userID int, user User, err error) {
 			continue
 		}
 
-		if user.UserName == "" {
+		// from the web UI idrac8 doesn't allow removing users only disabling users.
+		// There is a case where all user.UserName are NOT == "". This doens't mean that a new
+		// user cannot be created. Disabled users regardless of whether user.UserName == "" can be
+		// used for new user creation. FYI, ipmitool can remove the name: ipmitool user set name <id> ""
+		if user.UserName == "" || user.Enable == "disabled" {
 			return userID, user, err
 		}
 	}
