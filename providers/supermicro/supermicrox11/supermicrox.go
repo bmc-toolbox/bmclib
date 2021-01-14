@@ -254,12 +254,7 @@ func (s *SupermicroX) HardwareType() (model string) {
 		// Here is your sin
 		return model
 	}
-
-	if strings.Contains(strings.ToLower(m), X11) {
-		return X11
-	}
-
-	return BmcType
+	return m
 }
 
 // Model returns the device model

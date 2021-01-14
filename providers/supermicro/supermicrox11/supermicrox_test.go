@@ -276,7 +276,7 @@ func TestModel(t *testing.T) {
 }
 
 func TestBmcType(t *testing.T) {
-	expectedAnswer := "x11"
+	expectedAnswer := "X11SCM-F"
 
 	bmc, err := setup()
 	if err != nil {

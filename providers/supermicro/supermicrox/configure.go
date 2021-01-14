@@ -79,9 +79,9 @@ func (s *SupermicroX) isRoleValid(role string) bool {
 }
 
 // returns a map of user accounts and their ids
-func (s *SupermicroX) queryUserAccounts() (userAccounts map[string]int, err error) {
+func (s *SupermicroX) queryUserAccounts() (userAccounts map[int]string, err error) {
 
-	userAccounts = make(map[string]int)
+	userAccounts = make(map[int]string)
 	ipmi, err := s.query("CONFIG_INFO.XML=(0,0)")
 	if err != nil {
 		s.log.V(1).Info("error querying user accounts", "error", internal.ErrStringOrEmpty(err))
@@ -89,9 +89,7 @@ func (s *SupermicroX) queryUserAccounts() (userAccounts map[string]int, err erro
 	}
 
 	for idx, account := range ipmi.ConfigInfo.UserAccounts {
-		if account.Name != "" {
-			userAccounts[account.Name] = idx
-		}
+		userAccounts[idx] = account.Name
 	}
 
 	return userAccounts, err
@@ -111,9 +109,7 @@ func (s *SupermicroX) User(users []*cfgresources.User) (err error) {
 		return errors.New(msg)
 	}
 
-	userID := 1
 	for _, user := range users {
-
 		if user.Name == "" {
 			msg := "User resource expects parameter: Name."
 			s.log.V(1).Info(msg, "step", "applyUserParams")
@@ -132,31 +128,35 @@ func (s *SupermicroX) User(users []*cfgresources.User) (err error) {
 			return errors.New(msg)
 		}
 
-		configUser := ConfigUser{}
-
-		//if the user is enabled setup parameters
-		if user.Enable {
-			configUser.Username = user.Name
-			configUser.Password = user.Password
-			configUser.UserID = userID
-
-			if user.Role == "admin" {
-				configUser.NewPrivilege = 4
-			} else if user.Role == "user" {
-				configUser.NewPrivilege = 3
+		configUser := ConfigUser{
+			Username:     user.Name,
+			Password:     user.Password,
+			NewPrivilege: 3,
+			UserID:       1,
+		}
+		if user.Role == "admin" {
+			configUser.NewPrivilege = 4
+		}
+		var userID int
+		comparisonNum := 10
+		for id, name := range currentUsers {
+			if name == user.Name {
+				userID = id
+				break
+			} else if name == "" {
+				if id < comparisonNum {
+					userID = id
+					comparisonNum = id
+				}
 			}
-		} else {
-			_, uexists := currentUsers[user.Name]
-			//if the user exists, delete it
-			//this is done by sending an empty username along with,
-			//the respective userid
-			if uexists {
-				configUser.Username = ""
-				configUser.UserID = currentUsers[user.Name]
-			} else {
-				userID++
-				continue
-			}
+		}
+		if userID == 0 {
+			return errors.New("no user slots available")
+		}
+		configUser.UserID = userID
+
+		if !user.Enable {
+			configUser.Username = ""
 		}
 
 		endpoint := "config_user.cgi"
@@ -175,8 +175,6 @@ func (s *SupermicroX) User(users []*cfgresources.User) (err error) {
 		}
 
 		s.log.V(1).Info("User parameters applied.", "ip", s.ip, "model", s.HardwareType(), "user", user.Name)
-
-		userID++
 	}
 
 	return err

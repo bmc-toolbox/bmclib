@@ -251,11 +251,7 @@ func (s *SupermicroX) HardwareType() (model string) {
 		s.log.V(1).Info("error getting hardwaretype", "err", internal.ErrStringOrEmpty(err))
 		return model
 	}
-	if strings.Contains(strings.ToLower(m), X10) {
-		return X10
-	}
-
-	return BmcType
+	return m
 }
 
 // Model returns the device model

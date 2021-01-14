@@ -259,7 +259,10 @@ func (p *Probe) supermicrox(ctx context.Context, log logr.Logger) (bmcConnection
 		if err != nil {
 			return bmcConnection, err
 		}
-		if conn.HardwareType() == supermicrox.X10 {
+		// empty string means that either HardwareType() was unable to get the model or the model returned was empty
+		// if HardwareType() returned something more than empty than the call worked, we'll assume other calls will
+		// also work
+		if conn.HardwareType() != "" {
 			return conn, err
 		}
 	}
@@ -291,7 +294,10 @@ func (p *Probe) supermicrox11(ctx context.Context, log logr.Logger) (bmcConnecti
 		if err != nil {
 			return bmcConnection, err
 		}
-		if conn.HardwareType() == supermicrox11.X11 {
+		// empty string means that either HardwareType() was unable to get the model or the model returned was empty
+		// if HardwareType() returned something more than empty than the call worked, we'll assume other calls will
+		// also work
+		if conn.HardwareType() != "" {
 			return conn, err
 		}
 	}
