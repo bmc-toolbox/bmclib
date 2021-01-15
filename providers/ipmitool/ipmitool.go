@@ -6,8 +6,9 @@ import (
 	"strings"
 
 	"github.com/bmc-toolbox/bmclib/internal/ipmi"
-	"github.com/bmc-toolbox/bmclib/registry"
+	"github.com/bmc-toolbox/bmclib/providers"
 	"github.com/go-logr/logr"
+	"github.com/jacobweinstock/registrar"
 )
 
 const (
@@ -15,6 +16,17 @@ const (
 	ProviderName = "ipmitool"
 	// ProviderProtocol for the provider implementation
 	ProviderProtocol = "ipmi"
+)
+
+var (
+	// Features implemented by ipmitool
+	Features = registrar.Features{
+		providers.FeaturePowerSet,
+		providers.FeaturePowerState,
+		providers.FeatureUserRead,
+		providers.FeatureBmcReset,
+		providers.FeatureBootDeviceSet,
+	}
 )
 
 // Conn for Ipmitool connection details
@@ -27,26 +39,10 @@ type Conn struct {
 	con  *ipmi.Ipmi
 }
 
-func init() {
-	registry.Register(ProviderName, ProviderProtocol, func(host, port, user, pass string, log logr.Logger) (interface{}, registry.IsCompatibleFn, error) {
-		if port == "" {
-			port = "623"
-		}
-		i, err := ipmi.New(user, pass, host+":"+port)
-		conn := &Conn{Host: host, User: user, Pass: pass, Port: port, Log: log, con: i}
-		return conn, conn.isCompatible, err
-	}, []registry.Feature{
-		registry.FeaturePowerSet,
-		registry.FeaturePowerState,
-		registry.FeatureUserRead,
-		registry.FeatureBmcReset,
-		registry.FeatureBootDeviceSet,
-	})
-}
-
 // Open a connection to a BMC
 func (c *Conn) Open(ctx context.Context) (err error) {
-	return nil
+	c.con, err = ipmi.New(c.User, c.Pass, c.Host+":"+c.Port)
+	return err
 }
 
 // Close a connection to a BMC
@@ -55,8 +51,17 @@ func (c *Conn) Close(ctx context.Context) (err error) {
 }
 
 // Compatible tests whether a BMC is compatible with the ipmitool provider
-func (c *Conn) isCompatible(ctx context.Context) bool {
-	_, err := c.con.IsOn(ctx)
+func (c *Conn) Compatible(ctx context.Context) bool {
+	err := c.Open(ctx)
+	if err != nil {
+		c.Log.V(0).Error(err, "error checking compatibility opening connection")
+		return false
+	}
+	defer c.Close(ctx)
+	_, err = c.con.IsOn(ctx)
+	if err != nil {
+		c.Log.V(0).Error(err, "error checking compatibility through power status")
+	}
 	return err == nil
 }
 

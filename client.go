@@ -4,22 +4,19 @@ package bmclib
 
 import (
 	"context"
-	"sync"
 
 	"github.com/bmc-toolbox/bmclib/bmc"
 	"github.com/bmc-toolbox/bmclib/logging"
-	"github.com/bmc-toolbox/bmclib/registry"
+	"github.com/bmc-toolbox/bmclib/providers/ipmitool"
 	"github.com/go-logr/logr"
-
-	// register providers here
-	_ "github.com/bmc-toolbox/bmclib/providers/ipmitool"
+	"github.com/jacobweinstock/registrar"
 )
 
 // Client for BMC interactions
 type Client struct {
 	Auth     Auth
 	Logger   logr.Logger
-	Registry registry.Collection
+	Registry *registrar.Registry
 }
 
 // Auth details for connecting to a BMC
@@ -39,7 +36,7 @@ func WithLogger(logger logr.Logger) Option {
 }
 
 // WithRegistry sets the Registry
-func WithRegistry(registry registry.Collection) Option {
+func WithRegistry(registry *registrar.Registry) Option {
 	return func(args *Client) { args.Registry = registry }
 }
 
@@ -47,7 +44,7 @@ func WithRegistry(registry registry.Collection) Option {
 func NewClient(host, port, user, pass string, opts ...Option) *Client {
 	var defaultClient = &Client{
 		Logger:   logging.DefaultLogger(),
-		Registry: registry.All(),
+		Registry: registrar.NewRegistry(),
 	}
 	for _, opt := range opts {
 		opt(defaultClient)
@@ -57,96 +54,64 @@ func NewClient(host, port, user, pass string, opts ...Option) *Client {
 	defaultClient.Auth.Port = port
 	defaultClient.Auth.User = user
 	defaultClient.Auth.Pass = pass
-	defaultClient.setProviders()
+	defaultClient.Registry.Logger = defaultClient.Logger
+	defaultClient.registerProviders()
 
 	return defaultClient
 }
 
-// setProviders updates the Registry with corresponding interfaces for all registered implementations
-func (c *Client) setProviders() {
-	for _, elem := range c.Registry {
-		providerInterface, isCompatFn, err := elem.InitFn(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger)
-		if err != nil {
-			c.Logger.V(0).Info("provider registration error", "error", err.Error(), "provider", elem.Provider)
-			continue
-		}
-		elem.ProviderInterface = providerInterface
-		elem.IsCompatibleFn = isCompatFn
-	}
-}
-
-// getProviders returns a slice of interfaces for all registered implementations
-func (c *Client) getProviders() []interface{} {
-	results := make([]interface{}, len(c.Registry))
-	for _, elem := range c.Registry {
-		results = append(results, elem.ProviderInterface)
-	}
-	return results
-}
-
-// DiscoverCompatible updates the registry with only compatible BMCs
-func (c *Client) DiscoverCompatible(ctx context.Context) {
-	var wg sync.WaitGroup
-	result := make(registry.Collection, 0)
-	for _, elem := range c.Registry {
-		wg.Add(1)
-		go func(isCompat registry.IsCompatibleFn, reg *registry.Registry, wg *sync.WaitGroup) {
-			if isCompat(ctx) {
-				result = append(result, reg)
-			}
-			wg.Done()
-		}(elem.IsCompatibleFn, elem, &wg)
-	}
-	wg.Wait()
-	c.Registry = result
+func (c *Client) registerProviders() {
+	// register ipmitool provider
+	driverIpmitool := &ipmitool.Conn{Host: c.Auth.Host, Port: c.Auth.Port, User: c.Auth.User, Pass: c.Auth.Pass, Log: c.Logger}
+	c.Registry.Register(ipmitool.ProviderName, ipmitool.ProviderProtocol, ipmitool.Features, nil, driverIpmitool)
 }
 
 // Open pass through to library function
 func (c *Client) Open(ctx context.Context) (err error) {
-	return bmc.OpenConnectionFromInterfaces(ctx, c.getProviders())
+	return bmc.OpenConnectionFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
 }
 
 // Close pass through to library function
 func (c *Client) Close(ctx context.Context) (err error) {
-	return bmc.CloseConnectionFromInterfaces(ctx, c.getProviders())
+	return bmc.CloseConnectionFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
 }
 
 // GetPowerState pass through to library function
 func (c *Client) GetPowerState(ctx context.Context) (state string, err error) {
-	return bmc.GetPowerStateFromInterfaces(ctx, c.getProviders())
+	return bmc.GetPowerStateFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
 }
 
 // SetPowerState pass through to library function
 func (c *Client) SetPowerState(ctx context.Context, state string) (ok bool, err error) {
-	return bmc.SetPowerStateFromInterfaces(ctx, state, c.getProviders())
+	return bmc.SetPowerStateFromInterfaces(ctx, state, c.Registry.GetDriverInterfaces())
 }
 
 // CreateUser pass through to library function
 func (c *Client) CreateUser(ctx context.Context, user, pass, role string) (ok bool, err error) {
-	return bmc.CreateUserFromInterfaces(ctx, user, pass, role, c.getProviders())
+	return bmc.CreateUserFromInterfaces(ctx, user, pass, role, c.Registry.GetDriverInterfaces())
 }
 
 // UpdateUser pass through to library function
 func (c *Client) UpdateUser(ctx context.Context, user, pass, role string) (ok bool, err error) {
-	return bmc.UpdateUserFromInterfaces(ctx, user, pass, role, c.getProviders())
+	return bmc.UpdateUserFromInterfaces(ctx, user, pass, role, c.Registry.GetDriverInterfaces())
 }
 
 // DeleteUser pass through to library function
 func (c *Client) DeleteUser(ctx context.Context, user string) (ok bool, err error) {
-	return bmc.DeleteUserFromInterfaces(ctx, user, c.getProviders())
+	return bmc.DeleteUserFromInterfaces(ctx, user, c.Registry.GetDriverInterfaces())
 }
 
 // ReadUsers pass through to library function
 func (c *Client) ReadUsers(ctx context.Context) (users []map[string]string, err error) {
-	return bmc.ReadUsersFromInterfaces(ctx, c.getProviders())
+	return bmc.ReadUsersFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
 }
 
 // SetBootDevice pass through to library function
 func (c *Client) SetBootDevice(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
-	return bmc.SetBootDeviceFromInterfaces(ctx, bootDevice, setPersistent, efiBoot, c.getProviders())
+	return bmc.SetBootDeviceFromInterfaces(ctx, bootDevice, setPersistent, efiBoot, c.Registry.GetDriverInterfaces())
 }
 
 // ResetBMC pass through to library function
 func (c *Client) ResetBMC(ctx context.Context, resetType string) (ok bool, err error) {
-	return bmc.ResetBMCFromInterfaces(ctx, resetType, c.getProviders())
+	return bmc.ResetBMCFromInterfaces(ctx, resetType, c.Registry.GetDriverInterfaces())
 }

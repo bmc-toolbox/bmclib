@@ -3,6 +3,11 @@ package ipmitool
 import (
 	"context"
 	"errors"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"reflect"
 	"testing"
 	"time"
@@ -10,35 +15,30 @@ import (
 	"bou.ke/monkey"
 	"github.com/bmc-toolbox/bmclib/internal/ipmi"
 	"github.com/bmc-toolbox/bmclib/logging"
-	"github.com/bmc-toolbox/bmclib/registry"
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
-func TestInit(t *testing.T) {
-	user := "ADMIN"
-	pass := "ADMIN"
-	host := "127.0.0.1"
-	port := "623"
-	ipm := &ipmi.Ipmi{Username: user, Password: pass, Host: host}
-	want := &Conn{
-		Host: host,
-		Port: port,
-		User: user,
-		Pass: pass,
-		Log:  nil,
-		con:  ipm,
+func TestMain(m *testing.M) {
+	var tempDir string
+	_, err := exec.LookPath("ipmitool")
+	if err != nil {
+		tempDir, err = ioutil.TempDir("/tmp", "")
+		if err != nil {
+			os.Exit(2)
+		}
+		path := os.Getenv("PATH") + ":" + tempDir
+		os.Setenv("PATH", path)
+		fmt.Println(os.Getenv("PATH"))
+		f := filepath.Join(tempDir, "ipmitool")
+		err = ioutil.WriteFile(f, []byte{}, 0755)
+		if err != nil {
+			os.RemoveAll(tempDir)
+			os.Exit(3)
+		}
 	}
-	monkey.Patch(ipmi.New, func(username string, password string, host string) (i *ipmi.Ipmi, err error) {
-		return ipm, nil
-	})
-	r := registry.All()
-	i, _, _ := r[0].InitFn(host, port, user, pass, nil)
-	n := i.(*Conn)
-	diff := cmp.Diff(want, n, cmpopts.IgnoreUnexported(Conn{}))
-	if diff != "" {
-		t.Fatal(diff)
-	}
+
+	code := m.Run()
+	os.RemoveAll(tempDir)
+	os.Exit(code)
 }
 
 func TestIsCompatible(t *testing.T) {
@@ -74,7 +74,7 @@ func TestIsCompatible(t *testing.T) {
 				Log:  logging.DefaultLogger(),
 				con:  i,
 			}
-			ok := c.isCompatible(ctx)
+			ok := c.Compatible(ctx)
 			if ok != tc.ok {
 				t.Fatalf("got: %v, expected: %v", ok, tc.ok)
 			}

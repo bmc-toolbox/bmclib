@@ -25,3 +25,7 @@ goimports: ## run goimports updating files in place
 goimports-check: ## run goimports displaying diffs
 	@echo be sure goimports is installed
 	goimports -d . | (! grep .)
+
+.PHONY: all-checks
+all-checks: cover lint goimports ## run all tests and formatters
+	go vet ./...
