@@ -12,7 +12,7 @@ require (
 	github.com/google/go-querystring v1.0.0
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.0
-	github.com/jacobweinstock/registrar v0.3.1
+	github.com/jacobweinstock/registrar v0.3.2
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/magiconair/properties v1.8.4 // indirect
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
