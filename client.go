@@ -47,7 +47,6 @@ func NewClient(host, port, user, pass string, opts ...Option) *Client {
 		Registry: registrar.NewRegistry(),
 	}
 	defaultClient.Registry.Logger = defaultClient.Logger
-	defaultClient.registerProviders()
 
 	for _, opt := range opts {
 		opt(defaultClient)
@@ -57,6 +56,10 @@ func NewClient(host, port, user, pass string, opts ...Option) *Client {
 	defaultClient.Auth.Port = port
 	defaultClient.Auth.User = user
 	defaultClient.Auth.Pass = pass
+	// len of 0 means that no Registry, with any registered providers was passed in.
+	if len(defaultClient.Registry.Drivers) == 0 {
+		defaultClient.registerProviders()
+	}
 
 	return defaultClient
 }
