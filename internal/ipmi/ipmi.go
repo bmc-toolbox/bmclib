@@ -207,7 +207,6 @@ func (i *Ipmi) BootDeviceSet(ctx context.Context, bootDevice string, setPersiste
 		ipmiCmd = append(ipmiCmd, optsFull)
 	}
 
-	fmt.Println(ipmiCmd)
 	output, err := i.run(ctx, ipmiCmd)
 	if err != nil {
 		return false, fmt.Errorf("%v: %v", err, output)
