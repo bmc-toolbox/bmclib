@@ -53,11 +53,11 @@ func TestIsCompatible(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			var ipm *ipmi.Ipmi
-			monkey.PatchInstanceMethod(reflect.TypeOf(ipm), "IsOn", func(_ *ipmi.Ipmi, _ context.Context) (status bool, err error) {
+			monkey.PatchInstanceMethod(reflect.TypeOf(ipm), "PowerState", func(_ *ipmi.Ipmi, _ context.Context) (status string, err error) {
 				if !tc.ok {
 					err = errors.New("not compatible")
 				}
-				return true, err
+				return "on", err
 			})
 			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 			defer cancel()
