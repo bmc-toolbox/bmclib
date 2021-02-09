@@ -6,7 +6,9 @@ import (
 	"context"
 
 	"github.com/bmc-toolbox/bmclib/bmc"
+	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/logging"
+	"github.com/bmc-toolbox/bmclib/providers/asrockrack"
 	"github.com/bmc-toolbox/bmclib/providers/ipmitool"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
@@ -68,6 +70,10 @@ func (c *Client) registerProviders() {
 	// register ipmitool provider
 	driverIpmitool := &ipmitool.Conn{Host: c.Auth.Host, Port: c.Auth.Port, User: c.Auth.User, Pass: c.Auth.Pass, Log: c.Logger}
 	c.Registry.Register(ipmitool.ProviderName, ipmitool.ProviderProtocol, ipmitool.Features, nil, driverIpmitool)
+
+	// setup https provider - we don't expect Build() to fail
+	driverHttps, _ := httpclient.Build()
+	c.Registry.Register(asrockrack.ProviderName, asrockrack.ProviderProtocol, asrockrack.Features, nil, driverHttps)
 }
 
 // Open pass through to library function
