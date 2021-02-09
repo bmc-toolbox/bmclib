@@ -23,7 +23,6 @@ var (
 	fwinfoResponse         = []byte(`{ "BMC_fw_version": "0.01.00", "BIOS_fw_version": "L2.07B", "ME_fw_version": "5.1.3.78", "Micro_Code_version": "000000ca", "CPLD_version": "N\/A", "CM_version": "0.13.01", "BPB_version": "0.0.002.0", "Node_id": "2" }`)
 	fwUploadResponse       = []byte(`{"cc": 0}`)
 	fwVerificationResponse = []byte(`[ { "id": 1, "current_image_name": "ast2500e", "current_image_version1": "0.01.00", "current_image_version2": "", "new_image_version": "0.03.00", "section_status": 0, "verification_status": 5 } ]`)
-	fwUpgradeResponse      = []byte(`{"preserve_config":1,"preserve_network":0,"preserve_user":0,"flash_status":1}`)
 	fwUpgradeProgress      = []byte(`{ "id": 1, "action": "Flashing...", "progress": "__PERCENT__% done         ", "state": 0 }`)
 )
 
@@ -92,7 +91,7 @@ func firmwareUpgrade(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusBadRequest)
 			}
 			fwUpgradeState.FirmwareVerified = true
-			w.Write(fwVerificationResponse)
+			_, _ = w.Write(fwVerificationResponse)
 		case "/api/maintenance/reset":
 			w.WriteHeader(http.StatusOK)
 		// 5. flash progress
@@ -108,7 +107,7 @@ func firmwareUpgrade(w http.ResponseWriter, r *http.Request) {
 			}
 
 			resp := bytes.Replace(fwUpgradeProgress, []byte("__PERCENT__"), []byte(strconv.Itoa(fwUpgradeState.UpgradePercent)), 1)
-			w.Write(resp)
+			_, _ = w.Write(resp)
 		}
 	case "PUT":
 
@@ -143,8 +142,8 @@ func firmwareUpgrade(w http.ResponseWriter, r *http.Request) {
 			fwUpgradeState.UpgradeInitiated = true
 			// respond with request body
 			b := new(bytes.Buffer)
-			b.ReadFrom(r.Body)
-			w.Write(b.Bytes())
+			_, _ = b.ReadFrom(r.Body)
+			_, _ = w.Write(b.Bytes())
 		}
 	case "POST":
 		switch r.RequestURI {
@@ -168,7 +167,7 @@ func firmwareUpgrade(w http.ResponseWriter, r *http.Request) {
 			}
 
 			fwUpgradeState.FirmwareUploaded = true
-			w.Write(fwUploadResponse)
+			_, _ = w.Write(fwUploadResponse)
 		}
 	default:
 		w.WriteHeader(http.StatusBadRequest)

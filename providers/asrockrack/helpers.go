@@ -307,10 +307,8 @@ func (a *ASRockRack) queryHTTPS(URLendpoint, method string, payload []byte, head
 
 	// add headers
 	req.Header.Add("X-CSRFTOKEN", a.loginSession.CSRFToken)
-	if headers != nil {
-		for k, v := range headers {
-			req.Header.Add(k, v)
-		}
+	for k, v := range headers {
+		req.Header.Add(k, v)
 	}
 
 	// debug dump request

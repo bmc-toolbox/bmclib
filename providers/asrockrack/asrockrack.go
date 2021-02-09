@@ -40,7 +40,6 @@ type ASRockRack struct {
 	ip           string
 	username     string
 	password     string
-	sid          *http.Cookie
 	loginSession *loginSession
 	httpClient   *http.Client
 	fwInfo       *firmwareInfo
