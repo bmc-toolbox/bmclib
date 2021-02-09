@@ -13,6 +13,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/devices"
 
 	"github.com/bmc-toolbox/bmclib/errors"
+	"github.com/bmc-toolbox/bmclib/providers/asrockrack"
 	"github.com/bmc-toolbox/bmclib/providers/dell/idrac8"
 	"github.com/bmc-toolbox/bmclib/providers/dell/idrac9"
 	"github.com/bmc-toolbox/bmclib/providers/dell/m1000e"
@@ -327,6 +328,33 @@ func (p *Probe) quanta(ctx context.Context, log logr.Logger) (bmcConnection inte
 	if resp.StatusCode == 200 && bytes.Contains(payload, []byte("Quanta")) {
 		log.V(1).Info("step", "ScanAndConnect", "host", p.host, "vendor", string(devices.Quanta), "msg", "it's a quanta")
 		return bmcConnection, errors.NewErrUnsupportedHardware("quanta hardware not supported")
+	}
+
+	return bmcConnection, errors.ErrDeviceNotMatched
+}
+
+func (p *Probe) asRockRack(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("https://%s", p.host), nil)
+	if err != nil {
+		return bmcConnection, err
+	}
+	resp, err := p.client.Do(req)
+	if err != nil {
+		return bmcConnection, err
+	}
+
+	defer resp.Body.Close()
+	defer io.Copy(ioutil.Discard, resp.Body) // nolint
+
+	payload, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return bmcConnection, err
+	}
+
+	// ensure the response we got included a png
+	if resp.StatusCode == 200 && bytes.Contains(payload, []byte("ASRockRack")) {
+		log.V(1).Info("step", "ScanAndConnect", "host", p.host, "vendor", string(devices.ASRockRack), "msg", "it's a ASRockRack")
+		return asrockrack.New(ctx, p.host, p.username, p.password, log)
 	}
 
 	return bmcConnection, errors.ErrDeviceNotMatched

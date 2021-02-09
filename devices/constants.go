@@ -55,6 +55,8 @@ const (
 	Ilo5 = "iLO5"
 	//AtenSM is the constant for AtenSM bmc
 	AtenSM = "AtenSM"
+	//ASRockRack is the constant for ASRockRack bmc
+	ASRockRack = "ASRockRack"
 )
 
 // ListSupportedVendors  returns a list of supported vendors
