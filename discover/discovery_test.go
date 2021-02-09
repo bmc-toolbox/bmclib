@@ -113,6 +113,11 @@ func TestProbes(t *testing.T) {
 			wantHint: ProbeHpIlo,
 			wantType: (*ilo.Ilo)(nil),
 		},
+		{
+			name:     "ASRockRack",
+			wantHint: ProbeASRockRack,
+			wantType: nil,
+		},
 	}
 
 	for _, tt := range testt {
