@@ -42,7 +42,8 @@ type ASRockRack struct {
 	loginSession       *loginSession
 	httpClient         *http.Client
 	fwInfo             *firmwareInfo
-	resetRequired      bool
+	resetRequired      bool // Indicates if the BMC requires a reset
+	skipLogout         bool // A Close() / httpsLogout() request is ignored if the BMC was just flashed - since the sessions are terminated either way
 	bMCFirmwareUpdated bool
 	ctx                context.Context
 	log                logr.Logger
@@ -80,6 +81,10 @@ func (a *ASRockRack) Open(ctx context.Context) (err error) {
 
 // Close a connection to a BMC
 func (a *ASRockRack) Close(ctx context.Context) (err error) {
+
+	if a.skipLogout {
+		return nil
+	}
 
 	err = a.httpsLogout()
 	if err != nil {
@@ -205,6 +210,8 @@ func (a *ASRockRack) FirmwareUpdateBMC(ctx context.Context, filePath string) err
 				a.log.V(0).Info("info", "step", "5/5 - firmware flash complete!", "progress", p.Progress, "action", p.Action, "elapsed time", time.Since(startTS).String())
 				// The BMC resets by itself after a successful flash
 				a.resetRequired = false
+				// HTTP sessions are terminated once the BMC resets after an upgrade
+				a.skipLogout = true
 				return nil
 			}
 		case <-timeoutT:

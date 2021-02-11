@@ -103,13 +103,15 @@ func firmwareUpgrade(w http.ResponseWriter, r *http.Request) {
 			resp := fwUpgradeProgress
 			if fwUpgradeState.UpgradePercent >= 100 {
 				fwUpgradeState.UpgradePercent = 100
+				// state: 2  indicates firmware flash complete
 				resp = bytes.Replace(fwUpgradeProgress, []byte("__STATE__"), []byte(strconv.Itoa(2)), 1)
 			} else {
+				// state: 0 indicates firmware flash in progress
+				resp = bytes.Replace(fwUpgradeProgress, []byte("__STATE__"), []byte(strconv.Itoa(0)), 1)
 				fwUpgradeState.UpgradePercent += 50
 			}
 
-			resp = bytes.Replace(fwUpgradeProgress, []byte("__PERCENT__"), []byte(strconv.Itoa(fwUpgradeState.UpgradePercent)), 1)
-
+			resp = bytes.Replace(resp, []byte("__PERCENT__"), []byte(strconv.Itoa(fwUpgradeState.UpgradePercent)), 1)
 			_, _ = w.Write(resp)
 		}
 	case "PUT":
