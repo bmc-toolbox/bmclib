@@ -882,3 +882,18 @@ func (i *IDrac8) UpdateCredentials(username string, password string) {
 	i.username = username
 	i.password = password
 }
+
+// BiosVersion returns the BIOS version from the BMC, implements the Firmware interface
+func (i *IDrac8) GetBIOSVersion(ctx context.Context) (string, error) {
+	return "", errors.ErrNotImplemented
+}
+
+// BMCVersion returns the BMC version, implements the Firmware interface
+func (i *IDrac8) GetBMCVersion(ctx context.Context) (string, error) {
+	return "", errors.ErrNotImplemented
+}
+
+// Updates the BMC firmware, implements the Firmware interface
+func (i *IDrac8) FirmwareUpdateBMC(ctx context.Context, filePath string) error {
+	return errors.ErrNotImplemented
+}
