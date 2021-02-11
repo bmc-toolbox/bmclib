@@ -51,7 +51,7 @@ func init() {
 	bmcURL, _ = url.Parse(server.URL)
 
 	l := logrus.New()
-	l.Level = logrus.InfoLevel
+	l.Level = logrus.DebugLevel
 	// setup bmc client
 	tLog := logrusr.NewLogger(l)
 	aClient, err = New(context.TODO(), bmcURL.Host, "foo", "bar", tLog)
@@ -96,7 +96,6 @@ func firmwareUpgrade(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 		// 5. flash progress
 		case "/api/maintenance/firmware/flash-progress":
-			spew.Dump(r.Cookies())
 			if !fwUpgradeState.UpgradeInitiated {
 				w.WriteHeader(http.StatusBadRequest)
 			}
