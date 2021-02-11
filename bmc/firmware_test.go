@@ -15,7 +15,7 @@ type firmwareTester struct {
 	MakeErrorOut bool
 }
 
-func (f *firmwareTester) FirmwareVersionBMC(ctx context.Context) (version string, err error) {
+func (f *firmwareTester) GetBMCVersion(ctx context.Context) (version string, err error) {
 	if f.MakeErrorOut {
 		return "", errors.New("failed to get BMC version")
 	}

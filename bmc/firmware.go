@@ -10,7 +10,7 @@ import (
 
 // BMCVersionGetter retrieves the current BMC firmware version information
 type BMCVersionGetter interface {
-	FirmwareVersionBMC(ctx context.Context) (version string, err error)
+	GetBMCVersion(ctx context.Context) (version string, err error)
 }
 
 // BMCFirmwareUpdater upgrades the BMC firmware
@@ -28,7 +28,7 @@ Loop:
 			break Loop
 		default:
 			if elem != nil {
-				version, vErr := elem.FirmwareVersionBMC(ctx)
+				version, vErr := elem.GetBMCVersion(ctx)
 				if vErr != nil {
 					err = multierror.Append(err, vErr)
 					continue
@@ -101,4 +101,56 @@ func UpdateBMCFirmwareFromInterfaces(ctx context.Context, updateFileName string,
 	}
 
 	return UpdateBMCFirmware(ctx, updateFileName, bmcFirmwareUpdater)
+}
+
+// BIOSVersionGetter retrieves the current BIOS firmware version information
+type BIOSVersionGetter interface {
+	GetBIOSVersion(ctx context.Context) (version string, err error)
+}
+
+// BIOSFirmwareUpdater upgrades the BIOS firmware
+type BIOSFirmwareUpdater interface {
+	FirmwareUpdateBIOS(ctx context.Context, fileName string) (err error)
+}
+
+// GetBIOSVersion returns the BMC firmware version, trying all interface implementations passed in
+func GetBIOSVersion(ctx context.Context, p []BIOSVersionGetter) (version string, err error) {
+Loop:
+	for _, elem := range p {
+		select {
+		case <-ctx.Done():
+			err = multierror.Append(err, ctx.Err())
+			break Loop
+		default:
+			if elem != nil {
+				version, vErr := elem.GetBIOSVersion(ctx)
+				if vErr != nil {
+					err = multierror.Append(err, vErr)
+					continue
+				}
+				return version, nil
+			}
+		}
+	}
+
+	return version, multierror.Append(err, errors.New("failed to get BMC version"))
+}
+
+// GetBIOSVersionFromInterfaces pass through to library function
+func GetBIOSVersionFromInterfaces(ctx context.Context, generic []interface{}) (version string, err error) {
+	biosVersionGetter := make([]BIOSVersionGetter, 0)
+	for _, elem := range generic {
+		switch p := elem.(type) {
+		case BIOSVersionGetter:
+			biosVersionGetter = append(biosVersionGetter, p)
+		default:
+			e := fmt.Sprintf("not a BIOSVersionGetter implementation: %T", p)
+			err = multierror.Append(err, errors.New(e))
+		}
+	}
+	if len(biosVersionGetter) == 0 {
+		return version, multierror.Append(err, errors.New("no BIOSVersionGetter implementations found"))
+	}
+
+	return GetBIOSVersion(ctx, biosVersionGetter)
 }
