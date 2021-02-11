@@ -187,3 +187,18 @@ func (i *Ibmc) UpdateFirmware(string, string) (b bool, e error) {
 func (i *Ibmc) IsOn() (status bool, err error) {
 	return false, nil
 }
+
+// BiosVersion returns the BIOS version from the BMC, implements the Firmware interface
+func (i *Ibmc) GetBIOSVersion(ctx context.Context) (string, error) {
+	return "", errors.ErrNotImplemented
+}
+
+// BMCVersion returns the BMC version, implements the Firmware interface
+func (i *Ibmc) GetBMCVersion(ctx context.Context) (string, error) {
+	return "", errors.ErrNotImplemented
+}
+
+// Updates the BMC firmware, implements the Firmware interface
+func (i *Ibmc) FirmwareUpdateBMC(ctx context.Context, filePath string) error {
+	return errors.ErrNotImplemented
+}
