@@ -5,6 +5,7 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
+	"github.com/bmc-toolbox/bmclib/errors"
 )
 
 // The ibmc model is part of the dummy vendor,
