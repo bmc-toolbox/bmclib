@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"os"
 
 	"github.com/bmc-toolbox/bmclib/devices"
@@ -58,7 +59,7 @@ func printStatus(connection interface{}, logger *logrus.Logger) {
 	switch con := connection.(type) {
 	case devices.Bmc:
 		conn := con
-		defer conn.Close()
+		defer conn.Close(context.TODO())
 
 		sr, err := conn.Serial()
 		if err != nil {

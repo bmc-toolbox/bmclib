@@ -19,7 +19,7 @@ type Bmc interface {
 	Firmware
 
 	CheckCredentials() error
-	Close() error
+	Close(context.Context) error
 	PowerOn() (bool, error)       // PowerSetter
 	PowerOff() (bool, error)      // PowerSetter
 	PxeOnce() (bool, error)       // BootDeviceSetter

@@ -2,6 +2,7 @@ package idrac8
 
 import (
 	"bytes"
+	"context"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -102,7 +103,7 @@ func (i *IDrac8) loadHwData() (err error) {
 }
 
 // Close closes the connection properly
-func (i *IDrac8) Close() error {
+func (i *IDrac8) Close(ctx context.Context) error {
 	var multiErr error
 
 	if i.httpClient != nil {
