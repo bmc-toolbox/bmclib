@@ -282,7 +282,7 @@ func (a *ASRockRack) httpsLogout() error {
 	}
 
 	if statusCode != 200 {
-		return fmt.Errorf("Error logging out: " + err.Error())
+		return fmt.Errorf("Non 200 response at https logout: %d", statusCode)
 	}
 
 	return nil
