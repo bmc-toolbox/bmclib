@@ -1,6 +1,7 @@
 package idrac9
 
 import (
+	"context"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -106,7 +107,7 @@ func (i *IDrac9) loadHwData() (err error) {
 }
 
 // Close closes the connection properly
-func (i *IDrac9) Close() error {
+func (i *IDrac9) Close(ctx context.Context) error {
 	var multiErr error
 
 	if i.httpClient != nil {

@@ -2,6 +2,7 @@ package ilo
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -83,7 +84,7 @@ func (i *Ilo) httpLogin() (err error) {
 }
 
 // Close closes the connection properly
-func (i *Ilo) Close() error {
+func (i *Ilo) Close(ctx context.Context) error {
 	var multiErr error
 
 	if i.httpClient != nil {

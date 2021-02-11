@@ -1,6 +1,7 @@
 package devices
 
 import (
+	"context"
 	"crypto/x509"
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
@@ -15,7 +16,7 @@ type Bmc interface {
 	BmcCollection
 
 	CheckCredentials() error
-	Close() error
+	Close(context.Context) error
 	PowerOn() (bool, error)       // PowerSetter
 	PowerOff() (bool, error)      // PowerSetter
 	PxeOnce() (bool, error)       // BootDeviceSetter

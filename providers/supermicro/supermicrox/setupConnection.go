@@ -2,6 +2,7 @@ package supermicrox
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -60,7 +61,7 @@ func (s *SupermicroX) httpLogin() (err error) {
 }
 
 // Close closes the connection properly
-func (s *SupermicroX) Close() (err error) {
+func (s *SupermicroX) Close(ctx context.Context) (err error) {
 	if s.httpClient != nil {
 		bmcURL := fmt.Sprintf("https://%s/cgi/logout.cgi", s.ip)
 		s.log.V(1).Info("logout from bmc", "step", "bmc connection", "vendor", supermicro.VendorID, "ip", s.ip)

@@ -1,8 +1,11 @@
 package ibmc
 
 import (
+	"context"
+
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
+	"github.com/bmc-toolbox/bmclib/errors"
 )
 
 // The ibmc model is part of the dummy vendor,
@@ -72,7 +75,7 @@ func (i *Ibmc) License() (string, string, error) {
 }
 
 // Close implements the Bmc interface
-func (i *Ibmc) Close() error {
+func (i *Ibmc) Close(ctx context.Context) error {
 	return nil
 }
 
