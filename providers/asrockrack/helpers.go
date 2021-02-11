@@ -39,10 +39,10 @@ type firmwareInfo struct {
 
 // Payload to preseve config when updating the BMC firmware
 type preserveConfig struct {
-	PreserveConfig  int `json:"preserve_config,omitempty"`
+	FlashStatus     int `json:"flash_status"` // 1 = full firmware flash, 2 = section based flash, 3 - version compare flash
+	PreserveConfig  int `json:"preserve_config"`
 	PreserveNetwork int `json:"preserve_network"`
 	PreserveUser    int `json:"preserve_user"`
-	FlashStatus     int `json:"flash_status"` // 1 = full firmware flash, 2 = section based flash, 3 - version compare flash
 }
 
 // Firmware flash progress
@@ -56,6 +56,8 @@ type upgradeProgress struct {
 }
 
 // 1 Set BMC to flash mode and prepare flash area
+// at this point all logged in sessions are terminated
+// and no logins are permitted
 func (a *ASRockRack) setFlashMode() error {
 
 	endpoint := "api/maintenance/flash"
@@ -69,7 +71,7 @@ func (a *ASRockRack) setFlashMode() error {
 		return fmt.Errorf("Non 200 response: %d", statusCode)
 	}
 
-	a.flashModeSet = true
+	a.resetRequired = true
 
 	return nil
 }
@@ -151,7 +153,8 @@ func (a *ASRockRack) upgradeBMC() error {
 		return err
 	}
 
-	_, statusCode, err := a.queryHTTPS(endpoint, "PUT", payload, nil)
+	headers := map[string]string{"Content-Type": "application/json"}
+	_, statusCode, err := a.queryHTTPS(endpoint, "PUT", payload, headers)
 	if err != nil {
 		return err
 	}
@@ -186,6 +189,7 @@ func (a *ASRockRack) reset() error {
 func (a *ASRockRack) flashProgress() (*upgradeProgress, error) {
 
 	endpoint := "api/maintenance/firmware/flash-progress"
+
 	resp, statusCode, err := a.queryHTTPS(endpoint, "GET", nil, nil)
 	if err != nil {
 		return nil, err

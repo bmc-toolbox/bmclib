@@ -125,3 +125,8 @@ func (c *Client) SetBootDevice(ctx context.Context, bootDevice string, setPersis
 func (c *Client) ResetBMC(ctx context.Context, resetType string) (ok bool, err error) {
 	return bmc.ResetBMCFromInterfaces(ctx, resetType, c.Registry.GetDriverInterfaces())
 }
+
+// GetBMCVersion pass through library function
+func (c *Client) GetBMCVersion(ctx context.Context) (version string, err error) {
+	return bmc.GetBMCVersionFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+}

@@ -1,11 +1,23 @@
 package asrockrack
 
 import (
+	"context"
 	"os"
 	"testing"
 
 	"gopkg.in/go-playground/assert.v1"
 )
+
+//func TestBmcInterface(t *testing.T) {
+
+//c, err := New(context.TODO(), ip, username, password, logrusr.NewLogger(testLog))
+//if err != nil {
+//return c, err
+//}
+//_ = devices.Bmc(c)
+//_ = devices.Configure(c)
+//_ = devices.Firmware(c)
+//}
 
 func Test_httpLogin(t *testing.T) {
 
@@ -71,7 +83,7 @@ func Test_FirwmwareUpdateBMC(t *testing.T) {
 	}
 
 	defer os.Remove(upgradeFile)
-	err = aClient.FirmwareUpdateBMC(upgradeFile)
+	err = aClient.FirmwareUpdateBMC(context.TODO(), upgradeFile)
 	if err != nil {
 		t.Errorf(err.Error())
 	}

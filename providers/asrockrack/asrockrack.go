@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
@@ -22,7 +21,7 @@ const (
 	// ProviderName for the provider implementation
 	ProviderName = "asrockrack"
 	// ProviderProtocol for the provider implementation
-	ProviderProtocol = "https"
+	ProviderProtocol = "vendorapi"
 )
 
 var (
@@ -37,18 +36,19 @@ var (
 
 // ASRockRack holds the status and properties of a connection to a asrockrack bmc
 type ASRockRack struct {
-	ip           string
-	username     string
-	password     string
-	loginSession *loginSession
-	httpClient   *http.Client
-	fwInfo       *firmwareInfo
-	flashModeSet bool
-	ctx          context.Context
-	log          logr.Logger
+	ip                 string
+	username           string
+	password           string
+	loginSession       *loginSession
+	httpClient         *http.Client
+	fwInfo             *firmwareInfo
+	resetRequired      bool
+	bMCFirmwareUpdated bool
+	ctx                context.Context
+	log                logr.Logger
 }
 
-// New returns a new SupermicroX instance ready to be used
+// New returns a new ASRockRack instance ready to be used
 func New(ctx context.Context, ip string, username string, password string, log logr.Logger) (*ASRockRack, error) {
 
 	client, err := httpclient.Build()
@@ -89,8 +89,17 @@ func (a *ASRockRack) Close(ctx context.Context) (err error) {
 	return nil
 }
 
+// CheckCredentials verify whether the credentials are valid or not
+func (a *ASRockRack) CheckCredentials() (err error) {
+	err = a.httpsLogin()
+	if err != nil {
+		return err
+	}
+	return err
+}
+
 // BiosVersion returns the BIOS version from the BMC
-func (a *ASRockRack) BiosVersion() (string, error) {
+func (a *ASRockRack) GetBIOSVersion(ctx context.Context) (string, error) {
 
 	var err error
 	if a.fwInfo == nil {
@@ -104,7 +113,7 @@ func (a *ASRockRack) BiosVersion() (string, error) {
 }
 
 // BMCVersion returns the BMC version
-func (a *ASRockRack) BMCVersion() (string, error) {
+func (a *ASRockRack) GetBMCVersion(ctx context.Context) (string, error) {
 
 	var err error
 	if a.fwInfo == nil {
@@ -120,11 +129,13 @@ func (a *ASRockRack) BMCVersion() (string, error) {
 // nolint: gocyclo
 // BMC firmware update is a multi step process
 // this method initiates the upgrade process and waits in a loop until the device has been upgraded
-func (a *ASRockRack) FirmwareUpdateBMC(filePath string) error {
+func (a *ASRockRack) FirmwareUpdateBMC(ctx context.Context, filePath string) error {
 
-	// The BMC needs to be reset once set into flash mode
 	defer func() {
-		if a.flashModeSet {
+		// The device needs to be reset to be removed from flash mode,
+		// this is required once setFlashMode() is invoked.
+		// The BMC resets itself once a firmware flash is successful or failed.
+		if a.resetRequired {
 			a.log.V(1).Info("info", "resetting BMC, this takes a few minutes")
 			err := a.reset()
 			if err != nil {
@@ -140,14 +151,14 @@ func (a *ASRockRack) FirmwareUpdateBMC(filePath string) error {
 	}
 
 	// 1. set the device to flash mode - prepares the flash
-	a.log.V(1).Info("info", "step 1/5 - setting device into flash mode.. this takes a minute", "filePath", filePath)
+	a.log.V(0).Info("info", "step 1/5 - setting device into flash mode.. this takes a minute", "filePath", filePath)
 	err = a.setFlashMode()
 	if err != nil {
 		return fmt.Errorf("failed in step 1/5 - set device in flash mode: " + err.Error())
 	}
 
 	// 2. upload firmware image file
-	a.log.V(1).Info("info", "step 2/5 - uploading firmware image", "filePath", filePath)
+	a.log.V(0).Info("info", "step 2/5 - uploading firmware image", "filePath", filePath)
 	err = a.uploadFirmware(filePath)
 	if err != nil {
 		return fmt.Errorf("failed in step 2/5 - upload firmware image: " + err.Error())
@@ -155,21 +166,21 @@ func (a *ASRockRack) FirmwareUpdateBMC(filePath string) error {
 
 	// 3. BMC to verify the uploaded file
 	err = a.verifyUploadedFirmware()
-	a.log.V(1).Info("info", "step 3/5 - verify uploaded firmware", "filePath", filePath)
+	a.log.V(0).Info("info", "step 3/5 - verify uploaded firmware", "filePath", filePath)
 	if err != nil {
 		return fmt.Errorf("failed in step 3/5 - verify uploaded firmware: " + err.Error())
 	}
 
 	startTS := time.Now()
 	// 4. Run the upgrade - preserving current config
-	a.log.V(1).Info("info", "step 4/5 - run the upgrade, preserving current configuration", "filePath", filePath)
+	a.log.V(0).Info("info", "step 4/5 - run the upgrade, preserving current configuration", "filePath", filePath)
 	err = a.upgradeBMC()
 	if err != nil {
 		return fmt.Errorf("failed in step 4/5 - verify uploaded firmware: " + err.Error())
 	}
 
 	// progress check interval
-	progressT := time.NewTicker(10 * time.Second).C
+	progressT := time.NewTicker(2 * time.Second).C
 	// timeout interval
 	timeoutT := time.NewTicker(30 * time.Minute).C
 	maxErrors := 20
@@ -183,13 +194,16 @@ func (a *ASRockRack) FirmwareUpdateBMC(filePath string) error {
 			p, err := a.flashProgress()
 			if err != nil {
 				errorsCount++
-				a.log.Error(err, "step 5/5 - error checking flash progress", "error count", errorsCount, "max errors", maxErrors, "elapsed time", time.Since(startTS).String())
+				a.log.V(0).Info("error", "step 5/5 - error checking flash progress", "error count", errorsCount, "max errors", maxErrors, "elapsed time", time.Since(startTS).String())
+				continue
 			}
 
-			a.log.V(1).Info("info", "step 5/5 - flash progress..", "progress", p.Progress, "action", p.Action, "elapsed time", time.Since(startTS).String())
+			a.log.V(0).Info("info", "step 5/5 - flash progress..", "progress", p.Progress, "action", p.Action, "elapsed time", time.Since(startTS).String())
 
 			// all done!
-			if strings.Contains(p.Progress, "100% done") {
+			if p.State == 2 {
+				a.log.V(0).Info("info", "step 5/5 - firmware flash complete!", "progress", p.Progress, "action", p.Action, "elapsed time", time.Since(startTS).String())
+				a.resetRequired = false
 				return nil
 			}
 		case <-timeoutT:

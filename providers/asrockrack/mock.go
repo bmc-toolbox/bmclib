@@ -23,7 +23,7 @@ var (
 	fwinfoResponse         = []byte(`{ "BMC_fw_version": "0.01.00", "BIOS_fw_version": "L2.07B", "ME_fw_version": "5.1.3.78", "Micro_Code_version": "000000ca", "CPLD_version": "N\/A", "CM_version": "0.13.01", "BPB_version": "0.0.002.0", "Node_id": "2" }`)
 	fwUploadResponse       = []byte(`{"cc": 0}`)
 	fwVerificationResponse = []byte(`[ { "id": 1, "current_image_name": "ast2500e", "current_image_version1": "0.01.00", "current_image_version2": "", "new_image_version": "0.03.00", "section_status": 0, "verification_status": 5 } ]`)
-	fwUpgradeProgress      = []byte(`{ "id": 1, "action": "Flashing...", "progress": "__PERCENT__% done         ", "state": 0 }`)
+	fwUpgradeProgress      = []byte(`{ "id": 1, "action": "Flashing...", "progress": "__PERCENT__% done         ", "state": __STATE__ }`)
 )
 
 // setup test BMC
@@ -96,17 +96,21 @@ func firmwareUpgrade(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 		// 5. flash progress
 		case "/api/maintenance/firmware/flash-progress":
+			spew.Dump(r.Cookies())
 			if !fwUpgradeState.UpgradeInitiated {
 				w.WriteHeader(http.StatusBadRequest)
 			}
 
+			resp := fwUpgradeProgress
 			if fwUpgradeState.UpgradePercent >= 100 {
 				fwUpgradeState.UpgradePercent = 100
+				resp = bytes.Replace(fwUpgradeProgress, []byte("__STATE__"), []byte(strconv.Itoa(2)), 1)
 			} else {
 				fwUpgradeState.UpgradePercent += 50
 			}
 
-			resp := bytes.Replace(fwUpgradeProgress, []byte("__PERCENT__"), []byte(strconv.Itoa(fwUpgradeState.UpgradePercent)), 1)
+			resp = bytes.Replace(fwUpgradeProgress, []byte("__PERCENT__"), []byte(strconv.Itoa(fwUpgradeState.UpgradePercent)), 1)
+
 			_, _ = w.Write(resp)
 		}
 	case "PUT":
@@ -119,6 +123,10 @@ func firmwareUpgrade(w http.ResponseWriter, r *http.Request) {
 		// 4. run the upgrade
 		case "/api/maintenance/firmware/upgrade":
 			if !fwUpgradeState.FirmwareVerified {
+				w.WriteHeader(http.StatusBadRequest)
+			}
+
+			if r.Header.Get("Content-Type") != "application/json" {
 				w.WriteHeader(http.StatusBadRequest)
 			}
 
