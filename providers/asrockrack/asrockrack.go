@@ -36,17 +36,16 @@ var (
 
 // ASRockRack holds the status and properties of a connection to a asrockrack bmc
 type ASRockRack struct {
-	ip                 string
-	username           string
-	password           string
-	loginSession       *loginSession
-	httpClient         *http.Client
-	fwInfo             *firmwareInfo
-	resetRequired      bool // Indicates if the BMC requires a reset
-	skipLogout         bool // A Close() / httpsLogout() request is ignored if the BMC was just flashed - since the sessions are terminated either way
-	bMCFirmwareUpdated bool
-	ctx                context.Context
-	log                logr.Logger
+	ip            string
+	username      string
+	password      string
+	loginSession  *loginSession
+	httpClient    *http.Client
+	fwInfo        *firmwareInfo
+	resetRequired bool // Indicates if the BMC requires a reset
+	skipLogout    bool // A Close() / httpsLogout() request is ignored if the BMC was just flashed - since the sessions are terminated either way
+	ctx           context.Context
+	log           logr.Logger
 }
 
 // New returns a new ASRockRack instance ready to be used
