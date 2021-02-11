@@ -15,6 +15,9 @@ type Bmc interface {
 	// BmcCollection interface
 	BmcCollection
 
+	// Firmware getter/updater interface
+	Firmware
+
 	CheckCredentials() error
 	Close(context.Context) error
 	PowerOn() (bool, error)       // PowerSetter
@@ -133,4 +136,10 @@ type Configure interface {
 	CurrentHTTPSCert() ([]*x509.Certificate, bool, error)
 	GenerateCSR(*cfgresources.HTTPSCertAttributes) ([]byte, error)
 	UploadHTTPSCert([]byte, string, []byte, string) (bool, error)
+}
+
+type Firmware interface {
+	GetBIOSVersion(context.Context) (version string, err error)
+	GetBMCVersion(context.Context) (version string, err error)
+	FirmwareUpdateBMC(ctx context.Context, fileName string) (err error)
 }

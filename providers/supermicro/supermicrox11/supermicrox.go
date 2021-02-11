@@ -724,3 +724,18 @@ func (s *SupermicroX) UpdateCredentials(username string, password string) {
 	s.username = username
 	s.password = password
 }
+
+// BiosVersion returns the BIOS version from the BMC, implements the Firmware interface
+func (s *SupermicroX) GetBIOSVersion(ctx context.Context) (string, error) {
+	return "", errors.ErrNotImplemented
+}
+
+// BMCVersion returns the BMC version, implements the Firmware interface
+func (s *SupermicroX) GetBMCVersion(ctx context.Context) (string, error) {
+	return "", errors.ErrNotImplemented
+}
+
+// Updates the BMC firmware, implements the Firmware interface
+func (s *SupermicroX) FirmwareUpdateBMC(ctx context.Context, filePath string) error {
+	return errors.ErrNotImplemented
+}
