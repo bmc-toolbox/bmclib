@@ -70,17 +70,39 @@ func mockASRockBMC() *httptest.Server {
 	handler.HandleFunc("/api/asrr/fw-info", fwinfo)
 
 	// fw update endpoints - in order of invocation
-	handler.HandleFunc("/api/maintenance/flash", firmwareUpgrade)
-	handler.HandleFunc("/api/maintenance/firmware", firmwareUpgrade)
-	handler.HandleFunc("/api/maintenance/firmware/verification", firmwareUpgrade)
-	handler.HandleFunc("/api/maintenance/firmware/upgrade", firmwareUpgrade)
-	handler.HandleFunc("/api/maintenance/firmware/flash-progress", firmwareUpgrade)
-	handler.HandleFunc("/api/maintenance/reset", firmwareUpgrade)
+	handler.HandleFunc("/api/maintenance/flash", bmcFirmwareUpgrade)
+	handler.HandleFunc("/api/maintenance/firmware", bmcFirmwareUpgrade)
+	handler.HandleFunc("/api/maintenance/firmware/verification", bmcFirmwareUpgrade)
+	handler.HandleFunc("/api/maintenance/firmware/upgrade", bmcFirmwareUpgrade)
+	handler.HandleFunc("/api/maintenance/firmware/flash-progress", bmcFirmwareUpgrade)
+	handler.HandleFunc("/api/maintenance/reset", bmcFirmwareUpgrade)
+	handler.HandleFunc("/api/asrr/maintenance/BIOS/firmware", biosFirmwareUpgrade)
 
 	return httptest.NewTLSServer(handler)
 }
 
-func firmwareUpgrade(w http.ResponseWriter, r *http.Request) {
+func biosFirmwareUpgrade(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("%s -> %s\n", r.Method, r.RequestURI)
+	switch r.Method {
+	case "POST":
+		switch r.RequestURI {
+		case "/api/asrr/maintenance/BIOS/firmware":
+
+			// validate content type
+			if !strings.Contains(r.Header.Get("Content-Type"), "multipart/form-data") {
+				w.WriteHeader(http.StatusBadRequest)
+			}
+
+			// parse multipart form
+			err := r.ParseMultipartForm(100)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+			}
+		}
+	}
+}
+
+func bmcFirmwareUpgrade(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("%s -> %s\n", r.Method, r.RequestURI)
 	switch r.Method {
 	case "GET":
@@ -156,6 +178,7 @@ func firmwareUpgrade(w http.ResponseWriter, r *http.Request) {
 		}
 	case "POST":
 		switch r.RequestURI {
+
 		// 2. upload firmware
 		case "/api/maintenance/firmware":
 
