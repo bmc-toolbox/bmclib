@@ -21,7 +21,7 @@ import (
 // github.com/wojas/genericr: genericr
 func main() {
 
-	ip := "10.230.148.171"
+	ip := ""
 	user := "admin"
 	pass := "admin"
 
@@ -37,7 +37,7 @@ func main() {
 	printStatus(conn, logger)
 
 	logger.Info("printing status with the default builtin logger")
-	os.Setenv("BMCLIB_LOG_LEVEL", "gTtrace")
+	os.Setenv("BMCLIB_LOG_LEVEL", "trace")
 	conn, err = withDefaultBuiltinLogger(ip, user, pass)
 	if err != nil {
 		logger.Fatal(err)
