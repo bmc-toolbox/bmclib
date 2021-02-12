@@ -18,6 +18,16 @@ type BMCFirmwareUpdater interface {
 	FirmwareUpdateBMC(ctx context.Context, fileName string) (err error)
 }
 
+// BIOSVersionGetter retrieves the current BIOS firmware version information
+type BIOSVersionGetter interface {
+	GetBIOSVersion(ctx context.Context) (version string, err error)
+}
+
+// BIOSFirmwareUpdater upgrades the BIOS firmware
+type BIOSFirmwareUpdater interface {
+	FirmwareUpdateBIOS(ctx context.Context, fileName string) (err error)
+}
+
 // GetBMCVersion returns the BMC firmware version, trying all interface implementations passed in
 func GetBMCVersion(ctx context.Context, p []BMCVersionGetter) (version string, err error) {
 Loop:
@@ -84,7 +94,7 @@ Loop:
 
 }
 
-// GetBMCVersionFromInterfaces pass through to library function
+// UpdateBMCFirmwareFromInterfaces pass through to library function
 func UpdateBMCFirmwareFromInterfaces(ctx context.Context, updateFileName string, generic []interface{}) (err error) {
 	bmcFirmwareUpdater := make([]BMCFirmwareUpdater, 0)
 	for _, elem := range generic {
@@ -101,16 +111,6 @@ func UpdateBMCFirmwareFromInterfaces(ctx context.Context, updateFileName string,
 	}
 
 	return UpdateBMCFirmware(ctx, updateFileName, bmcFirmwareUpdater)
-}
-
-// BIOSVersionGetter retrieves the current BIOS firmware version information
-type BIOSVersionGetter interface {
-	GetBIOSVersion(ctx context.Context) (version string, err error)
-}
-
-// BIOSFirmwareUpdater upgrades the BIOS firmware
-type BIOSFirmwareUpdater interface {
-	FirmwareUpdateBIOS(ctx context.Context, fileName string) (err error)
 }
 
 // GetBIOSVersion returns the BMC firmware version, trying all interface implementations passed in
@@ -133,7 +133,7 @@ Loop:
 		}
 	}
 
-	return version, multierror.Append(err, errors.New("failed to get BMC version"))
+	return version, multierror.Append(err, errors.New("failed to get BIOS version"))
 }
 
 // GetBIOSVersionFromInterfaces pass through to library function
@@ -153,4 +153,47 @@ func GetBIOSVersionFromInterfaces(ctx context.Context, generic []interface{}) (v
 	}
 
 	return GetBIOSVersion(ctx, biosVersionGetter)
+}
+
+// UpdateBIOSFirmware upgrades the BIOS firmware, trying all interface implementations passed ini
+func UpdateBIOSFirmware(ctx context.Context, updateFileName string, p []BIOSFirmwareUpdater) (err error) {
+Loop:
+	for _, elem := range p {
+		select {
+		case <-ctx.Done():
+			err = multierror.Append(err, ctx.Err())
+			break Loop
+		default:
+			if elem != nil {
+				uErr := elem.FirmwareUpdateBIOS(ctx, updateFileName)
+				if uErr != nil {
+					err = multierror.Append(err, uErr)
+					continue
+				}
+				return nil
+			}
+		}
+	}
+
+	return multierror.Append(err, errors.New("failed to update BIOS firmware"))
+
+}
+
+// GetBMCVersionFromInterfaces pass through to library function
+func UpdateBIOSFirmwareFromInterfaces(ctx context.Context, updateFileName string, generic []interface{}) (err error) {
+	biosFirmwareUpdater := make([]BIOSFirmwareUpdater, 0)
+	for _, elem := range generic {
+		switch p := elem.(type) {
+		case BIOSFirmwareUpdater:
+			biosFirmwareUpdater = append(biosFirmwareUpdater, p)
+		default:
+			e := fmt.Sprintf("not a BIOSFirmwareUpdater implementation: %T", p)
+			err = multierror.Append(err, errors.New(e))
+		}
+	}
+	if len(biosFirmwareUpdater) == 0 {
+		return multierror.Append(err, errors.New("no BIOSFirmwareUpdater implementations found"))
+	}
+
+	return UpdateBIOSFirmware(ctx, updateFileName, biosFirmwareUpdater)
 }
