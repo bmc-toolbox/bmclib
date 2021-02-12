@@ -6,9 +6,7 @@ import (
 	"context"
 
 	"github.com/bmc-toolbox/bmclib/bmc"
-	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/logging"
-	"github.com/bmc-toolbox/bmclib/providers/asrockrack"
 	"github.com/bmc-toolbox/bmclib/providers/ipmitool"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
@@ -71,9 +69,6 @@ func (c *Client) registerProviders() {
 	driverIpmitool := &ipmitool.Conn{Host: c.Auth.Host, Port: c.Auth.Port, User: c.Auth.User, Pass: c.Auth.Pass, Log: c.Logger}
 	c.Registry.Register(ipmitool.ProviderName, ipmitool.ProviderProtocol, ipmitool.Features, nil, driverIpmitool)
 
-	// setup https provider - we don't expect Build() to fail
-	driverHttps, _ := httpclient.Build()
-	c.Registry.Register(asrockrack.ProviderName, asrockrack.ProviderProtocol, asrockrack.Features, nil, driverHttps)
 }
 
 // Open pass through to library function
@@ -129,4 +124,19 @@ func (c *Client) ResetBMC(ctx context.Context, resetType string) (ok bool, err e
 // GetBMCVersion pass through library function
 func (c *Client) GetBMCVersion(ctx context.Context) (version string, err error) {
 	return bmc.GetBMCVersionFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+}
+
+// UpdateBMCFirmware pass through library function
+func (c *Client) UpdateBMCFirmware(ctx context.Context, fileName string) (err error) {
+	return bmc.UpdateBMCFirmwareFromInterfaces(ctx, fileName, c.Registry.GetDriverInterfaces())
+}
+
+// GetBIOSVersion pass through library function
+func (c *Client) GetBIOSVersion(ctx context.Context) (version string, err error) {
+	return bmc.GetBIOSVersionFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+}
+
+// UpdateBIOSFirmware pass through library function
+func (c *Client) UpdateBIOSFirmware(ctx context.Context, fileName string) (err error) {
+	return bmc.UpdateBIOSFirmwareFromInterfaces(ctx, fileName, c.Registry.GetDriverInterfaces())
 }
