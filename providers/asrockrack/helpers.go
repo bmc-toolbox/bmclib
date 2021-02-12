@@ -55,6 +55,13 @@ type upgradeProgress struct {
 	State    int    `json:"state,omitempty"`
 }
 
+// BIOS upgrade commands
+// 2 == configure
+// 3 == apply upgrade
+type biosUpdateAction struct {
+	Action int `json:"action"`
+}
+
 // 1 Set BMC to flash mode and prepare flash area
 // at this point all logged in sessions are terminated
 // and no logins are permitted
@@ -77,9 +84,7 @@ func (a *ASRockRack) setFlashMode() error {
 }
 
 // 2 Upload the firmware file
-func (a *ASRockRack) uploadFirmware(filePath string) error {
-
-	endpoint := "api/maintenance/firmware"
+func (a *ASRockRack) uploadFirmware(endpoint string, filePath string) error {
 
 	// setup a buffer for our multipart form
 	var form bytes.Buffer
@@ -186,9 +191,7 @@ func (a *ASRockRack) reset() error {
 }
 
 // 5. firmware flash progress
-func (a *ASRockRack) flashProgress() (*upgradeProgress, error) {
-
-	endpoint := "api/maintenance/firmware/flash-progress"
+func (a *ASRockRack) flashProgress(endpoint string) (*upgradeProgress, error) {
 
 	resp, statusCode, err := a.queryHTTPS(endpoint, "GET", nil, nil)
 	if err != nil {
@@ -230,6 +233,71 @@ func (a *ASRockRack) firmwareInfo() (*firmwareInfo, error) {
 	}
 
 	return f, nil
+
+}
+
+// Set the BIOS upgrade configuration
+//  - preserve current configuration
+func (a *ASRockRack) biosUpgradeConfiguration() error {
+
+	endpoint := "api/asrr/maintenance/BIOS/configuration"
+
+	// Preserve existing configuration?
+	p := biosUpdateAction{Action: 2}
+	payload, err := json.Marshal(p)
+	if err != nil {
+		return err
+	}
+
+	headers := map[string]string{"Content-Type": "application/json"}
+	resp, statusCode, err := a.queryHTTPS(endpoint, "POST", payload, headers)
+	if err != nil {
+		return err
+	}
+
+	if statusCode != 200 {
+		return fmt.Errorf("Non 200 response: %d", statusCode)
+	}
+
+	f := &firmwareInfo{}
+	err = json.Unmarshal(resp, f)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+// Run BIOS upgrade
+func (a *ASRockRack) biosUpgrade() error {
+
+	endpoint := "api/asrr/maintenance/BIOS/upgrade"
+
+	// Run upgrade
+	p := biosUpdateAction{Action: 3}
+	payload, err := json.Marshal(p)
+	if err != nil {
+		return err
+	}
+
+	headers := map[string]string{"Content-Type": "application/json"}
+	resp, statusCode, err := a.queryHTTPS(endpoint, "POST", payload, headers)
+	if err != nil {
+		return err
+	}
+
+	if statusCode != 200 {
+		return fmt.Errorf("Non 200 response: %d", statusCode)
+	}
+
+	f := &firmwareInfo{}
+	err = json.Unmarshal(resp, f)
+	if err != nil {
+		return err
+	}
+
+	return nil
 
 }
 

@@ -1,4 +1,4 @@
-
+### BMC
  Flashing a BMC firmware seems to be a multi step process
 
 
@@ -32,3 +32,30 @@
  6. GET https://10.230.148.171/api/maintenance/firmware/flash-progress
      { "id": 1, "action": "Flashing...", "progress": "12% done         ", "state": 0 }
      { "id": 1, "action": "Flashing...", "progress": "100% done", "state": 0 }
+
+
+### BIOS
+
+1. POST api/asrr/maintenance/BIOS/firmware
+   multipart payload: 
+
+------WebKitFormBoundaryBet48KCtZK4gBlQz
+Content-Disposition: form-data; name="fwimage"; filename="E6D4INL2.07B"
+Content-Type: application/octet-stream
+
+
+------WebKitFormBoundaryBet48KCtZK4gBlQz--
+
+
+2. POST api/asrr/maintenance/BIOS/configuration
+   payload {"action":"2"}
+   200 OK
+     {"response": 1}
+
+3. POST api/asrr/maintenance/BIOS/upgrade
+   payload {action: 3}
+   200 oK
+
+4.  GET api/asrr/maintenance/BIOS/flash-progress
+
+

@@ -127,7 +127,7 @@ func (a *ASRockRack) GetBMCVersion(ctx context.Context) (string, error) {
 		}
 	}
 
-	return a.fwInfo.BIOSVersion, nil
+	return a.fwInfo.BMCVersion, nil
 }
 
 // nolint: gocyclo
@@ -220,7 +220,78 @@ func (a *ASRockRack) FirmwareUpdateBMC(ctx context.Context, filePath string) err
 	}
 }
 
-func (a *ASRockRack) FirmwareUpdateBIOS(filePath string) error {
+func (a *ASRockRack) FirmwareUpdateBIOS(ctx context.Context, filePath string) error {
 
-	return nil
+	defer func() {
+		if a.resetRequired {
+			a.log.V(1).Info("info", "resetting BMC, this takes a few minutes")
+			err := a.reset()
+			if err != nil {
+				a.log.Error(err, "failed to reset BMC")
+			}
+		}
+	}()
+
+	// 0. validate the given filePath exists
+	_, err := os.Stat(filePath)
+	if os.IsNotExist(err) {
+		return err
+	}
+
+	// 1. upload firmware image file
+	a.log.V(1).Info("info", "step", "1/4 uploading firmware image", "filePath", filePath)
+	err = a.uploadFirmware("api/asrr/maintenance/BIOS/firmware", filePath)
+	if err != nil {
+		return fmt.Errorf("failed in step 1/4 - upload firmware image: " + err.Error())
+	}
+
+	// 2. set update parameters to preserve configuratin
+	a.log.V(1).Info("info", "step", "2/4 set preserve configuration")
+	err = a.biosUpgradeConfiguration()
+	if err != nil {
+		return fmt.Errorf("failed in step 2/4 - set preserve configuration: " + err.Error())
+	}
+
+	startTS := time.Now()
+	// 3. run upgrade
+	a.log.V(1).Info("info", "step", "3/4 run upgrade")
+	err = a.biosUpgrade()
+	if err != nil {
+		return fmt.Errorf("failed in step 3/4 - run upgrade: " + err.Error())
+	}
+
+	// progress check interval
+	progressT := time.NewTicker(2 * time.Second).C
+	// timeout interval
+	timeoutT := time.NewTicker(30 * time.Minute).C
+	maxErrors := 20
+	var errorsCount int
+
+	// 5.loop until firmware was updated - with a timeout
+	for {
+		select {
+		case <-progressT:
+			// check progress
+			endpoint := "api/asrr/maintenance/BIOS/flash-progress"
+			p, err := a.flashProgress(endpoint)
+			if err != nil {
+				errorsCount++
+				a.log.V(1).Error(err, "step", "4/4 - error checking flash progress", "error count", errorsCount, "max errors", maxErrors, "elapsed time", time.Since(startTS).String())
+				continue
+			}
+
+			a.log.V(1).Info("info", "step", "4/4 - check flash progress..", "progress", p.Progress, "action", p.Action, "elapsed time", time.Since(startTS).String())
+
+			// all done!
+			if p.State == 2 {
+				a.log.V(1).Info("info", "step", "4/4 - firmware flash complete!", "progress", p.Progress, "action", p.Action, "elapsed time", time.Since(startTS).String())
+				// Reset BMC after flash
+				a.resetRequired = true
+				return nil
+			}
+		case <-timeoutT:
+			return fmt.Errorf("timeout in step 5/5 - flash progress, error count: %d, elapsed time: %s", errorsCount, time.Since(startTS).String())
+		}
+	}
+
 }
