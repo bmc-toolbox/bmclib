@@ -317,7 +317,7 @@ func (a *ASRockRack) queryHTTPS(URLendpoint, method string, payload []byte, head
 
 	// debug dump request
 	reqDump, _ := httputil.DumpRequestOut(req, true)
-	a.log.V(2).Info("trace", "url", URL, "requestDump", string(reqDump))
+	a.log.V(3).Info("trace", "url", URL, "requestDump", string(reqDump))
 
 	resp, err := a.httpClient.Do(req)
 	if err != nil {
@@ -326,7 +326,7 @@ func (a *ASRockRack) queryHTTPS(URLendpoint, method string, payload []byte, head
 
 	// debug dump response
 	respDump, _ := httputil.DumpResponse(resp, true)
-	a.log.V(2).Info("trace", "responseDump", string(respDump))
+	a.log.V(3).Info("trace", "responseDump", string(respDump))
 
 	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
