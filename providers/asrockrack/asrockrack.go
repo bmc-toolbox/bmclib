@@ -67,6 +67,14 @@ func New(ctx context.Context, ip string, username string, password string, log l
 	}, nil
 }
 
+func (a *ASRockRack) Features() registrar.Features {
+	return Features
+}
+
+func (a *ASRockRack) ProviderProtocol() string {
+	return ProviderProtocol
+}
+
 // Open a connection to a BMC
 func (a *ASRockRack) Open(ctx context.Context) (err error) {
 
