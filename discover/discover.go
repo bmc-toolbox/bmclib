@@ -27,7 +27,12 @@ const (
 
 // ScanAndConnect will scan the bmc trying to learn the device type and return a working connection.
 func ScanAndConnect(host string, username string, password string, options ...Option) (bmcConnection interface{}, err error) {
-	opts := &Options{HintCallback: func(_ string) error { return nil }}
+	opts := &Options{
+		HintCallback: func(_ string) error { return nil },
+		Username:     username,
+		Password:     password,
+		Host:         host,
+	}
 	for _, optFn := range options {
 		optFn(opts)
 	}
@@ -64,7 +69,6 @@ func ScanAndConnect(host string, username string, password string, options ...Op
 		ProbeM1000e:        probe.m1000e,
 		ProbeQuanta:        probe.quanta,
 		ProbeHpCl100:       probe.hpCl100,
-		ProbeASRockRack:    probe.asRockRack,
 	}
 
 	order := []string{ProbeHpIlo,
@@ -76,7 +80,6 @@ func ScanAndConnect(host string, username string, password string, options ...Op
 		ProbeM1000e,
 		ProbeQuanta,
 		ProbeHpCl100,
-		ProbeASRockRack,
 	}
 
 	if opts.Hint != "" {
@@ -111,7 +114,10 @@ func ScanAndConnect(host string, username string, password string, options ...Op
 // Options to pass in
 type Options struct {
 	// Hint is a probe ID that hints which probe should be probed first.
-	Hint string
+	Hint     string
+	Host     string
+	Username string
+	Password string
 
 	// HintCallBack is a function that is called back with a probe ID that might be used
 	// for the next ScanAndConnect attempt.  The callback is called only on successful scan.
