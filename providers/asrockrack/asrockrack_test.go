@@ -8,6 +8,13 @@ import (
 	"gopkg.in/go-playground/assert.v1"
 )
 
+func Test_Compatible(t *testing.T) {
+	b := aClient.Compatible()
+	if !b {
+		t.Errorf("expected true, got false")
+	}
+}
+
 func Test_httpLogin(t *testing.T) {
 
 	err := aClient.httpsLogin()
