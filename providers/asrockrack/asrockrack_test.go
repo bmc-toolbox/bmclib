@@ -8,16 +8,12 @@ import (
 	"gopkg.in/go-playground/assert.v1"
 )
 
-//func TestBmcInterface(t *testing.T) {
-
-//c, err := New(context.TODO(), ip, username, password, logrusr.NewLogger(testLog))
-//if err != nil {
-//return c, err
-//}
-//_ = devices.Bmc(c)
-//_ = devices.Configure(c)
-//_ = devices.Firmware(c)
-//}
+func Test_Compatible(t *testing.T) {
+	b := aClient.Compatible()
+	if !b {
+		t.Errorf("expected true, got false")
+	}
+}
 
 func Test_httpLogin(t *testing.T) {
 

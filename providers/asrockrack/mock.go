@@ -66,6 +66,7 @@ func init() {
 /////////////// mock bmc service ///////////////////////////
 func mockASRockBMC() *httptest.Server {
 	handler := http.NewServeMux()
+	handler.HandleFunc("/", index)
 	handler.HandleFunc("/api/session", session)
 	handler.HandleFunc("/api/asrr/fw-info", fwinfo)
 
@@ -79,6 +80,13 @@ func mockASRockBMC() *httptest.Server {
 	handler.HandleFunc("/api/asrr/maintenance/BIOS/firmware", biosFirmwareUpgrade)
 
 	return httptest.NewTLSServer(handler)
+}
+
+func index(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		_, _ = w.Write([]byte(`ASRockRack`))
+	}
 }
 
 func biosFirmwareUpgrade(w http.ResponseWriter, r *http.Request) {

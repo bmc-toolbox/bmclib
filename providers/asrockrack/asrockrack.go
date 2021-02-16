@@ -1,6 +1,7 @@
 package asrockrack
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"net/http"
@@ -67,7 +68,27 @@ func New(ctx context.Context, ip string, username string, password string, log l
 	}, nil
 }
 
-// Open a connection to a BMC
+// Compatible implements the registrar.Verifier interface
+// returns true if the BMC is identified to be an asrockrack
+func (a *ASRockRack) Compatible() bool {
+
+	resp, statusCode, err := a.queryHTTPS("/", "GET", nil, nil)
+	if err != nil {
+		return false
+	}
+
+	if statusCode != 200 {
+		return false
+	}
+
+	if bytes.Contains(resp, []byte(`ASRockRack`)) {
+		return true
+	}
+
+	return false
+}
+
+// Open a connection to a BMC, implements the Opener interface
 func (a *ASRockRack) Open(ctx context.Context) (err error) {
 
 	err = a.httpsLogin()
@@ -78,7 +99,7 @@ func (a *ASRockRack) Open(ctx context.Context) (err error) {
 	return nil
 }
 
-// Close a connection to a BMC
+// Close a connection to a BMC, implements the Closer interface
 func (a *ASRockRack) Close(ctx context.Context) (err error) {
 
 	if a.skipLogout {
