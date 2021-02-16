@@ -512,6 +512,13 @@ func (i *Ilo) parseChassisInfo() (*hp.ChassisInfo, error) {
 		if err != nil {
 			return nil, err
 		}
+		if chassisInfo.Error.Code != "" {
+			e := "Code: " + chassisInfo.Error.Code + ", Message: " + chassisInfo.Error.Message
+			for i, s := range chassisInfo.Error.ExtendedMessage {
+				e += fmt.Sprintf(", Extended[%d]: %s", i, s)
+			}
+			return nil, fmt.Errorf(e)
+		}
 
 		// Matching the new interface to the old one, since the code still drops
 		//   off to the old interface in case the new interface is not available.
