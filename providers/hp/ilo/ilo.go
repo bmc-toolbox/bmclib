@@ -106,7 +106,7 @@ func (i *Ilo) CheckCredentials() (err error) {
 }
 
 // get calls a given json endpoint of the iLO and returns the data
-func (i *Ilo) get(endpoint string) (payload []byte, err error) {
+func (i *Ilo) get(endpoint string, useSession bool) (payload []byte, err error) {
 	i.log.V(1).Info("retrieving data from bmc", "step", "bmc connection", "vendor", hp.VendorID, "ip", i.ip, "endpoint", endpoint)
 
 	bmcURL := fmt.Sprintf("https://%s", i.ip)
@@ -120,10 +120,14 @@ func (i *Ilo) get(endpoint string) (payload []byte, err error) {
 		return payload, err
 	}
 
-	for _, cookie := range i.httpClient.Jar.Cookies(u) {
-		if cookie.Name == "sessionKey" {
-			req.AddCookie(cookie)
+	if useSession {
+		for _, cookie := range i.httpClient.Jar.Cookies(u) {
+			if cookie.Name == "sessionKey" {
+				req.AddCookie(cookie)
+			}
 		}
+	} else {
+		req.SetBasicAuth(i.username, i.password)
 	}
 
 	reqDump, _ := httputil.DumpRequestOut(req, true)
@@ -200,7 +204,7 @@ func (i *Ilo) ChassisSerial() (string, error) {
 		return "", err
 	}
 
-	payload, err := i.get("json/rck_info")
+	payload, err := i.get("json/rck_info", true)
 	if err != nil {
 		return "", err
 	}
@@ -257,7 +261,7 @@ func (i *Ilo) Name() (name string, err error) {
 	}
 
 	url := "json/overview"
-	payload, err := i.get(url)
+	payload, err := i.get(url, true)
 	if err != nil {
 		return name, err
 	}
@@ -279,7 +283,7 @@ func (i *Ilo) Status() (health string, err error) {
 	}
 
 	url := "json/overview"
-	payload, err := i.get(url)
+	payload, err := i.get(url, true)
 	if err != nil {
 		return health, err
 	}
@@ -305,7 +309,7 @@ func (i *Ilo) Memory() (mem int, err error) {
 	}
 
 	url := "json/mem_info"
-	payload, err := i.get(url)
+	payload, err := i.get(url, true)
 	if err != nil {
 		return mem, err
 	}
@@ -335,7 +339,7 @@ func (i *Ilo) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCount i
 	}
 
 	url := "json/proc_info"
-	payload, err := i.get(url)
+	payload, err := i.get(url, true)
 	if err != nil {
 		return cpu, cpuCount, coreCount, hyperthreadCount, err
 	}
@@ -361,7 +365,7 @@ func (i *Ilo) BiosVersion() (version string, err error) {
 	}
 
 	url := "json/overview"
-	payload, err := i.get(url)
+	payload, err := i.get(url, true)
 	if err != nil {
 		return version, err
 	}
@@ -387,7 +391,7 @@ func (i *Ilo) PowerKw() (power float64, err error) {
 	}
 
 	url := "json/power_summary"
-	payload, err := i.get(url)
+	payload, err := i.get(url, true)
 	if err != nil {
 		return power, err
 	}
@@ -409,7 +413,7 @@ func (i *Ilo) PowerState() (state string, err error) {
 	}
 
 	url := "json/power_summary"
-	payload, err := i.get(url)
+	payload, err := i.get(url, true)
 	if err != nil {
 		return state, err
 	}
@@ -431,7 +435,7 @@ func (i *Ilo) TempC() (temp int, err error) {
 	}
 
 	url := "json/health_temperature"
-	payload, err := i.get(url)
+	payload, err := i.get(url, true)
 	if err != nil {
 		return temp, err
 	}
@@ -484,7 +488,7 @@ func (i *Ilo) License() (name string, licType string, err error) {
 	}
 
 	url := "json/license"
-	payload, err := i.get(url)
+	payload, err := i.get(url, true)
 	if err != nil {
 		return name, licType, err
 	}
@@ -506,7 +510,7 @@ func (i *Ilo) parseChassisInfo() (*hp.ChassisInfo, error) {
 
 	chassisInfo := &hp.ChassisInfo{}
 	// We try the new way of doing things first (RedFish).
-	payload, err := i.get(hp.ChassisInfoNewURL)
+	payload, err := i.get(hp.ChassisInfoNewURL, false)
 	if err == nil {
 		err = json.Unmarshal(payload, chassisInfo)
 		if err != nil {
@@ -534,7 +538,7 @@ func (i *Ilo) parseChassisInfo() (*hp.ChassisInfo, error) {
 	}
 
 	// This just means that we have to try the old way of doing things, since RedFish is not available.
-	payload, err = i.get(hp.ChassisInfoOldURL)
+	payload, err = i.get(hp.ChassisInfoOldURL, true)
 	if err != nil {
 		return nil, err
 	}
@@ -555,7 +559,7 @@ func (i *Ilo) Psus() (psus []*devices.Psu, err error) {
 	}
 
 	url := "json/power_supplies"
-	payload, err := i.get(url)
+	payload, err := i.get(url, true)
 	if err != nil {
 		return psus, err
 	}
@@ -598,7 +602,7 @@ func (i *Ilo) Disks() (disks []*devices.Disk, err error) {
 	}
 
 	url := "json/health_phy_drives"
-	payload, err := i.get(url)
+	payload, err := i.get(url, true)
 	if err != nil {
 		return disks, err
 	}

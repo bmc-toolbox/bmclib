@@ -48,7 +48,7 @@ func (i *Ilo) Screenshot() (response []byte, extension string, err error) {
 		return response, extension, errors.ErrFeatureUnavailable
 	}
 
-	response, err = i.get(endpoint)
+	response, err = i.get(endpoint, true)
 	if err != nil {
 		return []byte{}, extension, err
 	}
@@ -60,7 +60,7 @@ func (i *Ilo) queryDirectoryGroups() (directoryGroups []DirectoryGroups, err err
 
 	endpoint := "json/directory_groups"
 
-	payload, err := i.get(endpoint)
+	payload, err := i.get(endpoint, true)
 	if err != nil {
 		msg := "GET request failed."
 		i.log.V(1).Info(msg,
@@ -94,7 +94,7 @@ func (i *Ilo) queryUsers() (usersInfo []UserInfo, err error) {
 
 	endpoint := "json/user_info"
 
-	payload, err := i.get(endpoint)
+	payload, err := i.get(endpoint, true)
 	if err != nil {
 		msg := "GET request failed."
 		i.log.V(1).Info(msg,
@@ -129,7 +129,7 @@ func (i *Ilo) queryNetworkSntp() (networkSntp NetworkSntp, err error) {
 
 	endpoint := "json/network_sntp/interface/0"
 
-	payload, err := i.get(endpoint)
+	payload, err := i.get(endpoint, true)
 	if err != nil {
 		msg := "GET request failed."
 		i.log.V(1).Info(msg,
@@ -163,7 +163,7 @@ func (i *Ilo) queryAccessSettings() (AccessSettings, error) {
 
 	var accessSettings AccessSettings
 
-	payload, err := i.get(endpoint)
+	payload, err := i.get(endpoint, true)
 	if err != nil {
 		msg := "GET request failed."
 		i.log.V(1).Info(msg,
@@ -197,7 +197,7 @@ func (i *Ilo) queryNetworkIPv4() (NetworkIPv4, error) {
 
 	var networkIPv4 NetworkIPv4
 
-	payload, err := i.get(endpoint)
+	payload, err := i.get(endpoint, true)
 	if err != nil {
 		msg := "GET request failed."
 		i.log.V(1).Info(msg,
@@ -231,7 +231,7 @@ func (i *Ilo) queryPowerRegulator() (PowerRegulator, error) {
 
 	var powerRegulator PowerRegulator
 
-	payload, err := i.get(endpoint)
+	payload, err := i.get(endpoint, true)
 	if err != nil {
 		msg := "GET request failed."
 		i.log.V(1).Info(msg,
