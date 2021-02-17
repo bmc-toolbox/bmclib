@@ -32,7 +32,6 @@ func main() {
 		pass,
 		discover.WithContext(ctx),
 		discover.WithLogger(logger),
-		discover.WithProbeHint(discover.ProbeASRockRack),
 	)
 
 	if err != nil {
@@ -49,11 +48,11 @@ func main() {
 
 	defer bmc.Close(ctx)
 
-	v, err := bmc.GetBMCVersion(ctx)
+	s, err := bmc.Serial()
 	if err != nil {
-		logger.Error(err, "Error getting bmc version")
+		logger.Error(err, "Error getting bmc serial")
 		os.Exit(1)
 	}
-	fmt.Println(v)
+	fmt.Println(s)
 
 }

@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bmc-toolbox/bmclib/providers/asrockrack"
 	"github.com/bmc-toolbox/bmclib/providers/dell/idrac8"
 	"github.com/bmc-toolbox/bmclib/providers/dell/idrac9"
 	"github.com/bmc-toolbox/bmclib/providers/hp/c7000"
@@ -114,11 +113,6 @@ func TestProbes(t *testing.T) {
 			wantHint: ProbeHpIlo,
 			wantType: (*ilo.Ilo)(nil),
 		},
-		{
-			name:     "ASRockRack",
-			wantHint: ProbeASRockRack,
-			wantType: (*asrockrack.ASRockRack)(nil),
-		},
 	}
 
 	for _, tt := range testt {
@@ -184,12 +178,10 @@ var (
 		ProbeM1000e,
 		ProbeQuanta,
 		ProbeHpCl100,
-		ProbeASRockRack,
 	}
 
 	_answers = map[string]map[string][]byte{
-		"ASRockRack": {"/": []byte(`ASRockRack`)},
-		"IDrac8":     {"/session": []byte(`{"aimGetProp" : {"hostname" :"machine","gui_str_title_bar" :"","OEMHostName" :"machine.example.com","fwVersion" :"2.50.33","sysDesc" :"PowerEdge M630","status" : "OK"}}`)},
+		"IDrac8": {"/session": []byte(`{"aimGetProp" : {"hostname" :"machine","gui_str_title_bar" :"","OEMHostName" :"machine.example.com","fwVersion" :"2.50.33","sysDesc" :"PowerEdge M630","status" : "OK"}}`)},
 		"IDrac9": {
 			"/sysmgmt/2015/bmc/info":    []byte(`{"Attributes":{"ADEnabled":"Disabled","BuildVersion":"37","FwVer":"3.15.15.15","GUITitleBar":"spare-H16Z4M2","IsOEMBranded":"0","License":"Enterprise","SSOEnabled":"Disabled","SecurityPolicyMessage":"By accessing this computer, you confirm that such access complies with your organization's security policy.","ServerGen":"14G","SrvPrcName":"NULL","SystemLockdown":"Disabled","SystemModelName":"PowerEdge M640","TFAEnabled":"Disabled","iDRACName":"spare-H16Z4M2"}}`),
 			"/sysmgmt/2015/bmc/session": []byte(`{"status": "good", "authResult": 7, "forwardUrl": "something", "errorMsg": "none"}`),
