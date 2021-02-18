@@ -203,6 +203,13 @@ type ChassisInfo struct {
 			BayNumber int
 		}
 	} `json:"Oem"`
+	Error struct {
+		Code            string `json:"code"`
+		Message         string `json:"message"`
+		ExtendedMessage []*struct {
+			MessageId string `json:"MessageId"`
+		} `json:"@Message.ExtendedInfo"`
+	} `json:"error"`
 }
 
 // Mem is the struct used to render the data from https://$ip/json/mem_info, it contains the ram data
