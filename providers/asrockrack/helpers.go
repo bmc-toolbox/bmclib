@@ -14,7 +14,6 @@ import (
 	"path"
 
 	"github.com/bmc-toolbox/bmclib/errors"
-	log "github.com/sirupsen/logrus"
 )
 
 // API session setup response payload
@@ -75,7 +74,7 @@ func (a *ASRockRack) setFlashMode() error {
 	}
 
 	if statusCode != 200 {
-		return fmt.Errorf("Non 200 response: %d", statusCode)
+		return fmt.Errorf("non 200 response: %d", statusCode)
 	}
 
 	a.resetRequired = true
@@ -122,7 +121,7 @@ func (a *ASRockRack) uploadFirmware(endpoint string, filePath string) error {
 	}
 
 	if statusCode != 200 {
-		return fmt.Errorf("Non 200 response: %d", statusCode)
+		return fmt.Errorf("non 200 response: %d", statusCode)
 	}
 
 	return nil
@@ -139,7 +138,7 @@ func (a *ASRockRack) verifyUploadedFirmware() error {
 	}
 
 	if statusCode != 200 {
-		return fmt.Errorf("Non 200 response: %d", statusCode)
+		return fmt.Errorf("non 200 response: %d", statusCode)
 	}
 
 	return nil
@@ -165,7 +164,7 @@ func (a *ASRockRack) upgradeBMC() error {
 	}
 
 	if statusCode != 200 {
-		return fmt.Errorf("Non 200 response: %d", statusCode)
+		return fmt.Errorf("non 200 response: %d", statusCode)
 	}
 
 	return nil
@@ -177,13 +176,13 @@ func (a *ASRockRack) reset() error {
 
 	endpoint := "api/maintenance/reset"
 
-	_, statusCode, err := a.queryHTTPS(endpoint, "GET", nil, nil)
+	_, statusCode, err := a.queryHTTPS(endpoint, "POST", nil, nil)
 	if err != nil {
 		return err
 	}
 
 	if statusCode != 200 {
-		return fmt.Errorf("Non 200 response: %d", statusCode)
+		return fmt.Errorf("non 200 response: %d", statusCode)
 	}
 
 	return nil
@@ -199,7 +198,7 @@ func (a *ASRockRack) flashProgress(endpoint string) (*upgradeProgress, error) {
 	}
 
 	if statusCode != 200 {
-		return nil, fmt.Errorf("Non 200 response: %d", statusCode)
+		return nil, fmt.Errorf("non 200 response: %d", statusCode)
 	}
 
 	p := &upgradeProgress{}
@@ -223,7 +222,7 @@ func (a *ASRockRack) firmwareInfo() (*firmwareInfo, error) {
 	}
 
 	if statusCode != 200 {
-		return nil, fmt.Errorf("Non 200 response: %d", statusCode)
+		return nil, fmt.Errorf("non 200 response: %d", statusCode)
 	}
 
 	f := &firmwareInfo{}
@@ -256,7 +255,7 @@ func (a *ASRockRack) biosUpgradeConfiguration() error {
 	}
 
 	if statusCode != 200 {
-		return fmt.Errorf("Non 200 response: %d", statusCode)
+		return fmt.Errorf("non 200 response: %d", statusCode)
 	}
 
 	f := &firmwareInfo{}
@@ -288,7 +287,7 @@ func (a *ASRockRack) biosUpgrade() error {
 	}
 
 	if statusCode != 200 {
-		return fmt.Errorf("Non 200 response: %d", statusCode)
+		return fmt.Errorf("non 200 response: %d", statusCode)
 	}
 
 	f := &firmwareInfo{}
@@ -338,7 +337,6 @@ func (a *ASRockRack) httpsLogin() error {
 func (a *ASRockRack) httpsLogout() error {
 
 	urlEndpoint := "api/session"
-	log.WithFields(log.Fields{"step": "bmc connection", "vendor": VendorID, "ip": a.ip}).Debug("logout from bmc")
 
 	_, statusCode, err := a.queryHTTPS(urlEndpoint, "DELETE", nil, nil)
 	if err != nil {
@@ -350,7 +348,7 @@ func (a *ASRockRack) httpsLogout() error {
 	}
 
 	if statusCode != 200 {
-		return fmt.Errorf("Non 200 response at https logout: %d", statusCode)
+		return fmt.Errorf("non 200 response at https logout: %d", statusCode)
 	}
 
 	return nil
