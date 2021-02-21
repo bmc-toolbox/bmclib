@@ -42,7 +42,7 @@ func main() {
 
 	// The driver interface being provided could implement methods for ProviderName, ProviderProtocol etc
 	// that way we don't have to pass all of these in individually?
-	drivers.Register(asrockrack.ProviderName, asrockrack.ProviderProtocol, asrockrack.Features, nil, asrockRack)
+
 	regOptions := bmclib.WithRegistry(drivers)
 
 	// bmclib client - setting the logger as a param doesn't work - its overwritten by the default logger

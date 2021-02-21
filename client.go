@@ -7,6 +7,7 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/bmc"
 	"github.com/bmc-toolbox/bmclib/logging"
+	"github.com/bmc-toolbox/bmclib/providers/asrockrack"
 	"github.com/bmc-toolbox/bmclib/providers/ipmitool"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
@@ -69,6 +70,8 @@ func (c *Client) registerProviders() {
 	driverIpmitool := &ipmitool.Conn{Host: c.Auth.Host, Port: c.Auth.Port, User: c.Auth.User, Pass: c.Auth.Pass, Log: c.Logger}
 	c.Registry.Register(ipmitool.ProviderName, ipmitool.ProviderProtocol, ipmitool.Features, nil, driverIpmitool)
 
+	asrockRack, _ := asrockrack.New(context.TODO(), c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger)
+	c.Registry.Register(asrockrack.ProviderName, asrockrack.ProviderProtocol, asrockrack.Features, nil, asrockRack)
 }
 
 // Open pass through to library function
