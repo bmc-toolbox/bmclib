@@ -10,8 +10,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
+	"testing"
 
 	"github.com/bombsimon/logrusr"
 	"github.com/sirupsen/logrus"
@@ -43,7 +45,7 @@ type testFwUpgradeState struct {
 // the bmc lib client
 var aClient *ASRockRack
 
-func init() {
+func TestMain(m *testing.M) {
 
 	var err error
 	// setup mock server
@@ -61,6 +63,7 @@ func init() {
 
 	// firmware update test state
 	fwUpgradeState = &testFwUpgradeState{}
+	os.Exit(m.Run())
 }
 
 /////////////// mock bmc service ///////////////////////////
@@ -114,8 +117,6 @@ func bmcFirmwareUpgrade(w http.ResponseWriter, r *http.Request) {
 			}
 			fwUpgradeState.FirmwareVerified = true
 			_, _ = w.Write(fwVerificationResponse)
-		case "/api/maintenance/reset":
-			w.WriteHeader(http.StatusOK)
 		// 5. flash progress
 		case "/api/maintenance/firmware/flash-progress":
 			if !fwUpgradeState.UpgradeInitiated {
@@ -178,6 +179,8 @@ func bmcFirmwareUpgrade(w http.ResponseWriter, r *http.Request) {
 		}
 	case "POST":
 		switch r.RequestURI {
+		case "/api/maintenance/reset":
+			w.WriteHeader(http.StatusOK)
 
 		// 2. upload firmware
 		case "/api/maintenance/firmware":
