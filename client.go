@@ -47,12 +47,12 @@ func NewClient(host, port, user, pass string, opts ...Option) *Client {
 		Logger:   logging.DefaultLogger(),
 		Registry: registrar.NewRegistry(),
 	}
-	defaultClient.Registry.Logger = defaultClient.Logger
 
 	for _, opt := range opts {
 		opt(defaultClient)
 	}
 
+	defaultClient.Registry.Logger = defaultClient.Logger
 	defaultClient.Auth.Host = host
 	defaultClient.Auth.Port = port
 	defaultClient.Auth.User = user
