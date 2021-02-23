@@ -1,7 +1,6 @@
 package asrockrack
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -10,8 +9,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httputil"
-	"os"
-	"path"
 
 	"github.com/bmc-toolbox/bmclib/errors"
 )
@@ -83,27 +80,20 @@ func (a *ASRockRack) setFlashMode() error {
 }
 
 // 2 Upload the firmware file
-func (a *ASRockRack) uploadFirmware(endpoint string, filePath string) error {
+func (a *ASRockRack) uploadFirmware(endpoint string, fwReader io.Reader) error {
 
 	// setup a buffer for our multipart form
 	var form bytes.Buffer
 	w := multipart.NewWriter(&form)
 
 	// create form data from update image
-	fwWriter, err := w.CreateFormFile("fwimage", path.Base(filePath))
-	if err != nil {
-		return err
-	}
-
-	// open file handle
-	fh, err := os.Open(filePath)
+	fwWriter, err := w.CreateFormFile("fwimage", "image")
 	if err != nil {
 		return err
 	}
 
 	// copy file contents into form payload
-	fReader := bufio.NewReader(fh)
-	_, err = io.Copy(fwWriter, fReader)
+	_, err = io.Copy(fwWriter, fwReader)
 	if err != nil {
 		return err
 	}

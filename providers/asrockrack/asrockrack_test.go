@@ -78,8 +78,13 @@ func Test_FirwmwareUpdateBMC(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 
-	defer os.Remove(upgradeFile)
-	err = aClient.FirmwareUpdateBMC(context.TODO(), upgradeFile)
+	fh, err := os.Open(upgradeFile)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	defer fh.Close()
+	err = aClient.FirmwareUpdateBMC(context.TODO(), fh)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
