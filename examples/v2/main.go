@@ -1,13 +1,14 @@
 package main
 
 /*
- This utilizes the 'v2' bmclib interface methods
+ This utilizes the 'v2' bmclib interface methods to flash a firmware image
 */
 
 import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/bmc-toolbox/bmclib"
