@@ -64,7 +64,6 @@ func ScanAndConnect(host string, username string, password string, options ...Op
 		ProbeM1000e:        probe.m1000e,
 		ProbeQuanta:        probe.quanta,
 		ProbeHpCl100:       probe.hpCl100,
-		ProbeASRockRack:    probe.asRockRack,
 	}
 
 	order := []string{ProbeHpIlo,
