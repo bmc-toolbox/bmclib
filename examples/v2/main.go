@@ -18,17 +18,19 @@ import (
 func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
-	host := "127.0.0.1"
+	host := ""
 	port := ""
-	user := "foo"
-	pass := "bar"
+	user := ""
+	pass := ""
 
-	cl := bmclib.NewClient(host, port, user, pass)
 	l := logrus.New()
-	l.Level = logrus.TraceLevel
-	cl.Logger = logrusr.NewLogger(l)
+	l.Level = logrus.DebugLevel
+	logger := logrusr.NewLogger(l)
 
-	err := cl.Open(ctx)
+	var err error
+
+	cl := bmclib.NewClient(host, port, user, pass, bmclib.WithLogger(logger))
+	err = cl.Open(ctx)
 	if err != nil {
 		log.Fatal(err, "bmc login failed")
 	}
@@ -41,5 +43,17 @@ func main() {
 	}
 
 	fmt.Println("BMC version: " + v)
+
+	// open file handle
+	fh, err := os.Open("/tmp/E3C246D4I-NL_L0.03.00.ima")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer fh.Close()
+
+	err = cl.UpdateBMCFirmware(ctx, fh)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 }
