@@ -1,58 +1,60 @@
 package main
 
-// This snippet utilizes the 'v1' older bmclib interface methods
-// it connects to the bmc and retries its version
+/*
+ This utilizes what is to tbe the 'v1' bmclib interface methods to flash a firmware image
+*/
 
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
+	"time"
 
-	"github.com/bmc-toolbox/bmclib/devices"
-	"github.com/bmc-toolbox/bmclib/discover"
+	"github.com/bmc-toolbox/bmclib"
 	"github.com/bombsimon/logrusr"
 	"github.com/sirupsen/logrus"
 )
 
 func main() {
-	//ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	ctx := context.TODO()
-	//defer cancel()
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
 	host := ""
+	port := ""
 	user := ""
 	pass := ""
 
 	l := logrus.New()
-	l.Level = logrus.TraceLevel
+	l.Level = logrus.DebugLevel
 	logger := logrusr.NewLogger(l)
 
-	c, err := discover.ScanAndConnect(
-		host,
-		user,
-		pass,
-		discover.WithContext(ctx),
-		discover.WithLogger(logger),
-	)
+	var err error
 
+	cl := bmclib.NewClient(host, port, user, pass, bmclib.WithLogger(logger))
+	err = cl.Open(ctx)
 	if err != nil {
-		logger.Error(err, "Error connecting to bmc")
+		log.Fatal(err, "bmc login failed")
 	}
 
-	bmc := c.(devices.Bmc)
+	defer cl.Close(ctx)
 
-	err = bmc.CheckCredentials()
+	v, err := cl.GetBMCVersion(ctx)
 	if err != nil {
-		logger.Error(err, "Failed to validate credentials")
-		os.Exit(1)
+		log.Fatal(err, "unable to retrieve BMC version")
 	}
 
-	defer bmc.Close(ctx)
+	fmt.Println("BMC version: " + v)
 
-	s, err := bmc.Serial()
+	// open file handle
+	fh, err := os.Open("/tmp/E3C246D4I-NL_L0.03.00.ima")
 	if err != nil {
-		logger.Error(err, "Error getting bmc serial")
-		os.Exit(1)
+		log.Fatal(err)
 	}
-	fmt.Println(s)
+	defer fh.Close()
+
+	err = cl.UpdateBMCFirmware(ctx, fh)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 }
