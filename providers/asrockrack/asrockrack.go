@@ -15,10 +15,6 @@ import (
 )
 
 const (
-	// BmcType defines the bmc model that is supported by this package
-	BmcType = "asrockrack"
-	// VendorID represents the id of the vendor across all packages
-	VendorID = "ASRockRack"
 	// ProviderName for the provider implementation
 	ProviderName = "asrockrack"
 	// ProviderProtocol for the provider implementation
