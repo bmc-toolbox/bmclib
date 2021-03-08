@@ -71,7 +71,7 @@ func (c *Client) registerProviders() {
 	driverIpmitool := &ipmitool.Conn{Host: c.Auth.Host, Port: c.Auth.Port, User: c.Auth.User, Pass: c.Auth.Pass, Log: c.Logger}
 	c.Registry.Register(ipmitool.ProviderName, ipmitool.ProviderProtocol, ipmitool.Features, nil, driverIpmitool)
 
-  // register ASRR vendorapi provider
+	// register ASRR vendorapi provider
 	driverAsrockrack, _ := asrockrack.New(context.TODO(), c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger)
 	c.Registry.Register(asrockrack.ProviderName, asrockrack.ProviderProtocol, asrockrack.Features, nil, driverAsrockrack)
 
