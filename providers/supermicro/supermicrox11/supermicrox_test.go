@@ -597,7 +597,6 @@ func TestIBmcInterface(t *testing.T) {
 	}
 	_ = devices.Bmc(bmc)
 	_ = devices.Configure(bmc)
-	_ = devices.Firmware(bmc)
 	tearDown()
 }
 
