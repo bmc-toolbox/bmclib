@@ -41,7 +41,6 @@ type ASRockRack struct {
 	fwInfo        *firmwareInfo
 	resetRequired bool // Indicates if the BMC requires a reset
 	skipLogout    bool // A Close() / httpsLogout() request is ignored if the BMC was just flashed - since the sessions are terminated either way
-	ctx           context.Context
 	log           logr.Logger
 }
 
@@ -57,7 +56,6 @@ func New(ctx context.Context, ip string, username string, password string, log l
 		ip:           ip,
 		username:     username,
 		password:     password,
-		ctx:          ctx,
 		log:          log,
 		loginSession: &loginSession{},
 		httpClient:   client,
