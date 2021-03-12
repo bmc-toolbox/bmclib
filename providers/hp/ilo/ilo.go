@@ -662,7 +662,7 @@ func (i *Ilo) IsBlade() (isBlade bool, err error) {
 		return false, err
 	}
 
-	return chassisInfo.ChassisType == "Blade" || chassisInfo.ChassisSn != "", nil
+	return chassisInfo.ChassisType == "Blade", nil
 }
 
 // Slot returns the current slot within the chassis
