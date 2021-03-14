@@ -84,7 +84,7 @@ func Test_FirwmwareUpdateBMC(t *testing.T) {
 	}
 
 	defer fh.Close()
-	err = aClient.FirmwareUpdateBMC(context.TODO(), fh)
+	err = aClient.FirmwareUpdateBMC(context.TODO(), fh, 0)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
