@@ -397,8 +397,10 @@ func (a *ASRockRack) queryHTTPS(URLendpoint, method string, payload io.Reader, h
 	}
 
 	// debug dump request
-	reqDump, _ := httputil.DumpRequestOut(req, true)
-	a.log.V(3).Info("trace", "url", URL, "requestDump", string(reqDump))
+	if os.Getenv("BMCLIB_LOG_LEVEL") == "trace" {
+		reqDump, _ := httputil.DumpRequestOut(req, true)
+		a.log.V(3).Info("trace", "url", URL, "requestDump", string(reqDump))
+	}
 
 	resp, err := a.httpClient.Do(req)
 	if err != nil {
@@ -406,8 +408,10 @@ func (a *ASRockRack) queryHTTPS(URLendpoint, method string, payload io.Reader, h
 	}
 
 	// debug dump response
-	respDump, _ := httputil.DumpResponse(resp, true)
-	a.log.V(3).Info("trace", "responseDump", string(respDump))
+	if os.Getenv("BMCLIB_LOG_LEVEL") == "trace" {
+		respDump, _ := httputil.DumpResponse(resp, true)
+		a.log.V(3).Info("trace", "responseDump", string(respDump))
+	}
 
 	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
