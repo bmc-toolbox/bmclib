@@ -9,6 +9,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httputil"
+	"os"
 
 	"github.com/bmc-toolbox/bmclib/errors"
 )
@@ -65,7 +66,7 @@ func (a *ASRockRack) setFlashMode() error {
 
 	endpoint := "api/maintenance/flash"
 
-	_, statusCode, err := a.queryHTTPS(endpoint, "PUT", nil, nil)
+	_, statusCode, err := a.queryHTTPS(endpoint, "PUT", nil, nil, 0)
 	if err != nil {
 		return err
 	}
@@ -105,7 +106,7 @@ func (a *ASRockRack) uploadFirmware(endpoint string, fwReader io.Reader) error {
 	w.Close()
 
 	// POST payload
-	_, statusCode, err := a.queryHTTPS(endpoint, "POST", form.Bytes(), headers)
+	_, statusCode, err := a.queryHTTPS(endpoint, "POST", pipeReader, headers, contentLength)
 	if err != nil {
 		return err
 	}
@@ -122,7 +123,7 @@ func (a *ASRockRack) verifyUploadedFirmware() error {
 
 	endpoint := "api/maintenance/firmware/verification"
 
-	_, statusCode, err := a.queryHTTPS(endpoint, "GET", nil, nil)
+	_, statusCode, err := a.queryHTTPS(endpoint, "GET", nil, nil, 0)
 	if err != nil {
 		return err
 	}
@@ -148,7 +149,7 @@ func (a *ASRockRack) upgradeBMC() error {
 	}
 
 	headers := map[string]string{"Content-Type": "application/json"}
-	_, statusCode, err := a.queryHTTPS(endpoint, "PUT", payload, headers)
+	_, statusCode, err := a.queryHTTPS(endpoint, "PUT", bytes.NewReader(payload), headers, 0)
 	if err != nil {
 		return err
 	}
@@ -166,7 +167,7 @@ func (a *ASRockRack) reset() error {
 
 	endpoint := "api/maintenance/reset"
 
-	_, statusCode, err := a.queryHTTPS(endpoint, "POST", nil, nil)
+	_, statusCode, err := a.queryHTTPS(endpoint, "POST", nil, nil, 0)
 	if err != nil {
 		return err
 	}
@@ -182,7 +183,7 @@ func (a *ASRockRack) reset() error {
 // 5. firmware flash progress
 func (a *ASRockRack) flashProgress(endpoint string) (*upgradeProgress, error) {
 
-	resp, statusCode, err := a.queryHTTPS(endpoint, "GET", nil, nil)
+	resp, statusCode, err := a.queryHTTPS(endpoint, "GET", nil, nil, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +207,7 @@ func (a *ASRockRack) firmwareInfo() (*firmwareInfo, error) {
 
 	endpoint := "api/asrr/fw-info"
 
-	resp, statusCode, err := a.queryHTTPS(endpoint, "GET", nil, nil)
+	resp, statusCode, err := a.queryHTTPS(endpoint, "GET", nil, nil, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -239,7 +240,7 @@ func (a *ASRockRack) biosUpgradeConfiguration() error {
 	}
 
 	headers := map[string]string{"Content-Type": "application/json"}
-	resp, statusCode, err := a.queryHTTPS(endpoint, "POST", payload, headers)
+	resp, statusCode, err := a.queryHTTPS(endpoint, "POST", bytes.NewReader(payload), headers, 0)
 	if err != nil {
 		return err
 	}
@@ -271,7 +272,7 @@ func (a *ASRockRack) biosUpgrade() error {
 	}
 
 	headers := map[string]string{"Content-Type": "application/json"}
-	resp, statusCode, err := a.queryHTTPS(endpoint, "POST", payload, headers)
+	resp, statusCode, err := a.queryHTTPS(endpoint, "POST", bytes.NewReader(payload), headers, 0)
 	if err != nil {
 		return err
 	}
@@ -305,7 +306,7 @@ func (a *ASRockRack) httpsLogin() error {
 
 	headers := map[string]string{"Content-Type": "application/x-www-form-urlencoded"}
 
-	resp, statusCode, err := a.queryHTTPS(urlEndpoint, "POST", payload, headers)
+	resp, statusCode, err := a.queryHTTPS(urlEndpoint, "POST", bytes.NewReader(payload), headers, 0)
 	if err != nil {
 		return fmt.Errorf("Error logging in: " + err.Error())
 	}
@@ -328,7 +329,7 @@ func (a *ASRockRack) httpsLogout() error {
 
 	urlEndpoint := "api/session"
 
-	_, statusCode, err := a.queryHTTPS(urlEndpoint, "DELETE", nil, nil)
+	_, statusCode, err := a.queryHTTPS(urlEndpoint, "DELETE", nil, nil, 0)
 	if err != nil {
 		return fmt.Errorf("Error logging out: " + err.Error())
 	}
@@ -347,20 +348,14 @@ func (a *ASRockRack) httpsLogout() error {
 // queryHTTPS run the HTTPS query passing in the required headers
 // the / suffix should be excluded from the URLendpoint
 // returns - response body, http status code, error if any
-func (a *ASRockRack) queryHTTPS(URLendpoint, method string, payload []byte, headers map[string]string) ([]byte, int, error) {
+func (a *ASRockRack) queryHTTPS(URLendpoint, method string, payload io.Reader, headers map[string]string, contentLength int64) ([]byte, int, error) {
 
 	var body []byte
 	var err error
 	var req *http.Request
 
 	URL := fmt.Sprintf("https://%s/%s", a.ip, URLendpoint)
-	if len(payload) > 0 {
-		req, err = http.NewRequest(method, URL, bytes.NewReader(payload))
-	} else {
-		req, err = http.NewRequest(method, URL, nil)
-	}
-
-	//
+	req, err = http.NewRequest(method, URL, payload)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -369,6 +364,13 @@ func (a *ASRockRack) queryHTTPS(URLendpoint, method string, payload []byte, head
 	req.Header.Add("X-CSRFTOKEN", a.loginSession.CSRFToken)
 	for k, v := range headers {
 		req.Header.Add(k, v)
+	}
+
+	// Content-Length headers are ignored, unless defined in this manner
+	// https://go.googlesource.com/go/+/go1.16/src/net/http/request.go#161
+	// https://go.googlesource.com/go/+/go1.16/src/net/http/request.go#88
+	if contentLength > 0 {
+		req.ContentLength = contentLength
 	}
 
 	// debug dump request

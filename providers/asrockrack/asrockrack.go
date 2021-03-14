@@ -66,7 +66,7 @@ func New(ip string, username string, password string, log logr.Logger) (*ASRockR
 // returns true if the BMC is identified to be an asrockrack
 func (a *ASRockRack) Compatible() bool {
 
-	resp, statusCode, err := a.queryHTTPS("/", "GET", nil, nil)
+	resp, statusCode, err := a.queryHTTPS("/", "GET", nil, nil, 0)
 	if err != nil {
 		return false
 	}
