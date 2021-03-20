@@ -62,6 +62,10 @@ func (p *userTester) UserRead(ctx context.Context) (users []map[string]string, e
 	return users, nil
 }
 
+func (p *userTester) Name() string {
+	return "test provider"
+}
+
 func TestUserCreate(t *testing.T) {
 	testCases := []struct {
 		name         string
@@ -90,20 +94,18 @@ func TestUserCreate(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, err := CreateUser(ctx, user, pass, role, []UserCreator{&testImplementation})
+			result, err := CreateUser(ctx, user, pass, role, []userProviders{{"", &testImplementation, nil, nil, nil}})
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {
 					t.Fatal(diff)
 				}
-
 			} else {
 				diff := cmp.Diff(expectedResult, result)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
-
 		})
 	}
 }
@@ -114,8 +116,10 @@ func TestCreateUserFromInterfaces(t *testing.T) {
 		err               error
 		badImplementation bool
 		want              bool
+		withName          bool
 	}{
 		{name: "success", want: true},
+		{name: "success", want: true, withName: true},
 		{name: "no implementations found", badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a UserCreator implementation: *struct {}"), errors.New("no UserCreator implementations found")}}},
 	}
 
@@ -134,20 +138,34 @@ func TestCreateUserFromInterfaces(t *testing.T) {
 			user := "ADMIN"
 			pass := "ADMIN"
 			role := "admin"
-			result, err := CreateUserFromInterfaces(context.Background(), user, pass, role, generic)
+			var result bool
+			var err error
+			var successfulProvider string
+			if tc.withName {
+				result, err = CreateUserFromInterfaces(context.Background(), user, pass, role, generic, &successfulProvider)
+			} else {
+				result, err = CreateUserFromInterfaces(context.Background(), user, pass, role, generic)
+			}
 			if err != nil {
-				diff := cmp.Diff(tc.err.Error(), err.Error())
-				if diff != "" {
-					t.Fatal(diff)
+				if tc.err != nil {
+					diff := cmp.Diff(tc.err.Error(), err.Error())
+					if diff != "" {
+						t.Fatal(diff)
+					}
+				} else {
+					t.Fatal(err)
 				}
-
 			} else {
 				diff := cmp.Diff(expectedResult, result)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
-
+			if tc.withName {
+				if diff := cmp.Diff("test provider", successfulProvider); diff != "" {
+					t.Fatal(diff)
+				}
+			}
 		})
 	}
 }
@@ -180,20 +198,18 @@ func TestUpdateUser(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, err := UpdateUser(ctx, user, pass, role, []UserUpdater{&testImplementation})
+			result, err := UpdateUser(ctx, user, pass, role, []userProviders{{"", nil, &testImplementation, nil, nil}})
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {
 					t.Fatal(diff)
 				}
-
 			} else {
 				diff := cmp.Diff(expectedResult, result)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
-
 		})
 	}
 }
@@ -204,8 +220,10 @@ func TestUpdateUserFromInterfaces(t *testing.T) {
 		err               error
 		badImplementation bool
 		want              bool
+		withName          bool
 	}{
 		{name: "success", want: true},
+		{name: "success", want: true, withName: true},
 		{name: "no implementations found", badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a UserUpdater implementation: *struct {}"), errors.New("no UserUpdater implementations found")}}},
 	}
 
@@ -224,20 +242,34 @@ func TestUpdateUserFromInterfaces(t *testing.T) {
 			user := "ADMIN"
 			pass := "ADMIN"
 			role := "admin"
-			result, err := UpdateUserFromInterfaces(context.Background(), user, pass, role, generic)
+			var result bool
+			var err error
+			var successfulProvider string
+			if tc.withName {
+				result, err = UpdateUserFromInterfaces(context.Background(), user, pass, role, generic, &successfulProvider)
+			} else {
+				result, err = UpdateUserFromInterfaces(context.Background(), user, pass, role, generic)
+			}
 			if err != nil {
-				diff := cmp.Diff(tc.err.Error(), err.Error())
-				if diff != "" {
-					t.Fatal(diff)
+				if tc.err != nil {
+					diff := cmp.Diff(tc.err.Error(), err.Error())
+					if diff != "" {
+						t.Fatal(diff)
+					}
+				} else {
+					t.Fatal(err)
 				}
-
 			} else {
 				diff := cmp.Diff(expectedResult, result)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
-
+			if tc.withName {
+				if diff := cmp.Diff("test provider", successfulProvider); diff != "" {
+					t.Fatal(diff)
+				}
+			}
 		})
 	}
 }
@@ -268,20 +300,18 @@ func TestDeleteUser(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, err := DeleteUser(ctx, user, []UserDeleter{&testImplementation})
+			result, err := DeleteUser(ctx, user, []userProviders{{"", nil, nil, &testImplementation, nil}})
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {
 					t.Fatal(diff)
 				}
-
 			} else {
 				diff := cmp.Diff(expectedResult, result)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
-
 		})
 	}
 }
@@ -292,8 +322,10 @@ func TestDeleteUserFromInterfaces(t *testing.T) {
 		err               error
 		badImplementation bool
 		want              bool
+		withName          bool
 	}{
 		{name: "success", want: true},
+		{name: "success", want: true, withName: true},
 		{name: "no implementations found", badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a UserDeleter implementation: *struct {}"), errors.New("no UserDeleter implementations found")}}},
 	}
 
@@ -310,20 +342,34 @@ func TestDeleteUserFromInterfaces(t *testing.T) {
 			}
 			expectedResult := tc.want
 			user := "ADMIN"
-			result, err := DeleteUserFromInterfaces(context.Background(), user, generic)
+			var result bool
+			var err error
+			var successfulProvider string
+			if tc.withName {
+				result, err = DeleteUserFromInterfaces(context.Background(), user, generic, &successfulProvider)
+			} else {
+				result, err = DeleteUserFromInterfaces(context.Background(), user, generic)
+			}
 			if err != nil {
-				diff := cmp.Diff(tc.err.Error(), err.Error())
-				if diff != "" {
-					t.Fatal(diff)
+				if tc.err != nil {
+					diff := cmp.Diff(tc.err.Error(), err.Error())
+					if diff != "" {
+						t.Fatal(diff)
+					}
+				} else {
+					t.Fatal(err)
 				}
-
 			} else {
 				diff := cmp.Diff(expectedResult, result)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
-
+			if tc.withName {
+				if diff := cmp.Diff("test provider", successfulProvider); diff != "" {
+					t.Fatal(diff)
+				}
+			}
 		})
 	}
 }
@@ -360,20 +406,18 @@ func TestReadUsers(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, err := ReadUsers(ctx, []UserReader{&testImplementation})
+			result, err := ReadUsers(ctx, []userProviders{{"", nil, nil, nil, &testImplementation}})
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {
 					t.Fatal(diff)
 				}
-
 			} else {
 				diff := cmp.Diff(expectedResult, result)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
-
 		})
 	}
 }
@@ -384,8 +428,10 @@ func TestReadUsersFromInterfaces(t *testing.T) {
 		err               error
 		badImplementation bool
 		want              bool
+		withName          bool
 	}{
 		{name: "success", want: true},
+		{name: "success", want: true, withName: true},
 		{name: "no implementations found", badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a UserReader implementation: *struct {}"), errors.New("no UserReader implementations found")}}},
 	}
 
@@ -410,20 +456,34 @@ func TestReadUsersFromInterfaces(t *testing.T) {
 				generic = []interface{}{&testImplementation}
 			}
 			expectedResult := users
-			result, err := ReadUsersFromInterfaces(context.Background(), generic)
+			var result []map[string]string
+			var err error
+			var successfulProvider string
+			if tc.withName {
+				result, err = ReadUsersFromInterfaces(context.Background(), generic, &successfulProvider)
+			} else {
+				result, err = ReadUsersFromInterfaces(context.Background(), generic)
+			}
 			if err != nil {
-				diff := cmp.Diff(tc.err.Error(), err.Error())
-				if diff != "" {
-					t.Fatal(diff)
+				if tc.err != nil {
+					diff := cmp.Diff(tc.err.Error(), err.Error())
+					if diff != "" {
+						t.Fatal(diff)
+					}
+				} else {
+					t.Fatal(err)
 				}
-
 			} else {
 				diff := cmp.Diff(expectedResult, result)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
-
+			if tc.withName {
+				if diff := cmp.Diff("test provider", successfulProvider); diff != "" {
+					t.Fatal(diff)
+				}
+			}
 		})
 	}
 }

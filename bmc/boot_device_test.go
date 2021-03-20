@@ -25,6 +25,10 @@ func (b *bootDeviceTester) BootDeviceSet(ctx context.Context, bootDevice string,
 	return true, nil
 }
 
+func (b *bootDeviceTester) Name() string {
+	return "test provider"
+}
+
 func TestSetBootDevice(t *testing.T) {
 	testCases := []struct {
 		name         string
@@ -51,7 +55,7 @@ func TestSetBootDevice(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, err := SetBootDevice(ctx, tc.bootDevice, false, false, []BootDeviceSetter{&testImplementation})
+			result, err := SetBootDevice(ctx, tc.bootDevice, false, false, []bootDeviceProviders{{"", &testImplementation}})
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {
@@ -76,8 +80,10 @@ func TestSetBootDeviceFromInterfaces(t *testing.T) {
 		err               error
 		badImplementation bool
 		want              bool
+		withName          bool
 	}{
 		{name: "success", bootDevice: "pxe", want: true},
+		{name: "success", bootDevice: "pxe", want: true, withName: true},
 		{name: "no implementations found", bootDevice: "pxe", want: false, badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a BootDeviceSetter implementation: *struct {}"), errors.New("no BootDeviceSetter implementations found")}}},
 	}
 
@@ -93,20 +99,30 @@ func TestSetBootDeviceFromInterfaces(t *testing.T) {
 				generic = []interface{}{&testImplementation}
 			}
 			expectedResult := tc.want
-			result, err := SetBootDeviceFromInterfaces(context.Background(), tc.bootDevice, false, false, generic)
+			var result bool
+			var err error
+			var successfulProvider string
+			if tc.withName {
+				result, err = SetBootDeviceFromInterfaces(context.Background(), tc.bootDevice, false, false, generic, &successfulProvider)
+			} else {
+				result, err = SetBootDeviceFromInterfaces(context.Background(), tc.bootDevice, false, false, generic)
+			}
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {
 					t.Fatal(diff)
 				}
-
 			} else {
 				diff := cmp.Diff(expectedResult, result)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
-
+			if tc.withName {
+				if diff := cmp.Diff("test provider", successfulProvider); diff != "" {
+					t.Fatal(diff)
+				}
+			}
 		})
 	}
 }

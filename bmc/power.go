@@ -29,8 +29,16 @@ type PowerStateGetter interface {
 	PowerStateGet(ctx context.Context) (state string, err error)
 }
 
+// powerProviders is an internal struct to correlate an implementation/provider and its name
+type powerProviders struct {
+	name             string
+	powerStateGetter PowerStateGetter
+	powerSetter      PowerSetter
+}
+
 // SetPowerState sets the power state for a BMC, trying all interface implementations passed in
-func SetPowerState(ctx context.Context, state string, p []PowerSetter) (ok bool, err error) {
+// if a successfulProviderName is passed in, it will be updated to be the name of the provider that successfully executed
+func SetPowerState(ctx context.Context, state string, p []powerProviders, successfulProviderName ...*string) (ok bool, err error) {
 Loop:
 	for _, elem := range p {
 		select {
@@ -38,8 +46,8 @@ Loop:
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			if elem != nil {
-				ok, setErr := elem.PowerSet(ctx, state)
+			if elem.powerSetter != nil {
+				ok, setErr := elem.powerSetter.PowerSet(ctx, state)
 				if setErr != nil {
 					err = multierror.Append(err, setErr)
 					continue
@@ -47,6 +55,9 @@ Loop:
 				if !ok {
 					err = multierror.Append(err, errors.New("failed to set power state"))
 					continue
+				}
+				if len(successfulProviderName) > 0 && successfulProviderName[0] != nil {
+					*successfulProviderName[0] = elem.name
 				}
 				return ok, nil
 			}
@@ -56,12 +67,19 @@ Loop:
 }
 
 // SetPowerStateFromInterfaces pass through to library function
-func SetPowerStateFromInterfaces(ctx context.Context, state string, generic []interface{}) (ok bool, err error) {
-	powerSetter := make([]PowerSetter, 0)
+// if a successfulProviderName is passed in, it will be updated to be the name of the provider that successfully executed
+func SetPowerStateFromInterfaces(ctx context.Context, state string, generic []interface{}, successfulProviderName ...*string) (ok bool, err error) {
+	powerSetter := make([]powerProviders, 0)
 	for _, elem := range generic {
+		var temp powerProviders
+		switch p := elem.(type) {
+		case Provider:
+			temp.name = p.Name()
+		}
 		switch p := elem.(type) {
 		case PowerSetter:
-			powerSetter = append(powerSetter, p)
+			temp.powerSetter = p
+			powerSetter = append(powerSetter, temp)
 		default:
 			e := fmt.Sprintf("not a PowerSetter implementation: %T", p)
 			err = multierror.Append(err, errors.New(e))
@@ -70,11 +88,12 @@ func SetPowerStateFromInterfaces(ctx context.Context, state string, generic []in
 	if len(powerSetter) == 0 {
 		return ok, multierror.Append(err, errors.New("no PowerSetter implementations found"))
 	}
-	return SetPowerState(ctx, state, powerSetter)
+	return SetPowerState(ctx, state, powerSetter, successfulProviderName...)
 }
 
 // GetPowerState sets the power state for a BMC, trying all interface implementations passed in
-func GetPowerState(ctx context.Context, p []PowerStateGetter) (state string, err error) {
+// if a successfulProviderName is passed in, it will be updated to be the name of the provider that successfully executed
+func GetPowerState(ctx context.Context, p []powerProviders, successfulProviderName ...*string) (state string, err error) {
 Loop:
 	for _, elem := range p {
 		select {
@@ -82,11 +101,14 @@ Loop:
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			if elem != nil {
-				state, stateErr := elem.PowerStateGet(ctx)
+			if elem.powerStateGetter != nil {
+				state, stateErr := elem.powerStateGetter.PowerStateGet(ctx)
 				if stateErr != nil {
 					err = multierror.Append(err, stateErr)
 					continue
+				}
+				if len(successfulProviderName) > 0 && successfulProviderName[0] != nil {
+					*successfulProviderName[0] = elem.name
 				}
 				return state, nil
 			}
@@ -96,12 +118,19 @@ Loop:
 }
 
 // GetPowerStateFromInterfaces pass through to library function
-func GetPowerStateFromInterfaces(ctx context.Context, generic []interface{}) (state string, err error) {
-	powerStateGetter := make([]PowerStateGetter, 0)
+// if a successfulProviderName is passed in, it will be updated to be the name of the provider that successfully executed
+func GetPowerStateFromInterfaces(ctx context.Context, generic []interface{}, successfulProviderName ...*string) (state string, err error) {
+	powerStateGetter := make([]powerProviders, 0)
 	for _, elem := range generic {
+		var temp powerProviders
+		switch p := elem.(type) {
+		case Provider:
+			temp.name = p.Name()
+		}
 		switch p := elem.(type) {
 		case PowerStateGetter:
-			powerStateGetter = append(powerStateGetter, p)
+			temp.powerStateGetter = p
+			powerStateGetter = append(powerStateGetter, temp)
 		default:
 			e := fmt.Sprintf("not a PowerStateGetter implementation: %T", p)
 			err = multierror.Append(err, errors.New(e))
@@ -110,5 +139,5 @@ func GetPowerStateFromInterfaces(ctx context.Context, generic []interface{}) (st
 	if len(powerStateGetter) == 0 {
 		return state, multierror.Append(err, errors.New("no PowerStateGetter implementations found"))
 	}
-	return GetPowerState(ctx, powerStateGetter)
+	return GetPowerState(ctx, powerStateGetter, successfulProviderName...)
 }

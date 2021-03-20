@@ -25,6 +25,10 @@ func (r *resetTester) BmcReset(ctx context.Context, resetType string) (ok bool, 
 	return true, nil
 }
 
+func (r *resetTester) Name() string {
+	return "test provider"
+}
+
 func TestResetBMC(t *testing.T) {
 	testCases := []struct {
 		name         string
@@ -51,7 +55,7 @@ func TestResetBMC(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, err := ResetBMC(ctx, tc.resetType, []BMCResetter{&testImplementation})
+			result, err := ResetBMC(ctx, tc.resetType, []bmcProviders{{"", &testImplementation}})
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {
@@ -76,8 +80,10 @@ func TestResetBMCFromInterfaces(t *testing.T) {
 		err               error
 		badImplementation bool
 		want              bool
+		withName          bool
 	}{
 		{name: "success", resetType: "cold", want: true},
+		{name: "success", resetType: "cold", want: true, withName: true},
 		{name: "no implementations found", resetType: "warm", want: false, badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a BMCResetter implementation: *struct {}"), errors.New("no BMCResetter implementations found")}}},
 	}
 
@@ -93,20 +99,34 @@ func TestResetBMCFromInterfaces(t *testing.T) {
 				generic = []interface{}{&testImplementation}
 			}
 			expectedResult := tc.want
-			result, err := ResetBMCFromInterfaces(context.Background(), tc.resetType, generic)
+			var result bool
+			var err error
+			var successfulProvider string
+			if tc.withName {
+				result, err = ResetBMCFromInterfaces(context.Background(), tc.resetType, generic, &successfulProvider)
+			} else {
+				result, err = ResetBMCFromInterfaces(context.Background(), tc.resetType, generic)
+			}
 			if err != nil {
-				diff := cmp.Diff(tc.err.Error(), err.Error())
-				if diff != "" {
-					t.Fatal(diff)
+				if tc.err != nil {
+					diff := cmp.Diff(tc.err.Error(), err.Error())
+					if diff != "" {
+						t.Fatal(diff)
+					}
+				} else {
+					t.Fatal(err)
 				}
-
 			} else {
 				diff := cmp.Diff(expectedResult, result)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
-
+			if tc.withName {
+				if diff := cmp.Diff("test provider", successfulProvider); diff != "" {
+					t.Fatal(diff)
+				}
+			}
 		})
 	}
 }

@@ -37,11 +37,17 @@ func TestBMC(t *testing.T) {
 	if err != nil {
 		t.Log(err)
 	}
-	state, err = cl.GetPowerState(ctx)
+
+	var providerName string
+	// if you pass in a string pointer to any function
+	// it will be updated with the name of the provider
+	// that successfully execute
+	state, err = cl.GetPowerState(ctx, &providerName)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log(state)
+	t.Log(providerName)
 
 	users, err := cl.ReadUsers(ctx)
 	if err != nil {

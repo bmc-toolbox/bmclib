@@ -32,6 +32,10 @@ func (p *powerTester) PowerStateGet(ctx context.Context) (state string, err erro
 	return "on", nil
 }
 
+func (p *powerTester) Name() string {
+	return "test provider"
+}
+
 func TestSetPowerState(t *testing.T) {
 	testCases := []struct {
 		name         string
@@ -58,7 +62,7 @@ func TestSetPowerState(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, err := SetPowerState(ctx, tc.state, []PowerSetter{&testImplementation})
+			result, err := SetPowerState(ctx, tc.state, []powerProviders{{"", nil, &testImplementation}})
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {
@@ -83,8 +87,10 @@ func TestSetPowerStateFromInterfaces(t *testing.T) {
 		err               error
 		badImplementation bool
 		want              bool
+		withName          bool
 	}{
 		{name: "success", state: "off", want: true},
+		{name: "success", state: "on", want: true, withName: true},
 		{name: "no implementations found", state: "on", want: false, badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a PowerSetter implementation: *struct {}"), errors.New("no PowerSetter implementations found")}}},
 	}
 
@@ -100,20 +106,34 @@ func TestSetPowerStateFromInterfaces(t *testing.T) {
 				generic = []interface{}{&testImplementation}
 			}
 			expectedResult := tc.want
-			result, err := SetPowerStateFromInterfaces(context.Background(), tc.state, generic)
+			var result bool
+			var err error
+			var successfulProvider string
+			if tc.withName {
+				result, err = SetPowerStateFromInterfaces(context.Background(), tc.state, generic, &successfulProvider)
+			} else {
+				result, err = SetPowerStateFromInterfaces(context.Background(), tc.state, generic)
+			}
 			if err != nil {
-				diff := cmp.Diff(tc.err.Error(), err.Error())
-				if diff != "" {
-					t.Fatal(diff)
+				if tc.err != nil {
+					diff := cmp.Diff(tc.err.Error(), err.Error())
+					if diff != "" {
+						t.Fatal(diff)
+					}
+				} else {
+					t.Fatal(err)
 				}
-
 			} else {
 				diff := cmp.Diff(expectedResult, result)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
-
+			if tc.withName {
+				if diff := cmp.Diff("test provider", successfulProvider); diff != "" {
+					t.Fatal(diff)
+				}
+			}
 		})
 	}
 }
@@ -141,22 +161,21 @@ func TestGetPowerState(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, err := GetPowerState(ctx, []PowerStateGetter{&testImplementation})
+			result, err := GetPowerState(ctx, []powerProviders{{"", &testImplementation, nil}})
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {
 					t.Fatal(diff)
 				}
-
 			} else {
 				diff := cmp.Diff(expectedResult, result)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
-
 		})
 	}
+
 }
 
 func TestGetPowerStateFromInterfaces(t *testing.T) {
@@ -166,8 +185,10 @@ func TestGetPowerStateFromInterfaces(t *testing.T) {
 		err               error
 		badImplementation bool
 		want              string
+		withName          bool
 	}{
 		{name: "success", state: "on", want: "on"},
+		{name: "success", state: "on", want: "on", withName: true},
 		{name: "no implementations found", state: "on", want: "", badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a PowerStateGetter implementation: *struct {}"), errors.New("no PowerStateGetter implementations found")}}},
 	}
 
@@ -183,20 +204,34 @@ func TestGetPowerStateFromInterfaces(t *testing.T) {
 				generic = []interface{}{&testImplementation}
 			}
 			expectedResult := tc.want
-			result, err := GetPowerStateFromInterfaces(context.Background(), generic)
+			var result string
+			var err error
+			var successfulProvider string
+			if tc.withName {
+				result, err = GetPowerStateFromInterfaces(context.Background(), generic, &successfulProvider)
+			} else {
+				result, err = GetPowerStateFromInterfaces(context.Background(), generic)
+			}
 			if err != nil {
-				diff := cmp.Diff(tc.err.Error(), err.Error())
-				if diff != "" {
-					t.Fatal(diff)
+				if tc.err != nil {
+					diff := cmp.Diff(tc.err.Error(), err.Error())
+					if diff != "" {
+						t.Fatal(diff)
+					}
+				} else {
+					t.Fatal(err)
 				}
-
 			} else {
 				diff := cmp.Diff(expectedResult, result)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
-
+			if tc.withName {
+				if diff := cmp.Diff("test provider", successfulProvider); diff != "" {
+					t.Fatal(diff)
+				}
+			}
 		})
 	}
 }
