@@ -2,7 +2,6 @@ package asrockrack
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -56,7 +55,7 @@ func TestMain(m *testing.M) {
 	l.Level = logrus.DebugLevel
 	// setup bmc client
 	tLog := logrusr.NewLogger(l)
-	aClient, err = New(context.TODO(), bmcURL.Host, "foo", "bar", tLog)
+	aClient, err = New(bmcURL.Host, "foo", "bar", tLog)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

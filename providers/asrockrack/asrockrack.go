@@ -45,7 +45,7 @@ type ASRockRack struct {
 }
 
 // New returns a new ASRockRack instance ready to be used
-func New(ctx context.Context, ip string, username string, password string, log logr.Logger) (*ASRockRack, error) {
+func New(ip string, username string, password string, log logr.Logger) (*ASRockRack, error) {
 
 	client, err := httpclient.Build()
 	if err != nil {
