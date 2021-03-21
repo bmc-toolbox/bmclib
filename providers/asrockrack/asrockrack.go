@@ -75,22 +75,12 @@ func (a *ASRockRack) Compatible() bool {
 		return false
 	}
 
-	if bytes.Contains(resp, []byte(`ASRockRack`)) {
-		return true
-	}
-
-	return false
+	return bytes.Contains(resp, []byte(`ASRockRack`))
 }
 
 // Open a connection to a BMC, implements the Opener interface
 func (a *ASRockRack) Open(ctx context.Context) (err error) {
-
-	err = a.httpsLogin()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return a.httpsLogin()
 }
 
 // Close a connection to a BMC, implements the Closer interface
@@ -100,21 +90,12 @@ func (a *ASRockRack) Close(ctx context.Context) (err error) {
 		return nil
 	}
 
-	err = a.httpsLogout()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return a.httpsLogout()
 }
 
 // CheckCredentials verify whether the credentials are valid or not
 func (a *ASRockRack) CheckCredentials() (err error) {
-	err = a.httpsLogin()
-	if err != nil {
-		return err
-	}
-	return err
+	return a.httpsLogin()
 }
 
 // BiosVersion returns the BIOS version from the BMC
