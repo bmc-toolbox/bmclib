@@ -22,7 +22,8 @@ func TestBMC(t *testing.T) {
 	cl := NewClient(host, port, user, pass, WithLogger(log))
 	cl.Registry.Drivers = cl.Registry.FilterForCompatible(ctx)
 	var metadata bmc.Metadata
-	err := cl.Open(ctx, &metadata)
+	var err error
+	cl.Registry.Drivers, err = cl.Open(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}

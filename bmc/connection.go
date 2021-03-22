@@ -21,63 +21,48 @@ type Closer interface {
 // connectionProviders is an internal struct to correlate an implementation/provider and its name
 type connectionProviders struct {
 	name   string
-	opener Opener
 	closer Closer
 }
 
-// OpenConnection opens a connection to a BMC, trying all interface implementations passed in
-func OpenConnection(ctx context.Context, o []connectionProviders, metadata ...*Metadata) (err error) {
+// OpenConnectionFromInterfaces will try all opener interfaces and remove failed ones.
+// The reason failed ones need to be removed is so that when other methods are called (like powerstate)
+// implementations that have connections wont nil pointer error when their connection fails.
+func OpenConnectionFromInterfaces(ctx context.Context, generic []interface{}, metadata ...*Metadata) (opened []interface{}, err error) {
 	if len(metadata) == 0 || metadata[0] == nil {
 		metadata = []*Metadata{&Metadata{}}
 	}
-	var connOpen bool
 Loop:
-	for _, elem := range o {
+	for _, elem := range generic {
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			if elem.opener != nil {
-				*metadata[0] = Metadata{ProvidersAttempted: append(metadata[0].ProvidersAttempted, elem.name)}
-				openErr := elem.opener.Open(ctx)
-				if openErr != nil {
-					err = multierror.Append(err, openErr)
-					continue
-				}
-				connOpen = true
-				*metadata[0] = Metadata{SuccessfulOpenConns: append(metadata[0].SuccessfulOpenConns, elem.name), ProvidersAttempted: metadata[0].ProvidersAttempted}
-			}
 		}
-	}
-	if connOpen {
-		return nil
-	}
-	return multierror.Append(err, errors.New("failed to open connection"))
-}
-
-// OpenConnectionFromInterfaces pass through to library function
-func OpenConnectionFromInterfaces(ctx context.Context, generic []interface{}, metadata ...*Metadata) (err error) {
-	openers := make([]connectionProviders, 0)
-	for _, elem := range generic {
-		var temp connectionProviders
+		var providerName string
 		switch p := elem.(type) {
 		case Provider:
-			temp.name = p.Name()
+			providerName = p.Name()
 		}
 		switch p := elem.(type) {
 		case Opener:
-			temp.opener = p
-			openers = append(openers, temp)
+			*metadata[0] = Metadata{ProvidersAttempted: append(metadata[0].ProvidersAttempted, providerName)}
+			er := p.Open(ctx)
+			if er != nil {
+				err = multierror.Append(err, er)
+				continue
+			}
+			opened = append(opened, elem)
+			*metadata[0] = Metadata{SuccessfulOpenConns: append(metadata[0].SuccessfulOpenConns, providerName), ProvidersAttempted: metadata[0].ProvidersAttempted}
 		default:
 			e := fmt.Sprintf("not a Opener implementation: %T", p)
 			err = multierror.Append(err, errors.New(e))
 		}
 	}
-	if len(openers) == 0 {
-		return multierror.Append(err, errors.New("no Opener implementations found"))
+	if len(opened) == 0 {
+		return nil, multierror.Append(err, errors.New("no Opener implementations found"))
 	}
-	return OpenConnection(ctx, openers, metadata...)
+	return opened, nil
 }
 
 // CloseConnection closes a connection to a BMC, trying all interface implementations passed in
