@@ -53,7 +53,7 @@ func (s *SupermicroX) PxeOnce() (status bool, err error) {
 	if err != nil {
 		return status, err
 	}
-	_, err = i.PxeOnceMbr(context.Background())
+	_, err = i.PxeOnceEfi(context.Background())
 	if err != nil {
 		return false, err
 	}
