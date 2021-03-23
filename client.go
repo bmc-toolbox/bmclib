@@ -10,6 +10,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/bmc"
 	"github.com/bmc-toolbox/bmclib/logging"
 	"github.com/bmc-toolbox/bmclib/providers/asrockrack"
+	"github.com/bmc-toolbox/bmclib/providers/dell/idrac9"
 	"github.com/bmc-toolbox/bmclib/providers/goipmi"
 	"github.com/bmc-toolbox/bmclib/providers/ipmitool"
 	"github.com/bmc-toolbox/bmclib/providers/redfish"
@@ -87,6 +88,10 @@ func (c *Client) registerProviders() {
 	// register gofish provider
 	driverGoFish := &redfish.Conn{Host: c.Auth.Host, Port: c.Auth.Port, User: c.Auth.User, Pass: c.Auth.Pass, Log: c.Logger}
 	c.Registry.Register(redfish.ProviderName, redfish.ProviderProtocol, redfish.Features, nil, driverGoFish)
+
+	// register dell idrac9 provider
+	driverIdrac9 := &idrac9.Conn{Host: c.Auth.Host, Port: c.Auth.Port, User: c.Auth.User, Pass: c.Auth.Pass, Log: c.Logger}
+	c.Registry.Register(idrac9.ProviderName, idrac9.ProviderProtocol, idrac9.Features, nil, driverIdrac9)
 	/*
 		// dummy used for testing
 		driverDummy := &dummy.Conn{FailOpen: true}

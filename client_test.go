@@ -10,7 +10,7 @@ import (
 
 func TestBMC(t *testing.T) {
 	t.Skip("needs ipmitool and real ipmi server")
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	host := "127.0.0.1"
 	port := "623"
