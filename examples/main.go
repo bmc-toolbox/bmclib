@@ -21,9 +21,9 @@ import (
 // github.com/wojas/genericr: genericr
 func main() {
 
-	ip := "<bmc_ip>"
-	user := "user"
-	pass := "password"
+	ip := ""
+	user := "admin"
+	pass := "admin"
 
 	logger := logrus.New()
 	logger.SetLevel(logrus.DebugLevel)
@@ -37,7 +37,7 @@ func main() {
 	printStatus(conn, logger)
 
 	logger.Info("printing status with the default builtin logger")
-	os.Setenv("BMCLIB_LOG_LEVEL", "debug")
+	os.Setenv("BMCLIB_LOG_LEVEL", "trace")
 	conn, err = withDefaultBuiltinLogger(ip, user, pass)
 	if err != nil {
 		logger.Fatal(err)

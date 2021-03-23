@@ -4,9 +4,11 @@ package bmclib
 
 import (
 	"context"
+	"io"
 
 	"github.com/bmc-toolbox/bmclib/bmc"
 	"github.com/bmc-toolbox/bmclib/logging"
+	"github.com/bmc-toolbox/bmclib/providers/asrockrack"
 	"github.com/bmc-toolbox/bmclib/providers/ipmitool"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
@@ -46,12 +48,12 @@ func NewClient(host, port, user, pass string, opts ...Option) *Client {
 		Logger:   logging.DefaultLogger(),
 		Registry: registrar.NewRegistry(),
 	}
-	defaultClient.Registry.Logger = defaultClient.Logger
 
 	for _, opt := range opts {
 		opt(defaultClient)
 	}
 
+	defaultClient.Registry.Logger = defaultClient.Logger
 	defaultClient.Auth.Host = host
 	defaultClient.Auth.Port = port
 	defaultClient.Auth.User = user
@@ -68,6 +70,11 @@ func (c *Client) registerProviders() {
 	// register ipmitool provider
 	driverIpmitool := &ipmitool.Conn{Host: c.Auth.Host, Port: c.Auth.Port, User: c.Auth.User, Pass: c.Auth.Pass, Log: c.Logger}
 	c.Registry.Register(ipmitool.ProviderName, ipmitool.ProviderProtocol, ipmitool.Features, nil, driverIpmitool)
+
+	// register ASRR vendorapi provider
+	driverAsrockrack, _ := asrockrack.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger)
+	c.Registry.Register(asrockrack.ProviderName, asrockrack.ProviderProtocol, asrockrack.Features, nil, driverAsrockrack)
+
 }
 
 // Open pass through to library function
@@ -118,4 +125,24 @@ func (c *Client) SetBootDevice(ctx context.Context, bootDevice string, setPersis
 // ResetBMC pass through to library function
 func (c *Client) ResetBMC(ctx context.Context, resetType string) (ok bool, err error) {
 	return bmc.ResetBMCFromInterfaces(ctx, resetType, c.Registry.GetDriverInterfaces())
+}
+
+// GetBMCVersion pass through library function
+func (c *Client) GetBMCVersion(ctx context.Context) (version string, err error) {
+	return bmc.GetBMCVersionFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+}
+
+// UpdateBMCFirmware pass through library function
+func (c *Client) UpdateBMCFirmware(ctx context.Context, fileReader io.Reader) (err error) {
+	return bmc.UpdateBMCFirmwareFromInterfaces(ctx, fileReader, c.Registry.GetDriverInterfaces())
+}
+
+// GetBIOSVersion pass through library function
+func (c *Client) GetBIOSVersion(ctx context.Context) (version string, err error) {
+	return bmc.GetBIOSVersionFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+}
+
+// UpdateBIOSFirmware pass through library function
+func (c *Client) UpdateBIOSFirmware(ctx context.Context, fileReader io.Reader) (err error) {
+	return bmc.UpdateBIOSFirmwareFromInterfaces(ctx, fileReader, c.Registry.GetDriverInterfaces())
 }
