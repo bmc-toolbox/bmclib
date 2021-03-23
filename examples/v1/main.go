@@ -52,7 +52,12 @@ func main() {
 	}
 	defer fh.Close()
 
-	err = cl.UpdateBMCFirmware(ctx, fh)
+	fi, err := fh.Stat()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = cl.UpdateBMCFirmware(ctx, fh, fi.Size())
 	if err != nil {
 		log.Fatal(err)
 	}
