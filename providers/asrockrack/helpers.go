@@ -80,30 +80,53 @@ func (a *ASRockRack) setFlashMode() error {
 	return nil
 }
 
+func multipartSize(fieldname, filename string) int64 {
+	body := &bytes.Buffer{}
+	form := multipart.NewWriter(body)
+	_, _ = form.CreateFormFile(fieldname, filename)
+	_ = form.Close()
+	return int64(body.Len())
+}
+
 // 2 Upload the firmware file
-func (a *ASRockRack) uploadFirmware(endpoint string, fwReader io.Reader) error {
+func (a *ASRockRack) uploadFirmware(endpoint string, fwReader io.Reader, fileSize int64) error {
 
-	// setup a buffer for our multipart form
-	var form bytes.Buffer
-	w := multipart.NewWriter(&form)
+	fieldName, fileName := "fwimage", "image"
+	contentLength := multipartSize(fieldName, fileName) + fileSize
 
-	// create form data from update image
-	fwWriter, err := w.CreateFormFile("fwimage", "image")
-	if err != nil {
-		return err
-	}
+	// setup pipe
+	pipeReader, pipeWriter := io.Pipe()
+	defer pipeReader.Close()
 
-	// copy file contents into form payload
-	_, err = io.Copy(fwWriter, fwReader)
-	if err != nil {
-		return err
-	}
+	// initiate a mulitpart writer
+	form := multipart.NewWriter(pipeWriter)
+
+	errCh := make(chan error, 1)
+	go func() {
+		defer pipeWriter.Close()
+
+		// create form part
+		part, err := form.CreateFormFile(fieldName, fileName)
+		if err != nil {
+			errCh <- err
+			return
+		}
+
+		// copy from source into form part writer
+		_, err = io.Copy(part, fwReader)
+		if err != nil {
+			errCh <- err
+			return
+		}
+
+		// add terminating boundary to multipart form
+		errCh <- form.Close()
+	}()
 
 	// multi-part content type
-	headers := map[string]string{"Content-Type": w.FormDataContentType()}
-
-	// close multipart writer - adds the teminating boundary.
-	w.Close()
+	headers := map[string]string{
+		"Content-Type": form.FormDataContentType(),
+	}
 
 	// POST payload
 	_, statusCode, err := a.queryHTTPS(endpoint, "POST", pipeReader, headers, contentLength)
