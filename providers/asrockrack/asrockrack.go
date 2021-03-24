@@ -38,7 +38,6 @@ type ASRockRack struct {
 	password      string
 	loginSession  *loginSession
 	httpClient    *http.Client
-	fwInfo        *firmwareInfo
 	resetRequired bool // Indicates if the BMC requires a reset
 	skipLogout    bool // A Close() / httpsLogout() request is ignored if the BMC was just flashed - since the sessions are terminated either way
 	log           logr.Logger
@@ -101,29 +100,23 @@ func (a *ASRockRack) CheckCredentials() (err error) {
 // BiosVersion returns the BIOS version from the BMC
 func (a *ASRockRack) GetBIOSVersion(ctx context.Context) (string, error) {
 
-	var err error
-	if a.fwInfo == nil {
-		a.fwInfo, err = a.firmwareInfo()
-		if err != nil {
-			return "", err
-		}
+	fwInfo, err := a.firmwareInfo()
+	if err != nil {
+		return "", err
 	}
 
-	return a.fwInfo.BIOSVersion, nil
+	return fwInfo.BIOSVersion, nil
 }
 
 // BMCVersion returns the BMC version
 func (a *ASRockRack) GetBMCVersion(ctx context.Context) (string, error) {
 
-	var err error
-	if a.fwInfo == nil {
-		a.fwInfo, err = a.firmwareInfo()
-		if err != nil {
-			return "", err
-		}
+	fwInfo, err := a.firmwareInfo()
+	if err != nil {
+		return "", err
 	}
 
-	return a.fwInfo.BMCVersion, nil
+	return fwInfo.BMCVersion, nil
 }
 
 // nolint: gocyclo
