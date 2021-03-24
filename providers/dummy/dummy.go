@@ -33,6 +33,10 @@ type Conn struct {
 	Log      logr.Logger
 }
 
+func (c *Conn) Name() string {
+	return ProviderName
+}
+
 func (c *Conn) Open(ctx context.Context) error {
 	if c.FailOpen {
 		return errors.New("failed on purpose")
@@ -53,5 +57,5 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 // PowerStateGet gets the power state of a BMC machine
 func (c *Conn) PowerStateGet(ctx context.Context) (state string, err error) {
 	//panic("testing")
-	return "on", nil
+	return "on", errors.New("bad")
 }

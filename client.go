@@ -74,7 +74,11 @@ func (c *Client) registerProviders() {
 	// register ASRR vendorapi provider
 	driverAsrockrack, _ := asrockrack.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger)
 	c.Registry.Register(asrockrack.ProviderName, asrockrack.ProviderProtocol, asrockrack.Features, nil, driverAsrockrack)
-
+	/*
+		// dummy used for testing
+		driverDummy := &dummy.Conn{FailOpen: true}
+		c.Registry.Register(dummy.ProviderName, dummy.ProviderProtocol, dummy.Features, nil, driverDummy)
+	*/
 }
 
 // Open calls the OpenConnectionFromInterfaces library function
