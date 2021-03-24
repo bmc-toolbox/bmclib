@@ -1,7 +1,7 @@
 package main
 
 /*
- This utilizes what is to tbe the 'v1' bmclib interface methods to flash a firmware image
+ This utilizes the 'v2' bmclib interface methods to flash a firmware image
 */
 
 import (

@@ -133,8 +133,8 @@ func (c *Client) GetBMCVersion(ctx context.Context) (version string, err error) 
 }
 
 // UpdateBMCFirmware pass through library function
-func (c *Client) UpdateBMCFirmware(ctx context.Context, fileReader io.Reader, fileSize int64) (err error) {
-	return bmc.UpdateBMCFirmwareFromInterfaces(ctx, fileReader, fileSize, c.Registry.GetDriverInterfaces())
+func (c *Client) UpdateBMCFirmware(ctx context.Context, fileReader io.Reader) (err error) {
+	return bmc.UpdateBMCFirmwareFromInterfaces(ctx, fileReader, c.Registry.GetDriverInterfaces())
 }
 
 // GetBIOSVersion pass through library function
@@ -143,6 +143,6 @@ func (c *Client) GetBIOSVersion(ctx context.Context) (version string, err error)
 }
 
 // UpdateBIOSFirmware pass through library function
-func (c *Client) UpdateBIOSFirmware(ctx context.Context, fileReader io.Reader, fileSize int64) (err error) {
-	return bmc.UpdateBIOSFirmwareFromInterfaces(ctx, fileReader, fileSize, c.Registry.GetDriverInterfaces())
+func (c *Client) UpdateBIOSFirmware(ctx context.Context, fileReader io.Reader) (err error) {
+	return bmc.UpdateBIOSFirmwareFromInterfaces(ctx, fileReader, c.Registry.GetDriverInterfaces())
 }

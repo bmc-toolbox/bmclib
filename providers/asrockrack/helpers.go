@@ -9,7 +9,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httputil"
-	"os"
 
 	"github.com/bmc-toolbox/bmclib/errors"
 )
@@ -66,7 +65,7 @@ func (a *ASRockRack) setFlashMode() error {
 
 	endpoint := "api/maintenance/flash"
 
-	_, statusCode, err := a.queryHTTPS(endpoint, "PUT", nil, nil, 0)
+	_, statusCode, err := a.queryHTTPS(endpoint, "PUT", nil, nil)
 	if err != nil {
 		return err
 	}
@@ -80,56 +79,33 @@ func (a *ASRockRack) setFlashMode() error {
 	return nil
 }
 
-func multipartSize(fieldname, filename string) int64 {
-	body := &bytes.Buffer{}
-	form := multipart.NewWriter(body)
-	_, _ = form.CreateFormFile(fieldname, filename)
-	_ = form.Close()
-	return int64(body.Len())
-}
-
 // 2 Upload the firmware file
-func (a *ASRockRack) uploadFirmware(endpoint string, fwReader io.Reader, fileSize int64) error {
+func (a *ASRockRack) uploadFirmware(endpoint string, fwReader io.Reader) error {
 
-	fieldName, fileName := "fwimage", "image"
-	contentLength := multipartSize(fieldName, fileName) + fileSize
+	// setup a buffer for our multipart form
+	var form bytes.Buffer
+	w := multipart.NewWriter(&form)
 
-	// setup pipe
-	pipeReader, pipeWriter := io.Pipe()
-	defer pipeReader.Close()
-
-	// initiate a mulitpart writer
-	form := multipart.NewWriter(pipeWriter)
-
-	errCh := make(chan error, 1)
-	go func() {
-		defer pipeWriter.Close()
-
-		// create form part
-		part, err := form.CreateFormFile(fieldName, fileName)
-		if err != nil {
-			errCh <- err
-			return
-		}
-
-		// copy from source into form part writer
-		_, err = io.Copy(part, fwReader)
-		if err != nil {
-			errCh <- err
-			return
-		}
-
-		// add terminating boundary to multipart form
-		errCh <- form.Close()
-	}()
-
-	// multi-part content type
-	headers := map[string]string{
-		"Content-Type": form.FormDataContentType(),
+	// create form data from update image
+	fwWriter, err := w.CreateFormFile("fwimage", "image")
+	if err != nil {
+		return err
 	}
 
+	// copy file contents into form payload
+	_, err = io.Copy(fwWriter, fwReader)
+	if err != nil {
+		return err
+	}
+
+	// multi-part content type
+	headers := map[string]string{"Content-Type": w.FormDataContentType()}
+
+	// close multipart writer - adds the teminating boundary.
+	w.Close()
+
 	// POST payload
-	_, statusCode, err := a.queryHTTPS(endpoint, "POST", pipeReader, headers, contentLength)
+	_, statusCode, err := a.queryHTTPS(endpoint, "POST", form.Bytes(), headers)
 	if err != nil {
 		return err
 	}
@@ -146,7 +122,7 @@ func (a *ASRockRack) verifyUploadedFirmware() error {
 
 	endpoint := "api/maintenance/firmware/verification"
 
-	_, statusCode, err := a.queryHTTPS(endpoint, "GET", nil, nil, 0)
+	_, statusCode, err := a.queryHTTPS(endpoint, "GET", nil, nil)
 	if err != nil {
 		return err
 	}
@@ -172,7 +148,7 @@ func (a *ASRockRack) upgradeBMC() error {
 	}
 
 	headers := map[string]string{"Content-Type": "application/json"}
-	_, statusCode, err := a.queryHTTPS(endpoint, "PUT", bytes.NewReader(payload), headers, 0)
+	_, statusCode, err := a.queryHTTPS(endpoint, "PUT", payload, headers)
 	if err != nil {
 		return err
 	}
@@ -190,7 +166,7 @@ func (a *ASRockRack) reset() error {
 
 	endpoint := "api/maintenance/reset"
 
-	_, statusCode, err := a.queryHTTPS(endpoint, "POST", nil, nil, 0)
+	_, statusCode, err := a.queryHTTPS(endpoint, "POST", nil, nil)
 	if err != nil {
 		return err
 	}
@@ -206,7 +182,7 @@ func (a *ASRockRack) reset() error {
 // 5. firmware flash progress
 func (a *ASRockRack) flashProgress(endpoint string) (*upgradeProgress, error) {
 
-	resp, statusCode, err := a.queryHTTPS(endpoint, "GET", nil, nil, 0)
+	resp, statusCode, err := a.queryHTTPS(endpoint, "GET", nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -230,7 +206,7 @@ func (a *ASRockRack) firmwareInfo() (*firmwareInfo, error) {
 
 	endpoint := "api/asrr/fw-info"
 
-	resp, statusCode, err := a.queryHTTPS(endpoint, "GET", nil, nil, 0)
+	resp, statusCode, err := a.queryHTTPS(endpoint, "GET", nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -263,7 +239,7 @@ func (a *ASRockRack) biosUpgradeConfiguration() error {
 	}
 
 	headers := map[string]string{"Content-Type": "application/json"}
-	resp, statusCode, err := a.queryHTTPS(endpoint, "POST", bytes.NewReader(payload), headers, 0)
+	resp, statusCode, err := a.queryHTTPS(endpoint, "POST", payload, headers)
 	if err != nil {
 		return err
 	}
@@ -295,7 +271,7 @@ func (a *ASRockRack) biosUpgrade() error {
 	}
 
 	headers := map[string]string{"Content-Type": "application/json"}
-	resp, statusCode, err := a.queryHTTPS(endpoint, "POST", bytes.NewReader(payload), headers, 0)
+	resp, statusCode, err := a.queryHTTPS(endpoint, "POST", payload, headers)
 	if err != nil {
 		return err
 	}
@@ -329,7 +305,7 @@ func (a *ASRockRack) httpsLogin() error {
 
 	headers := map[string]string{"Content-Type": "application/x-www-form-urlencoded"}
 
-	resp, statusCode, err := a.queryHTTPS(urlEndpoint, "POST", bytes.NewReader(payload), headers, 0)
+	resp, statusCode, err := a.queryHTTPS(urlEndpoint, "POST", payload, headers)
 	if err != nil {
 		return fmt.Errorf("Error logging in: " + err.Error())
 	}
@@ -352,7 +328,7 @@ func (a *ASRockRack) httpsLogout() error {
 
 	urlEndpoint := "api/session"
 
-	_, statusCode, err := a.queryHTTPS(urlEndpoint, "DELETE", nil, nil, 0)
+	_, statusCode, err := a.queryHTTPS(urlEndpoint, "DELETE", nil, nil)
 	if err != nil {
 		return fmt.Errorf("Error logging out: " + err.Error())
 	}
@@ -371,14 +347,20 @@ func (a *ASRockRack) httpsLogout() error {
 // queryHTTPS run the HTTPS query passing in the required headers
 // the / suffix should be excluded from the URLendpoint
 // returns - response body, http status code, error if any
-func (a *ASRockRack) queryHTTPS(URLendpoint, method string, payload io.Reader, headers map[string]string, contentLength int64) ([]byte, int, error) {
+func (a *ASRockRack) queryHTTPS(URLendpoint, method string, payload []byte, headers map[string]string) ([]byte, int, error) {
 
 	var body []byte
 	var err error
 	var req *http.Request
 
 	URL := fmt.Sprintf("https://%s/%s", a.ip, URLendpoint)
-	req, err = http.NewRequest(method, URL, payload)
+	if len(payload) > 0 {
+		req, err = http.NewRequest(method, URL, bytes.NewReader(payload))
+	} else {
+		req, err = http.NewRequest(method, URL, nil)
+	}
+
+	//
 	if err != nil {
 		return nil, 0, err
 	}
@@ -389,18 +371,9 @@ func (a *ASRockRack) queryHTTPS(URLendpoint, method string, payload io.Reader, h
 		req.Header.Add(k, v)
 	}
 
-	// Content-Length headers are ignored, unless defined in this manner
-	// https://go.googlesource.com/go/+/go1.16/src/net/http/request.go#161
-	// https://go.googlesource.com/go/+/go1.16/src/net/http/request.go#88
-	if contentLength > 0 {
-		req.ContentLength = contentLength
-	}
-
 	// debug dump request
-	if os.Getenv("BMCLIB_LOG_LEVEL") == "trace" {
-		reqDump, _ := httputil.DumpRequestOut(req, true)
-		a.log.V(3).Info("trace", "url", URL, "requestDump", string(reqDump))
-	}
+	reqDump, _ := httputil.DumpRequestOut(req, true)
+	a.log.V(3).Info("trace", "url", URL, "requestDump", string(reqDump))
 
 	resp, err := a.httpClient.Do(req)
 	if err != nil {
@@ -408,10 +381,8 @@ func (a *ASRockRack) queryHTTPS(URLendpoint, method string, payload io.Reader, h
 	}
 
 	// debug dump response
-	if os.Getenv("BMCLIB_LOG_LEVEL") == "trace" {
-		respDump, _ := httputil.DumpResponse(resp, true)
-		a.log.V(3).Info("trace", "responseDump", string(respDump))
-	}
+	respDump, _ := httputil.DumpResponse(resp, true)
+	a.log.V(3).Info("trace", "responseDump", string(respDump))
 
 	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {

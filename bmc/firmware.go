@@ -16,7 +16,7 @@ type BMCVersionGetter interface {
 
 // BMCFirmwareUpdater upgrades the BMC firmware
 type BMCFirmwareUpdater interface {
-	FirmwareUpdateBMC(ctx context.Context, fileReader io.Reader, fileSize int64) (err error)
+	FirmwareUpdateBMC(ctx context.Context, fileReader io.Reader) (err error)
 }
 
 // BIOSVersionGetter retrieves the current BIOS firmware version information
@@ -26,7 +26,7 @@ type BIOSVersionGetter interface {
 
 // BIOSFirmwareUpdater upgrades the BIOS firmware
 type BIOSFirmwareUpdater interface {
-	FirmwareUpdateBIOS(ctx context.Context, fileReader io.Reader, fileSize int64) (err error)
+	FirmwareUpdateBIOS(ctx context.Context, fileReader io.Reader) (err error)
 }
 
 // GetBMCVersion returns the BMC firmware version, trying all interface implementations passed in
@@ -72,7 +72,7 @@ func GetBMCVersionFromInterfaces(ctx context.Context, generic []interface{}) (ve
 }
 
 // UpdateBMCFirmware upgrades the BMC firmware, trying all interface implementations passed ini
-func UpdateBMCFirmware(ctx context.Context, fileReader io.Reader, fileSize int64, p []BMCFirmwareUpdater) (err error) {
+func UpdateBMCFirmware(ctx context.Context, fileReader io.Reader, p []BMCFirmwareUpdater) (err error) {
 Loop:
 	for _, elem := range p {
 		select {
@@ -81,7 +81,7 @@ Loop:
 			break Loop
 		default:
 			if elem != nil {
-				uErr := elem.FirmwareUpdateBMC(ctx, fileReader, fileSize)
+				uErr := elem.FirmwareUpdateBMC(ctx, fileReader)
 				if uErr != nil {
 					err = multierror.Append(err, uErr)
 					continue
@@ -96,7 +96,7 @@ Loop:
 }
 
 // UpdateBMCFirmwareFromInterfaces pass through to library function
-func UpdateBMCFirmwareFromInterfaces(ctx context.Context, fileReader io.Reader, fileSize int64, generic []interface{}) (err error) {
+func UpdateBMCFirmwareFromInterfaces(ctx context.Context, fileReader io.Reader, generic []interface{}) (err error) {
 	bmcFirmwareUpdater := make([]BMCFirmwareUpdater, 0)
 	for _, elem := range generic {
 		switch p := elem.(type) {
@@ -111,7 +111,7 @@ func UpdateBMCFirmwareFromInterfaces(ctx context.Context, fileReader io.Reader, 
 		return multierror.Append(err, errors.New("no BMCFirmwareUpdater implementations found"))
 	}
 
-	return UpdateBMCFirmware(ctx, fileReader, fileSize, bmcFirmwareUpdater)
+	return UpdateBMCFirmware(ctx, fileReader, bmcFirmwareUpdater)
 }
 
 // GetBIOSVersion returns the BMC firmware version, trying all interface implementations passed in
@@ -157,7 +157,7 @@ func GetBIOSVersionFromInterfaces(ctx context.Context, generic []interface{}) (v
 }
 
 // UpdateBIOSFirmware upgrades the BIOS firmware, trying all interface implementations passed ini
-func UpdateBIOSFirmware(ctx context.Context, fileReader io.Reader, fileSize int64, p []BIOSFirmwareUpdater) (err error) {
+func UpdateBIOSFirmware(ctx context.Context, fileReader io.Reader, p []BIOSFirmwareUpdater) (err error) {
 Loop:
 	for _, elem := range p {
 		select {
@@ -166,7 +166,7 @@ Loop:
 			break Loop
 		default:
 			if elem != nil {
-				uErr := elem.FirmwareUpdateBIOS(ctx, fileReader, fileSize)
+				uErr := elem.FirmwareUpdateBIOS(ctx, fileReader)
 				if uErr != nil {
 					err = multierror.Append(err, uErr)
 					continue
@@ -181,7 +181,7 @@ Loop:
 }
 
 // GetBMCVersionFromInterfaces pass through to library function
-func UpdateBIOSFirmwareFromInterfaces(ctx context.Context, fileReader io.Reader, fileSize int64, generic []interface{}) (err error) {
+func UpdateBIOSFirmwareFromInterfaces(ctx context.Context, fileReader io.Reader, generic []interface{}) (err error) {
 	biosFirmwareUpdater := make([]BIOSFirmwareUpdater, 0)
 	for _, elem := range generic {
 		switch p := elem.(type) {
@@ -196,5 +196,5 @@ func UpdateBIOSFirmwareFromInterfaces(ctx context.Context, fileReader io.Reader,
 		return multierror.Append(err, errors.New("no BIOSFirmwareUpdater implementations found"))
 	}
 
-	return UpdateBIOSFirmware(ctx, fileReader, fileSize, biosFirmwareUpdater)
+	return UpdateBIOSFirmware(ctx, fileReader, biosFirmwareUpdater)
 }

@@ -66,7 +66,7 @@ func New(ip string, username string, password string, log logr.Logger) (*ASRockR
 // returns true if the BMC is identified to be an asrockrack
 func (a *ASRockRack) Compatible() bool {
 
-	resp, statusCode, err := a.queryHTTPS("/", "GET", nil, nil, 0)
+	resp, statusCode, err := a.queryHTTPS("/", "GET", nil, nil)
 	if err != nil {
 		return false
 	}
@@ -129,8 +129,7 @@ func (a *ASRockRack) GetBMCVersion(ctx context.Context) (string, error) {
 // nolint: gocyclo
 // BMC firmware update is a multi step process
 // this method initiates the upgrade process and waits in a loop until the device has been upgraded
-// fileSize is required to setup the multipart form upload Content-Length
-func (a *ASRockRack) FirmwareUpdateBMC(ctx context.Context, fileReader io.Reader, fileSize int64) error {
+func (a *ASRockRack) FirmwareUpdateBMC(ctx context.Context, fileReader io.Reader) error {
 
 	defer func() {
 		// The device needs to be reset to be removed from flash mode,
@@ -148,29 +147,29 @@ func (a *ASRockRack) FirmwareUpdateBMC(ctx context.Context, fileReader io.Reader
 	var err error
 
 	// 1. set the device to flash mode - prepares the flash
-	a.log.V(2).Info("info", "action", "set device to flash mode, takes a minute...", "step", "1/5")
+	a.log.V(1).Info("info", "action", "set device to flash mode, takes a minute...", "step", "1/5")
 	err = a.setFlashMode()
 	if err != nil {
 		return fmt.Errorf("failed in step 1/5 - set device to flash mode: " + err.Error())
 	}
 
 	// 2. upload firmware image file
-	a.log.V(2).Info("info", "action", "upload BMC firmware image", "step", "2/5")
-	err = a.uploadFirmware("api/maintenance/firmware", fileReader, fileSize)
+	a.log.V(1).Info("info", "action", "upload BMC firmware image", "step", "2/5")
+	err = a.uploadFirmware("api/maintenance/firmware", fileReader)
 	if err != nil {
 		return fmt.Errorf("failed in step 2/5 - upload BMC firmware image: " + err.Error())
 	}
 
 	// 3. BMC to verify the uploaded file
 	err = a.verifyUploadedFirmware()
-	a.log.V(2).Info("info", "action", "BMC verify uploaded firmware", "step", "3/5")
+	a.log.V(1).Info("info", "action", "BMC verify uploaded firmware", "step", "3/5")
 	if err != nil {
 		return fmt.Errorf("failed in step 3/5 - BMC verify uploaded firmware: " + err.Error())
 	}
 
 	startTS := time.Now()
 	// 4. Run the upgrade - preserving current config
-	a.log.V(2).Info("info", "action", "proceed with upgrade, preserve current configuration", "step", "4/5")
+	a.log.V(1).Info("info", "action", "proceed with upgrade, preserve current configuration", "step", "4/5")
 	err = a.upgradeBMC()
 	if err != nil {
 		return fmt.Errorf("failed in step 4/5 - proceed with upgrade: " + err.Error())
@@ -192,15 +191,15 @@ func (a *ASRockRack) FirmwareUpdateBMC(ctx context.Context, fileReader io.Reader
 			p, err := a.flashProgress(endpoint)
 			if err != nil {
 				errorsCount++
-				a.log.V(2).Error(err, "step", "5/5 - error checking flash progress", "error count", errorsCount, "max errors", maxErrors, "elapsed time", time.Since(startTS).String())
+				a.log.V(1).Error(err, "step", "5/5 - error checking flash progress", "error count", errorsCount, "max errors", maxErrors, "elapsed time", time.Since(startTS).String())
 				continue
 			}
 
-			a.log.V(2).Info("info", "action", p.Action, "step", "5/5", "progress", p.Progress, "elapsed time", time.Since(startTS).String())
+			a.log.V(1).Info("info", "action", p.Action, "step", "5/5", "progress", p.Progress, "elapsed time", time.Since(startTS).String())
 
 			// all done!
 			if p.State == 2 {
-				a.log.V(2).Info("info", "action", "flash process complete", "step", "5/5", "progress", p.Progress, "elapsed time", time.Since(startTS).String())
+				a.log.V(1).Info("info", "action", "flash process complete", "step", "5/5", "progress", p.Progress, "elapsed time", time.Since(startTS).String())
 				// The BMC resets by itself after a successful flash
 				a.resetRequired = false
 				// HTTP sessions are terminated once the BMC resets after an upgrade
@@ -213,11 +212,11 @@ func (a *ASRockRack) FirmwareUpdateBMC(ctx context.Context, fileReader io.Reader
 	}
 }
 
-func (a *ASRockRack) FirmwareUpdateBIOS(ctx context.Context, fileReader io.Reader, fileSize int64) error {
+func (a *ASRockRack) FirmwareUpdateBIOS(ctx context.Context, fileReader io.Reader) error {
 
 	defer func() {
 		if a.resetRequired {
-			a.log.V(2).Info("info", "resetting BMC, this takes a few minutes")
+			a.log.V(1).Info("info", "resetting BMC, this takes a few minutes")
 			err := a.reset()
 			if err != nil {
 				a.log.Error(err, "failed to reset BMC")
@@ -228,14 +227,14 @@ func (a *ASRockRack) FirmwareUpdateBIOS(ctx context.Context, fileReader io.Reade
 	var err error
 
 	// 1. upload firmware image file
-	a.log.V(2).Info("info", "action", "upload BIOS firmware image", "step", "1/4")
-	err = a.uploadFirmware("api/asrr/maintenance/BIOS/firmware", fileReader, fileSize)
+	a.log.V(1).Info("info", "action", "upload BIOS firmware image", "step", "1/4")
+	err = a.uploadFirmware("api/asrr/maintenance/BIOS/firmware", fileReader)
 	if err != nil {
 		return fmt.Errorf("failed in step 1/4 - upload firmware image: " + err.Error())
 	}
 
 	// 2. set update parameters to preserve configuratin
-	a.log.V(2).Info("info", "action", "set flash configuration", "step", "2/4")
+	a.log.V(1).Info("info", "action", "set flash configuration", "step", "2/4")
 	err = a.biosUpgradeConfiguration()
 	if err != nil {
 		return fmt.Errorf("failed in step 2/4 - set flash configuration: " + err.Error())
@@ -243,7 +242,7 @@ func (a *ASRockRack) FirmwareUpdateBIOS(ctx context.Context, fileReader io.Reade
 
 	startTS := time.Now()
 	// 3. run upgrade
-	a.log.V(2).Info("info", "action", "proceed with upgrade", "step", "3/4")
+	a.log.V(1).Info("info", "action", "proceed with upgrade", "step", "3/4")
 	err = a.biosUpgrade()
 	if err != nil {
 		return fmt.Errorf("failed in step 3/4 - proceed with upgrade: " + err.Error())
@@ -265,15 +264,15 @@ func (a *ASRockRack) FirmwareUpdateBIOS(ctx context.Context, fileReader io.Reade
 			p, err := a.flashProgress(endpoint)
 			if err != nil {
 				errorsCount++
-				a.log.V(2).Error(err, "action", "check flash progress", "step", "4/4", "error count", errorsCount, "max errors", maxErrors, "elapsed time", time.Since(startTS).String())
+				a.log.V(1).Error(err, "action", "check flash progress", "step", "4/4", "error count", errorsCount, "max errors", maxErrors, "elapsed time", time.Since(startTS).String())
 				continue
 			}
 
-			a.log.V(2).Info("info", "action", "check flash progress", "step", "4/4", "progress", p.Progress, "action", p.Action, "elapsed time", time.Since(startTS).String())
+			a.log.V(1).Info("info", "action", "check flash progress", "step", "4/4", "progress", p.Progress, "action", p.Action, "elapsed time", time.Since(startTS).String())
 
 			// all done!
 			if p.State == 2 {
-				a.log.V(2).Info("info", "action", "flash process complete", "step", "4/4", "progress", p.Progress, "elapsed time", time.Since(startTS).String())
+				a.log.V(1).Info("info", "action", "flash process complete", "step", "4/4", "progress", p.Progress, "elapsed time", time.Since(startTS).String())
 				// Reset BMC after flash
 				a.resetRequired = true
 				return nil

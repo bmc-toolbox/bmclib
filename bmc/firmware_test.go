@@ -27,7 +27,7 @@ func (f *firmwareTester) GetBMCVersion(ctx context.Context) (version string, err
 	return "1.33.7", nil
 }
 
-func (f *firmwareTester) FirmwareUpdateBMC(ctx context.Context, fileReader io.Reader, fileSize int64) (err error) {
+func (f *firmwareTester) FirmwareUpdateBMC(ctx context.Context, fileReader io.Reader) (err error) {
 	if f.MakeErrorOut {
 		return errors.New("failed update")
 	}
@@ -35,7 +35,7 @@ func (f *firmwareTester) FirmwareUpdateBMC(ctx context.Context, fileReader io.Re
 	return nil
 }
 
-func (f *firmwareTester) FirmwareUpdateBIOS(ctx context.Context, fileReader io.Reader, fileSize int64) (err error) {
+func (f *firmwareTester) FirmwareUpdateBIOS(ctx context.Context, fileReader io.Reader) (err error) {
 	if f.MakeErrorOut {
 		return errors.New("failed update")
 	}
@@ -156,7 +156,7 @@ func TestUpdateBMCFirmware(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			err := UpdateBMCFirmware(ctx, bytes.NewReader([]byte(`foo`)), 0, []BMCFirmwareUpdater{&testImplementation})
+			err := UpdateBMCFirmware(ctx, bytes.NewReader([]byte(`foo`)), []BMCFirmwareUpdater{&testImplementation})
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {
@@ -189,7 +189,7 @@ func TestUpdateBMCFirmwareFromInterfaces(t *testing.T) {
 				testImplementation := firmwareTester{}
 				generic = []interface{}{&testImplementation}
 			}
-			err := UpdateBMCFirmwareFromInterfaces(context.Background(), bytes.NewReader([]byte(`foo`)), 0, generic)
+			err := UpdateBMCFirmwareFromInterfaces(context.Background(), bytes.NewReader([]byte(`foo`)), generic)
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {
@@ -304,7 +304,7 @@ func TestUpdateBIOSFirmware(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			err := UpdateBIOSFirmware(ctx, bytes.NewReader([]byte(`foo`)), 0, []BIOSFirmwareUpdater{&testImplementation})
+			err := UpdateBIOSFirmware(ctx, bytes.NewReader([]byte(`foo`)), []BIOSFirmwareUpdater{&testImplementation})
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {
@@ -337,7 +337,7 @@ func TestUpdateBIOSFirmwareFromInterfaces(t *testing.T) {
 				testImplementation := firmwareTester{}
 				generic = []interface{}{&testImplementation}
 			}
-			err := UpdateBIOSFirmwareFromInterfaces(context.Background(), bytes.NewReader([]byte(`foo`)), 0, generic)
+			err := UpdateBIOSFirmwareFromInterfaces(context.Background(), bytes.NewReader([]byte(`foo`)), generic)
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {
