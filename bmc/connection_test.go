@@ -18,7 +18,6 @@ func (r *connTester) Open(ctx context.Context) (err error) {
 	if r.MakeErrorOut {
 		return errors.New("open connection failed")
 	}
-
 	return nil
 }
 
@@ -26,34 +25,35 @@ func (r *connTester) Close(ctx context.Context) (err error) {
 	if r.MakeErrorOut {
 		return errors.New("close connection failed")
 	}
-
 	return nil
 }
 
+func (p *connTester) Name() string {
+	return "test provider"
+}
+
 func TestOpenConnection(t *testing.T) {
-	testCases := []struct {
-		name         string
+	testCases := map[string]struct {
 		makeErrorOut bool
 		err          error
 		ctxTimeout   time.Duration
 	}{
-		{name: "success"},
-		{name: "error context deadline", err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to open connection")}}, ctxTimeout: time.Nanosecond * 1},
-		{name: "error", makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("open connection failed"), errors.New("failed to open connection")}}},
+		"success":                {},
+		"error context deadline": {err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to open connection")}}, ctxTimeout: time.Nanosecond * 1},
+		"error":                  {makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("open connection failed"), errors.New("failed to open connection")}}},
 	}
 
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
 			testImplementation := connTester{MakeErrorOut: tc.makeErrorOut}
 			if tc.ctxTimeout == 0 {
 				tc.ctxTimeout = time.Second * 3
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			err := OpenConnection(ctx, []Opener{&testImplementation})
+			err := OpenConnection(ctx, []connectionProviders{{"", &testImplementation, nil}})
 			if err != nil {
-				diff := cmp.Diff(tc.err.Error(), err.Error())
+				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
 					t.Fatal(diff)
 				}
@@ -63,18 +63,18 @@ func TestOpenConnection(t *testing.T) {
 }
 
 func TestOpenConnectionFromInterfaces(t *testing.T) {
-	testCases := []struct {
-		name              string
+	testCases := map[string]struct {
 		err               error
 		badImplementation bool
+		withMetadata      bool
 	}{
-		{name: "success"},
-		{name: "no implementations found", badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a Opener implementation: *struct {}"), errors.New("no Opener implementations found")}}},
+		"success":                  {},
+		"success with metadata":    {withMetadata: true},
+		"no implementations found": {badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a Opener implementation: *struct {}"), errors.New("no Opener implementations found")}}},
 	}
 
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
 			var generic []interface{}
 			if tc.badImplementation {
 				badImplementation := struct{}{}
@@ -83,10 +83,21 @@ func TestOpenConnectionFromInterfaces(t *testing.T) {
 				testImplementation := connTester{}
 				generic = []interface{}{&testImplementation}
 			}
-			err := OpenConnectionFromInterfaces(context.Background(), generic)
+			var err error
+			var metadata Metadata
+			if tc.withMetadata {
+				err = OpenConnectionFromInterfaces(context.Background(), generic, &metadata)
+			} else {
+				err = OpenConnectionFromInterfaces(context.Background(), generic)
+			}
 			if err != nil {
-				diff := cmp.Diff(tc.err.Error(), err.Error())
+				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
+					t.Fatal(diff)
+				}
+			}
+			if tc.withMetadata {
+				if diff := cmp.Diff(metadata.SuccessfulOpenConns, []string{"test provider"}); diff != "" {
 					t.Fatal(diff)
 				}
 			}
@@ -95,29 +106,27 @@ func TestOpenConnectionFromInterfaces(t *testing.T) {
 }
 
 func TestCloseConnection(t *testing.T) {
-	testCases := []struct {
-		name         string
+	testCases := map[string]struct {
 		makeErrorOut bool
 		err          error
 		ctxTimeout   time.Duration
 	}{
-		{name: "success"},
-		{name: "error context deadline", err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to close connection")}}, ctxTimeout: time.Nanosecond * 1},
-		{name: "error", makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("close connection failed"), errors.New("failed to close connection")}}},
+		"success":                {},
+		"error context deadline": {err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to close connection")}}, ctxTimeout: time.Nanosecond * 1},
+		"error":                  {makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("close connection failed"), errors.New("failed to close connection")}}},
 	}
 
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
 			testImplementation := connTester{MakeErrorOut: tc.makeErrorOut}
 			if tc.ctxTimeout == 0 {
 				tc.ctxTimeout = time.Second * 3
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			err := CloseConnection(ctx, []Closer{&testImplementation})
+			err := CloseConnection(ctx, []connectionProviders{{"", nil, &testImplementation}})
 			if err != nil {
-				diff := cmp.Diff(tc.err.Error(), err.Error())
+				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
 					t.Fatal(diff)
 				}
@@ -127,18 +136,18 @@ func TestCloseConnection(t *testing.T) {
 }
 
 func TestCloseConnectionFromInterfaces(t *testing.T) {
-	testCases := []struct {
-		name              string
+	testCases := map[string]struct {
 		err               error
 		badImplementation bool
+		withMetadata      bool
 	}{
-		{name: "success"},
-		{name: "no implementations found", badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a Closer implementation: *struct {}"), errors.New("no Closer implementations found")}}},
+		"success":                  {},
+		"success with metadata":    {withMetadata: true},
+		"no implementations found": {badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a Closer implementation: *struct {}"), errors.New("no Closer implementations found")}}},
 	}
 
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
 			var generic []interface{}
 			if tc.badImplementation {
 				badImplementation := struct{}{}
@@ -147,10 +156,21 @@ func TestCloseConnectionFromInterfaces(t *testing.T) {
 				testImplementation := connTester{}
 				generic = []interface{}{&testImplementation}
 			}
-			err := CloseConnectionFromInterfaces(context.Background(), generic)
+			var err error
+			var metadata Metadata
+			if tc.withMetadata {
+				err = CloseConnectionFromInterfaces(context.Background(), generic, &metadata)
+			} else {
+				err = CloseConnectionFromInterfaces(context.Background(), generic)
+			}
 			if err != nil {
-				diff := cmp.Diff(tc.err.Error(), err.Error())
+				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
+					t.Fatal(diff)
+				}
+			}
+			if tc.withMetadata {
+				if diff := cmp.Diff(metadata.SuccessfulCloseConns, []string{"test provider"}); diff != "" {
 					t.Fatal(diff)
 				}
 			}

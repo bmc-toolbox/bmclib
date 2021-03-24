@@ -28,8 +28,21 @@ type UserReader interface {
 	UserRead(ctx context.Context) (users []map[string]string, err error)
 }
 
+// userProviders is an internal struct used to correlate an implementation/provider with its name
+type userProviders struct {
+	name        string
+	userCreator UserCreator
+	userUpdater UserUpdater
+	userDeleter UserDeleter
+	userReader  UserReader
+}
+
 // CreateUser creates a user using the passed in implementation
-func CreateUser(ctx context.Context, user, pass, role string, u []UserCreator) (ok bool, err error) {
+// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
+func CreateUser(ctx context.Context, user, pass, role string, u []userProviders, metadata ...*Metadata) (ok bool, err error) {
+	if len(metadata) == 0 || metadata[0] == nil {
+		metadata = []*Metadata{&Metadata{}}
+	}
 Loop:
 	for _, elem := range u {
 		select {
@@ -37,8 +50,9 @@ Loop:
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			if elem != nil {
-				ok, createErr := elem.UserCreate(ctx, user, pass, role)
+			if elem.userCreator != nil {
+				*metadata[0] = Metadata{ProvidersAttempted: append(metadata[0].ProvidersAttempted, elem.name)}
+				ok, createErr := elem.userCreator.UserCreate(ctx, user, pass, role)
 				if createErr != nil {
 					err = multierror.Append(err, createErr)
 					continue
@@ -47,6 +61,7 @@ Loop:
 					err = multierror.Append(err, errors.New("failed to create user"))
 					continue
 				}
+				*metadata[0] = Metadata{SuccessfulProvider: elem.name, ProvidersAttempted: metadata[0].ProvidersAttempted}
 				return ok, nil
 			}
 		}
@@ -55,12 +70,19 @@ Loop:
 }
 
 // CreateUserFromInterfaces pass through to library function
-func CreateUserFromInterfaces(ctx context.Context, user, pass, role string, generic []interface{}) (ok bool, err error) {
-	userCreators := make([]UserCreator, 0)
+// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
+func CreateUserFromInterfaces(ctx context.Context, user, pass, role string, generic []interface{}, metadata ...*Metadata) (ok bool, err error) {
+	userCreators := make([]userProviders, 0)
 	for _, elem := range generic {
+		var temp userProviders
+		switch p := elem.(type) {
+		case Provider:
+			temp.name = p.Name()
+		}
 		switch u := elem.(type) {
 		case UserCreator:
-			userCreators = append(userCreators, u)
+			temp.userCreator = u
+			userCreators = append(userCreators, temp)
 		default:
 			e := fmt.Sprintf("not a UserCreator implementation: %T", u)
 			err = multierror.Append(err, errors.New(e))
@@ -69,11 +91,15 @@ func CreateUserFromInterfaces(ctx context.Context, user, pass, role string, gene
 	if len(userCreators) == 0 {
 		return ok, multierror.Append(err, errors.New("no UserCreator implementations found"))
 	}
-	return CreateUser(ctx, user, pass, role, userCreators)
+	return CreateUser(ctx, user, pass, role, userCreators, metadata...)
 }
 
 // UpdateUser updates a user's settings
-func UpdateUser(ctx context.Context, user, pass, role string, u []UserUpdater) (ok bool, err error) {
+// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
+func UpdateUser(ctx context.Context, user, pass, role string, u []userProviders, metadata ...*Metadata) (ok bool, err error) {
+	if len(metadata) == 0 || metadata[0] == nil {
+		metadata = []*Metadata{&Metadata{}}
+	}
 Loop:
 	for _, elem := range u {
 		select {
@@ -81,8 +107,9 @@ Loop:
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			if elem != nil {
-				ok, UpdateErr := elem.UserUpdate(ctx, user, pass, role)
+			if elem.userUpdater != nil {
+				*metadata[0] = Metadata{ProvidersAttempted: append(metadata[0].ProvidersAttempted, elem.name)}
+				ok, UpdateErr := elem.userUpdater.UserUpdate(ctx, user, pass, role)
 				if UpdateErr != nil {
 					err = multierror.Append(err, UpdateErr)
 					continue
@@ -91,6 +118,7 @@ Loop:
 					err = multierror.Append(err, errors.New("failed to update user"))
 					continue
 				}
+				*metadata[0] = Metadata{SuccessfulProvider: elem.name, ProvidersAttempted: metadata[0].ProvidersAttempted}
 				return ok, nil
 			}
 		}
@@ -99,12 +127,19 @@ Loop:
 }
 
 // UpdateUserFromInterfaces pass through to library function
-func UpdateUserFromInterfaces(ctx context.Context, user, pass, role string, generic []interface{}) (ok bool, err error) {
-	userUpdaters := make([]UserUpdater, 0)
+// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
+func UpdateUserFromInterfaces(ctx context.Context, user, pass, role string, generic []interface{}, metadata ...*Metadata) (ok bool, err error) {
+	userUpdaters := make([]userProviders, 0)
 	for _, elem := range generic {
+		var temp userProviders
+		switch p := elem.(type) {
+		case Provider:
+			temp.name = p.Name()
+		}
 		switch u := elem.(type) {
 		case UserUpdater:
-			userUpdaters = append(userUpdaters, u)
+			temp.userUpdater = u
+			userUpdaters = append(userUpdaters, temp)
 		default:
 			e := fmt.Sprintf("not a UserUpdater implementation: %T", u)
 			err = multierror.Append(err, errors.New(e))
@@ -113,11 +148,15 @@ func UpdateUserFromInterfaces(ctx context.Context, user, pass, role string, gene
 	if len(userUpdaters) == 0 {
 		return ok, multierror.Append(err, errors.New("no UserUpdater implementations found"))
 	}
-	return UpdateUser(ctx, user, pass, role, userUpdaters)
+	return UpdateUser(ctx, user, pass, role, userUpdaters, metadata...)
 }
 
 // DeleteUser deletes a user from a BMC
-func DeleteUser(ctx context.Context, user string, u []UserDeleter) (ok bool, err error) {
+// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
+func DeleteUser(ctx context.Context, user string, u []userProviders, metadata ...*Metadata) (ok bool, err error) {
+	if len(metadata) == 0 || metadata[0] == nil {
+		metadata = []*Metadata{&Metadata{}}
+	}
 Loop:
 	for _, elem := range u {
 		select {
@@ -125,8 +164,9 @@ Loop:
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			if elem != nil {
-				ok, deleteErr := elem.UserDelete(ctx, user)
+			if elem.userDeleter != nil {
+				*metadata[0] = Metadata{ProvidersAttempted: append(metadata[0].ProvidersAttempted, elem.name)}
+				ok, deleteErr := elem.userDeleter.UserDelete(ctx, user)
 				if deleteErr != nil {
 					err = multierror.Append(err, deleteErr)
 					continue
@@ -135,6 +175,7 @@ Loop:
 					err = multierror.Append(err, errors.New("failed to delete user"))
 					continue
 				}
+				*metadata[0] = Metadata{SuccessfulProvider: elem.name, ProvidersAttempted: metadata[0].ProvidersAttempted}
 				return ok, nil
 			}
 		}
@@ -143,12 +184,19 @@ Loop:
 }
 
 // DeleteUserFromInterfaces pass through to library function
-func DeleteUserFromInterfaces(ctx context.Context, user string, generic []interface{}) (ok bool, err error) {
-	userDeleters := make([]UserDeleter, 0)
+// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
+func DeleteUserFromInterfaces(ctx context.Context, user string, generic []interface{}, metadata ...*Metadata) (ok bool, err error) {
+	userDeleters := make([]userProviders, 0)
 	for _, elem := range generic {
+		var temp userProviders
+		switch p := elem.(type) {
+		case Provider:
+			temp.name = p.Name()
+		}
 		switch u := elem.(type) {
 		case UserDeleter:
-			userDeleters = append(userDeleters, u)
+			temp.userDeleter = u
+			userDeleters = append(userDeleters, temp)
 		default:
 			e := fmt.Sprintf("not a UserDeleter implementation: %T", u)
 			err = multierror.Append(err, errors.New(e))
@@ -157,11 +205,15 @@ func DeleteUserFromInterfaces(ctx context.Context, user string, generic []interf
 	if len(userDeleters) == 0 {
 		return ok, multierror.Append(err, errors.New("no UserDeleter implementations found"))
 	}
-	return DeleteUser(ctx, user, userDeleters)
+	return DeleteUser(ctx, user, userDeleters, metadata...)
 }
 
 // ReadUsers returns all users from a BMC
-func ReadUsers(ctx context.Context, u []UserReader) (users []map[string]string, err error) {
+// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
+func ReadUsers(ctx context.Context, u []userProviders, metadata ...*Metadata) (users []map[string]string, err error) {
+	if len(metadata) == 0 || metadata[0] == nil {
+		metadata = []*Metadata{&Metadata{}}
+	}
 Loop:
 	for _, elem := range u {
 		select {
@@ -169,12 +221,14 @@ Loop:
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			if elem != nil {
-				users, readErr := elem.UserRead(ctx)
+			if elem.userReader != nil {
+				*metadata[0] = Metadata{ProvidersAttempted: append(metadata[0].ProvidersAttempted, elem.name)}
+				users, readErr := elem.userReader.UserRead(ctx)
 				if readErr != nil {
 					err = multierror.Append(err, readErr)
 					continue
 				}
+				*metadata[0] = Metadata{SuccessfulProvider: elem.name, ProvidersAttempted: metadata[0].ProvidersAttempted}
 				return users, nil
 			}
 		}
@@ -183,12 +237,19 @@ Loop:
 }
 
 // ReadUsersFromInterfaces pass through to library function
-func ReadUsersFromInterfaces(ctx context.Context, generic []interface{}) (users []map[string]string, err error) {
-	userReaders := make([]UserReader, 0)
+// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
+func ReadUsersFromInterfaces(ctx context.Context, generic []interface{}, metadata ...*Metadata) (users []map[string]string, err error) {
+	userReaders := make([]userProviders, 0)
 	for _, elem := range generic {
+		var temp userProviders
+		switch p := elem.(type) {
+		case Provider:
+			temp.name = p.Name()
+		}
 		switch u := elem.(type) {
 		case UserReader:
-			userReaders = append(userReaders, u)
+			temp.userReader = u
+			userReaders = append(userReaders, temp)
 		default:
 			e := fmt.Sprintf("not a UserReader implementation: %T", u)
 			err = multierror.Append(errors.New(e))
@@ -197,5 +258,5 @@ func ReadUsersFromInterfaces(ctx context.Context, generic []interface{}) (users 
 	if len(userReaders) == 0 {
 		return users, multierror.Append(err, errors.New("no UserReader implementations found"))
 	}
-	return ReadUsers(ctx, userReaders)
+	return ReadUsers(ctx, userReaders, metadata...)
 }

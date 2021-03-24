@@ -65,6 +65,10 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 	return err == nil
 }
 
+func (c *Conn) Name() string {
+	return ProviderName
+}
+
 // BootDeviceSet sets the next boot device with options
 func (c *Conn) BootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
 	return c.con.BootDeviceSet(ctx, bootDevice, setPersistent, efiBoot)

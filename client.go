@@ -78,53 +78,61 @@ func (c *Client) registerProviders() {
 }
 
 // Open pass through to library function
-func (c *Client) Open(ctx context.Context) (err error) {
-	return bmc.OpenConnectionFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+func (c *Client) Open(ctx context.Context, metadata ...*bmc.Metadata) (err error) {
+	return bmc.OpenConnectionFromInterfaces(ctx, c.Registry.GetDriverInterfaces(), metadata...)
 }
 
 // Close pass through to library function
-func (c *Client) Close(ctx context.Context) (err error) {
-	return bmc.CloseConnectionFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+func (c *Client) Close(ctx context.Context, metadata ...*bmc.Metadata) (err error) {
+	return bmc.CloseConnectionFromInterfaces(ctx, c.Registry.GetDriverInterfaces(), metadata...)
 }
 
 // GetPowerState pass through to library function
-func (c *Client) GetPowerState(ctx context.Context) (state string, err error) {
-	return bmc.GetPowerStateFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
+func (c *Client) GetPowerState(ctx context.Context, metadata ...*bmc.Metadata) (state string, err error) {
+	return bmc.GetPowerStateFromInterfaces(ctx, c.Registry.GetDriverInterfaces(), metadata...)
 }
 
 // SetPowerState pass through to library function
-func (c *Client) SetPowerState(ctx context.Context, state string) (ok bool, err error) {
-	return bmc.SetPowerStateFromInterfaces(ctx, state, c.Registry.GetDriverInterfaces())
+// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
+func (c *Client) SetPowerState(ctx context.Context, state string, metadata ...*bmc.Metadata) (ok bool, err error) {
+	return bmc.SetPowerStateFromInterfaces(ctx, state, c.Registry.GetDriverInterfaces(), metadata...)
 }
 
 // CreateUser pass through to library function
-func (c *Client) CreateUser(ctx context.Context, user, pass, role string) (ok bool, err error) {
-	return bmc.CreateUserFromInterfaces(ctx, user, pass, role, c.Registry.GetDriverInterfaces())
+// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
+func (c *Client) CreateUser(ctx context.Context, user, pass, role string, metadata ...*bmc.Metadata) (ok bool, err error) {
+	return bmc.CreateUserFromInterfaces(ctx, user, pass, role, c.Registry.GetDriverInterfaces(), metadata...)
 }
 
 // UpdateUser pass through to library function
-func (c *Client) UpdateUser(ctx context.Context, user, pass, role string) (ok bool, err error) {
-	return bmc.UpdateUserFromInterfaces(ctx, user, pass, role, c.Registry.GetDriverInterfaces())
+// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
+func (c *Client) UpdateUser(ctx context.Context, user, pass, role string, metadata ...*bmc.Metadata) (ok bool, err error) {
+	return bmc.UpdateUserFromInterfaces(ctx, user, pass, role, c.Registry.GetDriverInterfaces(), metadata...)
 }
 
 // DeleteUser pass through to library function
-func (c *Client) DeleteUser(ctx context.Context, user string) (ok bool, err error) {
-	return bmc.DeleteUserFromInterfaces(ctx, user, c.Registry.GetDriverInterfaces())
+// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
+func (c *Client) DeleteUser(ctx context.Context, user string, metadata ...*bmc.Metadata) (ok bool, err error) {
+	return bmc.DeleteUserFromInterfaces(ctx, user, c.Registry.GetDriverInterfaces(), metadata...)
 }
 
 // ReadUsers pass through to library function
-func (c *Client) ReadUsers(ctx context.Context) (users []map[string]string, err error) {
-	return bmc.ReadUsersFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
+func (c *Client) ReadUsers(ctx context.Context, metadata ...*bmc.Metadata) (users []map[string]string, err error) {
+	return bmc.ReadUsersFromInterfaces(ctx, c.Registry.GetDriverInterfaces(), metadata...)
 }
 
 // SetBootDevice pass through to library function
-func (c *Client) SetBootDevice(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
-	return bmc.SetBootDeviceFromInterfaces(ctx, bootDevice, setPersistent, efiBoot, c.Registry.GetDriverInterfaces())
+// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
+func (c *Client) SetBootDevice(ctx context.Context, bootDevice string, setPersistent, efiBoot bool, metadata ...*bmc.Metadata) (ok bool, err error) {
+	return bmc.SetBootDeviceFromInterfaces(ctx, bootDevice, setPersistent, efiBoot, c.Registry.GetDriverInterfaces(), metadata...)
 }
 
 // ResetBMC pass through to library function
-func (c *Client) ResetBMC(ctx context.Context, resetType string) (ok bool, err error) {
-	return bmc.ResetBMCFromInterfaces(ctx, resetType, c.Registry.GetDriverInterfaces())
+// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
+func (c *Client) ResetBMC(ctx context.Context, resetType string, metadata ...*bmc.Metadata) (ok bool, err error) {
+	return bmc.ResetBMCFromInterfaces(ctx, resetType, c.Registry.GetDriverInterfaces(), metadata...)
 }
 
 // GetBMCVersion pass through library function

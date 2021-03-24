@@ -62,24 +62,26 @@ func (p *userTester) UserRead(ctx context.Context) (users []map[string]string, e
 	return users, nil
 }
 
+func (p *userTester) Name() string {
+	return "test provider"
+}
+
 func TestUserCreate(t *testing.T) {
-	testCases := []struct {
-		name         string
+	testCases := map[string]struct {
 		makeErrorOut bool
 		makeNotOk    bool
 		want         bool
 		err          error
 		ctxTimeout   time.Duration
 	}{
-		{name: "success", want: true},
-		{name: "not ok return", want: false, makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("failed to create user"), errors.New("failed to create user")}}},
-		{name: "error", makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("create user failed"), errors.New("failed to create user")}}},
-		{name: "error context timeout", makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to create user")}}, ctxTimeout: time.Nanosecond * 1},
+		"success":               {want: true},
+		"not ok return":         {want: false, makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("failed to create user"), errors.New("failed to create user")}}},
+		"error":                 {makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("create user failed"), errors.New("failed to create user")}}},
+		"error context timeout": {makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to create user")}}, ctxTimeout: time.Nanosecond * 1},
 	}
 
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
 			testImplementation := userTester{MakeErrorOut: tc.makeErrorOut, MakeNotOK: tc.makeNotOk}
 			expectedResult := tc.want
 			user := "ADMIN"
@@ -90,38 +92,36 @@ func TestUserCreate(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, err := CreateUser(ctx, user, pass, role, []UserCreator{&testImplementation})
+			result, err := CreateUser(ctx, user, pass, role, []userProviders{{"", &testImplementation, nil, nil, nil}})
 			if err != nil {
-				diff := cmp.Diff(tc.err.Error(), err.Error())
+				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
 					t.Fatal(diff)
 				}
-
 			} else {
-				diff := cmp.Diff(expectedResult, result)
+				diff := cmp.Diff(result, expectedResult)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
-
 		})
 	}
 }
 
 func TestCreateUserFromInterfaces(t *testing.T) {
-	testCases := []struct {
-		name              string
+	testCases := map[string]struct {
 		err               error
 		badImplementation bool
 		want              bool
+		withMetadata      bool
 	}{
-		{name: "success", want: true},
-		{name: "no implementations found", badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a UserCreator implementation: *struct {}"), errors.New("no UserCreator implementations found")}}},
+		"success":                  {want: true},
+		"success with metadata":    {want: true, withMetadata: true},
+		"no implementations found": {badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a UserCreator implementation: *struct {}"), errors.New("no UserCreator implementations found")}}},
 	}
 
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
 			var generic []interface{}
 			if tc.badImplementation {
 				badImplementation := struct{}{}
@@ -134,42 +134,54 @@ func TestCreateUserFromInterfaces(t *testing.T) {
 			user := "ADMIN"
 			pass := "ADMIN"
 			role := "admin"
-			result, err := CreateUserFromInterfaces(context.Background(), user, pass, role, generic)
-			if err != nil {
-				diff := cmp.Diff(tc.err.Error(), err.Error())
-				if diff != "" {
-					t.Fatal(diff)
-				}
-
+			var result bool
+			var err error
+			var metadata Metadata
+			if tc.withMetadata {
+				result, err = CreateUserFromInterfaces(context.Background(), user, pass, role, generic, &metadata)
 			} else {
-				diff := cmp.Diff(expectedResult, result)
+				result, err = CreateUserFromInterfaces(context.Background(), user, pass, role, generic)
+			}
+			if err != nil {
+				if tc.err != nil {
+					diff := cmp.Diff(err.Error(), tc.err.Error())
+					if diff != "" {
+						t.Fatal(diff)
+					}
+				} else {
+					t.Fatal(err)
+				}
+			} else {
+				diff := cmp.Diff(result, expectedResult)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
-
+			if tc.withMetadata {
+				if diff := cmp.Diff(metadata.SuccessfulProvider, "test provider"); diff != "" {
+					t.Fatal(diff)
+				}
+			}
 		})
 	}
 }
 
 func TestUpdateUser(t *testing.T) {
-	testCases := []struct {
-		name         string
+	testCases := map[string]struct {
 		makeErrorOut bool
 		makeNotOk    bool
 		want         bool
 		err          error
 		ctxTimeout   time.Duration
 	}{
-		{name: "success", want: true},
-		{name: "not ok return", want: false, makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("failed to update user"), errors.New("failed to update user")}}},
-		{name: "error", makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("update user failed"), errors.New("failed to update user")}}},
-		{name: "error context timeout", makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to update user")}}, ctxTimeout: time.Nanosecond * 1},
+		"success":               {want: true},
+		"not ok return":         {want: false, makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("failed to update user"), errors.New("failed to update user")}}},
+		"error":                 {makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("update user failed"), errors.New("failed to update user")}}},
+		"error context timeout": {makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to update user")}}, ctxTimeout: time.Nanosecond * 1},
 	}
 
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
 			testImplementation := userTester{MakeErrorOut: tc.makeErrorOut, MakeNotOK: tc.makeNotOk}
 			expectedResult := tc.want
 			user := "ADMIN"
@@ -180,38 +192,36 @@ func TestUpdateUser(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, err := UpdateUser(ctx, user, pass, role, []UserUpdater{&testImplementation})
+			result, err := UpdateUser(ctx, user, pass, role, []userProviders{{"", nil, &testImplementation, nil, nil}})
 			if err != nil {
-				diff := cmp.Diff(tc.err.Error(), err.Error())
+				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
 					t.Fatal(diff)
 				}
-
 			} else {
-				diff := cmp.Diff(expectedResult, result)
+				diff := cmp.Diff(result, expectedResult)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
-
 		})
 	}
 }
 
 func TestUpdateUserFromInterfaces(t *testing.T) {
-	testCases := []struct {
-		name              string
+	testCases := map[string]struct {
 		err               error
 		badImplementation bool
 		want              bool
+		withMetadata      bool
 	}{
-		{name: "success", want: true},
-		{name: "no implementations found", badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a UserUpdater implementation: *struct {}"), errors.New("no UserUpdater implementations found")}}},
+		"success":                  {want: true},
+		"success with metadata":    {want: true, withMetadata: true},
+		"no implementations found": {badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a UserUpdater implementation: *struct {}"), errors.New("no UserUpdater implementations found")}}},
 	}
 
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
 			var generic []interface{}
 			if tc.badImplementation {
 				badImplementation := struct{}{}
@@ -224,42 +234,54 @@ func TestUpdateUserFromInterfaces(t *testing.T) {
 			user := "ADMIN"
 			pass := "ADMIN"
 			role := "admin"
-			result, err := UpdateUserFromInterfaces(context.Background(), user, pass, role, generic)
-			if err != nil {
-				diff := cmp.Diff(tc.err.Error(), err.Error())
-				if diff != "" {
-					t.Fatal(diff)
-				}
-
+			var result bool
+			var err error
+			var metadata Metadata
+			if tc.withMetadata {
+				result, err = UpdateUserFromInterfaces(context.Background(), user, pass, role, generic, &metadata)
 			} else {
-				diff := cmp.Diff(expectedResult, result)
+				result, err = UpdateUserFromInterfaces(context.Background(), user, pass, role, generic)
+			}
+			if err != nil {
+				if tc.err != nil {
+					diff := cmp.Diff(err.Error(), tc.err.Error())
+					if diff != "" {
+						t.Fatal(diff)
+					}
+				} else {
+					t.Fatal(err)
+				}
+			} else {
+				diff := cmp.Diff(result, expectedResult)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
-
+			if tc.withMetadata {
+				if diff := cmp.Diff(metadata.SuccessfulProvider, "test provider"); diff != "" {
+					t.Fatal(diff)
+				}
+			}
 		})
 	}
 }
 
 func TestDeleteUser(t *testing.T) {
-	testCases := []struct {
-		name         string
+	testCases := map[string]struct {
 		makeErrorOut bool
 		makeNotOk    bool
 		want         bool
 		err          error
 		ctxTimeout   time.Duration
 	}{
-		{name: "success", want: true},
-		{name: "not ok return", want: false, makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("failed to delete user"), errors.New("failed to delete user")}}},
-		{name: "error", makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("delete user failed"), errors.New("failed to delete user")}}},
-		{name: "error context timeout", makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to delete user")}}, ctxTimeout: time.Nanosecond * 1},
+		"success":               {want: true},
+		"not ok return":         {want: false, makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("failed to delete user"), errors.New("failed to delete user")}}},
+		"error":                 {makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("delete user failed"), errors.New("failed to delete user")}}},
+		"error context timeout": {makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to delete user")}}, ctxTimeout: time.Nanosecond * 1},
 	}
 
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
 			testImplementation := userTester{MakeErrorOut: tc.makeErrorOut, MakeNotOK: tc.makeNotOk}
 			expectedResult := tc.want
 			user := "ADMIN"
@@ -268,38 +290,36 @@ func TestDeleteUser(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, err := DeleteUser(ctx, user, []UserDeleter{&testImplementation})
+			result, err := DeleteUser(ctx, user, []userProviders{{"", nil, nil, &testImplementation, nil}})
 			if err != nil {
-				diff := cmp.Diff(tc.err.Error(), err.Error())
+				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
 					t.Fatal(diff)
 				}
-
 			} else {
-				diff := cmp.Diff(expectedResult, result)
+				diff := cmp.Diff(result, expectedResult)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
-
 		})
 	}
 }
 
 func TestDeleteUserFromInterfaces(t *testing.T) {
-	testCases := []struct {
-		name              string
+	testCases := map[string]struct {
 		err               error
 		badImplementation bool
 		want              bool
+		withMetadata      bool
 	}{
-		{name: "success", want: true},
-		{name: "no implementations found", badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a UserDeleter implementation: *struct {}"), errors.New("no UserDeleter implementations found")}}},
+		"success":                  {want: true},
+		"success with metadata":    {want: true, withMetadata: true},
+		"no implementations found": {badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a UserDeleter implementation: *struct {}"), errors.New("no UserDeleter implementations found")}}},
 	}
 
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
 			var generic []interface{}
 			if tc.badImplementation {
 				badImplementation := struct{}{}
@@ -310,35 +330,48 @@ func TestDeleteUserFromInterfaces(t *testing.T) {
 			}
 			expectedResult := tc.want
 			user := "ADMIN"
-			result, err := DeleteUserFromInterfaces(context.Background(), user, generic)
-			if err != nil {
-				diff := cmp.Diff(tc.err.Error(), err.Error())
-				if diff != "" {
-					t.Fatal(diff)
-				}
-
+			var result bool
+			var err error
+			var metadata Metadata
+			if tc.withMetadata {
+				result, err = DeleteUserFromInterfaces(context.Background(), user, generic, &metadata)
 			} else {
-				diff := cmp.Diff(expectedResult, result)
+				result, err = DeleteUserFromInterfaces(context.Background(), user, generic)
+			}
+			if err != nil {
+				if tc.err != nil {
+					diff := cmp.Diff(err.Error(), tc.err.Error())
+					if diff != "" {
+						t.Fatal(diff)
+					}
+				} else {
+					t.Fatal(err)
+				}
+			} else {
+				diff := cmp.Diff(result, expectedResult)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
-
+			if tc.withMetadata {
+				if diff := cmp.Diff(metadata.SuccessfulProvider, "test provider"); diff != "" {
+					t.Fatal(diff)
+				}
+			}
 		})
 	}
 }
 
 func TestReadUsers(t *testing.T) {
-	testCases := []struct {
-		name         string
+	testCases := map[string]struct {
 		makeErrorOut bool
 		want         bool
 		err          error
 		ctxTimeout   time.Duration
 	}{
-		{name: "success", want: true},
-		{name: "not ok return", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("read users failed"), errors.New("failed to read users")}}},
-		{name: "not ok return", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to read users")}}, ctxTimeout: time.Nanosecond * 1},
+		"success":               {want: true},
+		"not ok return":         {want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("read users failed"), errors.New("failed to read users")}}},
+		"error context timeout": {want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to read users")}}, ctxTimeout: time.Nanosecond * 1},
 	}
 
 	users := []map[string]string{
@@ -350,9 +383,8 @@ func TestReadUsers(t *testing.T) {
 			"Name":   "ADMIN",
 		},
 	}
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
 			testImplementation := userTester{MakeErrorOut: tc.makeErrorOut}
 			expectedResult := users
 			if tc.ctxTimeout == 0 {
@@ -360,33 +392,32 @@ func TestReadUsers(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, err := ReadUsers(ctx, []UserReader{&testImplementation})
+			result, err := ReadUsers(ctx, []userProviders{{"", nil, nil, nil, &testImplementation}})
 			if err != nil {
-				diff := cmp.Diff(tc.err.Error(), err.Error())
+				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
 					t.Fatal(diff)
 				}
-
 			} else {
-				diff := cmp.Diff(expectedResult, result)
+				diff := cmp.Diff(result, expectedResult)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
-
 		})
 	}
 }
 
 func TestReadUsersFromInterfaces(t *testing.T) {
-	testCases := []struct {
-		name              string
+	testCases := map[string]struct {
 		err               error
 		badImplementation bool
 		want              bool
+		withMetadata      bool
 	}{
-		{name: "success", want: true},
-		{name: "no implementations found", badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a UserReader implementation: *struct {}"), errors.New("no UserReader implementations found")}}},
+		"success":                  {want: true},
+		"success with metadata":    {want: true, withMetadata: true},
+		"no implementations found": {badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a UserReader implementation: *struct {}"), errors.New("no UserReader implementations found")}}},
 	}
 
 	users := []map[string]string{
@@ -398,9 +429,8 @@ func TestReadUsersFromInterfaces(t *testing.T) {
 			"Name":   "ADMIN",
 		},
 	}
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
 			var generic []interface{}
 			if tc.badImplementation {
 				badImplementation := struct{}{}
@@ -410,20 +440,34 @@ func TestReadUsersFromInterfaces(t *testing.T) {
 				generic = []interface{}{&testImplementation}
 			}
 			expectedResult := users
-			result, err := ReadUsersFromInterfaces(context.Background(), generic)
-			if err != nil {
-				diff := cmp.Diff(tc.err.Error(), err.Error())
-				if diff != "" {
-					t.Fatal(diff)
-				}
-
+			var result []map[string]string
+			var err error
+			var metadata Metadata
+			if tc.withMetadata {
+				result, err = ReadUsersFromInterfaces(context.Background(), generic, &metadata)
 			} else {
-				diff := cmp.Diff(expectedResult, result)
+				result, err = ReadUsersFromInterfaces(context.Background(), generic)
+			}
+			if err != nil {
+				if tc.err != nil {
+					diff := cmp.Diff(err.Error(), tc.err.Error())
+					if diff != "" {
+						t.Fatal(diff)
+					}
+				} else {
+					t.Fatal(err)
+				}
+			} else {
+				diff := cmp.Diff(result, expectedResult)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
-
+			if tc.withMetadata {
+				if diff := cmp.Diff(metadata.SuccessfulProvider, "test provider"); diff != "" {
+					t.Fatal(diff)
+				}
+			}
 		})
 	}
 }
