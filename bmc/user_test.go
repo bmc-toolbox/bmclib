@@ -101,7 +101,7 @@ func TestUserCreate(t *testing.T) {
 					t.Fatal(diff)
 				}
 			} else {
-				diff := cmp.Diff(expectedResult, result)
+				diff := cmp.Diff(result, expectedResult)
 				if diff != "" {
 					t.Fatal(diff)
 				}
@@ -140,7 +140,7 @@ func TestCreateUserFromInterfaces(t *testing.T) {
 			role := "admin"
 			var result bool
 			var err error
-			var successfulProvider string
+			var successfulProvider Metadata
 			if tc.withName {
 				result, err = CreateUserFromInterfaces(context.Background(), user, pass, role, generic, &successfulProvider)
 			} else {
@@ -162,7 +162,7 @@ func TestCreateUserFromInterfaces(t *testing.T) {
 				}
 			}
 			if tc.withName {
-				if diff := cmp.Diff("test provider", successfulProvider); diff != "" {
+				if diff := cmp.Diff(successfulProvider.SuccessfulProvider, "test provider"); diff != "" {
 					t.Fatal(diff)
 				}
 			}
@@ -205,7 +205,7 @@ func TestUpdateUser(t *testing.T) {
 					t.Fatal(diff)
 				}
 			} else {
-				diff := cmp.Diff(expectedResult, result)
+				diff := cmp.Diff(result, expectedResult)
 				if diff != "" {
 					t.Fatal(diff)
 				}
@@ -244,7 +244,7 @@ func TestUpdateUserFromInterfaces(t *testing.T) {
 			role := "admin"
 			var result bool
 			var err error
-			var successfulProvider string
+			var successfulProvider Metadata
 			if tc.withName {
 				result, err = UpdateUserFromInterfaces(context.Background(), user, pass, role, generic, &successfulProvider)
 			} else {
@@ -260,13 +260,13 @@ func TestUpdateUserFromInterfaces(t *testing.T) {
 					t.Fatal(err)
 				}
 			} else {
-				diff := cmp.Diff(expectedResult, result)
+				diff := cmp.Diff(result, expectedResult)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
 			if tc.withName {
-				if diff := cmp.Diff("test provider", successfulProvider); diff != "" {
+				if diff := cmp.Diff(successfulProvider.SuccessfulProvider, "test provider"); diff != "" {
 					t.Fatal(diff)
 				}
 			}
@@ -307,7 +307,7 @@ func TestDeleteUser(t *testing.T) {
 					t.Fatal(diff)
 				}
 			} else {
-				diff := cmp.Diff(expectedResult, result)
+				diff := cmp.Diff(result, expectedResult)
 				if diff != "" {
 					t.Fatal(diff)
 				}
@@ -344,7 +344,7 @@ func TestDeleteUserFromInterfaces(t *testing.T) {
 			user := "ADMIN"
 			var result bool
 			var err error
-			var successfulProvider string
+			var successfulProvider Metadata
 			if tc.withName {
 				result, err = DeleteUserFromInterfaces(context.Background(), user, generic, &successfulProvider)
 			} else {
@@ -360,13 +360,13 @@ func TestDeleteUserFromInterfaces(t *testing.T) {
 					t.Fatal(err)
 				}
 			} else {
-				diff := cmp.Diff(expectedResult, result)
+				diff := cmp.Diff(result, expectedResult)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
 			if tc.withName {
-				if diff := cmp.Diff("test provider", successfulProvider); diff != "" {
+				if diff := cmp.Diff(successfulProvider.SuccessfulProvider, "test provider"); diff != "" {
 					t.Fatal(diff)
 				}
 			}
@@ -413,7 +413,7 @@ func TestReadUsers(t *testing.T) {
 					t.Fatal(diff)
 				}
 			} else {
-				diff := cmp.Diff(expectedResult, result)
+				diff := cmp.Diff(result, expectedResult)
 				if diff != "" {
 					t.Fatal(diff)
 				}
@@ -458,7 +458,7 @@ func TestReadUsersFromInterfaces(t *testing.T) {
 			expectedResult := users
 			var result []map[string]string
 			var err error
-			var successfulProvider string
+			var successfulProvider Metadata
 			if tc.withName {
 				result, err = ReadUsersFromInterfaces(context.Background(), generic, &successfulProvider)
 			} else {
@@ -474,13 +474,13 @@ func TestReadUsersFromInterfaces(t *testing.T) {
 					t.Fatal(err)
 				}
 			} else {
-				diff := cmp.Diff(expectedResult, result)
+				diff := cmp.Diff(result, expectedResult)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
 			if tc.withName {
-				if diff := cmp.Diff("test provider", successfulProvider); diff != "" {
+				if diff := cmp.Diff(successfulProvider.SuccessfulProvider, "test provider"); diff != "" {
 					t.Fatal(diff)
 				}
 			}

@@ -63,7 +63,7 @@ func TestSetBootDevice(t *testing.T) {
 				}
 
 			} else {
-				diff := cmp.Diff(expectedResult, result)
+				diff := cmp.Diff(result, expectedResult)
 				if diff != "" {
 					t.Fatal(diff)
 				}
@@ -101,7 +101,7 @@ func TestSetBootDeviceFromInterfaces(t *testing.T) {
 			expectedResult := tc.want
 			var result bool
 			var err error
-			var successfulProvider string
+			var successfulProvider Metadata
 			if tc.withName {
 				result, err = SetBootDeviceFromInterfaces(context.Background(), tc.bootDevice, false, false, generic, &successfulProvider)
 			} else {
@@ -119,7 +119,7 @@ func TestSetBootDeviceFromInterfaces(t *testing.T) {
 				}
 			}
 			if tc.withName {
-				if diff := cmp.Diff("test provider", successfulProvider); diff != "" {
+				if diff := cmp.Diff(successfulProvider.SuccessfulProvider, "test provider"); diff != "" {
 					t.Fatal(diff)
 				}
 			}

@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bmc-toolbox/bmclib/bmc"
 	"github.com/bmc-toolbox/bmclib/logging"
 )
 
@@ -26,7 +27,7 @@ func TestBMC(t *testing.T) {
 	}
 	defer cl.Close(ctx)
 
-	cl.Registry.Drivers = cl.Registry.PreferProtocol("redfish")
+	cl.Registry.Drivers = cl.Registry.PreferDriver("other")
 	state, err := cl.GetPowerState(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -38,16 +39,16 @@ func TestBMC(t *testing.T) {
 		t.Log(err)
 	}
 
-	var providerName string
-	// if you pass in a string pointer to any function
-	// it will be updated with the name of the provider
-	// that successfully execute
-	state, err = cl.GetPowerState(ctx, &providerName)
+	var metadata bmc.Metadata
+	// if you pass in a the metadata as a pointer to any function
+	// it will be updated with details about the call. name of the provider
+	// that successfully execute and providers attempted.
+	state, err = cl.GetPowerState(ctx, &metadata)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log(state)
-	t.Log(providerName)
+	t.Logf("%+v", metadata)
 
 	users, err := cl.ReadUsers(ctx)
 	if err != nil {

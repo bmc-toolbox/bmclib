@@ -21,7 +21,10 @@ type bootDeviceProviders struct {
 
 // SetBootDevice sets the boot device. Next boot only unless setPersistent=true
 // if a successfulProviderName is passed in, it will be updated to be the name of the provider that successfully executed
-func SetBootDevice(ctx context.Context, bootDevice string, setPersistent, efiBoot bool, b []bootDeviceProviders, successfulProviderName ...*string) (ok bool, err error) {
+func SetBootDevice(ctx context.Context, bootDevice string, setPersistent, efiBoot bool, b []bootDeviceProviders, metadata ...*Metadata) (ok bool, err error) {
+	if len(metadata) == 0 || metadata[0] == nil {
+		metadata = []*Metadata{&Metadata{}}
+	}
 Loop:
 	for _, elem := range b {
 		select {
@@ -30,6 +33,7 @@ Loop:
 			break Loop
 		default:
 			if elem.bootDeviceSetter != nil {
+				*metadata[0] = Metadata{ProvidersAttempted: append(metadata[0].ProvidersAttempted, elem.name)}
 				ok, setErr := elem.bootDeviceSetter.BootDeviceSet(ctx, bootDevice, setPersistent, efiBoot)
 				if setErr != nil {
 					err = multierror.Append(err, setErr)
@@ -39,9 +43,7 @@ Loop:
 					err = multierror.Append(err, errors.New("failed to set boot device"))
 					continue
 				}
-				if len(successfulProviderName) > 0 && successfulProviderName[0] != nil {
-					*successfulProviderName[0] = elem.name
-				}
+				*metadata[0] = Metadata{SuccessfulProvider: elem.name, ProvidersAttempted: append(metadata[0].ProvidersAttempted, elem.name)}
 				return ok, nil
 			}
 		}
@@ -51,7 +53,7 @@ Loop:
 
 // SetBootDeviceFromInterfaces pass through to library function
 // if a successfulProviderName is passed in, it will be updated to be the name of the provider that successfully executed
-func SetBootDeviceFromInterfaces(ctx context.Context, bootDevice string, setPersistent, efiBoot bool, generic []interface{}, successfulProviderName ...*string) (ok bool, err error) {
+func SetBootDeviceFromInterfaces(ctx context.Context, bootDevice string, setPersistent, efiBoot bool, generic []interface{}, metadata ...*Metadata) (ok bool, err error) {
 	bdSetters := make([]bootDeviceProviders, 0)
 	for _, elem := range generic {
 		var temp bootDeviceProviders
@@ -71,5 +73,5 @@ func SetBootDeviceFromInterfaces(ctx context.Context, bootDevice string, setPers
 	if len(bdSetters) == 0 {
 		return ok, multierror.Append(err, errors.New("no BootDeviceSetter implementations found"))
 	}
-	return SetBootDevice(ctx, bootDevice, setPersistent, efiBoot, bdSetters, successfulProviderName...)
+	return SetBootDevice(ctx, bootDevice, setPersistent, efiBoot, bdSetters, metadata...)
 }

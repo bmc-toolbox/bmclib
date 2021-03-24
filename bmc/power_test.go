@@ -70,7 +70,7 @@ func TestSetPowerState(t *testing.T) {
 				}
 
 			} else {
-				diff := cmp.Diff(expectedResult, result)
+				diff := cmp.Diff(result, expectedResult)
 				if diff != "" {
 					t.Fatal(diff)
 				}
@@ -108,7 +108,7 @@ func TestSetPowerStateFromInterfaces(t *testing.T) {
 			expectedResult := tc.want
 			var result bool
 			var err error
-			var successfulProvider string
+			var successfulProvider Metadata
 			if tc.withName {
 				result, err = SetPowerStateFromInterfaces(context.Background(), tc.state, generic, &successfulProvider)
 			} else {
@@ -124,13 +124,13 @@ func TestSetPowerStateFromInterfaces(t *testing.T) {
 					t.Fatal(err)
 				}
 			} else {
-				diff := cmp.Diff(expectedResult, result)
+				diff := cmp.Diff(result, expectedResult)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
 			if tc.withName {
-				if diff := cmp.Diff("test provider", successfulProvider); diff != "" {
+				if diff := cmp.Diff(successfulProvider.SuccessfulProvider, "test provider"); diff != "" {
 					t.Fatal(diff)
 				}
 			}
@@ -168,7 +168,7 @@ func TestGetPowerState(t *testing.T) {
 					t.Fatal(diff)
 				}
 			} else {
-				diff := cmp.Diff(expectedResult, result)
+				diff := cmp.Diff(result, expectedResult)
 				if diff != "" {
 					t.Fatal(diff)
 				}
@@ -206,7 +206,7 @@ func TestGetPowerStateFromInterfaces(t *testing.T) {
 			expectedResult := tc.want
 			var result string
 			var err error
-			var successfulProvider string
+			var successfulProvider Metadata
 			if tc.withName {
 				result, err = GetPowerStateFromInterfaces(context.Background(), generic, &successfulProvider)
 			} else {
@@ -222,13 +222,13 @@ func TestGetPowerStateFromInterfaces(t *testing.T) {
 					t.Fatal(err)
 				}
 			} else {
-				diff := cmp.Diff(expectedResult, result)
+				diff := cmp.Diff(result, expectedResult)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
 			if tc.withName {
-				if diff := cmp.Diff("test provider", successfulProvider); diff != "" {
+				if diff := cmp.Diff(successfulProvider.SuccessfulProvider, "test provider"); diff != "" {
 					t.Fatal(diff)
 				}
 			}

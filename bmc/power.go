@@ -37,8 +37,11 @@ type powerProviders struct {
 }
 
 // SetPowerState sets the power state for a BMC, trying all interface implementations passed in
-// if a successfulProviderName is passed in, it will be updated to be the name of the provider that successfully executed
-func SetPowerState(ctx context.Context, state string, p []powerProviders, successfulProviderName ...*string) (ok bool, err error) {
+// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
+func SetPowerState(ctx context.Context, state string, p []powerProviders, metadata ...*Metadata) (ok bool, err error) {
+	if len(metadata) == 0 || metadata[0] == nil {
+		metadata = []*Metadata{&Metadata{}}
+	}
 Loop:
 	for _, elem := range p {
 		select {
@@ -47,6 +50,7 @@ Loop:
 			break Loop
 		default:
 			if elem.powerSetter != nil {
+				*metadata[0] = Metadata{ProvidersAttempted: append(metadata[0].ProvidersAttempted, elem.name)}
 				ok, setErr := elem.powerSetter.PowerSet(ctx, state)
 				if setErr != nil {
 					err = multierror.Append(err, setErr)
@@ -56,9 +60,7 @@ Loop:
 					err = multierror.Append(err, errors.New("failed to set power state"))
 					continue
 				}
-				if len(successfulProviderName) > 0 && successfulProviderName[0] != nil {
-					*successfulProviderName[0] = elem.name
-				}
+				*metadata[0] = Metadata{SuccessfulProvider: elem.name, ProvidersAttempted: append(metadata[0].ProvidersAttempted, elem.name)}
 				return ok, nil
 			}
 		}
@@ -67,8 +69,8 @@ Loop:
 }
 
 // SetPowerStateFromInterfaces pass through to library function
-// if a successfulProviderName is passed in, it will be updated to be the name of the provider that successfully executed
-func SetPowerStateFromInterfaces(ctx context.Context, state string, generic []interface{}, successfulProviderName ...*string) (ok bool, err error) {
+// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
+func SetPowerStateFromInterfaces(ctx context.Context, state string, generic []interface{}, metadata ...*Metadata) (ok bool, err error) {
 	powerSetter := make([]powerProviders, 0)
 	for _, elem := range generic {
 		var temp powerProviders
@@ -88,12 +90,15 @@ func SetPowerStateFromInterfaces(ctx context.Context, state string, generic []in
 	if len(powerSetter) == 0 {
 		return ok, multierror.Append(err, errors.New("no PowerSetter implementations found"))
 	}
-	return SetPowerState(ctx, state, powerSetter, successfulProviderName...)
+	return SetPowerState(ctx, state, powerSetter, metadata...)
 }
 
 // GetPowerState sets the power state for a BMC, trying all interface implementations passed in
-// if a successfulProviderName is passed in, it will be updated to be the name of the provider that successfully executed
-func GetPowerState(ctx context.Context, p []powerProviders, successfulProviderName ...*string) (state string, err error) {
+// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
+func GetPowerState(ctx context.Context, p []powerProviders, metadata ...*Metadata) (state string, err error) {
+	if len(metadata) == 0 || metadata[0] == nil {
+		metadata = []*Metadata{&Metadata{}}
+	}
 Loop:
 	for _, elem := range p {
 		select {
@@ -102,14 +107,13 @@ Loop:
 			break Loop
 		default:
 			if elem.powerStateGetter != nil {
+				*metadata[0] = Metadata{ProvidersAttempted: append(metadata[0].ProvidersAttempted, elem.name)}
 				state, stateErr := elem.powerStateGetter.PowerStateGet(ctx)
 				if stateErr != nil {
 					err = multierror.Append(err, stateErr)
 					continue
 				}
-				if len(successfulProviderName) > 0 && successfulProviderName[0] != nil {
-					*successfulProviderName[0] = elem.name
-				}
+				*metadata[0] = Metadata{SuccessfulProvider: elem.name, ProvidersAttempted: append(metadata[0].ProvidersAttempted, elem.name)}
 				return state, nil
 			}
 		}
@@ -118,8 +122,8 @@ Loop:
 }
 
 // GetPowerStateFromInterfaces pass through to library function
-// if a successfulProviderName is passed in, it will be updated to be the name of the provider that successfully executed
-func GetPowerStateFromInterfaces(ctx context.Context, generic []interface{}, successfulProviderName ...*string) (state string, err error) {
+// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
+func GetPowerStateFromInterfaces(ctx context.Context, generic []interface{}, metadata ...*Metadata) (state string, err error) {
 	powerStateGetter := make([]powerProviders, 0)
 	for _, elem := range generic {
 		var temp powerProviders
@@ -139,5 +143,5 @@ func GetPowerStateFromInterfaces(ctx context.Context, generic []interface{}, suc
 	if len(powerStateGetter) == 0 {
 		return state, multierror.Append(err, errors.New("no PowerStateGetter implementations found"))
 	}
-	return GetPowerState(ctx, powerStateGetter, successfulProviderName...)
+	return GetPowerState(ctx, powerStateGetter, metadata...)
 }
