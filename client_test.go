@@ -21,11 +21,13 @@ func TestBMC(t *testing.T) {
 	log := logging.DefaultLogger()
 	cl := NewClient(host, port, user, pass, WithLogger(log))
 	cl.Registry.Drivers = cl.Registry.FilterForCompatible(ctx)
-	err := cl.Open(ctx)
+	var metadata bmc.Metadata
+	err := cl.Open(ctx, &metadata)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer cl.Close(ctx)
+	t.Logf("%+v", metadata)
 
 	cl.Registry.Drivers = cl.Registry.PreferDriver("other")
 	state, err := cl.GetPowerState(ctx)
@@ -39,7 +41,6 @@ func TestBMC(t *testing.T) {
 		t.Log(err)
 	}
 
-	var metadata bmc.Metadata
 	// if you pass in a the metadata as a pointer to any function
 	// it will be updated with details about the call. name of the provider
 	// that successfully execute and providers attempted.

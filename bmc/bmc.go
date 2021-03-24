@@ -6,4 +6,8 @@ type Metadata struct {
 	SuccessfulProvider string
 	// ProvidersAttempted is a slice of all providers that were attempt to execute
 	ProvidersAttempted []string
+	// SuccessfulOpenConns is a slice of provider names that were opened successfully
+	SuccessfulOpenConns []string
+	// SuccessfulCloseConns is a slice of provider names that were closed successfully
+	SuccessfulCloseConns []string
 }

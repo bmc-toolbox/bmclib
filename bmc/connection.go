@@ -18,8 +18,18 @@ type Closer interface {
 	Close(ctx context.Context) error
 }
 
+// connectionProviders is an internal struct to correlate an implementation/provider and its name
+type connectionProviders struct {
+	name   string
+	opener Opener
+	closer Closer
+}
+
 // OpenConnection opens a connection to a BMC, trying all interface implementations passed in
-func OpenConnection(ctx context.Context, o []Opener) (err error) {
+func OpenConnection(ctx context.Context, o []connectionProviders, metadata ...*Metadata) (err error) {
+	if len(metadata) == 0 || metadata[0] == nil {
+		metadata = []*Metadata{&Metadata{}}
+	}
 	var connOpen bool
 Loop:
 	for _, elem := range o {
@@ -28,13 +38,15 @@ Loop:
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			if elem != nil {
-				openErr := elem.Open(ctx)
+			if elem.opener != nil {
+				*metadata[0] = Metadata{ProvidersAttempted: append(metadata[0].ProvidersAttempted, elem.name)}
+				openErr := elem.opener.Open(ctx)
 				if openErr != nil {
 					err = multierror.Append(err, openErr)
 					continue
 				}
 				connOpen = true
+				*metadata[0] = Metadata{SuccessfulOpenConns: append(metadata[0].SuccessfulOpenConns, elem.name), ProvidersAttempted: metadata[0].ProvidersAttempted}
 			}
 		}
 	}
@@ -45,12 +57,18 @@ Loop:
 }
 
 // OpenConnectionFromInterfaces pass through to library function
-func OpenConnectionFromInterfaces(ctx context.Context, generic []interface{}) (err error) {
-	openers := make([]Opener, 0)
+func OpenConnectionFromInterfaces(ctx context.Context, generic []interface{}, metadata ...*Metadata) (err error) {
+	openers := make([]connectionProviders, 0)
 	for _, elem := range generic {
+		var temp connectionProviders
+		switch p := elem.(type) {
+		case Provider:
+			temp.name = p.Name()
+		}
 		switch p := elem.(type) {
 		case Opener:
-			openers = append(openers, p)
+			temp.opener = p
+			openers = append(openers, temp)
 		default:
 			e := fmt.Sprintf("not a Opener implementation: %T", p)
 			err = multierror.Append(err, errors.New(e))
@@ -59,11 +77,14 @@ func OpenConnectionFromInterfaces(ctx context.Context, generic []interface{}) (e
 	if len(openers) == 0 {
 		return multierror.Append(err, errors.New("no Opener implementations found"))
 	}
-	return OpenConnection(ctx, openers)
+	return OpenConnection(ctx, openers, metadata...)
 }
 
 // CloseConnection closes a connection to a BMC, trying all interface implementations passed in
-func CloseConnection(ctx context.Context, c []Closer) (err error) {
+func CloseConnection(ctx context.Context, c []connectionProviders, metadata ...*Metadata) (err error) {
+	if len(metadata) == 0 || metadata[0] == nil {
+		metadata = []*Metadata{&Metadata{}}
+	}
 	var connClosed bool
 Loop:
 	for _, elem := range c {
@@ -72,13 +93,15 @@ Loop:
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			if elem != nil {
-				openErr := elem.Close(ctx)
+			if elem.closer != nil {
+				*metadata[0] = Metadata{ProvidersAttempted: append(metadata[0].ProvidersAttempted, elem.name)}
+				openErr := elem.closer.Close(ctx)
 				if openErr != nil {
 					err = multierror.Append(err, openErr)
 					continue
 				}
 				connClosed = true
+				*metadata[0] = Metadata{SuccessfulCloseConns: append(metadata[0].SuccessfulCloseConns, elem.name), ProvidersAttempted: metadata[0].ProvidersAttempted}
 			}
 		}
 	}
@@ -89,12 +112,18 @@ Loop:
 }
 
 // CloseConnectionFromInterfaces pass through to library function
-func CloseConnectionFromInterfaces(ctx context.Context, generic []interface{}) (err error) {
-	closers := make([]Closer, 0)
+func CloseConnectionFromInterfaces(ctx context.Context, generic []interface{}, metadata ...*Metadata) (err error) {
+	closers := make([]connectionProviders, 0)
 	for _, elem := range generic {
+		var temp connectionProviders
+		switch p := elem.(type) {
+		case Provider:
+			temp.name = p.Name()
+		}
 		switch p := elem.(type) {
 		case Closer:
-			closers = append(closers, p)
+			temp.closer = p
+			closers = append(closers, temp)
 		default:
 			e := fmt.Sprintf("not a Closer implementation: %T", p)
 			err = multierror.Append(err, errors.New(e))
@@ -103,5 +132,5 @@ func CloseConnectionFromInterfaces(ctx context.Context, generic []interface{}) (
 	if len(closers) == 0 {
 		return multierror.Append(err, errors.New("no Closer implementations found"))
 	}
-	return CloseConnection(ctx, closers)
+	return CloseConnection(ctx, closers, metadata...)
 }

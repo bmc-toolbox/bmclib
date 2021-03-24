@@ -60,7 +60,7 @@ Loop:
 					err = multierror.Append(err, errors.New("failed to set power state"))
 					continue
 				}
-				*metadata[0] = Metadata{SuccessfulProvider: elem.name, ProvidersAttempted: append(metadata[0].ProvidersAttempted, elem.name)}
+				*metadata[0] = Metadata{SuccessfulProvider: elem.name, ProvidersAttempted: metadata[0].ProvidersAttempted}
 				return ok, nil
 			}
 		}
@@ -113,7 +113,7 @@ Loop:
 					err = multierror.Append(err, stateErr)
 					continue
 				}
-				*metadata[0] = Metadata{SuccessfulProvider: elem.name, ProvidersAttempted: append(metadata[0].ProvidersAttempted, elem.name)}
+				*metadata[0] = Metadata{SuccessfulProvider: elem.name, ProvidersAttempted: metadata[0].ProvidersAttempted}
 				return state, nil
 			}
 		}

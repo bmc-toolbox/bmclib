@@ -78,13 +78,13 @@ func (c *Client) registerProviders() {
 }
 
 // Open pass through to library function
-func (c *Client) Open(ctx context.Context) (err error) {
-	return bmc.OpenConnectionFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+func (c *Client) Open(ctx context.Context, metadata ...*bmc.Metadata) (err error) {
+	return bmc.OpenConnectionFromInterfaces(ctx, c.Registry.GetDriverInterfaces(), metadata...)
 }
 
 // Close pass through to library function
-func (c *Client) Close(ctx context.Context) (err error) {
-	return bmc.CloseConnectionFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+func (c *Client) Close(ctx context.Context, metadata ...*bmc.Metadata) (err error) {
+	return bmc.CloseConnectionFromInterfaces(ctx, c.Registry.GetDriverInterfaces(), metadata...)
 }
 
 // GetPowerState pass through to library function

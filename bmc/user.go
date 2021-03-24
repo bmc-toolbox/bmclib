@@ -61,7 +61,7 @@ Loop:
 					err = multierror.Append(err, errors.New("failed to create user"))
 					continue
 				}
-				*metadata[0] = Metadata{SuccessfulProvider: elem.name, ProvidersAttempted: append(metadata[0].ProvidersAttempted, elem.name)}
+				*metadata[0] = Metadata{SuccessfulProvider: elem.name, ProvidersAttempted: metadata[0].ProvidersAttempted}
 				return ok, nil
 			}
 		}
@@ -118,7 +118,7 @@ Loop:
 					err = multierror.Append(err, errors.New("failed to update user"))
 					continue
 				}
-				*metadata[0] = Metadata{SuccessfulProvider: elem.name, ProvidersAttempted: append(metadata[0].ProvidersAttempted, elem.name)}
+				*metadata[0] = Metadata{SuccessfulProvider: elem.name, ProvidersAttempted: metadata[0].ProvidersAttempted}
 				return ok, nil
 			}
 		}
@@ -175,7 +175,7 @@ Loop:
 					err = multierror.Append(err, errors.New("failed to delete user"))
 					continue
 				}
-				*metadata[0] = Metadata{SuccessfulProvider: elem.name, ProvidersAttempted: append(metadata[0].ProvidersAttempted, elem.name)}
+				*metadata[0] = Metadata{SuccessfulProvider: elem.name, ProvidersAttempted: metadata[0].ProvidersAttempted}
 				return ok, nil
 			}
 		}
@@ -228,7 +228,7 @@ Loop:
 					err = multierror.Append(err, readErr)
 					continue
 				}
-				*metadata[0] = Metadata{SuccessfulProvider: elem.name, ProvidersAttempted: append(metadata[0].ProvidersAttempted, elem.name)}
+				*metadata[0] = Metadata{SuccessfulProvider: elem.name, ProvidersAttempted: metadata[0].ProvidersAttempted}
 				return users, nil
 			}
 		}
