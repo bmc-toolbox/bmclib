@@ -9,6 +9,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/bmc"
 	"github.com/bmc-toolbox/bmclib/logging"
 	"github.com/bmc-toolbox/bmclib/providers/asrockrack"
+	"github.com/bmc-toolbox/bmclib/providers/goipmi"
 	"github.com/bmc-toolbox/bmclib/providers/ipmitool"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
@@ -74,6 +75,10 @@ func (c *Client) registerProviders() {
 	// register ASRR vendorapi provider
 	driverAsrockrack, _ := asrockrack.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger)
 	c.Registry.Register(asrockrack.ProviderName, asrockrack.ProviderProtocol, asrockrack.Features, nil, driverAsrockrack)
+
+	// register goipmi provider
+	driverGoIpmi := &goipmi.Conn{Host: c.Auth.Host, Port: c.Auth.Port, User: c.Auth.User, Pass: c.Auth.Pass, Log: c.Logger}
+	c.Registry.Register(goipmi.ProviderName, goipmi.ProviderProtocol, goipmi.Features, nil, driverGoIpmi)
 	/*
 		// dummy used for testing
 		driverDummy := &dummy.Conn{FailOpen: true}

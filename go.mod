@@ -6,6 +6,7 @@ require (
 	bou.ke/monkey v1.0.2
 	github.com/bombsimon/logrusr v1.0.0
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
+	github.com/gebn/bmc v0.0.0-20200904230046-a5643220ab2a
 	github.com/go-logr/logr v0.4.0
 	github.com/go-logr/zapr v0.4.0 // indirect
 	github.com/go-playground/universal-translator v0.17.0 // indirect
