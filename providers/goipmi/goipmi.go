@@ -37,6 +37,10 @@ type Conn struct {
 	conn      bmc.Session
 }
 
+func (c *Conn) Name() string {
+	return ProviderName
+}
+
 func (c *Conn) Open(ctx context.Context) error {
 	machine, err := bmc.Dial(ctx, c.Host)
 	if err != nil {
