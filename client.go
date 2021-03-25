@@ -74,12 +74,29 @@ func (c *Client) registerProviders() {
 	// register ASRR vendorapi provider
 	driverAsrockrack, _ := asrockrack.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger)
 	c.Registry.Register(asrockrack.ProviderName, asrockrack.ProviderProtocol, asrockrack.Features, nil, driverAsrockrack)
-
+	/*
+		// dummy used for testing
+		driverDummy := &dummy.Conn{FailOpen: true}
+		c.Registry.Register(dummy.ProviderName, dummy.ProviderProtocol, dummy.Features, nil, driverDummy)
+	*/
 }
 
-// Open pass through to library function
-func (c *Client) Open(ctx context.Context, metadata ...*bmc.Metadata) (err error) {
-	return bmc.OpenConnectionFromInterfaces(ctx, c.Registry.GetDriverInterfaces(), metadata...)
+// Open calls the OpenConnectionFromInterfaces library function
+// creates and returns a new Drivers with only implementations that were successfully opened
+func (c *Client) Open(ctx context.Context, metadata ...*bmc.Metadata) (reg registrar.Drivers, err error) {
+	ifs, err := bmc.OpenConnectionFromInterfaces(ctx, c.Registry.GetDriverInterfaces(), metadata...)
+	if err != nil {
+		return nil, err
+	}
+	for _, elem := range c.Registry.Drivers {
+		for _, em := range ifs {
+			if em == elem.DriverInterface {
+				elem.DriverInterface = em
+				reg = append(reg, elem)
+			}
+		}
+	}
+	return reg, nil
 }
 
 // Close pass through to library function

@@ -22,25 +22,23 @@ func TestBMC(t *testing.T) {
 	cl := NewClient(host, port, user, pass, WithLogger(log))
 	cl.Registry.Drivers = cl.Registry.FilterForCompatible(ctx)
 	var metadata bmc.Metadata
-	err := cl.Open(ctx, &metadata)
+	var err error
+	cl.Registry.Drivers, err = cl.Open(ctx, &metadata)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer cl.Close(ctx)
 	t.Logf("%+v", metadata)
 
-	cl.Registry.Drivers = cl.Registry.PreferDriver("other")
-	state, err := cl.GetPowerState(ctx)
+	cl.Registry.Drivers = cl.Registry.PreferDriver("dummy")
+	state, err := cl.GetPowerState(ctx, &metadata)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log(state)
+	t.Logf("%+v", metadata)
 
-	cl.Registry.Drivers = cl.Registry.PreferProtocol("ipmi")
-	if err != nil {
-		t.Log(err)
-	}
-
+	cl.Registry.Drivers = cl.Registry.PreferDriver("ipmitool")
 	// if you pass in a the metadata as a pointer to any function
 	// it will be updated with details about the call. name of the provider
 	// that successfully execute and providers attempted.

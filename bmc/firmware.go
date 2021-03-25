@@ -33,19 +33,20 @@ type BIOSFirmwareUpdater interface {
 func GetBMCVersion(ctx context.Context, p []BMCVersionGetter) (version string, err error) {
 Loop:
 	for _, elem := range p {
+		if elem == nil {
+			continue
+		}
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			if elem != nil {
-				version, vErr := elem.GetBMCVersion(ctx)
-				if vErr != nil {
-					err = multierror.Append(err, vErr)
-					continue
-				}
-				return version, nil
+			version, vErr := elem.GetBMCVersion(ctx)
+			if vErr != nil {
+				err = multierror.Append(err, vErr)
+				continue
 			}
+			return version, nil
 		}
 	}
 
@@ -75,19 +76,20 @@ func GetBMCVersionFromInterfaces(ctx context.Context, generic []interface{}) (ve
 func UpdateBMCFirmware(ctx context.Context, fileReader io.Reader, fileSize int64, p []BMCFirmwareUpdater) (err error) {
 Loop:
 	for _, elem := range p {
+		if elem == nil {
+			continue
+		}
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			if elem != nil {
-				uErr := elem.FirmwareUpdateBMC(ctx, fileReader, fileSize)
-				if uErr != nil {
-					err = multierror.Append(err, uErr)
-					continue
-				}
-				return nil
+			uErr := elem.FirmwareUpdateBMC(ctx, fileReader, fileSize)
+			if uErr != nil {
+				err = multierror.Append(err, uErr)
+				continue
 			}
+			return nil
 		}
 	}
 
@@ -118,19 +120,20 @@ func UpdateBMCFirmwareFromInterfaces(ctx context.Context, fileReader io.Reader, 
 func GetBIOSVersion(ctx context.Context, p []BIOSVersionGetter) (version string, err error) {
 Loop:
 	for _, elem := range p {
+		if elem == nil {
+			continue
+		}
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			if elem != nil {
-				version, vErr := elem.GetBIOSVersion(ctx)
-				if vErr != nil {
-					err = multierror.Append(err, vErr)
-					continue
-				}
-				return version, nil
+			version, vErr := elem.GetBIOSVersion(ctx)
+			if vErr != nil {
+				err = multierror.Append(err, vErr)
+				continue
 			}
+			return version, nil
 		}
 	}
 
@@ -160,19 +163,20 @@ func GetBIOSVersionFromInterfaces(ctx context.Context, generic []interface{}) (v
 func UpdateBIOSFirmware(ctx context.Context, fileReader io.Reader, fileSize int64, p []BIOSFirmwareUpdater) (err error) {
 Loop:
 	for _, elem := range p {
+		if elem == nil {
+			continue
+		}
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			if elem != nil {
-				uErr := elem.FirmwareUpdateBIOS(ctx, fileReader, fileSize)
-				if uErr != nil {
-					err = multierror.Append(err, uErr)
-					continue
-				}
-				return nil
+			uErr := elem.FirmwareUpdateBIOS(ctx, fileReader, fileSize)
+			if uErr != nil {
+				err = multierror.Append(err, uErr)
+				continue
 			}
+			return nil
 		}
 	}
 

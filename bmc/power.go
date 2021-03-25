@@ -39,30 +39,34 @@ type powerProviders struct {
 // SetPowerState sets the power state for a BMC, trying all interface implementations passed in
 // if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
 func SetPowerState(ctx context.Context, state string, p []powerProviders, metadata ...*Metadata) (ok bool, err error) {
-	if len(metadata) == 0 || metadata[0] == nil {
-		metadata = []*Metadata{&Metadata{}}
-	}
+	var metadataLocal Metadata
+	defer func() {
+		if len(metadata) > 0 && metadata[0] != nil {
+			*metadata[0] = metadataLocal
+		}
+	}()
 Loop:
 	for _, elem := range p {
+		if elem.powerSetter == nil {
+			continue
+		}
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			if elem.powerSetter != nil {
-				*metadata[0] = Metadata{ProvidersAttempted: append(metadata[0].ProvidersAttempted, elem.name)}
-				ok, setErr := elem.powerSetter.PowerSet(ctx, state)
-				if setErr != nil {
-					err = multierror.Append(err, setErr)
-					continue
-				}
-				if !ok {
-					err = multierror.Append(err, errors.New("failed to set power state"))
-					continue
-				}
-				*metadata[0] = Metadata{SuccessfulProvider: elem.name, ProvidersAttempted: metadata[0].ProvidersAttempted}
-				return ok, nil
+			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			ok, setErr := elem.powerSetter.PowerSet(ctx, state)
+			if setErr != nil {
+				err = multierror.Append(err, setErr)
+				continue
 			}
+			if !ok {
+				err = multierror.Append(err, errors.New("failed to set power state"))
+				continue
+			}
+			metadataLocal.SuccessfulProvider = elem.name
+			return ok, nil
 		}
 	}
 	return ok, multierror.Append(err, errors.New("failed to set power state"))
@@ -73,11 +77,7 @@ Loop:
 func SetPowerStateFromInterfaces(ctx context.Context, state string, generic []interface{}, metadata ...*Metadata) (ok bool, err error) {
 	powerSetter := make([]powerProviders, 0)
 	for _, elem := range generic {
-		var temp powerProviders
-		switch p := elem.(type) {
-		case Provider:
-			temp.name = p.Name()
-		}
+		temp := powerProviders{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case PowerSetter:
 			temp.powerSetter = p
@@ -96,26 +96,30 @@ func SetPowerStateFromInterfaces(ctx context.Context, state string, generic []in
 // GetPowerState sets the power state for a BMC, trying all interface implementations passed in
 // if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
 func GetPowerState(ctx context.Context, p []powerProviders, metadata ...*Metadata) (state string, err error) {
-	if len(metadata) == 0 || metadata[0] == nil {
-		metadata = []*Metadata{&Metadata{}}
-	}
+	var metadataLocal Metadata
+	defer func() {
+		if len(metadata) > 0 && metadata[0] != nil {
+			*metadata[0] = metadataLocal
+		}
+	}()
 Loop:
 	for _, elem := range p {
+		if elem.powerStateGetter == nil {
+			continue
+		}
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			if elem.powerStateGetter != nil {
-				*metadata[0] = Metadata{ProvidersAttempted: append(metadata[0].ProvidersAttempted, elem.name)}
-				state, stateErr := elem.powerStateGetter.PowerStateGet(ctx)
-				if stateErr != nil {
-					err = multierror.Append(err, stateErr)
-					continue
-				}
-				*metadata[0] = Metadata{SuccessfulProvider: elem.name, ProvidersAttempted: metadata[0].ProvidersAttempted}
-				return state, nil
+			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			state, stateErr := elem.powerStateGetter.PowerStateGet(ctx)
+			if stateErr != nil {
+				err = multierror.Append(err, stateErr)
+				continue
 			}
+			metadataLocal.SuccessfulProvider = elem.name
+			return state, nil
 		}
 	}
 	return state, multierror.Append(err, errors.New("failed to get power state"))
@@ -126,11 +130,7 @@ Loop:
 func GetPowerStateFromInterfaces(ctx context.Context, generic []interface{}, metadata ...*Metadata) (state string, err error) {
 	powerStateGetter := make([]powerProviders, 0)
 	for _, elem := range generic {
-		var temp powerProviders
-		switch p := elem.(type) {
-		case Provider:
-			temp.name = p.Name()
-		}
+		temp := powerProviders{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case PowerStateGetter:
 			temp.powerStateGetter = p

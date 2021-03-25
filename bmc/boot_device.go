@@ -22,30 +22,34 @@ type bootDeviceProviders struct {
 // SetBootDevice sets the boot device. Next boot only unless setPersistent=true
 // if a successfulProviderName is passed in, it will be updated to be the name of the provider that successfully executed
 func SetBootDevice(ctx context.Context, bootDevice string, setPersistent, efiBoot bool, b []bootDeviceProviders, metadata ...*Metadata) (ok bool, err error) {
-	if len(metadata) == 0 || metadata[0] == nil {
-		metadata = []*Metadata{&Metadata{}}
-	}
+	var metadataLocal Metadata
+	defer func() {
+		if len(metadata) > 0 && metadata[0] != nil {
+			*metadata[0] = metadataLocal
+		}
+	}()
 Loop:
 	for _, elem := range b {
+		if elem.bootDeviceSetter == nil {
+			continue
+		}
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			if elem.bootDeviceSetter != nil {
-				*metadata[0] = Metadata{ProvidersAttempted: append(metadata[0].ProvidersAttempted, elem.name)}
-				ok, setErr := elem.bootDeviceSetter.BootDeviceSet(ctx, bootDevice, setPersistent, efiBoot)
-				if setErr != nil {
-					err = multierror.Append(err, setErr)
-					continue
-				}
-				if !ok {
-					err = multierror.Append(err, errors.New("failed to set boot device"))
-					continue
-				}
-				*metadata[0] = Metadata{SuccessfulProvider: elem.name, ProvidersAttempted: metadata[0].ProvidersAttempted}
-				return ok, nil
+			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			ok, setErr := elem.bootDeviceSetter.BootDeviceSet(ctx, bootDevice, setPersistent, efiBoot)
+			if setErr != nil {
+				err = multierror.Append(err, setErr)
+				continue
 			}
+			if !ok {
+				err = multierror.Append(err, errors.New("failed to set boot device"))
+				continue
+			}
+			metadataLocal.SuccessfulProvider = elem.name
+			return ok, nil
 		}
 	}
 	return ok, multierror.Append(err, errors.New("failed to set boot device"))
@@ -56,11 +60,7 @@ Loop:
 func SetBootDeviceFromInterfaces(ctx context.Context, bootDevice string, setPersistent, efiBoot bool, generic []interface{}, metadata ...*Metadata) (ok bool, err error) {
 	bdSetters := make([]bootDeviceProviders, 0)
 	for _, elem := range generic {
-		var temp bootDeviceProviders
-		switch p := elem.(type) {
-		case Provider:
-			temp.name = p.Name()
-		}
+		temp := bootDeviceProviders{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case BootDeviceSetter:
 			temp.bootDeviceSetter = p

@@ -21,88 +21,79 @@ type Closer interface {
 // connectionProviders is an internal struct to correlate an implementation/provider and its name
 type connectionProviders struct {
 	name   string
-	opener Opener
 	closer Closer
 }
 
-// OpenConnection opens a connection to a BMC, trying all interface implementations passed in
-func OpenConnection(ctx context.Context, o []connectionProviders, metadata ...*Metadata) (err error) {
-	if len(metadata) == 0 || metadata[0] == nil {
-		metadata = []*Metadata{&Metadata{}}
-	}
-	var connOpen bool
+// OpenConnectionFromInterfaces will try all opener interfaces and remove failed ones.
+// The reason failed ones need to be removed is so that when other methods are called (like powerstate)
+// implementations that have connections wont nil pointer error when their connection fails.
+func OpenConnectionFromInterfaces(ctx context.Context, generic []interface{}, metadata ...*Metadata) (opened []interface{}, err error) {
+	var metadataLocal Metadata
+	defer func() {
+		if len(metadata) > 0 && metadata[0] != nil {
+			*metadata[0] = metadataLocal
+		}
+	}()
 Loop:
-	for _, elem := range o {
+	for _, elem := range generic {
+		// return immediately if the context is done/terminated/etc
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			if elem.opener != nil {
-				*metadata[0] = Metadata{ProvidersAttempted: append(metadata[0].ProvidersAttempted, elem.name)}
-				openErr := elem.opener.Open(ctx)
-				if openErr != nil {
-					err = multierror.Append(err, openErr)
-					continue
-				}
-				connOpen = true
-				*metadata[0] = Metadata{SuccessfulOpenConns: append(metadata[0].SuccessfulOpenConns, elem.name), ProvidersAttempted: metadata[0].ProvidersAttempted}
-			}
 		}
-	}
-	if connOpen {
-		return nil
-	}
-	return multierror.Append(err, errors.New("failed to open connection"))
-}
-
-// OpenConnectionFromInterfaces pass through to library function
-func OpenConnectionFromInterfaces(ctx context.Context, generic []interface{}, metadata ...*Metadata) (err error) {
-	openers := make([]connectionProviders, 0)
-	for _, elem := range generic {
-		var temp connectionProviders
-		switch p := elem.(type) {
-		case Provider:
-			temp.name = p.Name()
-		}
+		// get the provider name for use in metadata
+		providerName := getProviderName(elem)
+		// now, try to open connections
 		switch p := elem.(type) {
 		case Opener:
-			temp.opener = p
-			openers = append(openers, temp)
+			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, providerName)
+			er := p.Open(ctx)
+			if er != nil {
+				err = multierror.Append(err, er)
+				continue
+			}
+			opened = append(opened, elem)
+			metadataLocal.SuccessfulOpenConns = append(metadataLocal.SuccessfulOpenConns, providerName)
 		default:
 			e := fmt.Sprintf("not a Opener implementation: %T", p)
 			err = multierror.Append(err, errors.New(e))
 		}
 	}
-	if len(openers) == 0 {
-		return multierror.Append(err, errors.New("no Opener implementations found"))
+	if len(opened) == 0 {
+		return nil, multierror.Append(err, errors.New("no Opener implementations found"))
 	}
-	return OpenConnection(ctx, openers, metadata...)
+	return opened, nil
 }
 
 // CloseConnection closes a connection to a BMC, trying all interface implementations passed in
 func CloseConnection(ctx context.Context, c []connectionProviders, metadata ...*Metadata) (err error) {
-	if len(metadata) == 0 || metadata[0] == nil {
-		metadata = []*Metadata{&Metadata{}}
-	}
+	var metadataLocal Metadata
+	defer func() {
+		if len(metadata) > 0 && metadata[0] != nil {
+			*metadata[0] = metadataLocal
+		}
+	}()
 	var connClosed bool
 Loop:
 	for _, elem := range c {
+		if elem.closer == nil {
+			continue
+		}
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			if elem.closer != nil {
-				*metadata[0] = Metadata{ProvidersAttempted: append(metadata[0].ProvidersAttempted, elem.name)}
-				openErr := elem.closer.Close(ctx)
-				if openErr != nil {
-					err = multierror.Append(err, openErr)
-					continue
-				}
-				connClosed = true
-				*metadata[0] = Metadata{SuccessfulCloseConns: append(metadata[0].SuccessfulCloseConns, elem.name), ProvidersAttempted: metadata[0].ProvidersAttempted}
+			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			openErr := elem.closer.Close(ctx)
+			if openErr != nil {
+				err = multierror.Append(err, openErr)
+				continue
 			}
+			connClosed = true
+			metadataLocal.SuccessfulCloseConns = append(metadataLocal.SuccessfulCloseConns, elem.name)
 		}
 	}
 	if connClosed {
@@ -115,11 +106,7 @@ Loop:
 func CloseConnectionFromInterfaces(ctx context.Context, generic []interface{}, metadata ...*Metadata) (err error) {
 	closers := make([]connectionProviders, 0)
 	for _, elem := range generic {
-		var temp connectionProviders
-		switch p := elem.(type) {
-		case Provider:
-			temp.name = p.Name()
-		}
+		temp := connectionProviders{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case Closer:
 			temp.closer = p

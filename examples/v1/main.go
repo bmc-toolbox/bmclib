@@ -31,7 +31,7 @@ func main() {
 	var err error
 
 	cl := bmclib.NewClient(host, port, user, pass, bmclib.WithLogger(logger))
-	err = cl.Open(ctx)
+	cl.Registry.Drivers, err = cl.Open(ctx)
 	if err != nil {
 		log.Fatal(err, "bmc login failed")
 	}

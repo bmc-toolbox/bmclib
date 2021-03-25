@@ -55,9 +55,13 @@ func TestSetBootDevice(t *testing.T) {
 			defer cancel()
 			result, err := SetBootDevice(ctx, tc.bootDevice, false, false, []bootDeviceProviders{{"", &testImplementation}})
 			if err != nil {
-				diff := cmp.Diff(err.Error(), tc.err.Error())
-				if diff != "" {
-					t.Fatal(diff)
+				if tc.err != nil {
+					diff := cmp.Diff(err.Error(), tc.err.Error())
+					if diff != "" {
+						t.Fatal(diff)
+					}
+				} else {
+					t.Fatal(err)
 				}
 
 			} else {
