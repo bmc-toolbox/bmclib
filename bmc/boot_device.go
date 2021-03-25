@@ -30,25 +30,26 @@ func SetBootDevice(ctx context.Context, bootDevice string, setPersistent, efiBoo
 	}()
 Loop:
 	for _, elem := range b {
+		if elem.bootDeviceSetter == nil {
+			continue
+		}
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			if elem.bootDeviceSetter != nil {
-				metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
-				ok, setErr := elem.bootDeviceSetter.BootDeviceSet(ctx, bootDevice, setPersistent, efiBoot)
-				if setErr != nil {
-					err = multierror.Append(err, setErr)
-					continue
-				}
-				if !ok {
-					err = multierror.Append(err, errors.New("failed to set boot device"))
-					continue
-				}
-				metadataLocal.SuccessfulProvider = elem.name
-				return ok, nil
+			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			ok, setErr := elem.bootDeviceSetter.BootDeviceSet(ctx, bootDevice, setPersistent, efiBoot)
+			if setErr != nil {
+				err = multierror.Append(err, setErr)
+				continue
 			}
+			if !ok {
+				err = multierror.Append(err, errors.New("failed to set boot device"))
+				continue
+			}
+			metadataLocal.SuccessfulProvider = elem.name
+			return ok, nil
 		}
 	}
 	return ok, multierror.Append(err, errors.New("failed to set boot device"))

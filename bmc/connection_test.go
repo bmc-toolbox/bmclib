@@ -56,8 +56,6 @@ func TestOpenConnectionFromInterfaces(t *testing.T) {
 			} else {
 				testImplementation := &connTester{MakeErrorOut: tc.makeErrorOut}
 				generic = append(generic, testImplementation)
-				ok := generic[0].(Opener)
-				t.Log(ok)
 			}
 			if tc.ctxTimeout == 0 {
 				tc.ctxTimeout = time.Second * 3

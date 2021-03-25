@@ -78,21 +78,22 @@ func CloseConnection(ctx context.Context, c []connectionProviders, metadata ...*
 	var connClosed bool
 Loop:
 	for _, elem := range c {
+		if elem.closer == nil {
+			continue
+		}
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			if elem.closer != nil {
-				metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
-				openErr := elem.closer.Close(ctx)
-				if openErr != nil {
-					err = multierror.Append(err, openErr)
-					continue
-				}
-				connClosed = true
-				metadataLocal.SuccessfulCloseConns = append(metadataLocal.SuccessfulCloseConns, elem.name)
+			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			openErr := elem.closer.Close(ctx)
+			if openErr != nil {
+				err = multierror.Append(err, openErr)
+				continue
 			}
+			connClosed = true
+			metadataLocal.SuccessfulCloseConns = append(metadataLocal.SuccessfulCloseConns, elem.name)
 		}
 	}
 	if connClosed {

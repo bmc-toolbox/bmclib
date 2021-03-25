@@ -47,25 +47,26 @@ func SetPowerState(ctx context.Context, state string, p []powerProviders, metada
 	}()
 Loop:
 	for _, elem := range p {
+		if elem.powerSetter == nil {
+			continue
+		}
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			if elem.powerSetter != nil {
-				metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
-				ok, setErr := elem.powerSetter.PowerSet(ctx, state)
-				if setErr != nil {
-					err = multierror.Append(err, setErr)
-					continue
-				}
-				if !ok {
-					err = multierror.Append(err, errors.New("failed to set power state"))
-					continue
-				}
-				metadataLocal.SuccessfulProvider = elem.name
-				return ok, nil
+			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			ok, setErr := elem.powerSetter.PowerSet(ctx, state)
+			if setErr != nil {
+				err = multierror.Append(err, setErr)
+				continue
 			}
+			if !ok {
+				err = multierror.Append(err, errors.New("failed to set power state"))
+				continue
+			}
+			metadataLocal.SuccessfulProvider = elem.name
+			return ok, nil
 		}
 	}
 	return ok, multierror.Append(err, errors.New("failed to set power state"))
@@ -103,21 +104,22 @@ func GetPowerState(ctx context.Context, p []powerProviders, metadata ...*Metadat
 	}()
 Loop:
 	for _, elem := range p {
+		if elem.powerStateGetter == nil {
+			continue
+		}
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			if elem.powerStateGetter != nil {
-				metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
-				state, stateErr := elem.powerStateGetter.PowerStateGet(ctx)
-				if stateErr != nil {
-					err = multierror.Append(err, stateErr)
-					continue
-				}
-				metadataLocal.SuccessfulProvider = elem.name
-				return state, nil
+			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			state, stateErr := elem.powerStateGetter.PowerStateGet(ctx)
+			if stateErr != nil {
+				err = multierror.Append(err, stateErr)
+				continue
 			}
+			metadataLocal.SuccessfulProvider = elem.name
+			return state, nil
 		}
 	}
 	return state, multierror.Append(err, errors.New("failed to get power state"))

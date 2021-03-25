@@ -48,25 +48,26 @@ func CreateUser(ctx context.Context, user, pass, role string, u []userProviders,
 	}()
 Loop:
 	for _, elem := range u {
+		if elem.userCreator == nil {
+			continue
+		}
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			if elem.userCreator != nil {
-				metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
-				ok, createErr := elem.userCreator.UserCreate(ctx, user, pass, role)
-				if createErr != nil {
-					err = multierror.Append(err, createErr)
-					continue
-				}
-				if !ok {
-					err = multierror.Append(err, errors.New("failed to create user"))
-					continue
-				}
-				metadataLocal.SuccessfulProvider = elem.name
-				return ok, nil
+			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			ok, createErr := elem.userCreator.UserCreate(ctx, user, pass, role)
+			if createErr != nil {
+				err = multierror.Append(err, createErr)
+				continue
 			}
+			if !ok {
+				err = multierror.Append(err, errors.New("failed to create user"))
+				continue
+			}
+			metadataLocal.SuccessfulProvider = elem.name
+			return ok, nil
 		}
 	}
 	return ok, multierror.Append(err, errors.New("failed to create user"))
@@ -104,25 +105,26 @@ func UpdateUser(ctx context.Context, user, pass, role string, u []userProviders,
 	}()
 Loop:
 	for _, elem := range u {
+		if elem.userUpdater == nil {
+			continue
+		}
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			if elem.userUpdater != nil {
-				metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
-				ok, UpdateErr := elem.userUpdater.UserUpdate(ctx, user, pass, role)
-				if UpdateErr != nil {
-					err = multierror.Append(err, UpdateErr)
-					continue
-				}
-				if !ok {
-					err = multierror.Append(err, errors.New("failed to update user"))
-					continue
-				}
-				metadataLocal.SuccessfulProvider = elem.name
-				return ok, nil
+			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			ok, UpdateErr := elem.userUpdater.UserUpdate(ctx, user, pass, role)
+			if UpdateErr != nil {
+				err = multierror.Append(err, UpdateErr)
+				continue
 			}
+			if !ok {
+				err = multierror.Append(err, errors.New("failed to update user"))
+				continue
+			}
+			metadataLocal.SuccessfulProvider = elem.name
+			return ok, nil
 		}
 	}
 	return ok, multierror.Append(err, errors.New("failed to update user"))
@@ -160,25 +162,26 @@ func DeleteUser(ctx context.Context, user string, u []userProviders, metadata ..
 	}()
 Loop:
 	for _, elem := range u {
+		if elem.userDeleter == nil {
+			continue
+		}
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			if elem.userDeleter != nil {
-				metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
-				ok, deleteErr := elem.userDeleter.UserDelete(ctx, user)
-				if deleteErr != nil {
-					err = multierror.Append(err, deleteErr)
-					continue
-				}
-				if !ok {
-					err = multierror.Append(err, errors.New("failed to delete user"))
-					continue
-				}
-				metadataLocal.SuccessfulProvider = elem.name
-				return ok, nil
+			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			ok, deleteErr := elem.userDeleter.UserDelete(ctx, user)
+			if deleteErr != nil {
+				err = multierror.Append(err, deleteErr)
+				continue
 			}
+			if !ok {
+				err = multierror.Append(err, errors.New("failed to delete user"))
+				continue
+			}
+			metadataLocal.SuccessfulProvider = elem.name
+			return ok, nil
 		}
 	}
 	return ok, multierror.Append(err, errors.New("failed to delete user"))
@@ -216,21 +219,22 @@ func ReadUsers(ctx context.Context, u []userProviders, metadata ...*Metadata) (u
 	}()
 Loop:
 	for _, elem := range u {
+		if elem.userReader == nil {
+			continue
+		}
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			if elem.userReader != nil {
-				metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
-				users, readErr := elem.userReader.UserRead(ctx)
-				if readErr != nil {
-					err = multierror.Append(err, readErr)
-					continue
-				}
-				metadataLocal.SuccessfulProvider = elem.name
-				return users, nil
+			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			users, readErr := elem.userReader.UserRead(ctx)
+			if readErr != nil {
+				err = multierror.Append(err, readErr)
+				continue
 			}
+			metadataLocal.SuccessfulProvider = elem.name
+			return users, nil
 		}
 	}
 	return users, multierror.Append(err, errors.New("failed to read users"))

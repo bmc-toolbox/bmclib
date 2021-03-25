@@ -32,25 +32,26 @@ func ResetBMC(ctx context.Context, resetType string, b []bmcProviders, metadata 
 	}()
 Loop:
 	for _, elem := range b {
+		if elem.bmcResetter == nil {
+			continue
+		}
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			if elem.bmcResetter != nil {
-				metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
-				ok, setErr := elem.bmcResetter.BmcReset(ctx, resetType)
-				if setErr != nil {
-					err = multierror.Append(err, setErr)
-					continue
-				}
-				if !ok {
-					err = multierror.Append(err, errors.New("failed to reset BMC"))
-					continue
-				}
-				metadataLocal.SuccessfulProvider = elem.name
-				return ok, nil
+			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			ok, setErr := elem.bmcResetter.BmcReset(ctx, resetType)
+			if setErr != nil {
+				err = multierror.Append(err, setErr)
+				continue
 			}
+			if !ok {
+				err = multierror.Append(err, errors.New("failed to reset BMC"))
+				continue
+			}
+			metadataLocal.SuccessfulProvider = elem.name
+			return ok, nil
 		}
 	}
 	return ok, multierror.Append(err, errors.New("failed to reset BMC"))
