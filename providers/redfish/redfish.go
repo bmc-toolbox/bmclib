@@ -22,7 +22,7 @@ const (
 )
 
 var (
-	// Features implemented by ipmitool
+	// Features implemented by gofish
 	Features = registrar.Features{
 		providers.FeaturePowerSet,
 		providers.FeaturePowerState,
@@ -59,6 +59,25 @@ func (c *Conn) Open(ctx context.Context) (err error) {
 func (c *Conn) Close(ctx context.Context) error {
 	c.conn.Logout()
 	return nil
+}
+
+func (c *Conn) Name() string {
+	return ProviderName
+}
+
+// Compatible tests whether a BMC is compatible with the gofish provider
+func (c *Conn) Compatible(ctx context.Context) bool {
+	err := c.Open(ctx)
+	if err != nil {
+		c.Log.V(0).Error(err, "error checking compatibility: open connection failed")
+		return false
+	}
+	defer c.Close(ctx)
+	_, err = c.PowerStateGet(ctx)
+	if err != nil {
+		c.Log.V(0).Error(err, "error checking compatibility: power state get failed")
+	}
+	return err == nil
 }
 
 // PowerStateGet gets the power state of a BMC machine
