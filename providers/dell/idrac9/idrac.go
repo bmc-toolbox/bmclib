@@ -67,6 +67,17 @@ func (c *Conn) Close(ctx context.Context) error {
 	return nil
 }
 
+// Compatible tests whether a BMC is compatible with the idrac9 provider
+func (c *Conn) Compatible(ctx context.Context) bool {
+	err := c.Open(ctx)
+	if err != nil {
+		c.Log.V(0).Error(err, "error checking compatibility opening connection")
+		return false
+	}
+	defer c.Close(ctx)
+	return true
+}
+
 func (c *Conn) UserCreate(ctx context.Context, user, pass, role string) (ok bool, err error) {
 	idrac := &IDrac9{ip: c.Host, username: c.User, password: c.Pass, log: c.Log}
 	idrac.xsrfToken = c.xsrfToken
