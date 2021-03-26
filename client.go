@@ -11,6 +11,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/providers/asrockrack"
 	"github.com/bmc-toolbox/bmclib/providers/goipmi"
 	"github.com/bmc-toolbox/bmclib/providers/ipmitool"
+	"github.com/bmc-toolbox/bmclib/providers/redfish"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 )
@@ -79,6 +80,10 @@ func (c *Client) registerProviders() {
 	// register goipmi provider
 	driverGoIpmi := &goipmi.Conn{Host: c.Auth.Host, Port: c.Auth.Port, User: c.Auth.User, Pass: c.Auth.Pass, Log: c.Logger}
 	c.Registry.Register(goipmi.ProviderName, goipmi.ProviderProtocol, goipmi.Features, nil, driverGoIpmi)
+
+	// register gofish provider
+	driverGoFish := &redfish.Conn{Host: c.Auth.Host, Port: c.Auth.Port, User: c.Auth.User, Pass: c.Auth.Pass, Log: c.Logger}
+	c.Registry.Register(redfish.ProviderName, redfish.ProviderProtocol, redfish.Features, nil, driverGoFish)
 	/*
 		// dummy used for testing
 		driverDummy := &dummy.Conn{FailOpen: true}
