@@ -466,6 +466,9 @@ func (i *IDrac9) Slot() (slot int, err error) {
 						return -1, err
 					}
 					v := strings.Split(property.Value, " ")
+					if len(v) < 2 {
+						return -1, fmt.Errorf("Looks like the BaseBoardChassisSlot is ill-formatted!")
+					}
 					slot, err = strconv.Atoi(v[1])
 					if err != nil {
 						return -1, err
