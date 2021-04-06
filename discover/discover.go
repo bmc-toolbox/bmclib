@@ -22,7 +22,6 @@ const (
 	ProbeM1000e        = "m1000e"
 	ProbeQuanta        = "quanta"
 	ProbeHpCl100       = "hpcl100"
-	ProbeASRockRack    = "asrockrack"
 )
 
 // ScanAndConnect will scan the bmc trying to learn the device type and return a working connection.
@@ -75,7 +74,6 @@ func ScanAndConnect(host string, username string, password string, options ...Op
 		ProbeM1000e,
 		ProbeQuanta,
 		ProbeHpCl100,
-		ProbeASRockRack,
 	}
 
 	if opts.Hint != "" {
