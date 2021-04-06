@@ -170,9 +170,9 @@ func (a *ASRockRack) FirmwareUpdateBMC(ctx context.Context, fileReader io.Reader
 	}
 
 	// progress check interval
-	progressT := time.NewTicker(2 * time.Second).C
+	progressT := time.NewTicker(500 * time.Millisecond).C
 	// timeout interval
-	timeoutT := time.NewTicker(30 * time.Minute).C
+	timeoutT := time.NewTicker(20 * time.Minute).C
 	maxErrors := 20
 	var errorsCount int
 
