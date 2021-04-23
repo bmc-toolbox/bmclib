@@ -112,11 +112,10 @@ func (i *Ipmi) PowerResetBmc(ctx context.Context, resetType string) (ok bool, er
 func (i *Ipmi) PowerOn(ctx context.Context) (status bool, err error) {
 	s, err := i.IsOn(ctx)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "error checking power state")
 	}
-
 	if s {
-		return false, fmt.Errorf("server is already on")
+		return true, nil
 	}
 
 	output, err := i.run(ctx, []string{"chassis", "power", "on"})
@@ -125,9 +124,9 @@ func (i *Ipmi) PowerOn(ctx context.Context) (status bool, err error) {
 	}
 
 	if strings.HasPrefix(output, "Chassis Power Control: Up/On") {
-		return true, err
+		return true, nil
 	}
-	return false, fmt.Errorf("%v: %v", err, output)
+	return false, fmt.Errorf("stderr/stdout: %v", output)
 }
 
 // PowerOnForce power on the machine via bmc even when the machine is already on (Thanks HP!)
