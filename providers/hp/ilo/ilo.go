@@ -523,6 +523,9 @@ func (i *Ilo) parseChassisInfo() (*hp.ChassisInfo, error) {
 			}
 			return nil, fmt.Errorf(e)
 		}
+		if chassisInfo.Links.ContainedBy.ID == "/redfish/v1/Chassis/EnclosureChassis" {
+			chassisInfo.ChassisType = "Blade"
+		}
 
 		// Matching the new interface to the old one, since the code still drops
 		//   off to the old interface in case the new interface is not available.

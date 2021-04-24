@@ -210,6 +210,11 @@ type ChassisInfo struct {
 			MessageId string `json:"MessageId"`
 		} `json:"@Message.ExtendedInfo"`
 	} `json:"error"`
+	Links struct {
+		ContainedBy struct {
+			ID string `json:"@odata.id"`
+		}
+	}
 }
 
 // Mem is the struct used to render the data from https://$ip/json/mem_info, it contains the ram data
