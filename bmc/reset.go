@@ -23,13 +23,8 @@ type bmcProviders struct {
 
 // ResetBMC tries all implementations for a success BMC reset
 // if a successfulProviderName is passed in, it will be updated to be the name of the provider that successfully executed
-func ResetBMC(ctx context.Context, resetType string, b []bmcProviders, metadata ...*Metadata) (ok bool, err error) {
+func ResetBMC(ctx context.Context, resetType string, b []bmcProviders) (ok bool, metadata Metadata, err error) {
 	var metadataLocal Metadata
-	defer func() {
-		if len(metadata) > 0 && metadata[0] != nil {
-			*metadata[0] = metadataLocal
-		}
-	}()
 Loop:
 	for _, elem := range b {
 		if elem.bmcResetter == nil {
@@ -51,15 +46,15 @@ Loop:
 				continue
 			}
 			metadataLocal.SuccessfulProvider = elem.name
-			return ok, nil
+			return ok, metadataLocal, nil
 		}
 	}
-	return ok, multierror.Append(err, errors.New("failed to reset BMC"))
+	return ok, metadataLocal, multierror.Append(err, errors.New("failed to reset BMC"))
 }
 
 // ResetBMCFromInterfaces pass through to library function
 // if a successfulProviderName is passed in, it will be updated to be the name of the provider that successfully executed
-func ResetBMCFromInterfaces(ctx context.Context, resetType string, generic []interface{}, metadata ...*Metadata) (ok bool, err error) {
+func ResetBMCFromInterfaces(ctx context.Context, resetType string, generic []interface{}) (ok bool, metadata Metadata, err error) {
 	bmcSetters := make([]bmcProviders, 0)
 	for _, elem := range generic {
 		temp := bmcProviders{name: getProviderName(elem)}
@@ -73,7 +68,7 @@ func ResetBMCFromInterfaces(ctx context.Context, resetType string, generic []int
 		}
 	}
 	if len(bmcSetters) == 0 {
-		return ok, multierror.Append(err, errors.New("no BMCResetter implementations found"))
+		return ok, metadata, multierror.Append(err, errors.New("no BMCResetter implementations found"))
 	}
-	return ResetBMC(ctx, resetType, bmcSetters, metadata...)
+	return ResetBMC(ctx, resetType, bmcSetters)
 }

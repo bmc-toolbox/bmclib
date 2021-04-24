@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/bmc"
 	"github.com/bmc-toolbox/bmclib/logging"
 )
 
@@ -21,39 +20,36 @@ func TestBMC(t *testing.T) {
 	log := logging.DefaultLogger()
 	cl := NewClient(host, port, user, pass, WithLogger(log))
 	cl.Registry.Drivers = cl.Registry.FilterForCompatible(ctx)
-	var metadata bmc.Metadata
 	var err error
-	cl.Registry.Drivers, err = cl.Open(ctx, &metadata)
+	cl.Registry.Drivers, err = cl.Open(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer cl.Close(ctx)
-	t.Logf("%+v", metadata)
+	t.Logf("metadata: %+v", cl.GetMetadata())
 
 	cl.Registry.Drivers = cl.Registry.PreferDriver("dummy")
-	state, err := cl.GetPowerState(ctx, &metadata)
+	state, err := cl.GetPowerState(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log(state)
-	t.Logf("%+v", metadata)
+	t.Logf("metadata %+v", cl.GetMetadata())
 
 	cl.Registry.Drivers = cl.Registry.PreferDriver("ipmitool")
-	// if you pass in a the metadata as a pointer to any function
-	// it will be updated with details about the call. name of the provider
-	// that successfully execute and providers attempted.
-	state, err = cl.GetPowerState(ctx, &metadata)
+	state, err = cl.GetPowerState(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log(state)
-	t.Logf("%+v", metadata)
+	t.Logf("metadata: %+v", cl.GetMetadata())
 
 	users, err := cl.ReadUsers(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log(users)
+	t.Logf("metadata: %+v", cl.GetMetadata())
 
 	t.Fatal()
 }

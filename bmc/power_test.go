@@ -60,7 +60,7 @@ func TestSetPowerState(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, err := SetPowerState(ctx, tc.state, []powerProviders{{"", nil, &testImplementation}})
+			result, _, err := SetPowerState(ctx, tc.state, []powerProviders{{"", nil, &testImplementation}})
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
@@ -100,14 +100,7 @@ func TestSetPowerStateFromInterfaces(t *testing.T) {
 				generic = []interface{}{&testImplementation}
 			}
 			expectedResult := tc.want
-			var result bool
-			var err error
-			var metadata Metadata
-			if tc.withMetadata {
-				result, err = SetPowerStateFromInterfaces(context.Background(), tc.state, generic, &metadata)
-			} else {
-				result, err = SetPowerStateFromInterfaces(context.Background(), tc.state, generic)
-			}
+			result, metadata, err := SetPowerStateFromInterfaces(context.Background(), tc.state, generic)
 			if err != nil {
 				if tc.err != nil {
 					diff := cmp.Diff(err.Error(), tc.err.Error())
@@ -153,7 +146,7 @@ func TestGetPowerState(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, err := GetPowerState(ctx, []powerProviders{{"", &testImplementation, nil}})
+			result, _, err := GetPowerState(ctx, []powerProviders{{"", &testImplementation, nil}})
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
@@ -193,14 +186,7 @@ func TestGetPowerStateFromInterfaces(t *testing.T) {
 				generic = []interface{}{&testImplementation}
 			}
 			expectedResult := tc.want
-			var result string
-			var err error
-			var metadata Metadata
-			if tc.withMetadata {
-				result, err = GetPowerStateFromInterfaces(context.Background(), generic, &metadata)
-			} else {
-				result, err = GetPowerStateFromInterfaces(context.Background(), generic)
-			}
+			result, metadata, err := GetPowerStateFromInterfaces(context.Background(), generic)
 			if err != nil {
 				if tc.err != nil {
 					diff := cmp.Diff(err.Error(), tc.err.Error())

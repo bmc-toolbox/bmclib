@@ -53,7 +53,7 @@ func TestSetBootDevice(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, err := SetBootDevice(ctx, tc.bootDevice, false, false, []bootDeviceProviders{{"", &testImplementation}})
+			result, _, err := SetBootDevice(ctx, tc.bootDevice, false, false, []bootDeviceProviders{{"", &testImplementation}})
 			if err != nil {
 				if tc.err != nil {
 					diff := cmp.Diff(err.Error(), tc.err.Error())
@@ -99,14 +99,7 @@ func TestSetBootDeviceFromInterfaces(t *testing.T) {
 				generic = []interface{}{&testImplementation}
 			}
 			expectedResult := tc.want
-			var result bool
-			var err error
-			var metadata Metadata
-			if tc.withName {
-				result, err = SetBootDeviceFromInterfaces(context.Background(), tc.bootDevice, false, false, generic, &metadata)
-			} else {
-				result, err = SetBootDeviceFromInterfaces(context.Background(), tc.bootDevice, false, false, generic)
-			}
+			result, metadata, err := SetBootDeviceFromInterfaces(context.Background(), tc.bootDevice, false, false, generic)
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {

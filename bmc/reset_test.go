@@ -53,7 +53,7 @@ func TestResetBMC(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, err := ResetBMC(ctx, tc.resetType, []bmcProviders{{"", &testImplementation}})
+			result, _, err := ResetBMC(ctx, tc.resetType, []bmcProviders{{"", &testImplementation}})
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
@@ -93,14 +93,7 @@ func TestResetBMCFromInterfaces(t *testing.T) {
 				generic = []interface{}{&testImplementation}
 			}
 			expectedResult := tc.want
-			var result bool
-			var err error
-			var metadata Metadata
-			if tc.withName {
-				result, err = ResetBMCFromInterfaces(context.Background(), tc.resetType, generic, &metadata)
-			} else {
-				result, err = ResetBMCFromInterfaces(context.Background(), tc.resetType, generic)
-			}
+			result, metadata, err := ResetBMCFromInterfaces(context.Background(), tc.resetType, generic)
 			if err != nil {
 				if tc.err != nil {
 					diff := cmp.Diff(err.Error(), tc.err.Error())
