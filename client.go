@@ -5,6 +5,7 @@ package bmclib
 import (
 	"context"
 	"io"
+	"sync"
 
 	"github.com/bmc-toolbox/bmclib/bmc"
 	"github.com/bmc-toolbox/bmclib/logging"
@@ -22,6 +23,7 @@ type Client struct {
 	Logger   logr.Logger
 	Registry *registrar.Registry
 	metadata *bmc.Metadata
+	mdLock   *sync.Mutex
 }
 
 // Auth details for connecting to a BMC
@@ -65,7 +67,7 @@ func NewClient(host, port, user, pass string, opts ...Option) *Client {
 	if len(defaultClient.Registry.Drivers) == 0 {
 		defaultClient.registerProviders()
 	}
-
+	defaultClient.mdLock = &sync.Mutex{}
 	return defaultClient
 }
 
@@ -97,6 +99,19 @@ func (c *Client) GetMetadata() bmc.Metadata {
 	return *c.metadata
 }
 
+// setMetadata wraps setting metadata with a mutex for cases where users are
+// making calls to multiple *Client.X functions/methods across goroutines
+func (c *Client) setMetadata(metadata bmc.Metadata) {
+	// a mutex is created with the NewClient func, in the case
+	// where a user doesn't call NewClient we handle by checking if
+	// the mutex is nil
+	if c.mdLock != nil {
+		c.mdLock.Lock()
+		defer c.mdLock.Unlock()
+	}
+	c.metadata = &metadata
+}
+
 // Open calls the OpenConnectionFromInterfaces library function
 // creates and returns a new Drivers with only implementations that were successfully opened
 func (c *Client) Open(ctx context.Context) (reg registrar.Drivers, err error) {
@@ -112,61 +127,70 @@ func (c *Client) Open(ctx context.Context) (reg registrar.Drivers, err error) {
 			}
 		}
 	}
-	c.metadata = &metadata
+	c.setMetadata(metadata)
 	return reg, nil
 }
 
 // Close pass through to library function
 func (c *Client) Close(ctx context.Context) (err error) {
-	*c.metadata, err = bmc.CloseConnectionFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+	metadata, err := bmc.CloseConnectionFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+	c.setMetadata(metadata)
 	return err
 }
 
 // GetPowerState pass through to library function
 func (c *Client) GetPowerState(ctx context.Context) (state string, err error) {
-	state, *c.metadata, err = bmc.GetPowerStateFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+	state, metadata, err := bmc.GetPowerStateFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+	c.setMetadata(metadata)
 	return state, err
 }
 
 // SetPowerState pass through to library function
 func (c *Client) SetPowerState(ctx context.Context, state string) (ok bool, err error) {
-	ok, *c.metadata, err = bmc.SetPowerStateFromInterfaces(ctx, state, c.Registry.GetDriverInterfaces())
+	ok, metadata, err := bmc.SetPowerStateFromInterfaces(ctx, state, c.Registry.GetDriverInterfaces())
+	c.setMetadata(metadata)
 	return ok, err
 }
 
 // CreateUser pass through to library function
 func (c *Client) CreateUser(ctx context.Context, user, pass, role string) (ok bool, err error) {
-	ok, *c.metadata, err = bmc.CreateUserFromInterfaces(ctx, user, pass, role, c.Registry.GetDriverInterfaces())
+	ok, metadata, err := bmc.CreateUserFromInterfaces(ctx, user, pass, role, c.Registry.GetDriverInterfaces())
+	c.setMetadata(metadata)
 	return ok, err
 }
 
 // UpdateUser pass through to library function
 func (c *Client) UpdateUser(ctx context.Context, user, pass, role string) (ok bool, err error) {
-	ok, *c.metadata, err = bmc.UpdateUserFromInterfaces(ctx, user, pass, role, c.Registry.GetDriverInterfaces())
+	ok, metadata, err := bmc.UpdateUserFromInterfaces(ctx, user, pass, role, c.Registry.GetDriverInterfaces())
+	c.setMetadata(metadata)
 	return ok, err
 }
 
 // DeleteUser pass through to library function
 func (c *Client) DeleteUser(ctx context.Context, user string) (ok bool, err error) {
-	ok, *c.metadata, err = bmc.DeleteUserFromInterfaces(ctx, user, c.Registry.GetDriverInterfaces())
+	ok, metadata, err := bmc.DeleteUserFromInterfaces(ctx, user, c.Registry.GetDriverInterfaces())
+	c.setMetadata(metadata)
 	return ok, err
 }
 
 // ReadUsers pass through to library function
 func (c *Client) ReadUsers(ctx context.Context) (users []map[string]string, err error) {
-	users, *c.metadata, err = bmc.ReadUsersFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+	users, metadata, err := bmc.ReadUsersFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+	c.setMetadata(metadata)
 	return users, err
 }
 
 // SetBootDevice pass through to library function
 func (c *Client) SetBootDevice(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
-	ok, *c.metadata, err = bmc.SetBootDeviceFromInterfaces(ctx, bootDevice, setPersistent, efiBoot, c.Registry.GetDriverInterfaces())
+	ok, metadata, err := bmc.SetBootDeviceFromInterfaces(ctx, bootDevice, setPersistent, efiBoot, c.Registry.GetDriverInterfaces())
+	c.setMetadata(metadata)
 	return ok, err
 }
 
 // ResetBMC pass through to library function
 func (c *Client) ResetBMC(ctx context.Context, resetType string) (ok bool, err error) {
-	ok, *c.metadata, err = bmc.ResetBMCFromInterfaces(ctx, resetType, c.Registry.GetDriverInterfaces())
+	ok, metadata, err := bmc.ResetBMCFromInterfaces(ctx, resetType, c.Registry.GetDriverInterfaces())
+	c.setMetadata(metadata)
 	return ok, err
 }
 
