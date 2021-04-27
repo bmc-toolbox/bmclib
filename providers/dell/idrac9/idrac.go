@@ -1,9 +1,11 @@
 package idrac9
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 
@@ -69,13 +71,38 @@ func (c *Conn) Close(ctx context.Context) error {
 
 // Compatible tests whether a BMC is compatible with the idrac9 provider
 func (c *Conn) Compatible(ctx context.Context) bool {
-	err := c.Open(ctx)
+	url := fmt.Sprintf("https://%s/sysmgmt/2015/bmc/info", c.Host)
+	log := c.Log.WithValues("url", url)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		c.Log.V(0).Error(err, "error checking compatibility opening connection")
+		log.V(0).Error(err, "error creating http request")
 		return false
 	}
-	defer c.Close(ctx)
-	return true
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.V(0).Error(err, "error making http request")
+		return false
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		log.V(0).Error(errors.New("error checking compatibility"), "status code not 200", "status_code", resp.StatusCode)
+		return false
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.V(0).Error(err, "error reading response body")
+		return false
+	}
+	models := []string{"PowerEdge M640", "PowerEdge R640", "PowerEdge R6415", "PowerEdge R6515", "PowerEdge R740xd"}
+	for _, subStr := range models {
+		if bytes.Contains(body, []byte(subStr)) {
+			return true
+		}
+	}
+	log.V(0).Error(errors.New("error checking compatibility"), "url did not contain expected string", "expected_strings", models)
+	return false
 }
 
 func (c *Conn) UserCreate(ctx context.Context, user, pass, role string) (ok bool, err error) {
