@@ -93,19 +93,14 @@ func (c *Conn) PowerStateGet(ctx context.Context) (state string, err error) {
 func (c *Conn) PowerSet(ctx context.Context, state string) (ok bool, err error) {
 	switch strings.ToLower(state) {
 	case "on":
-		on, _ := c.con.IsOn(ctx)
-		if on {
-			ok = true
-		} else {
+		on, errOn := c.con.IsOn(ctx)
+		if errOn != nil || !on {
 			ok, err = c.con.PowerOn(ctx)
+		} else {
+			ok = true
 		}
 	case "off":
-		on, _ := c.con.IsOn(ctx)
-		if !on {
-			ok = true
-		} else {
-			ok, err = c.con.PowerOff(ctx)
-		}
+		ok, err = c.con.PowerOff(ctx)
 	case "soft":
 		ok, err = c.con.PowerSoft(ctx)
 	case "reset":
