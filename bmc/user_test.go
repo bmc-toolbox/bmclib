@@ -92,7 +92,7 @@ func TestUserCreate(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, err := CreateUser(ctx, user, pass, role, []userProviders{{"", &testImplementation, nil, nil, nil}})
+			result, _, err := CreateUser(ctx, user, pass, role, []userProviders{{"", &testImplementation, nil, nil, nil}})
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
@@ -134,14 +134,7 @@ func TestCreateUserFromInterfaces(t *testing.T) {
 			user := "ADMIN"
 			pass := "ADMIN"
 			role := "admin"
-			var result bool
-			var err error
-			var metadata Metadata
-			if tc.withMetadata {
-				result, err = CreateUserFromInterfaces(context.Background(), user, pass, role, generic, &metadata)
-			} else {
-				result, err = CreateUserFromInterfaces(context.Background(), user, pass, role, generic)
-			}
+			result, metadata, err := CreateUserFromInterfaces(context.Background(), user, pass, role, generic)
 			if err != nil {
 				if tc.err != nil {
 					diff := cmp.Diff(err.Error(), tc.err.Error())
@@ -159,6 +152,7 @@ func TestCreateUserFromInterfaces(t *testing.T) {
 			}
 			if tc.withMetadata {
 				if diff := cmp.Diff(metadata.SuccessfulProvider, "test provider"); diff != "" {
+					t.Logf("%+v", metadata)
 					t.Fatal(diff)
 				}
 			}
@@ -192,7 +186,7 @@ func TestUpdateUser(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, err := UpdateUser(ctx, user, pass, role, []userProviders{{"", nil, &testImplementation, nil, nil}})
+			result, _, err := UpdateUser(ctx, user, pass, role, []userProviders{{"", nil, &testImplementation, nil, nil}})
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
@@ -234,14 +228,7 @@ func TestUpdateUserFromInterfaces(t *testing.T) {
 			user := "ADMIN"
 			pass := "ADMIN"
 			role := "admin"
-			var result bool
-			var err error
-			var metadata Metadata
-			if tc.withMetadata {
-				result, err = UpdateUserFromInterfaces(context.Background(), user, pass, role, generic, &metadata)
-			} else {
-				result, err = UpdateUserFromInterfaces(context.Background(), user, pass, role, generic)
-			}
+			result, metadata, err := UpdateUserFromInterfaces(context.Background(), user, pass, role, generic)
 			if err != nil {
 				if tc.err != nil {
 					diff := cmp.Diff(err.Error(), tc.err.Error())
@@ -290,7 +277,7 @@ func TestDeleteUser(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, err := DeleteUser(ctx, user, []userProviders{{"", nil, nil, &testImplementation, nil}})
+			result, _, err := DeleteUser(ctx, user, []userProviders{{"", nil, nil, &testImplementation, nil}})
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
@@ -330,14 +317,7 @@ func TestDeleteUserFromInterfaces(t *testing.T) {
 			}
 			expectedResult := tc.want
 			user := "ADMIN"
-			var result bool
-			var err error
-			var metadata Metadata
-			if tc.withMetadata {
-				result, err = DeleteUserFromInterfaces(context.Background(), user, generic, &metadata)
-			} else {
-				result, err = DeleteUserFromInterfaces(context.Background(), user, generic)
-			}
+			result, metadata, err := DeleteUserFromInterfaces(context.Background(), user, generic)
 			if err != nil {
 				if tc.err != nil {
 					diff := cmp.Diff(err.Error(), tc.err.Error())
@@ -392,7 +372,7 @@ func TestReadUsers(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, err := ReadUsers(ctx, []userProviders{{"", nil, nil, nil, &testImplementation}})
+			result, _, err := ReadUsers(ctx, []userProviders{{"", nil, nil, nil, &testImplementation}})
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
@@ -440,14 +420,7 @@ func TestReadUsersFromInterfaces(t *testing.T) {
 				generic = []interface{}{&testImplementation}
 			}
 			expectedResult := users
-			var result []map[string]string
-			var err error
-			var metadata Metadata
-			if tc.withMetadata {
-				result, err = ReadUsersFromInterfaces(context.Background(), generic, &metadata)
-			} else {
-				result, err = ReadUsersFromInterfaces(context.Background(), generic)
-			}
+			result, metadata, err := ReadUsersFromInterfaces(context.Background(), generic)
 			if err != nil {
 				if tc.err != nil {
 					diff := cmp.Diff(err.Error(), tc.err.Error())

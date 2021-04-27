@@ -38,13 +38,8 @@ type powerProviders struct {
 
 // SetPowerState sets the power state for a BMC, trying all interface implementations passed in
 // if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
-func SetPowerState(ctx context.Context, state string, p []powerProviders, metadata ...*Metadata) (ok bool, err error) {
+func SetPowerState(ctx context.Context, state string, p []powerProviders) (ok bool, metadata Metadata, err error) {
 	var metadataLocal Metadata
-	defer func() {
-		if len(metadata) > 0 && metadata[0] != nil {
-			*metadata[0] = metadataLocal
-		}
-	}()
 Loop:
 	for _, elem := range p {
 		if elem.powerSetter == nil {
@@ -66,15 +61,15 @@ Loop:
 				continue
 			}
 			metadataLocal.SuccessfulProvider = elem.name
-			return ok, nil
+			return ok, metadataLocal, nil
 		}
 	}
-	return ok, multierror.Append(err, errors.New("failed to set power state"))
+	return ok, metadataLocal, multierror.Append(err, errors.New("failed to set power state"))
 }
 
 // SetPowerStateFromInterfaces pass through to library function
 // if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
-func SetPowerStateFromInterfaces(ctx context.Context, state string, generic []interface{}, metadata ...*Metadata) (ok bool, err error) {
+func SetPowerStateFromInterfaces(ctx context.Context, state string, generic []interface{}) (ok bool, metadata Metadata, err error) {
 	powerSetter := make([]powerProviders, 0)
 	for _, elem := range generic {
 		temp := powerProviders{name: getProviderName(elem)}
@@ -88,20 +83,14 @@ func SetPowerStateFromInterfaces(ctx context.Context, state string, generic []in
 		}
 	}
 	if len(powerSetter) == 0 {
-		return ok, multierror.Append(err, errors.New("no PowerSetter implementations found"))
+		return ok, metadata, multierror.Append(err, errors.New("no PowerSetter implementations found"))
 	}
-	return SetPowerState(ctx, state, powerSetter, metadata...)
+	return SetPowerState(ctx, state, powerSetter)
 }
 
 // GetPowerState sets the power state for a BMC, trying all interface implementations passed in
 // if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
-func GetPowerState(ctx context.Context, p []powerProviders, metadata ...*Metadata) (state string, err error) {
-	var metadataLocal Metadata
-	defer func() {
-		if len(metadata) > 0 && metadata[0] != nil {
-			*metadata[0] = metadataLocal
-		}
-	}()
+func GetPowerState(ctx context.Context, p []powerProviders) (state string, metadata Metadata, err error) {
 Loop:
 	for _, elem := range p {
 		if elem.powerStateGetter == nil {
@@ -112,22 +101,22 @@ Loop:
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			metadata.ProvidersAttempted = append(metadata.ProvidersAttempted, elem.name)
 			state, stateErr := elem.powerStateGetter.PowerStateGet(ctx)
 			if stateErr != nil {
 				err = multierror.Append(err, stateErr)
 				continue
 			}
-			metadataLocal.SuccessfulProvider = elem.name
-			return state, nil
+			metadata.SuccessfulProvider = elem.name
+			return state, metadata, nil
 		}
 	}
-	return state, multierror.Append(err, errors.New("failed to get power state"))
+	return state, metadata, multierror.Append(err, errors.New("failed to get power state"))
 }
 
 // GetPowerStateFromInterfaces pass through to library function
 // if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
-func GetPowerStateFromInterfaces(ctx context.Context, generic []interface{}, metadata ...*Metadata) (state string, err error) {
+func GetPowerStateFromInterfaces(ctx context.Context, generic []interface{}) (state string, metadata Metadata, err error) {
 	powerStateGetter := make([]powerProviders, 0)
 	for _, elem := range generic {
 		temp := powerProviders{name: getProviderName(elem)}
@@ -141,7 +130,7 @@ func GetPowerStateFromInterfaces(ctx context.Context, generic []interface{}, met
 		}
 	}
 	if len(powerStateGetter) == 0 {
-		return state, multierror.Append(err, errors.New("no PowerStateGetter implementations found"))
+		return state, metadata, multierror.Append(err, errors.New("no PowerStateGetter implementations found"))
 	}
-	return GetPowerState(ctx, powerStateGetter, metadata...)
+	return GetPowerState(ctx, powerStateGetter)
 }

@@ -62,14 +62,7 @@ func TestOpenConnectionFromInterfaces(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			var err error
-			var metadata Metadata
-			var opened []interface{}
-			if tc.withMetadata {
-				opened, err = OpenConnectionFromInterfaces(ctx, generic, &metadata)
-			} else {
-				opened, err = OpenConnectionFromInterfaces(ctx, generic)
-			}
+			opened, metadata, err := OpenConnectionFromInterfaces(ctx, generic)
 			if err != nil {
 				if tc.err != nil {
 					if diff := cmp.Diff(err.Error(), tc.err.Error()); diff != "" {
@@ -112,7 +105,7 @@ func TestCloseConnection(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			err := CloseConnection(ctx, []connectionProviders{{"", &testImplementation}})
+			_, err := CloseConnection(ctx, []connectionProviders{{"", &testImplementation}})
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
@@ -144,13 +137,8 @@ func TestCloseConnectionFromInterfaces(t *testing.T) {
 				testImplementation := connTester{}
 				generic = []interface{}{&testImplementation}
 			}
-			var err error
-			var metadata Metadata
-			if tc.withMetadata {
-				err = CloseConnectionFromInterfaces(context.Background(), generic, &metadata)
-			} else {
-				err = CloseConnectionFromInterfaces(context.Background(), generic)
-			}
+
+			metadata, err := CloseConnectionFromInterfaces(context.Background(), generic)
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
