@@ -113,12 +113,15 @@ func (c *Client) setMetadata(metadata bmc.Metadata) {
 }
 
 // Open calls the OpenConnectionFromInterfaces library function
-// creates and returns a new Drivers with only implementations that were successfully opened
-func (c *Client) Open(ctx context.Context) (reg registrar.Drivers, err error) {
+// Any providers/drivers that do not successfully connect are removed
+// from the client.Registry.Drivers. If client.Registry.Drivers ends up
+// being empty then we error.
+func (c *Client) Open(ctx context.Context) error {
 	ifs, metadata, err := bmc.OpenConnectionFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
 	if err != nil {
-		return nil, err
+		return err
 	}
+	var reg registrar.Drivers
 	for _, elem := range c.Registry.Drivers {
 		for _, em := range ifs {
 			if em == elem.DriverInterface {
@@ -127,8 +130,9 @@ func (c *Client) Open(ctx context.Context) (reg registrar.Drivers, err error) {
 			}
 		}
 	}
+	c.Registry.Drivers = reg
 	c.setMetadata(metadata)
-	return reg, nil
+	return nil
 }
 
 // Close pass through to library function
