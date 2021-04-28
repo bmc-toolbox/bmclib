@@ -221,3 +221,13 @@ func (c *Client) GetBIOSVersion(ctx context.Context) (version string, err error)
 func (c *Client) UpdateBIOSFirmware(ctx context.Context, fileReader io.Reader, fileSize int64) (err error) {
 	return bmc.UpdateBIOSFirmwareFromInterfaces(ctx, fileReader, fileSize, c.Registry.GetDriverInterfaces())
 }
+
+// InsertVirtualMedia pass through library function
+func (c *Client) InsertVirtualMedia(ctx context.Context, options *redfish.VirtualMediaOptions) (err error) {
+	return bmc.VirtualMediaInserterFromInterfaces(ctx, options, c.Registry.GetDriverInterfaces())
+}
+
+// EjectVirtualMedia pass through library function
+func (c *Client) EjectVirtualMedia(ctx context.Context) (err error) {
+	return bmc.VirtualMediaEjecterFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+}
