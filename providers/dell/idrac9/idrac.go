@@ -237,20 +237,21 @@ func (c *Conn) UserRead(ctx context.Context) (users []map[string]string, err err
 		return nil, errors.Wrap(err, "unable to query existing users")
 	}
 	for id, usr := range existingUsers {
-		if usr.UserName != "" {
-			var temp map[string]string
-			userJson, err := json.Marshal(usr)
-			if err != nil {
-				return nil, errors.Wrap(err, "error reading users")
-			}
-			err = json.Unmarshal(userJson, &temp)
-			if err != nil {
-				return nil, errors.Wrap(err, "error reading users")
-			}
-
-			temp["ID"] = strconv.Itoa(id)
-			users = append(users, temp)
+		if usr.UserName == "" {
+			continue
 		}
+		var temp map[string]string
+		userJson, err := json.Marshal(usr)
+		if err != nil {
+			return nil, errors.Wrap(err, "error reading users")
+		}
+		err = json.Unmarshal(userJson, &temp)
+		if err != nil {
+			return nil, errors.Wrap(err, "error reading users")
+		}
+
+		temp["ID"] = strconv.Itoa(id)
+		users = append(users, temp)
 	}
 	return users, nil
 }
