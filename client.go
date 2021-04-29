@@ -8,7 +8,6 @@ import (
 	"sync"
 
 	"github.com/bmc-toolbox/bmclib/bmc"
-	"github.com/bmc-toolbox/bmclib/logging"
 	"github.com/bmc-toolbox/bmclib/providers/asrockrack"
 	"github.com/bmc-toolbox/bmclib/providers/dell/idrac9"
 	"github.com/bmc-toolbox/bmclib/providers/goipmi"
@@ -51,7 +50,7 @@ func WithRegistry(registry *registrar.Registry) Option {
 // NewClient returns a new Client struct
 func NewClient(host, port, user, pass string, opts ...Option) *Client {
 	var defaultClient = &Client{
-		Logger:   logging.DefaultLogger(),
+		Logger:   logr.Discard(),
 		Registry: registrar.NewRegistry(),
 	}
 
