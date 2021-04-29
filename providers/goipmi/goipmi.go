@@ -42,7 +42,12 @@ func (c *Conn) Name() string {
 }
 
 func (c *Conn) Open(ctx context.Context) error {
-	machine, err := bmc.Dial(ctx, c.Host)
+	// default port is 623
+	host := c.Host + ":623"
+	if c.Port != "" {
+		host = c.Host + ":" + c.Port
+	}
+	machine, err := bmc.Dial(ctx, host)
 	if err != nil {
 		return err
 	}
