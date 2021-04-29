@@ -43,6 +43,10 @@ var (
 	}
 )
 
+func (c *Conn) Name() string {
+	return ProviderName
+}
+
 func (c *Conn) Open(ctx context.Context) error {
 	idrac := &IDrac9{ip: c.Host, username: c.User, password: c.Pass, log: c.Log}
 	err := idrac.httpLogin()
