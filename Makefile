@@ -3,6 +3,7 @@ help:
 
 .PHONY: test
 test: ## Run unit tests
+	go mod tidy
 	go test -gcflags=-l -v -covermode=count ./...
 
 .PHONY: cover
