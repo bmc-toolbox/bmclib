@@ -523,13 +523,26 @@ func (i *Ilo) parseChassisInfo() (*hp.ChassisInfo, error) {
 			}
 			return nil, fmt.Errorf(e)
 		}
-		if chassisInfo.Links.ContainedBy.ID == "/redfish/v1/Chassis/EnclosureChassis" {
+
+		if chassisInfo.Links.ContainedBy.ID == "/"+hp.ChassisInfoChassisURL {
 			chassisInfo.ChassisType = "Blade"
+			payload, err = i.get(hp.ChassisInfoChassisURL, false)
+			if err != nil {
+				return nil, err
+			}
+			chassisExtendedInfo := &hp.ChassisInfo{}
+			err = json.Unmarshal(payload, chassisExtendedInfo)
+			if err != nil {
+				return nil, err
+			}
+
+			chassisInfo.ChassisSn = chassisExtendedInfo.SerialNumber
+		} else {
+			chassisInfo.ChassisSn = chassisInfo.SerialNumber
 		}
 
 		// Matching the new interface to the old one, since the code still drops
 		//   off to the old interface in case the new interface is not available.
-		chassisInfo.ChassisSn = chassisInfo.SerialNumber
 		chassisInfo.NodeNumber = chassisInfo.Oem.Hpe.BayNumber
 
 		return chassisInfo, nil
