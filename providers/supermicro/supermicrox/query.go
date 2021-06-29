@@ -97,7 +97,7 @@ func (s *SupermicroX) Screenshot() (response []byte, extension string, err error
 	queryString, _ := query.Values(urlRedirect)
 	getEndpoint += queryString.Encode()
 
-	response, err = s.get(getEndpoint)
+	response, err = s.get(getEndpoint, false)
 	if err != nil {
 		return []byte{}, extension, err
 	}
