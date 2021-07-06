@@ -3,6 +3,7 @@ package supermicrox
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
@@ -41,6 +42,17 @@ type SupermicroX struct {
 	log        logr.Logger
 }
 
+type ChassisInfo struct {
+	SerialNumber string `json:"SerialNumber"`
+	Error        struct {
+		Code            string `json:"code"`
+		Message         string `json:"message"`
+		ExtendedMessage []*struct {
+			MessageId string `json:"MessageId"`
+		} `json:"@Message.ExtendedInfo"`
+	} `json:"error"`
+}
+
 // New returns a new SupermicroX instance ready to be used
 func New(ctx context.Context, ip string, username string, password string, log logr.Logger) (sm *SupermicroX, err error) {
 	return &SupermicroX{
@@ -61,17 +73,21 @@ func (s *SupermicroX) CheckCredentials() (err error) {
 }
 
 // get calls a given json endpoint of the ilo and returns the data
-func (s *SupermicroX) get(endpoint string) (payload []byte, err error) {
+func (s *SupermicroX) get(endpoint string, authentication bool) (payload []byte, err error) {
+	err = s.httpLogin()
+	if err != nil {
+		return nil, err
+	}
 
 	bmcURL := fmt.Sprintf("https://%s", s.ip)
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s", bmcURL, endpoint), nil)
 	if err != nil {
-		return payload, err
+		return nil, err
 	}
 
 	u, err := url.Parse(bmcURL)
 	if err != nil {
-		return payload, err
+		return nil, err
 	}
 
 	for _, cookie := range s.httpClient.Jar.Cookies(u) {
@@ -80,12 +96,16 @@ func (s *SupermicroX) get(endpoint string) (payload []byte, err error) {
 		}
 	}
 
+	if authentication {
+		req.SetBasicAuth(s.username, s.password)
+	}
+
 	reqDump, _ := httputil.DumpRequestOut(req, true)
 	s.log.V(2).Info("", "request", fmt.Sprintf("https://%s/%s", bmcURL, endpoint), "requestDump", string(reqDump))
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
-		return payload, err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
@@ -94,14 +114,14 @@ func (s *SupermicroX) get(endpoint string) (payload []byte, err error) {
 
 	payload, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return payload, err
+		return nil, err
 	}
 
 	if resp.StatusCode == 404 {
-		return payload, errors.ErrPageNotFound
+		return nil, errors.ErrPageNotFound
 	}
 
-	return payload, err
+	return payload, nil
 }
 
 // posts a urlencoded form to the given endpoint
@@ -229,16 +249,26 @@ func (s *SupermicroX) Serial() (serial string, err error) {
 
 // ChassisSerial returns the serial number of the chassis where the blade is attached
 func (s *SupermicroX) ChassisSerial() (serial string, err error) {
-	ipmi, err := s.query("FRU_INFO.XML=(0,0)")
+	chassisInfo := &ChassisInfo{}
+	payload, err := s.get("redfish/v1/Chassis/1", true)
 	if err != nil {
-		return serial, err
+		return "", err
 	}
 
-	if ipmi.FruInfo == nil || ipmi.FruInfo.Chassis == nil {
-		return serial, errors.ErrInvalidSerial
+	err = json.Unmarshal(payload, chassisInfo)
+	if err != nil {
+		return "", err
 	}
 
-	return strings.ToLower(strings.TrimSpace(ipmi.FruInfo.Chassis.SerialNum)), err
+	if chassisInfo.Error.Code != "" {
+		e := "Code: " + chassisInfo.Error.Code + ", Message: " + chassisInfo.Error.Message
+		for i, s := range chassisInfo.Error.ExtendedMessage {
+			e += fmt.Sprintf(", Extended[%d]: %s", i, s)
+		}
+		return "", fmt.Errorf(e)
+	}
+
+	return strings.ToLower(chassisInfo.SerialNumber), nil
 }
 
 // HardwareType returns just Model id string - supermicrox

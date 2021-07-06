@@ -18,6 +18,7 @@ var (
 	mux     *http.ServeMux
 	server  *httptest.Server
 	Answers = map[string][]byte{
+		"/redfish/v1/Chassis/1": []byte(`{"@odata.context":"/redfish/v1/$metadata#Chassis.Chassis","@odata.type":"#Chassis.Chassis","@odata.id":"/redfish/v1/Chassis/1","Id":"1","Name":"Computer System Chassis","ChassisType":"RackMount","Manufacturer":"Supermicro","Model":"X10DRFF-CTG","SKU":"","SerialNumber":"CF414AF38N50003","PartNumber":"CSE-F414IS2-R2K04BP","AssetTag":"NONE","IndicatorLED":"Off","Status":{"State":"Enabled","Health":"OK"},"PhysicalSecurity":{"IntrusionSensorNumber":170,"IntrusionSensor":"Normal","IntrusionSensorReArm":"Manual"},"Power":{"@odata.id":"/redfish/v1/Chassis/1/Power"},"Thermal":{"@odata.id":"/redfish/v1/Chassis/1/Thermal"},"Links":{"ComputerSystems":[{"@odata.id":"/redfish/v1/Systems/1"}],"ManagedBy":[{"@odata.id":"/redfish/v1/Managers/1"}],"ContainedBy":{"@odata.id":"/redfish/v1/Chassis/Rack1"}},"Oem":{}}`),
 		"FRU_INFO.XML=(0,0)": []byte(`<?xml version="1.0"?>
 			<IPMI>
 			  <FRU_INFO RES="1">
@@ -119,6 +120,15 @@ func setup() (r *SupermicroX, err error) {
 	ip := strings.TrimPrefix(server.URL, "https://")
 	username := "super"
 	password := "test"
+
+	mux.HandleFunc("/redfish/v1/Chassis/1", func(w http.ResponseWriter, r *http.Request) {
+		_, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		_, _ = w.Write(Answers[string("/redfish/v1/Chassis/1")])
+	})
 
 	mux.HandleFunc("/cgi/ipmi.cgi", func(w http.ResponseWriter, r *http.Request) {
 		query, err := ioutil.ReadAll(r.Body)
