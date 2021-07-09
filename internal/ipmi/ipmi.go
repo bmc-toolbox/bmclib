@@ -58,12 +58,26 @@ func (i *Ipmi) run(ctx context.Context, command []string) (output string, err er
 
 // PowerCycle reboots the machine via bmc
 func (i *Ipmi) PowerCycle(ctx context.Context) (status bool, err error) {
-	output, err := i.run(ctx, []string{"chassis", "power", "cycle"})
+	output, err := i.run(ctx, []string{"chassis", "power", "status"})
 	if err != nil {
 		return false, fmt.Errorf("%v: %v", err, output)
 	}
 
-	if strings.HasPrefix(output, "Chassis Power Control: Cycle") {
+	command := "on"
+	reply := "Up/On"
+	if strings.HasPrefix(output, "Chassis Power is on") {
+		command = "cycle"
+		reply = "Cycle"
+	} else if !strings.HasPrefix(output, "Chassis Power is off") {
+		return false, fmt.Errorf("%v: %v", err, output)
+	}
+
+	output, err = i.run(ctx, []string{"chassis", "power", command})
+	if err != nil {
+		return false, fmt.Errorf("%v: %v", err, output)
+	}
+
+	if strings.HasPrefix(output, "Chassis Power Control: "+reply) {
 		return true, err
 	}
 	return false, fmt.Errorf("%v: %v", err, output)
