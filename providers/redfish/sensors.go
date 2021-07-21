@@ -106,6 +106,7 @@ func (c *Conn) TemperatureSensors(ctx context.Context) ([]*devices.TemperatureSe
 
 			t := &devices.TemperatureSensor{
 				ID:              id,
+				Name:            s.Name,
 				PhysicalContext: s.PhysicalContext,
 				ReadingCelsius:  s.ReadingCelsius,
 			}
@@ -155,6 +156,7 @@ func (c *Conn) FanSensors(ctx context.Context) ([]*devices.FanSensor, error) {
 
 			t := &devices.FanSensor{
 				ID:              id,
+				Name:            s.Name,
 				PhysicalContext: s.PhysicalContext,
 				Reading:         s.Reading,
 			}
@@ -192,6 +194,8 @@ func (c *Conn) ChassisHealth(ctx context.Context) ([]*devices.ChassisHealth, err
 
 		compatible++
 		h := &devices.ChassisHealth{
+			ID:     ch.ID,
+			Name:   ch.Name,
 			State:  string(ch.Status.State),
 			Health: string(ch.Status.Health),
 		}
