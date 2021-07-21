@@ -6,7 +6,9 @@ import (
 	"strings"
 	"time"
 
+	bmcErrs "github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/providers"
+
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 	"github.com/pkg/errors"
@@ -68,7 +70,7 @@ func (c *Conn) Open(ctx context.Context) (err error) {
 
 	c.conn, err = gofish.ConnectContext(ctx, config)
 	if err != nil {
-		return err
+		return errors.Wrap(bmcErrs.ErrLoginFailed, err.Error())
 	}
 	return nil
 }

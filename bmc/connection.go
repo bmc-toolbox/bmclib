@@ -8,6 +8,10 @@ import (
 	"github.com/hashicorp/go-multierror"
 )
 
+var (
+	ErrOpenConnection = errors.New("error opening connection")
+)
+
 // Opener interface for opening a connection to a BMC
 type Opener interface {
 	Open(ctx context.Context) error
