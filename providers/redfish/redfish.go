@@ -28,7 +28,7 @@ var (
 	Features = registrar.Features{
 		providers.FeaturePowerSet,
 		providers.FeaturePowerState,
-		providers.FeaturePowersensors,
+		providers.FeaturePowerSensors,
 		providers.FeatureTemperatureSensors,
 		providers.FeatureFanSensors,
 		providers.FeatureChassisHealth,

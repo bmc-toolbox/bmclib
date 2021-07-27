@@ -30,7 +30,7 @@ const (
 	// FeatureBiosFirmwareUpdate means an implementation that updates the BIOS firmware
 	FeatureBiosFirmwareUpdate registrar.Feature = "biosfirwareupdate"
 	// FeaturePowersensors indicates an implementation that returns Power sensor information
-	FeaturePowersensors registrar.Feature = "powersensors"
+	FeaturePowerSensors registrar.Feature = "powersensors"
 	// FeatureTemperatureSensors indicates an implementation that returns Temperature sensor information
 	FeatureTemperatureSensors registrar.Feature = "temperaturesensors"
 	// FeatureFanSensors indicates an implementation that returns Fan sensor information
