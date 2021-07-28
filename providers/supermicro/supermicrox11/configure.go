@@ -431,7 +431,7 @@ func (s *SupermicroX) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfg
 
 	//for each ldap group setup config
 	//since supermicro can work with just one Searchbase, we go with the 'user' role group
-	for _, group := range cfgGroup {
+	for _, group := range cfgGroups {
 
 		if !group.Enable {
 			continue

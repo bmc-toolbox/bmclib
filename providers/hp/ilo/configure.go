@@ -458,7 +458,7 @@ func (i *Ilo) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Lda
 		return errors.New(msg)
 	}
 
-	for _, group := range cfg {
+	for _, group := range cfgGroups {
 
 		var postPayload bool
 		if group.Group == "" {

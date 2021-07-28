@@ -438,7 +438,7 @@ func (i *IDrac8) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresou
 	}
 
 	//for each ldap group
-	for _, group := range cfgGroup {
+	for _, group := range cfgGroups {
 
 		//if a group has been set to disable in the config,
 		//its configuration is skipped and removed.

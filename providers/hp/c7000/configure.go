@@ -208,7 +208,7 @@ func (c *C7000) applyEnableLdapAuth(enable bool) (err error) {
 // 3.  addLdapGroupBayAccess (done)
 func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
 
-	for _, group := range cfg {
+	for _, group := range cfgGroups {
 
 		if group.Group == "" {
 			c.log.V(1).Info("Ldap resource parameter Group required but not declared.",

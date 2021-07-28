@@ -147,30 +147,30 @@ func (m *M1000e) newLdapRoleCfg(cfg *cfgresources.LdapGroup, roleID int) (ldapAr
 
 	var privBitmap, genLdapRolePrivilege int
 
-	if cfg.Group == "" {
+	if cfgGroups.Group == "" {
 		msg := "Ldap resource parameter Group required but not declared."
 		err = errors.New(msg)
-		m.log.V(1).Error(err, msg, "Role", cfg.Role, "step", "newLdapRoleCfg")
+		m.log.V(1).Error(err, msg, "Role", cfgGroups.Role, "step", "newLdapRoleCfg")
 		return ldapArgCfg, err
 	}
 
-	if cfg.GroupBaseDn == "" && cfg.Enable {
+	if cfgGroups.GroupBaseDn == "" && cfgGroups.Enable {
 		msg := "Ldap resource parameter GroupBaseDn required but not declared."
 		err = errors.New(msg)
-		m.log.V(1).Error(err, msg, "Role", cfg.Role, "step", "newLdapRoleCfg")
+		m.log.V(1).Error(err, msg, "Role", cfgGroups.Role, "step", "newLdapRoleCfg")
 		return ldapArgCfg, err
 	}
 
-	if !m.isRoleValid(cfg.Role) {
+	if !m.isRoleValid(cfgGroups.Role) {
 		msg := "Ldap resource Role must be a valid role: admin OR user."
 		err = errors.New(msg)
-		m.log.V(1).Error(err, msg, "Role", cfg.Role, "step", "newLdapRoleCfg")
+		m.log.V(1).Error(err, msg, "Role", cfgGroups.Role, "step", "newLdapRoleCfg")
 		return ldapArgCfg, err
 	}
 
-	groupDn := fmt.Sprintf("cn=%s,%s", cfg.Group, cfg.GroupBaseDn)
+	groupDn := fmt.Sprintf("cn=%s,%s", cfgGroups.Group, cfgGroups.GroupBaseDn)
 
-	switch cfg.Role {
+	switch cfgGroups.Role {
 	case "admin":
 		privBitmap = 4095
 		genLdapRolePrivilege = privBitmap

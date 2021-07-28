@@ -190,7 +190,7 @@ func (m *M1000e) applyLdapRoleCfg(cfg LdapArgParams, roleID int) (err error) {
 func (m *M1000e) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
 
 	roleID := 1
-	for _, group := range cfg {
+	for _, group := range cfgGroups {
 		ldapRoleParams, err := m.newLdapRoleCfg(group, roleID)
 		if err != nil {
 			m.log.V(1).Error(err, "Unable to apply Ldap role group config.",

@@ -354,7 +354,7 @@ func (i *IDrac9) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.
 	}
 
 	//for each configuration ldap role group
-	for _, cfgRole := range cfg {
+	for _, cfgRole := range cfgGroups {
 
 		// the distinguished name of the group
 		// example, if the GroupBaseDn is ou=Group,dc=example,dc=com and the Group is cn=fooUsers
