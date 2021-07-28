@@ -74,3 +74,7 @@ func (s *SupermicroX) IsOn() (status bool, err error) {
 func (s *SupermicroX) UpdateFirmware(source, file string) (status bool, err error) {
 	return true, fmt.Errorf("not supported yet")
 }
+
+func (s *SupermicroX) CheckFirmwareVersion() (version string, err error) {
+	return "", fmt.Errorf("not supported yet")
+}

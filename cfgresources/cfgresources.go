@@ -1,6 +1,10 @@
 package cfgresources
 
-import "time"
+import (
+	"encoding/json"
+	"os/exec"
+	"time"
+)
 
 // SetupChassis struct holds attributes for one time chassis setup.
 type SetupChassis struct {

@@ -176,6 +176,7 @@ func (p *Probe) idrac8(ctx context.Context, log logr.Logger) (bmcConnection inte
 
 	if resp.StatusCode == 200 && containsAnySubStr(payload, idrac8SysDesc) {
 		log.V(1).Info("step", "connection", "host", p.host, "vendor", string(devices.Dell), "msg", "it's a idrac8")
+
 		return idrac8.New(ctx, p.host, p.username, p.password, log)
 	}
 
@@ -202,6 +203,7 @@ func (p *Probe) idrac9(ctx context.Context, log logr.Logger) (bmcConnection inte
 
 	if resp.StatusCode == 200 && containsAnySubStr(payload, idrac9SysDesc) {
 		log.V(1).Info("step", "connection", "host", p.host, "vendor", string(devices.Dell), "msg", "it's a idrac9")
+
 		return idrac9.New(ctx, p.host, p.host, p.username, p.password, log)
 	}
 
@@ -228,6 +230,7 @@ func (p *Probe) m1000e(ctx context.Context, log logr.Logger) (bmcConnection inte
 
 	if resp.StatusCode == 200 && containsAnySubStr(payload, m1000eSysDesc) {
 		log.V(1).Info("step", "connection", "host", p.host, "vendor", string(devices.Dell), "msg", "it's a m1000e chassis")
+
 		return m1000e.New(ctx, p.host, p.username, p.password, log)
 	}
 
@@ -255,6 +258,7 @@ func (p *Probe) supermicrox(ctx context.Context, log logr.Logger) (bmcConnection
 	// looking for ATEN in the response payload isn't the most ideal way, although it is unique to Supermicros
 	if resp.StatusCode == 200 && bytes.Contains(payload, []byte("ATEN International")) {
 		log.V(1).Info("it's a supermicro", "step", "connection", "host", p.host, "vendor", devices.Supermicro, "hardwareType", supermicrox.X10)
+
 		conn, err := supermicrox.New(ctx, p.host, p.username, p.password, log)
 		if err != nil {
 			return bmcConnection, err
@@ -290,6 +294,7 @@ func (p *Probe) supermicrox11(ctx context.Context, log logr.Logger) (bmcConnecti
 	// looking for ATEN in the response payload isn't the most ideal way, although it is unique to Supermicros
 	if resp.StatusCode == 200 && bytes.Contains(payload, []byte("ATEN International")) {
 		log.V(1).Info("it's a supermicrox11", "step", "connection", "host", p.host, "vendor", devices.Supermicro, "hardwareType", supermicrox11.X11)
+
 		conn, err := supermicrox11.New(ctx, p.host, p.username, p.password, log)
 		if err != nil {
 			return bmcConnection, err
