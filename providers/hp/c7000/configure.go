@@ -200,13 +200,13 @@ func (c *C7000) applyEnableLdapAuth(enable bool) (err error) {
 	return err
 }
 
-// LdapGroup applies LDAP Group/Role related configuration
-// LdapGroup implements the Configure interface.
+// LdapGroups applies LDAP Group/Role related configuration
+// LdapGroups implements the Configure interface.
 // Actions carried out in order
 // 1.  addLdapGroup
 // 2.  setLdapGroupBayACL
 // 3.  addLdapGroupBayAccess (done)
-func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
+func (c *C7000) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
 
 	for _, group := range cfgGroups {
 

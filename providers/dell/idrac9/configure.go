@@ -335,10 +335,10 @@ func (i *IDrac9) Ldap(cfg *cfgresources.Ldap) (err error) {
 	return err
 }
 
-// LdapGroup applies LDAP Group/Role related configuration
-// LdapGroup implements the Configure interface.
+// LdapGroups applies LDAP Group/Role related configuration
+// LdapGroups implements the Configure interface.
 // nolint: gocyclo
-func (i *IDrac9) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
+func (i *IDrac9) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
 
 	idracLdapRoleGroups, err := i.queryLdapRoleGroups()
 	if err != nil {

@@ -185,9 +185,9 @@ func (m *M1000e) applyLdapRoleCfg(cfg LdapArgParams, roleID int) (err error) {
 	return err
 }
 
-// LdapGroup applies LDAP Group/Role related configuration
-// LdapGroup implements the Configure interface.
-func (m *M1000e) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
+// LdapGroups applies LDAP Group/Role related configuration
+// LdapGroups implements the Configure interface.
+func (m *M1000e) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
 
 	roleID := 1
 	for _, group := range cfgGroups {

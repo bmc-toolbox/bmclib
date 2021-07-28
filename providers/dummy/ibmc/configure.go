@@ -44,8 +44,8 @@ func (i *Ibmc) Ldap(cfg *cfgresources.Ldap) error {
 	return nil
 }
 
-// LdapGroup method implements the Configure interface
-func (i *Ibmc) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) error {
+// LdapGroups method implements the Configure interface
+func (i *Ibmc) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) error {
 	return nil
 }
 

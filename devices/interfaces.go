@@ -125,7 +125,7 @@ type Configure interface {
 	Syslog(*cfgresources.Syslog) error
 	Ntp(*cfgresources.Ntp) error
 	Ldap(*cfgresources.Ldap) error
-	LdapGroup([]*cfgresources.LdapGroup, *cfgresources.Ldap) error
+	LdapGroups([]*cfgresources.LdapGroup, *cfgresources.Ldap) error
 	Network(*cfgresources.Network) (bool, error)
 	SetLicense(*cfgresources.License) error
 	Bios(*cfgresources.Bios) error

@@ -441,10 +441,10 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 	return err
 }
 
-// LdapGroup applies LDAP Group/Role related configuration
-// LdapGroup implements the Configure interface.
+// LdapGroups applies LDAP Group/Role related configuration
+// LdapGroups implements the Configure interface.
 // nolint: gocyclo
-func (i *Ilo) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
+func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
 
 	directoryGroups, err := i.queryDirectoryGroups()
 	if err != nil {

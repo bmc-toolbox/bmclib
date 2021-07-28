@@ -15,7 +15,7 @@ type SetupChassis struct {
 // ResourcesConfig struct holds all the configuration to be applied.
 type ResourcesConfig struct {
 	Ldap         *Ldap         `yaml:"ldap"`
-	LdapGroup    []*LdapGroup  `yaml:"ldapGroup"`
+	LdapGroups   *LdapGroups   `yaml:"ldapGroups"`
 	License      *License      `yaml:"license"`
 	Network      *Network      `yaml:"network"`
 	Syslog       *Syslog       `yaml:"syslog"`
@@ -102,7 +102,46 @@ type License struct {
 	Key string `yaml:"key"`
 }
 
-// LdapGroup struct holds BMC LDAP role group configuration.
+type LdapBin struct {
+	Executor string `yaml:"executor"`
+	Path     string `yaml:"path"`
+}
+
+// LdapGroups holds all group-related configuration parameters.
+// ExtraGroups is used in combination with Bin to add more groups at runtime.
+type LdapGroups struct {
+	Bin              *LdapBin     `yaml:"bin"`
+	Groups           []*LdapGroup `yaml:"groups"`
+	ExtraAdminGroups []*LdapGroup `json:"admins"`
+	ExtraUserGroups  []*LdapGroup `json:"users"`
+}
+
+// If you want to add extra groups at runtime using a script, you have
+//   the option of specifying
+//   * Bin.Executor: Usually /bin/sh or /bin/bash and the like
+//   * Bin.Path: Path your actual script
+// You get the serial of the asset and its vendor as two arguments
+// If you want more, create a GitHub issue and we will take a look
+func (l *LdapGroups) GetExtraGroups(serial, vendor string) (string, error) {
+	if l.Bin.Path == "" {
+		return "nothing", nil
+	}
+
+	cmd := exec.Command(l.Bin.Executor, l.Bin.Path, serial, vendor)
+	stdout, err := cmd.CombinedOutput()
+	if err != nil {
+		return string(stdout), err
+	}
+
+	json.Unmarshal(stdout, &l)
+
+	l.Groups = append(l.Groups, l.ExtraAdminGroups...)
+	l.Groups = append(l.Groups, l.ExtraUserGroups...)
+
+	return "success", nil
+}
+
+// LdapGroup struct holds a single BMC LDAP role group configuration.
 type LdapGroup struct {
 	Role        string `yaml:"role"`
 	Group       string `yaml:"group"`

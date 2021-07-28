@@ -324,11 +324,11 @@ func (s *SupermicroX) Ldap(cfgLdap *cfgresources.Ldap) error {
 	return nil
 }
 
-// LdapGroup applies LDAP and LDAP Group/Role related configuration,
-// LdapGroup implements the Configure interface.
+// LdapGroups applies LDAP and LDAP Group/Role related configuration,
+// LdapGroups implements the Configure interface.
 // Supermicro does not have any separate configuration for Ldap groups just for generic ldap
 // nolint: gocyclo
-func (s *SupermicroX) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
+func (s *SupermicroX) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
 
 	var enable string
 

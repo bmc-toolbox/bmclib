@@ -143,7 +143,7 @@ func (m *M1000e) isRoleValid(role string) bool {
 }
 
 // Given the Ldap resource, populate required LdapArgParams
-func (m *M1000e) newLdapRoleCfg(cfg *cfgresources.LdapGroup, roleID int) (ldapArgCfg LdapArgParams, err error) {
+func (m *M1000e) newLdapRoleCfg(cfgGroups *cfgresources.LdapGroup, roleID int) (ldapArgCfg LdapArgParams, err error) {
 
 	var privBitmap, genLdapRolePrivilege int
 
