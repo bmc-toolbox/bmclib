@@ -494,11 +494,11 @@ func (i *IDrac8) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 
 		groupPrivilegeParam += fmt.Sprintf("xGLGroup%dPriv:%s,", groupID, privID)
 		groupID++
-
 	}
 
-	//set the rest of the group privileges to 0
-	for i := groupID + 1; i <= 5; i++ {
+	// Set the rest of the group privileges to 0.
+	// Dell supports only 5 groups.
+	for i := groupID; i <= 5; i++ {
 		groupPrivilegeParam += fmt.Sprintf("xGLGroup%dPriv:0,", i)
 	}
 
