@@ -90,7 +90,7 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 		i.log.V(1).Error(err, msg,
 			"step", "applyUserParams",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
@@ -103,7 +103,7 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 		i.log.V(1).Error(err, msg,
 			"step", "applyUserParams",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
@@ -122,7 +122,7 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 				if err != nil {
 					i.log.V(1).Info("Unable to add new User.",
 						"IP", i.ip,
-						"Model", i.HardwareType(),
+						"HardwareType", i.HardwareType(),
 						"step", helper.WhosCalling(),
 						"User", cfgUser.Name,
 						"Error", internal.ErrStringOrEmpty(err),
@@ -149,7 +149,7 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 			if err != nil {
 				i.log.V(1).Info("Add/Update user request failed.",
 					"IP", i.ip,
-					"Model", i.HardwareType(),
+					"HardwareType", i.HardwareType(),
 					"step", helper.WhosCalling(),
 					"User", cfgUser.Name,
 					"Error", internal.ErrStringOrEmpty(err),
@@ -172,7 +172,7 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 			if err != nil {
 				i.log.V(1).Info("Disable user request failed.",
 					"IP", i.ip,
-					"Model", i.HardwareType(),
+					"HardwareType", i.HardwareType(),
 					"step", helper.WhosCalling(),
 					"User", cfgUser.Name,
 					"Error", internal.ErrStringOrEmpty(err),
@@ -180,7 +180,7 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 			}
 		}
 
-		i.log.V(1).Info("User parameters applied.", "IP", i.ip, "Model", i.HardwareType(), "User", cfgUser.Name)
+		i.log.V(1).Info("User parameters applied.", "IP", i.ip, "HardwareType", i.HardwareType(), "User", cfgUser.Name)
 	}
 
 	return err
@@ -266,7 +266,7 @@ func (i *IDrac8) Syslog(cfg *cfgresources.Syslog) (err error) {
 		return err
 	}
 
-	i.log.V(1).Info("Syslog parameters applied.", "IP", i.ip, "Model", i.HardwareType())
+	i.log.V(1).Info("Syslog parameters applied.", "IP", i.ip, "HardwareType", i.HardwareType())
 
 	return err
 }
@@ -318,15 +318,14 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 	if err != nil {
 		i.log.V(1).Info("GET request failed.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"response", string(response),
 		)
 	}
 
-	i.log.V(1).Info("NTP servers param applied.", "IP", i.ip, "Model", i.HardwareType())
-
+	i.log.V(1).Info("NTP servers param applied.", "IP", i.ip, "HardwareType", i.HardwareType())
 }
 
 // Ldap applies LDAP configuration params.
@@ -347,7 +346,7 @@ func (i *IDrac8) Ldap(cfg *cfgresources.Ldap) error {
 		err = errors.New(msg)
 		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"response", string(response),
@@ -360,7 +359,7 @@ func (i *IDrac8) Ldap(cfg *cfgresources.Ldap) error {
 		return err
 	}
 
-	i.log.V(1).Info("Ldap server param set.", "IP", i.ip, "Model", i.HardwareType())
+	i.log.V(1).Info("Ldap server param set.", "IP", i.ip, "HardwareType", i.HardwareType())
 	return nil
 }
 
@@ -381,7 +380,7 @@ func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) error {
 		msg := "request to set ldap search filter failed."
 		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"response", string(response),
@@ -389,7 +388,7 @@ func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) error {
 		return err
 	}
 
-	i.log.V(1).Info("Ldap search filter param applied.", "IP", i.ip, "Model", i.HardwareType())
+	i.log.V(1).Info("Ldap search filter param applied.", "IP", i.ip, "HardwareType", i.HardwareType())
 	return nil
 }
 
@@ -481,7 +480,7 @@ func (i *IDrac8) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 		if err != nil {
 			i.log.V(1).Error(err, "GET request failed.",
 				"IP", i.ip,
-				"Model", i.HardwareType(),
+				"HardwareType", i.HardwareType(),
 				"endpoint", endpoint,
 				"step", "applyLdapGroupParams",
 				"response", string(response),
@@ -491,7 +490,7 @@ func (i *IDrac8) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 
 		i.log.V(1).Info("Ldap GroupDN config applied.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"Role", group.Role,
 		)
 
@@ -516,7 +515,7 @@ func (i *IDrac8) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 	if err != nil {
 		i.log.V(1).Error(err, "Unable to set Ldap Role Group Privileges.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", "applyLdapGroupParams",
 		)
 		return err
@@ -554,7 +553,7 @@ func (i *IDrac8) applyLdapRoleGroupPrivParam(cfg *cfgresources.Ldap, groupPrivil
 	if err != nil || responseCode != 200 {
 		i.log.V(1).Error(err, "POST request failed.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"responseCode", responseCode,
@@ -563,7 +562,7 @@ func (i *IDrac8) applyLdapRoleGroupPrivParam(cfg *cfgresources.Ldap, groupPrivil
 		return err
 	}
 
-	i.log.V(1).Info("Ldap Group role privileges applied.", "IP", i.ip, "Model", i.HardwareType())
+	i.log.V(1).Info("LDAP Group role privileges applied.", "IP", i.ip, "HardwareType", i.HardwareType())
 
 	return err
 }
@@ -578,15 +577,14 @@ func (i *IDrac8) applyTimezoneParam(timezone string) {
 	if err != nil {
 		i.log.V(1).Info("GET request failed.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"response", string(response),
 		)
 	}
 
-	i.log.V(1).Info("Timezone param applied.", "IP", i.ip, "Model", i.HardwareType())
-
+	i.log.V(1).Info("Timezone param applied.", "IP", i.ip, "HardwareType", i.HardwareType())
 }
 
 // Network method implements the Configure interface
@@ -628,7 +626,7 @@ func (i *IDrac8) Network(cfg *cfgresources.Network) (reset bool, err error) {
 	if err != nil || responseCode != 200 {
 		i.log.V(1).Error(err, "POST request to set Network params failed.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"responseCode", responseCode,
@@ -637,7 +635,7 @@ func (i *IDrac8) Network(cfg *cfgresources.Network) (reset bool, err error) {
 		return reset, err
 	}
 
-	i.log.V(1).Info("Network config parameters applied.", "IP", i.ip, "Model", i.HardwareType())
+	i.log.V(1).Info("Network config parameters applied.", "IP", i.ip, "HardwareType", i.HardwareType())
 	return reset, err
 }
 
@@ -664,7 +662,7 @@ func (i *IDrac8) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, er
 	if err != nil {
 		i.log.V(1).Error(err, "GET request failed.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
@@ -722,7 +720,7 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	if err != nil || status != 201 {
 		i.log.V(1).Error(err, "Cert form upload POST request failed, expected 201.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"status", status,
@@ -737,7 +735,7 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 		i.log.V(1).Error(err, "Unable to unmarshal cert store response payload.",
 			"step", helper.WhosCalling(),
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return false, err
@@ -748,7 +746,7 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 		i.log.V(1).Error(err, "Unable to marshal cert store resource URI.",
 			"step", helper.WhosCalling(),
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return false, err
@@ -760,7 +758,7 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	if err != nil || status != 201 {
 		i.log.V(1).Error(err, "Cert form upload POST request failed, expected 201.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"status", status,

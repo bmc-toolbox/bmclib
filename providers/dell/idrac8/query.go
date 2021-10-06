@@ -70,7 +70,6 @@ func (i *IDrac8) Screenshot() (response []byte, extension string, err error) {
 
 //Queries Idrac8 for current user accounts
 func (i *IDrac8) queryUsers() (userInfo UserInfo, err error) {
-
 	userInfo = make(UserInfo)
 
 	endpoint := "data?get=user"
@@ -79,7 +78,7 @@ func (i *IDrac8) queryUsers() (userInfo UserInfo, err error) {
 	if err != nil {
 		i.log.V(1).Error(err, "GET request failed.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
@@ -94,7 +93,7 @@ func (i *IDrac8) queryUsers() (userInfo UserInfo, err error) {
 			"step", "queryUserInfo",
 			"resource", "User",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return userInfo, err

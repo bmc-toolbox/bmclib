@@ -66,7 +66,7 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 		msg := "Unable to get current bios settings through redfish."
 		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
@@ -81,7 +81,7 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 		if err != nil {
 			i.log.V(1).Error(err, "diffBiosSettings returned error.",
 				"IP", i.ip,
-				"Model", i.HardwareType(),
+				"HardwareType", i.HardwareType(),
 				"step", helper.WhosCalling(),
 				"Error", internal.ErrStringOrEmpty(err),
 			)
@@ -90,7 +90,7 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 
 		i.log.V(0).Info("Bios configuration to be applied",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Changes (Ignore empty fields)", fmt.Sprintf("%+v", toApplyBiosSettings),
 		)
@@ -103,7 +103,7 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 				"step", "applyBiosParams",
 				"resource", "Bios",
 				"IP", i.ip,
-				"Model", i.HardwareType(),
+				"HardwareType", i.HardwareType(),
 				"Bios settings pending", internal.ErrStringOrEmpty(err),
 			)
 		}
@@ -113,7 +113,7 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 			msg := "setBiosAttributes returned error."
 			i.log.V(1).Error(err, msg,
 				"IP", i.ip,
-				"Model", i.HardwareType(),
+				"HardwareType", i.HardwareType(),
 				"step", helper.WhosCalling(),
 				"Error", internal.ErrStringOrEmpty(err),
 			)
@@ -122,7 +122,7 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 
 		i.log.V(0).Info("Bios configuration update job queued in iDrac.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 		)
 
@@ -130,7 +130,7 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 
 		i.log.V(0).Info("Bios configuration is up to date.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 		)
 	}
@@ -154,7 +154,7 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 		i.log.V(1).Error(err, msg,
 			"step", "applyUserParams",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return errors.New(msg)
@@ -166,7 +166,7 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 		i.log.V(1).Error(err, msg,
 			"step", "applyUserParams",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return errors.New(msg)
@@ -186,7 +186,7 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 				if err != nil {
 					i.log.V(1).Error(err, "Unable to add new User.",
 						"IP", i.ip,
-						"Model", i.HardwareType(),
+						"HardwareType", i.HardwareType(),
 						"step", helper.WhosCalling(),
 						"User", cfgUser.Name,
 						"Error", internal.ErrStringOrEmpty(err),
@@ -213,7 +213,7 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 			if err != nil {
 				i.log.V(1).Error(err, "Add/Update user request failed.",
 					"IP", i.ip,
-					"Model", i.HardwareType(),
+					"HardwareType", i.HardwareType(),
 					"step", helper.WhosCalling(),
 					"User", cfgUser.Name,
 					"Error", internal.ErrStringOrEmpty(err),
@@ -230,7 +230,7 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 			if err != nil {
 				i.log.V(1).Error(err, "Delete user request failed.",
 					"IP", i.ip,
-					"Model", i.HardwareType(),
+					"HardwareType", i.HardwareType(),
 					"step", helper.WhosCalling(),
 					"User", cfgUser.Name,
 					"Error", internal.ErrStringOrEmpty(err),
@@ -243,7 +243,7 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 
 		i.log.V(1).Info("User parameters applied.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"User", cfgUser.Name,
 		)
 
@@ -270,7 +270,7 @@ func (i *IDrac9) Ldap(cfg *cfgresources.Ldap) (err error) {
 		err = errors.New(msg)
 		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling,
 		)
 		return err
@@ -280,7 +280,7 @@ func (i *IDrac9) Ldap(cfg *cfgresources.Ldap) (err error) {
 		msg := "Ldap resource parameter BaseDn required but not declared."
 		err = errors.New(msg)
 		i.log.V(1).Error(err, msg,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling,
 		)
 		return err
@@ -325,7 +325,7 @@ func (i *IDrac9) Ldap(cfg *cfgresources.Ldap) (err error) {
 		err = errors.New(msg)
 		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
@@ -345,9 +345,9 @@ func (i *IDrac9) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 		msg := "Unable to query existing users"
 		err = errors.New(msg)
 		i.log.V(1).Error(err, msg,
-			"step", "applyUserParams",
+			"step", helper.WhosCalling(),
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
@@ -372,7 +372,7 @@ func (i *IDrac9) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 				if err != nil {
 					i.log.V(1).Error(err, "Unable to add new Ldap Role Group.",
 						"IP", i.ip,
-						"Model", i.HardwareType(),
+						"HardwareType", i.HardwareType(),
 						"step", helper.WhosCalling(),
 						"Ldap Role Group", cfgRole.Group,
 						"Role Group DN", cfgRole.Role,
@@ -395,7 +395,7 @@ func (i *IDrac9) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 			if err != nil {
 				i.log.V(1).Error(err, "Add/Update LDAP Role Group request failed.",
 					"IP", i.ip,
-					"Model", i.HardwareType(),
+					"HardwareType", i.HardwareType(),
 					"step", helper.WhosCalling(),
 					"Ldap Role Group", cfgRole.Group,
 					"Role Group DN", cfgRole.Role,
@@ -415,7 +415,7 @@ func (i *IDrac9) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 			if err != nil {
 				i.log.V(1).Error(err, "Remove LDAP Role Group request failed.",
 					"IP", i.ip,
-					"Model", i.HardwareType(),
+					"HardwareType", i.HardwareType(),
 					"step", helper.WhosCalling(),
 					"Ldap Role Group", cfgRole.Group,
 					"Role Group DN", cfgRole.Role,
@@ -427,7 +427,7 @@ func (i *IDrac9) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 
 		i.log.V(1).Info("Ldap Role Group parameters applied.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"Step", helper.WhosCalling(),
 			"Ldap Role Group", cfgRole.Role,
 			"Role Group DN", cfgRole.Role,
@@ -455,7 +455,7 @@ func (i *IDrac9) Ntp(cfg *cfgresources.Ntp) (err error) {
 		err = errors.New(msg)
 		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"Step", helper.WhosCalling(),
 		)
 		return err
@@ -466,7 +466,7 @@ func (i *IDrac9) Ntp(cfg *cfgresources.Ntp) (err error) {
 		err = errors.New(msg)
 		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"Step", helper.WhosCalling(),
 		)
 		return err
@@ -478,7 +478,7 @@ func (i *IDrac9) Ntp(cfg *cfgresources.Ntp) (err error) {
 		err = errors.New(msg)
 		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Unknown Timezone", cfg.Timezone,
 		)
@@ -489,7 +489,7 @@ func (i *IDrac9) Ntp(cfg *cfgresources.Ntp) (err error) {
 	if err != nil {
 		i.log.V(1).Error(err, "PUT timezone request failed.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Timezone", cfg.Timezone,
 			"Error", internal.ErrStringOrEmpty(err),
@@ -508,7 +508,7 @@ func (i *IDrac9) Ntp(cfg *cfgresources.Ntp) (err error) {
 	if err != nil {
 		i.log.V(1).Error(err, "PUT Ntp request failed.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
@@ -517,7 +517,7 @@ func (i *IDrac9) Ntp(cfg *cfgresources.Ntp) (err error) {
 
 	i.log.V(1).Info("NTP servers param applied.",
 		"IP", i.ip,
-		"Model", i.HardwareType(),
+		"HardwareType", i.HardwareType(),
 	)
 
 	return err
@@ -538,7 +538,7 @@ func (i *IDrac9) Syslog(cfg *cfgresources.Syslog) (err error) {
 	if cfg.Server == "" {
 		i.log.V(1).Info("Syslog resource expects parameter: Server.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 		)
 		return
@@ -567,7 +567,7 @@ func (i *IDrac9) Syslog(cfg *cfgresources.Syslog) (err error) {
 	if err != nil {
 		i.log.V(1).Error(err, "PUT Syslog request failed.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
@@ -579,7 +579,7 @@ func (i *IDrac9) Syslog(cfg *cfgresources.Syslog) (err error) {
 	if err != nil {
 		i.log.V(1).Error(err, "PUT to enable Alerts failed request failed.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
@@ -591,14 +591,14 @@ func (i *IDrac9) Syslog(cfg *cfgresources.Syslog) (err error) {
 	if err != nil {
 		i.log.V(1).Error(err, "PUT to configure alerts failed request failed.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
 
-	i.log.V(1).Info("Syslog and alert parameters applied.", "IP", i.ip, "Model", i.HardwareType())
+	i.log.V(1).Info("Syslog and alert parameters applied.", "IP", i.ip, "HardwareType", i.HardwareType())
 	return err
 }
 
@@ -655,7 +655,7 @@ func (i *IDrac9) Network(cfg *cfgresources.Network) (reset bool, err error) {
 	if err != nil {
 		i.log.V(1).Info("PUT IPv4 request failed.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
@@ -665,7 +665,7 @@ func (i *IDrac9) Network(cfg *cfgresources.Network) (reset bool, err error) {
 	if err != nil {
 		i.log.V(1).Info("PUT SerialOverLan request failed.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
@@ -675,7 +675,7 @@ func (i *IDrac9) Network(cfg *cfgresources.Network) (reset bool, err error) {
 	if err != nil {
 		i.log.V(1).Info("PUT SerialRedirection request failed.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
@@ -685,13 +685,13 @@ func (i *IDrac9) Network(cfg *cfgresources.Network) (reset bool, err error) {
 	if err != nil {
 		i.log.V(1).Info("PUT IpmiOverLan request failed.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 	}
 
-	i.log.V(1).Info("Network config parameters applied.", "IP", i.ip, "Model", i.HardwareType())
+	i.log.V(1).Info("Network config parameters applied.", "IP", i.ip, "HardwareType", i.HardwareType())
 	return reset, err
 }
 
@@ -764,7 +764,7 @@ func (i *IDrac9) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	if err != nil || status != 201 {
 		i.log.V(1).Error(err, "Cert form upload POST request failed, expected 201.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"status", status,
@@ -779,7 +779,7 @@ func (i *IDrac9) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 		i.log.V(1).Error(err, "Unable to unmarshal cert store response payload.",
 			"step", helper.WhosCalling(),
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return false, err
@@ -790,7 +790,7 @@ func (i *IDrac9) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 		i.log.V(1).Error(err, "Unable to marshal cert store resource URI.",
 			"step", helper.WhosCalling(),
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return false, err
@@ -802,7 +802,7 @@ func (i *IDrac9) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	if err != nil || status != 201 {
 		i.log.V(1).Error(err, "Cert form upload POST request failed, expected 201.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"status", status,

@@ -59,7 +59,7 @@ func (i *Ilo) httpLogin() (err error) {
 	}
 
 	if i.sessionKey == "" {
-		i.log.V(1).Info("Expected sessionKey cookie value not found.", "step", "Login()", "IP", i.ip, "Model", i.HardwareType())
+		i.log.V(1).Info("Expected sessionKey cookie value not found.", "step", "Login()", "IP", i.ip, "HardwareType", i.HardwareType())
 	}
 
 	if resp.StatusCode == 404 {

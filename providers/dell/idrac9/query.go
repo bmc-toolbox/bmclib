@@ -56,14 +56,13 @@ func (i *IDrac9) Screenshot() (response []byte, extension string, err error) {
 }
 
 func (i *IDrac9) queryUsers() (users map[int]User, err error) {
-
 	endpoint := "sysmgmt/2012/server/configgroup/iDRAC.Users"
 
 	data, err := i.get(endpoint, &map[string]string{})
 	if err != nil {
 		i.log.V(1).Error(err, "GET request failed.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
@@ -76,7 +75,7 @@ func (i *IDrac9) queryUsers() (users map[int]User, err error) {
 	if err != nil {
 		i.log.V(1).Error(err, "Unable to unmarshal payload.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"resource", "User",
 			"step", "queryUserInfo",
 			"Error", internal.ErrStringOrEmpty(err),
@@ -95,7 +94,7 @@ func (i *IDrac9) queryLdapRoleGroups() (ldapRoleGroups LdapRoleGroups, err error
 	if err != nil {
 		i.log.V(1).Error(err, "GET request failed.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
@@ -108,7 +107,7 @@ func (i *IDrac9) queryLdapRoleGroups() (ldapRoleGroups LdapRoleGroups, err error
 	if err != nil {
 		i.log.V(1).Error(err, "Unable to unmarshal payload.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"resource", "User",
 			"step", "queryUserInfo",
 			"Error", internal.ErrStringOrEmpty(err),
