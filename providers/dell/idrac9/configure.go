@@ -148,7 +148,7 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 	if err != nil {
 		return err
 	}
-	err = i.validateCfg(cfgUsers)
+	err = internal.ValidateUserConfig(cfgUsers)
 	if err != nil {
 		msg := "Config validation failed."
 		i.log.V(1).Error(err, msg,

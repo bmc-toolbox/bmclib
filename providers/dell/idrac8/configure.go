@@ -64,26 +64,12 @@ func escapeLdapString(s string) string {
 	return r
 }
 
-// Return bool value if the role is valid.
-func (i *IDrac8) isRoleValid(role string) bool {
-
-	validRoles := []string{"admin", "user"}
-	for _, v := range validRoles {
-		if role == v {
-			return true
-		}
-	}
-
-	return false
-}
-
 // User applies the User configuration resource,
 // if the user exists, it updates the users password,
 // User implements the Configure interface.
 // Iterate over iDrac users and adds/removes/modifies user accounts
 func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
-
-	err = i.validateUserCfg(cfgUsers)
+	err = internal.ValidateUserConfig(cfgUsers)
 	if err != nil {
 		msg := "User config validation failed."
 		err = errors.New(msg)
@@ -465,8 +451,8 @@ func (i *IDrac8) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 			return err
 		}
 
-		if !i.isRoleValid(group.Role) {
-			msg := "Ldap resource Role must be a valid role: admin OR user."
+		if !internal.IsRoleValid(group.Role) {
+			msg := "LDAP resource parameter \"Role\" must be a valid role: \"admin\" OR \"user\"."
 			err = errors.New(msg)
 			i.log.V(1).Error(err, msg, "Role", group.Role, "step", "applyLdapGroupParams")
 			return err

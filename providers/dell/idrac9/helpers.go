@@ -4,48 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-
-	"github.com/bmc-toolbox/bmclib/cfgresources"
 )
 
-// Return bool value if the role is valid.
-func isRoleValid(role string) bool {
-
-	validRoles := []string{"admin", "user"}
-	for _, v := range validRoles {
-		if role == v {
-			return true
-		}
-	}
-
-	return false
-}
-
-// Return bool value if the role is valid.
-func (i *IDrac9) validateCfg(cfgUsers []*cfgresources.User) (err error) {
-
-	for _, cfgUser := range cfgUsers {
-		if cfgUser.Name == "" {
-			msg := "User resource expects parameter: Name."
-			return errors.New(msg)
-		}
-
-		if cfgUser.Password == "" {
-			msg := "User resource expects parameter: Password."
-			return errors.New(msg)
-		}
-
-		if !isRoleValid(cfgUser.Role) {
-			msg := "User resource expects parameter Role to be one of 'admin', 'user'"
-			return errors.New(msg)
-		}
-	}
-
-	return nil
-}
-
-// iDrac9 supports upto 16 users, user 0 is reserved
-// this function returns an empty user slot that can be used for a new user account
+// IDRAC9 supports upto 16 users, user 0 is reserved.
+// This function returns an empty user slot that can be used for a new user account.
 func getEmptyUserSlot(idracUsers userInfo) (userID int, user User, err error) {
 	for userID, user := range idracUsers {
 
