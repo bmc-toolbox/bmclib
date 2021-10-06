@@ -86,13 +86,19 @@ func (i *IDrac9) loadHwData() (err error) {
 	}
 
 	url := "sysmgmt/2012/server/inventory/hardware"
-	payload, err := i.get(url, nil)
-	if err != nil {
-		return err
+	statusCode, response, err := i.get(url, nil)
+	if err != nil || statusCode != 200 {
+		msg := fmt.Sprintf("Status code is %d", statusCode)
+		if err != nil {
+			msg += ", Error: " + err.Error()
+		} else {
+			msg += ", Response: " + string(response)
+		}
+		return fmt.Errorf("IDrac9.loadHwData(): GET request failed. " + msg)
 	}
 
 	iDracInventory := &dell.IDracInventory{}
-	err = xml.Unmarshal(payload, iDracInventory)
+	err = xml.Unmarshal(response, iDracInventory)
 	if err != nil {
 		return err
 	}

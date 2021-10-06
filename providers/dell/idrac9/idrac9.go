@@ -61,13 +61,13 @@ func (i *IDrac9) CheckCredentials() (err error) {
 }
 
 // get calls a given json endpoint of the ilo and returns the data
-func (i *IDrac9) get(endpoint string, extraHeaders *map[string]string) (payload []byte, err error) {
+func (i *IDrac9) get(endpoint string, extraHeaders *map[string]string) (statusCode int, payload []byte, err error) {
 	i.log.V(1).Info("retrieving data from bmc", "step", "bmc connection", "vendor", dell.VendorID, "ip", i.ip, "endpoint", endpoint)
 
 	bmcURL := fmt.Sprintf("https://%s", i.ip)
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s", bmcURL, endpoint), nil)
 	if err != nil {
-		return payload, err
+		return 0, nil, err
 	}
 
 	req.Header.Add("XSRF-TOKEN", i.xsrfToken)
@@ -83,7 +83,7 @@ func (i *IDrac9) get(endpoint string, extraHeaders *map[string]string) (payload 
 
 	resp, err := i.httpClient.Do(req)
 	if err != nil {
-		return payload, err
+		return 0, nil, err
 	}
 	defer resp.Body.Close()
 
@@ -92,14 +92,14 @@ func (i *IDrac9) get(endpoint string, extraHeaders *map[string]string) (payload 
 
 	payload, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return payload, err
+		return 0, nil, err
 	}
 
 	if resp.StatusCode == 404 {
-		return payload, errors.ErrPageNotFound
+		return 404, payload, errors.ErrPageNotFound
 	}
 
-	return payload, err
+	return resp.StatusCode, payload, err
 }
 
 // PUTs data
@@ -318,9 +318,9 @@ func (i *IDrac9) Status() (status string, err error) {
 	}
 
 	url := "sysmgmt/2016/server/extended_health"
-	payload, err := i.get(url, extraHeaders)
-	if err != nil {
-		return status, err
+	statusCode, payload, err := i.get(url, extraHeaders)
+	if err != nil || statusCode != 200 {
+		return "", err
 	}
 
 	iDracHealthStatus := &dell.IDracHealthStatus{}
@@ -346,13 +346,13 @@ func (i *IDrac9) PowerKw() (power float64, err error) {
 	}
 
 	url := "sysmgmt/2015/server/sensor/power"
-	payload, err := i.get(url, nil)
-	if err != nil {
+	statusCode, response, err := i.get(url, nil)
+	if err != nil || statusCode != 200 {
 		return power, err
 	}
 
 	iDracPowerData := &dell.IDrac9PowerData{}
-	err = json.Unmarshal(payload, iDracPowerData)
+	err = json.Unmarshal(response, iDracPowerData)
 	if err != nil {
 		return power, err
 	}
@@ -487,13 +487,13 @@ func (i *IDrac9) Slot() (slot int, err error) {
 func (i *IDrac9) slotC6420() (slot int, err error) {
 
 	var url = "sysmgmt/2012/server/configgroup/System.ServerTopology"
-	payload, err := i.get(url, nil)
-	if err != nil {
+	statusCode, response, err := i.get(url, nil)
+	if err != nil || statusCode != 200 {
 		return -1, err
 	}
 
 	iDracSystemTopology := &dell.SystemTopology{}
-	err = json.Unmarshal(payload, iDracSystemTopology)
+	err = json.Unmarshal(response, iDracSystemTopology)
 	if err != nil {
 		return -1, err
 	}
@@ -546,13 +546,13 @@ func (i *IDrac9) License() (name string, licType string, err error) {
 	}
 
 	url := "sysmgmt/2012/server/license"
-	payload, err := i.get(url, extraHeaders)
-	if err != nil {
+	statusCode, response, err := i.get(url, extraHeaders)
+	if err != nil || statusCode != 200 {
 		return name, licType, err
 	}
 
 	iDracLicense := &dell.IDracLicense{}
-	err = json.Unmarshal(payload, iDracLicense)
+	err = json.Unmarshal(response, iDracLicense)
 	if err != nil {
 		return name, licType, err
 	}
@@ -598,13 +598,13 @@ func (i *IDrac9) TempC() (temp int, err error) {
 	}
 
 	url := "sysmgmt/2012/server/temperature"
-	payload, err := i.get(url, extraHeaders)
-	if err != nil {
+	statusCode, response, err := i.get(url, extraHeaders)
+	if err != nil || statusCode != 200 {
 		return temp, err
 	}
 
 	iDracTemp := &dell.IDracTemp{}
-	err = json.Unmarshal(payload, iDracTemp)
+	err = json.Unmarshal(response, iDracTemp)
 	if err != nil {
 		return temp, err
 	}
@@ -680,13 +680,13 @@ func (i *IDrac9) Psus() (psus []*devices.Psu, err error) {
 	}
 
 	url := "sysmgmt/2013/server/sensor/powersupplyunit"
-	payload, err := i.get(url, extraHeaders)
-	if err != nil {
+	statusCode, response, err := i.get(url, extraHeaders)
+	if err != nil || statusCode != 200 {
 		return psus, err
 	}
 
 	iDracPowersupplyunit := &dell.IDracPowersupplyunit{}
-	err = json.Unmarshal(payload, iDracPowersupplyunit)
+	err = json.Unmarshal(response, iDracPowersupplyunit)
 	if err != nil {
 		return psus, err
 	}

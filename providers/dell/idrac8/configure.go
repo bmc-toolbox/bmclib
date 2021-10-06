@@ -301,12 +301,13 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 	//ntp servers
 
 	endpoint := fmt.Sprintf("data?%s", queryStr)
-	response, err := i.get(endpoint, nil)
-	if err != nil {
+	statusCode, response, err := i.get(endpoint, nil)
+	if err != nil || statusCode != 200 {
 		i.log.V(1).Info("GET request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
+			"status", statusCode,
 			"step", helper.WhosCalling(),
 			"response", string(response),
 		)
@@ -327,14 +328,15 @@ func (i *IDrac8) Ldap(cfg *cfgresources.Ldap) error {
 	}
 
 	endpoint := fmt.Sprintf("data?set=xGLServer:%s", cfg.Server)
-	response, err := i.get(endpoint, nil)
-	if err != nil {
+	statusCode, response, err := i.get(endpoint, nil)
+	if err != nil || statusCode != 200 {
 		msg := "Request to set ldap server failed."
 		err = errors.New(msg)
 		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
+			"status", statusCode,
 			"step", helper.WhosCalling(),
 			"response", string(response),
 		)
@@ -362,13 +364,14 @@ func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) error {
 	}
 
 	endpoint := fmt.Sprintf("data?set=xGLSearchFilter:%s", escapeLdapString(cfg.SearchFilter))
-	response, err := i.get(endpoint, nil)
-	if err != nil {
+	statusCode, response, err := i.get(endpoint, nil)
+	if err != nil || statusCode != 200 {
 		msg := "request to set ldap search filter failed."
 		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
+			"status", statusCode,
 			"step", helper.WhosCalling(),
 			"response", string(response),
 		)
@@ -463,12 +466,13 @@ func (i *IDrac8) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 		groupDn = escapeLdapString(groupDn)
 
 		endpoint := fmt.Sprintf("data?set=xGLGroup%dName:%s", groupID, groupDn)
-		response, err := i.get(endpoint, nil)
-		if err != nil {
+		statusCode, response, err := i.get(endpoint, nil)
+		if err != nil || statusCode != 200 {
 			i.log.V(1).Error(err, "GET request failed.",
 				"IP", i.ip,
 				"HardwareType", i.HardwareType(),
 				"endpoint", endpoint,
+				"status", statusCode,
 				"step", "applyLdapGroupParams",
 				"response", string(response),
 			)
@@ -559,12 +563,13 @@ func (i *IDrac8) applyTimezoneParam(timezone string) {
 	//https://10.193.251.10/data?set=tm_tz_str_zone:CET
 
 	endpoint := fmt.Sprintf("data?set=tm_tz_str_zone:%s", timezone)
-	response, err := i.get(endpoint, nil)
-	if err != nil {
+	statusCode, response, err := i.get(endpoint, nil)
+	if err != nil || statusCode != 200 {
 		i.log.V(1).Info("GET request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
+			"status", statusCode,
 			"step", helper.WhosCalling(),
 			"response", string(response),
 		)
@@ -644,19 +649,20 @@ func (i *IDrac8) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, er
 
 	queryString := url.QueryEscape(fmt.Sprintf("%s=serverCSR(%s)", endpoint, strings.Join(payload, ",")))
 
-	body, err := i.get(queryString, nil)
-	if err != nil {
+	statusCode, response, err := i.get(queryString, nil)
+	if err != nil || statusCode != 200 {
 		i.log.V(1).Error(err, "GET request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
+			"status", statusCode,
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return []byte{}, err
 	}
 
-	return body, nil
+	return response, nil
 }
 
 // UploadHTTPSCert uploads the given CRT cert,

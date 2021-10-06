@@ -41,15 +41,15 @@ func (i *IDrac9) Screenshot() (response []byte, extension string, err error) {
 
 	extension = "png"
 	endpoint1 := "sysmgmt/2015/server/preview"
-	_, err = i.get(endpoint1, &map[string]string{})
-	if err != nil {
-		return []byte{}, extension, err
+	statusCode, _, err := i.get(endpoint1, &map[string]string{})
+	if err != nil || statusCode != 200 {
+		return nil, "", err
 	}
 
 	endpoint2 := "capconsole/scapture0.png"
-	response, err = i.get(endpoint2, &map[string]string{})
-	if err != nil {
-		return []byte{}, extension, err
+	statusCode, response, err = i.get(endpoint2, &map[string]string{})
+	if err != nil || statusCode != 200 {
+		return nil, "", err
 	}
 
 	return response, extension, err
@@ -58,8 +58,8 @@ func (i *IDrac9) Screenshot() (response []byte, extension string, err error) {
 func (i *IDrac9) queryUsers() (users map[int]User, err error) {
 	endpoint := "sysmgmt/2012/server/configgroup/iDRAC.Users"
 
-	data, err := i.get(endpoint, &map[string]string{})
-	if err != nil {
+	statusCode, response, err := i.get(endpoint, &map[string]string{})
+	if err != nil || statusCode != 200 {
 		i.log.V(1).Error(err, "GET request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
@@ -71,7 +71,7 @@ func (i *IDrac9) queryUsers() (users map[int]User, err error) {
 	}
 
 	userData := make(idracUsers)
-	err = json.Unmarshal(data, &userData)
+	err = json.Unmarshal(response, &userData)
 	if err != nil {
 		i.log.V(1).Error(err, "Unable to unmarshal payload.",
 			"IP", i.ip,
@@ -90,8 +90,8 @@ func (i *IDrac9) queryLdapRoleGroups() (ldapRoleGroups LdapRoleGroups, err error
 
 	endpoint := "sysmgmt/2012/server/configgroup/iDRAC.LDAPRoleGroup"
 
-	data, err := i.get(endpoint, &map[string]string{})
-	if err != nil {
+	statusCode, response, err := i.get(endpoint, &map[string]string{})
+	if err != nil || statusCode != 200 {
 		i.log.V(1).Error(err, "GET request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
@@ -103,7 +103,7 @@ func (i *IDrac9) queryLdapRoleGroups() (ldapRoleGroups LdapRoleGroups, err error
 	}
 
 	idracLdapRoleGroups := make(idracLdapRoleGroups)
-	err = json.Unmarshal(data, &idracLdapRoleGroups)
+	err = json.Unmarshal(response, &idracLdapRoleGroups)
 	if err != nil {
 		i.log.V(1).Error(err, "Unable to unmarshal payload.",
 			"IP", i.ip,

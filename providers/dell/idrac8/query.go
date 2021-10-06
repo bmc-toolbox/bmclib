@@ -48,8 +48,8 @@ func (i *IDrac8) Screenshot() (response []byte, extension string, err error) {
 	extension = "png"
 
 	// here we expect an empty response
-	response, err = i.get(endpoint1, &map[string]string{"idracAutoRefresh": "1"})
-	if err != nil {
+	statusCode, response, err := i.get(endpoint1, &map[string]string{"idracAutoRefresh": "1"})
+	if err != nil || statusCode != 200 {
 		return []byte{}, extension, err
 	}
 
@@ -60,8 +60,8 @@ func (i *IDrac8) Screenshot() (response []byte, extension string, err error) {
 	endpoint2 := fmt.Sprintf("capconsole/scapture0.png?%d",
 		time.Now().UnixNano()/int64(time.Millisecond))
 
-	response, err = i.get(endpoint2, &map[string]string{})
-	if err != nil {
+	statusCode, response, err = i.get(endpoint2, &map[string]string{})
+	if err != nil || statusCode != 200 {
 		return []byte{}, extension, err
 	}
 
@@ -74,8 +74,8 @@ func (i *IDrac8) queryUsers() (userInfo UserInfo, err error) {
 
 	endpoint := "data?get=user"
 
-	response, err := i.get(endpoint, &map[string]string{})
-	if err != nil {
+	statusCode, response, err := i.get(endpoint, &map[string]string{})
+	if err != nil || statusCode != 200 {
 		i.log.V(1).Error(err, "GET request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
