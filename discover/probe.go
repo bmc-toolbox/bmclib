@@ -76,6 +76,7 @@ func (p *Probe) hpIlo(ctx context.Context, log logr.Logger) (bmcConnection inter
 		if iloXML.HSI != nil {
 			if strings.HasPrefix(iloXML.MP.Pn, "Integrated Lights-Out") {
 				log.V(1).Info("step", "ScanAndConnect", "host", p.host, "vendor", string(devices.HP), "msg", "it's a HP with iLo")
+
 				return ilo.New(ctx, p.host, p.username, p.password, log)
 			}
 
@@ -118,6 +119,7 @@ func (p *Probe) hpC7000(ctx context.Context, log logr.Logger) (bmcConnection int
 
 		if iloXMLC.Infra2 != nil {
 			log.V(1).Info("step", "ScanAndConnect", "host", p.host, "vendor", string(devices.HP), "msg", "it's a chassis")
+
 			return c7000.New(ctx, p.host, p.username, p.password, log)
 		}
 
@@ -127,7 +129,6 @@ func (p *Probe) hpC7000(ctx context.Context, log logr.Logger) (bmcConnection int
 
 // hpCl100 attempts to identify a cloudline device
 func (p *Probe) hpCl100(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {
-
 	// HPE Cloudline CL100
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("https://%s/res/ok.png", p.host), nil)
 	if err != nil {
