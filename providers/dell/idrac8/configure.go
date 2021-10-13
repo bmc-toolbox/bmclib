@@ -50,12 +50,13 @@ func (i *IDrac8) Bios(cfg *cfgresources.Bios) (err error) {
 	return err
 }
 
-// escapeLdapString escapes ldap parameters strings
 func escapeLdapString(s string) string {
 	r := ""
 	for _, c := range s {
-		if c == '=' || c == ',' {
-			r += fmt.Sprintf("\\%c", c)
+		if c == '=' {
+			r += "%5C%3D"
+		} else if c == ',' {
+			r += "%5C%2C"
 		} else {
 			r += string(c)
 		}
@@ -513,10 +514,9 @@ func (i *IDrac8) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 //https://10.193.251.10/postset?ldapconf
 // data=LDAPEnableMode:3,xGLNameSearchEnabled:0,xGLBaseDN:ou%5C%3DPeople%5C%2Cdc%5C%3Dactivehotels%5C%2Cdc%5C%3Dcom,xGLUserLogin:uid,xGLGroupMem:memberUid,xGLBindDN:,xGLCertValidationEnabled:1,xGLGroup1Priv:511,xGLGroup2Priv:97,xGLGroup3Priv:0,xGLGroup4Priv:0,xGLGroup5Priv:0,xGLServerPort:636
 func (i *IDrac8) applyLdapRoleGroupPrivParam(cfg *cfgresources.Ldap, groupPrivilegeParam string) (err error) {
-
 	baseDn := escapeLdapString(cfg.BaseDn)
-	payload := "data=LDAPEnableMode:3,"  //setup generic ldap
-	payload += "xGLNameSearchEnabled:0," //lookup ldap server from dns
+	payload := "data=LDAPEnableMode:3,"  // Generic LDAP
+	payload += "xGLNameSearchEnabled:0," // Lookup LDAP server from DNS
 	payload += fmt.Sprintf("xGLBaseDN:%s,", baseDn)
 	payload += fmt.Sprintf("xGLUserLogin:%s,", cfg.UserAttribute)
 	payload += fmt.Sprintf("xGLGroupMem:%s,", cfg.GroupAttribute)
