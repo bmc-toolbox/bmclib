@@ -84,8 +84,10 @@ With approval from [Booking.com](http://www.booking.com), the code and
 specification were generalized and published as Open Source on github, for
 which the authors would like to express their gratitude.
 
+bmclib interfaces with Redfish with https://github.com/stmcginnis/gofish
+
 #### Authors
 - Juliano Martinez
-- Joel Rebello 
+- Joel Rebello
 - Guilherme M. Schroeder
 - Mariano Guezuraga
