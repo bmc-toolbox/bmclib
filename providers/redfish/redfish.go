@@ -3,6 +3,7 @@ package redfish
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -41,11 +42,17 @@ type Conn struct {
 
 // Open a connection to a BMC via redfish
 func (c *Conn) Open(ctx context.Context) (err error) {
+
 	config := gofish.ClientConfig{
 		Endpoint: "https://" + c.Host,
 		Username: c.User,
 		Password: c.Pass,
 		Insecure: true,
+	}
+
+	debug := os.Getenv("DEBUG_BMCLIB")
+	if debug != "" {
+		config.DumpWriter = os.Stdout
 	}
 
 	c.conn, err = gofish.ConnectContext(ctx, config)
