@@ -167,7 +167,7 @@ func (c *C7000) PxeOnceBlade(position int) (bool, error) {
 	return false, fmt.Errorf(output)
 }
 
-// SetDynamicPower configure the dynamic power behaviour
+// SetDynamicPower configure the dynamic power behavior
 func (c *C7000) SetDynamicPower(enable bool) (bool, error) {
 	var state string
 	if enable {

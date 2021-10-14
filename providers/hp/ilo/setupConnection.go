@@ -110,7 +110,6 @@ func (i *Ilo) Close(ctx context.Context) error {
 
 				respDump, _ := httputil.DumpResponse(resp, true)
 				i.log.V(2).Info("responseTrace", "responseDump", string(respDump))
-
 			}
 		}
 	}

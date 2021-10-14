@@ -8,12 +8,10 @@ import (
 
 // cmdPowerSettings
 func (i *Ilo) cmpPowerSettings(regulatorMode string) (PowerRegulator, bool, error) {
-
 	// get current config
 	currentConfig, err := i.queryPowerRegulator()
 	if err != nil {
 		return PowerRegulator{}, false, fmt.Errorf("Unable to query existing Power regulator config")
-
 	}
 
 	settingsMatch := func() bool {
@@ -26,12 +24,10 @@ func (i *Ilo) cmpPowerSettings(regulatorMode string) (PowerRegulator, bool, erro
 
 	// configuration update required.
 	return currentConfig, true, nil
-
 }
 
 // compares the current Network IPv4 config with the given Network configuration
 func (i *Ilo) cmpNetworkIPv4Settings(cfg *cfgresources.Network) (NetworkIPv4, bool, error) {
-
 	// setup some params as int for comparison
 	var dnsFromDHCP, dhcpEnable, ddnsEnable int
 
@@ -51,7 +47,6 @@ func (i *Ilo) cmpNetworkIPv4Settings(cfg *cfgresources.Network) (NetworkIPv4, bo
 	currentConfig, err := i.queryNetworkIPv4()
 	if err != nil {
 		return NetworkIPv4{}, false, fmt.Errorf("Unable to query existing IPv4 network config")
-
 	}
 
 	settingsMatch := func() bool {
@@ -89,7 +84,6 @@ func (i *Ilo) cmpNetworkIPv4Settings(cfg *cfgresources.Network) (NetworkIPv4, bo
 // returning an updated AccessSettings struct if an update is required.
 // nolint: gocyclo
 func (i *Ilo) cmpAccessSettings(cfg *cfgresources.Network) (AccessSettings, bool, error) {
-
 	// setup some params as int for comparison
 	var sshEnable, ipmiEnable, serialEnable int
 
@@ -113,7 +107,6 @@ func (i *Ilo) cmpAccessSettings(cfg *cfgresources.Network) (AccessSettings, bool
 
 	// compare current configuration with configuration declared.
 	settingsMatch := func() bool {
-
 		// compare currentConfig cofiguration with declared.
 		if currentConfig.SSHStatus != sshEnable {
 			return false
@@ -162,5 +155,4 @@ func (i *Ilo) cmpAccessSettings(cfg *cfgresources.Network) (AccessSettings, bool
 
 	// configuration update required.
 	return currentConfig, true, nil
-
 }

@@ -15,7 +15,6 @@ import (
 
 // wraps the XML to be sent in the SOAP envelope
 func wrapXML(element interface{}, sessionKey string) (doc Envelope) {
-
 	body := Body{Content: element}
 	doc = Envelope{
 		SOAPENV: "http://www.w3.org/2003/05/soap-envelope",
@@ -28,7 +27,6 @@ func wrapXML(element interface{}, sessionKey string) (doc Envelope) {
 	}
 
 	if sessionKey != "" {
-
 		doc.Header = Header{Security: Security{
 			MustUnderstand: "true",
 			HpOaSessionKeyToken: HpOaSessionKeyToken{

@@ -18,7 +18,6 @@ import (
 // The bool value returned indicates if the BMC supports CSR generation.
 // CurrentHTTPSCert implements the Configure interface
 func (i *IDrac8) CurrentHTTPSCert() ([]*x509.Certificate, bool, error) {
-
 	dialer := &net.Dialer{
 		Timeout: time.Duration(10) * time.Second,
 	}
@@ -32,7 +31,6 @@ func (i *IDrac8) CurrentHTTPSCert() ([]*x509.Certificate, bool, error) {
 	defer conn.Close()
 
 	return conn.ConnectionState().PeerCertificates, true, nil
-
 }
 
 // Screenshot Grab screen preview.
@@ -100,7 +98,6 @@ func (i *IDrac8) queryUsers() (userInfo UserInfo, err error) {
 	}
 
 	for _, userAccount := range xmlData.XMLUserAccount {
-
 		user := User{
 			UserName:  userAccount.Name,
 			Privilege: strconv.Itoa(userAccount.Privileges),

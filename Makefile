@@ -15,7 +15,7 @@ cover: ## Run unit tests with coverage report
 .PHONY: lint
 lint:  ## Run linting
 	@echo be sure golangci-lint is installed: https://golangci-lint.run/usage/install/
-	golangci-lint run
+	golangci-lint run --config .golangci.yml
 
 .PHONY: goimports
 goimports: ## run goimports updating files in place

@@ -60,7 +60,6 @@ func (s *SupermicroX) CheckCredentials() (err error) {
 
 // get calls a given json endpoint of the ilo and returns the data
 func (s *SupermicroX) get(endpoint string) (payload []byte, err error) {
-
 	bmcURL := fmt.Sprintf("https://%s/%s", s.ip, endpoint)
 	req, err := http.NewRequest("GET", bmcURL, nil)
 	if err != nil {
@@ -122,15 +121,12 @@ func (s *SupermicroX) post(endpoint string, urlValues *url.Values, form []byte, 
 	var req *http.Request
 
 	if formDataContentType == "" {
-
 		req, err = http.NewRequest("POST", u.String(), strings.NewReader(urlValues.Encode()))
 		if err != nil {
 			return response, statusCode, err
 		}
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
 	} else {
-
 		req, err = http.NewRequest("POST", u.String(), bytes.NewReader(form))
 		if err != nil {
 			return response, statusCode, err

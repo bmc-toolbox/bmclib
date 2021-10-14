@@ -56,7 +56,6 @@ func TestPowerStateGet(t *testing.T) {
 			if state != tc.expectedState {
 				t.Fatalf("expected: %v, got: %v", tc.expectedState, state)
 			}
-
 		})
 	}
 }
@@ -126,7 +125,6 @@ func TestPowerSet(t *testing.T) {
 			if ok != tc.expectedOk {
 				t.Fatalf("expected: %v, got: %v", tc.expectedOk, ok)
 			}
-
 		})
 	}
 }

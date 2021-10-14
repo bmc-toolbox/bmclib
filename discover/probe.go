@@ -60,7 +60,6 @@ func (p *Probe) hpIlo(ctx context.Context, log logr.Logger) (bmcConnection inter
 	}
 
 	if bytes.Contains(payload[:6], []byte("RIMP")) {
-
 		iloXMLC := &hp.Rimp{}
 		err = xml.Unmarshal(payload, iloXMLC)
 		if err != nil {
@@ -110,7 +109,6 @@ func (p *Probe) hpC7000(ctx context.Context, log logr.Logger) (bmcConnection int
 	}
 
 	if bytes.Contains(payload[:6], []byte("RIMP")) {
-
 		iloXMLC := &hp.Rimp{}
 		err = xml.Unmarshal(payload, iloXMLC)
 		if err != nil {
@@ -122,7 +120,6 @@ func (p *Probe) hpC7000(ctx context.Context, log logr.Logger) (bmcConnection int
 
 			return c7000.New(ctx, p.host, p.username, p.password, log)
 		}
-
 	}
 	return bmcConnection, errors.ErrDeviceNotMatched
 }
@@ -154,7 +151,6 @@ func (p *Probe) hpCl100(ctx context.Context, log logr.Logger) (bmcConnection int
 	}
 
 	return bmcConnection, errors.ErrDeviceNotMatched
-
 }
 
 func (p *Probe) idrac8(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {

@@ -45,7 +45,6 @@ type testFwUpgradeState struct {
 var aClient *ASRockRack
 
 func TestMain(m *testing.M) {
-
 	var err error
 	// setup mock server
 	server = mockASRockBMC()
@@ -221,17 +220,14 @@ func fwinfo(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		_, _ = w.Write(fwinfoResponse)
 	}
-
 }
 
 func session(w http.ResponseWriter, r *http.Request) {
-
 	switch r.Method {
 	case "POST":
 		// login to BMC
 		b, _ := ioutil.ReadAll(r.Body)
 		if string(b) == string(loginPayload) {
-
 			// login request needs to be of the right content-typ
 			if r.Header.Get("Content-Type") != "application/x-www-form-urlencoded" {
 				w.WriteHeader(http.StatusBadRequest)

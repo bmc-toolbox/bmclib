@@ -57,7 +57,6 @@ func TestBmcReset(t *testing.T) {
 			if ok != tc.expectedOk {
 				t.Fatalf("expected: %v, got: %v", tc.expectedOk, ok)
 			}
-
 		})
 	}
 }

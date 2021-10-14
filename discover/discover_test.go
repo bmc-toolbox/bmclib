@@ -20,8 +20,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-var ()
-
 func init() {
 	if viper.GetBool("debug") != true {
 		viper.SetDefault("debug", true)
@@ -149,7 +147,6 @@ func TestProbes(t *testing.T) {
 				t.Log(hint)
 				if reflect.TypeOf(tt.wantType) != reflect.TypeOf(bmc) {
 					t.Errorf("Want %T, got %T", tt.wantType, bmc)
-
 				}
 			}
 
@@ -161,9 +158,7 @@ func TestProbes(t *testing.T) {
 
 			if reflect.TypeOf(tt.wantType) != reflect.TypeOf(bmc) {
 				t.Errorf("Want %T, got %T", tt.wantType, bmc)
-
 			}
-
 		})
 	}
 }
