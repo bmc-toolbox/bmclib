@@ -63,7 +63,6 @@ type biosUpdateAction struct {
 // at this point all logged in sessions are terminated
 // and no logins are permitted
 func (a *ASRockRack) setFlashMode() error {
-
 	endpoint := "api/maintenance/flash"
 
 	_, statusCode, err := a.queryHTTPS(endpoint, "PUT", nil, nil, 0)
@@ -90,7 +89,6 @@ func multipartSize(fieldname, filename string) int64 {
 
 // 2 Upload the firmware file
 func (a *ASRockRack) uploadFirmware(endpoint string, fwReader io.Reader, fileSize int64) error {
-
 	fieldName, fileName := "fwimage", "image"
 	contentLength := multipartSize(fieldName, fileName) + fileSize
 
@@ -143,7 +141,6 @@ func (a *ASRockRack) uploadFirmware(endpoint string, fwReader io.Reader, fileSiz
 
 // 3. Verify uploaded firmware file - to be invoked after uploadFirmware()
 func (a *ASRockRack) verifyUploadedFirmware() error {
-
 	endpoint := "api/maintenance/firmware/verification"
 
 	_, statusCode, err := a.queryHTTPS(endpoint, "GET", nil, nil, 0)
@@ -156,12 +153,10 @@ func (a *ASRockRack) verifyUploadedFirmware() error {
 	}
 
 	return nil
-
 }
 
 // 4. Start firmware flashing process - to be invoked after verifyUploadedFirmware
 func (a *ASRockRack) upgradeBMC() error {
-
 	endpoint := "api/maintenance/firmware/upgrade"
 
 	// preserve all configuration during upgrade, full flash
@@ -182,12 +177,10 @@ func (a *ASRockRack) upgradeBMC() error {
 	}
 
 	return nil
-
 }
 
 // 4. reset BMC
 func (a *ASRockRack) reset() error {
-
 	endpoint := "api/maintenance/reset"
 
 	_, statusCode, err := a.queryHTTPS(endpoint, "POST", nil, nil, 0)
@@ -200,12 +193,10 @@ func (a *ASRockRack) reset() error {
 	}
 
 	return nil
-
 }
 
 // 5. firmware flash progress
 func (a *ASRockRack) flashProgress(endpoint string) (*upgradeProgress, error) {
-
 	resp, statusCode, err := a.queryHTTPS(endpoint, "GET", nil, nil, 0)
 	if err != nil {
 		return nil, err
@@ -222,12 +213,10 @@ func (a *ASRockRack) flashProgress(endpoint string) (*upgradeProgress, error) {
 	}
 
 	return p, nil
-
 }
 
 // Query firmware information from the BMC
 func (a *ASRockRack) firmwareInfo() (*firmwareInfo, error) {
-
 	endpoint := "api/asrr/fw-info"
 
 	resp, statusCode, err := a.queryHTTPS(endpoint, "GET", nil, nil, 0)
@@ -246,13 +235,11 @@ func (a *ASRockRack) firmwareInfo() (*firmwareInfo, error) {
 	}
 
 	return f, nil
-
 }
 
 // Set the BIOS upgrade configuration
 //  - preserve current configuration
 func (a *ASRockRack) biosUpgradeConfiguration() error {
-
 	endpoint := "api/asrr/maintenance/BIOS/configuration"
 
 	// Preserve existing configuration?
@@ -279,12 +266,10 @@ func (a *ASRockRack) biosUpgradeConfiguration() error {
 	}
 
 	return nil
-
 }
 
 // Run BIOS upgrade
 func (a *ASRockRack) biosUpgrade() error {
-
 	endpoint := "api/asrr/maintenance/BIOS/upgrade"
 
 	// Run upgrade
@@ -311,12 +296,10 @@ func (a *ASRockRack) biosUpgrade() error {
 	}
 
 	return nil
-
 }
 
 // Aquires a session id cookie and a csrf token
 func (a *ASRockRack) httpsLogin() error {
-
 	urlEndpoint := "api/session"
 
 	// login payload
@@ -349,7 +332,6 @@ func (a *ASRockRack) httpsLogin() error {
 
 // Close ends the BMC session
 func (a *ASRockRack) httpsLogout() error {
-
 	urlEndpoint := "api/session"
 
 	_, statusCode, err := a.queryHTTPS(urlEndpoint, "DELETE", nil, nil, 0)
@@ -372,7 +354,6 @@ func (a *ASRockRack) httpsLogout() error {
 // the / suffix should be excluded from the URLendpoint
 // returns - response body, http status code, error if any
 func (a *ASRockRack) queryHTTPS(URLendpoint, method string, payload io.Reader, headers map[string]string, contentLength int64) ([]byte, int, error) {
-
 	var body []byte
 	var err error
 	var req *http.Request
@@ -421,5 +402,4 @@ func (a *ASRockRack) queryHTTPS(URLendpoint, method string, payload io.Reader, h
 	defer resp.Body.Close()
 
 	return body, resp.StatusCode, nil
-
 }

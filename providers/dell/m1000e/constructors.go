@@ -24,7 +24,6 @@ import (
 // Given the Ntp resource,
 // populate the required Datetime params
 func (m *M1000e) newDatetimeCfg(ntp *cfgresources.Ntp) DatetimeParams {
-
 	if ntp.Timezone == "" {
 		// TODO update method with error return and return err in this if, was doing logrus.Fatal here
 		msg := "ntp resource parameter timezone required but not declared"
@@ -58,7 +57,6 @@ func (m *M1000e) newDatetimeCfg(ntp *cfgresources.Ntp) DatetimeParams {
 // A multipart form would be required to upload the cacert
 // Given the Ldap resource, populate required DirectoryServicesParams
 func (m *M1000e) newDirectoryServicesCfg(ldap *cfgresources.Ldap) DirectoryServicesParams {
-
 	var userAttribute, groupAttribute string
 	if ldap.Server == "" {
 		m.log.V(1).Info("Ldap resource parameter Server required but not declared.", "step", "newDirectoryServicesCfg")
@@ -131,7 +129,6 @@ func (m *M1000e) newDirectoryServicesCfg(ldap *cfgresources.Ldap) DirectoryServi
 
 // Return bool value if the role is valid.
 func (m *M1000e) isRoleValid(role string) bool {
-
 	validRoles := []string{"admin", "user"}
 	for _, v := range validRoles {
 		if role == v {
@@ -144,7 +141,6 @@ func (m *M1000e) isRoleValid(role string) bool {
 
 // Given the Ldap resource, populate required LdapArgParams
 func (m *M1000e) newLdapRoleCfg(cfg *cfgresources.LdapGroup, roleID int) (ldapArgCfg LdapArgParams, err error) {
-
 	var privBitmap, genLdapRolePrivilege int
 
 	if cfg.Group == "" {
@@ -204,7 +200,6 @@ func (m *M1000e) newLdapRoleCfg(cfg *cfgresources.LdapGroup, roleID int) (ldapAr
 // Given the syslog resource, populate the required InterfaceParams
 // check for missing params
 func (m *M1000e) newInterfaceCfg(syslog *cfgresources.Syslog) InterfaceParams {
-
 	var syslogPort int
 
 	if syslog.Server == "" {
@@ -262,7 +257,6 @@ func (m *M1000e) newInterfaceCfg(syslog *cfgresources.Syslog) InterfaceParams {
 // Given the user resource, populate the required UserParams
 // check for missing params
 func (m *M1000e) newUserCfg(user *cfgresources.User, userID int) UserParams {
-
 	var cmcGroup, privilege int
 
 	if user.Name == "" {

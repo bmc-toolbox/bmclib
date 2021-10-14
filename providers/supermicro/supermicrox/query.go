@@ -16,7 +16,6 @@ import (
 // the bool value returned is set to true if the BMC support CSR generation.
 // CurrentHTTPSCert implements the Configure interface.
 func (s *SupermicroX) CurrentHTTPSCert() ([]*x509.Certificate, bool, error) {
-
 	dialer := &net.Dialer{
 		Timeout: time.Duration(10) * time.Second,
 	}
@@ -30,7 +29,6 @@ func (s *SupermicroX) CurrentHTTPSCert() ([]*x509.Certificate, bool, error) {
 	defer conn.Close()
 
 	return conn.ConnectionState().PeerCertificates, false, nil
-
 }
 
 // Screenshot returns a thumbnail of video display from the bmc.
@@ -38,7 +36,6 @@ func (s *SupermicroX) CurrentHTTPSCert() ([]*x509.Certificate, bool, error) {
 // 2. sleep for 3 seconds to give ikvm time to ensure preview was captured
 // 3. request for preview.
 func (s *SupermicroX) Screenshot() (response []byte, extension string, err error) {
-
 	postEndpoint := "CapturePreview.cgi"
 	getEndpoint := "cgi/url_redirect.cgi?"
 

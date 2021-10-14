@@ -441,7 +441,6 @@ func (d *CMCSlotMacWwn) UnmarshalJSON(data []byte) error {
 				d.SlotMacWwnList[pos] = b
 			}
 		}
-
 	}
 
 	return nil

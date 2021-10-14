@@ -66,7 +66,6 @@ func escapeLdapString(s string) string {
 
 // Return bool value if the role is valid.
 func (i *IDrac8) isRoleValid(role string) bool {
-
 	validRoles := []string{"admin", "user"}
 	for _, v := range validRoles {
 		if role == v {
@@ -82,7 +81,6 @@ func (i *IDrac8) isRoleValid(role string) bool {
 // User implements the Configure interface.
 // Iterate over iDrac users and adds/removes/modifies user accounts
 func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
-
 	err = i.validateUserCfg(cfgUsers)
 	if err != nil {
 		msg := "User config validation failed."
@@ -111,11 +109,9 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 
 	////for each configuration user
 	for _, cfgUser := range cfgUsers {
-
 		userID, userInfo, uExists := userInIdrac(cfgUser.Name, idracUsers)
 		//user to be added/updated
 		if cfgUser.Enable {
-
 			//new user to be added
 			if !uExists {
 				userID, userInfo, err = getEmptyUserSlot(idracUsers)
@@ -156,12 +152,10 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 				)
 				continue
 			}
-
 		} // end if cfgUser.Enable
 
 		//if the user exists but is disabled in our config, remove the user
 		if !cfgUser.Enable && uExists {
-
 			userInfo.Enable = "Disabled"
 			userInfo.SolEnable = "Disabled"
 			userInfo.UserName = cfgUser.Name
@@ -194,7 +188,6 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 // and since not all BMCs currently support configuring filtering for alerts,
 // for now the configuration for alert filters/enabling is managed through this method.
 func (i *IDrac8) Syslog(cfg *cfgresources.Syslog) (err error) {
-
 	var port int
 	enable := "Enabled"
 
@@ -274,7 +267,6 @@ func (i *IDrac8) Syslog(cfg *cfgresources.Syslog) (err error) {
 // Ntp applies NTP configuration params
 // Ntp implements the Configure interface.
 func (i *IDrac8) Ntp(cfg *cfgresources.Ntp) (err error) {
-
 	if cfg.Server1 == "" {
 		i.log.V(1).Info("NTP resource expects parameter: server1.", "step", "apply-ntp-cfg")
 		return
@@ -292,7 +284,6 @@ func (i *IDrac8) Ntp(cfg *cfgresources.Ntp) (err error) {
 }
 
 func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
-
 	var enable int
 	if !cfg.Enable {
 		i.log.V(1).Info("Ntp resource declared with enable: false.", "step", helper.WhosCalling())
@@ -326,13 +317,11 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 	}
 
 	i.log.V(1).Info("NTP servers param applied.", "IP", i.ip, "Model", i.HardwareType())
-
 }
 
 // Ldap applies LDAP configuration params.
 // Ldap implements the Configure interface.
 func (i *IDrac8) Ldap(cfg *cfgresources.Ldap) error {
-
 	if cfg.Server == "" {
 		msg := "ldap resource parameter Server required but not declared."
 		err := errors.New(msg)
@@ -367,7 +356,6 @@ func (i *IDrac8) Ldap(cfg *cfgresources.Ldap) error {
 // Applies ldap search filter param.
 // set=xGLSearchFilter:objectClass\=posixAccount
 func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) error {
-
 	if cfg.SearchFilter == "" {
 		msg := "Ldap resource parameter SearchFilter required but not declared."
 		err := errors.New(msg)
@@ -397,7 +385,6 @@ func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) error {
 // LdapGroup implements the Configure interface.
 // nolint: gocyclo
 func (i *IDrac8) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
-
 	groupID := 1
 
 	//set to decide what privileges the group should have
@@ -439,7 +426,6 @@ func (i *IDrac8) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresou
 
 	//for each ldap group
 	for _, group := range cfgGroup {
-
 		//if a group has been set to disable in the config,
 		//its configuration is skipped and removed.
 		if !group.Enable {
@@ -504,7 +490,6 @@ func (i *IDrac8) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresou
 
 		groupPrivilegeParam += fmt.Sprintf("xGLGroup%dPriv:%s,", groupID, privID)
 		groupID++
-
 	}
 
 	//set the rest of the group privileges to 0
@@ -528,7 +513,6 @@ func (i *IDrac8) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresou
 //https://10.193.251.10/postset?ldapconf
 // data=LDAPEnableMode:3,xGLNameSearchEnabled:0,xGLBaseDN:ou%5C%3DPeople%5C%2Cdc%5C%3Dactivehotels%5C%2Cdc%5C%3Dcom,xGLUserLogin:uid,xGLGroupMem:memberUid,xGLBindDN:,xGLCertValidationEnabled:1,xGLGroup1Priv:511,xGLGroup2Priv:97,xGLGroup3Priv:0,xGLGroup4Priv:0,xGLGroup5Priv:0,xGLServerPort:636
 func (i *IDrac8) applyLdapRoleGroupPrivParam(cfg *cfgresources.Ldap, groupPrivilegeParam string) (err error) {
-
 	baseDn := escapeLdapString(cfg.BaseDn)
 	payload := "data=LDAPEnableMode:3,"  //setup generic ldap
 	payload += "xGLNameSearchEnabled:0," //lookup ldap server from dns
@@ -586,13 +570,11 @@ func (i *IDrac8) applyTimezoneParam(timezone string) {
 	}
 
 	i.log.V(1).Info("Timezone param applied.", "IP", i.ip, "Model", i.HardwareType())
-
 }
 
 // Network method implements the Configure interface
 // applies various network parameters.
 func (i *IDrac8) Network(cfg *cfgresources.Network) (reset bool, err error) {
-
 	params := map[string]int{
 		"EnableIPv4":              1,
 		"DHCPEnable":              1,
@@ -643,7 +625,6 @@ func (i *IDrac8) Network(cfg *cfgresources.Network) (reset bool, err error) {
 
 // GenerateCSR generates a CSR request on the BMC.
 func (i *IDrac8) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, error) {
-
 	var payload []string
 
 	endpoint := "bindata?set"
@@ -680,7 +661,6 @@ func (i *IDrac8) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, er
 // 1. POST upload signed x509 cert in multipart form.
 // 2. POST returned resource URI
 func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, keyFileName string) (bool, error) {
-
 	endpoint := "sysmgmt/2012/server/transient/filestore?fileupload=true"
 	endpoint += fmt.Sprintf("&ST1=%s", i.st1)
 
@@ -769,5 +749,4 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	}
 
 	return true, err
-
 }

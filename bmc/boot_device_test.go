@@ -63,14 +63,12 @@ func TestSetBootDevice(t *testing.T) {
 				} else {
 					t.Fatal(err)
 				}
-
 			} else {
 				diff := cmp.Diff(result, expectedResult)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
-
 		})
 	}
 }

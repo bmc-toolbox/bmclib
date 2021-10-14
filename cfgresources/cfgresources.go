@@ -24,7 +24,7 @@ type ResourcesConfig struct {
 	Ntp          *Ntp          `yaml:"ntp"`
 	Bios         *Bios         `yaml:"bios"`
 	Power        *Power        `yaml:"power"`
-	Supermicro   *Supermicro   `yaml:"supermicro"` //supermicro specific config, example of issue #34
+	Supermicro   *Supermicro   `yaml:"supermicro"` // supermicro specific config, example of issue #34
 	SetupChassis *SetupChassis `yaml:"setupChassis"`
 }
 
@@ -44,20 +44,20 @@ type BladeBmcAccount struct {
 	Password string `yaml:"password"`
 }
 
-//Enable/Disable Virtual Mac addresses for blades in a chassis.
-//FlexAddresses in M1000e jargon.
-//Virtual connect in HP C7000 jargon.
+// Enable/Disable Virtual Mac addresses for blades in a chassis.
+// FlexAddresses in M1000e jargon.
+// Virtual connect in HP C7000 jargon.
 type flexAddress struct {
 	Enable bool `yaml:"enable"`
 }
 
-//Enable/Disable ipmi over lan
+// Enable/Disable ipmi over lan
 type ipmiOverLan struct {
 	Enable bool `yaml:"enable"`
 }
 
-//'Dynamic Power' in HP C7000 Jargon.
-//'DPSE' (dynamic PSU engagement) in M1000e Dell jargon.
+// 'Dynamic Power' in HP C7000 Jargon.
+// 'DPSE' (dynamic PSU engagement) in M1000e Dell jargon.
 type dynamicPower struct {
 	Enable bool `yaml:"enable"`
 }
@@ -88,8 +88,8 @@ type Ldap struct {
 	Port           int    `yaml:"port"`
 	Enable         bool   `yaml:"enable"`
 	Role           string `yaml:"role"`
-	BaseDn         string `yaml:"baseDn"` //BaseDN is the starting point of the LDAP tree search.
-	BindDn         string `yaml:"bindDn"` //BindDN is used to gain access to the LDAP tree.
+	BaseDn         string `yaml:"baseDn"` // BaseDN is the starting point of the LDAP tree search.
+	BindDn         string `yaml:"bindDn"` // BindDN is used to gain access to the LDAP tree.
 	Group          string `yaml:"group"`
 	GroupBaseDn    string `yaml:"groupBaseDn"`
 	UserAttribute  string `yaml:"userAttribute"`
@@ -97,7 +97,7 @@ type Ldap struct {
 	SearchFilter   string `yaml:"searchFilter"`
 }
 
-// License struct holds BMC licencing configuration.
+// License struct holds BMC licensing configuration.
 type License struct {
 	Key string `yaml:"key"`
 }
@@ -137,7 +137,7 @@ type Network struct {
 	DNSFromDHCP    bool   `yaml:"dnsFromDhcp"`
 	SSHEnable      bool   `yaml:"sshEnable"`
 	SSHPort        int    `yaml:"sshPort"`
-	SolEnable      bool   `yaml:"solEnable"` //Serial over lan
+	SolEnable      bool   `yaml:"solEnable"` // Serial over lan
 	IpmiEnable     bool   `yaml:"ipmiEnable"`
 	DhcpEnable     bool   `yaml:"dhcpEnable"`
 	IpmiPort       int    `yaml:"ipmiPort"`

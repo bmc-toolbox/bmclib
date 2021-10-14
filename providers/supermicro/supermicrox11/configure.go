@@ -68,7 +68,6 @@ func timezoneToUtcOffset(location *time.Location) (offset int) {
 
 // Return bool value if the role is valid.
 func (s *SupermicroX) isRoleValid(role string) bool {
-
 	validRoles := []string{"admin", "user"}
 	for _, v := range validRoles {
 		if role == v {
@@ -81,7 +80,6 @@ func (s *SupermicroX) isRoleValid(role string) bool {
 
 // returns a map of user accounts and their ids
 func (s *SupermicroX) queryUserAccounts() (userAccounts map[string]int, err error) {
-
 	userAccounts = make(map[string]int)
 	ipmi, err := s.query("op=CONFIG_INFO.XML&r=(0,0)")
 	if err != nil {
@@ -105,7 +103,6 @@ func (s *SupermicroX) queryUserAccounts() (userAccounts map[string]int, err erro
 // supermicro user accounts start with 1, account 0 which is a large empty string :\.
 // nolint: gocyclo
 func (s *SupermicroX) User(users []*cfgresources.User) (err error) {
-
 	currentUsers, err := s.queryUserAccounts()
 	if err != nil {
 		msg := "Unable to query current user accounts."
@@ -212,7 +209,6 @@ func (s *SupermicroX) User(users []*cfgresources.User) (err error) {
 			"Model": s.HardwareType(),
 			"User":  user.Name,
 		}).Debug("User parameters applied.")
-
 	}
 
 	return err
@@ -221,7 +217,6 @@ func (s *SupermicroX) User(users []*cfgresources.User) (err error) {
 // Network method implements the Configure interface
 // applies various network parameters.
 func (s *SupermicroX) Network(cfg *cfgresources.Network) (reset bool, err error) {
-
 	sshPort := 22
 
 	if cfg.SSHPort != 0 && cfg.SSHPort != sshPort {
@@ -273,7 +268,6 @@ func (s *SupermicroX) Network(cfg *cfgresources.Network) (reset bool, err error)
 // Ntp applies NTP configuration params
 // Ntp implements the Configure interface.
 func (s *SupermicroX) Ntp(cfg *cfgresources.Ntp) (err error) {
-
 	var enable string
 	if cfg.Server1 == "" {
 		log.WithFields(log.Fields{
@@ -378,7 +372,6 @@ func (s *SupermicroX) Ldap(cfgLdap *cfgresources.Ldap) error {
 // Supermicro does not have any separate configuration for Ldap groups just for generic ldap
 // nolint: gocyclo
 func (s *SupermicroX) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
-
 	var enable string
 
 	if cfgLdap.Server == "" {
@@ -432,7 +425,6 @@ func (s *SupermicroX) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfg
 	//for each ldap group setup config
 	//since supermicro can work with just one Searchbase, we go with the 'user' role group
 	for _, group := range cfgGroup {
-
 		if !group.Enable {
 			continue
 		}
@@ -517,7 +509,6 @@ func (s *SupermicroX) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfg
 // Syslog implements the Configure interface
 // this also enables alerts from the BMC
 func (s *SupermicroX) Syslog(cfg *cfgresources.Syslog) (err error) {
-
 	var port int
 
 	if cfg.Server == "" {
@@ -622,7 +613,6 @@ func (s *SupermicroX) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byt
 // 4. delay for a second
 // 5. Request for the current: SSL_STATUS.XML	(0,0)
 func (s *SupermicroX) UploadHTTPSCert(cert []byte, certFileName string, key []byte, keyFileName string) (bool, error) {
-
 	endpoint := "upload_ssl.cgi"
 
 	// setup a buffer for our multipart form
@@ -691,7 +681,6 @@ func (s *SupermicroX) UploadHTTPSCert(cert []byte, certFileName string, key []by
 // The second part of the certificate upload process,
 // we get the BMC to validate the uploaded SSL certificate.
 func (s *SupermicroX) validateSSL() error {
-
 	var v = url.Values{}
 	v.Set("op", "SSL_VALIDATE.XML")
 	v.Set("r", "(0,0)")
@@ -717,7 +706,6 @@ func (s *SupermicroX) validateSSL() error {
 // Get the current status of the certificate.
 // POST https://10.193.251.43/cgi/ipmi.cgi SSL_STATUS.XML: (0,0)
 func (s *SupermicroX) statusSSL() error {
-
 	var v = url.Values{}
 	v.Add("op", "SSL_STATUS.XML")
 	v.Set("r", "(0,0)")

@@ -81,14 +81,12 @@ func TestGetBMCVersion(t *testing.T) {
 				if diff != "" {
 					t.Fatal(diff)
 				}
-
 			} else {
 				diff := cmp.Diff(expectedResult, result)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
-
 		})
 	}
 }
@@ -123,14 +121,12 @@ func TestGetBMCVersionFromInterfaces(t *testing.T) {
 				if diff != "" {
 					t.Fatal(diff)
 				}
-
 			} else {
 				diff := cmp.Diff(expectedResult, result)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
-
 		})
 	}
 }
@@ -229,14 +225,12 @@ func TestGetBIOSVersion(t *testing.T) {
 				if diff != "" {
 					t.Fatal(diff)
 				}
-
 			} else {
 				diff := cmp.Diff(expectedResult, result)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
-
 		})
 	}
 }
@@ -271,14 +265,12 @@ func TestGetBIOSVersionFromInterfaces(t *testing.T) {
 				if diff != "" {
 					t.Fatal(diff)
 				}
-
 			} else {
 				diff := cmp.Diff(expectedResult, result)
 				if diff != "" {
 					t.Fatal(diff)
 				}
 			}
-
 		})
 	}
 }

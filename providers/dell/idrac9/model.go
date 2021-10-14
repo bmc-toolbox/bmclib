@@ -32,7 +32,7 @@ type Ldap struct {
 
 type idracLdapRoleGroups map[string]LdapRoleGroups
 
-// LdapRoleGroups declares the format in which ldap role groups are un/marshalled.
+// LdapRoleGroups declares the format in which ldap role groups are un/marshaled.
 type LdapRoleGroups map[string]LdapRoleGroup
 
 // LdapRoleGroup declares Ldap role group configuration payload.
@@ -672,7 +672,7 @@ var Timezones = map[string]string{
 	"America/Cayman":                   "America/Cayman",
 	"America/Chicago":                  "America/Chicago",
 	"America/Chihuahua":                "America/Chihuahua",
-	"America/Coral_Harbour":            "America/Coral_Harbour",
+	"America/Coral_Harbor":             "America/Coral_Harbor",
 	"America/Cordoba":                  "America/Cordoba",
 	"America/Costa_Rica":               "America/Costa_Rica",
 	"America/Cuiaba":                   "America/Cuiaba",

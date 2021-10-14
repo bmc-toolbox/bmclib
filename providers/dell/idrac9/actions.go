@@ -85,7 +85,6 @@ func (i *IDrac9) PxeOnce() (bool, error) {
 
 // IsOn tells if a machine is currently powered on
 func (i *IDrac9) IsOn() (status bool, err error) {
-
 	output, err := i.sshClient.Run("racadm serveraction powerstatus")
 	if err != nil {
 		return false, fmt.Errorf("output: %q: %w", output, err)

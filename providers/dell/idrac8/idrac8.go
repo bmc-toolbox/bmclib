@@ -127,7 +127,6 @@ func (i *IDrac8) post(endpoint string, data []byte, formDataContentType string) 
 	if formDataContentType == "" {
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	} else {
-
 		// Set multipart form content type
 		req.Header.Set("Content-Type", formDataContentType)
 

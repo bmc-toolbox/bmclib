@@ -42,7 +42,6 @@ func (c *C7000) ResourcesSetup() []string {
 
 // Return bool value if the role is valid.
 func (c *C7000) isRoleValid(role string) bool {
-
 	validRoles := []string{"admin", "user"}
 	for _, v := range validRoles {
 		if role == v {
@@ -179,7 +178,6 @@ func (c *C7000) applysetLdapInfo4(cfg *cfgresources.Ldap) (err error) {
 //  <hpoa:enableLocalUsers>true</hpoa:enableLocalUsers>
 // </hpoa:enableLdapAuthentication>
 func (c *C7000) applyEnableLdapAuth(enable bool) (err error) {
-
 	payload := enableLdapAuthentication{EnableLdap: enable, EnableLocalUsers: true}
 	statusCode, _, err := c.postXML(payload)
 	if statusCode != 200 || err != nil {
@@ -207,9 +205,7 @@ func (c *C7000) applyEnableLdapAuth(enable bool) (err error) {
 // 2.  setLdapGroupBayACL
 // 3.  addLdapGroupBayAccess (done)
 func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
-
 	for _, group := range cfg {
-
 		if group.Group == "" {
 			c.log.V(1).Info("Ldap resource parameter Group required but not declared.",
 				"step", "applyLdapGroupParams",
@@ -297,7 +293,6 @@ func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.L
 //  <hpoa:ldapGroup>bmcAdmins</hpoa:ldapGroup>
 // </hpoa:removeLdapGroup>
 func (c *C7000) applyRemoveLdapGroup(group string) (err error) {
-
 	payload := removeLdapGroup{LdapGroup: ldapGroup{Text: group}}
 	statusCode, _, err := c.postXML(payload)
 	if statusCode == 200 || statusCode == 500 { // 500 indicates the group exists.
@@ -333,7 +328,6 @@ func (c *C7000) applyRemoveLdapGroup(group string) (err error) {
 //  <hpoa:ldapGroup>bmcAdmins</hpoa:ldapGroup>
 // </hpoa:addLdapGroup>
 func (c *C7000) applyAddLdapGroup(group string) (err error) {
-
 	payload := addLdapGroup{LdapGroup: ldapGroup{Text: group}}
 	statusCode, _, err := c.postXML(payload)
 	if statusCode == 200 || statusCode == 500 { // 500 indicates the group exists.
@@ -369,7 +363,6 @@ func (c *C7000) applyAddLdapGroup(group string) (err error) {
 //  <hpoa:acl>ADMINISTRATOR</hpoa:acl>
 // </hpoa:setLdapGroupBayAcl>
 func (c *C7000) applyLdapGroupBayACL(role string, group string) (err error) {
-
 	var userACL string
 
 	if role == "admin" {
@@ -488,7 +481,6 @@ func (c *C7000) applyAddLdapGroupBayAccess(group string) (err error) {
 // if the user exists, it updates the users password,
 // User implements the Configure interface.
 func (c *C7000) User(users []*cfgresources.User) (err error) {
-
 	for _, cfg := range users {
 		if cfg.Name == "" {
 			err = errors.New("user resource expects parameter: Name")
@@ -574,7 +566,6 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 			if err != nil {
 				return err
 			}
-
 		}
 
 		c.log.V(1).Info("User cfg applied.",
@@ -582,13 +573,11 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 			"Model", c.HardwareType(),
 			"user", cfg.Name,
 		)
-
 	}
 	return err
 }
 
 func (c *C7000) setUserPassword(user string, password string) (err error) {
-
 	u := Username{Text: user}
 	p := Password{Text: password}
 	payload := SetUserPassword{Username: u, Password: p}
@@ -615,7 +604,6 @@ func (c *C7000) setUserPassword(user string, password string) (err error) {
 }
 
 func (c *C7000) setUserACL(user string, role string) (err error) {
-
 	var aclRole string
 	if role == "admin" {
 		aclRole = "ADMINISTRATOR"
@@ -654,7 +642,6 @@ func (c *C7000) setUserACL(user string, role string) (err error) {
 // Applies user bay access to each blade, interconnect,
 // see applyAddLdapGroupBayAccess() for details.
 func (c *C7000) applyAddUserBayAccess(user string) (err error) {
-
 	//The c7000 wont allow changes to the bay acls for the reserved Administrator user.
 	if user == "Administrator" {
 		return nil
@@ -728,7 +715,6 @@ func (c *C7000) applyAddUserBayAccess(user string) (err error) {
 //  <hpoa:timeZone>CET</hpoa:timeZone>
 // </hpoa:setEnclosureTimeZone>
 func (c *C7000) Ntp(cfg *cfgresources.Ntp) (err error) {
-
 	if cfg.Server1 == "" {
 		c.log.V(1).Info("NTP resource expects parameter: server1.",
 			"step", "applyNtpParams",
@@ -793,7 +779,6 @@ func (c *C7000) Ntp(cfg *cfgresources.Ntp) (err error) {
 //applies timezone
 // TODO: validate timezone string.
 func (c *C7000) applyNtpTimezoneParam(timezone string) (err error) {
-
 	//setup timezone XML payload
 	payload := setEnclosureTimeZone{Timezone: timeZone{Text: timezone}}
 
@@ -824,7 +809,6 @@ func (c *C7000) applyNtpTimezoneParam(timezone string) (err error) {
 // 3. enable syslog
 // theres no option to set the port
 func (c *C7000) Syslog(cfg *cfgresources.Syslog) (err error) {
-
 	var port int
 	if cfg.Server == "" {
 		c.log.V(1).Info("Syslog resource expects parameter: Server.",
@@ -870,7 +854,6 @@ func (c *C7000) Syslog(cfg *cfgresources.Syslog) (err error) {
 //  <hpoa:server>foobar</hpoa:server>
 // </hpoa:setRemoteSyslogServer>
 func (c *C7000) applySyslogServer(server string) {
-
 	payload := SetRemoteSyslogServer{Server: server}
 	statusCode, _, err := c.postXML(payload)
 	if err != nil || statusCode != 200 {
@@ -919,7 +902,6 @@ func (c *C7000) applySyslogPort(port int) {
 //  <hpoa:enabled>true</hpoa:enabled>
 // </hpoa:setRemoteSyslogEnabled>
 func (c *C7000) applySyslogEnabled(enabled bool) {
-
 	payload := SetRemoteSyslogEnabled{Enabled: enabled}
 	statusCode, _, err := c.postXML(payload)
 	if err != nil || statusCode != 200 {

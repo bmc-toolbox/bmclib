@@ -127,7 +127,6 @@ func (s *SupermicroX) get(endpoint string, authentication bool) (payload []byte,
 // posts a urlencoded form to the given endpoint
 // nolint: gocyclo
 func (s *SupermicroX) post(endpoint string, urlValues *url.Values, form []byte, formDataContentType string) (statusCode int, err error) {
-
 	err = s.httpLogin()
 	if err != nil {
 		return statusCode, err
@@ -141,15 +140,12 @@ func (s *SupermicroX) post(endpoint string, urlValues *url.Values, form []byte, 
 	var req *http.Request
 
 	if formDataContentType == "" {
-
 		req, err = http.NewRequest("POST", u.String(), strings.NewReader(urlValues.Encode()))
 		if err != nil {
 			return statusCode, err
 		}
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
 	} else {
-
 		req, err = http.NewRequest("POST", u.String(), bytes.NewReader(form))
 		if err != nil {
 			return statusCode, err

@@ -155,7 +155,6 @@ func (i *Ilo) get(endpoint string, useSession bool) (payload []byte, err error) 
 
 // posts the payload to the given endpoint
 func (i *Ilo) post(endpoint string, data []byte) (statusCode int, body []byte, err error) {
-
 	u, err := url.Parse(fmt.Sprintf("https://%s/%s", i.ip, endpoint))
 	if err != nil {
 		return 0, []byte{}, err

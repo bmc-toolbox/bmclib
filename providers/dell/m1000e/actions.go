@@ -215,7 +215,6 @@ func (m *M1000e) SetIpmiOverLan(position int, enable bool) (bool, error) {
 	}
 
 	return false, fmt.Errorf(output)
-
 }
 
 // SetDynamicPower Enable/Disable Dynamic Power - Dynamic Power Supply Engagement (DPSE) in Dell jargon.
