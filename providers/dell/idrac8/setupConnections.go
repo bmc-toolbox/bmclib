@@ -82,13 +82,13 @@ func (i *IDrac8) loadHwData() (err error) {
 	}
 
 	url := "sysmgmt/2012/server/inventory/hardware"
-	payload, err := i.get(url, nil)
-	if err != nil {
+	statusCode, response, err := i.get(url, nil)
+	if err != nil || statusCode != 200 {
 		return err
 	}
 
 	iDracInventory := &dell.IDracInventory{}
-	err = xml.Unmarshal(payload, iDracInventory)
+	err = xml.Unmarshal(response, iDracInventory)
 	if err != nil {
 		return err
 	}

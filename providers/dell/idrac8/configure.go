@@ -50,12 +50,13 @@ func (i *IDrac8) Bios(cfg *cfgresources.Bios) (err error) {
 	return err
 }
 
-// escapeLdapString escapes ldap parameters strings
 func escapeLdapString(s string) string {
 	r := ""
 	for _, c := range s {
-		if c == '=' || c == ',' {
-			r += fmt.Sprintf("\\%c", c)
+		if c == '=' {
+			r += "%5C%3D"
+		} else if c == ',' {
+			r += "%5C%2C"
 		} else {
 			r += string(c)
 		}
@@ -64,33 +65,19 @@ func escapeLdapString(s string) string {
 	return r
 }
 
-// Return bool value if the role is valid.
-func (i *IDrac8) isRoleValid(role string) bool {
-
-	validRoles := []string{"admin", "user"}
-	for _, v := range validRoles {
-		if role == v {
-			return true
-		}
-	}
-
-	return false
-}
-
 // User applies the User configuration resource,
 // if the user exists, it updates the users password,
 // User implements the Configure interface.
 // Iterate over iDrac users and adds/removes/modifies user accounts
 func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
-
-	err = i.validateUserCfg(cfgUsers)
+	err = internal.ValidateUserConfig(cfgUsers)
 	if err != nil {
 		msg := "User config validation failed."
 		err = errors.New(msg)
 		i.log.V(1).Error(err, msg,
 			"step", "applyUserParams",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
@@ -103,7 +90,7 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 		i.log.V(1).Error(err, msg,
 			"step", "applyUserParams",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
@@ -122,7 +109,7 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 				if err != nil {
 					i.log.V(1).Info("Unable to add new User.",
 						"IP", i.ip,
-						"Model", i.HardwareType(),
+						"HardwareType", i.HardwareType(),
 						"step", helper.WhosCalling(),
 						"User", cfgUser.Name,
 						"Error", internal.ErrStringOrEmpty(err),
@@ -149,7 +136,7 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 			if err != nil {
 				i.log.V(1).Info("Add/Update user request failed.",
 					"IP", i.ip,
-					"Model", i.HardwareType(),
+					"HardwareType", i.HardwareType(),
 					"step", helper.WhosCalling(),
 					"User", cfgUser.Name,
 					"Error", internal.ErrStringOrEmpty(err),
@@ -172,7 +159,7 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 			if err != nil {
 				i.log.V(1).Info("Disable user request failed.",
 					"IP", i.ip,
-					"Model", i.HardwareType(),
+					"HardwareType", i.HardwareType(),
 					"step", helper.WhosCalling(),
 					"User", cfgUser.Name,
 					"Error", internal.ErrStringOrEmpty(err),
@@ -180,7 +167,7 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 			}
 		}
 
-		i.log.V(1).Info("User parameters applied.", "IP", i.ip, "Model", i.HardwareType(), "User", cfgUser.Name)
+		i.log.V(1).Info("User parameters applied.", "IP", i.ip, "HardwareType", i.HardwareType(), "User", cfgUser.Name)
 	}
 
 	return err
@@ -266,7 +253,7 @@ func (i *IDrac8) Syslog(cfg *cfgresources.Syslog) (err error) {
 		return err
 	}
 
-	i.log.V(1).Info("Syslog parameters applied.", "IP", i.ip, "Model", i.HardwareType())
+	i.log.V(1).Info("Syslog parameters applied.", "IP", i.ip, "HardwareType", i.HardwareType())
 
 	return err
 }
@@ -314,19 +301,19 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 	//ntp servers
 
 	endpoint := fmt.Sprintf("data?%s", queryStr)
-	response, err := i.get(endpoint, nil)
-	if err != nil {
+	statusCode, response, err := i.get(endpoint, nil)
+	if err != nil || statusCode != 200 {
 		i.log.V(1).Info("GET request failed.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
+			"status", statusCode,
 			"step", helper.WhosCalling(),
 			"response", string(response),
 		)
 	}
 
-	i.log.V(1).Info("NTP servers param applied.", "IP", i.ip, "Model", i.HardwareType())
-
+	i.log.V(1).Info("NTP servers param applied.", "IP", i.ip, "HardwareType", i.HardwareType())
 }
 
 // Ldap applies LDAP configuration params.
@@ -341,14 +328,15 @@ func (i *IDrac8) Ldap(cfg *cfgresources.Ldap) error {
 	}
 
 	endpoint := fmt.Sprintf("data?set=xGLServer:%s", cfg.Server)
-	response, err := i.get(endpoint, nil)
-	if err != nil {
+	statusCode, response, err := i.get(endpoint, nil)
+	if err != nil || statusCode != 200 {
 		msg := "Request to set ldap server failed."
 		err = errors.New(msg)
 		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
+			"status", statusCode,
 			"step", helper.WhosCalling(),
 			"response", string(response),
 		)
@@ -360,7 +348,7 @@ func (i *IDrac8) Ldap(cfg *cfgresources.Ldap) error {
 		return err
 	}
 
-	i.log.V(1).Info("Ldap server param set.", "IP", i.ip, "Model", i.HardwareType())
+	i.log.V(1).Info("Ldap server param set.", "IP", i.ip, "HardwareType", i.HardwareType())
 	return nil
 }
 
@@ -376,27 +364,28 @@ func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) error {
 	}
 
 	endpoint := fmt.Sprintf("data?set=xGLSearchFilter:%s", escapeLdapString(cfg.SearchFilter))
-	response, err := i.get(endpoint, nil)
-	if err != nil {
+	statusCode, response, err := i.get(endpoint, nil)
+	if err != nil || statusCode != 200 {
 		msg := "request to set ldap search filter failed."
 		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
+			"status", statusCode,
 			"step", helper.WhosCalling(),
 			"response", string(response),
 		)
 		return err
 	}
 
-	i.log.V(1).Info("Ldap search filter param applied.", "IP", i.ip, "Model", i.HardwareType())
+	i.log.V(1).Info("Ldap search filter param applied.", "IP", i.ip, "HardwareType", i.HardwareType())
 	return nil
 }
 
-// LdapGroup applies LDAP Group/Role related configuration
-// LdapGroup implements the Configure interface.
+// LdapGroups applies LDAP Group/Role related configuration
+// LdapGroups implements the Configure interface.
 // nolint: gocyclo
-func (i *IDrac8) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
+func (i *IDrac8) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
 
 	groupID := 1
 
@@ -438,7 +427,7 @@ func (i *IDrac8) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresou
 	}
 
 	//for each ldap group
-	for _, group := range cfgGroup {
+	for _, group := range cfgGroups {
 
 		//if a group has been set to disable in the config,
 		//its configuration is skipped and removed.
@@ -466,8 +455,8 @@ func (i *IDrac8) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresou
 			return err
 		}
 
-		if !i.isRoleValid(group.Role) {
-			msg := "Ldap resource Role must be a valid role: admin OR user."
+		if !internal.IsRoleValid(group.Role) {
+			msg := "LDAP resource parameter \"Role\" must be a valid role: \"admin\" OR \"user\"."
 			err = errors.New(msg)
 			i.log.V(1).Error(err, msg, "Role", group.Role, "step", "applyLdapGroupParams")
 			return err
@@ -477,12 +466,13 @@ func (i *IDrac8) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresou
 		groupDn = escapeLdapString(groupDn)
 
 		endpoint := fmt.Sprintf("data?set=xGLGroup%dName:%s", groupID, groupDn)
-		response, err := i.get(endpoint, nil)
-		if err != nil {
+		statusCode, response, err := i.get(endpoint, nil)
+		if err != nil || statusCode != 200 {
 			i.log.V(1).Error(err, "GET request failed.",
 				"IP", i.ip,
-				"Model", i.HardwareType(),
+				"HardwareType", i.HardwareType(),
 				"endpoint", endpoint,
+				"status", statusCode,
 				"step", "applyLdapGroupParams",
 				"response", string(response),
 			)
@@ -491,7 +481,7 @@ func (i *IDrac8) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresou
 
 		i.log.V(1).Info("Ldap GroupDN config applied.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"Role", group.Role,
 		)
 
@@ -504,11 +494,11 @@ func (i *IDrac8) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresou
 
 		groupPrivilegeParam += fmt.Sprintf("xGLGroup%dPriv:%s,", groupID, privID)
 		groupID++
-
 	}
 
-	//set the rest of the group privileges to 0
-	for i := groupID + 1; i <= 5; i++ {
+	// Set the rest of the group privileges to 0.
+	// Dell supports only 5 groups.
+	for i := groupID; i <= 5; i++ {
 		groupPrivilegeParam += fmt.Sprintf("xGLGroup%dPriv:0,", i)
 	}
 
@@ -516,7 +506,7 @@ func (i *IDrac8) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresou
 	if err != nil {
 		i.log.V(1).Error(err, "Unable to set Ldap Role Group Privileges.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", "applyLdapGroupParams",
 		)
 		return err
@@ -528,10 +518,9 @@ func (i *IDrac8) LdapGroup(cfgGroup []*cfgresources.LdapGroup, cfgLdap *cfgresou
 //https://10.193.251.10/postset?ldapconf
 // data=LDAPEnableMode:3,xGLNameSearchEnabled:0,xGLBaseDN:ou%5C%3DPeople%5C%2Cdc%5C%3Dactivehotels%5C%2Cdc%5C%3Dcom,xGLUserLogin:uid,xGLGroupMem:memberUid,xGLBindDN:,xGLCertValidationEnabled:1,xGLGroup1Priv:511,xGLGroup2Priv:97,xGLGroup3Priv:0,xGLGroup4Priv:0,xGLGroup5Priv:0,xGLServerPort:636
 func (i *IDrac8) applyLdapRoleGroupPrivParam(cfg *cfgresources.Ldap, groupPrivilegeParam string) (err error) {
-
 	baseDn := escapeLdapString(cfg.BaseDn)
-	payload := "data=LDAPEnableMode:3,"  //setup generic ldap
-	payload += "xGLNameSearchEnabled:0," //lookup ldap server from dns
+	payload := "data=LDAPEnableMode:3,"  // Generic LDAP
+	payload += "xGLNameSearchEnabled:0," // Lookup LDAP server from DNS
 	payload += fmt.Sprintf("xGLBaseDN:%s,", baseDn)
 	payload += fmt.Sprintf("xGLUserLogin:%s,", cfg.UserAttribute)
 	payload += fmt.Sprintf("xGLGroupMem:%s,", cfg.GroupAttribute)
@@ -554,7 +543,7 @@ func (i *IDrac8) applyLdapRoleGroupPrivParam(cfg *cfgresources.Ldap, groupPrivil
 	if err != nil || responseCode != 200 {
 		i.log.V(1).Error(err, "POST request failed.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"responseCode", responseCode,
@@ -563,7 +552,7 @@ func (i *IDrac8) applyLdapRoleGroupPrivParam(cfg *cfgresources.Ldap, groupPrivil
 		return err
 	}
 
-	i.log.V(1).Info("Ldap Group role privileges applied.", "IP", i.ip, "Model", i.HardwareType())
+	i.log.V(1).Info("LDAP Group role privileges applied.", "IP", i.ip, "HardwareType", i.HardwareType())
 
 	return err
 }
@@ -574,19 +563,19 @@ func (i *IDrac8) applyTimezoneParam(timezone string) {
 	//https://10.193.251.10/data?set=tm_tz_str_zone:CET
 
 	endpoint := fmt.Sprintf("data?set=tm_tz_str_zone:%s", timezone)
-	response, err := i.get(endpoint, nil)
-	if err != nil {
+	statusCode, response, err := i.get(endpoint, nil)
+	if err != nil || statusCode != 200 {
 		i.log.V(1).Info("GET request failed.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
+			"status", statusCode,
 			"step", helper.WhosCalling(),
 			"response", string(response),
 		)
 	}
 
-	i.log.V(1).Info("Timezone param applied.", "IP", i.ip, "Model", i.HardwareType())
-
+	i.log.V(1).Info("Timezone param applied.", "IP", i.ip, "HardwareType", i.HardwareType())
 }
 
 // Network method implements the Configure interface
@@ -628,7 +617,7 @@ func (i *IDrac8) Network(cfg *cfgresources.Network) (reset bool, err error) {
 	if err != nil || responseCode != 200 {
 		i.log.V(1).Error(err, "POST request to set Network params failed.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"responseCode", responseCode,
@@ -637,7 +626,7 @@ func (i *IDrac8) Network(cfg *cfgresources.Network) (reset bool, err error) {
 		return reset, err
 	}
 
-	i.log.V(1).Info("Network config parameters applied.", "IP", i.ip, "Model", i.HardwareType())
+	i.log.V(1).Info("Network config parameters applied.", "IP", i.ip, "HardwareType", i.HardwareType())
 	return reset, err
 }
 
@@ -660,19 +649,20 @@ func (i *IDrac8) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, er
 
 	queryString := url.QueryEscape(fmt.Sprintf("%s=serverCSR(%s)", endpoint, strings.Join(payload, ",")))
 
-	body, err := i.get(queryString, nil)
-	if err != nil {
+	statusCode, response, err := i.get(queryString, nil)
+	if err != nil || statusCode != 200 {
 		i.log.V(1).Error(err, "GET request failed.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
+			"status", statusCode,
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return []byte{}, err
 	}
 
-	return body, nil
+	return response, nil
 }
 
 // UploadHTTPSCert uploads the given CRT cert,
@@ -722,7 +712,7 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	if err != nil || status != 201 {
 		i.log.V(1).Error(err, "Cert form upload POST request failed, expected 201.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"status", status,
@@ -737,7 +727,7 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 		i.log.V(1).Error(err, "Unable to unmarshal cert store response payload.",
 			"step", helper.WhosCalling(),
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return false, err
@@ -748,7 +738,7 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 		i.log.V(1).Error(err, "Unable to marshal cert store resource URI.",
 			"step", helper.WhosCalling(),
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return false, err
@@ -760,7 +750,7 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	if err != nil || status != 201 {
 		i.log.V(1).Error(err, "Cert form upload POST request failed, expected 201.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"status", status,

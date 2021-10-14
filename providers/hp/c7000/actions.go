@@ -190,18 +190,22 @@ func (c *C7000) SetDynamicPower(enable bool) (bool, error) {
 }
 
 // UpdateFirmware updates the chassis firmware
-func (c *C7000) UpdateFirmware(source, file string) (bool, error) {
+func (c *C7000) UpdateFirmware(source, file string) (bool, string, error) {
 	cmd := fmt.Sprintf("update image %s/%s", source, file)
 	output, err := c.sshClient.Run(cmd)
 	if err != nil {
-		return false, fmt.Errorf("output: %q: %w", output, err)
+		return false, "", fmt.Errorf("output: %q: %w", output, err)
 	}
 
 	if strings.Contains(output, "Flashing Active Onboard Administrator") {
-		return true, nil
+		return true, output, nil
 	}
 
-	return false, fmt.Errorf(output)
+	return false, output, fmt.Errorf(output)
+}
+
+func (c *C7000) CheckFirmwareVersion() (version string, err error) {
+	return "", fmt.Errorf("not supported yet")
 }
 
 // ModBladeBmcUser modfies BMC Admin user account password through the chassis,

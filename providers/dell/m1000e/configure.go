@@ -98,7 +98,7 @@ func (m *M1000e) User(cfgUsers []*cfgresources.User) (err error) {
 			return err
 		}
 
-		m.log.V(1).Info("User account config parameters applied.", "IP", m.ip, "Model", m.HardwareType())
+		m.log.V(1).Info("User account config parameters applied.", "IP", m.ip, "HardwareType", m.HardwareType())
 
 	}
 
@@ -120,7 +120,7 @@ func (m *M1000e) Syslog(cfg *cfgresources.Syslog) (err error) {
 		return err
 	}
 
-	m.log.V(1).Info("Interface config parameters applied.", "IP", m.ip, "Model", m.HardwareType())
+	m.log.V(1).Info("Interface config parameters applied.", "IP", m.ip, "HardwareType", m.HardwareType())
 	return err
 }
 
@@ -143,7 +143,7 @@ func (m *M1000e) Ntp(cfg *cfgresources.Ntp) (err error) {
 		return err
 	}
 
-	m.log.V(1).Info("DateTime config parameters applied.", "IP", m.ip, "Model", m.HardwareType())
+	m.log.V(1).Info("DateTime config parameters applied.", "IP", m.ip, "HardwareType", m.HardwareType())
 	return err
 }
 
@@ -161,7 +161,7 @@ func (m *M1000e) Ldap(cfg *cfgresources.Ldap) (err error) {
 		return err
 	}
 
-	m.log.V(1).Info("Ldap config parameters applied.", "IP", m.ip, "Model", m.HardwareType())
+	m.log.V(1).Info("Ldap config parameters applied.", "IP", m.ip, "HardwareType", m.HardwareType())
 	return err
 }
 
@@ -181,23 +181,23 @@ func (m *M1000e) applyLdapRoleCfg(cfg LdapArgParams, roleID int) (err error) {
 		return err
 	}
 
-	m.log.V(1).Info("Ldap Role group config parameters applied.", "IP", m.ip, "Model", m.HardwareType())
+	m.log.V(1).Info("Ldap Role group config parameters applied.", "IP", m.ip, "HardwareType", m.HardwareType())
 	return err
 }
 
-// LdapGroup applies LDAP Group/Role related configuration
-// LdapGroup implements the Configure interface.
-func (m *M1000e) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
+// LdapGroups applies LDAP Group/Role related configuration
+// LdapGroups implements the Configure interface.
+func (m *M1000e) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
 
 	roleID := 1
-	for _, group := range cfg {
+	for _, group := range cfgGroups {
 		ldapRoleParams, err := m.newLdapRoleCfg(group, roleID)
 		if err != nil {
 			m.log.V(1).Error(err, "Unable to apply Ldap role group config.",
 				"step", "applyLdapGroupParams",
 				"Ldap role", group.Role,
 				"IP", m.ip,
-				"Model", m.HardwareType(),
+				"HardwareType", m.HardwareType(),
 				"Error", internal.ErrStringOrEmpty(err),
 			)
 			return err
@@ -209,7 +209,7 @@ func (m *M1000e) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.
 				"step", "applyLdapGroupParams",
 				"Ldap role", group.Role,
 				"IP", m.ip,
-				"Model", m.HardwareType(),
+				"HardwareType", m.HardwareType(),
 				"Error", err,
 			)
 			return err
@@ -217,7 +217,7 @@ func (m *M1000e) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.
 
 		m.log.V(1).Info("Ldap group parameters applied.",
 			"IP", m.ip,
-			"Model", m.HardwareType(),
+			"HardwareType", m.HardwareType(),
 			"Role", group.Role,
 			"Group", group.Group,
 		)
@@ -273,7 +273,7 @@ func (m *M1000e) CurrentHTTPSCert() (c []*x509.Certificate, b bool, e error) {
 //
 //	m.log.V(1).Info("",
 //		"IP":    m.ip,
-//		"Model": m.HardwareType(),
+//		"HardwareType": m.HardwareType(),
 //	}).Debug("SSL certs uploaded.")
 //	return err
 //}
@@ -430,7 +430,7 @@ func (m *M1000e) ApplySecurityCfg(cfg LoginSecurityParams) (err error) {
 		return err
 	}
 
-	m.log.V(1).Info("Security config parameters applied.", "IP", m.ip, "Model", m.HardwareType())
+	m.log.V(1).Info("Security config parameters applied.", "IP", m.ip, "HardwareType", m.HardwareType())
 	return err
 
 }

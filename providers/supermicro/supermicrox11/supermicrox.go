@@ -289,6 +289,10 @@ func (s *SupermicroX) Version() (bmcVersion string, err error) {
 	return bmcVersion, err
 }
 
+func (s *SupermicroX) Class() (class string, err error) {
+	return "SupermicroX", nil
+}
+
 // Name returns the hostname of the machine
 func (s *SupermicroX) Name() (name string, err error) {
 	ipmi, err := s.query("op=CONFIG_INFO.XML&r=(0,0)")

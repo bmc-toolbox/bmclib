@@ -100,7 +100,11 @@ func (m *M1000e) Name() (name string, err error) {
 
 // HardwareType returns just Model id string - m1000e
 func (m *M1000e) HardwareType() (model string) {
-	return BMCType
+	return "m1000e"
+}
+
+func (m *M1000e) CheckFirmwareVersion() (version string, err error) {
+	return "", fmt.Errorf("not supported yet")
 }
 
 // Model returns the full device model string

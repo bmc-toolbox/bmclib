@@ -3,6 +3,7 @@ package ilo
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/bmc-toolbox/bmclib/internal/ipmi"
@@ -107,16 +108,31 @@ func (i *Ilo) IsOn() (bool, error) {
 }
 
 // UpdateFirmware updates the bmc firmware
-func (i *Ilo) UpdateFirmware(source, file string) (bool, error) {
+func (i *Ilo) UpdateFirmware(source, file string) (bool, string, error) {
 	cmd := fmt.Sprintf("load /map1/firmware1 -source %s/%s", source, file)
 	output, err := i.sshClient.Run(cmd)
 	if err != nil {
-		return false, fmt.Errorf("output: %q: %w", output, err)
+		return false, "", fmt.Errorf("output: %q: %w", output, err)
 	}
 
 	if strings.Contains(output, "Resetting iLO") {
-		return true, nil
+		return true, output, nil
 	}
 
-	return false, fmt.Errorf(output)
+	return false, output, fmt.Errorf(output)
+}
+
+func (i *Ilo) CheckFirmwareVersion() (version string, err error) {
+	output, err := i.sshClient.Run("show /map1/firmware1")
+	if err != nil {
+		return "", fmt.Errorf("output: %q: %w", output, err)
+	}
+
+	re := regexp.MustCompile(`.*version=((\d+\.)+\d+)`)
+	matches := re.FindStringSubmatch(output)
+	if len(matches) > 1 {
+		return matches[1], nil
+	}
+
+	return "", fmt.Errorf("unexpected output: %q", output)
 }

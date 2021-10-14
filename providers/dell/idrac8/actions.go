@@ -3,6 +3,7 @@ package idrac8
 import (
 	"fmt"
 	"net/url"
+	"regexp"
 	"strings"
 )
 
@@ -102,26 +103,36 @@ func (i *IDrac8) IsOn() (bool, error) {
 }
 
 // UpdateFirmware updates the bmc firmware
-func (i *IDrac8) UpdateFirmware(source, file string) (bool, error) {
-	u, err := url.Parse(source)
+func (i *IDrac8) UpdateFirmware(source, file string) (bool, string, error) {
+	_, err := url.Parse(source)
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 
-	password, ok := u.User.Password()
-	if !ok {
-		password = "anonymous"
-	}
-
-	cmd := fmt.Sprintf("racadm fwupdate -f %s %s %s -d %s/%s", u.Host, u.User.Username(), password, u.Path, file)
+	cmd := fmt.Sprintf("racadm fwupdate -g -u -a %s -d %s", source, file)
 	output, err := i.sshClient.Run(cmd)
 	if err != nil {
-		return false, fmt.Errorf("output: %q: %w", output, err)
+		return false, output, fmt.Errorf("unexpected output: %q, error: %w", output, err)
 	}
 
 	if strings.Contains(output, "Firmware update completed successfully") {
-		return true, nil
+		return true, output, nil
 	}
 
-	return false, err
+	return false, output, fmt.Errorf("unexpected output: %q", output)
+}
+
+func (i *IDrac8) CheckFirmwareVersion() (version string, err error) {
+	output, err := i.sshClient.Run("racadm getversion -f idrac")
+	if err != nil {
+		return "", fmt.Errorf("output: %q: %w", output, err)
+	}
+
+	re := regexp.MustCompile(`.*iDRAC Version.*= ((\d+\.)+\d+)`)
+	matches := re.FindStringSubmatch(output)
+	if len(matches) > 1 {
+		return matches[1], nil
+	}
+
+	return "", fmt.Errorf("unexpected output: %q", output)
 }

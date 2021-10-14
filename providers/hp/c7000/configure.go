@@ -75,7 +75,7 @@ func (c *C7000) Ldap(cfg *cfgresources.Ldap) (err error) {
 			"step", "applyLdapParams",
 			"resource", "Ldap",
 			"IP", c.ip,
-			"Model", c.HardwareType(),
+			"HardwareType", c.HardwareType(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
@@ -87,7 +87,7 @@ func (c *C7000) Ldap(cfg *cfgresources.Ldap) (err error) {
 			"step", "applyLdapParams",
 			"resource", "Ldap",
 			"IP", c.ip,
-			"Model", c.HardwareType(),
+			"HardwareType", c.HardwareType(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
@@ -118,7 +118,7 @@ func (c *C7000) applysetLdapInfo4(cfg *cfgresources.Ldap) (err error) {
 	if cfg.Server == "" {
 		c.log.V(1).Info("Ldap resource parameter Server required but not declared.",
 			"step", "applysetLdapInfo4",
-			"Model", c.HardwareType(),
+			"HardwareType", c.HardwareType(),
 		)
 		return err
 	}
@@ -126,7 +126,7 @@ func (c *C7000) applysetLdapInfo4(cfg *cfgresources.Ldap) (err error) {
 	if cfg.Port == 0 {
 		c.log.V(1).Info("Ldap resource parameter Port required but not declared.",
 			"step", "applysetLdapInfo4",
-			"Model", c.HardwareType(),
+			"HardwareType", c.HardwareType(),
 		)
 		return err
 	}
@@ -160,7 +160,7 @@ func (c *C7000) applysetLdapInfo4(cfg *cfgresources.Ldap) (err error) {
 		c.log.V(1).Info("Ldap applysetLdapInfo4 apply request returned non 200.",
 			"step", "applysetLdapInfo4",
 			"IP", c.ip,
-			"Model", c.HardwareType(),
+			"HardwareType", c.HardwareType(),
 			"statusCode", statusCode,
 			"Error", internal.ErrStringOrEmpty(err),
 		)
@@ -169,7 +169,7 @@ func (c *C7000) applysetLdapInfo4(cfg *cfgresources.Ldap) (err error) {
 
 	c.log.V(1).Info("Ldap Server parameters applied.",
 		"IP", c.ip,
-		"Model", c.HardwareType(),
+		"HardwareType", c.HardwareType(),
 	)
 	return err
 }
@@ -186,7 +186,7 @@ func (c *C7000) applyEnableLdapAuth(enable bool) (err error) {
 		c.log.V(1).Info("Ldap applyEnableLdapAuth apply request returned non 200.",
 			"step", "applyEnableLdapAuth",
 			"IP", c.ip,
-			"Model", c.HardwareType(),
+			"HardwareType", c.HardwareType(),
 			"statusCode", statusCode,
 			"Error", internal.ErrStringOrEmpty(err),
 		)
@@ -195,25 +195,25 @@ func (c *C7000) applyEnableLdapAuth(enable bool) (err error) {
 
 	c.log.V(1).Info("Ldap Enabled.",
 		"IP", c.ip,
-		"Model", c.HardwareType(),
+		"HardwareType", c.HardwareType(),
 	)
 	return err
 }
 
-// LdapGroup applies LDAP Group/Role related configuration
-// LdapGroup implements the Configure interface.
+// LdapGroups applies LDAP Group/Role related configuration
+// LdapGroups implements the Configure interface.
 // Actions carried out in order
 // 1.  addLdapGroup
 // 2.  setLdapGroupBayACL
 // 3.  addLdapGroupBayAccess (done)
-func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
+func (c *C7000) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
 
-	for _, group := range cfg {
+	for _, group := range cfgGroups {
 
 		if group.Group == "" {
 			c.log.V(1).Info("Ldap resource parameter Group required but not declared.",
 				"step", "applyLdapGroupParams",
-				"Model", c.HardwareType(),
+				"HardwareType", c.HardwareType(),
 				"Ldap role", group.Role,
 			)
 			return
@@ -227,7 +227,7 @@ func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.L
 					"step", "applyRemoveLdapGroup",
 					"resource", "Ldap",
 					"IP", c.ip,
-					"Model", c.HardwareType(),
+					"HardwareType", c.HardwareType(),
 					"Error", internal.ErrStringOrEmpty(err),
 				)
 				return
@@ -240,7 +240,7 @@ func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.L
 			c.log.V(1).Info("Ldap resource Role must be a valid role: admin OR user.",
 				"step", "applyLdapGroupParams",
 				"role", group.Role,
-				"Model", c.HardwareType(),
+				"HardwareType", c.HardwareType(),
 			)
 			return
 		}
@@ -252,7 +252,7 @@ func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.L
 				"step", "applyAddLdapGroup",
 				"resource", "Ldap",
 				"IP", c.ip,
-				"Model", c.HardwareType(),
+				"HardwareType", c.HardwareType(),
 				"Error", internal.ErrStringOrEmpty(err),
 			)
 			return
@@ -265,7 +265,7 @@ func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.L
 				"step", "setLdapGroupBayACL",
 				"resource", "Ldap",
 				"IP", c.ip,
-				"Model", c.HardwareType(),
+				"HardwareType", c.HardwareType(),
 				"Error", internal.ErrStringOrEmpty(err),
 			)
 			return
@@ -278,7 +278,7 @@ func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.L
 				"step", "applyAddLdapGroupBayAccess",
 				"resource", "Ldap",
 				"IP", c.ip,
-				"Model", c.HardwareType(),
+				"HardwareType", c.HardwareType(),
 				"Error", internal.ErrStringOrEmpty(err),
 			)
 			return
@@ -287,7 +287,7 @@ func (c *C7000) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.L
 
 	c.log.V(1).Info("Ldap config applied",
 		"IP", c.ip,
-		"Model", c.HardwareType(),
+		"HardwareType", c.HardwareType(),
 	)
 	return
 }
@@ -304,7 +304,7 @@ func (c *C7000) applyRemoveLdapGroup(group string) (err error) {
 		c.log.V(1).Info("Ldap applyRemoveLdapGroup applied.",
 			"step", "applyRemoveLdapGroup",
 			"IP", c.ip,
-			"Model", c.HardwareType(),
+			"HardwareType", c.HardwareType(),
 			"statusCode", statusCode,
 		)
 		return nil
@@ -314,7 +314,7 @@ func (c *C7000) applyRemoveLdapGroup(group string) (err error) {
 		c.log.V(1).Info("Ldap applyRemoveLdapGroup request returned non 200.",
 			"step", "applyRemoveLdapGroup",
 			"IP", c.ip,
-			"Model", c.HardwareType(),
+			"HardwareType", c.HardwareType(),
 			"statusCode", statusCode,
 		)
 		return err
@@ -322,7 +322,7 @@ func (c *C7000) applyRemoveLdapGroup(group string) (err error) {
 
 	c.log.V(1).Info("Ldap group removed.",
 		"IP", c.ip,
-		"Model", c.HardwareType(),
+		"HardwareType", c.HardwareType(),
 		"Group", group,
 	)
 	return nil
@@ -340,7 +340,7 @@ func (c *C7000) applyAddLdapGroup(group string) (err error) {
 		c.log.V(1).Info("Ldap applyAddLdapGroup applied.",
 			"step", "applyAddLdapGroup",
 			"IP", c.ip,
-			"Model", c.HardwareType(),
+			"HardwareType", c.HardwareType(),
 			"statusCode", statusCode,
 		)
 		return nil
@@ -350,7 +350,7 @@ func (c *C7000) applyAddLdapGroup(group string) (err error) {
 		c.log.V(1).Info("Ldap applyAddLdapGroup request returned non 200.",
 			"step", "applyAddLdapGroup",
 			"IP", c.ip,
-			"Model", c.HardwareType(),
+			"HardwareType", c.HardwareType(),
 			"statusCode", statusCode,
 		)
 		return err
@@ -358,7 +358,7 @@ func (c *C7000) applyAddLdapGroup(group string) (err error) {
 
 	c.log.V(1).Info("Ldap group added.",
 		"IP", c.ip,
-		"Model", c.HardwareType(),
+		"HardwareType", c.HardwareType(),
 	)
 	return nil
 }
@@ -384,7 +384,7 @@ func (c *C7000) applyLdapGroupBayACL(role string, group string) (err error) {
 		c.log.V(1).Info("LDAP applyLdapGroupBayACL request returned non 200.",
 			"step", "applyLdapGroupBayACL",
 			"IP", c.ip,
-			"Model", c.HardwareType(),
+			"HardwareType", c.HardwareType(),
 			"statusCode", statusCode,
 			"Error", internal.ErrStringOrEmpty(err),
 		)
@@ -393,7 +393,7 @@ func (c *C7000) applyLdapGroupBayACL(role string, group string) (err error) {
 
 	c.log.V(1).Info("Ldap group ACL added.",
 		"IP", c.ip,
-		"Model", c.HardwareType(),
+		"HardwareType", c.HardwareType(),
 		"Role", role,
 		"Group", group,
 	)
@@ -469,7 +469,7 @@ func (c *C7000) applyAddLdapGroupBayAccess(group string) (err error) {
 		c.log.V(1).Info("LDAP applyAddLdapGroupBayAccess apply request returned non 200.",
 			"step", "applyAddLdapGroupBayAccess",
 			"IP", c.ip,
-			"Model", c.HardwareType(),
+			"HardwareType", c.HardwareType(),
 			"statusCode", statusCode,
 			"Error", internal.ErrStringOrEmpty(err),
 		)
@@ -478,7 +478,7 @@ func (c *C7000) applyAddLdapGroupBayAccess(group string) (err error) {
 
 	c.log.V(1).Info("Ldap interconnect and bay ACLs added.",
 		"IP", c.ip,
-		"Model", c.HardwareType(),
+		"HardwareType", c.HardwareType(),
 		"Group", group,
 	)
 	return err
@@ -494,7 +494,7 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 			err = errors.New("user resource expects parameter: Name")
 			c.log.V(1).Error(err, "user resource expects parameter: Name",
 				"step", "applyUserParams",
-				"Model", c.HardwareType(),
+				"HardwareType", c.HardwareType(),
 			)
 			return err
 		}
@@ -503,7 +503,7 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 			err = errors.New("user resource expects parameter: Password")
 			c.log.V(1).Error(err, "user resource expects parameter: Password",
 				"step", "applyUserParams",
-				"Model", c.HardwareType(),
+				"HardwareType", c.HardwareType(),
 			)
 			return err
 		}
@@ -512,7 +512,7 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 			err = errors.New("user resource Role must be declared and a valid role: admin")
 			c.log.V(1).Error(err, "user resource Role must be declared and a valid role: admin",
 				"step", "applyUserParams",
-				"Model", c.HardwareType(),
+				"HardwareType", c.HardwareType(),
 				"Role", cfg.Role,
 			)
 			return err
@@ -533,7 +533,7 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 
 			c.log.V(1).Info("User removed.",
 				"IP", c.ip,
-				"Model", c.HardwareType(),
+				"HardwareType", c.HardwareType(),
 				"User", cfg.Name,
 			)
 
@@ -553,7 +553,7 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 				"step", "applyUserParams",
 				"user", cfg.Name,
 				"IP", c.ip,
-				"Model", c.HardwareType(),
+				"HardwareType", c.HardwareType(),
 				"Return code", statusCode,
 			)
 
@@ -579,7 +579,7 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 
 		c.log.V(1).Info("User cfg applied.",
 			"IP", c.ip,
-			"Model", c.HardwareType(),
+			"HardwareType", c.HardwareType(),
 			"user", cfg.Name,
 		)
 
@@ -599,8 +599,8 @@ func (c *C7000) setUserPassword(user string, password string) (err error) {
 			"step", "setUserPassword",
 			"user", user,
 			"IP", c.ip,
-			"Model", c.HardwareType(),
-			"return code", statusCode,
+			"HardwareType", c.HardwareType(),
+			"StatusCode", statusCode,
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
@@ -608,7 +608,7 @@ func (c *C7000) setUserPassword(user string, password string) (err error) {
 
 	c.log.V(1).Info("User password set.",
 		"IP", c.ip,
-		"Model", c.HardwareType(),
+		"HardwareType", c.HardwareType(),
 		"user", user,
 	)
 	return err
@@ -635,8 +635,8 @@ func (c *C7000) setUserACL(user string, role string) (err error) {
 			"user", user,
 			"ACL", role,
 			"IP", c.ip,
-			"Model", c.HardwareType(),
-			"return code", statusCode,
+			"HardwareType", c.HardwareType(),
+			"StatusCode", statusCode,
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
@@ -644,7 +644,7 @@ func (c *C7000) setUserACL(user string, role string) (err error) {
 
 	c.log.V(1).Info("User ACL set.",
 		"IP", c.ip,
-		"Model", c.HardwareType(),
+		"HardwareType", c.HardwareType(),
 		"User", user,
 		"ACL", role,
 	)
@@ -696,7 +696,7 @@ func (c *C7000) applyAddUserBayAccess(user string) (err error) {
 		c.log.V(1).Error(err, "LDAP applyAddUserBayAccess apply request returned non 200.",
 			"step", "applyAddUserBayAccess",
 			"IP", c.ip,
-			"Model", c.HardwareType(),
+			"HardwareType", c.HardwareType(),
 			"statusCode", statusCode,
 			"Error", internal.ErrStringOrEmpty(err),
 		)
@@ -706,7 +706,7 @@ func (c *C7000) applyAddUserBayAccess(user string) (err error) {
 	c.log.V(1).Info("User account related interconnect and bay ACLs added.",
 		"step", "applyAddUserBayAccess",
 		"IP", c.ip,
-		"Model", c.HardwareType(),
+		"HardwareType", c.HardwareType(),
 		"user", user,
 	)
 	return err
@@ -732,7 +732,7 @@ func (c *C7000) Ntp(cfg *cfgresources.Ntp) (err error) {
 	if cfg.Server1 == "" {
 		c.log.V(1).Info("NTP resource expects parameter: server1.",
 			"step", "applyNtpParams",
-			"Model", c.HardwareType(),
+			"HardwareType", c.HardwareType(),
 		)
 		return
 	}
@@ -740,7 +740,7 @@ func (c *C7000) Ntp(cfg *cfgresources.Ntp) (err error) {
 	if cfg.Timezone == "" {
 		c.log.V(1).Info("NTP resource expects parameter: timezone.",
 			"step", "applyNtpParams",
-			"Model", c.HardwareType(),
+			"HardwareType", c.HardwareType(),
 		)
 		return
 	}
@@ -748,7 +748,7 @@ func (c *C7000) Ntp(cfg *cfgresources.Ntp) (err error) {
 	if !cfg.Enable {
 		c.log.V(1).Info("Ntp resource declared with enable: false.",
 			"step", "applyNtpParams",
-			"Model", c.HardwareType(),
+			"HardwareType", c.HardwareType(),
 		)
 		return
 	}
@@ -765,7 +765,7 @@ func (c *C7000) Ntp(cfg *cfgresources.Ntp) (err error) {
 		c.log.V(1).Info("NTP apply request returned non 200.",
 			"step", "applyNtpParams",
 			"IP", c.ip,
-			"Model", c.HardwareType(),
+			"HardwareType", c.HardwareType(),
 			"StatusCode", statusCode,
 			"Error", internal.ErrStringOrEmpty(err),
 		)
@@ -777,7 +777,7 @@ func (c *C7000) Ntp(cfg *cfgresources.Ntp) (err error) {
 		c.log.V(1).Info("Unable to apply NTP timezone config.",
 			"step", "applyNtpParams",
 			"IP", c.ip,
-			"Model", c.HardwareType(),
+			"HardwareType", c.HardwareType(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
@@ -785,7 +785,7 @@ func (c *C7000) Ntp(cfg *cfgresources.Ntp) (err error) {
 
 	c.log.V(1).Info("Date and time config applied.",
 		"IP", c.ip,
-		"Model", c.HardwareType(),
+		"HardwareType", c.HardwareType(),
 	)
 	return err
 }
@@ -802,7 +802,7 @@ func (c *C7000) applyNtpTimezoneParam(timezone string) (err error) {
 		c.log.V(1).Info("NTP applyNtpTimezoneParam request returned non 200.",
 			"step", "applyNtpTimezoneParam",
 			"IP", c.ip,
-			"Model", c.HardwareType(),
+			"HardwareType", c.HardwareType(),
 			"Error", internal.ErrStringOrEmpty(err),
 			"StatusCode", statusCode,
 		)
@@ -811,7 +811,7 @@ func (c *C7000) applyNtpTimezoneParam(timezone string) (err error) {
 
 	c.log.V(1).Info("Timezone config applied.",
 		"IP", c.ip,
-		"Model", c.HardwareType(),
+		"HardwareType", c.HardwareType(),
 	)
 	return err
 }
@@ -830,7 +830,7 @@ func (c *C7000) Syslog(cfg *cfgresources.Syslog) (err error) {
 		c.log.V(1).Info("Syslog resource expects parameter: Server.",
 			"step", "applySyslogParams",
 			"IP", c.ip,
-			"Model", c.HardwareType(),
+			"HardwareType", c.HardwareType(),
 		)
 		return
 	}
@@ -839,7 +839,7 @@ func (c *C7000) Syslog(cfg *cfgresources.Syslog) (err error) {
 		c.log.V(1).Info("Syslog resource port set to default: 514.",
 			"step", "applySyslogParams",
 			"IP", c.ip,
-			"Model", c.HardwareType(),
+			"HardwareType", c.HardwareType(),
 		)
 		port = 514
 	} else {
@@ -850,7 +850,7 @@ func (c *C7000) Syslog(cfg *cfgresources.Syslog) (err error) {
 		c.log.V(1).Info("Syslog resource declared with enable: false.",
 			"step", "applySyslogParams",
 			"IP", c.ip,
-			"Model", c.HardwareType(),
+			"HardwareType", c.HardwareType(),
 		)
 	}
 
@@ -860,7 +860,7 @@ func (c *C7000) Syslog(cfg *cfgresources.Syslog) (err error) {
 
 	c.log.V(1).Info("Syslog config applied.",
 		"IP", c.ip,
-		"Model", c.HardwareType(),
+		"HardwareType", c.HardwareType(),
 	)
 	return err
 }
@@ -877,7 +877,7 @@ func (c *C7000) applySyslogServer(server string) {
 		c.log.V(1).Error(err, "Syslog set server request returned non 200.",
 			"step", "applySyslogServer",
 			"IP", c.ip,
-			"Model", c.HardwareType(),
+			"HardwareType", c.HardwareType(),
 			"Error", internal.ErrStringOrEmpty(err),
 			"StatusCode", statusCode,
 		)
@@ -886,7 +886,7 @@ func (c *C7000) applySyslogServer(server string) {
 
 	c.log.V(1).Info("Syslog server set.",
 		"IP", c.ip,
-		"Model", c.HardwareType(),
+		"HardwareType", c.HardwareType(),
 	)
 }
 
@@ -901,7 +901,7 @@ func (c *C7000) applySyslogPort(port int) {
 		c.log.V(1).Error(err, "Syslog set port request returned non 200.",
 			"step", "applySyslogPort",
 			"IP", c.ip,
-			"Model", c.HardwareType(),
+			"HardwareType", c.HardwareType(),
 			"Error", internal.ErrStringOrEmpty(err),
 			"StatusCode", statusCode,
 		)
@@ -910,7 +910,7 @@ func (c *C7000) applySyslogPort(port int) {
 
 	c.log.V(1).Info("Syslog port set.",
 		"IP", c.ip,
-		"Model", c.HardwareType(),
+		"HardwareType", c.HardwareType(),
 	)
 }
 
@@ -926,7 +926,7 @@ func (c *C7000) applySyslogEnabled(enabled bool) {
 		c.log.V(1).Error(err, "Syslog enable request returned non 200.",
 			"step", "SetRemoteSyslogEnabled",
 			"IP", c.ip,
-			"Model", c.HardwareType(),
+			"HardwareType", c.HardwareType(),
 			"Error", internal.ErrStringOrEmpty(err),
 			"StatusCode", statusCode,
 		)
@@ -935,7 +935,7 @@ func (c *C7000) applySyslogEnabled(enabled bool) {
 
 	c.log.V(1).Info("Syslog enabled.",
 		"IP", c.ip,
-		"Model", c.HardwareType(),
+		"HardwareType", c.HardwareType(),
 	)
 }
 

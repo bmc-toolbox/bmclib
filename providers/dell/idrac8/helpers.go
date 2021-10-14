@@ -4,40 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-
-	"github.com/bmc-toolbox/bmclib/cfgresources"
 )
-
-// Return bool value if the role is valid.
-func isRoleValid(role string) bool {
-	validRoles := []string{"admin", "user"}
-	for _, v := range validRoles {
-		if role == v {
-			return true
-		}
-	}
-
-	return false
-}
-
-// Return bool value if the role is valid.
-func (i *IDrac8) validateUserCfg(cfgUsers []*cfgresources.User) error {
-	for _, cfgUser := range cfgUsers {
-		if cfgUser.Name == "" {
-			return errors.New("user resource expects parameter: Name")
-		}
-
-		if cfgUser.Password == "" {
-			return errors.New("user resource expects parameter: Password")
-		}
-
-		if !isRoleValid(cfgUser.Role) {
-			return errors.New("user resource expects parameter Role to be one of 'admin', 'user'")
-		}
-	}
-
-	return nil
-}
 
 // IDrac8 supports upto 16 users, user 0 is reserved
 // this function returns an empty user slot that can be used for a new user account

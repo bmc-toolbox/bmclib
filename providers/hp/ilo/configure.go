@@ -40,7 +40,7 @@ func (i *Ilo) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 		msg := "Expected sessionKey not found, unable to configure BMC."
 		i.log.V(1).Info(msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", "Login()",
 		)
 		return errors.New(msg)
@@ -97,7 +97,7 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 		msg := "Unable to query existing users"
 		i.log.V(1).Info(msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", "applyUserParams",
 			"Error", internal.ErrStringOrEmpty(err),
 		)
@@ -171,7 +171,7 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 			msg := "User disabled in config, will be removed."
 			i.log.V(1).Info(msg,
 				"IP", i.ip,
-				"Model", i.HardwareType(),
+				"HardwareType", i.HardwareType(),
 				"User", user.Name,
 			)
 			postPayload = true
@@ -183,7 +183,7 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 				msg := "Unable to marshal userInfo payload to set User config."
 				i.log.V(1).Info(msg,
 					"IP", i.ip,
-					"Model", i.HardwareType(),
+					"HardwareType", i.HardwareType(),
 					"step", helper.WhosCalling(),
 					"User", user.Name,
 					"Error", internal.ErrStringOrEmpty(err),
@@ -197,7 +197,7 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 				msg := "POST request to set User config returned error."
 				i.log.V(1).Info(msg,
 					"IP", i.ip,
-					"Model", i.HardwareType(),
+					"HardwareType", i.HardwareType(),
 					"endpoint", endpoint,
 					"step", helper.WhosCalling(),
 					"User", user.Name,
@@ -211,7 +211,7 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 
 			i.log.V(1).Info("User parameters applied.",
 				"IP", i.ip,
-				"Model", i.HardwareType(),
+				"HardwareType", i.HardwareType(),
 				"User", user.Name,
 			)
 
@@ -259,7 +259,7 @@ func (i *Ilo) Syslog(cfg *cfgresources.Syslog) (err error) {
 		msg := "Unable to marshal RemoteSyslog payload to set Syslog config."
 		i.log.V(1).Info(msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
@@ -272,7 +272,7 @@ func (i *Ilo) Syslog(cfg *cfgresources.Syslog) (err error) {
 		msg := "POST request to set User config returned error."
 		i.log.V(1).Info(msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"StatusCode", statusCode,
@@ -282,7 +282,7 @@ func (i *Ilo) Syslog(cfg *cfgresources.Syslog) (err error) {
 		return errors.New(msg)
 	}
 
-	i.log.V(1).Info("Syslog parameters applied.", "IP", i.ip, "Model", i.HardwareType())
+	i.log.V(1).Info("Syslog parameters applied.", "IP", i.ip, "HardwareType", i.HardwareType())
 
 	return err
 }
@@ -308,7 +308,7 @@ func (i *Ilo) SetLicense(cfg *cfgresources.License) (err error) {
 		msg := "Unable to marshal License payload to activate License."
 		i.log.V(1).Info(msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
@@ -321,7 +321,7 @@ func (i *Ilo) SetLicense(cfg *cfgresources.License) (err error) {
 		msg := "POST request to set User config returned error."
 		i.log.V(1).Info(msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"StatusCode", statusCode,
@@ -331,7 +331,7 @@ func (i *Ilo) SetLicense(cfg *cfgresources.License) (err error) {
 		return errors.New(msg)
 	}
 
-	i.log.V(1).Info("License activated.", "IP", i.ip, "Model", i.HardwareType())
+	i.log.V(1).Info("License activated.", "IP", i.ip, "HardwareType", i.HardwareType())
 
 	return err
 }
@@ -380,7 +380,7 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 		msg := "Unable to query existing config"
 		i.log.V(1).Info(msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
@@ -413,7 +413,7 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 		msg := "Unable to marshal NetworkSntp payload to set NTP config."
 		i.log.V(1).Info(msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
@@ -426,7 +426,7 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 		msg := "POST request to set NTP config returned error."
 		i.log.V(1).Info(msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"StatusCode", statusCode,
@@ -436,35 +436,35 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 		return errors.New(msg)
 	}
 
-	i.log.V(1).Info("NTP parameters applied.", "IP", i.ip, "Model", i.HardwareType())
+	i.log.V(1).Info("NTP parameters applied.", "IP", i.ip, "HardwareType", i.HardwareType())
 
 	return err
 }
 
-// LdapGroup applies LDAP Group/Role related configuration
-// LdapGroup implements the Configure interface.
+// LdapGroups applies LDAP Group/Role related configuration
+// LdapGroups implements the Configure interface.
 // nolint: gocyclo
-func (i *Ilo) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
+func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
 
 	directoryGroups, err := i.queryDirectoryGroups()
 	if err != nil {
 		msg := "Unable to query existing Ldap groups"
 		i.log.V(1).Info(msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return errors.New(msg)
 	}
 
-	for _, group := range cfg {
+	for _, group := range cfgGroups {
 
 		var postPayload bool
 		if group.Group == "" {
 			msg := "Ldap resource parameter Group required but not declared."
 			i.log.V(1).Info(msg,
-				"Model", i.HardwareType(),
+				"HardwareType", i.HardwareType(),
 				"step", helper.WhosCalling(),
 				"Ldap role", group.Role,
 			)
@@ -474,7 +474,7 @@ func (i *Ilo) LdapGroup(cfg []*cfgresources.LdapGroup, cfgLdap *cfgresources.Lda
 		if !i.isRoleValid(group.Role) {
 			msg := "Ldap resource Role must be a valid role: admin OR user."
 			i.log.V(1).Info(msg,
-				"Model", i.HardwareType(),
+				"HardwareType", i.HardwareType(),
 				"step", helper.WhosCalling(),
 				"Ldap role", group.Role,
 			)
@@ -574,7 +574,7 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 	if cfg.Server == "" {
 		msg := "Ldap resource parameter Server required but not declared."
 		i.log.V(1).Info(msg,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 		)
 		return errors.New(msg)
@@ -583,7 +583,7 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 	if cfg.Port == 0 {
 		msg := "Ldap resource parameter Port required but not declared."
 		i.log.V(1).Info(msg,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 		)
 		return errors.New(msg)
@@ -592,7 +592,7 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 	if cfg.BaseDn == "" {
 		msg := "Ldap resource parameter BaseDn required but not declared."
 		i.log.V(1).Info(msg,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 		)
 		return errors.New(msg)
@@ -622,7 +622,7 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 	if err != nil {
 		i.log.V(1).Info("Unable to marshal directory payload to set Ldap config.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
@@ -635,7 +635,7 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 		msg := "POST request to set Ldap config returned error."
 		i.log.V(1).Info(msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"StatusCode", statusCode,
@@ -645,10 +645,9 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 		return err
 	}
 
-	i.log.V(1).Info("Ldap parameters applied.", "IP", i.ip, "Model", i.HardwareType())
+	i.log.V(1).Info("Ldap parameters applied.", "IP", i.ip, "HardwareType", i.HardwareType())
 
 	return err
-
 }
 
 // GenerateCSR generates a CSR request on the BMC.
@@ -809,7 +808,7 @@ func (i *Ilo) Power(cfg *cfgresources.Power) error {
 	if !changeRequired {
 		i.log.V(2).Info("Power regulator config - no change required.",
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"current mode", config.PowerMode,
 			"expected mode", configMode,
 		)
@@ -818,7 +817,7 @@ func (i *Ilo) Power(cfg *cfgresources.Power) error {
 
 	i.log.V(2).Info("Power regulator change to be applied.",
 		"IP", i.ip,
-		"Model", i.HardwareType(),
+		"HardwareType", i.HardwareType(),
 		"current mode", config.PowerMode,
 		"expected mode", configMode,
 	)
@@ -840,7 +839,7 @@ func (i *Ilo) Power(cfg *cfgresources.Power) error {
 
 	i.log.V(1).Info("Power regulator config applied.",
 		"IP", i.ip,
-		"Model", i.HardwareType(),
+		"HardwareType", i.HardwareType(),
 	)
 
 	return nil

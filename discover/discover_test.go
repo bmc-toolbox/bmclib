@@ -7,8 +7,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/providers/dell/idrac8"
 	"github.com/bmc-toolbox/bmclib/providers/dell/idrac9"
+	"github.com/bmc-toolbox/bmclib/providers/dell/m1000e"
 	"github.com/bmc-toolbox/bmclib/providers/hp/c7000"
 	"github.com/bmc-toolbox/bmclib/providers/hp/ilo"
 	"github.com/bmc-toolbox/bmclib/providers/supermicro/supermicrox"
@@ -75,6 +77,19 @@ func setup(vendor string, answers map[string][]byte) (scanAndConnectCurry func(o
 			return ScanAndConnect(ip, username, password, opts...)
 		},
 		server.Close
+}
+
+// Golang doesn't have a way to assure a type implements an interface.
+// We test here that the code "compiles", i.e. that the types that we
+//   expect to implement an interface actually implement it.
+func TestInterfaceImplemented(t *testing.T) {
+	var _ devices.Bmc = &ilo.Ilo{}
+	var _ devices.Cmc = &c7000.C7000{}
+	var _ devices.Bmc = &idrac8.IDrac8{}
+	var _ devices.Bmc = &idrac9.IDrac9{}
+	var _ devices.Cmc = &m1000e.M1000e{}
+	var _ devices.Bmc = &supermicrox.SupermicroX{}
+	var _ devices.Bmc = &supermicrox11.SupermicroX{}
 }
 
 func TestProbes(t *testing.T) {

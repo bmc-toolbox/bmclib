@@ -65,7 +65,7 @@ func (i *Ilo) queryDirectoryGroups() (directoryGroups []DirectoryGroups, err err
 		msg := "GET request failed."
 		i.log.V(1).Info(msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
@@ -80,7 +80,7 @@ func (i *Ilo) queryDirectoryGroups() (directoryGroups []DirectoryGroups, err err
 		msg := "Unable to unmarshal payload."
 		i.log.V(1).Info(msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
@@ -99,7 +99,7 @@ func (i *Ilo) queryUsers() (usersInfo []UserInfo, err error) {
 		msg := "GET request failed."
 		i.log.V(1).Info(msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
@@ -114,7 +114,7 @@ func (i *Ilo) queryUsers() (usersInfo []UserInfo, err error) {
 		msg := "Unable to unmarshal payload."
 		i.log.V(1).Info(msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"resource", "User",
 			"step", "queryUserInfo",
 			"Error", internal.ErrStringOrEmpty(err),
@@ -134,7 +134,7 @@ func (i *Ilo) queryNetworkSntp() (networkSntp NetworkSntp, err error) {
 		msg := "GET request failed."
 		i.log.V(1).Info(msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
@@ -147,7 +147,7 @@ func (i *Ilo) queryNetworkSntp() (networkSntp NetworkSntp, err error) {
 		msg := "Unable to unmarshal payload."
 		i.log.V(1).Info(msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
@@ -168,7 +168,7 @@ func (i *Ilo) queryAccessSettings() (AccessSettings, error) {
 		msg := "GET request failed."
 		i.log.V(1).Info(msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
@@ -181,7 +181,7 @@ func (i *Ilo) queryAccessSettings() (AccessSettings, error) {
 		msg := "Unable to unmarshal payload."
 		i.log.V(1).Info(msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
@@ -202,7 +202,7 @@ func (i *Ilo) queryNetworkIPv4() (NetworkIPv4, error) {
 		msg := "GET request failed."
 		i.log.V(1).Info(msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
@@ -215,7 +215,7 @@ func (i *Ilo) queryNetworkIPv4() (NetworkIPv4, error) {
 		msg := "Unable to unmarshal payload."
 		i.log.V(1).Info(msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)
@@ -236,7 +236,7 @@ func (i *Ilo) queryPowerRegulator() (PowerRegulator, error) {
 		msg := "GET request failed."
 		i.log.V(1).Info(msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
@@ -249,7 +249,7 @@ func (i *Ilo) queryPowerRegulator() (PowerRegulator, error) {
 		msg := "Unable to unmarshal payload."
 		i.log.V(1).Info(msg,
 			"IP", i.ip,
-			"Model", i.HardwareType(),
+			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Error", internal.ErrStringOrEmpty(err),
 		)

@@ -160,13 +160,13 @@ func (i *IDrac8) post(endpoint string, data []byte, formDataContentType string) 
 }
 
 // get calls a given json endpoint of the ilo and returns the data
-func (i *IDrac8) get(endpoint string, extraHeaders *map[string]string) (payload []byte, err error) {
+func (i *IDrac8) get(endpoint string, extraHeaders *map[string]string) (statusCode int, payload []byte, err error) {
 	i.log.V(1).Info("retrieving data from bmc", "step", "bmc connection", "vendor", dell.VendorID, "ip", i.ip, "endpoint", endpoint)
 
 	bmcURL := fmt.Sprintf("https://%s", i.ip)
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s", bmcURL, endpoint), nil)
 	if err != nil {
-		return payload, err
+		return 0, nil, err
 	}
 	req.Header.Add("ST2", i.st2)
 	if extraHeaders != nil {
@@ -177,7 +177,7 @@ func (i *IDrac8) get(endpoint string, extraHeaders *map[string]string) (payload 
 
 	u, err := url.Parse(bmcURL)
 	if err != nil {
-		return payload, err
+		return 0, nil, err
 	}
 
 	for _, cookie := range i.httpClient.Jar.Cookies(u) {
@@ -190,7 +190,7 @@ func (i *IDrac8) get(endpoint string, extraHeaders *map[string]string) (payload 
 
 	resp, err := i.httpClient.Do(req)
 	if err != nil {
-		return payload, err
+		return 0, nil, err
 	}
 	defer resp.Body.Close()
 	respDump, _ := httputil.DumpResponse(resp, true)
@@ -198,14 +198,14 @@ func (i *IDrac8) get(endpoint string, extraHeaders *map[string]string) (payload 
 
 	payload, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return payload, err
+		return 0, nil, err
 	}
 
 	if resp.StatusCode == 404 {
-		return payload, errors.ErrPageNotFound
+		return 404, payload, errors.ErrPageNotFound
 	}
 
-	return payload, err
+	return resp.StatusCode, payload, err
 }
 
 // Nics returns all found Nics in the device
@@ -313,13 +313,13 @@ func (i *IDrac8) Status() (status string, err error) {
 	}
 
 	url := "sysmgmt/2016/server/extended_health"
-	payload, err := i.get(url, extraHeaders)
-	if err != nil {
+	statusCode, response, err := i.get(url, extraHeaders)
+	if err != nil || statusCode != 200 {
 		return status, err
 	}
 
 	iDracHealthStatus := &dell.IDracHealthStatus{}
-	err = json.Unmarshal(payload, iDracHealthStatus)
+	err = json.Unmarshal(response, iDracHealthStatus)
 	if err != nil {
 		return status, err
 	}
@@ -341,13 +341,13 @@ func (i *IDrac8) PowerKw() (power float64, err error) {
 	}
 
 	url := "data?get=powermonitordata"
-	payload, err := i.get(url, nil)
-	if err != nil {
+	statusCode, response, err := i.get(url, nil)
+	if err != nil || statusCode != 200 {
 		return power, err
 	}
 
 	iDracRoot := &dell.IDracRoot{}
-	err = xml.Unmarshal(payload, iDracRoot)
+	err = xml.Unmarshal(response, iDracRoot)
 	if err != nil {
 		return power, err
 	}
@@ -509,13 +509,13 @@ func (i *IDrac8) License() (name string, licType string, err error) {
 	}
 
 	url := "sysmgmt/2012/server/license"
-	payload, err := i.get(url, extraHeaders)
-	if err != nil {
+	statusCode, response, err := i.get(url, extraHeaders)
+	if err != nil || statusCode != 200 {
 		return name, licType, err
 	}
 
 	iDracLicense := &dell.IDracLicense{}
-	err = json.Unmarshal(payload, iDracLicense)
+	err = json.Unmarshal(response, iDracLicense)
 	if err != nil {
 		return name, licType, err
 	}
@@ -611,13 +611,13 @@ func (i *IDrac8) TempC() (temp int, err error) {
 	}
 
 	url := "sysmgmt/2012/server/temperature"
-	payload, err := i.get(url, extraHeaders)
-	if err != nil {
+	statusCode, response, err := i.get(url, extraHeaders)
+	if err != nil || statusCode != 200 {
 		return temp, err
 	}
 
 	iDracTemp := &dell.IDracTemp{}
-	err = json.Unmarshal(payload, iDracTemp)
+	err = json.Unmarshal(response, iDracTemp)
 	if err != nil {
 		return temp, err
 	}
@@ -637,13 +637,13 @@ func (i *IDrac8) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCoun
 	}
 
 	url := "sysmgmt/2012/server/processor"
-	payload, err := i.get(url, extraHeaders)
-	if err != nil {
+	statusCode, response, err := i.get(url, extraHeaders)
+	if err != nil || statusCode != 200 {
 		return cpu, cpuCount, coreCount, hyperthreadCount, err
 	}
 
 	dellBladeProc := &dell.BladeProcessorEndpoint{}
-	err = json.Unmarshal(payload, dellBladeProc)
+	err = json.Unmarshal(response, dellBladeProc)
 	if err != nil {
 		return cpu, cpuCount, coreCount, hyperthreadCount, err
 	}
@@ -688,13 +688,13 @@ func (i *IDrac8) Psus() (psus []*devices.Psu, err error) {
 	}
 
 	url := "data?get=powerSupplies"
-	payload, err := i.get(url, nil)
-	if err != nil {
+	statusCode, response, err := i.get(url, nil)
+	if err != nil || statusCode != 200 {
 		return psus, err
 	}
 
 	iDracRoot := &dell.IDracRoot{}
-	err = xml.Unmarshal(payload, iDracRoot)
+	err = xml.Unmarshal(response, iDracRoot)
 	if err != nil {
 		return psus, err
 	}
