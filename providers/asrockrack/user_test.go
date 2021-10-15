@@ -222,6 +222,7 @@ func Test_userAccounts(t *testing.T) {
 		Password:                     "",
 		ConfirmPassword:              "",
 		PasswordSize:                 "",
+		EmailFormat:                  "ami_format",
 	}
 
 	accounts, err := aClient.listUsers()

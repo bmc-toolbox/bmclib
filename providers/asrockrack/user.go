@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/pkg/errors"
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/errors"
@@ -148,7 +147,6 @@ func (a *ASRockRack) UserUpdate(ctx context.Context, user, pass, role string) (o
 				return false, errors.Wrap(bmclibErrs.ErrUserAccountUpdate, err.Error())
 			}
 
-			spew.Dump(account)
 			return true, nil
 		}
 	}
