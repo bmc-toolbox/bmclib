@@ -3,7 +3,6 @@ package asrockrack
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -25,6 +24,9 @@ var (
 	fwUploadResponse       = []byte(`{"cc": 0}`)
 	fwVerificationResponse = []byte(`[ { "id": 1, "current_image_name": "ast2500e", "current_image_version1": "0.01.00", "current_image_version2": "", "new_image_version": "0.03.00", "section_status": 0, "verification_status": 5 } ]`)
 	fwUpgradeProgress      = []byte(`{ "id": 1, "action": "Flashing...", "progress": "__PERCENT__% done         ", "state": __STATE__ }`)
+	usersPayload           = []byte(`[ { "id": 1, "name": "anonymous", "access": 0, "kvm": 1, "vmedia": 1, "snmp": 0, "prev_snmp": 0, "network_privilege": "administrator", "fixed_user_count": 2, "snmp_access": "", "OEMProprietary_level_Privilege": 1, "privilege_limit_serial": "none", "snmp_authentication_protocol": "", "snmp_privacy_protocol": "", "email_id": "", "email_format": "ami_format", "ssh_key": "Not Available", "creation_time": 4802 }, { "id": 2, "name": "admin", "access": 1, "kvm": 1, "vmedia": 1, "snmp": 0, "prev_snmp": 0, "network_privilege": "administrator", "fixed_user_count": 2, "snmp_access": "", "OEMProprietary_level_Privilege": 1, "privilege_limit_serial": "none", "snmp_authentication_protocol": "", "snmp_privacy_protocol": "", "email_id": "", "email_format": "ami_format", "ssh_key": "Not Available", "creation_time": 188 }, { "id": 3, "name": "foo", "access": 1, "kvm": 1, "vmedia": 1, "snmp": 0, "prev_snmp": 0, "network_privilege": "administrator", "fixed_user_count": 2, "snmp_access": "", "OEMProprietary_level_Privilege": 1, "privilege_limit_serial": "none", "snmp_authentication_protocol": "", "snmp_privacy_protocol": "", "email_id": "", "email_format": "ami_format", "ssh_key": "Not Available", "creation_time": 4802 }, { "id": 4, "name": "", "access": 0, "kvm": 0, "vmedia": 0, "snmp": 0, "prev_snmp": 0, "network_privilege": "", "fixed_user_count": 2, "snmp_access": "", "OEMProprietary_level_Privilege": 1, "privilege_limit_serial": "", "snmp_authentication_protocol": "", "snmp_privacy_protocol": "", "email_id": "", "email_format": "", "ssh_key": "Not Available", "creation_time": 0 }, { "id": 5, "name": "", "access": 0, "kvm": 0, "vmedia": 0, "snmp": 0, "prev_snmp": 0, "network_privilege": "", "fixed_user_count": 2, "snmp_access": "", "OEMProprietary_level_Privilege": 1, "privilege_limit_serial": "", "snmp_authentication_protocol": "", "snmp_privacy_protocol": "", "email_id": "", "email_format": "", "ssh_key": "Not Available", "creation_time": 0 }, { "id": 6, "name": "", "access": 0, "kvm": 0, "vmedia": 0, "snmp": 0, "prev_snmp": 0, "network_privilege": "", "fixed_user_count": 2, "snmp_access": "", "OEMProprietary_level_Privilege": 1, "privilege_limit_serial": "", "snmp_authentication_protocol": "", "snmp_privacy_protocol": "", "email_id": "", "email_format": "", "ssh_key": "Not Available", "creation_time": 0 }, { "id": 7, "name": "", "access": 0, "kvm": 0, "vmedia": 0, "snmp": 0, "prev_snmp": 0, "network_privilege": "", "fixed_user_count": 2, "snmp_access": "", "OEMProprietary_level_Privilege": 1, "privilege_limit_serial": "", "snmp_authentication_protocol": "", "snmp_privacy_protocol": "", "email_id": "", "email_format": "", "ssh_key": "Not Available", "creation_time": 0 }, { "id": 8, "name": "", "access": 0, "kvm": 0, "vmedia": 0, "snmp": 0, "prev_snmp": 0, "network_privilege": "", "fixed_user_count": 2, "snmp_access": "", "OEMProprietary_level_Privilege": 1, "privilege_limit_serial": "", "snmp_authentication_protocol": "", "snmp_privacy_protocol": "", "email_id": "", "email_format": "", "ssh_key": "Not Available", "creation_time": 0 }, { "id": 9, "name": "", "access": 0, "kvm": 0, "vmedia": 0, "snmp": 0, "prev_snmp": 0, "network_privilege": "", "fixed_user_count": 2, "snmp_access": "", "OEMProprietary_level_Privilege": 1, "privilege_limit_serial": "", "snmp_authentication_protocol": "", "snmp_privacy_protocol": "", "email_id": "", "email_format": "", "ssh_key": "Not Available", "creation_time": 0 }, { "id": 10, "name": "", "access": 0, "kvm": 0, "vmedia": 0, "snmp": 0, "prev_snmp": 0, "network_privilege": "", "fixed_user_count": 2, "snmp_access": "", "OEMProprietary_level_Privilege": 1, "privilege_limit_serial": "", "snmp_authentication_protocol": "", "snmp_privacy_protocol": "", "email_id": "", "email_format": "", "ssh_key": "Not Available", "creation_time": 0 } ]`)
+	// TODO: implement under rw mutex
+	httpRequestTestVar *http.Request
 )
 
 // setup test BMC
@@ -80,6 +82,9 @@ func mockASRockBMC() *httptest.Server {
 	handler.HandleFunc("/api/maintenance/reset", bmcFirmwareUpgrade)
 	handler.HandleFunc("/api/asrr/maintenance/BIOS/firmware", biosFirmwareUpgrade)
 
+	// user accounts endpoints
+	handler.HandleFunc("/api/settings/users", userAccountList)
+	handler.HandleFunc("/api/settings/users/3", userAccountList)
 	return httptest.NewTLSServer(handler)
 }
 
@@ -90,8 +95,21 @@ func index(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func userAccountList(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		if os.Getenv("TEST_FAIL_QUERY") != "" {
+			w.WriteHeader(http.StatusInternalServerError)
+		} else {
+			_, _ = w.Write(usersPayload)
+		}
+	case "PUT":
+		httpRequestTestVar = r
+	}
+}
+
 func biosFirmwareUpgrade(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("%s -> %s\n", r.Method, r.RequestURI)
+	//	fmt.Printf("%s -> %s\n", r.Method, r.RequestURI)
 	switch r.Method {
 	case "POST":
 		switch r.RequestURI {
@@ -112,7 +130,7 @@ func biosFirmwareUpgrade(w http.ResponseWriter, r *http.Request) {
 }
 
 func bmcFirmwareUpgrade(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("%s -> %s\n", r.Method, r.RequestURI)
+	// fmt.Printf("%s -> %s\n", r.Method, r.RequestURI)
 	switch r.Method {
 	case "GET":
 		switch r.RequestURI {

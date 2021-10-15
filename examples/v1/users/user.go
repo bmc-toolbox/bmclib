@@ -26,8 +26,8 @@ func main() {
 
 	cl := bmclib.NewClient(host, port, user, pass, bmclib.WithLogger(logger))
 
-	// we may want to specify multiple protocols here
 	cl.Registry.Drivers = cl.Registry.Using("redfish")
+	// cl.Registry.Drivers = cl.Registry.Using("vendorapi")
 
 	err = cl.Open(ctx)
 	if err != nil {

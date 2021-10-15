@@ -9,6 +9,7 @@ require (
 	github.com/gebn/bmc v0.0.0-20200904230046-a5643220ab2a
 	github.com/go-logr/logr v0.4.0
 	github.com/go-logr/zapr v0.4.0 // indirect
+	github.com/go-playground/assert/v2 v2.0.1 // indirect
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/google/go-cmp v0.5.5
 	github.com/google/go-querystring v1.0.0
@@ -27,6 +28,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.7.1
 	github.com/stmcginnis/gofish v0.12.0
+	github.com/stretchr/testify v1.7.0
 	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/crypto v0.0.0-20210317152858-513c2a44f670
 	golang.org/x/net v0.0.0-20210316092652-d523dce5a7f4
