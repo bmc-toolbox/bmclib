@@ -13,6 +13,8 @@ import (
 func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
+
+	// set BMC parameters here
 	host := ""
 	port := ""
 	user := ""
@@ -22,14 +24,16 @@ func main() {
 	l.Level = logrus.DebugLevel
 	logger := logrusr.NewLogger(l)
 
-	var err error
+	if host == "" || user == "" || pass == "" {
+		log.Fatal("required host/user/pass parameters not defined")
+	}
 
 	cl := bmclib.NewClient(host, port, user, pass, bmclib.WithLogger(logger))
 
 	// we may want to specify multiple protocols here
 	cl.Registry.Drivers = cl.Registry.Using("redfish")
 
-	err = cl.Open(ctx)
+	err := cl.Open(ctx)
 	if err != nil {
 		log.Fatal(err, "bmc login failed")
 	}

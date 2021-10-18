@@ -51,7 +51,7 @@ func (c *Conn) Open(ctx context.Context) (err error) {
 	}
 
 	debug := os.Getenv("DEBUG_BMCLIB")
-	if debug != "" {
+	if debug == "true" {
 		config.DumpWriter = os.Stdout
 	}
 
