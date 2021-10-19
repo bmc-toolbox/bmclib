@@ -109,7 +109,6 @@ func userAccountList(w http.ResponseWriter, r *http.Request) {
 }
 
 func biosFirmwareUpgrade(w http.ResponseWriter, r *http.Request) {
-	//	fmt.Printf("%s -> %s\n", r.Method, r.RequestURI)
 	switch r.Method {
 	case "POST":
 		switch r.RequestURI {
@@ -130,7 +129,6 @@ func biosFirmwareUpgrade(w http.ResponseWriter, r *http.Request) {
 }
 
 func bmcFirmwareUpgrade(w http.ResponseWriter, r *http.Request) {
-	// fmt.Printf("%s -> %s\n", r.Method, r.RequestURI)
 	switch r.Method {
 	case "GET":
 		switch r.RequestURI {

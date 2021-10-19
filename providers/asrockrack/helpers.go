@@ -67,7 +67,7 @@ func (a *ASRockRack) listUsers() ([]*UserAccount, error) {
 		return nil, err
 	}
 
-	if statusCode != 200 {
+	if statusCode != http.StatusOK {
 		return nil, fmt.Errorf("non 200 response: %d", statusCode)
 	}
 
@@ -95,7 +95,7 @@ func (a *ASRockRack) createUpdateUser(account *UserAccount) error {
 		return err
 	}
 
-	if statusCode != 200 {
+	if statusCode != http.StatusOK {
 		return fmt.Errorf("non 200 response: %d", statusCode)
 	}
 
@@ -113,7 +113,7 @@ func (a *ASRockRack) setFlashMode() error {
 		return err
 	}
 
-	if statusCode != 200 {
+	if statusCode != http.StatusOK {
 		return fmt.Errorf("non 200 response: %d", statusCode)
 	}
 
@@ -175,7 +175,7 @@ func (a *ASRockRack) uploadFirmware(endpoint string, fwReader io.Reader, fileSiz
 		return err
 	}
 
-	if statusCode != 200 {
+	if statusCode != http.StatusOK {
 		return fmt.Errorf("non 200 response: %d", statusCode)
 	}
 
@@ -191,7 +191,7 @@ func (a *ASRockRack) verifyUploadedFirmware() error {
 		return err
 	}
 
-	if statusCode != 200 {
+	if statusCode != http.StatusOK {
 		return fmt.Errorf("non 200 response: %d", statusCode)
 	}
 
@@ -215,7 +215,7 @@ func (a *ASRockRack) upgradeBMC() error {
 		return err
 	}
 
-	if statusCode != 200 {
+	if statusCode != http.StatusOK {
 		return fmt.Errorf("non 200 response: %d", statusCode)
 	}
 
@@ -231,7 +231,7 @@ func (a *ASRockRack) reset() error {
 		return err
 	}
 
-	if statusCode != 200 {
+	if statusCode != http.StatusOK {
 		return fmt.Errorf("non 200 response: %d", statusCode)
 	}
 
@@ -245,7 +245,7 @@ func (a *ASRockRack) flashProgress(endpoint string) (*upgradeProgress, error) {
 		return nil, err
 	}
 
-	if statusCode != 200 {
+	if statusCode != http.StatusOK {
 		return nil, fmt.Errorf("non 200 response: %d", statusCode)
 	}
 
@@ -267,7 +267,7 @@ func (a *ASRockRack) firmwareInfo() (*firmwareInfo, error) {
 		return nil, err
 	}
 
-	if statusCode != 200 {
+	if statusCode != http.StatusOK {
 		return nil, fmt.Errorf("non 200 response: %d", statusCode)
 	}
 
@@ -298,7 +298,7 @@ func (a *ASRockRack) biosUpgradeConfiguration() error {
 		return err
 	}
 
-	if statusCode != 200 {
+	if statusCode != http.StatusOK {
 		return fmt.Errorf("non 200 response: %d", statusCode)
 	}
 
@@ -328,7 +328,7 @@ func (a *ASRockRack) biosUpgrade() error {
 		return err
 	}
 
-	if statusCode != 200 {
+	if statusCode != http.StatusOK {
 		return fmt.Errorf("non 200 response: %d", statusCode)
 	}
 
@@ -386,7 +386,7 @@ func (a *ASRockRack) httpsLogout() error {
 		return fmt.Errorf("Error logging out: " + err.Error())
 	}
 
-	if statusCode != 200 {
+	if statusCode != http.StatusOK {
 		return fmt.Errorf("non 200 response at https logout: %d", statusCode)
 	}
 

@@ -131,7 +131,6 @@ func (a *ASRockRack) UserUpdate(ctx context.Context, user, pass, role string) (o
 
 	// identify account slot not in use
 	for _, account := range accounts {
-		// ASRR BMCs have a reserved slot 1 for a disabled Anonymous, no idea why.
 		account := account
 		if account.Name == user {
 			user := newUserAccount(account.ID, user, pass, role)
