@@ -3,6 +3,7 @@ package redfish
 import (
 	"context"
 
+	"github.com/bmc-toolbox/bmclib/internal"
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish/redfish"
 )
@@ -84,7 +85,7 @@ func (c *Conn) UserUpdate(ctx context.Context, user, pass, role string) (ok bool
 
 // UserCreate adds a new user account
 func (c *Conn) UserCreate(ctx context.Context, user, pass, role string) (ok bool, err error) {
-	if !StringInSlice(role, ValidRoles) {
+	if !internal.StringInSlice(role, ValidRoles) {
 		return false, ErrInvalidUserRole
 	}
 
@@ -106,7 +107,7 @@ func (c *Conn) UserCreate(ctx context.Context, user, pass, role string) (ok bool
 	// identify account slot not in use
 	for _, account := range accounts {
 		// Dell iDracs don't want us to create accounts in these slots
-		if StringInSlice(account.ID, []string{"1"}) {
+		if internal.StringInSlice(account.ID, []string{"1"}) {
 			continue
 		}
 
@@ -131,13 +132,4 @@ func (c *Conn) UserCreate(ctx context.Context, user, pass, role string) (ok bool
 	}
 
 	return false, ErrNoUserSlotsAvailable
-}
-
-func StringInSlice(str string, sl []string) bool {
-	for _, s := range sl {
-		if str == s {
-			return true
-		}
-	}
-	return false
 }
