@@ -50,6 +50,27 @@ var (
 
 	// ErrDeviceNotMatched is the error returned when the device was not a type it was probed for
 	ErrDeviceNotMatched = errors.New("the vendor device did not match the probe")
+
+	// ErrRetrievingUserAccounts is returned when bmclib is unable to retrieve user accounts from the BMC
+	ErrRetrievingUserAccounts = errors.New("error retrieving user accounts")
+
+	// ErrInvalidUserRole is returned when the given user account role is not valid
+	ErrInvalidUserRole = errors.New("invalid user account role")
+
+	// ErrUserParamsRequired is returned when all the required user parameters are not provided - username, password, role
+	ErrUserParamsRequired = errors.New("username, password and role are required parameters")
+
+	// ErrUserAccountExists is returned when a user account with the username is already present
+	ErrUserAccountExists = errors.New("user account already exists")
+
+	// ErrNoUserSlotsAvailable is returned when there are no user account slots available
+	ErrNoUserSlotsAvailable = errors.New("no user account slots available")
+
+	// ErrUserAccountNotFound is returned when the user account is not present
+	ErrUserAccountNotFound = errors.New("given user account does not exist")
+
+	// ErrUserAccountUpdate is returned when the user account failed to be updated
+	ErrUserAccountUpdate = errors.New("user account attributes could not be updated")
 )
 
 type ErrUnsupportedHardware struct {
