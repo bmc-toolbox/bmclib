@@ -49,10 +49,9 @@ func (i *IDrac9) Power(cfg *cfgresources.Power) (err error) {
 // Bios sets up Bios configuration
 // Bios implements the Configure interface
 func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
-
 	newBiosSettings := cfg.Dell.Idrac9BiosSettings
 
-	//validate config
+	// validate config
 	validate := validator.New()
 	err = validate.Struct(newBiosSettings)
 	if err != nil {
@@ -60,7 +59,7 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 		return err
 	}
 
-	//GET current settings
+	// GET current settings
 	currentBiosSettings, err := i.getBiosSettings()
 	if err != nil || currentBiosSettings == nil {
 		msg := "Unable to get current bios settings through redfish."
@@ -73,10 +72,9 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 		return errors.New(msg)
 	}
 
-	//Compare current bios settings with our declared config.
+	// Compare current bios settings with our declared config.
 	if *newBiosSettings != *currentBiosSettings {
-
-		//retrieve fields that is the config to be applied
+		// retrieve fields that is the config to be applied
 		toApplyBiosSettings, err := diffBiosSettings(newBiosSettings, currentBiosSettings)
 		if err != nil {
 			i.log.V(1).Error(err, "diffBiosSettings returned error.",
@@ -95,8 +93,8 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 			"Changes (Ignore empty fields)", fmt.Sprintf("%+v", toApplyBiosSettings),
 		)
 
-		//purge any existing pending bios setting jobs
-		//or we will not be able to set any params
+		// purge any existing pending bios setting jobs
+		// or we will not be able to set any params
 		err = i.purgeJobsForBiosSettings()
 		if err != nil {
 			i.log.V(1).Info("Unable to purge pending bios setting jobs.",
@@ -125,9 +123,7 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 		)
-
 	} else {
-
 		i.log.V(0).Info("Bios configuration is up to date.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
@@ -172,15 +168,13 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 		return errors.New(msg)
 	}
 
-	//for each configuration user
+	// for each configuration user
 	for _, cfgUser := range cfgUsers {
-
 		userID, userInfo, uExists := userInIdrac(cfgUser.Name, idracUsers)
 
-		//user to be added/updated
+		// user to be added/updated
 		if cfgUser.Enable {
-
-			//new user to be added
+			// new user to be added
 			if !uExists {
 				userID, userInfo, err = getEmptyUserSlot(idracUsers)
 				if err != nil {
@@ -200,7 +194,7 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 			userInfo.UserName = cfgUser.Name
 			userInfo.Password = cfgUser.Password
 
-			//set appropriate privileges
+			// set appropriate privileges
 			if cfgUser.Role == "admin" {
 				userInfo.Privilege = "511"
 				userInfo.IpmiLanPrivilege = "Administrator"
@@ -220,10 +214,9 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 				)
 				continue
 			}
-
 		} // end if cfgUser.Enable
 
-		//if the user exists but is disabled in our config, remove the user
+		// if the user exists but is disabled in our config, remove the user
 		if !cfgUser.Enable && uExists {
 			endpoint := fmt.Sprintf("sysmgmt/2017/server/user?userid=%d", userID)
 			statusCode, response, err := i.delete(endpoint)
@@ -246,7 +239,6 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 			"HardwareType", i.HardwareType(),
 			"User", cfgUser.Name,
 		)
-
 	}
 
 	return err
@@ -339,7 +331,6 @@ func (i *IDrac9) Ldap(cfg *cfgresources.Ldap) (err error) {
 // LdapGroups implements the Configure interface.
 // nolint: gocyclo
 func (i *IDrac9) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
-
 	idracLdapRoleGroups, err := i.queryLdapRoleGroups()
 	if err != nil {
 		msg := "Unable to query existing users"
@@ -353,9 +344,8 @@ func (i *IDrac9) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 		return err
 	}
 
-	//for each configuration ldap role group
+	// for each configuration ldap role group
 	for _, cfgRole := range cfgGroups {
-
 		// the distinguished name of the group
 		// example, if the GroupBaseDn is ou=Group,dc=example,dc=com and the Group is cn=fooUsers
 		// the groupDN will be Group+GroupBaseDn = cn=fooUsers,ou=Group,dc=example,dc=com
@@ -365,7 +355,6 @@ func (i *IDrac9) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 
 		//role to be added/updated
 		if cfgRole.Enable {
-
 			//new role to be added
 			if !rExists {
 				roleID, role, err = getEmptyLdapRoleGroupSlot(idracLdapRoleGroups)
@@ -384,7 +373,7 @@ func (i *IDrac9) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 
 			role.DN = groupDN
 
-			//set appropriate privileges
+			// set appropriate privileges
 			if cfgRole.Role == "admin" {
 				role.Privilege = "511"
 			} else {
@@ -403,12 +392,10 @@ func (i *IDrac9) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 				)
 				continue
 			}
-
 		} // end if cfgUser.Enable
 
 		//if the role exists but is disabled in our config, remove the role
 		if !cfgRole.Enable && rExists {
-
 			role.DN = ""
 			role.Privilege = "0"
 			err = i.putLdapRoleGroup(roleID, role)
@@ -432,7 +419,6 @@ func (i *IDrac9) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 			"Ldap Role Group", cfgRole.Role,
 			"Role Group DN", cfgRole.Role,
 		)
-
 	}
 
 	return err
@@ -441,7 +427,6 @@ func (i *IDrac9) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 // Ntp applies NTP configuration params
 // Ntp implements the Configure interface.
 func (i *IDrac9) Ntp(cfg *cfgresources.Ntp) (err error) {
-
 	var enable string
 
 	if cfg.Enable {
@@ -531,7 +516,6 @@ func (i *IDrac9) Ntp(cfg *cfgresources.Ntp) (err error) {
 // and since not all BMCs currently support configuring filtering for alerts,
 // for now the configuration for alert filters/enabling is managed through this method.
 func (i *IDrac9) Syslog(cfg *cfgresources.Syslog) (err error) {
-
 	var port int
 	enable := "Enabled"
 
@@ -605,7 +589,6 @@ func (i *IDrac9) Syslog(cfg *cfgresources.Syslog) (err error) {
 // Network method implements the Configure interface
 // applies various network parameters.
 func (i *IDrac9) Network(cfg *cfgresources.Network) (reset bool, err error) {
-
 	params := map[string]string{
 		"EnableIPv4":              "Enabled",
 		"DHCPEnable":              "Enabled",
@@ -705,7 +688,6 @@ func (i *IDrac9) SetLicense(cfg *cfgresources.License) (err error) {
 // 1. PUT CSR info based on configuration
 // 2. POST sysmgmt/2012/server/network/ssl/csr which returns a base64encoded CSR.
 func (i *IDrac9) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, error) {
-
 	c := CSRInfo{
 		CommonName:       cert.CommonName,
 		CountryCode:      cert.CountryCode,
@@ -738,7 +720,6 @@ func (i *IDrac9) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, er
 // 1. POST upload signed x509 cert in multipart form.
 // 2. POST returned resource URI
 func (i *IDrac9) UploadHTTPSCert(cert []byte, certFileName string, key []byte, keyFileName string) (bool, error) {
-
 	endpoint := "sysmgmt/2012/server/transient/filestore"
 
 	// setup a buffer for our multipart form

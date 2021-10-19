@@ -45,7 +45,6 @@ type ASRockRack struct {
 
 // New returns a new ASRockRack instance ready to be used
 func New(ip string, username string, password string, log logr.Logger) (*ASRockRack, error) {
-
 	client, err := httpclient.Build()
 	if err != nil {
 		return nil, err
@@ -64,7 +63,6 @@ func New(ip string, username string, password string, log logr.Logger) (*ASRockR
 // Compatible implements the registrar.Verifier interface
 // returns true if the BMC is identified to be an asrockrack
 func (a *ASRockRack) Compatible() bool {
-
 	resp, statusCode, err := a.queryHTTPS("/", "GET", nil, nil, 0)
 	if err != nil {
 		return false
@@ -84,7 +82,6 @@ func (a *ASRockRack) Open(ctx context.Context) (err error) {
 
 // Close a connection to a BMC, implements the Closer interface
 func (a *ASRockRack) Close(ctx context.Context) (err error) {
-
 	if a.skipLogout {
 		return nil
 	}
@@ -99,7 +96,6 @@ func (a *ASRockRack) CheckCredentials() (err error) {
 
 // BiosVersion returns the BIOS version from the BMC
 func (a *ASRockRack) GetBIOSVersion(ctx context.Context) (string, error) {
-
 	fwInfo, err := a.firmwareInfo()
 	if err != nil {
 		return "", err
@@ -110,7 +106,6 @@ func (a *ASRockRack) GetBIOSVersion(ctx context.Context) (string, error) {
 
 // BMCVersion returns the BMC version
 func (a *ASRockRack) GetBMCVersion(ctx context.Context) (string, error) {
-
 	fwInfo, err := a.firmwareInfo()
 	if err != nil {
 		return "", err
@@ -124,7 +119,6 @@ func (a *ASRockRack) GetBMCVersion(ctx context.Context) (string, error) {
 // this method initiates the upgrade process and waits in a loop until the device has been upgraded
 // fileSize is required to setup the multipart form upload Content-Length
 func (a *ASRockRack) FirmwareUpdateBMC(ctx context.Context, fileReader io.Reader, fileSize int64) error {
-
 	defer func() {
 		// The device needs to be reset to be removed from flash mode,
 		// this is required once setFlashMode() is invoked.
@@ -207,7 +201,6 @@ func (a *ASRockRack) FirmwareUpdateBMC(ctx context.Context, fileReader io.Reader
 }
 
 func (a *ASRockRack) FirmwareUpdateBIOS(ctx context.Context, fileReader io.Reader, fileSize int64) error {
-
 	defer func() {
 		if a.resetRequired {
 			a.log.V(2).Info("info", "resetting BMC, this takes a few minutes")
@@ -227,7 +220,7 @@ func (a *ASRockRack) FirmwareUpdateBIOS(ctx context.Context, fileReader io.Reade
 		return fmt.Errorf("failed in step 1/4 - upload firmware image: " + err.Error())
 	}
 
-	// 2. set update parameters to preserve configuratin
+	// 2. set update parameters to preserve configurations
 	a.log.V(2).Info("info", "action", "set flash configuration", "step", "2/4")
 	err = a.biosUpgradeConfiguration()
 	if err != nil {
@@ -275,5 +268,4 @@ func (a *ASRockRack) FirmwareUpdateBIOS(ctx context.Context, fileReader io.Reade
 			return fmt.Errorf("timeout in step 4/4 - flash progress, error count: %d, elapsed time: %s", errorsCount, time.Since(startTS).String())
 		}
 	}
-
 }

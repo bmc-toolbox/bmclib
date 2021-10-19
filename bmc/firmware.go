@@ -94,7 +94,6 @@ Loop:
 	}
 
 	return multierror.Append(err, errors.New("failed to update BMC firmware"))
-
 }
 
 // UpdateBMCFirmwareFromInterfaces pass through to library function
@@ -181,7 +180,6 @@ Loop:
 	}
 
 	return multierror.Append(err, errors.New("failed to update BIOS firmware"))
-
 }
 
 // GetBMCVersionFromInterfaces pass through to library function

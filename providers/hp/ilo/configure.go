@@ -34,7 +34,6 @@ func (i *Ilo) Resources() []string {
 // ApplyCfg applies configuration
 // To be deprecated once the Configure interface is ready.
 func (i *Ilo) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
-
 	//check sessionKey is available
 	if i.sessionKey == "" {
 		msg := "Expected sessionKey not found, unable to configure BMC."
@@ -51,7 +50,6 @@ func (i *Ilo) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 
 // Return bool value if the role is valid.
 func (i *Ilo) isRoleValid(role string) bool {
-
 	validRoles := []string{"admin", "user"}
 	for _, v := range validRoles {
 		if role == v {
@@ -64,7 +62,6 @@ func (i *Ilo) isRoleValid(role string) bool {
 
 // checks if a user is present in a given list
 func userExists(user string, usersInfo []UserInfo) (userInfo UserInfo, exists bool) {
-
 	for _, userInfo := range usersInfo {
 		if userInfo.UserName == user || userInfo.LoginName == user {
 			return userInfo, true
@@ -76,7 +73,6 @@ func userExists(user string, usersInfo []UserInfo) (userInfo UserInfo, exists bo
 
 // checks if a ldap group is present in a given list
 func ldapGroupExists(group string, directoryGroups []DirectoryGroups) (directoryGroup DirectoryGroups, exists bool) {
-
 	for _, directoryGroup := range directoryGroups {
 		if directoryGroup.Dn == group {
 			return directoryGroup, true
@@ -91,7 +87,6 @@ func ldapGroupExists(group string, directoryGroups []DirectoryGroups) (directory
 // User implements the Configure interface.
 // nolint: gocyclo
 func (i *Ilo) User(users []*cfgresources.User) (err error) {
-
 	existingUsers, err := i.queryUsers()
 	if err != nil {
 		msg := "Unable to query existing users"
@@ -105,7 +100,6 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 	}
 
 	for _, user := range users {
-
 		var postPayload bool
 
 		if user.Name == "" {
@@ -214,7 +208,6 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 				"HardwareType", i.HardwareType(),
 				"User", user.Name,
 			)
-
 		}
 	}
 
@@ -224,7 +217,6 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 // Syslog applies the Syslog configuration resource
 // Syslog implements the Configure interface
 func (i *Ilo) Syslog(cfg *cfgresources.Syslog) (err error) {
-
 	var port int
 	enable := 1
 
@@ -290,7 +282,6 @@ func (i *Ilo) Syslog(cfg *cfgresources.Syslog) (err error) {
 // SetLicense applies license configuration params
 // SetLicense implements the Configure interface.
 func (i *Ilo) SetLicense(cfg *cfgresources.License) (err error) {
-
 	if cfg.Key == "" {
 		msg := "License resource expects parameter: Key."
 		i.log.V(1).Info(msg, "step", helper.WhosCalling())
@@ -339,7 +330,6 @@ func (i *Ilo) SetLicense(cfg *cfgresources.License) (err error) {
 // Ntp applies NTP configuration params
 // Ntp implements the Configure interface.
 func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
-
 	enable := 1
 	if cfg.Server1 == "" {
 		msg := "NTP resource expects parameter: server1."
@@ -445,7 +435,6 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 // LdapGroups implements the Configure interface.
 // nolint: gocyclo
 func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
-
 	directoryGroups, err := i.queryDirectoryGroups()
 	if err != nil {
 		msg := "Unable to query existing Ldap groups"
@@ -459,7 +448,6 @@ func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresour
 	}
 
 	for _, group := range cfgGroups {
-
 		var postPayload bool
 		if group.Group == "" {
 			msg := "Ldap resource parameter Group required but not declared."
@@ -489,7 +477,6 @@ func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresour
 
 		//if the group is enabled setup parameters
 		if group.Enable {
-
 			directoryGroup.LoginPriv = 1
 			directoryGroup.RemoteConsPriv = 1
 			directoryGroup.VirtualMediaPriv = 1
@@ -507,7 +494,6 @@ func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresour
 			if gexists {
 				directoryGroup.Method = "mod_group"
 			} else {
-
 				directoryGroup.Method = "add_group"
 			}
 
@@ -559,9 +545,7 @@ func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresour
 				"Model", i.HardwareType(),
 				"User", group.Group,
 			)
-
 		}
-
 	}
 
 	return err
@@ -570,7 +554,6 @@ func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresour
 // Ldap applies LDAP configuration params.
 // Ldap implements the Configure interface.
 func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
-
 	if cfg.Server == "" {
 		msg := "Ldap resource parameter Server required but not declared."
 		i.log.V(1).Info(msg,
@@ -655,7 +638,6 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 // the response will be a 500 with the body	{"message":"JS_CERT_NOT_AVAILABLE","details":null}
 // If the configuration for the Subject has not changed and the CSR is ready a CSR is returned.
 func (i *Ilo) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, error) {
-
 	csrConfig := &csr{
 		Country:          cert.CountryCode,
 		State:            cert.StateName,
@@ -703,7 +685,6 @@ func (i *Ilo) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, error
 // UploadHTTPSCert implements the Configure interface.
 // return true if the bmc requires a reset.
 func (i *Ilo) UploadHTTPSCert(cert []byte, certFileName string, key []byte, keyFileName string) (bool, error) {
-
 	certPayload := &certImport{
 		Method:          "import_certificate",
 		CertificateData: string(cert),
@@ -732,7 +713,6 @@ func (i *Ilo) UploadHTTPSCert(cert []byte, certFileName string, key []byte, keyF
 // Network method implements the Configure interface
 // nolint: gocyclo
 func (i *Ilo) Network(cfg *cfgresources.Network) (reset bool, err error) {
-
 	// check if AccessSettings configuration update is required.
 	accessSettings, updateAccessSettings, err := i.cmpAccessSettings(cfg)
 	if err != nil {
@@ -761,7 +741,6 @@ func (i *Ilo) Network(cfg *cfgresources.Network) (reset bool, err error) {
 	}
 
 	if updateIPv4Settings {
-
 		payload, err := json.Marshal(networkIPv4Settings)
 		if err != nil {
 			return reset, fmt.Errorf("Error marshaling NetworkIPv4 payload: %s", err)
@@ -781,7 +760,6 @@ func (i *Ilo) Network(cfg *cfgresources.Network) (reset bool, err error) {
 
 // Power settings
 func (i *Ilo) Power(cfg *cfgresources.Power) error {
-
 	if cfg.HPE == nil {
 		return nil
 	}

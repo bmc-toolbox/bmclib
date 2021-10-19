@@ -15,7 +15,6 @@ import (
 // The bool value returned indicates if the BMC supports CSR generation.
 // CurrentHTTPSCert implements the Configure interface.
 func (i *IDrac9) CurrentHTTPSCert() ([]*x509.Certificate, bool, error) {
-
 	dialer := &net.Dialer{
 		Timeout: time.Duration(10) * time.Second,
 	}
@@ -29,7 +28,6 @@ func (i *IDrac9) CurrentHTTPSCert() ([]*x509.Certificate, bool, error) {
 	defer conn.Close()
 
 	return conn.ConnectionState().PeerCertificates, true, nil
-
 }
 
 // Screenshot grab screen preview.
@@ -87,7 +85,6 @@ func (i *IDrac9) queryUsers() (users map[int]User, err error) {
 }
 
 func (i *IDrac9) queryLdapRoleGroups() (ldapRoleGroups LdapRoleGroups, err error) {
-
 	endpoint := "sysmgmt/2012/server/configgroup/iDRAC.LDAPRoleGroup"
 
 	statusCode, response, err := i.get(endpoint, &map[string]string{})

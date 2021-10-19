@@ -16,7 +16,6 @@ func Test_Compatible(t *testing.T) {
 }
 
 func Test_httpLogin(t *testing.T) {
-
 	err := aClient.httpsLogin()
 	if err != nil {
 		t.Errorf(err.Error())
@@ -26,7 +25,6 @@ func Test_httpLogin(t *testing.T) {
 }
 
 func Test_Close(t *testing.T) {
-
 	err := aClient.httpsLogin()
 	if err != nil {
 		t.Errorf(err.Error())
@@ -39,7 +37,6 @@ func Test_Close(t *testing.T) {
 }
 
 func Test_FirmwareInfo(t *testing.T) {
-
 	expected := firmwareInfo{
 		BMCVersion:       "0.01.00",
 		BIOSVersion:      "L2.07B",
@@ -62,11 +59,9 @@ func Test_FirmwareInfo(t *testing.T) {
 	}
 
 	assert.Equal(t, expected, fwInfo)
-
 }
 
 func Test_FirwmwareUpdateBMC(t *testing.T) {
-
 	err := aClient.httpsLogin()
 	if err != nil {
 		t.Errorf(err.Error())

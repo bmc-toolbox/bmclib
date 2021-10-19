@@ -43,3 +43,12 @@ func ValidateUserConfig(cfgUsers []*cfgresources.User) (err error) {
 
 	return nil
 }
+
+func StringInSlice(str string, sl []string) bool {
+	for _, s := range sl {
+		if str == s {
+			return true
+		}
+	}
+	return false
+}

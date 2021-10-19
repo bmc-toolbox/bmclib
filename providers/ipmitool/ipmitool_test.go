@@ -103,7 +103,6 @@ func TestPowerState(t *testing.T) {
 	}
 	t.Log(state)
 	t.Fatal()
-
 }
 
 func TestPowerSet1(t *testing.T) {
@@ -127,7 +126,6 @@ func TestPowerSet1(t *testing.T) {
 	}
 	t.Log(state)
 	t.Fatal()
-
 }
 
 func TestBootDeviceSet2(t *testing.T) {
@@ -145,7 +143,6 @@ func TestBootDeviceSet2(t *testing.T) {
 	}
 	t.Log(state)
 	t.Fatal()
-
 }
 
 func TestBMCReset(t *testing.T) {
@@ -163,5 +160,4 @@ func TestBMCReset(t *testing.T) {
 	}
 	t.Log(state)
 	t.Fatal()
-
 }

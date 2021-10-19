@@ -18,7 +18,6 @@ import (
 //diffs two BiosSettings and returns a BiosSettings with the difference.
 //!! Note this assumes the struct fields in BiosSettings are all strings !!
 func diffBiosSettings(new *BiosSettings, current *BiosSettings) (diff *BiosSettings, err error) {
-
 	//the struct that holds the changes
 	diff = &BiosSettings{}
 
@@ -51,7 +50,6 @@ func diffBiosSettings(new *BiosSettings, current *BiosSettings) (diff *BiosSetti
 }
 
 func (i *IDrac9) getBiosSettings() (biosSettings *BiosSettings, err error) {
-
 	endpoint := "redfish/v1/Systems/System.Embedded.1/Bios"
 
 	oData := Odata{}
@@ -66,7 +64,6 @@ func (i *IDrac9) getBiosSettings() (biosSettings *BiosSettings, err error) {
 	}
 
 	return oData.Attributes, err
-
 }
 
 /*
@@ -97,14 +94,13 @@ func (i *IDrac9) biosSettingsPendingReboot() (pendingBiosSettings *BiosSettings,
 
 // PATCHs Bios settings, queues setting to be applied at next boot.
 func (i *IDrac9) setBiosSettings(biosSettings *BiosSettings) (err error) {
-
 	biosSettingsURI := "redfish/v1/Systems/System.Embedded.1/Bios/Settings"
 	idracPayload := make(map[string]*BiosSettings)
 	idracPayload["Attributes"] = biosSettings
 
 	payload, err := json.Marshal(idracPayload)
 	if err != nil {
-		msg := fmt.Sprintf("Error marshalling biosAttributes payload: %s", err)
+		msg := fmt.Sprintf("Error marshaling biosAttributes payload: %s", err)
 		return errors.New(msg)
 	}
 
@@ -120,7 +116,6 @@ func (i *IDrac9) setBiosSettings(biosSettings *BiosSettings) (err error) {
 }
 
 func (i *IDrac9) queueJobs(jobURI string) (err error) {
-
 	endpoint := "redfish/v1/Managers/iDRAC.Embedded.1/Jobs"
 
 	if !strings.HasPrefix(jobURI, "/") {
@@ -134,7 +129,7 @@ func (i *IDrac9) queueJobs(jobURI string) (err error) {
 
 	payload, err := json.Marshal(targetSetting)
 	if err != nil {
-		msg := fmt.Sprintf("Error marshalling job queue payload for uri: %s, error: %s", jobURI, err)
+		msg := fmt.Sprintf("Error marshaling job queue payload for uri: %s, error: %s", jobURI, err)
 		return errors.New(msg)
 	}
 
@@ -149,7 +144,6 @@ func (i *IDrac9) queueJobs(jobURI string) (err error) {
 
 // Given a Job ID, purge it from the job queue
 func (i *IDrac9) purgeJob(jobID string) (err error) {
-
 	if !strings.Contains(jobID, "JID") {
 		return errors.New("Invalid Job ID given, Job IDs should be prefixed with JID_")
 	}
@@ -167,7 +161,6 @@ func (i *IDrac9) purgeJob(jobID string) (err error) {
 
 // Purges any jobs related to Bios configuration
 func (i *IDrac9) purgeJobsForBiosSettings() (err error) {
-
 	//get current job ids
 	jobIDs, err := i.getJobIds()
 	if err != nil {
@@ -205,7 +198,6 @@ func (i *IDrac9) purgeJobsByType(jobIDs []string, jobType string) (err error) {
 
 //Returns the job state, Type for the given Job id
 func (i *IDrac9) getJob(jobID string) (jobState string, jobType string, err error) {
-
 	endpoint := fmt.Sprintf("%s/%s", "redfish/v1/Managers/iDRAC.Embedded.1/Jobs/", jobID)
 
 	oData := Odata{}
@@ -220,12 +212,10 @@ func (i *IDrac9) getJob(jobID string) (jobState string, jobType string, err erro
 	}
 
 	return oData.JobState, oData.JobType, err
-
 }
 
 // Returns Job ids
 func (i *IDrac9) getJobIds() (jobs []string, err error) {
-
 	endpoint := "redfish/v1/Managers/iDRAC.Embedded.1/Jobs"
 
 	oData := Odata{}
@@ -270,7 +260,6 @@ func isRequestMethodValid(method string) (valid bool) {
 
 // GET data
 func (i *IDrac9) queryRedfish(method string, endpoint string, payload []byte) (statusCode int, response []byte, err error) {
-
 	if !isRequestMethodValid(method) {
 		return statusCode, response, fmt.Errorf("Invalid request method: %v", method)
 	}

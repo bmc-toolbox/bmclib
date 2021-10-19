@@ -67,7 +67,6 @@ func timezoneToUtcOffset(location *time.Location) (offset int) {
 
 // Return bool value if the role is valid.
 func (s *SupermicroX) isRoleValid(role string) bool {
-
 	validRoles := []string{"admin", "user"}
 	for _, v := range validRoles {
 		if role == v {
@@ -80,7 +79,6 @@ func (s *SupermicroX) isRoleValid(role string) bool {
 
 // returns a map of user accounts and their ids
 func (s *SupermicroX) queryUserAccounts() (userAccounts map[int]string, err error) {
-
 	userAccounts = make(map[int]string)
 	ipmi, err := s.query("CONFIG_INFO.XML=(0,0)")
 	if err != nil {
@@ -101,7 +99,6 @@ func (s *SupermicroX) queryUserAccounts() (userAccounts map[int]string, err erro
 // supermicro user accounts start with 1, account 0 which is a large empty string :\.
 // nolint: gocyclo
 func (s *SupermicroX) User(users []*cfgresources.User) (err error) {
-
 	currentUsers, err := s.queryUserAccounts()
 	if err != nil {
 		msg := "Unable to query current user accounts."
@@ -183,7 +180,6 @@ func (s *SupermicroX) User(users []*cfgresources.User) (err error) {
 // Network method implements the Configure interface
 // applies various network parameters.
 func (s *SupermicroX) Network(cfg *cfgresources.Network) (reset bool, err error) {
-
 	sshPort := 22
 
 	if cfg.SSHPort != 0 && cfg.SSHPort != sshPort {
@@ -231,7 +227,6 @@ func (s *SupermicroX) Network(cfg *cfgresources.Network) (reset bool, err error)
 // Ntp applies NTP configuration params
 // Ntp implements the Configure interface.
 func (s *SupermicroX) Ntp(cfg *cfgresources.Ntp) (err error) {
-
 	var enable string
 	if cfg.Server1 == "" {
 		s.log.V(1).Info("NTP resource expects parameter: server1.",
@@ -329,7 +324,6 @@ func (s *SupermicroX) Ldap(cfgLdap *cfgresources.Ldap) error {
 // Supermicro does not have any separate configuration for Ldap groups just for generic ldap
 // nolint: gocyclo
 func (s *SupermicroX) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
-
 	var enable string
 
 	if cfgLdap.Server == "" {
@@ -338,7 +332,7 @@ func (s *SupermicroX) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *c
 		return errors.New(msg)
 	}
 
-	//first some preliminary checks
+	// first some preliminary checks
 	if cfgLdap.Port == 0 {
 		msg := "Ldap resource parameter Port required but not declared"
 		s.log.V(1).Info(msg,
@@ -369,10 +363,9 @@ func (s *SupermicroX) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *c
 		return errors.New(msg)
 	}
 
-	//for each ldap group setup config
-	//since supermicro can work with just one Searchbase, we go with the 'user' role group
+	// for each ldap group setup config
+	// since supermicro can work with just one Searchbase, we go with the 'user' role group
 	for _, group := range cfgGroups {
-
 		if !group.Enable {
 			continue
 		}
@@ -443,7 +436,6 @@ func (s *SupermicroX) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *c
 // Syslog implements the Configure interface
 // this also enables alerts from the BMC
 func (s *SupermicroX) Syslog(cfg *cfgresources.Syslog) (err error) {
-
 	var port int
 
 	if cfg.Server == "" {
@@ -533,7 +525,6 @@ func (s *SupermicroX) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byt
 // 4. delay for a second
 // 5. Request for the current: SSL_STATUS.XML	(0,0)
 func (s *SupermicroX) UploadHTTPSCert(cert []byte, certFileName string, key []byte, keyFileName string) (bool, error) {
-
 	endpoint := "upload_ssl.cgi"
 
 	// setup a buffer for our multipart form
@@ -602,7 +593,6 @@ func (s *SupermicroX) UploadHTTPSCert(cert []byte, certFileName string, key []by
 // The second part of the certificate upload process,
 // we get the BMC to validate the uploaded SSL certificate.
 func (s *SupermicroX) validateSSL() error {
-
 	var v = url.Values{}
 	v.Set("SSL_VALIDATE.XML", "(0,0)")
 
@@ -627,7 +617,6 @@ func (s *SupermicroX) validateSSL() error {
 // Get the current status of the certificate.
 // POST https://10.193.251.43/cgi/ipmi.cgi SSL_STATUS.XML: (0,0)
 func (s *SupermicroX) statusSSL() error {
-
 	var v = url.Values{}
 	v.Add("SSL_STATUS.XML", "(0,0)")
 

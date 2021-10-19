@@ -139,7 +139,6 @@ func (i *IDrac9) put(endpoint string, payload []byte) (statusCode int, response 
 
 // calls delete on the given endpoint
 func (i *IDrac9) delete(endpoint string) (statusCode int, payload []byte, err error) {
-
 	bmcURL := fmt.Sprintf("https://%s", i.ip)
 
 	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/%s", bmcURL, endpoint), nil)
@@ -171,7 +170,6 @@ func (i *IDrac9) delete(endpoint string) (statusCode int, payload []byte, err er
 
 // posts the payload to the given endpoint
 func (i *IDrac9) post(endpoint string, data []byte, formDataContentType string) (statusCode int, body []byte, err error) {
-
 	u, err := url.Parse(fmt.Sprintf("https://%s/%s", i.ip, endpoint))
 	if err != nil {
 		return 0, []byte{}, err
@@ -485,7 +483,6 @@ func (i *IDrac9) Slot() (slot int, err error) {
 
 // slotC6420 returns the current slot for the C6420 blade within the chassis
 func (i *IDrac9) slotC6420() (slot int, err error) {
-
 	var url = "sysmgmt/2012/server/configgroup/System.ServerTopology"
 	statusCode, response, err := i.get(url, nil)
 	if err != nil || statusCode != 200 {

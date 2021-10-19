@@ -98,11 +98,9 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 
 	////for each configuration user
 	for _, cfgUser := range cfgUsers {
-
 		userID, userInfo, uExists := userInIdrac(cfgUser.Name, idracUsers)
 		//user to be added/updated
 		if cfgUser.Enable {
-
 			//new user to be added
 			if !uExists {
 				userID, userInfo, err = getEmptyUserSlot(idracUsers)
@@ -143,12 +141,10 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 				)
 				continue
 			}
-
 		} // end if cfgUser.Enable
 
 		//if the user exists but is disabled in our config, remove the user
 		if !cfgUser.Enable && uExists {
-
 			userInfo.Enable = "Disabled"
 			userInfo.SolEnable = "Disabled"
 			userInfo.UserName = cfgUser.Name
@@ -181,7 +177,6 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 // and since not all BMCs currently support configuring filtering for alerts,
 // for now the configuration for alert filters/enabling is managed through this method.
 func (i *IDrac8) Syslog(cfg *cfgresources.Syslog) (err error) {
-
 	var port int
 	enable := "Enabled"
 
@@ -261,7 +256,6 @@ func (i *IDrac8) Syslog(cfg *cfgresources.Syslog) (err error) {
 // Ntp applies NTP configuration params
 // Ntp implements the Configure interface.
 func (i *IDrac8) Ntp(cfg *cfgresources.Ntp) (err error) {
-
 	if cfg.Server1 == "" {
 		i.log.V(1).Info("NTP resource expects parameter: server1.", "step", "apply-ntp-cfg")
 		return
@@ -279,7 +273,6 @@ func (i *IDrac8) Ntp(cfg *cfgresources.Ntp) (err error) {
 }
 
 func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
-
 	var enable int
 	if !cfg.Enable {
 		i.log.V(1).Info("Ntp resource declared with enable: false.", "step", helper.WhosCalling())
@@ -319,7 +312,6 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 // Ldap applies LDAP configuration params.
 // Ldap implements the Configure interface.
 func (i *IDrac8) Ldap(cfg *cfgresources.Ldap) error {
-
 	if cfg.Server == "" {
 		msg := "ldap resource parameter Server required but not declared."
 		err := errors.New(msg)
@@ -355,7 +347,6 @@ func (i *IDrac8) Ldap(cfg *cfgresources.Ldap) error {
 // Applies ldap search filter param.
 // set=xGLSearchFilter:objectClass\=posixAccount
 func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) error {
-
 	if cfg.SearchFilter == "" {
 		msg := "Ldap resource parameter SearchFilter required but not declared."
 		err := errors.New(msg)
@@ -386,18 +377,17 @@ func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) error {
 // LdapGroups implements the Configure interface.
 // nolint: gocyclo
 func (i *IDrac8) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
-
 	groupID := 1
 
-	//set to decide what privileges the group should have
-	//497 == operator
-	//511 == administrator (full privileges)
+	// set to decide what privileges the group should have
+	// 497 == operator
+	// 511 == administrator (full privileges)
 	privID := "0"
 
-	//groupPrivilegeParam is populated per group and is passed to i.applyLdapRoleGroupPrivParam
+	// groupPrivilegeParam is populated per group and is passed to i.applyLdapRoleGroupPrivParam
 	groupPrivilegeParam := ""
 
-	//first some preliminary checks
+	// first some preliminary checks
 	if cfgLdap.Port == 0 {
 		msg := "Ldap resource parameter Port required but not declared"
 		err = errors.New(msg)
@@ -426,11 +416,10 @@ func (i *IDrac8) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 		return err
 	}
 
-	//for each ldap group
+	// for each ldap group
 	for _, group := range cfgGroups {
-
-		//if a group has been set to disable in the config,
-		//its configuration is skipped and removed.
+		// if a group has been set to disable in the config,
+		// its configuration is skipped and removed.
 		if !group.Enable {
 			continue
 		}
@@ -581,7 +570,6 @@ func (i *IDrac8) applyTimezoneParam(timezone string) {
 // Network method implements the Configure interface
 // applies various network parameters.
 func (i *IDrac8) Network(cfg *cfgresources.Network) (reset bool, err error) {
-
 	params := map[string]int{
 		"EnableIPv4":              1,
 		"DHCPEnable":              1,
@@ -632,7 +620,6 @@ func (i *IDrac8) Network(cfg *cfgresources.Network) (reset bool, err error) {
 
 // GenerateCSR generates a CSR request on the BMC.
 func (i *IDrac8) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, error) {
-
 	var payload []string
 
 	endpoint := "bindata?set"
@@ -670,7 +657,6 @@ func (i *IDrac8) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, er
 // 1. POST upload signed x509 cert in multipart form.
 // 2. POST returned resource URI
 func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, keyFileName string) (bool, error) {
-
 	endpoint := "sysmgmt/2012/server/transient/filestore?fileupload=true"
 	endpoint += fmt.Sprintf("&ST1=%s", i.st1)
 
@@ -759,5 +745,4 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	}
 
 	return true, err
-
 }
