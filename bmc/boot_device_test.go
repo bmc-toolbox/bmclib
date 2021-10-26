@@ -39,8 +39,8 @@ func TestSetBootDevice(t *testing.T) {
 		ctxTimeout   time.Duration
 	}{
 		"success":               {bootDevice: "pxe", want: true},
-		"not ok return":         {bootDevice: "pxe", want: false, makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("failed to set boot device"), errors.New("failed to set boot device")}}},
-		"error":                 {bootDevice: "pxe", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("boot device set failed"), errors.New("failed to set boot device")}}},
+		"not ok return":         {bootDevice: "pxe", want: false, makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider, failed to set boot device"), errors.New("failed to set boot device")}}},
+		"error":                 {bootDevice: "pxe", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider: boot device set failed"), errors.New("failed to set boot device")}}},
 		"error context timeout": {bootDevice: "pxe", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to set boot device")}}, ctxTimeout: time.Nanosecond * 1},
 	}
 
@@ -53,7 +53,7 @@ func TestSetBootDevice(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, _, err := SetBootDevice(ctx, tc.bootDevice, false, false, []bootDeviceProviders{{"", &testImplementation}})
+			result, _, err := SetBootDevice(ctx, tc.bootDevice, false, false, []bootDeviceProviders{{"test provider", &testImplementation}})
 			if err != nil {
 				if tc.err != nil {
 					diff := cmp.Diff(err.Error(), tc.err.Error())

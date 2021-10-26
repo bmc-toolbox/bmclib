@@ -39,8 +39,8 @@ func TestResetBMC(t *testing.T) {
 		ctxTimeout   time.Duration
 	}{
 		"success":               {resetType: "cold", want: true},
-		"not ok return":         {resetType: "warm", want: false, makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("failed to reset BMC"), errors.New("failed to reset BMC")}}},
-		"error":                 {resetType: "cold", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("bmc reset failed"), errors.New("failed to reset BMC")}}},
+		"not ok return":         {resetType: "warm", want: false, makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider, failed to reset BMC"), errors.New("failed to reset BMC")}}},
+		"error":                 {resetType: "cold", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider: bmc reset failed"), errors.New("failed to reset BMC")}}},
 		"error context timeout": {resetType: "cold", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to reset BMC")}}, ctxTimeout: time.Nanosecond * 1},
 	}
 
@@ -53,7 +53,7 @@ func TestResetBMC(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, _, err := ResetBMC(ctx, tc.resetType, []bmcProviders{{"", &testImplementation}})
+			result, _, err := ResetBMC(ctx, tc.resetType, []bmcProviders{{"test provider", &testImplementation}})
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {

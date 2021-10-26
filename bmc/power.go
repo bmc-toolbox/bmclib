@@ -2,10 +2,10 @@ package bmc
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/hashicorp/go-multierror"
+	"github.com/pkg/errors"
 )
 
 // PowerSetter sets the power state of a BMC
@@ -53,11 +53,11 @@ Loop:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
 			ok, setErr := elem.powerSetter.PowerSet(ctx, state)
 			if setErr != nil {
-				err = multierror.Append(err, setErr)
+				err = multierror.Append(err, errors.WithMessagef(setErr, "provider: %v", elem.name))
 				continue
 			}
 			if !ok {
-				err = multierror.Append(err, errors.New("failed to set power state"))
+				err = multierror.Append(err, fmt.Errorf("provider: %v, failed to set power state", elem.name))
 				continue
 			}
 			metadataLocal.SuccessfulProvider = elem.name
@@ -104,7 +104,7 @@ Loop:
 			metadata.ProvidersAttempted = append(metadata.ProvidersAttempted, elem.name)
 			state, stateErr := elem.powerStateGetter.PowerStateGet(ctx)
 			if stateErr != nil {
-				err = multierror.Append(err, stateErr)
+				err = multierror.Append(err, errors.WithMessagef(stateErr, "provider: %v", elem.name))
 				continue
 			}
 			metadata.SuccessfulProvider = elem.name

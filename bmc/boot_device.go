@@ -2,10 +2,10 @@ package bmc
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/hashicorp/go-multierror"
+	"github.com/pkg/errors"
 )
 
 // BootDeviceSetter sets the next boot device for a machine
@@ -36,11 +36,11 @@ Loop:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
 			ok, setErr := elem.bootDeviceSetter.BootDeviceSet(ctx, bootDevice, setPersistent, efiBoot)
 			if setErr != nil {
-				err = multierror.Append(err, setErr)
+				err = multierror.Append(err, errors.WithMessagef(setErr, "provider: %v", elem.name))
 				continue
 			}
 			if !ok {
-				err = multierror.Append(err, errors.New("failed to set boot device"))
+				err = multierror.Append(err, fmt.Errorf("provider: %v, failed to set boot device", elem.name))
 				continue
 			}
 			metadataLocal.SuccessfulProvider = elem.name

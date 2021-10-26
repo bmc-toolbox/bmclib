@@ -43,7 +43,7 @@ func TestOpenConnectionFromInterfaces(t *testing.T) {
 		"success":                  {},
 		"success with metadata":    {withMetadata: true},
 		"error context deadline":   {err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("no Opener implementations found")}}, ctxTimeout: time.Nanosecond * 1},
-		"error failed open":        {makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("open connection failed"), errors.New("no Opener implementations found")}}},
+		"error failed open":        {makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider: open connection failed"), errors.New("no Opener implementations found")}}},
 		"no implementations found": {badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a Opener implementation: *struct {}"), errors.New("no Opener implementations found")}}},
 	}
 
@@ -94,7 +94,7 @@ func TestCloseConnection(t *testing.T) {
 	}{
 		"success":                {},
 		"error context deadline": {err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to close connection")}}, ctxTimeout: time.Nanosecond * 1},
-		"error":                  {makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("close connection failed"), errors.New("failed to close connection")}}},
+		"error":                  {makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider: close connection failed"), errors.New("failed to close connection")}}},
 	}
 
 	for name, tc := range testCases {
@@ -105,7 +105,7 @@ func TestCloseConnection(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			_, err := CloseConnection(ctx, []connectionProviders{{"", &testImplementation}})
+			_, err := CloseConnection(ctx, []connectionProviders{{"test provider", &testImplementation}})
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {

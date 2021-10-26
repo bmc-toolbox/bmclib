@@ -2,10 +2,10 @@ package bmc
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/hashicorp/go-multierror"
+	"github.com/pkg/errors"
 )
 
 // Opener interface for opening a connection to a BMC
@@ -46,7 +46,7 @@ Loop:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, providerName)
 			er := p.Open(ctx)
 			if er != nil {
-				err = multierror.Append(err, er)
+				err = multierror.Append(err, errors.WithMessagef(er, "provider: %v", providerName))
 				continue
 			}
 			opened = append(opened, elem)
@@ -77,9 +77,9 @@ Loop:
 			break Loop
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
-			openErr := elem.closer.Close(ctx)
-			if openErr != nil {
-				err = multierror.Append(err, openErr)
+			closeErr := elem.closer.Close(ctx)
+			if closeErr != nil {
+				err = multierror.Append(err, errors.WithMessagef(closeErr, "provider: %v", elem.name))
 				continue
 			}
 			connClosed = true

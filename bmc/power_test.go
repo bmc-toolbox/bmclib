@@ -46,8 +46,8 @@ func TestSetPowerState(t *testing.T) {
 		ctxTimeout   time.Duration
 	}{
 		"success":               {state: "off", want: true},
-		"not ok return":         {state: "off", want: false, makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("failed to set power state"), errors.New("failed to set power state")}}},
-		"error":                 {state: "off", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("power set failed"), errors.New("failed to set power state")}}},
+		"not ok return":         {state: "off", want: false, makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider, failed to set power state"), errors.New("failed to set power state")}}},
+		"error":                 {state: "off", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider: power set failed"), errors.New("failed to set power state")}}},
 		"error context timeout": {state: "off", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to set power state")}}, ctxTimeout: time.Nanosecond * 1},
 	}
 
@@ -60,7 +60,7 @@ func TestSetPowerState(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, _, err := SetPowerState(ctx, tc.state, []powerProviders{{"", nil, &testImplementation}})
+			result, _, err := SetPowerState(ctx, tc.state, []powerProviders{{"test provider", nil, &testImplementation}})
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
@@ -133,7 +133,7 @@ func TestGetPowerState(t *testing.T) {
 		ctxTimeout time.Duration
 	}{
 		"success":              {state: "on", err: nil},
-		"failure":              {state: "on", makeFail: true, err: &multierror.Error{Errors: []error{errors.New("power state get failed"), errors.New("failed to get power state")}}},
+		"failure":              {state: "on", makeFail: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider: power state get failed"), errors.New("failed to get power state")}}},
 		"fail context timeout": {state: "on", makeFail: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to get power state")}}, ctxTimeout: time.Nanosecond * 1},
 	}
 
@@ -146,7 +146,7 @@ func TestGetPowerState(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, _, err := GetPowerState(ctx, []powerProviders{{"", &testImplementation, nil}})
+			result, _, err := GetPowerState(ctx, []powerProviders{{"test provider", &testImplementation, nil}})
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
