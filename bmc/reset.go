@@ -2,10 +2,10 @@ package bmc
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/hashicorp/go-multierror"
+	"github.com/pkg/errors"
 )
 
 // BMCResetter for resetting a BMC.
@@ -38,11 +38,11 @@ Loop:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
 			ok, setErr := elem.bmcResetter.BmcReset(ctx, resetType)
 			if setErr != nil {
-				err = multierror.Append(err, setErr)
+				err = multierror.Append(err, errors.WithMessagef(setErr, "provider: %v", elem.name))
 				continue
 			}
 			if !ok {
-				err = multierror.Append(err, errors.New("failed to reset BMC"))
+				err = multierror.Append(err, fmt.Errorf("provider: %v, failed to reset BMC", elem.name))
 				continue
 			}
 			metadataLocal.SuccessfulProvider = elem.name
