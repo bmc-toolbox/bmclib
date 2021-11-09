@@ -139,7 +139,7 @@ func (l *LdapGroups) GetExtraGroups(serial, vendor string) (string, error) {
 
 	err = json.Unmarshal(stdout, &l)
 	if err != nil {
-		return "", err
+		return string(stdout), err
 	}
 
 	l.Groups = append(l.Groups, l.ExtraAdminGroups...)
