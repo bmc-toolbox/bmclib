@@ -28,7 +28,7 @@ type ResourcesConfig struct {
 	Ntp          *Ntp          `yaml:"ntp"`
 	Bios         *Bios         `yaml:"bios"`
 	Power        *Power        `yaml:"power"`
-	Supermicro   *Supermicro   `yaml:"supermicro"` // supermicro specific config, example of issue #34
+	Supermicro   *Supermicro   `yaml:"supermicro"`
 	SetupChassis *SetupChassis `yaml:"setupChassis"`
 }
 
@@ -55,7 +55,6 @@ type flexAddress struct {
 	Enable bool `yaml:"enable"`
 }
 
-// Enable/Disable ipmi over lan
 type ipmiOverLan struct {
 	Enable bool `yaml:"enable"`
 }
@@ -122,10 +121,10 @@ type LdapGroups struct {
 
 // If you want to add extra groups at runtime using a script, you have
 //   the option of specifying
-//   * Bin.Executor: Usually /bin/sh or /bin/bash and the like
-//   * Bin.Path: Path your actual script
-// You get the serial of the asset and its vendor as two arguments
-// If you want more, create a GitHub issue and we will take a look
+//   * Bin.Executor: Usually /bin/sh or /bin/bash and the like.
+//   * Bin.Path: Path your actual script.
+// You get the serial of the asset and its vendor as two arguments.
+// If you want more, create a GitHub issue and we will take a look.
 func (l *LdapGroups) GetExtraGroups(serial, vendor string) (string, error) {
 	if l.Bin.Path == "" {
 		return "nothing", nil
@@ -183,7 +182,7 @@ type Network struct {
 	DNSFromDHCP    bool   `yaml:"dnsFromDhcp"`
 	SSHEnable      bool   `yaml:"sshEnable"`
 	SSHPort        int    `yaml:"sshPort"`
-	SolEnable      bool   `yaml:"solEnable"` // Serial over lan
+	SolEnable      bool   `yaml:"solEnable"` // SerialOverLan
 	IpmiEnable     bool   `yaml:"ipmiEnable"`
 	DhcpEnable     bool   `yaml:"dhcpEnable"`
 	IpmiPort       int    `yaml:"ipmiPort"`

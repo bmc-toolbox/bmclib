@@ -19,7 +19,7 @@ func getEmptyUserSlot(idracUsers userInfo) (userID int, user User, err error) {
 		}
 	}
 
-	return 0, user, errors.New("All user account slots in use, remove an account before adding a new one")
+	return 0, user, errors.New("All user account slots are in use, remove an account before adding a new one.")
 }
 
 // checks if a user is present in a given list
@@ -98,14 +98,13 @@ func getEmptyLdapRoleGroupSlot(roleGroups LdapRoleGroups) (roleID string, roleGr
 	return roleID, roleGroup, errors.New("All Ldap Role Group slots in use, remove a Role group before adding a new one")
 }
 
-// PUTs ldap role group config
 func (i *IDrac9) putLdapRoleGroup(roleID string, ldapRoleGroup LdapRoleGroup) (err error) {
 	idracPayload := make(map[string]LdapRoleGroup)
 	idracPayload["iDRAC.LDAPRoleGroup"] = ldapRoleGroup
 
 	payload, err := json.Marshal(idracPayload)
 	if err != nil {
-		msg := fmt.Sprintf("Error marshaling Ldap Role Group payload: %s", err)
+		msg := fmt.Sprintf("Error marshaling LDAP Role Group payload: %s", err)
 		return errors.New(msg)
 	}
 

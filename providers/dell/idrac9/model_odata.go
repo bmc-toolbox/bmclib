@@ -14,14 +14,12 @@ type Odata struct {
 	JobState     string              `json:"JobState,omitempty"`
 }
 
-// BiosSettings is an alias type of cfgresources.Idrac9BiosSettings
-//All supported bios settings can be queried from through redfish/v1/Systems/System.Embedded.1/Bios
-//NOTE: all fields int this struct are expected to be of type string, for details see diffBiosSettings()
-// This type aliasing tightly couples config resources, maybe theres another aproach here.
+// BiosSettings is an alias type of cfgresources.Idrac9BiosSettings.
+// All supported BIOS settings can be queried from through redfish/v1/Systems/System.Embedded.1/Bios.
+// NOTE: All fields in this struct are expected to be of type string, for details see diffBiosSettings().
+// This type aliasing tightly couples config resources, maybe there's another aproach here.
 type BiosSettings = cfgresources.Idrac9BiosSettings
 
-// TargetSettingsURI struct declares parameters to unmarshal TargetSettingsURI.
-//Post Jobs to be done
 type TargetSettingsURI struct {
-	TargetSettingsURI string `json:"TargetSettingsURI"` //e.g /redfish/v1/Systems/System.Embedded.1/Bios/Settings
+	TargetSettingsURI string `json:"TargetSettingsURI"` // e.g. /redfish/v1/Systems/System.Embedded.1/Bios/Settings
 }

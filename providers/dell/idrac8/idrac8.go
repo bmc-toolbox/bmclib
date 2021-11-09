@@ -154,11 +154,9 @@ func (i *IDrac8) post(endpoint string, data []byte, formDataContentType string) 
 		return 0, []byte{}, err
 	}
 
-	//fmt.Printf("%s\n", body)
 	return resp.StatusCode, body, err
 }
 
-// get calls a given json endpoint of the ilo and returns the data
 func (i *IDrac8) get(endpoint string, extraHeaders *map[string]string) (statusCode int, payload []byte, err error) {
 	i.log.V(1).Info("retrieving data from bmc", "step", "bmc connection", "vendor", dell.VendorID, "ip", i.ip, "endpoint", endpoint)
 

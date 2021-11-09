@@ -197,7 +197,7 @@ func (m *M1000e) PxeOnceBlade(position int) (bool, error) {
 	return false, fmt.Errorf(output)
 }
 
-// SetIpmiOverLan Enable/Disable IPMI over lan parameter per blade in chassis
+// Enable/Disable the IpmiOverLan parameter per blade in the chassis.
 func (m *M1000e) SetIpmiOverLan(position int, enable bool) (bool, error) {
 	var state int
 	if enable {

@@ -6,7 +6,6 @@ type Supermicro struct {
 }
 
 // SupermicroNetworkCfg holds configuration for supermicro network.
-//this is an example for issue #34
 type SupermicroNetworkCfg struct {
 	Web              string `yaml:"web"`
 	WebSsl           int    `yaml:"webSsl"`

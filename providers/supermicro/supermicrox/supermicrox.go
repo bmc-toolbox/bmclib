@@ -60,7 +60,8 @@ func New(ctx context.Context, ip string, username string, password string, log l
 		username: username,
 		password: password,
 		ctx:      ctx,
-		log:      log}, err
+		log:      log,
+	}, err
 }
 
 // CheckCredentials verify whether the credentials are valid or not

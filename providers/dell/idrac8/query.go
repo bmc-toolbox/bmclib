@@ -23,7 +23,6 @@ func (i *IDrac8) CurrentHTTPSCert() ([]*x509.Certificate, bool, error) {
 	}
 
 	conn, err := tls.DialWithDialer(dialer, "tcp", i.ip+":"+"443", &tls.Config{InsecureSkipVerify: true})
-
 	if err != nil {
 		return []*x509.Certificate{{}}, true, err
 	}
@@ -40,13 +39,13 @@ func (i *IDrac8) Screenshot() (response []byte, extension string, err error) {
 		return response, extension, err
 	}
 
-	endpoint1 := fmt.Sprintf("data?get=consolepreview[auto%%20%d]",
+	endpoint := fmt.Sprintf("data?get=consolepreview[auto%%20%d]",
 		time.Now().UnixNano()/int64(time.Millisecond))
 
 	extension = "png"
 
 	// here we expect an empty response
-	statusCode, response, err := i.get(endpoint1, &map[string]string{"idracAutoRefresh": "1"})
+	statusCode, response, err := i.get(endpoint, &map[string]string{"idracAutoRefresh": "1"})
 	if err != nil || statusCode != 200 {
 		return []byte{}, extension, err
 	}
@@ -55,10 +54,10 @@ func (i *IDrac8) Screenshot() (response []byte, extension string, err error) {
 		return []byte{}, extension, fmt.Errorf(string(response))
 	}
 
-	endpoint2 := fmt.Sprintf("capconsole/scapture0.png?%d",
+	endpoint = fmt.Sprintf("capconsole/scapture0.png?%d",
 		time.Now().UnixNano()/int64(time.Millisecond))
 
-	statusCode, response, err = i.get(endpoint2, &map[string]string{})
+	statusCode, response, err = i.get(endpoint, &map[string]string{})
 	if err != nil || statusCode != 200 {
 		return []byte{}, extension, err
 	}
@@ -66,7 +65,7 @@ func (i *IDrac8) Screenshot() (response []byte, extension string, err error) {
 	return response, extension, err
 }
 
-//Queries Idrac8 for current user accounts
+// Queries for current user accounts.
 func (i *IDrac8) queryUsers() (userInfo UserInfo, err error) {
 	userInfo = make(UserInfo)
 

@@ -266,7 +266,7 @@ func (i *IDrac9) Nics() (nics []*devices.Nic, err error) {
 	return nics, err
 }
 
-// Serial returns the device serial
+// Returns the device serial or an empty string in case it doesn't find it.
 func (i *IDrac9) Serial() (serial string, err error) {
 	err = i.loadHwData()
 	if err != nil {
@@ -483,7 +483,7 @@ func (i *IDrac9) Slot() (slot int, err error) {
 
 // slotC6420 returns the current slot for the C6420 blade within the chassis
 func (i *IDrac9) slotC6420() (slot int, err error) {
-	var url = "sysmgmt/2012/server/configgroup/System.ServerTopology"
+	url := "sysmgmt/2012/server/configgroup/System.ServerTopology"
 	statusCode, response, err := i.get(url, nil)
 	if err != nil || statusCode != 200 {
 		return -1, err
@@ -507,7 +507,7 @@ func (i *IDrac9) slotC6420() (slot int, err error) {
 	return slot, err
 }
 
-// Model returns the device model
+// Returns the device model or an empty string in case it doesn't find it.
 func (i *IDrac9) Model() (model string, err error) {
 	err = i.loadHwData()
 	if err != nil {

@@ -67,8 +67,8 @@ func (i *IDrac9) httpLogin() (err error) {
 		return err
 	}
 
-	//0 = login success.
-	//7 = login success with default credentials.
+	// 0 = Login successful.
+	// 7 = Login successful with default credentials.
 	if iDracAuth.AuthResult != 0 && iDracAuth.AuthResult != 7 {
 		return errors.ErrLoginFailed
 	}
@@ -82,7 +82,7 @@ func (i *IDrac9) httpLogin() (err error) {
 func (i *IDrac9) loadHwData() (err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return err
+		return fmt.Errorf("IDrac9.loadHwData(): HTTP login problem: " + err.Error())
 	}
 
 	url := "sysmgmt/2012/server/inventory/hardware"

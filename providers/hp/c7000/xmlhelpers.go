@@ -27,12 +27,13 @@ func wrapXML(element interface{}, sessionKey string) (doc Envelope) {
 	}
 
 	if sessionKey != "" {
-		doc.Header = Header{Security: Security{
-			MustUnderstand: "true",
-			HpOaSessionKeyToken: HpOaSessionKeyToken{
-				OaSessionKey: OaSessionKey{Text: sessionKey},
+		doc.Header = Header{
+			Security: Security{
+				MustUnderstand: "true",
+				HpOaSessionKeyToken: HpOaSessionKeyToken{
+					OaSessionKey: OaSessionKey{Text: sessionKey},
+				},
 			},
-		},
 		}
 	}
 
@@ -70,8 +71,8 @@ func (c *C7000) postXML(data interface{}) (statusCode int, body []byte, err erro
 		return 0, []byte{}, err
 	}
 
-	//Setup a context to cancel the request if it takes long,
-	//this prevents the http.Client.Timeout Deadline from kicking in and causing a panic.
+	// Setup a context to cancel the request if it takes long.
+	// This prevents the http.Client.Timeout deadline from kicking in and causing a panic.
 	ctx, cancel := context.WithTimeout(req.Context(), 10*time.Second)
 	defer cancel()
 
@@ -96,6 +97,5 @@ func (c *C7000) postXML(data interface{}) (statusCode int, body []byte, err erro
 		return 0, []byte{}, err
 	}
 
-	//fmt.Printf("%+v\n", body)
 	return resp.StatusCode, body, err
 }

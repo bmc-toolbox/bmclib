@@ -11,7 +11,7 @@ type DirectoryGroupAccts struct {
 }
 
 // LicenseInfo declares License information payload.
-//POST https://10.183.244.173/json/license_info
+// POST https://10.183.244.173/json/license_info
 type LicenseInfo struct {
 	Key        string `json:"key,omitempty"`
 	Method     string `json:"method,omitempty"`
@@ -33,7 +33,7 @@ type UserInfo struct {
 	ConfigPriv       int    `json:"config_priv,omitempty"`
 	UserPriv         int    `json:"user_priv,omitempty"`
 	LoginPriv        int    `json:"login_priv,omitempty"`
-	Method           string `json:"method"` //mod_user, add_user, del_user
+	Method           string `json:"method"` // mod_user, add_user, del_user
 	UserID           int    `json:"user_id,omitempty"`
 	SessionKey       string `json:"session_key,omitempty"`
 }
@@ -45,7 +45,7 @@ type UserInfo struct {
 type RemoteSyslog struct {
 	SyslogEnable int    `json:"syslog_enable"`
 	SyslogPort   int    `json:"syslog_port"`
-	Method       string `json:"method"` //syslog_save,
+	Method       string `json:"method"` // syslog_save
 	SyslogServer string `json:"syslog_server"`
 	SessionKey   string `json:"session_key,omitempty"`
 }
@@ -67,9 +67,9 @@ type NetworkSntp struct {
 	Sdn2WCount                  int    `json:"sdn2_wcount"`
 	SntpServer1                 string `json:"sntp_server1"`
 	SntpServer2                 string `json:"sntp_server2"`
-	TimePropagate               int    `json:"time_propagate"` //propagate time from OA to blade
-	OurZone                     int    `json:"our_zone"`       //368 - see Timezones
-	Method                      string `json:"method"`         //set_sntp
+	TimePropagate               int    `json:"time_propagate"` // propagate time from OA to blade
+	OurZone                     int    `json:"our_zone"`       // 368 - see Timezones
+	Method                      string `json:"method"`         // set_sntp
 	SessionKey                  string `json:"session_key,omitempty"`
 }
 
@@ -81,7 +81,7 @@ type Directory struct {
 	ServerPort            int      `json:"server_port"`
 	UserContexts          []string `json:"user_contexts"`
 	AuthenticationEnabled int      `json:"authentication_enabled"`
-	LocalUserAcct         int      `json:"local_user_acct"` //enable local user accounts
+	LocalUserAcct         int      `json:"local_user_acct"` // enable local user accounts
 	EnableGroupAccount    int      `json:"enable_group_acct"`
 	EnableKerberos        int      `json:"enable_kerberos"`
 	KerberosKdcAddress    string   `json:"kerberos_kdc_address,omitempty"`
@@ -96,7 +96,7 @@ type Directory struct {
 //{"dn":"cn=hp,cn=bmcUsers","new_dn":"cn=hp,cn=bmcUsers","sid":"","login_priv":1,"remote_cons_priv":1,"virtual_media_priv":1,"reset_priv":1,"config_priv":0,"user_priv":0,"method":"mod_group","session_key":"bc2dae77e36a45fbeffce0bddd2ccabe"}
 type DirectoryGroups struct {
 	Dn               string `json:"dn"`
-	NewDn            string `json:"new_dn,omitempty"` //same as Dn, unless being modified
+	NewDn            string `json:"new_dn,omitempty"` // same as Dn, unless being modified
 	Sid              string `json:"sid,omitempty"`
 	LoginPriv        int    `json:"login_priv,omitempty"`
 	RemoteConsPriv   int    `json:"remote_cons_priv,omitempty"`
@@ -104,7 +104,7 @@ type DirectoryGroups struct {
 	ResetPriv        int    `json:"reset_priv,omitempty"`
 	ConfigPriv       int    `json:"config_priv,omitempty"`
 	UserPriv         int    `json:"user_priv,omitempty"`
-	Method           string `json:"method"` //add_group, mod_group, del_group
+	Method           string `json:"method"` // add_group, mod_group, del_group
 	SessionKey       string `json:"session_key"`
 }
 
@@ -256,7 +256,7 @@ var TimezonesIlo5 = map[string]int{
 }
 
 // TimezonesIlo4 declares valid timezones.
-//Important timezone ints taken from https://10.193.251.48/html/network_sntp.html?intf=0
+// Important timezone ints taken from https://10.193.251.48/html/network_sntp.html?intf=0
 var TimezonesIlo4 = map[string]int{
 	"CET":           368,
 	"CST6CDT":       371,

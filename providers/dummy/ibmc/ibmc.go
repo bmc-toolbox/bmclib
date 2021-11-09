@@ -42,7 +42,7 @@ func (i *Ibmc) BiosVersion() (string, error) {
 
 // HardwareType implements the Bmc interface
 func (i *Ibmc) HardwareType() string {
-	return ""
+	return "ibmc"
 }
 
 // Version implements the Bmc interface
@@ -157,7 +157,7 @@ func (i *Ibmc) TempC() (int, error) {
 
 // Vendor implements the Bmc interface
 func (i *Ibmc) Vendor() string {
-	return ""
+	return "Ibmc"
 }
 
 // Screenshot implements the Bmc interface

@@ -34,7 +34,6 @@ func (i *Ilo) Resources() []string {
 // ApplyCfg applies configuration
 // To be deprecated once the Configure interface is ready.
 func (i *Ilo) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
-	//check sessionKey is available
 	if i.sessionKey == "" {
 		msg := "Expected sessionKey not found, unable to configure BMC."
 		i.log.V(1).Info(msg,
@@ -89,7 +88,7 @@ func ldapGroupExists(group string, directoryGroups []DirectoryGroups) (directory
 func (i *Ilo) User(users []*cfgresources.User) (err error) {
 	existingUsers, err := i.queryUsers()
 	if err != nil {
-		msg := "Unable to query existing users"
+		msg := "Unable to query existing users."
 		i.log.V(1).Info(msg,
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
@@ -120,12 +119,9 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 			return errors.New(msg)
 		}
 
-		//retrive userInfo
 		userinfo, uexists := userExists(user.Name, existingUsers)
-		//set session key
 		userinfo.SessionKey = i.sessionKey
 
-		//if the user is enabled setup parameters
 		if user.Enable {
 			userinfo.RemoteConsPriv = 1
 			userinfo.VirtualMediaPriv = 1
@@ -141,7 +137,6 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 				userinfo.LoginPriv = 0
 			}
 
-			//if the user exists, modify it
 			if uexists {
 				userinfo.Method = "mod_user"
 				userinfo.UserID = userinfo.ID
@@ -158,7 +153,6 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 			postPayload = true
 		}
 
-		//if the user is disabled remove it
 		if !user.Enable && uexists {
 			userinfo.Method = "del_user"
 			userinfo.UserID = userinfo.ID
@@ -386,7 +380,7 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 		Ipv6Disabled:                0,
 		DhcpEnabled:                 enable,
 		Dhcp6Enabled:                enable,
-		UseDhcpSuppliedTimeServers:  0, //we probably want to expose these as params
+		UseDhcpSuppliedTimeServers:  0, // TODO: Maybe expose these as params?
 		UseDhcp6SuppliedTimeServers: 0,
 		Sdn1WCount:                  existingConfig.Sdn1WCount,
 		Sdn2WCount:                  existingConfig.Sdn2WCount,
@@ -450,7 +444,7 @@ func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresour
 	for _, group := range cfgGroups {
 		var postPayload bool
 		if group.Group == "" {
-			msg := "Ldap resource parameter Group required but not declared."
+			msg := "LDAP resource parameter Group required but not declared."
 			i.log.V(1).Info(msg,
 				"HardwareType", i.HardwareType(),
 				"step", helper.WhosCalling(),
@@ -460,7 +454,7 @@ func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresour
 		}
 
 		if !i.isRoleValid(group.Role) {
-			msg := "Ldap resource Role must be a valid role: admin OR user."
+			msg := "LDAP resource Role must be a valid role: admin OR user."
 			i.log.V(1).Info(msg,
 				"HardwareType", i.HardwareType(),
 				"step", helper.WhosCalling(),
@@ -555,7 +549,7 @@ func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresour
 // Ldap implements the Configure interface.
 func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 	if cfg.Server == "" {
-		msg := "Ldap resource parameter Server required but not declared."
+		msg := "LDAP resource parameter Server required but not declared."
 		i.log.V(1).Info(msg,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
@@ -564,7 +558,7 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 	}
 
 	if cfg.Port == 0 {
-		msg := "Ldap resource parameter Port required but not declared."
+		msg := "LDAP resource parameter Port required but not declared."
 		i.log.V(1).Info(msg,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
@@ -573,7 +567,7 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 	}
 
 	if cfg.BaseDn == "" {
-		msg := "Ldap resource parameter BaseDn required but not declared."
+		msg := "LDAP resource parameter BaseDn required but not declared."
 		i.log.V(1).Info(msg,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
@@ -672,7 +666,7 @@ func (i *Ilo) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, error
 		return []byte{}, err
 	}
 
-	var r = new(csrResponse)
+	r := new(csrResponse)
 	err = json.Unmarshal(response, r)
 	if err != nil {
 		return []byte{}, err
@@ -765,7 +759,7 @@ func (i *Ilo) Power(cfg *cfgresources.Power) error {
 	}
 
 	// map of valid power_settings attributes to params passed to the iLO API
-	var powerRegulatorModes = map[string]string{
+	powerRegulatorModes := map[string]string{
 		"dynamic":     "dyn",
 		"static_low":  "min",
 		"static_high": "max",
@@ -774,7 +768,7 @@ func (i *Ilo) Power(cfg *cfgresources.Power) error {
 
 	configMode, exists := powerRegulatorModes[cfg.HPE.PowerRegulator]
 	if cfg.HPE.PowerRegulator == "" || !exists {
-		return fmt.Errorf("power regulator parameter must be one of dynamic, static_log, static_high, os_control")
+		return fmt.Errorf("power_regulator parameter must be one of dynamic, static_log, static_high, os_control")
 	}
 
 	// check if a configuration update is required based on current setting
@@ -784,7 +778,7 @@ func (i *Ilo) Power(cfg *cfgresources.Power) error {
 	}
 
 	if !changeRequired {
-		i.log.V(2).Info("Power regulator config - no change required.",
+		i.log.V(2).Info("power_regulator config - no change required.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"current mode", config.PowerMode,
@@ -793,7 +787,7 @@ func (i *Ilo) Power(cfg *cfgresources.Power) error {
 		return nil
 	}
 
-	i.log.V(2).Info("Power regulator change to be applied.",
+	i.log.V(2).Info("power_regulator change to be applied.",
 		"IP", i.ip,
 		"HardwareType", i.HardwareType(),
 		"current mode", config.PowerMode,
@@ -806,7 +800,7 @@ func (i *Ilo) Power(cfg *cfgresources.Power) error {
 
 	payload, err := json.Marshal(config)
 	if err != nil {
-		return fmt.Errorf("Error marshaling PowerRegulator payload: %s", err)
+		return fmt.Errorf("Error marshaling power_regulator payload: %s", err)
 	}
 
 	endpoint := "json/power_regulator"
@@ -815,7 +809,7 @@ func (i *Ilo) Power(cfg *cfgresources.Power) error {
 		return fmt.Errorf("Error/non 200 response calling power_regulator, status: %d, error: %s", statusCode, err)
 	}
 
-	i.log.V(1).Info("Power regulator config applied.",
+	i.log.V(1).Info("power_regulator config applied.",
 		"IP", i.ip,
 		"HardwareType", i.HardwareType(),
 	)

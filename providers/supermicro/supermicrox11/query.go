@@ -21,7 +21,6 @@ func (s *SupermicroX) CurrentHTTPSCert() ([]*x509.Certificate, bool, error) {
 	}
 
 	conn, err := tls.DialWithDialer(dialer, "tcp", s.ip+":"+"443", &tls.Config{InsecureSkipVerify: true})
-
 	if err != nil {
 		return []*x509.Certificate{{}}, false, err
 	}
@@ -49,7 +48,7 @@ func (s *SupermicroX) Screenshot() (response []byte, extension string, err error
 	tzLocation, _ := time.LoadLocation("CET")
 	t := time.Now().In(tzLocation)
 
-	//Fri Jun 06 2018 14:28:25 GMT+0100 (CET)
+	// Fri Jun 06 2018 14:28:25 GMT+0100 (CET)
 	ts := fmt.Sprintf("%s %d %d:%d:%d %s (%s)",
 		t.Format("Fri Jun 01"),
 		t.Year(),
@@ -75,7 +74,7 @@ func (s *SupermicroX) Screenshot() (response []byte, extension string, err error
 	}
 
 	time.Sleep(3 * time.Second)
-	//Fri Jun 06 2018 14:28:25 GMT+0100 (CET)
+	// Fri Jun 06 2018 14:28:25 GMT+0100 (CET)
 	ts = fmt.Sprintf("%s %d %d:%d:%d %s (%s)",
 		t.Format("Fri Jun 01"),
 		t.Year(),

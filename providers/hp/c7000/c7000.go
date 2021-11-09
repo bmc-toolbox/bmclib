@@ -26,7 +26,7 @@ type C7000 struct {
 	ip         string
 	username   string
 	password   string
-	XMLToken   string //required to send SOAP XML payloads
+	XMLToken   string // Required to send SOAP XML payloads.
 	httpClient *http.Client
 	sshClient  *sshclient.SSHClient
 	Rimp       *hp.Rimp

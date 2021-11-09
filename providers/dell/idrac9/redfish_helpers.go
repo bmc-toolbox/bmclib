@@ -15,10 +15,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-//diffs two BiosSettings and returns a BiosSettings with the difference.
-//!! Note this assumes the struct fields in BiosSettings are all strings !!
+// Diffs two BiosSettings and returns a BiosSettings with the difference.
+// NOTE: This assumes the struct fields in BiosSettings are all strings!
 func diffBiosSettings(new *BiosSettings, current *BiosSettings) (diff *BiosSettings, err error) {
-	//the struct that holds the changes
+	// This struct only holds the changes to be corrected.
 	diff = &BiosSettings{}
 
 	struct1V := reflect.ValueOf(new).Elem()
@@ -104,14 +104,13 @@ func (i *IDrac9) setBiosSettings(biosSettings *BiosSettings) (err error) {
 		return errors.New(msg)
 	}
 
-	//PATCH bios settings
 	statusCode, _, err := i.queryRedfish("PATCH", biosSettingsURI, payload)
 	if err != nil || statusCode != 200 {
 		msg := fmt.Sprintf("PATCH request to set Bios config, returned code: %d", statusCode)
 		return errors.New(msg)
 	}
 
-	//Queue config to be set at next boot.
+	// Queue config to be set at next boot.
 	return i.queueJobs(biosSettingsURI)
 }
 
@@ -122,7 +121,7 @@ func (i *IDrac9) queueJobs(jobURI string) (err error) {
 		jobURI = fmt.Sprintf("/%s", jobURI)
 	}
 
-	//Queue this setting to be applied at the next boot.
+	// Queue this setting to be applied at the next boot.
 	targetSetting := TargetSettingsURI{
 		TargetSettingsURI: jobURI,
 	}
@@ -159,15 +158,13 @@ func (i *IDrac9) purgeJob(jobID string) (err error) {
 	return err
 }
 
-// Purges any jobs related to Bios configuration
+// Purges any jobs related to BIOS configuration.
 func (i *IDrac9) purgeJobsForBiosSettings() (err error) {
-	//get current job ids
 	jobIDs, err := i.getJobIds()
 	if err != nil {
 		return err
 	}
 
-	//check if any jobs are queued for bios configuration
 	if len(jobIDs) > 0 {
 		err = i.purgeJobsByType(jobIDs, "BIOSConfiguration")
 		if err != nil {
@@ -178,7 +175,7 @@ func (i *IDrac9) purgeJobsForBiosSettings() (err error) {
 	return err
 }
 
-//Purges jobs of the given type - if they are in the "Scheduled" state
+// Purges jobs of the given type (if they are in the "Scheduled" state).
 func (i *IDrac9) purgeJobsByType(jobIDs []string, jobType string) (err error) {
 	for _, jobID := range jobIDs {
 		jState, jType, err := i.getJob(jobID)
@@ -196,7 +193,7 @@ func (i *IDrac9) purgeJobsByType(jobIDs []string, jobType string) (err error) {
 	return err
 }
 
-//Returns the job state, Type for the given Job id
+// Returns the job state and type for the given job ID.
 func (i *IDrac9) getJob(jobID string) (jobState string, jobType string, err error) {
 	endpoint := fmt.Sprintf("%s/%s", "redfish/v1/Managers/iDRAC.Embedded.1/Jobs/", jobID)
 
@@ -229,15 +226,15 @@ func (i *IDrac9) getJobIds() (jobs []string, err error) {
 		return jobs, err
 	}
 
-	//No jobs present.
+	// No jobs present.
 	if oData.MembersCount < 1 {
 		return jobs, err
 	}
 
-	//[{"@odata.id":"/redfish/v1/Managers/iDRAC.Embedded.1/Jobs/JID_367624308519"}]
+	// e.g. [{"@odata.id":"/redfish/v1/Managers/iDRAC.Embedded.1/Jobs/JID_367624308519"}]
 	for _, m := range oData.Members {
 		for _, v := range m {
-			//extract the Job id from the string
+			// Extract the Job ID from the string:
 			tokens := strings.Split(v, "/")
 			jobID := tokens[len(tokens)-1]
 			jobs = append(jobs, jobID)

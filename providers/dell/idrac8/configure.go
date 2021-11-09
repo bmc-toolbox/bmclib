@@ -72,7 +72,7 @@ func escapeLdapString(s string) string {
 func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 	err = internal.ValidateUserConfig(cfgUsers)
 	if err != nil {
-		msg := "User config validation failed."
+		msg := "User config validation failed: " + err.Error()
 		err = errors.New(msg)
 		i.log.V(1).Error(err, msg,
 			"step", "applyUserParams",
@@ -85,7 +85,7 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 
 	idracUsers, err := i.queryUsers()
 	if err != nil {
-		msg := "Unable to query existing users"
+		msg := "Unable to query existing users."
 		err = errors.New(msg)
 		i.log.V(1).Error(err, msg,
 			"step", "applyUserParams",
@@ -96,12 +96,11 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 		return err
 	}
 
-	////for each configuration user
 	for _, cfgUser := range cfgUsers {
+
 		userID, userInfo, uExists := userInIdrac(cfgUser.Name, idracUsers)
-		//user to be added/updated
 		if cfgUser.Enable {
-			//new user to be added
+			// New user? Add them.
 			if !uExists {
 				userID, userInfo, err = getEmptyUserSlot(idracUsers)
 				if err != nil {
@@ -121,7 +120,6 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 			userInfo.UserName = cfgUser.Name
 			userInfo.Password = cfgUser.Password
 
-			//set appropriate privileges
 			if cfgUser.Role == "admin" {
 				userInfo.Privilege = "511"
 				userInfo.IpmiLanPrivilege = "Administrator"
@@ -141,10 +139,11 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 				)
 				continue
 			}
-		} // end if cfgUser.Enable
+		}
 
-		//if the user exists but is disabled in our config, remove the user
+		// User exists but is disabled in our config? Remove them.
 		if !cfgUser.Enable && uExists {
+
 			userInfo.Enable = "Disabled"
 			userInfo.SolEnable = "Disabled"
 			userInfo.UserName = cfgUser.Name
@@ -281,17 +280,14 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 		enable = 1
 	}
 
-	//https://10.193.251.10/data?set=tm_ntp_int_opmode:1, \\
-	//                               tm_ntp_str_server1:ntp0.lhr4.example.com, \\
-	//                               tm_ntp_str_server2:ntp0.ams4.example.com, \\
+	// https://10.193.251.10/data?set=tm_ntp_int_opmode:1,
+	//                               tm_ntp_str_server1:ntp0.lhr4.example.com,
+	//                               tm_ntp_str_server2:ntp0.ams4.example.com,
 	//                               tm_ntp_str_server3:ntp0.fra4.example.com
 	queryStr := fmt.Sprintf("set=tm_ntp_int_opmode:%d,", enable)
 	queryStr += fmt.Sprintf("tm_ntp_str_server1:%s,", cfg.Server1)
 	queryStr += fmt.Sprintf("tm_ntp_str_server2:%s,", cfg.Server2)
 	queryStr += fmt.Sprintf("tm_ntp_str_server3:%s,", cfg.Server3)
-
-	//GET - params as query string
-	//ntp servers
 
 	endpoint := fmt.Sprintf("data?%s", queryStr)
 	statusCode, response, err := i.get(endpoint, nil)
@@ -313,7 +309,7 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 // Ldap implements the Configure interface.
 func (i *IDrac8) Ldap(cfg *cfgresources.Ldap) error {
 	if cfg.Server == "" {
-		msg := "ldap resource parameter Server required but not declared."
+		msg := "LDAP resource parameter \"Server\" required but not declared."
 		err := errors.New(msg)
 		i.log.V(1).Error(err, msg, "step", "applyLdapServerParam")
 		return err
@@ -373,9 +369,8 @@ func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) error {
 	return nil
 }
 
-// LdapGroups applies LDAP Group/Role related configuration
-// LdapGroups implements the Configure interface.
-// nolint: gocyclo
+// Applies LDAP Group/Role related configuration.
+// Implements the Configure interface.
 func (i *IDrac8) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
 	groupID := 1
 
@@ -389,34 +384,33 @@ func (i *IDrac8) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 
 	// first some preliminary checks
 	if cfgLdap.Port == 0 {
-		msg := "Ldap resource parameter Port required but not declared"
+		msg := "LDAP resource parameter \"Port\" is required!"
 		err = errors.New(msg)
 		i.log.V(1).Error(err, msg, "step", "applyLdapRoleGroupPrivParam")
 		return err
 	}
 
 	if cfgLdap.BaseDn == "" {
-		msg := "Ldap resource parameter BaseDn required but not declared."
+		msg := "LDAP resource parameter \"BaseDn\" is required!"
 		err = errors.New(msg)
 		i.log.V(1).Error(err, msg, "step", "applyLdapRoleGroupPrivParam")
 		return err
 	}
 
 	if cfgLdap.UserAttribute == "" {
-		msg := "Ldap resource parameter userAttribute required but not declared."
+		msg := "LDAP resource parameter \"userAttribute\" is required!"
 		err = errors.New(msg)
 		i.log.V(1).Error(err, msg, "step", "applyLdapRoleGroupPrivParam")
 		return err
 	}
 
 	if cfgLdap.GroupAttribute == "" {
-		msg := "Ldap resource parameter groupAttribute required but not declared."
+		msg := "LDAP resource parameter \"groupAttribute\" is required!"
 		err = errors.New(msg)
 		i.log.V(1).Error(err, msg, "step", "applyLdapRoleGroupPrivParam")
 		return err
 	}
 
-	// for each ldap group
 	for _, group := range cfgGroups {
 		// if a group has been set to disable in the config,
 		// its configuration is skipped and removed.
@@ -431,16 +425,16 @@ func (i *IDrac8) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 		}
 
 		if group.Group == "" {
-			msg := "Ldap resource parameter Group required but not declared."
+			msg := "LDAP resource parameter \"Group\" is required!"
 			err = errors.New(msg)
-			i.log.V(1).Error(err, msg, "Role", group.Role, "step", "applyLdapGroupParams")
+			i.log.V(1).Error(err, msg, "step", "applyLdapGroupParams")
 			return err
 		}
 
 		if group.GroupBaseDn == "" {
-			msg := "Ldap resource parameter GroupBaseDn required but not declared."
+			msg := "LDAP resource parameter \"GroupBaseDn\" is required!"
 			err = errors.New(msg)
-			i.log.V(1).Error(err, msg, "Role", group.Role, "step", "applyLdapGroupParams")
+			i.log.V(1).Error(err, msg, "step", "applyLdapGroupParams")
 			return err
 		}
 
@@ -468,7 +462,7 @@ func (i *IDrac8) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 			return err
 		}
 
-		i.log.V(1).Info("Ldap GroupDN config applied.",
+		i.log.V(1).Info("LDAP GroupDN config applied.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"Role", group.Role,
@@ -504,7 +498,7 @@ func (i *IDrac8) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 }
 
 // Apply ldap group privileges
-//https://10.193.251.10/postset?ldapconf
+// https://10.193.251.10/postset?ldapconf
 // data=LDAPEnableMode:3,xGLNameSearchEnabled:0,xGLBaseDN:ou%5C%3DPeople%5C%2Cdc%5C%3Dactivehotels%5C%2Cdc%5C%3Dcom,xGLUserLogin:uid,xGLGroupMem:memberUid,xGLBindDN:,xGLCertValidationEnabled:1,xGLGroup1Priv:511,xGLGroup2Priv:97,xGLGroup3Priv:0,xGLGroup4Priv:0,xGLGroup5Priv:0,xGLServerPort:636
 func (i *IDrac8) applyLdapRoleGroupPrivParam(cfg *cfgresources.Ldap, groupPrivilegeParam string) (err error) {
 	baseDn := escapeLdapString(cfg.BaseDn)
@@ -514,7 +508,6 @@ func (i *IDrac8) applyLdapRoleGroupPrivParam(cfg *cfgresources.Ldap, groupPrivil
 	payload += fmt.Sprintf("xGLUserLogin:%s,", cfg.UserAttribute)
 	payload += fmt.Sprintf("xGLGroupMem:%s,", cfg.GroupAttribute)
 
-	//if bindDn was declared, we set it.
 	if cfg.BindDn != "" {
 		bindDn := escapeLdapString(cfg.BindDn)
 		payload += fmt.Sprintf("xGLBindDN:%s,", bindDn)
@@ -522,11 +515,10 @@ func (i *IDrac8) applyLdapRoleGroupPrivParam(cfg *cfgresources.Ldap, groupPrivil
 		payload += "xGLBindDN:,"
 	}
 
-	payload += "xGLCertValidationEnabled:0," //we may want to be able to set this from config
+	payload += "xGLCertValidationEnabled:0," // TODO: Set this from config?
 	payload += groupPrivilegeParam
 	payload += fmt.Sprintf("xGLServerPort:%d", cfg.Port)
 
-	//fmt.Println(payload)
 	endpoint := "postset?ldapconf"
 	responseCode, responseBody, err := i.post(endpoint, []byte(payload), "")
 	if err != nil || responseCode != 200 {
@@ -547,9 +539,8 @@ func (i *IDrac8) applyLdapRoleGroupPrivParam(cfg *cfgresources.Ldap, groupPrivil
 }
 
 func (i *IDrac8) applyTimezoneParam(timezone string) {
-	//POST - params as query string
-	//timezone
-	//https://10.193.251.10/data?set=tm_tz_str_zone:CET
+	// POST - params as query string
+	// https://10.193.251.10/data?set=tm_tz_str_zone:CET
 
 	endpoint := fmt.Sprintf("data?set=tm_tz_str_zone:%s", timezone)
 	statusCode, response, err := i.get(endpoint, nil)
@@ -596,8 +587,8 @@ func (i *IDrac8) Network(cfg *cfgresources.Network) (reset bool, err error) {
 	payload := fmt.Sprintf("dhcpForDNSDomain:%d,", params["DNSFromDHCP"])
 	payload += fmt.Sprintf("ipmiLAN:%d,", params["EnableIpmiOverLan"])
 	payload += fmt.Sprintf("serialOverLanEnabled:%d,", params["EnableSerialOverLan"])
-	payload += "serialOverLanBaud:3," //115.2 kbps
-	payload += "serialOverLanPriv:0," //Administrator
+	payload += "serialOverLanBaud:3," // 115.2 kbps
+	payload += "serialOverLanPriv:0," // Administrator
 	payload += fmt.Sprintf("racRedirectEna:%d,", params["EnableSerialRedirection"])
 	payload += "racEscKey:^\\\\"
 
@@ -707,7 +698,7 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	}
 
 	// extract resourceURI from response
-	var certStore = new(certStore)
+	certStore := new(certStore)
 	err = json.Unmarshal(body, certStore)
 	if err != nil {
 		i.log.V(1).Error(err, "Unable to unmarshal cert store response payload.",

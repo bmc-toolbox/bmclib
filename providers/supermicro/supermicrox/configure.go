@@ -264,7 +264,7 @@ func (s *SupermicroX) Ntp(cfg *cfgresources.Ntp) (err error) {
 	enable = "on"
 
 	t := time.Now().In(tzLocation)
-	//Fri Jun 06 2018 14:28:25 GMT+0100 (CET)
+	// Fri Jun 06 2018 14:28:25 GMT+0100 (CET)
 	ts := fmt.Sprintf("%s %d %d:%d:%d %s (%s)",
 		t.Format("Fri Jun 01"),
 		t.Year(),
@@ -277,7 +277,7 @@ func (s *SupermicroX) Ntp(cfg *cfgresources.Ntp) (err error) {
 	configDateTime := ConfigDateTime{
 		Op:                 "config_date_time",
 		Timezone:           tzUtcOffset,
-		DstEn:              false, //daylight savings
+		DstEn:              false,
 		Enable:             enable,
 		NtpServerPrimary:   cfg.Server1,
 		NtpServerSecondary: cfg.Server2,
@@ -324,15 +324,12 @@ func (s *SupermicroX) Ldap(cfgLdap *cfgresources.Ldap) error {
 // Supermicro does not have any separate configuration for Ldap groups just for generic ldap
 // nolint: gocyclo
 func (s *SupermicroX) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
-	var enable string
-
 	if cfgLdap.Server == "" {
 		msg := "Ldap resource parameter Server required but not declared."
 		s.log.V(1).Info(msg, "step", helper.WhosCalling(), "HardwareType", s.HardwareType())
 		return errors.New(msg)
 	}
 
-	// first some preliminary checks
 	if cfgLdap.Port == 0 {
 		msg := "Ldap resource parameter Port required but not declared"
 		s.log.V(1).Info(msg,
@@ -348,8 +345,6 @@ func (s *SupermicroX) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *c
 		return
 	}
 
-	enable = "on"
-
 	if cfgLdap.BaseDn == "" {
 		msg := "Ldap resource parameter BaseDn required but not declared."
 		s.log.V(1).Info(msg, "step", helper.WhosCalling(), "HardwareType", s.HardwareType())
@@ -363,8 +358,7 @@ func (s *SupermicroX) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *c
 		return errors.New(msg)
 	}
 
-	// for each ldap group setup config
-	// since supermicro can work with just one Searchbase, we go with the 'user' role group
+	// Since SuperMicro can work with just one search base, we go with the "user" role group.
 	for _, group := range cfgGroups {
 		if !group.Enable {
 			continue
@@ -403,13 +397,13 @@ func (s *SupermicroX) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *c
 
 		configLdap := ConfigLdap{
 			Op:           "config_ldap",
-			Enable:       enable,
+			Enable:       "on",
 			EnableSsl:    true,
 			LdapIP:       string(serverIP[0]),
 			BaseDn:       group.Group,
 			LdapPort:     cfgLdap.Port,
 			BindDn:       cfgLdap.BindDn,
-			BindPassword: "********", //default value
+			BindPassword: "********", // default value
 		}
 
 		endpoint := "op.cgi"
@@ -428,7 +422,7 @@ func (s *SupermicroX) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *c
 		}
 	}
 
-	s.log.V(1).Info("Ldap config parameters applied.", "ip", s.ip, "HardwareType", s.HardwareType())
+	s.log.V(1).Info("LDAP config parameters applied.", "ip", s.ip, "HardwareType", s.HardwareType())
 	return err
 }
 
@@ -593,10 +587,10 @@ func (s *SupermicroX) UploadHTTPSCert(cert []byte, certFileName string, key []by
 // The second part of the certificate upload process,
 // we get the BMC to validate the uploaded SSL certificate.
 func (s *SupermicroX) validateSSL() error {
-	var v = url.Values{}
+	v := url.Values{}
 	v.Set("SSL_VALIDATE.XML", "(0,0)")
 
-	var endpoint = "ipmi.cgi"
+	endpoint := "ipmi.cgi"
 	status, err := s.post(endpoint, &v, []byte{}, "")
 	if err != nil || status != 200 {
 		msg := "Cert validate POST request failed, expected 200."
@@ -617,10 +611,10 @@ func (s *SupermicroX) validateSSL() error {
 // Get the current status of the certificate.
 // POST https://10.193.251.43/cgi/ipmi.cgi SSL_STATUS.XML: (0,0)
 func (s *SupermicroX) statusSSL() error {
-	var v = url.Values{}
+	v := url.Values{}
 	v.Add("SSL_STATUS.XML", "(0,0)")
 
-	var endpoint = "ipmi.cgi"
+	endpoint := "ipmi.cgi"
 	status, err := s.post(endpoint, &v, []byte{}, "")
 	if err != nil || status != 200 {
 		msg := "Cert status POST request failed, expected 200."

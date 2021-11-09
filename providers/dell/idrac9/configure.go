@@ -51,7 +51,6 @@ func (i *IDrac9) Power(cfg *cfgresources.Power) (err error) {
 func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 	newBiosSettings := cfg.Dell.Idrac9BiosSettings
 
-	// validate config
 	validate := validator.New()
 	err = validate.Struct(newBiosSettings)
 	if err != nil {
@@ -59,7 +58,6 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 		return err
 	}
 
-	// GET current settings
 	currentBiosSettings, err := i.getBiosSettings()
 	if err != nil || currentBiosSettings == nil {
 		msg := "Unable to get current bios settings through redfish."
@@ -72,29 +70,26 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 		return errors.New(msg)
 	}
 
-	// Compare current bios settings with our declared config.
+	// Compare current BIOS settings with our declared config.
 	if *newBiosSettings != *currentBiosSettings {
-		// retrieve fields that is the config to be applied
 		toApplyBiosSettings, err := diffBiosSettings(newBiosSettings, currentBiosSettings)
 		if err != nil {
 			i.log.V(1).Error(err, "diffBiosSettings returned error.",
 				"IP", i.ip,
 				"HardwareType", i.HardwareType(),
 				"step", helper.WhosCalling(),
-				"Error", internal.ErrStringOrEmpty(err),
 			)
 			return err
 		}
 
-		i.log.V(0).Info("Bios configuration to be applied",
+		i.log.V(0).Info("BIOS configuration to be applied...",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Changes (Ignore empty fields)", fmt.Sprintf("%+v", toApplyBiosSettings),
 		)
 
-		// purge any existing pending bios setting jobs
-		// or we will not be able to set any params
+		// Purge any existing pending BIOS setting jobs (otherwise, we won't be able to set any params):
 		err = i.purgeJobsForBiosSettings()
 		if err != nil {
 			i.log.V(1).Info("Unable to purge pending bios setting jobs.",
@@ -108,17 +103,16 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 
 		err = i.setBiosSettings(toApplyBiosSettings)
 		if err != nil {
-			msg := "setBiosAttributes returned error."
+			msg := "setBiosAttributes() returned error."
 			i.log.V(1).Error(err, msg,
 				"IP", i.ip,
 				"HardwareType", i.HardwareType(),
 				"step", helper.WhosCalling(),
-				"Error", internal.ErrStringOrEmpty(err),
 			)
 			return errors.New(msg)
 		}
 
-		i.log.V(0).Info("Bios configuration update job queued in iDrac.",
+		i.log.V(0).Info("BIOS configuration update job queued in IDRAC.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
@@ -158,7 +152,7 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 
 	idracUsers, err := i.queryUsers()
 	if err != nil {
-		msg := "Unable to query existing users"
+		msg := "Unable to query existing users."
 		i.log.V(1).Error(err, msg,
 			"step", "applyUserParams",
 			"IP", i.ip,
@@ -168,13 +162,12 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 		return errors.New(msg)
 	}
 
-	// for each configuration user
 	for _, cfgUser := range cfgUsers {
+
 		userID, userInfo, uExists := userInIdrac(cfgUser.Name, idracUsers)
 
-		// user to be added/updated
 		if cfgUser.Enable {
-			// new user to be added
+			// New user? Add them.
 			if !uExists {
 				userID, userInfo, err = getEmptyUserSlot(idracUsers)
 				if err != nil {
@@ -194,7 +187,6 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 			userInfo.UserName = cfgUser.Name
 			userInfo.Password = cfgUser.Password
 
-			// set appropriate privileges
 			if cfgUser.Role == "admin" {
 				userInfo.Privilege = "511"
 				userInfo.IpmiLanPrivilege = "Administrator"
@@ -214,9 +206,9 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 				)
 				continue
 			}
-		} // end if cfgUser.Enable
+		}
 
-		// if the user exists but is disabled in our config, remove the user
+		// User exists but is disabled in our config? Remove them.
 		if !cfgUser.Enable && uExists {
 			endpoint := fmt.Sprintf("sysmgmt/2017/server/user?userid=%d", userID)
 			statusCode, response, err := i.delete(endpoint)
@@ -754,14 +746,13 @@ func (i *IDrac9) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	}
 
 	// extract resourceURI from response
-	var certStore = new(certStore)
+	certStore := new(certStore)
 	err = json.Unmarshal(body, certStore)
 	if err != nil {
 		i.log.V(1).Error(err, "Unable to unmarshal cert store response payload.",
 			"step", helper.WhosCalling(),
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return false, err
 	}

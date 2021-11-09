@@ -179,7 +179,9 @@ func (i *Ilo) post(endpoint string, data []byte) (statusCode int, body []byte, e
 	if err != nil {
 		return 0, []byte{}, err
 	}
+
 	defer resp.Body.Close()
+
 	respDump, _ := httputil.DumpResponse(resp, true)
 	i.log.V(2).Info("responseTrace", "responseDump", string(respDump))
 
@@ -196,7 +198,7 @@ func (i *Ilo) Serial() (serial string, err error) {
 	return strings.ToLower(strings.TrimSpace(i.rimpBlade.HSI.Sbsn)), err
 }
 
-// ChassisSerial returns the serial number of the chassis where the blade is attached
+// Returns the serial number of the chassis where the blade is attached.
 func (i *Ilo) ChassisSerial() (string, error) {
 	err := i.httpLogin()
 	if err != nil {
@@ -252,7 +254,7 @@ func (i *Ilo) Version() (bmcVersion string, err error) {
 	return i.rimpBlade.MP.Fwri, err
 }
 
-// Name returns the name of this server from the iLO point of view
+// Returns the name of this server from the ILO point of view.
 func (i *Ilo) Name() (name string, err error) {
 	err = i.httpLogin()
 	if err != nil {
@@ -274,7 +276,7 @@ func (i *Ilo) Name() (name string, err error) {
 	return overview.ServerName, err
 }
 
-// Status returns health string status from the bmc
+// Returns the health status from the ILO point of view.
 func (i *Ilo) Status() (health string, err error) {
 	err = i.httpLogin()
 	if err != nil {
@@ -300,7 +302,7 @@ func (i *Ilo) Status() (health string, err error) {
 	return overview.SystemHealth, err
 }
 
-// Memory returns the total amount of memory of the server
+// Returns the total amount of memory of the server.
 func (i *Ilo) Memory() (mem int, err error) {
 	err = i.httpLogin()
 	if err != nil {
@@ -330,7 +332,10 @@ func (i *Ilo) Memory() (mem int, err error) {
 	return mem / 1024, err
 }
 
-// CPU returns the cpu, cores and hyperthreads of the server
+// Finds the CPUs.
+// Returns the description, cores count, and hyperthreads count of the first CPU it finds.
+// Returns also the CPU count.
+// TODO: Does this make any sense?! We either return all the information about all CPUs, or just say something generic!
 func (i *Ilo) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCount int, err error) {
 	err = i.httpLogin()
 	if err != nil {
@@ -356,7 +361,7 @@ func (i *Ilo) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCount i
 	return cpu, cpuCount, coreCount, hyperthreadCount, err
 }
 
-// BiosVersion returns the current version of the bios
+// Returns the current version of the BIOS.
 func (i *Ilo) BiosVersion() (version string, err error) {
 	err = i.httpLogin()
 	if err != nil {
@@ -426,7 +431,7 @@ func (i *Ilo) PowerState() (state string, err error) {
 	return strings.ToLower(hpPowerSummary.HostpwrState), err
 }
 
-// TempC returns the current temperature of the machine
+// Returns the current temperature of the server.
 func (i *Ilo) TempC() (temp int, err error) {
 	err = i.httpLogin()
 	if err != nil {
@@ -479,7 +484,7 @@ func (i *Ilo) Nics() (nics []*devices.Nic, err error) {
 	return nics, err
 }
 
-// License returns the iLO's license information
+// Returns the ILO's license information.
 func (i *Ilo) License() (name string, licType string, err error) {
 	err = i.httpLogin()
 	if err != nil {

@@ -59,14 +59,14 @@ func (c *C7000) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 
 // Power implemented the Configure interface
 func (c *C7000) Power(cfg *cfgresources.Power) (err error) {
-	return err
+	return nil
 }
 
-// Ldap applies LDAP configuration params.
-// Ldap implements the Configure interface.
-//1. apply ldap group params
-//2. enable ldap auth
-//3. apply ldap server params
+// Applies LDAP configuration params.
+// Implements the Configure interface.
+// 1. Apply LDAP group params
+// 2. Enable LDAP auth
+// 3. Apply LDAP server params
 func (c *C7000) Ldap(cfg *cfgresources.Ldap) (err error) {
 	err = c.applysetLdapInfo4(cfg)
 	if err != nil {
@@ -364,12 +364,9 @@ func (c *C7000) applyAddLdapGroup(group string) (err error) {
 //  <hpoa:acl>ADMINISTRATOR</hpoa:acl>
 // </hpoa:setLdapGroupBayAcl>
 func (c *C7000) applyLdapGroupBayACL(role string, group string) (err error) {
-	var userACL string
-
+	userACL := "USER"
 	if role == "admin" {
 		userACL = "ADMINISTRATOR"
-	} else {
-		userACL = "USER"
 	}
 
 	payload := setLdapGroupBayACL{LdapGroup: ldapGroup{Text: group}, ACL: ACL{Text: userACL}}
@@ -425,9 +422,7 @@ func (c *C7000) applyLdapGroupBayACL(role string, group string) (err error) {
 //</hpoa:addLdapGroupBayAccess>
 
 func (c *C7000) applyAddLdapGroupBayAccess(group string) (err error) {
-	//group = "bmcAdmins"
-
-	//setup blade bays payload
+	// setup blade bays payload
 	bladebays := bladeBays{}
 	for b := 1; b <= 16; b++ {
 		baynumber := bayNumber{Text: b}
@@ -436,7 +431,7 @@ func (c *C7000) applyAddLdapGroupBayAccess(group string) (err error) {
 		bladebays.Blade = append(bladebays.Blade, blade)
 	}
 
-	//setup interconnect tray bays payload
+	// setup interconnect tray bays payload
 	interconnecttraybays := interconnectTrayBays{}
 	for t := 1; t <= 8; t++ {
 		access := access{Text: true}
@@ -445,7 +440,7 @@ func (c *C7000) applyAddLdapGroupBayAccess(group string) (err error) {
 		interconnecttraybays.InterconnectTray = append(interconnecttraybays.InterconnectTray, interconnecttray)
 	}
 
-	//setup the bays payload
+	// setup the bays payload
 	bayz := bays{
 		Hpoa:                 "hpoa.xsd",
 		OaAccess:             oaAccess{Text: true},
@@ -478,9 +473,9 @@ func (c *C7000) applyAddLdapGroupBayAccess(group string) (err error) {
 	return err
 }
 
-// User applies the User configuration resource,
-// if the user exists, it updates the users password,
-// User implements the Configure interface.
+// Applies the User configuration resource.
+// Implements the Configure interface.
+// If the user exists, updates their password.
 func (c *C7000) User(users []*cfgresources.User) (err error) {
 	for _, cfg := range users {
 		if cfg.Name == "" {
@@ -514,12 +509,12 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 		username := Username{Text: cfg.Name}
 		password := Password{Text: cfg.Password}
 
-		//if user account is disabled, remove the user
+		// User account is disabled? Remove them.
 		if !cfg.Enable {
 			payload := RemoveUser{Username: username}
 			statusCode, _, _ := c.postXML(payload)
 
-			//user doesn't exist
+			// User doesn't exist? Nothing to do, success claimed!
 			if statusCode != 400 {
 				return err
 			}
@@ -530,8 +525,7 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 				"User", cfg.Name,
 			)
 
-			//user exists and was removed.
-			return err
+			return nil
 		}
 
 		payload := AddUser{Username: username, Password: password}
@@ -540,7 +534,6 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 			return err
 		}
 
-		//user exists
 		if statusCode == 400 {
 			c.log.V(1).Info("User already exists, setting password.",
 				"step", "applyUserParams",
@@ -550,26 +543,23 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 				"Return code", statusCode,
 			)
 
-			//update user password
 			err := c.setUserPassword(cfg.Name, cfg.Password)
 			if err != nil {
 				return err
 			}
 
-			//update user acl
 			err = c.setUserACL(cfg.Name, cfg.Role)
 			if err != nil {
 				return err
 			}
 
-			//updates user blade bay access acls
 			err = c.applyAddUserBayAccess(cfg.Name)
 			if err != nil {
 				return err
 			}
 		}
 
-		c.log.V(1).Info("User cfg applied.",
+		c.log.V(1).Info("User config applied.",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
 			"user", cfg.Name,
@@ -643,12 +633,12 @@ func (c *C7000) setUserACL(user string, role string) (err error) {
 // Applies user bay access to each blade, interconnect,
 // see applyAddLdapGroupBayAccess() for details.
 func (c *C7000) applyAddUserBayAccess(user string) (err error) {
-	//The c7000 wont allow changes to the bay acls for the reserved Administrator user.
+	// The c7000 won't allow changes to the bay ACLs for the reserved Administrator user.
 	if user == "Administrator" {
 		return nil
 	}
 
-	//setup blade bays payload
+	// setup blade bays payload
 	bladebays := bladeBays{}
 	for b := 1; b <= 16; b++ {
 		baynumber := bayNumber{Text: b}
@@ -657,7 +647,7 @@ func (c *C7000) applyAddUserBayAccess(user string) (err error) {
 		bladebays.Blade = append(bladebays.Blade, blade)
 	}
 
-	//setup interconnect tray bays payload
+	// setup interconnect tray bays payload
 	interconnecttraybays := interconnectTrayBays{}
 	for t := 1; t <= 8; t++ {
 		access := access{Text: true}
@@ -666,7 +656,7 @@ func (c *C7000) applyAddUserBayAccess(user string) (err error) {
 		interconnecttraybays.InterconnectTray = append(interconnecttraybays.InterconnectTray, interconnecttray)
 	}
 
-	//setup the bays payload
+	// setup the bays payload
 	bayz := bays{
 		Hpoa:                 "hpoa.xsd",
 		OaAccess:             oaAccess{Text: true},
@@ -741,12 +731,11 @@ func (c *C7000) Ntp(cfg *cfgresources.Ntp) (err error) {
 	}
 
 	// setup ntp XML payload
-	ntppoll := NtpPoll{Text: "720"} //default period to poll the NTP server
+	ntppoll := NtpPoll{Text: "720"} // default period to poll the NTP server
 	primaryServer := NtpPrimary{Text: cfg.Server1}
 	secondaryServer := NtpSecondary{Text: cfg.Server2}
 	payload := configureNtp{NtpPrimary: primaryServer, NtpSecondary: secondaryServer, NtpPoll: ntppoll}
 
-	// fmt.Printf("%s\n", output)
 	statusCode, _, err := c.postXML(payload)
 	if err != nil || statusCode != 200 {
 		c.log.V(1).Info("NTP apply request returned non 200.",
@@ -777,10 +766,9 @@ func (c *C7000) Ntp(cfg *cfgresources.Ntp) (err error) {
 	return err
 }
 
-//applies timezone
 // TODO: validate timezone string.
 func (c *C7000) applyNtpTimezoneParam(timezone string) (err error) {
-	//setup timezone XML payload
+	// setup timezone XML payload
 	payload := setEnclosureTimeZone{Timezone: timeZone{Text: timezone}}
 
 	statusCode, _, err := c.postXML(payload)

@@ -30,7 +30,7 @@ var (
 	findRedundancyMode = regexp.MustCompile("selected=\"selected\">(.+)</option>")
 )
 
-// M1000e holds the status and properties of a connection to a CMC device
+// Holds the status and properties of a connection to a CMC device.
 type M1000e struct {
 	ip           string
 	username     string
@@ -39,12 +39,12 @@ type M1000e struct {
 	sshClient    *sshclient.SSHClient
 	cmcJSON      *dell.CMC
 	cmcWWN       *dell.CMCWWN
-	SessionToken string //required to set config
+	SessionToken string // Required to set config!
 	ctx          context.Context
 	log          logr.Logger
 }
 
-// New returns a connection to M1000e
+// Returns a connection to an M1000e.
 func New(ctx context.Context, host string, username string, password string, log logr.Logger) (*M1000e, error) {
 	sshClient, err := sshclient.New(host, username, password)
 	if err != nil {

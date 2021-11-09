@@ -24,7 +24,7 @@ const (
 	ProbeHpCl100       = "hpcl100"
 )
 
-// ScanAndConnect will scan the bmc trying to learn the device type and return a working connection.
+// ScanAndConnect will scan the BMC trying to deduce the device type and return a working connection.
 func ScanAndConnect(host string, username string, password string, options ...Option) (bmcConnection interface{}, err error) {
 	opts := &Options{HintCallback: func(_ string) error { return nil }}
 	for _, optFn := range options {
@@ -51,9 +51,9 @@ func ScanAndConnect(host string, username string, password string, options ...Op
 		return nil, err
 	}
 
-	var probe = Probe{client: client, username: username, password: password, host: host}
+	probe := Probe{client: client, username: username, password: password, host: host}
 
-	var devices = map[string]func(context.Context, logr.Logger) (interface{}, error){
+	devices := map[string]func(context.Context, logr.Logger) (interface{}, error){
 		ProbeHpIlo:         probe.hpIlo,
 		ProbeIdrac8:        probe.idrac8,
 		ProbeIdrac9:        probe.idrac9,
@@ -65,7 +65,8 @@ func ScanAndConnect(host string, username string, password string, options ...Op
 		ProbeHpCl100:       probe.hpCl100,
 	}
 
-	order := []string{ProbeHpIlo,
+	order := []string{
+		ProbeHpIlo,
 		ProbeIdrac8,
 		ProbeIdrac9,
 		ProbeSupermicrox11,
@@ -86,11 +87,15 @@ func ScanAndConnect(host string, username string, password string, options ...Op
 		opts.Logger.V(1).Info("probing to identify device", "step", "ScanAndConnect", "host", host, "vendor", probeID)
 
 		bmcConnection, err := probeDevice(opts.Context, opts.Logger)
-
 		// if the device didn't match continue to probe
 		if err != nil {
 			// log error if probe is not successful
-			opts.Logger.V(1).Info("probe failed", "step", "ScanAndConnect", "host", host, "vendor", probeID, "error", err)
+			opts.Logger.V(1).Info("Probe failed!",
+				"step", "ScanAndConnect",
+				"host", host,
+				"vendor", probeID,
+				"Error", err,
+			)
 			continue
 		}
 		if hintErr := opts.HintCallback(probeID); hintErr != nil {

@@ -21,7 +21,6 @@ func (i *Ilo) CurrentHTTPSCert() ([]*x509.Certificate, bool, error) {
 	}
 
 	conn, err := tls.DialWithDialer(dialer, "tcp", i.ip+":"+"443", &tls.Config{InsecureSkipVerify: true})
-
 	if err != nil {
 		return []*x509.Certificate{{}}, true, err
 	}
@@ -71,7 +70,6 @@ func (i *Ilo) queryDirectoryGroups() (directoryGroups []DirectoryGroups, err err
 	}
 
 	var directoryGroupAccts DirectoryGroupAccts
-	//fmt.Printf("--> %+v\n", userinfo["users"])
 	err = json.Unmarshal(payload, &directoryGroupAccts)
 	if err != nil {
 		msg := "Unable to unmarshal payload."
@@ -104,7 +102,6 @@ func (i *Ilo) queryUsers() (usersInfo []UserInfo, err error) {
 	}
 
 	var users Users
-	//fmt.Printf("--> %+v\n", userinfo["users"])
 	err = json.Unmarshal(payload, &users)
 	if err != nil {
 		msg := "Unable to unmarshal payload."
