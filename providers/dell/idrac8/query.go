@@ -35,7 +35,7 @@ func (i *IDrac8) CurrentHTTPSCert() ([]*x509.Certificate, bool, error) {
 func (i *IDrac8) Screenshot() (response []byte, extension string, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return response, extension, err
+		return nil, "", err
 	}
 
 	endpoint := fmt.Sprintf("data?get=consolepreview[auto%%20%d]",
@@ -50,11 +50,11 @@ func (i *IDrac8) Screenshot() (response []byte, extension string, err error) {
 			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
 		}
 
-		return []byte{}, extension, err
+		return nil, "", err
 	}
 
 	if !strings.Contains(string(response), "<status>ok</status>") {
-		return []byte{}, extension, fmt.Errorf(string(response))
+		return nil, "", fmt.Errorf(string(response))
 	}
 
 	endpoint = fmt.Sprintf("capconsole/scapture0.png?%d",
@@ -66,10 +66,10 @@ func (i *IDrac8) Screenshot() (response []byte, extension string, err error) {
 			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
 		}
 
-		return []byte{}, extension, err
+		return nil, "", err
 	}
 
-	return response, extension, err
+	return response, extension, nil
 }
 
 // Queries for current user accounts.

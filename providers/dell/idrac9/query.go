@@ -33,7 +33,7 @@ func (i *IDrac9) CurrentHTTPSCert() ([]*x509.Certificate, bool, error) {
 func (i *IDrac9) Screenshot() (response []byte, extension string, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return response, extension, err
+		return nil, "", err
 	}
 
 	extension = "png"
@@ -57,7 +57,7 @@ func (i *IDrac9) Screenshot() (response []byte, extension string, err error) {
 		return nil, "", err
 	}
 
-	return response, extension, err
+	return response, extension, nil
 }
 
 func (i *IDrac9) queryUsers() (users map[int]User, err error) {

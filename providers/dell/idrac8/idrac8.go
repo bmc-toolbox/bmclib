@@ -65,13 +65,13 @@ func (i *IDrac8) put(endpoint string, payload []byte) (statusCode int, response 
 
 	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/%s", bmcURL, endpoint), bytes.NewReader(payload))
 	if err != nil {
-		return statusCode, response, err
+		return 0, nil, err
 	}
 	req.Header.Add("ST2", i.st2)
 
 	u, err := url.Parse(bmcURL)
 	if err != nil {
-		return statusCode, response, err
+		return 0, nil, err
 	}
 
 	for _, cookie := range i.httpClient.Jar.Cookies(u) {
@@ -85,8 +85,9 @@ func (i *IDrac8) put(endpoint string, payload []byte) (statusCode int, response 
 
 	resp, err := i.httpClient.Do(req)
 	if err != nil {
-		return statusCode, response, err
+		return 0, nil, err
 	}
+
 	defer resp.Body.Close()
 
 	respDump, _ := httputil.DumpResponse(resp, true)
@@ -264,19 +265,19 @@ func (i *IDrac8) Nics() (nics []*devices.Nic, err error) {
 func (i *IDrac8) Serial() (serial string, err error) {
 	err = i.loadHwData()
 	if err != nil {
-		return serial, err
+		return "", err
 	}
 
 	for _, component := range i.iDracInventory.Component {
 		if component.Classname == "DCIM_SystemView" {
 			for _, property := range component.Properties {
 				if property.Name == "NodeID" && property.Type == "string" {
-					return strings.ToLower(property.Value), err
+					return strings.ToLower(property.Value), nil
 				}
 			}
 		}
 	}
-	return serial, err
+	return "", nil
 }
 
 // ChassisSerial returns the serial number of the chassis where the blade is attached
@@ -302,7 +303,7 @@ func (i *IDrac8) ChassisSerial() (serial string, err error) {
 func (i *IDrac8) Status() (status string, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return status, err
+		return "", err
 	}
 
 	extraHeaders := &map[string]string{
@@ -322,7 +323,7 @@ func (i *IDrac8) Status() (status string, err error) {
 	iDracHealthStatus := &dell.IDracHealthStatus{}
 	err = json.Unmarshal(response, iDracHealthStatus)
 	if err != nil {
-		return status, err
+		return "", err
 	}
 
 	for _, entry := range iDracHealthStatus.HealthStatus {
@@ -506,7 +507,7 @@ func (i *IDrac8) HardwareType() (bmcType string) {
 func (i *IDrac8) License() (name string, licType string, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return name, licType, err
+		return "", "", err
 	}
 
 	extraHeaders := &map[string]string{
@@ -526,7 +527,7 @@ func (i *IDrac8) License() (name string, licType string, err error) {
 	iDracLicense := &dell.IDracLicense{}
 	err = json.Unmarshal(response, iDracLicense)
 	if err != nil {
-		return name, licType, err
+		return "", "", err
 	}
 
 	if iDracLicense.License.VConsole == 1 {
@@ -612,7 +613,7 @@ func (i *IDrac8) Disks() (disks []*devices.Disk, err error) {
 func (i *IDrac8) TempC() (temp int, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return temp, err
+		return 0, err
 	}
 
 	extraHeaders := &map[string]string{
@@ -632,7 +633,7 @@ func (i *IDrac8) TempC() (temp int, err error) {
 	iDracTemp := &dell.IDracTemp{}
 	err = json.Unmarshal(response, iDracTemp)
 	if err != nil {
-		return temp, err
+		return 0, err
 	}
 
 	return iDracTemp.Temperatures.IDRACEmbedded1SystemBoardInletTemp.Reading, err
@@ -701,7 +702,7 @@ func (i *IDrac8) IsBlade() (isBlade bool, err error) {
 func (i *IDrac8) Psus() (psus []*devices.Psu, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return psus, err
+		return nil, err
 	}
 
 	url := "data?get=powerSupplies"
@@ -711,13 +712,13 @@ func (i *IDrac8) Psus() (psus []*devices.Psu, err error) {
 			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
 		}
 
-		return psus, err
+		return nil, err
 	}
 
 	iDracRoot := &dell.IDracRoot{}
 	err = xml.Unmarshal(response, iDracRoot)
 	if err != nil {
-		return psus, err
+		return nil, err
 	}
 
 	serial, _ := i.Serial()
@@ -743,7 +744,7 @@ func (i *IDrac8) Psus() (psus []*devices.Psu, err error) {
 		psus = append(psus, p)
 	}
 
-	return psus, err
+	return psus, nil
 }
 
 // Vendor returns bmc's vendor

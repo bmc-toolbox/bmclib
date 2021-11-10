@@ -140,7 +140,7 @@ func (i *IDrac9) queueJobs(jobURI string) (err error) {
 		return fmt.Errorf("POST request to queue job %s failed with status code %d!", jobURI, statusCode)
 	}
 
-	return err
+	return nil
 }
 
 // Given a Job ID, purge it from the job queue
@@ -158,7 +158,7 @@ func (i *IDrac9) purgeJob(jobID string) (err error) {
 		return fmt.Errorf("POST request to purge job %s failed with status code %d!", jobID, statusCode)
 	}
 
-	return err
+	return nil
 }
 
 // Purges any jobs related to BIOS configuration.

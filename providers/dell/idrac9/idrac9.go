@@ -270,7 +270,7 @@ func (i *IDrac9) Nics() (nics []*devices.Nic, err error) {
 func (i *IDrac9) Serial() (serial string, err error) {
 	err = i.loadHwData()
 	if err != nil {
-		return serial, err
+		return "", err
 	}
 
 	for _, component := range i.iDracInventory.Component {
@@ -282,7 +282,8 @@ func (i *IDrac9) Serial() (serial string, err error) {
 			}
 		}
 	}
-	return serial, err
+
+	return "", nil
 }
 
 // ChassisSerial returns the serial number of the chassis where the blade is attached
@@ -344,7 +345,7 @@ func (i *IDrac9) Status() (status string, err error) {
 func (i *IDrac9) PowerKw() (power float64, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return power, err
+		return 0, err
 	}
 
 	url := "sysmgmt/2015/server/sensor/power"
@@ -523,19 +524,20 @@ func (i *IDrac9) slotC6420() (slot int, err error) {
 func (i *IDrac9) Model() (model string, err error) {
 	err = i.loadHwData()
 	if err != nil {
-		return model, err
+		return "", err
 	}
 
 	for _, component := range i.iDracInventory.Component {
 		if component.Classname == "DCIM_SystemView" {
 			for _, property := range component.Properties {
 				if property.Name == "Model" && property.Type == "string" {
-					return property.Value, err
+					return property.Value, nil
 				}
 			}
 		}
 	}
-	return model, err
+
+	return "", nil
 }
 
 // HardwareType returns the type of bmc we are talking to
@@ -567,7 +569,7 @@ func (i *IDrac9) License() (name string, licType string, err error) {
 	iDracLicense := &dell.IDracLicense{}
 	err = json.Unmarshal(response, iDracLicense)
 	if err != nil {
-		return name, licType, err
+		return "", "", err
 	}
 
 	if iDracLicense.License.VConsole == 1 {
@@ -603,7 +605,7 @@ func (i *IDrac9) Memory() (mem int, err error) {
 func (i *IDrac9) TempC() (temp int, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return temp, err
+		return 0, err
 	}
 
 	extraHeaders := &map[string]string{
@@ -623,10 +625,10 @@ func (i *IDrac9) TempC() (temp int, err error) {
 	iDracTemp := &dell.IDracTemp{}
 	err = json.Unmarshal(response, iDracTemp)
 	if err != nil {
-		return temp, err
+		return 0, err
 	}
 
-	return iDracTemp.Temperatures.IDRACEmbedded1SystemBoardInletTemp.Reading, err
+	return iDracTemp.Temperatures.IDRACEmbedded1SystemBoardInletTemp.Reading, nil
 }
 
 // CPU return the cpu, cores and hyperthreads the server

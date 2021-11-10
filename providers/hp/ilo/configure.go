@@ -746,13 +746,13 @@ func (i *Ilo) Network(cfg *cfgresources.Network) (reset bool, err error) {
 	// check if AccessSettings configuration update is required.
 	accessSettings, updateAccessSettings, err := i.cmpAccessSettings(cfg)
 	if err != nil {
-		return reset, err
+		return false, err
 	}
 
 	if updateAccessSettings {
 		payload, err := json.Marshal(accessSettings)
 		if err != nil {
-			return reset, fmt.Errorf("Error marshaling AccessSettings payload: %s", err)
+			return false, fmt.Errorf("Error marshaling AccessSettings payload: %s", err)
 		}
 
 		endpoint := "json/access_settings"

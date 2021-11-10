@@ -745,5 +745,5 @@ func (i *IDrac9) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 		return false, err
 	}
 
-	return true, err
+	return true, nil
 }

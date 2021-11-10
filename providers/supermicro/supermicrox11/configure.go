@@ -368,7 +368,7 @@ func (s *SupermicroX) Ntp(cfg *cfgresources.Ntp) (err error) {
 		"IP":           s.ip,
 		"HardwareType": s.HardwareType(),
 	}).Debug("NTP config parameters applied.")
-	return err
+	return nil
 }
 
 // Ldap applies LDAP configuration params.

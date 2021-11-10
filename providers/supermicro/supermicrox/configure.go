@@ -89,7 +89,7 @@ func (s *SupermicroX) queryUserAccounts() (userAccounts map[int]string, err erro
 		userAccounts[idx] = account.Name
 	}
 
-	return userAccounts, err
+	return userAccounts, nil
 }
 
 // User applies the User configuration resource,
@@ -234,7 +234,7 @@ func (s *SupermicroX) Network(cfg *cfgresources.Network) (reset bool, err error)
 	}
 
 	s.log.V(1).Info("Network config parameters applied.", "ip", s.ip, "HardwareType", s.HardwareType())
-	return reset, err
+	return false, err
 }
 
 // Ntp applies NTP configuration params

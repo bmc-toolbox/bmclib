@@ -74,8 +74,7 @@ func (i *IDrac9) httpLogin() (err error) {
 	}
 
 	i.httpClient = httpClient
-
-	return err
+	return nil
 }
 
 // loadHwData load the full hardware information from the iDrac
@@ -108,8 +107,7 @@ func (i *IDrac9) loadHwData() (err error) {
 	}
 
 	i.iDracInventory = iDracInventory
-
-	return err
+	return nil
 }
 
 // Close closes the connection properly

@@ -278,7 +278,7 @@ func (i *Ilo) Name() (name string, err error) {
 	overview := &hp.Overview{}
 	err = json.Unmarshal(payload, overview)
 	if err != nil {
-		return name, err
+		return "", err
 	}
 
 	return overview.ServerName, err
@@ -317,7 +317,7 @@ func (i *Ilo) Status() (health string, err error) {
 func (i *Ilo) Memory() (mem int, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return mem, err
+		return 0, err
 	}
 
 	endpoint := "json/mem_info"
@@ -333,18 +333,18 @@ func (i *Ilo) Memory() (mem int, err error) {
 	hpMemData := &hp.Mem{}
 	err = json.Unmarshal(payload, hpMemData)
 	if err != nil {
-		return mem, err
+		return 0, err
 	}
 
 	if hpMemData.MemTotalMemSize != 0 {
-		return hpMemData.MemTotalMemSize / 1024, err
+		return hpMemData.MemTotalMemSize / 1024, nil
 	}
 
 	for _, slot := range hpMemData.Memory {
 		mem = mem + slot.MemSize
 	}
 
-	return mem / 1024, err
+	return mem / 1024, nil
 }
 
 // Finds the CPUs.
@@ -354,7 +354,7 @@ func (i *Ilo) Memory() (mem int, err error) {
 func (i *Ilo) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCount int, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return cpu, cpuCount, coreCount, hyperthreadCount, err
+		return "", 0, 0, 0, err
 	}
 
 	endpoint := "json/proc_info"
@@ -370,11 +370,11 @@ func (i *Ilo) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCount i
 	hpProcData := &hp.Procs{}
 	err = json.Unmarshal(payload, hpProcData)
 	if err != nil {
-		return cpu, cpuCount, coreCount, hyperthreadCount, err
+		return "", 0, 0, 0, err
 	}
 
 	for _, proc := range hpProcData.Processors {
-		return httpclient.StandardizeProcessorName(proc.ProcName), len(hpProcData.Processors), proc.ProcNumCores, proc.ProcNumThreads, err
+		return httpclient.StandardizeProcessorName(proc.ProcName), len(hpProcData.Processors), proc.ProcNumCores, proc.ProcNumThreads, nil
 	}
 
 	return cpu, cpuCount, coreCount, hyperthreadCount, err
@@ -384,7 +384,7 @@ func (i *Ilo) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCount i
 func (i *Ilo) BiosVersion() (version string, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return version, err
+		return "", err
 	}
 
 	endpoint := "json/overview"
@@ -400,21 +400,21 @@ func (i *Ilo) BiosVersion() (version string, err error) {
 	overview := &hp.Overview{}
 	err = json.Unmarshal(payload, overview)
 	if err != nil {
-		return version, err
+		return "", err
 	}
 
 	if overview.SystemRom != "" {
-		return overview.SystemRom, err
+		return overview.SystemRom, nil
 	}
 
-	return version, errors.ErrBiosNotFound
+	return "", errors.ErrBiosNotFound
 }
 
 // PowerKw returns the current power usage in Kw
 func (i *Ilo) PowerKw() (power float64, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return power, err
+		return 0, err
 	}
 
 	endpoint := "json/power_summary"
@@ -430,17 +430,17 @@ func (i *Ilo) PowerKw() (power float64, err error) {
 	hpPowerSummary := &hp.PowerSummary{}
 	err = json.Unmarshal(payload, hpPowerSummary)
 	if err != nil {
-		return power, err
+		return 0, err
 	}
 
-	return float64(hpPowerSummary.PowerSupplyInputPower) / 1024, err
+	return float64(hpPowerSummary.PowerSupplyInputPower) / 1024, nil
 }
 
 // PowerState returns the current power state of the machine
 func (i *Ilo) PowerState() (state string, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return state, err
+		return "", err
 	}
 
 	endpoint := "json/power_summary"
@@ -455,17 +455,17 @@ func (i *Ilo) PowerState() (state string, err error) {
 	hpPowerSummary := &hp.PowerSummary{}
 	err = json.Unmarshal(payload, hpPowerSummary)
 	if err != nil {
-		return state, err
+		return "", err
 	}
 
-	return strings.ToLower(hpPowerSummary.HostpwrState), err
+	return strings.ToLower(hpPowerSummary.HostpwrState), nil
 }
 
 // Returns the current temperature of the server.
 func (i *Ilo) TempC() (temp int, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return temp, err
+		return 0, err
 	}
 
 	endpoint := "json/health_temperature"
@@ -480,16 +480,16 @@ func (i *Ilo) TempC() (temp int, err error) {
 	hpHealthTemperature := &hp.HealthTemperature{}
 	err = json.Unmarshal(payload, hpHealthTemperature)
 	if err != nil {
-		return temp, err
+		return 0, err
 	}
 
 	for _, item := range hpHealthTemperature.Temperature {
 		if item.Location == "Ambient" {
-			return item.Currentreading, err
+			return item.Currentreading, nil
 		}
 	}
 
-	return temp, err
+	return 0, errors.ErrFeatureUnavailable
 }
 
 // Nics returns all found Nics in the device
@@ -521,7 +521,7 @@ func (i *Ilo) Nics() (nics []*devices.Nic, err error) {
 func (i *Ilo) License() (name string, licType string, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return name, licType, err
+		return "", "", err
 	}
 
 	endpoint := "json/license"
@@ -537,10 +537,10 @@ func (i *Ilo) License() (name string, licType string, err error) {
 	hpIloLicense := &hp.IloLicense{}
 	err = json.Unmarshal(payload, hpIloLicense)
 	if err != nil {
-		return name, licType, err
+		return "", "", err
 	}
 
-	return hpIloLicense.Name, hpIloLicense.Type, err
+	return hpIloLicense.Name, hpIloLicense.Type, nil
 }
 
 func (i *Ilo) parseChassisInfo() (*hp.ChassisInfo, error) {

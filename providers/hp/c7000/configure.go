@@ -171,7 +171,7 @@ func (c *C7000) applysetLdapInfo4(cfg *cfgresources.Ldap) (err error) {
 		"IP", c.ip,
 		"HardwareType", c.HardwareType(),
 	)
-	return err
+	return nil
 }
 
 // <hpoa:enableLdapAuthentication>
@@ -199,7 +199,7 @@ func (c *C7000) applyEnableLdapAuth(enable bool) (err error) {
 		"IP", c.ip,
 		"HardwareType", c.HardwareType(),
 	)
-	return err
+	return nil
 }
 
 // LdapGroups applies LDAP Group/Role related configuration
@@ -390,7 +390,7 @@ func (c *C7000) applyLdapGroupBayACL(role string, group string) (err error) {
 		"Role", role,
 		"Group", group,
 	)
-	return err
+	return nil
 }
 
 // Set blade, interconnect access
@@ -521,7 +521,7 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 
 			// User doesn't exist? Nothing to do, success claimed!
 			if statusCode != 400 {
-				return err
+				return nil
 			}
 
 			c.log.V(1).Info("User removed.",
@@ -570,7 +570,7 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 			"user", cfg.Name,
 		)
 	}
-	return err
+	return nil
 }
 
 func (c *C7000) setUserPassword(user string, password string) (err error) {
@@ -693,7 +693,7 @@ func (c *C7000) applyAddUserBayAccess(user string) (err error) {
 		"HardwareType", c.HardwareType(),
 		"user", user,
 	)
-	return err
+	return nil
 }
 
 // Ntp applies NTP configuration params
@@ -771,7 +771,7 @@ func (c *C7000) Ntp(cfg *cfgresources.Ntp) (err error) {
 		"IP", c.ip,
 		"HardwareType", c.HardwareType(),
 	)
-	return err
+	return nil
 }
 
 // TODO: validate timezone string.

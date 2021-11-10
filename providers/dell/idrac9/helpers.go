@@ -52,7 +52,7 @@ func (i *IDrac9) putUser(userID int, user User) (err error) {
 		return fmt.Errorf("PUT request to set User config failed with status code %d!", statusCode)
 	}
 
-	return err
+	return nil
 }
 
 // PUTs ldap config
