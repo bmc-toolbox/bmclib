@@ -665,19 +665,18 @@ func (i *Ilo) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, error
 
 	endpoint := "json/csr"
 	statusCode, response, err := i.post(endpoint, payload)
+	// Some general error?
+	if err != nil {
+		return nil, err
+	}
+
 	if statusCode == 500 {
 		return []byte{}, fmt.Errorf("CSR being generated, retry later")
 	}
 
-	// if its a not a 200 at this point,
-	// something else went wrong.
+	// If it's a not a 200 at this point, something else went wrong.
 	if statusCode != 200 {
-		return []byte{}, fmt.Errorf("Unexpected return code: %d", statusCode)
-	}
-
-	// Some other error
-	if err != nil {
-		return []byte{}, err
+		return []byte{}, fmt.Errorf("Unexpected return code %d calling %s!", statusCode, endpoint)
 	}
 
 	r := new(csrResponse)
