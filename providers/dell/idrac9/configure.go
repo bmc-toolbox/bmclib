@@ -159,7 +159,7 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 		)
-		return errors.New(msg)
+		return errors.New(msg + " Error: " + err.Error())
 	}
 
 	for _, cfgUser := range cfgUsers {

@@ -711,7 +711,7 @@ func (i *Ilo) UploadHTTPSCert(cert []byte, certFileName string, key []byte, keyF
 	}
 
 	if statusCode != 200 {
-		return false, fmt.Errorf("Unexpected return code: %d", statusCode)
+		return false, fmt.Errorf("Unexpected return code %d calling %s!", statusCode, endpoint)
 	}
 
 	// ILOs need a reset after cert upload.

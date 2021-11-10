@@ -100,7 +100,7 @@ func (s *SupermicroX) queryUserAccounts() (userAccounts map[int]string, err erro
 func (s *SupermicroX) User(users []*cfgresources.User) (err error) {
 	currentUsers, err := s.queryUserAccounts()
 	if err != nil {
-		msg := "Unable to query existing users."
+		msg := "SupermicroX User(): Unable to query existing users."
 		s.log.V(1).Error(err, msg,
 			"ip", s.ip,
 			"HardwareType", s.HardwareType(),

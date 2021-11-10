@@ -167,7 +167,7 @@ func (c *C7000) applysetLdapInfo4(cfg *cfgresources.Ldap) (err error) {
 		return err
 	}
 
-	c.log.V(1).Info("Ldap Server parameters applied.",
+	c.log.V(1).Info("LDAP Server parameters applied.",
 		"IP", c.ip,
 		"HardwareType", c.HardwareType(),
 	)
@@ -195,7 +195,7 @@ func (c *C7000) applyEnableLdapAuth(enable bool) (err error) {
 		return err
 	}
 
-	c.log.V(1).Info("Ldap Enabled.",
+	c.log.V(1).Info("LDAP Enabled.",
 		"IP", c.ip,
 		"HardwareType", c.HardwareType(),
 	)
@@ -384,7 +384,7 @@ func (c *C7000) applyLdapGroupBayACL(role string, group string) (err error) {
 		return err
 	}
 
-	c.log.V(1).Info("Ldap group ACL added.",
+	c.log.V(1).Info("LDAP group ACL added.",
 		"IP", c.ip,
 		"HardwareType", c.HardwareType(),
 		"Role", role,

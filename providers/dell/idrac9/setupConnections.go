@@ -100,11 +100,11 @@ func (i *IDrac9) loadHwData() (err error) {
 	iDracInventory := &dell.IDracInventory{}
 	err = xml.Unmarshal(response, iDracInventory)
 	if err != nil {
-		return err
+		return fmt.Errorf("IDrac9.loadHwData(): XML unmarshal problem: " + err.Error())
 	}
 
 	if iDracInventory.Component == nil {
-		return errors.ErrUnableToReadData
+		return fmt.Errorf("IDrac9.loadHwData(): HTTP login problem: " + errors.ErrUnableToReadData.Error())
 	}
 
 	i.iDracInventory = iDracInventory
