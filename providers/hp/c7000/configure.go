@@ -3,10 +3,10 @@ package c7000
 import (
 	"crypto/x509"
 	"errors"
+	"fmt"
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
-	"github.com/bmc-toolbox/bmclib/internal"
 )
 
 // This ensures the compiler errors if this type is missing
@@ -70,24 +70,22 @@ func (c *C7000) Power(cfg *cfgresources.Power) (err error) {
 func (c *C7000) Ldap(cfg *cfgresources.Ldap) (err error) {
 	err = c.applysetLdapInfo4(cfg)
 	if err != nil {
-		c.log.V(1).Info("applyLdapParams returned error.",
+		c.log.V(1).Error(err, "applyLdapParams returned error.",
 			"step", "applyLdapParams",
 			"resource", "Ldap",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
 
 	err = c.applyEnableLdapAuth(cfg.Enable)
 	if err != nil {
-		c.log.V(1).Info("applyLdapParams returned error.",
+		c.log.V(1).Error(err, "applyLdapParams returned error.",
 			"step", "applyLdapParams",
 			"resource", "Ldap",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
@@ -206,7 +204,6 @@ func (c *C7000) applyEnableLdapAuth(enable bool) (err error) {
 // 3.  addLdapGroupBayAccess (done)
 func (c *C7000) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
 	for _, group := range cfgGroups {
-
 		if group.Group == "" {
 			c.log.V(1).Info("Ldap resource parameter Group required but not declared.",
 				"step", "applyLdapGroupParams",
@@ -220,12 +217,11 @@ func (c *C7000) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgreso
 		if !group.Enable {
 			err = c.applyRemoveLdapGroup(group.Group)
 			if err != nil {
-				c.log.V(1).Info("Remove Ldap Group returned error.",
+				c.log.V(1).Error(err, "Remove Ldap Group returned error.",
 					"step", "applyRemoveLdapGroup",
 					"resource", "Ldap",
 					"IP", c.ip,
 					"HardwareType", c.HardwareType(),
-					"Error", internal.ErrStringOrEmpty(err),
 				)
 				return
 			}
@@ -245,12 +241,11 @@ func (c *C7000) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgreso
 		// 1. addLdapGroup
 		err = c.applyAddLdapGroup(group.Group)
 		if err != nil {
-			c.log.V(1).Info("addLdapGroup returned error.",
+			c.log.V(1).Error(err, "addLdapGroup returned error.",
 				"step", "applyAddLdapGroup",
 				"resource", "Ldap",
 				"IP", c.ip,
 				"HardwareType", c.HardwareType(),
-				"Error", internal.ErrStringOrEmpty(err),
 			)
 			return
 		}
@@ -258,12 +253,11 @@ func (c *C7000) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgreso
 		// 2. setLdapGroupBayACL
 		err = c.applyLdapGroupBayACL(group.Role, group.Group)
 		if err != nil {
-			c.log.V(1).Info("addLdapGroup returned error.",
+			c.log.V(1).Error(err, "addLdapGroup returned error.",
 				"step", "setLdapGroupBayACL",
 				"resource", "Ldap",
 				"IP", c.ip,
 				"HardwareType", c.HardwareType(),
-				"Error", internal.ErrStringOrEmpty(err),
 			)
 			return
 		}
@@ -271,12 +265,11 @@ func (c *C7000) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgreso
 		// 3. applyAddLdapGroupBayAccess
 		err = c.applyAddLdapGroupBayAccess(group.Group)
 		if err != nil {
-			c.log.V(1).Info("addLdapGroup returned error.",
+			c.log.V(1).Error(err, "addLdapGroup returned error.",
 				"step", "applyAddLdapGroupBayAccess",
 				"resource", "Ldap",
 				"IP", c.ip,
 				"HardwareType", c.HardwareType(),
-				"Error", internal.ErrStringOrEmpty(err),
 			)
 			return
 		}
@@ -372,12 +365,15 @@ func (c *C7000) applyLdapGroupBayACL(role string, group string) (err error) {
 	payload := setLdapGroupBayACL{LdapGroup: ldapGroup{Text: group}, ACL: ACL{Text: userACL}}
 	statusCode, _, err := c.postXML(payload)
 	if statusCode != 200 || err != nil {
-		c.log.V(1).Info("LDAP applyLdapGroupBayACL request returned non 200.",
+		if err == nil {
+			err = fmt.Errorf("XML POST failed with status code %d.", statusCode)
+		}
+
+		c.log.V(1).Error(err, "applyLdapGroupBayACL(): POST request failed.",
 			"step", "applyLdapGroupBayACL",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
-			"statusCode", statusCode,
-			"Error", internal.ErrStringOrEmpty(err),
+			"StatusCode", statusCode,
 		)
 		return err
 	}
@@ -455,12 +451,15 @@ func (c *C7000) applyAddLdapGroupBayAccess(group string) (err error) {
 
 	statusCode, _, err := c.postXML(payload)
 	if statusCode != 200 || err != nil {
-		c.log.V(1).Info("LDAP applyAddLdapGroupBayAccess apply request returned non 200.",
+		if err == nil {
+			err = fmt.Errorf("POST XML request failed with status code %d.", statusCode)
+		}
+
+		c.log.V(1).Error(err, "applyAddLdapGroupBayAccess(): POST request failed.",
 			"step", "applyAddLdapGroupBayAccess",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
-			"statusCode", statusCode,
-			"Error", internal.ErrStringOrEmpty(err),
+			"StatusCode", statusCode,
 		)
 		return err
 	}
@@ -581,7 +580,6 @@ func (c *C7000) setUserPassword(user string, password string) (err error) {
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
 			"StatusCode", statusCode,
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
@@ -616,7 +614,6 @@ func (c *C7000) setUserACL(user string, role string) (err error) {
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
 			"StatusCode", statusCode,
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
@@ -743,18 +740,16 @@ func (c *C7000) Ntp(cfg *cfgresources.Ntp) (err error) {
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
 			"StatusCode", statusCode,
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
 
 	err = c.applyNtpTimezoneParam(cfg.Timezone)
 	if err != nil {
-		c.log.V(1).Info("Unable to apply NTP timezone config.",
+		c.log.V(1).Error(err, "Unable to apply NTP timezone config.",
 			"step", "applyNtpParams",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
@@ -773,11 +768,14 @@ func (c *C7000) applyNtpTimezoneParam(timezone string) (err error) {
 
 	statusCode, _, err := c.postXML(payload)
 	if err != nil || statusCode != 200 {
-		c.log.V(1).Info("NTP applyNtpTimezoneParam request returned non 200.",
+		if err == nil {
+			err = fmt.Errorf("POST XML request failed with status code %d.", statusCode)
+		}
+
+		c.log.V(1).Error(err, "applyNtpTimezoneParam(): POST request failed.",
 			"step", "applyNtpTimezoneParam",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
-			"Error", internal.ErrStringOrEmpty(err),
 			"StatusCode", statusCode,
 		)
 		return err

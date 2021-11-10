@@ -78,7 +78,6 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 			"step", "applyUserParams",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
@@ -91,7 +90,6 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 			"step", "applyUserParams",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
@@ -104,12 +102,11 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 			if !uExists {
 				userID, userInfo, err = getEmptyUserSlot(idracUsers)
 				if err != nil {
-					i.log.V(1).Info("Unable to add new User.",
+					i.log.V(1).Error(err, "Unable to add new User.",
 						"IP", i.ip,
 						"HardwareType", i.HardwareType(),
 						"step", helper.WhosCalling(),
 						"User", cfgUser.Name,
-						"Error", internal.ErrStringOrEmpty(err),
 					)
 					continue
 				}
@@ -130,12 +127,11 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 
 			err = i.putUser(userID, userInfo)
 			if err != nil {
-				i.log.V(1).Info("Add/Update user request failed.",
+				i.log.V(1).Error(err, "User(): Add/Update user request failed.",
 					"IP", i.ip,
 					"HardwareType", i.HardwareType(),
 					"step", helper.WhosCalling(),
 					"User", cfgUser.Name,
-					"Error", internal.ErrStringOrEmpty(err),
 				)
 				continue
 			}
@@ -152,12 +148,11 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 
 			err = i.putUser(userID, userInfo)
 			if err != nil {
-				i.log.V(1).Info("Disable user request failed.",
+				i.log.V(1).Error(err, "User(): Disable user request failed.",
 					"IP", i.ip,
 					"HardwareType", i.HardwareType(),
 					"step", helper.WhosCalling(),
 					"User", cfgUser.Name,
-					"Error", internal.ErrStringOrEmpty(err),
 				)
 			}
 		}
@@ -635,7 +630,6 @@ func (i *IDrac8) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, er
 			"endpoint", endpoint,
 			"status", statusCode,
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return []byte{}, err
 	}
@@ -705,7 +699,6 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 			"step", helper.WhosCalling(),
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return false, err
 	}
@@ -716,7 +709,6 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 			"step", helper.WhosCalling(),
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return false, err
 	}

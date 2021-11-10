@@ -349,12 +349,11 @@ func (m *M1000e) StorageBlades() (storageBlades []*devices.StorageBlade, err err
 			storageBlade.PowerKw = float64(dellBlade.ActualPwrConsump) / 1000
 			temp, err := strconv.Atoi(dellBlade.BladeTemperature)
 			if err != nil {
-				m.log.V(1).Info("Auditing blade",
+				m.log.V(1).Error(err, "Auditing blade",
 					"operation", "connection",
 					"ip", m.ip,
 					"position", storageBlade.BladePosition,
 					"type", "chassis",
-					"error", internal.ErrStringOrEmpty(err),
 				)
 				continue
 			}
@@ -395,16 +394,17 @@ func (m *M1000e) Blades() (blades []*devices.Blade, err error) {
 			blade.PowerKw = float64(dellBlade.ActualPwrConsump) / 1000
 			temp, err := strconv.Atoi(dellBlade.BladeTemperature)
 			if err != nil {
-				m.log.V(1).Info(internal.ErrStringOrEmpty(err),
+				m.log.V(1).Error(err, "Blades(): Failed to get the blade temperature.",
 					"operation", "connection",
 					"ip", m.ip,
 					"position", blade.BladePosition,
 					"type", "chassis",
 				)
 				continue
-			} else {
-				blade.TempC = temp
 			}
+
+			blade.TempC = temp
+
 			if dellBlade.BladeLogDescription == "No Errors" {
 				blade.Status = "OK"
 			} else {
@@ -436,7 +436,7 @@ func (m *M1000e) Blades() (blades []*devices.Blade, err error) {
 			if strings.HasPrefix(blade.BmcAddress, "[") {
 				payload, err := m.get(fmt.Sprintf("blade_status?id=%d&cat=C10&tab=T41&id=P78", blade.BladePosition))
 				if err != nil {
-					m.log.V(1).Info(internal.ErrStringOrEmpty(err),
+					m.log.V(1).Error(err, "Blades(): Getting blade_status failed.",
 						"operation", "connection",
 						"ip", m.ip,
 						"position", blade.BladePosition,

@@ -7,7 +7,6 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
-	"github.com/bmc-toolbox/bmclib/internal"
 	"github.com/bmc-toolbox/bmclib/internal/helper"
 )
 
@@ -89,13 +88,12 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 	existingUsers, err := i.queryUsers()
 	if err != nil {
 		msg := "Unable to query existing users."
-		i.log.V(1).Info(msg,
+		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", "applyUserParams",
-			"Error", internal.ErrStringOrEmpty(err),
 		)
-		return errors.New(msg)
+		return err
 	}
 
 	for _, user := range users {
@@ -168,13 +166,12 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 		if postPayload {
 			payload, err := json.Marshal(userinfo)
 			if err != nil {
-				msg := "Unable to marshal userInfo payload to set User config."
-				i.log.V(1).Info(msg,
+				msg := "User(): Unable to marshal userInfo payload to set User config."
+				i.log.V(1).Error(err, msg,
 					"IP", i.ip,
 					"HardwareType", i.HardwareType(),
 					"step", helper.WhosCalling(),
 					"User", user.Name,
-					"Error", internal.ErrStringOrEmpty(err),
 				)
 				continue
 			}
@@ -182,8 +179,13 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 			endpoint := "json/user_info"
 			statusCode, response, err := i.post(endpoint, payload)
 			if err != nil || statusCode != 200 {
-				msg := "POST request to set User config returned error."
-				i.log.V(1).Info(msg,
+				if err == nil {
+					err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+				} else {
+					err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
+				}
+
+				i.log.V(1).Error(err, "POST request to set User config failed.",
 					"IP", i.ip,
 					"HardwareType", i.HardwareType(),
 					"endpoint", endpoint,
@@ -191,9 +193,7 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 					"User", user.Name,
 					"StatusCode", statusCode,
 					"response", string(response),
-					"Error", internal.ErrStringOrEmpty(err),
 				)
-
 				continue
 			}
 
@@ -243,11 +243,10 @@ func (i *Ilo) Syslog(cfg *cfgresources.Syslog) (err error) {
 	payload, err := json.Marshal(remoteSyslog)
 	if err != nil {
 		msg := "Unable to marshal RemoteSyslog payload to set Syslog config."
-		i.log.V(1).Info(msg,
+		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return errors.New(msg)
 	}
@@ -255,17 +254,21 @@ func (i *Ilo) Syslog(cfg *cfgresources.Syslog) (err error) {
 	endpoint := "json/remote_syslog"
 	statusCode, response, err := i.post(endpoint, payload)
 	if err != nil || statusCode != 200 {
-		msg := "POST request to set User config returned error."
-		i.log.V(1).Info(msg,
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+		} else {
+			err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
+		}
+
+		i.log.V(1).Error(err, "POST request to set Syslog config failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"StatusCode", statusCode,
 			"response", string(response),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
-		return errors.New(msg)
+		return err
 	}
 
 	i.log.V(1).Info("Syslog parameters applied.", "IP", i.ip, "HardwareType", i.HardwareType())
@@ -291,29 +294,33 @@ func (i *Ilo) SetLicense(cfg *cfgresources.License) (err error) {
 	payload, err := json.Marshal(license)
 	if err != nil {
 		msg := "Unable to marshal License payload to activate License."
-		i.log.V(1).Info(msg,
+		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
-		return errors.New(msg)
+		return errors.New(msg + ": " + err.Error())
 	}
 
 	endpoint := "json/license_info"
 	statusCode, response, err := i.post(endpoint, payload)
 	if err != nil || statusCode != 200 {
-		msg := "POST request to set User config returned error."
-		i.log.V(1).Info(msg,
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+		} else {
+			err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
+		}
+
+		msg := "POST request to set License failed."
+		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"StatusCode", statusCode,
 			"response", string(response),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
-		return errors.New(msg)
+		return err
 	}
 
 	i.log.V(1).Info("License activated.", "IP", i.ip, "HardwareType", i.HardwareType())
@@ -362,13 +369,12 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 	existingConfig, err := i.queryNetworkSntp()
 	if err != nil {
 		msg := "Unable to query existing config"
-		i.log.V(1).Info(msg,
+		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
-		return errors.New(msg)
+		return err
 	}
 
 	networkSntp := NetworkSntp{
@@ -395,29 +401,32 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 	payload, err := json.Marshal(networkSntp)
 	if err != nil {
 		msg := "Unable to marshal NetworkSntp payload to set NTP config."
-		i.log.V(1).Info(msg,
+		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
-		return errors.New(msg)
+		return err
 	}
 
 	endpoint := "json/network_sntp"
 	statusCode, response, err := i.post(endpoint, payload)
 	if err != nil || statusCode != 200 {
-		msg := "POST request to set NTP config returned error."
-		i.log.V(1).Info(msg,
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+		} else {
+			err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
+		}
+
+		i.log.V(1).Error(err, "POST request to set NTP config failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"StatusCode", statusCode,
 			"response", string(response),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
-		return errors.New(msg)
+		return err
 	}
 
 	i.log.V(1).Info("NTP parameters applied.", "IP", i.ip, "HardwareType", i.HardwareType())
@@ -431,14 +440,13 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
 	directoryGroups, err := i.queryDirectoryGroups()
 	if err != nil {
-		msg := "Unable to query existing Ldap groups"
-		i.log.V(1).Info(msg,
+		msg := "Unable to query existing LDAP groups."
+		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
-		return errors.New(msg)
+		return err
 	}
 
 	for _, group := range cfgGroups {
@@ -534,7 +542,7 @@ func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresour
 				continue
 			}
 
-			i.log.V(1).Info("LdapGroup parameters applied.",
+			i.log.V(1).Error(err, "POST request to set LDAP group failed.",
 				"IP", i.ip,
 				"Model", i.HardwareType(),
 				"User", group.Group,
@@ -549,30 +557,33 @@ func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresour
 // Ldap implements the Configure interface.
 func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 	if cfg.Server == "" {
-		msg := "LDAP resource parameter Server required but not declared."
-		i.log.V(1).Info(msg,
+		msg := "Ldap(): LDAP resource parameter Server required but not declared."
+		err = errors.New(msg)
+		i.log.V(1).Error(err, msg,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 		)
-		return errors.New(msg)
+		return err
 	}
 
 	if cfg.Port == 0 {
-		msg := "LDAP resource parameter Port required but not declared."
-		i.log.V(1).Info(msg,
+		msg := "Ldap(): LDAP resource parameter Port required but not declared."
+		err = errors.New(msg)
+		i.log.V(1).Error(err, msg,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 		)
-		return errors.New(msg)
+		return err
 	}
 
 	if cfg.BaseDn == "" {
-		msg := "LDAP resource parameter BaseDn required but not declared."
-		i.log.V(1).Info(msg,
+		msg := "Ldap(): LDAP resource parameter BaseDn required but not declared."
+		err = errors.New(msg)
+		i.log.V(1).Error(err, msg,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 		)
-		return errors.New(msg)
+		return err
 	}
 
 	var enable int
@@ -597,11 +608,10 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 
 	payload, err := json.Marshal(directory)
 	if err != nil {
-		i.log.V(1).Info("Unable to marshal directory payload to set Ldap config.",
+		i.log.V(1).Error(err, "Ldap(): Unable to marshal directory payload to set LDAP config.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
@@ -609,15 +619,19 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 	endpoint := "json/directory"
 	statusCode, response, err := i.post(endpoint, payload)
 	if err != nil || statusCode != 200 {
-		msg := "POST request to set Ldap config returned error."
-		i.log.V(1).Info(msg,
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+		} else {
+			err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
+		}
+
+		i.log.V(1).Error(err, "POST request to set Ldap config failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"StatusCode", statusCode,
 			"response", string(response),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}

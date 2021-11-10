@@ -78,7 +78,6 @@ func (i *IDrac8) queryUsers() (userInfo UserInfo, err error) {
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return userInfo, err
 	}

@@ -15,7 +15,6 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/errors"
-	"github.com/bmc-toolbox/bmclib/internal"
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/go-logr/logr"
 
@@ -274,10 +273,10 @@ func (s *SupermicroX) ChassisSerial() (serial string, err error) {
 func (s *SupermicroX) HardwareType() (model string) {
 	m, err := s.Model()
 	if err != nil {
-		// Here is your sin
-		s.log.V(1).Info("error getting hardwaretype", "err", internal.ErrStringOrEmpty(err))
-		return model
+		s.log.V(1).Error(err, "HardwareType(): Getting the hardware type failed.")
+		return ""
 	}
+
 	return m
 }
 

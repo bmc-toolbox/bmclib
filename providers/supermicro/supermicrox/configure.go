@@ -13,7 +13,6 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
-	"github.com/bmc-toolbox/bmclib/internal"
 	"github.com/bmc-toolbox/bmclib/internal/helper"
 
 	"github.com/google/go-querystring/query"
@@ -82,7 +81,7 @@ func (s *SupermicroX) queryUserAccounts() (userAccounts map[int]string, err erro
 	userAccounts = make(map[int]string)
 	ipmi, err := s.query("CONFIG_INFO.XML=(0,0)")
 	if err != nil {
-		s.log.V(1).Info("error querying user accounts", "error", internal.ErrStringOrEmpty(err))
+		s.log.V(1).Error(err, "queryUserAccounts(): Error querying user accounts.")
 		return userAccounts, err
 	}
 
@@ -101,8 +100,12 @@ func (s *SupermicroX) queryUserAccounts() (userAccounts map[int]string, err erro
 func (s *SupermicroX) User(users []*cfgresources.User) (err error) {
 	currentUsers, err := s.queryUserAccounts()
 	if err != nil {
-		msg := "Unable to query current user accounts."
-		s.log.V(1).Info(msg, "ip", s.ip, "HardwareType", s.HardwareType(), "step", helper.WhosCalling(), "error", internal.ErrStringOrEmpty(err))
+		msg := "Unable to query existing users."
+		s.log.V(1).Error(err, msg,
+			"ip", s.ip,
+			"HardwareType", s.HardwareType(),
+			"step", helper.WhosCalling(),
+		)
 		return errors.New(msg)
 	}
 
@@ -160,15 +163,20 @@ func (s *SupermicroX) User(users []*cfgresources.User) (err error) {
 		form, _ := query.Values(configUser)
 		statusCode, err := s.post(endpoint, &form, []byte{}, "")
 		if err != nil || statusCode != 200 {
-			msg := "POST request to set User config returned error."
-			s.log.V(1).Info(msg,
+			if err == nil {
+				err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+			} else {
+				err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
+			}
+
+			s.log.V(1).Error(err, "POST request to set User config failed.",
 				"ip", s.ip,
 				"HardwareType", s.HardwareType(),
 				"endpoint", endpoint,
-				"statusCode", statusCode,
+				"StatusCode", statusCode,
 				"step", helper.WhosCalling(),
-				"error", internal.ErrStringOrEmpty(err))
-			return errors.New(msg)
+			)
+			return err
 		}
 
 		s.log.V(1).Info("User parameters applied.", "ip", s.ip, "HardwareType", s.HardwareType(), "user", user.Name)
@@ -209,15 +217,20 @@ func (s *SupermicroX) Network(cfg *cfgresources.Network) (reset bool, err error)
 	form, _ := query.Values(configPort)
 	statusCode, err := s.post(endpoint, &form, []byte{}, "")
 	if err != nil || statusCode != 200 {
-		msg := "POST request to set Port config returned error."
-		s.log.V(1).Info(msg,
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+		} else {
+			err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
+		}
+
+		s.log.V(1).Error(err, "POST request to set Port config failed.",
 			"ip", s.ip,
 			"HardwareType", s.HardwareType(),
 			"endpoint", endpoint,
 			"statusCode", statusCode,
 			"step", helper.WhosCalling(),
-			"error", internal.ErrStringOrEmpty(err))
-		return reset, errors.New(msg)
+		)
+		return false, err
 	}
 
 	s.log.V(1).Info("Network config parameters applied.", "ip", s.ip, "HardwareType", s.HardwareType())
@@ -244,11 +257,11 @@ func (s *SupermicroX) Ntp(cfg *cfgresources.Ntp) (err error) {
 
 	tzLocation, err := time.LoadLocation(cfg.Timezone)
 	if err != nil {
-		s.log.V(1).Info("NTP resource declared parameter timezone invalid.",
+		s.log.V(1).Error(err, "Ntp(): Invalid timezone parameter.",
 			"step", "applyNtpParams",
 			"HardwareType", s.HardwareType(),
-			"declaredTtimezone", cfg.Timezone,
-			"error", internal.ErrStringOrEmpty(err))
+			"Timezone", cfg.Timezone,
+		)
 		return
 	}
 
@@ -294,15 +307,20 @@ func (s *SupermicroX) Ntp(cfg *cfgresources.Ntp) (err error) {
 	form, _ := query.Values(configDateTime)
 	statusCode, err := s.post(endpoint, &form, []byte{}, "")
 	if err != nil || statusCode != 200 {
-		msg := "POST request to set Syslog config returned error."
-		s.log.V(1).Info(msg,
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+		} else {
+			err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
+		}
+
+		s.log.V(1).Error(err, "POST request to set NTP config failed.",
 			"ip", s.ip,
 			"HardwareType", s.HardwareType(),
 			"endpoint", endpoint,
 			"statusCode", statusCode,
 			"step", helper.WhosCalling(),
-			"error", internal.ErrStringOrEmpty(err))
-		return errors.New(msg)
+		)
+		return err
 	}
 
 	s.log.V(1).Info("NTP config parameters applied.",
@@ -410,15 +428,21 @@ func (s *SupermicroX) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *c
 		form, _ := query.Values(configLdap)
 		statusCode, err := s.post(endpoint, &form, []byte{}, "")
 		if err != nil || statusCode != 200 {
-			msg := "POST request to set Ldap config returned error."
-			s.log.V(1).Info(msg,
+			if err == nil {
+				err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+			} else {
+				err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
+			}
+
+			s.log.V(1).Error(err, "POST request to set LDAP group config failed.",
 				"step", helper.WhosCalling(),
 				"ip", s.ip,
 				"HardwareType", s.HardwareType(),
 				"endpoint", endpoint,
-				"statusCode", statusCode,
-				"error", internal.ErrStringOrEmpty(err))
-			return errors.New(msg)
+				"StatusCode", statusCode,
+				"Group", group.Group,
+			)
+			return err
 		}
 	}
 
@@ -468,18 +492,22 @@ func (s *SupermicroX) Syslog(cfg *cfgresources.Syslog) (err error) {
 	endpoint := "op.cgi"
 	form, _ := query.Values(configSyslog)
 
-	//returns okStarting Syslog daemon if successful
 	statusCode, err := s.post(endpoint, &form, []byte{}, "")
 	if err != nil || statusCode != 200 {
-		msg := "POST request to set Syslog config returned error."
-		s.log.V(1).Info(msg,
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+		} else {
+			err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
+		}
+
+		s.log.V(1).Error(err, "POST request to set Syslog config returned error.",
 			"step", helper.WhosCalling(),
 			"ip", s.ip,
 			"HardwareType", s.HardwareType(),
 			"endpoint", endpoint,
-			"statusCode", statusCode,
-			"error", internal.ErrStringOrEmpty(err))
-		return errors.New(msg)
+			"StatusCode", statusCode,
+		)
+		return err
 	}
 
 	// enable maintenance events
@@ -490,15 +518,20 @@ func (s *SupermicroX) Syslog(cfg *cfgresources.Syslog) (err error) {
 
 	statusCode, err = s.post(endpoint, &form, []byte{}, "")
 	if err != nil || statusCode != 200 {
-		msg := "POST request to enable maintenance alerts returned error."
-		s.log.V(1).Info(msg,
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+		} else {
+			err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
+		}
+
+		s.log.V(1).Error(err, "POST request to enable maintenance alerts failed.",
 			"step", helper.WhosCalling(),
 			"ip", s.ip,
 			"HardwareType", s.HardwareType(),
 			"endpoint", endpoint,
-			"statusCode", statusCode,
-			"error", internal.ErrStringOrEmpty(err))
-		return errors.New(msg)
+			"StatusCode", statusCode,
+		)
+		return err
 	}
 
 	s.log.V(1).Info("Syslog config parameters applied.", "ip", s.ip, "HardwareType", s.HardwareType())

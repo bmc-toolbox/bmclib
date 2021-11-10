@@ -189,8 +189,8 @@ func (s *SupermicroX) User(users []*cfgresources.User) (err error) {
 				"StatusCode":   statusCode,
 				"Step":         helper.WhosCalling(),
 				"Error":        err,
-			}).Warn(msg)
-			return errors.New(msg)
+			}).Error("POST request to set User config returned error.")
+			return err
 		}
 		if strings.Contains(response, "LANG_CONFUSER_COMMON_ERR7") {
 			msg := "password did not meet complexity requirements"
@@ -252,8 +252,8 @@ func (s *SupermicroX) Network(cfg *cfgresources.Network) (reset bool, err error)
 			"StatusCode":   statusCode,
 			"Step":         helper.WhosCalling(),
 			"Error":        err,
-		}).Warn(msg)
-		return reset, errors.New(msg)
+		}).Error("POST request to set Port config returned error.")
+		return reset, err
 	}
 
 	log.WithFields(log.Fields{
@@ -345,8 +345,8 @@ func (s *SupermicroX) Ntp(cfg *cfgresources.Ntp) (err error) {
 			"StatusCode":   statusCode,
 			"Step":         helper.WhosCalling(),
 			"Error":        err,
-		}).Warn(msg)
-		return errors.New(msg)
+		}).Error("POST request to set NTP config returned error.")
+		return err
 	}
 
 	log.WithFields(log.Fields{
@@ -558,8 +558,8 @@ func (s *SupermicroX) Syslog(cfg *cfgresources.Syslog) (err error) {
 			"StatusCode":   statusCode,
 			"step":         helper.WhosCalling(),
 			"Error":        err,
-		}).Warn(msg)
-		return errors.New(msg)
+		}).Error("POST request to set Syslog config failed.")
+		return err
 	}
 
 	// enable maintenance events
@@ -578,8 +578,8 @@ func (s *SupermicroX) Syslog(cfg *cfgresources.Syslog) (err error) {
 			"StatusCode":   statusCode,
 			"step":         helper.WhosCalling(),
 			"Error":        err,
-		}).Warn(msg)
-		return errors.New(msg)
+		}).Error("POST request to enable maintenance alerts failed.")
+		return err
 	}
 
 	log.WithFields(log.Fields{

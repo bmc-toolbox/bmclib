@@ -4,11 +4,11 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"fmt"
 	"net"
 	"time"
 
 	"github.com/bmc-toolbox/bmclib/errors"
-	"github.com/bmc-toolbox/bmclib/internal"
 	"github.com/bmc-toolbox/bmclib/internal/helper"
 )
 
@@ -72,12 +72,11 @@ func (i *Ilo) queryDirectoryGroups() (directoryGroups []DirectoryGroups, err err
 	var directoryGroupAccts DirectoryGroupAccts
 	err = json.Unmarshal(payload, &directoryGroupAccts)
 	if err != nil {
-		msg := "Unable to unmarshal payload."
-		i.log.V(1).Info(msg,
+		msg := "queryDirectoryGroups(): Unable to unmarshal payload."
+		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return directoryGroups, err
 	}
@@ -96,7 +95,6 @@ func (i *Ilo) queryUsers() (usersInfo []UserInfo, err error) {
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return usersInfo, err
 	}
@@ -105,12 +103,11 @@ func (i *Ilo) queryUsers() (usersInfo []UserInfo, err error) {
 	err = json.Unmarshal(payload, &users)
 	if err != nil {
 		msg := "Unable to unmarshal payload."
-		i.log.V(1).Info(msg,
+		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"resource", "User",
 			"step", "queryUserInfo",
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return usersInfo, err
 	}
@@ -129,19 +126,17 @@ func (i *Ilo) queryNetworkSntp() (networkSntp NetworkSntp, err error) {
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return networkSntp, err
 	}
 
 	err = json.Unmarshal(payload, &networkSntp)
 	if err != nil {
-		msg := "Unable to unmarshal payload."
-		i.log.V(1).Info(msg,
+		msg := "queryNetworkSntp(): Unable to unmarshal payload."
+		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return networkSntp, err
 	}
@@ -162,19 +157,17 @@ func (i *Ilo) queryAccessSettings() (AccessSettings, error) {
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return accessSettings, err
 	}
 
 	err = json.Unmarshal(payload, &accessSettings)
 	if err != nil {
-		msg := "Unable to unmarshal payload."
-		i.log.V(1).Info(msg,
+		msg := "queryAccessSettings(): Unable to unmarshal payload."
+		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return accessSettings, err
 	}
@@ -195,19 +188,16 @@ func (i *Ilo) queryNetworkIPv4() (NetworkIPv4, error) {
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return networkIPv4, err
 	}
 
 	err = json.Unmarshal(payload, &networkIPv4)
 	if err != nil {
-		msg := "Unable to unmarshal payload."
-		i.log.V(1).Info(msg,
+		i.log.V(1).Error(err, "queryNetworkIPv4(): Unable to unmarshal payload.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return networkIPv4, err
 	}
@@ -228,19 +218,17 @@ func (i *Ilo) queryPowerRegulator() (PowerRegulator, error) {
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return PowerRegulator{}, err
 	}
 
 	err = json.Unmarshal(payload, &powerRegulator)
 	if err != nil {
-		msg := "Unable to unmarshal payload."
-		i.log.V(1).Info(msg,
+		msg := "queryPowerRegulator(): Unable to unmarshal payload."
+		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return PowerRegulator{}, err
 	}
