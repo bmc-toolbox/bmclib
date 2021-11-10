@@ -53,7 +53,7 @@ func (i *Ilo) Screenshot() (response []byte, extension string, err error) {
 	return response, extension, err
 }
 
-func (i *Ilo) queryDirectoryGroups() (directoryGroups []DirectoryGroups, err error) {
+func (i *Ilo) queryDirectoryGroups() ([]DirectoryGroups, error) {
 	endpoint := "json/directory_groups"
 	statusCode, payload, err := i.get(endpoint, true)
 	if err != nil || statusCode != 200 {
@@ -61,17 +61,13 @@ func (i *Ilo) queryDirectoryGroups() (directoryGroups []DirectoryGroups, err err
 			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
 		}
 
-	payload, err := i.get(endpoint, true)
-	if err != nil {
-		msg := "GET request failed."
-		i.log.V(1).Info(msg,
+		i.log.V(1).Error(err, "queryDirectoryGroups(): GET request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
-		return directoryGroups, err
+		return nil, err
 	}
 
 	var directoryGroupAccts DirectoryGroupAccts
@@ -83,10 +79,10 @@ func (i *Ilo) queryDirectoryGroups() (directoryGroups []DirectoryGroups, err err
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 		)
-		return directoryGroups, err
+		return nil, err
 	}
 
-	return directoryGroupAccts.Groups, err
+	return directoryGroupAccts.Groups, nil
 }
 
 func (i *Ilo) queryUsers() (usersInfo []UserInfo, err error) {

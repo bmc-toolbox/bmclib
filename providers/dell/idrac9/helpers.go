@@ -68,35 +68,13 @@ func (i *IDrac9) putLdap(ldap Ldap) (err error) {
 
 	endpoint := "sysmgmt/2012/server/configgroup/iDRAC.LDAP"
 	statusCode, _, err := i.put(endpoint, payload)
-	if err != nil || statusCode != 200 {
-		msg := fmt.Sprintf("PUT request to set User config returned error, return code: %d", statusCode)
-		return errors.New(msg)
+	if err != nil {
+		return fmt.Errorf("PUT request to set LDAP config failed with error %s!", err.Error())
+	} else if statusCode != 200 {
+		return fmt.Errorf("PUT request to set LDAP config failed with status code %d!", statusCode)
 	}
 
-	return err
-}
-
-// checks if a role group is in idrac
-func ldapRoleGroupInIdrac(group string, roleGroups LdapRoleGroups) (roleID string, roleGroup LdapRoleGroup, exists bool) {
-	for roleID, roleGroup := range roleGroups {
-		if roleGroup.DN == group {
-			return roleID, roleGroup, true
-		}
-	}
-
-	return roleID, roleGroup, false
-}
-
-// iDrac9 supports upto 5 ldap role groups
-// this function returns an empty user slot that can be used for a new ldap role group.
-func getEmptyLdapRoleGroupSlot(roleGroups LdapRoleGroups) (roleID string, roleGroup LdapRoleGroup, err error) {
-	for roleID, roleGroup := range roleGroups {
-		if roleGroup.DN == "" {
-			return roleID, roleGroup, err
-		}
-	}
-
-	return roleID, roleGroup, errors.New("All Ldap Role Group slots in use, remove a Role group before adding a new one")
+	return nil
 }
 
 func (i *IDrac9) putLdapRoleGroup(roleID string, ldapRoleGroup LdapRoleGroup) (err error) {

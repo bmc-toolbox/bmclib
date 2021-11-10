@@ -69,17 +69,6 @@ func userExists(user string, usersInfo []UserInfo) (userInfo UserInfo, exists bo
 	return userInfo, false
 }
 
-// checks if a ldap group is present in a given list
-func ldapGroupExists(group string, directoryGroups []DirectoryGroups) (directoryGroup DirectoryGroups, exists bool) {
-	for _, directoryGroup := range directoryGroups {
-		if directoryGroup.Dn == group {
-			return directoryGroup, true
-		}
-	}
-
-	return directoryGroup, false
-}
-
 // User applies the User configuration resource,
 // if the user exists, it updates the users password,
 // User implements the Configure interface.
@@ -449,8 +438,57 @@ func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresour
 		return err
 	}
 
+	endpoint := "json/directory_groups"
+
+	// Let's start from a clean slate.
+	for _, group := range directoryGroups {
+		group.Method = "del_group"
+		group.SessionKey = i.sessionKey
+
+		payload, err := json.Marshal(group)
+		if err != nil {
+			i.log.V(1).Error(err, "Unable to marshal directoryGroup payload to set LdapGroup config.",
+				"IP", i.ip,
+				"HardwareType", i.HardwareType(),
+				"step", helper.WhosCalling(),
+				"Group", group,
+			)
+			continue
+		}
+
+		statusCode, response, err := i.post(endpoint, payload)
+		if err != nil || statusCode != 200 {
+			if err == nil {
+				err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+			} else {
+				err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
+			}
+
+			i.log.V(1).Error(err, "POST request to delete LDAP groups failed.",
+				"IP", i.ip,
+				"HardwareType", i.HardwareType(),
+				"endpoint", endpoint,
+				"step", helper.WhosCalling(),
+				"Group", group,
+				"StatusCode", statusCode,
+				"response", string(response),
+			)
+			continue
+		}
+
+		i.log.V(1).Info("Old LDAP group deleted successfully.",
+			"IP", i.ip,
+			"HardwareType", i.HardwareType(),
+			"Group", group,
+		)
+	}
+
+	// Verify we have good configuration.
 	for _, group := range cfgGroups {
-		var postPayload bool
+		if !group.Enable {
+			continue
+		}
+
 		if group.Group == "" {
 			msg := "LDAP resource parameter Group required but not declared."
 			i.log.V(1).Info(msg,
@@ -470,87 +508,72 @@ func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresour
 			)
 			return errors.New(msg)
 		}
+	}
 
-		groupDn := group.Group
-		directoryGroup, gexists := ldapGroupExists(groupDn, directoryGroups)
+	// Now, let's add what we have.
+	for _, group := range cfgGroups {
+		if !group.Enable {
+			continue
+		}
 
-		directoryGroup.Dn = groupDn
+		var directoryGroup DirectoryGroups
+		directoryGroup.Dn = fmt.Sprintf("%s,%s", group.Group, group.GroupBaseDn)
+		directoryGroup.Method = "add_group"
 		directoryGroup.SessionKey = i.sessionKey
 
-		//if the group is enabled setup parameters
-		if group.Enable {
-			directoryGroup.LoginPriv = 1
-			directoryGroup.RemoteConsPriv = 1
-			directoryGroup.VirtualMediaPriv = 1
-			directoryGroup.ResetPriv = 1
+		// Privileges
+		directoryGroup.LoginPriv = 1
+		directoryGroup.RemoteConsPriv = 1
+		directoryGroup.VirtualMediaPriv = 1
+		directoryGroup.ResetPriv = 1
 
-			if group.Role == "admin" {
-				directoryGroup.ConfigPriv = 1
-				directoryGroup.UserPriv = 1
-			} else if group.Role == "user" {
-				directoryGroup.ConfigPriv = 0
-				directoryGroup.UserPriv = 0
-			}
-
-			//if the group exists, modify it
-			if gexists {
-				directoryGroup.Method = "mod_group"
-			} else {
-				directoryGroup.Method = "add_group"
-			}
-
-			postPayload = true
+		if group.Role == "admin" {
+			directoryGroup.ConfigPriv = 1
+			directoryGroup.UserPriv = 1
+		} else {
+			directoryGroup.ConfigPriv = 0
+			directoryGroup.UserPriv = 0
 		}
 
-		//if the group is disabled remove it
-		if !group.Enable && gexists {
-			directoryGroup.Method = "del_group"
-			i.log.V(1).Info("Ldap role group disabled in config, will be removed.",
+		payload, err := json.Marshal(directoryGroup)
+		if err != nil {
+			i.log.V(1).Error(err, "LdapGroups(): Unable to marshal directoryGroup payload to set LdapGroup config.",
 				"IP", i.ip,
-				"Model", i.HardwareType(),
-				"User", group.Group,
+				"HardwareType", i.HardwareType(),
+				"step", helper.WhosCalling(),
+				"Group", group.Group,
 			)
-			postPayload = true
+			continue
 		}
 
-		if postPayload {
-			payload, err := json.Marshal(directoryGroup)
-			if err != nil {
-				i.log.V(1).Info("Unable to marshal directoryGroup payload to set LdapGroup config.",
-					"IP", i.ip,
-					"Model", i.HardwareType(),
-					"step", helper.WhosCalling(),
-					"Group", group.Group,
-					"Error", internal.ErrStringOrEmpty(err),
-				)
-				continue
-			}
-
-			endpoint := "json/directory_groups"
-			statusCode, response, err := i.post(endpoint, payload)
-			if err != nil || statusCode != 200 {
-				i.log.V(1).Info("POST request to set User config returned error.",
-					"IP", i.ip,
-					"Model", i.HardwareType(),
-					"endpoint", endpoint,
-					"step", helper.WhosCalling(),
-					"Group", group.Group,
-					"StatusCode", statusCode,
-					"response", string(response),
-					"Error", internal.ErrStringOrEmpty(err),
-				)
-				continue
+		statusCode, response, err := i.post(endpoint, payload)
+		if err != nil || statusCode != 200 {
+			if err == nil {
+				err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+			} else {
+				err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
 			}
 
 			i.log.V(1).Error(err, "POST request to set LDAP group failed.",
 				"IP", i.ip,
-				"Model", i.HardwareType(),
-				"User", group.Group,
+				"HardwareType", i.HardwareType(),
+				"endpoint", endpoint,
+				"step", helper.WhosCalling(),
+				"Group", group.Group,
+				"StatusCode", statusCode,
+				"response", string(response),
 			)
+			continue
 		}
+
+		i.log.V(1).Info("LdapGroup parameters applied.",
+			"IP", i.ip,
+			"HardwareType", i.HardwareType(),
+			"Group", group.Group,
+		)
 	}
 
-	return err
+	return nil
 }
 
 // Ldap applies LDAP configuration params.
@@ -587,10 +610,10 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 	}
 
 	var enable int
-	if !cfg.Enable {
-		enable = 0
-	} else {
+	if cfg.Enable {
 		enable = 1
+	} else {
+		enable = 0
 	}
 
 	directory := Directory{

@@ -314,101 +314,71 @@ func (i *IDrac9) Ldap(cfg *cfgresources.Ldap) (err error) {
 	return err
 }
 
-// LdapGroups applies LDAP Group/Role related configuration
-// LdapGroups implements the Configure interface.
-// nolint: gocyclo
+// Applies LDAP Group/Role-related configuration.
+// Implements the Configure interface.
 func (i *IDrac9) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
-	idracLdapRoleGroups, err := i.queryLdapRoleGroups()
-	if err != nil {
-		msg := "Unable to query existing users"
-		err = errors.New(msg)
-		i.log.V(1).Error(err, msg,
-			"step", helper.WhosCalling(),
-			"IP", i.ip,
-			"HardwareType", i.HardwareType(),
-			"Error", internal.ErrStringOrEmpty(err),
-		)
-		return err
-	}
-
-	// for each configuration ldap role group
+	roleID := 0
 	for _, cfgRole := range cfgGroups {
-		// the distinguished name of the group
-		// example, if the GroupBaseDn is ou=Group,dc=example,dc=com and the Group is cn=fooUsers
-		// the groupDN will be Group+GroupBaseDn = cn=fooUsers,ou=Group,dc=example,dc=com
-		var groupDN = fmt.Sprintf("%s,%s", cfgRole.Group, cfgRole.GroupBaseDn)
-
-		roleID, role, rExists := ldapRoleGroupInIdrac(groupDN, idracLdapRoleGroups)
-
-		//role to be added/updated
-		if cfgRole.Enable {
-			//new role to be added
-			if !rExists {
-				roleID, role, err = getEmptyLdapRoleGroupSlot(idracLdapRoleGroups)
-				if err != nil {
-					i.log.V(1).Error(err, "Unable to add new Ldap Role Group.",
-						"IP", i.ip,
-						"HardwareType", i.HardwareType(),
-						"step", helper.WhosCalling(),
-						"Ldap Role Group", cfgRole.Group,
-						"Role Group DN", cfgRole.Role,
-						"Error", internal.ErrStringOrEmpty(err),
-					)
-					continue
-				}
-			}
-
-			role.DN = groupDN
-
-			// set appropriate privileges
-			if cfgRole.Role == "admin" {
-				role.Privilege = "511"
-			} else {
-				role.Privilege = "499"
-			}
-
-			err = i.putLdapRoleGroup(roleID, role)
-			if err != nil {
-				i.log.V(1).Error(err, "Add/Update LDAP Role Group request failed.",
-					"IP", i.ip,
-					"HardwareType", i.HardwareType(),
-					"step", helper.WhosCalling(),
-					"Ldap Role Group", cfgRole.Group,
-					"Role Group DN", cfgRole.Role,
-					"Error", internal.ErrStringOrEmpty(err),
-				)
-				continue
-			}
-		} // end if cfgUser.Enable
-
-		//if the role exists but is disabled in our config, remove the role
-		if !cfgRole.Enable && rExists {
-			role.DN = ""
-			role.Privilege = "0"
-			err = i.putLdapRoleGroup(roleID, role)
-			if err != nil {
-				i.log.V(1).Error(err, "Remove LDAP Role Group request failed.",
-					"IP", i.ip,
-					"HardwareType", i.HardwareType(),
-					"step", helper.WhosCalling(),
-					"Ldap Role Group", cfgRole.Group,
-					"Role Group DN", cfgRole.Role,
-					"Error", internal.ErrStringOrEmpty(err),
-				)
-				continue
-			}
+		if !cfgRole.Enable {
+			continue
 		}
 
-		i.log.V(1).Info("Ldap Role Group parameters applied.",
-			"IP", i.ip,
-			"HardwareType", i.HardwareType(),
-			"Step", helper.WhosCalling(),
-			"Ldap Role Group", cfgRole.Role,
-			"Role Group DN", cfgRole.Role,
-		)
+		// Use the next slot.
+		roleID++
+
+		// The distinguished name of the group:
+		//   e.g. If `GroupBaseDn` is ou=Group,dc=example,dc=com and `Group` is cn=fooUsers;
+		//        `groupDN` will be cn=fooUsers,ou=Group,dc=example,dc=com.
+		role := LdapRoleGroup{
+			DN:        fmt.Sprintf("%s,%s", cfgRole.Group, cfgRole.GroupBaseDn),
+			Privilege: "0",
+		}
+
+		if cfgRole.Role == "admin" {
+			role.Privilege = "511"
+		} else if cfgRole.Role == "user" {
+			role.Privilege = "499"
+		}
+
+		// Actual query:
+		err = i.putLdapRoleGroup(fmt.Sprintf("%d", roleID), role)
+		if err == nil {
+			i.log.V(1).Info("LDAP Role Group parameters applied.",
+				"IP", i.ip,
+				"HardwareType", i.HardwareType(),
+				"Step", helper.WhosCalling(),
+				"Ldap Role Group", cfgRole.Role,
+				"Role Group DN", cfgRole.Role,
+			)
+		} else {
+			i.log.V(1).Error(err, "Add/Update LDAP Role Group request failed.",
+				"IP", i.ip,
+				"HardwareType", i.HardwareType(),
+				"step", helper.WhosCalling(),
+				"Ldap Role Group", cfgRole.Group,
+				"Role Group DN", cfgRole.Role,
+			)
+			continue
+		}
 	}
 
-	return err
+	// Remove all the rest.
+	for roleID++; roleID <= 5; roleID++ {
+		role := LdapRoleGroup{
+			DN:        "",
+			Privilege: "0",
+		}
+		err = i.putLdapRoleGroup(fmt.Sprintf("%d", roleID), role)
+		if err != nil {
+			i.log.V(1).Error(err, "Remove LDAP Role Group request failed.",
+				"IP", i.ip,
+				"HardwareType", i.HardwareType(),
+				"step", helper.WhosCalling(),
+			)
+		}
+	}
+
+	return nil
 }
 
 // Ntp applies NTP configuration params
