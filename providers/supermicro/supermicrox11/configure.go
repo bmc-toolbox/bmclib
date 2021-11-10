@@ -250,7 +250,7 @@ func (s *SupermicroX) Network(cfg *cfgresources.Network) (reset bool, err error)
 	_, statusCode, err := s.post(endpoint, &form, []byte{}, "")
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		} else {
 			err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
 		}
@@ -348,7 +348,7 @@ func (s *SupermicroX) Ntp(cfg *cfgresources.Ntp) (err error) {
 	_, statusCode, err := s.post(endpoint, &form, []byte{}, "")
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		} else {
 			err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
 		}
@@ -492,7 +492,7 @@ func (s *SupermicroX) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *c
 		_, statusCode, err := s.post(endpoint, &form, []byte{}, "")
 		if err != nil || statusCode != 200 {
 			if err == nil {
-				err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+				err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 			} else {
 				err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
 			}
@@ -571,7 +571,7 @@ func (s *SupermicroX) Syslog(cfg *cfgresources.Syslog) (err error) {
 	_, statusCode, err := s.post(endpoint, &form, []byte{}, "")
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		} else {
 			err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
 		}
@@ -596,7 +596,7 @@ func (s *SupermicroX) Syslog(cfg *cfgresources.Syslog) (err error) {
 	_, statusCode, err = s.post(endpoint, &form, []byte{}, "")
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		} else {
 			err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
 		}

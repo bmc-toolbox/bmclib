@@ -288,7 +288,7 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 	statusCode, response, err := i.get(endpoint, nil)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		i.log.V(1).Error(err, "applyNtpServerParam(): GET request failed.",
@@ -318,7 +318,7 @@ func (i *IDrac8) Ldap(cfg *cfgresources.Ldap) error {
 	statusCode, response, err := i.get(endpoint, nil)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 		i.log.V(1).Error(err, "Request to set LDAP server failed.",
 			"IP", i.ip,
@@ -354,7 +354,7 @@ func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) error {
 	statusCode, response, err := i.get(endpoint, nil)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		i.log.V(1).Error(err, "Request to set LDAP search filter failed.",
@@ -451,7 +451,7 @@ func (i *IDrac8) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 		statusCode, response, err := i.get(endpoint, nil)
 		if err != nil || statusCode != 200 {
 			if err == nil {
-				err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+				err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 			}
 
 			i.log.V(1).Error(err, "LdapGroups(): GET request failed.",
@@ -491,7 +491,7 @@ func (i *IDrac8) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 		statusCode, response, err := i.get(endpoint, nil)
 		if err != nil || statusCode != 200 {
 			if err == nil {
-				err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+				err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 			}
 
 			i.log.V(1).Error(err, "GET request failed.",
@@ -567,7 +567,7 @@ func (i *IDrac8) applyTimezoneParam(timezone string) {
 	statusCode, response, err := i.get(endpoint, nil)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		i.log.V(1).Error(err, "applyTimezoneParam(): GET request failed.",
@@ -655,7 +655,7 @@ func (i *IDrac8) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, er
 	statusCode, response, err := i.get(queryString, nil)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		i.log.V(1).Error(err, "GenerateCSR(): GET request failed.",
@@ -716,7 +716,7 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	status, body, err := i.post(endpoint, form.Bytes(), w.FormDataContentType())
 	if err != nil || status != 201 {
 		if err == nil {
-			err = fmt.Errorf("Cert form upload POST request to %s failed, expected 201.", endpoint)
+			err = fmt.Errorf("Cert form upload POST request to %s failed with status code %d.", endpoint, status)
 		}
 
 		i.log.V(1).Error(err, "UploadHTTPSCert(): Cert form upload POST request failed.",
@@ -756,7 +756,7 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	status, _, err = i.post(endpoint, []byte(resourceURI), "")
 	if err != nil || status != 201 {
 		if err == nil {
-			err = fmt.Errorf("Cert form upload POST request to %s failed, expected 201.", endpoint)
+			err = fmt.Errorf("Cert form upload POST request to %s failed with status code %d.", endpoint, status)
 		}
 
 		i.log.V(1).Error(err, "UploadHTTPSCert(): Cert form upload POST request failed.",

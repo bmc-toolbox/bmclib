@@ -37,21 +37,21 @@ func (i *IDrac9) Screenshot() (response []byte, extension string, err error) {
 	}
 
 	extension = "png"
-	url := "sysmgmt/2015/server/preview"
-	statusCode, _, err := i.get(url, &map[string]string{})
+	endpoint := "sysmgmt/2015/server/preview"
+	statusCode, _, err := i.get(endpoint, &map[string]string{})
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return nil, "", err
 	}
 
-	url = "capconsole/scapture0.png"
-	statusCode, response, err = i.get(url, &map[string]string{})
+	endpoint = "capconsole/scapture0.png"
+	statusCode, response, err = i.get(endpoint, &map[string]string{})
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return nil, "", err
@@ -61,18 +61,17 @@ func (i *IDrac9) Screenshot() (response []byte, extension string, err error) {
 }
 
 func (i *IDrac9) queryUsers() (users map[int]User, err error) {
-	url := "sysmgmt/2012/server/configgroup/iDRAC.Users"
-
-	statusCode, response, err := i.get(url, &map[string]string{})
+	endpoint := "sysmgmt/2012/server/configgroup/iDRAC.Users"
+	statusCode, response, err := i.get(endpoint, &map[string]string{})
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		i.log.V(1).Error(err, "queryUsers(): GET request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
-			"endpoint", url,
+			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 		)
 		return users, err

@@ -47,7 +47,7 @@ func (i *IDrac8) Screenshot() (response []byte, extension string, err error) {
 	statusCode, response, err := i.get(endpoint, &map[string]string{"idracAutoRefresh": "1"})
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return nil, "", err
@@ -63,7 +63,7 @@ func (i *IDrac8) Screenshot() (response []byte, extension string, err error) {
 	statusCode, response, err = i.get(endpoint, &map[string]string{})
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return nil, "", err

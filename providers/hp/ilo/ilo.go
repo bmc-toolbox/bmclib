@@ -214,7 +214,7 @@ func (i *Ilo) ChassisSerial() (string, error) {
 	statusCode, payload, err := i.get(endpoint, true)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return "", err
@@ -275,7 +275,7 @@ func (i *Ilo) Name() (name string, err error) {
 	statusCode, payload, err := i.get(endpoint, true)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 		return "", err
 	}
@@ -300,7 +300,7 @@ func (i *Ilo) Status() (health string, err error) {
 	statusCode, payload, err := i.get(endpoint, true)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 		return "", err
 	}
@@ -329,7 +329,7 @@ func (i *Ilo) Memory() (mem int, err error) {
 	statusCode, payload, err := i.get(endpoint, true)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return 0, err
@@ -366,7 +366,7 @@ func (i *Ilo) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCount i
 	statusCode, payload, err := i.get(endpoint, true)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return "", 0, 0, 0, err
@@ -396,7 +396,7 @@ func (i *Ilo) BiosVersion() (version string, err error) {
 	statusCode, payload, err := i.get(endpoint, true)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return "", err
@@ -426,7 +426,7 @@ func (i *Ilo) PowerKw() (power float64, err error) {
 	statusCode, payload, err := i.get(endpoint, true)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return 0, err
@@ -452,7 +452,7 @@ func (i *Ilo) PowerState() (state string, err error) {
 	statusCode, payload, err := i.get(endpoint, true)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 		return "", err
 	}
@@ -477,7 +477,7 @@ func (i *Ilo) TempC() (temp int, err error) {
 	statusCode, payload, err := i.get(endpoint, true)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 		return 0, err
 	}
@@ -533,7 +533,7 @@ func (i *Ilo) License() (name string, licType string, err error) {
 	statusCode, payload, err := i.get(endpoint, true)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return "", "", err
@@ -575,7 +575,7 @@ func (i *Ilo) parseChassisInfo() (*hp.ChassisInfo, error) {
 			statusCode, payload, err = i.get(hp.ChassisInfoChassisURL, false)
 			if err != nil || statusCode != 200 {
 				if err == nil {
-					err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", hp.ChassisInfoChassisURL)
+					err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, hp.ChassisInfoChassisURL)
 				}
 
 				return nil, err
@@ -608,7 +608,7 @@ func (i *Ilo) parseChassisInfo() (*hp.ChassisInfo, error) {
 	statusCode, payload, err = i.get(hp.ChassisInfoOldURL, true)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", hp.ChassisInfoOldURL)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, hp.ChassisInfoOldURL)
 		}
 
 		return nil, err
@@ -633,7 +633,7 @@ func (i *Ilo) Psus() (psus []*devices.Psu, err error) {
 	statusCode, payload, err := i.get(endpoint, true)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return psus, err
@@ -680,7 +680,7 @@ func (i *Ilo) Disks() (disks []*devices.Disk, err error) {
 	statusCode, payload, err := i.get(endpoint, true)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return disks, err

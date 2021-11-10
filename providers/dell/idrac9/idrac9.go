@@ -316,11 +316,11 @@ func (i *IDrac9) Status() (status string, err error) {
 		"X-SYSMGMT-OPTIMIZE": "true",
 	}
 
-	url := "sysmgmt/2016/server/extended_health"
-	statusCode, payload, err := i.get(url, extraHeaders)
+	endpoint := "sysmgmt/2016/server/extended_health"
+	statusCode, payload, err := i.get(endpoint, extraHeaders)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return "", err
@@ -348,11 +348,11 @@ func (i *IDrac9) PowerKw() (power float64, err error) {
 		return 0, err
 	}
 
-	url := "sysmgmt/2015/server/sensor/power"
-	statusCode, response, err := i.get(url, nil)
+	endpoint := "sysmgmt/2015/server/sensor/power"
+	statusCode, response, err := i.get(endpoint, nil)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return 0, err
@@ -492,11 +492,11 @@ func (i *IDrac9) Slot() (slot int, err error) {
 
 // slotC6420 returns the current slot for the C6420 blade within the chassis
 func (i *IDrac9) slotC6420() (slot int, err error) {
-	url := "sysmgmt/2012/server/configgroup/System.ServerTopology"
-	statusCode, response, err := i.get(url, nil)
+	endpoint := "sysmgmt/2012/server/configgroup/System.ServerTopology"
+	statusCode, response, err := i.get(endpoint, nil)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return -1, err
@@ -556,11 +556,11 @@ func (i *IDrac9) License() (name string, licType string, err error) {
 		"X_SYSMGMT_OPTIMIZE": "true",
 	}
 
-	url := "sysmgmt/2012/server/license"
-	statusCode, response, err := i.get(url, extraHeaders)
+	endpoint := "sysmgmt/2012/server/license"
+	statusCode, response, err := i.get(endpoint, extraHeaders)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return "", "", err
@@ -612,11 +612,11 @@ func (i *IDrac9) TempC() (temp int, err error) {
 		"X-SYSMGMT-OPTIMIZE": "true",
 	}
 
-	url := "sysmgmt/2012/server/temperature"
-	statusCode, response, err := i.get(url, extraHeaders)
+	endpoint := "sysmgmt/2012/server/temperature"
+	statusCode, response, err := i.get(endpoint, extraHeaders)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return 0, err
@@ -698,11 +698,11 @@ func (i *IDrac9) Psus() (psus []*devices.Psu, err error) {
 		"X-SYSMGMT-OPTIMIZE": "true",
 	}
 
-	url := "sysmgmt/2013/server/sensor/powersupplyunit"
-	statusCode, response, err := i.get(url, extraHeaders)
+	endpoint := "sysmgmt/2013/server/sensor/powersupplyunit"
+	statusCode, response, err := i.get(endpoint, extraHeaders)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return psus, err

@@ -46,7 +46,7 @@ func (i *Ilo) Screenshot() (response []byte, extension string, err error) {
 	statusCode, response, err := i.get(endpoint, true)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return nil, "", err
@@ -60,7 +60,7 @@ func (i *Ilo) queryDirectoryGroups() ([]DirectoryGroups, error) {
 	statusCode, payload, err := i.get(endpoint, true)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		i.log.V(1).Error(err, "queryDirectoryGroups(): GET request failed.",
@@ -92,7 +92,7 @@ func (i *Ilo) queryUsers() ([]UserInfo, error) {
 	statusCode, payload, err := i.get(endpoint, true)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 		i.log.V(1).Error(err, "queryUsers(): GET request failed.",
 			"IP", i.ip,
@@ -124,7 +124,7 @@ func (i *Ilo) queryNetworkSntp() (networkSntp NetworkSntp, err error) {
 	statusCode, payload, err := i.get(endpoint, true)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		i.log.V(1).Error(err, "queryNetworkSntp(): GET request failed.",
@@ -155,7 +155,7 @@ func (i *Ilo) queryAccessSettings() (accessSettings AccessSettings, err error) {
 	statusCode, payload, err := i.get(endpoint, true)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		i.log.V(1).Error(err, "queryAccessSettings(): GET request failed.",
@@ -186,7 +186,7 @@ func (i *Ilo) queryNetworkIPv4() (networkIPv4 NetworkIPv4, err error) {
 	statusCode, payload, err := i.get(endpoint, true)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		i.log.V(1).Error(err, "queryNetworkIPv4(): GET request failed.",
@@ -219,7 +219,7 @@ func (i *Ilo) queryPowerRegulator() (PowerRegulator, error) {
 	statusCode, payload, err := i.get(endpoint, true)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		i.log.V(1).Error(err, "queryPowerRegulator(): GET request failed.",

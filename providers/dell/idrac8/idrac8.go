@@ -310,11 +310,11 @@ func (i *IDrac8) Status() (status string, err error) {
 		"X-SYSMGMT-OPTIMIZE": "true",
 	}
 
-	url := "sysmgmt/2016/server/extended_health"
-	statusCode, response, err := i.get(url, extraHeaders)
+	endpoint := "sysmgmt/2016/server/extended_health"
+	statusCode, response, err := i.get(endpoint, extraHeaders)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return "", err
@@ -342,11 +342,11 @@ func (i *IDrac8) PowerKw() (power float64, err error) {
 		return power, err
 	}
 
-	url := "data?get=powermonitordata"
-	statusCode, response, err := i.get(url, nil)
+	endpoint := "data?get=powermonitordata"
+	statusCode, response, err := i.get(endpoint, nil)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return power, err
@@ -514,11 +514,11 @@ func (i *IDrac8) License() (name string, licType string, err error) {
 		"X_SYSMGMT_OPTIMIZE": "true",
 	}
 
-	url := "sysmgmt/2012/server/license"
-	statusCode, response, err := i.get(url, extraHeaders)
+	endpoint := "sysmgmt/2012/server/license"
+	statusCode, response, err := i.get(endpoint, extraHeaders)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return "", "", err
@@ -620,11 +620,11 @@ func (i *IDrac8) TempC() (temp int, err error) {
 		"X_SYSMGMT_OPTIMIZE": "true",
 	}
 
-	url := "sysmgmt/2012/server/temperature"
-	statusCode, response, err := i.get(url, extraHeaders)
+	endpoint := "sysmgmt/2012/server/temperature"
+	statusCode, response, err := i.get(endpoint, extraHeaders)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return 0, err
@@ -650,11 +650,11 @@ func (i *IDrac8) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCoun
 		"X_SYSMGMT_OPTIMIZE": "true",
 	}
 
-	url := "sysmgmt/2012/server/processor"
-	statusCode, response, err := i.get(url, extraHeaders)
+	endpoint := "sysmgmt/2012/server/processor"
+	statusCode, response, err := i.get(endpoint, extraHeaders)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return "", 0, 0, 0, err
@@ -705,11 +705,11 @@ func (i *IDrac8) Psus() (psus []*devices.Psu, err error) {
 		return nil, err
 	}
 
-	url := "data?get=powerSupplies"
-	statusCode, response, err := i.get(url, nil)
+	endpoint := "data?get=powerSupplies"
+	statusCode, response, err := i.get(endpoint, nil)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return nil, err
