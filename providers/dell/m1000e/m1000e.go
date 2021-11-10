@@ -103,7 +103,7 @@ func (m *M1000e) HardwareType() (model string) {
 }
 
 func (m *M1000e) CheckFirmwareVersion() (version string, err error) {
-	return "", fmt.Errorf("not supported yet")
+	return "", fmt.Errorf("not yet implemented")
 }
 
 // Model returns the full device model string

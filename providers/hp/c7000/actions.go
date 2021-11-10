@@ -205,7 +205,7 @@ func (c *C7000) UpdateFirmware(source, file string) (bool, string, error) {
 }
 
 func (c *C7000) CheckFirmwareVersion() (version string, err error) {
-	return "", fmt.Errorf("not supported yet")
+	return "", fmt.Errorf("not yet implemented")
 }
 
 // ModBladeBmcUser modfies BMC Admin user account password through the chassis,
