@@ -105,19 +105,24 @@ func (i *Ilo) CheckCredentials() (err error) {
 	return err
 }
 
-// get calls a given json endpoint of the iLO and returns the data
-func (i *Ilo) get(endpoint string, useSession bool) (payload []byte, err error) {
-	i.log.V(1).Info("retrieving data from bmc", "step", "bmc connection", "vendor", hp.VendorID, "ip", i.ip, "endpoint", endpoint)
+// Calls a given JSON ILO endpoint and returns the status code and the data.
+func (i *Ilo) get(endpoint string, useSession bool) (int, []byte, error) {
+	i.log.V(1).Info("Retrieving data from ILO...",
+		"step", "bmc connection",
+		"vendor", hp.VendorID,
+		"ip", i.ip,
+		"endpoint", endpoint,
+	)
 
 	bmcURL := fmt.Sprintf("https://%s", i.ip)
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s", bmcURL, endpoint), nil)
 	if err != nil {
-		return payload, err
+		return 0, nil, err
 	}
 
 	u, err := url.Parse(bmcURL)
 	if err != nil {
-		return payload, err
+		return 0, nil, err
 	}
 
 	if useSession {
@@ -135,22 +140,22 @@ func (i *Ilo) get(endpoint string, useSession bool) (payload []byte, err error) 
 
 	resp, err := i.httpClient.Do(req)
 	if err != nil {
-		return payload, err
+		return 0, nil, err
 	}
 	defer resp.Body.Close()
 	respDump, _ := httputil.DumpResponse(resp, true)
 	i.log.V(2).Info("responseTrace", "responseDump", string(respDump))
 
-	payload, err = ioutil.ReadAll(resp.Body)
+	payload, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return payload, err
+		return 0, nil, err
 	}
 
 	if resp.StatusCode == 404 {
-		return payload, errors.ErrPageNotFound
+		return 404, nil, errors.ErrPageNotFound
 	}
 
-	return payload, err
+	return resp.StatusCode, payload, nil
 }
 
 // posts the payload to the given endpoint
