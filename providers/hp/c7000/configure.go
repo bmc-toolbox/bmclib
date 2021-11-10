@@ -162,8 +162,7 @@ func (c *C7000) applysetLdapInfo4(cfg *cfgresources.Ldap) (err error) {
 			"step", "applysetLdapInfo4",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
-			"statusCode", statusCode,
-			"Error", internal.ErrStringOrEmpty(err),
+			"StatusCode", statusCode,
 		)
 		return err
 	}
@@ -191,8 +190,7 @@ func (c *C7000) applyEnableLdapAuth(enable bool) (err error) {
 			"step", "applyEnableLdapAuth",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
-			"statusCode", statusCode,
-			"Error", internal.ErrStringOrEmpty(err),
+			"StatusCode", statusCode,
 		)
 		return err
 	}
@@ -302,7 +300,7 @@ func (c *C7000) applyRemoveLdapGroup(group string) (err error) {
 			"step", "applyRemoveLdapGroup",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
-			"statusCode", statusCode,
+			"StatusCode", statusCode,
 		)
 		return nil
 	}
@@ -312,7 +310,7 @@ func (c *C7000) applyRemoveLdapGroup(group string) (err error) {
 			"step", "applyRemoveLdapGroup",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
-			"statusCode", statusCode,
+			"StatusCode", statusCode,
 		)
 		return err
 	}
@@ -337,7 +335,7 @@ func (c *C7000) applyAddLdapGroup(group string) (err error) {
 			"step", "applyAddLdapGroup",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
-			"statusCode", statusCode,
+			"StatusCode", statusCode,
 		)
 		return nil
 	}
@@ -347,7 +345,7 @@ func (c *C7000) applyAddLdapGroup(group string) (err error) {
 			"step", "applyAddLdapGroup",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
-			"statusCode", statusCode,
+			"StatusCode", statusCode,
 		)
 		return err
 	}

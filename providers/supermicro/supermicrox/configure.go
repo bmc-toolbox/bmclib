@@ -227,7 +227,7 @@ func (s *SupermicroX) Network(cfg *cfgresources.Network) (reset bool, err error)
 			"ip", s.ip,
 			"HardwareType", s.HardwareType(),
 			"endpoint", endpoint,
-			"statusCode", statusCode,
+			"StatusCode", statusCode,
 			"step", helper.WhosCalling(),
 		)
 		return false, err
@@ -317,7 +317,7 @@ func (s *SupermicroX) Ntp(cfg *cfgresources.Ntp) (err error) {
 			"ip", s.ip,
 			"HardwareType", s.HardwareType(),
 			"endpoint", endpoint,
-			"statusCode", statusCode,
+			"StatusCode", statusCode,
 			"step", helper.WhosCalling(),
 		)
 		return err
@@ -640,6 +640,7 @@ func (s *SupermicroX) validateSSL() error {
 			"endpoint", endpoint,
 			"StatusCode", statusCode,
 		)
+
 		return err
 	}
 
