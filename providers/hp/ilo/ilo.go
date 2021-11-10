@@ -205,8 +205,13 @@ func (i *Ilo) ChassisSerial() (string, error) {
 		return "", err
 	}
 
-	payload, err := i.get("json/rck_info", true)
-	if err != nil {
+	endpoint := "json/rck_info"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+		}
+
 		return "", err
 	}
 
@@ -261,10 +266,13 @@ func (i *Ilo) Name() (name string, err error) {
 		return name, err
 	}
 
-	url := "json/overview"
-	payload, err := i.get(url, true)
-	if err != nil {
-		return name, err
+	endpoint := "json/overview"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+		}
+		return "", err
 	}
 
 	overview := &hp.Overview{}
@@ -283,10 +291,13 @@ func (i *Ilo) Status() (health string, err error) {
 		return health, err
 	}
 
-	url := "json/overview"
-	payload, err := i.get(url, true)
-	if err != nil {
-		return health, err
+	endpoint := "json/overview"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+		}
+		return "", err
 	}
 
 	overview := &hp.Overview{}
@@ -309,10 +320,14 @@ func (i *Ilo) Memory() (mem int, err error) {
 		return mem, err
 	}
 
-	url := "json/mem_info"
-	payload, err := i.get(url, true)
-	if err != nil {
-		return mem, err
+	endpoint := "json/mem_info"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+		}
+
+		return 0, err
 	}
 
 	hpMemData := &hp.Mem{}
@@ -342,10 +357,14 @@ func (i *Ilo) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCount i
 		return cpu, cpuCount, coreCount, hyperthreadCount, err
 	}
 
-	url := "json/proc_info"
-	payload, err := i.get(url, true)
-	if err != nil {
-		return cpu, cpuCount, coreCount, hyperthreadCount, err
+	endpoint := "json/proc_info"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+		}
+
+		return "", 0, 0, 0, err
 	}
 
 	hpProcData := &hp.Procs{}
@@ -368,10 +387,14 @@ func (i *Ilo) BiosVersion() (version string, err error) {
 		return version, err
 	}
 
-	url := "json/overview"
-	payload, err := i.get(url, true)
-	if err != nil {
-		return version, err
+	endpoint := "json/overview"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+		}
+
+		return "", err
 	}
 
 	overview := &hp.Overview{}
@@ -394,10 +417,14 @@ func (i *Ilo) PowerKw() (power float64, err error) {
 		return power, err
 	}
 
-	url := "json/power_summary"
-	payload, err := i.get(url, true)
-	if err != nil {
-		return power, err
+	endpoint := "json/power_summary"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+		}
+
+		return 0, err
 	}
 
 	hpPowerSummary := &hp.PowerSummary{}
@@ -416,10 +443,13 @@ func (i *Ilo) PowerState() (state string, err error) {
 		return state, err
 	}
 
-	url := "json/power_summary"
-	payload, err := i.get(url, true)
-	if err != nil {
-		return state, err
+	endpoint := "json/power_summary"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+		}
+		return "", err
 	}
 
 	hpPowerSummary := &hp.PowerSummary{}
@@ -438,10 +468,13 @@ func (i *Ilo) TempC() (temp int, err error) {
 		return temp, err
 	}
 
-	url := "json/health_temperature"
-	payload, err := i.get(url, true)
-	if err != nil {
-		return temp, err
+	endpoint := "json/health_temperature"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+		}
+		return 0, err
 	}
 
 	hpHealthTemperature := &hp.HealthTemperature{}
@@ -491,10 +524,14 @@ func (i *Ilo) License() (name string, licType string, err error) {
 		return name, licType, err
 	}
 
-	url := "json/license"
-	payload, err := i.get(url, true)
-	if err != nil {
-		return name, licType, err
+	endpoint := "json/license"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+		}
+
+		return "", "", err
 	}
 
 	hpIloLicense := &hp.IloLicense{}
@@ -514,8 +551,8 @@ func (i *Ilo) parseChassisInfo() (*hp.ChassisInfo, error) {
 
 	chassisInfo := &hp.ChassisInfo{}
 	// We try the new way of doing things first (RedFish).
-	payload, err := i.get(hp.ChassisInfoNewURL, false)
-	if err == nil {
+	statusCode, payload, err := i.get(hp.ChassisInfoNewURL, false)
+	if err == nil && statusCode == 200 {
 		err = json.Unmarshal(payload, chassisInfo)
 		if err != nil {
 			return nil, err
@@ -530,10 +567,15 @@ func (i *Ilo) parseChassisInfo() (*hp.ChassisInfo, error) {
 
 		if chassisInfo.Links.ContainedBy.ID == "/"+hp.ChassisInfoChassisURL {
 			chassisInfo.ChassisType = "Blade"
-			payload, err = i.get(hp.ChassisInfoChassisURL, false)
-			if err != nil {
+			statusCode, payload, err = i.get(hp.ChassisInfoChassisURL, false)
+			if err != nil || statusCode != 200 {
+				if err == nil {
+					err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", hp.ChassisInfoChassisURL)
+				}
+
 				return nil, err
 			}
+
 			chassisExtendedInfo := &hp.ChassisInfo{}
 			err = json.Unmarshal(payload, chassisExtendedInfo)
 			if err != nil {
@@ -558,8 +600,12 @@ func (i *Ilo) parseChassisInfo() (*hp.ChassisInfo, error) {
 	}
 
 	// This just means that we have to try the old way of doing things, since RedFish is not available.
-	payload, err = i.get(hp.ChassisInfoOldURL, true)
-	if err != nil {
+	statusCode, payload, err = i.get(hp.ChassisInfoOldURL, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", hp.ChassisInfoOldURL)
+		}
+
 		return nil, err
 	}
 
@@ -578,9 +624,13 @@ func (i *Ilo) Psus() (psus []*devices.Psu, err error) {
 		return psus, err
 	}
 
-	url := "json/power_supplies"
-	payload, err := i.get(url, true)
-	if err != nil {
+	endpoint := "json/power_supplies"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+		}
+
 		return psus, err
 	}
 
@@ -621,9 +671,13 @@ func (i *Ilo) Disks() (disks []*devices.Disk, err error) {
 		return disks, err
 	}
 
-	url := "json/health_phy_drives"
-	payload, err := i.get(url, true)
-	if err != nil {
+	endpoint := "json/health_phy_drives"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+		}
+
 		return disks, err
 	}
 

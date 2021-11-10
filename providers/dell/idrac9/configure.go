@@ -54,18 +54,21 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 	validate := validator.New()
 	err = validate.Struct(newBiosSettings)
 	if err != nil {
-		i.log.V(1).Error(err, "Config validation failed.", "step", "applyBiosParams", "Error", internal.ErrStringOrEmpty(err))
+		i.log.V(1).Error(err, "Bios(): Config validation failed.", "step", "applyBiosParams")
 		return err
 	}
 
 	currentBiosSettings, err := i.getBiosSettings()
 	if err != nil || currentBiosSettings == nil {
-		msg := "Unable to get current bios settings through redfish."
+		if err == nil {
+			err = fmt.Errorf("Call to getBiosSettings() returned nil.")
+		}
+
+		msg := "Bios(): Unable to get current BIOS settings through RedFish."
 		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return errors.New(msg)
 	}
@@ -718,7 +721,11 @@ func (i *IDrac9) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	// 1. POST upload x509 cert
 	status, body, err := i.post(endpoint, form.Bytes(), w.FormDataContentType())
 	if err != nil || status != 201 {
-		i.log.V(1).Error(err, "Cert form upload POST request failed, expected 201.",
+		if err == nil {
+			err = fmt.Errorf("Cert form upload POST request to %s failed with status code %d.", endpoint, status)
+		}
+
+		i.log.V(1).Error(err, "UploadHTTPSCert(): Cert form upload POST request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
@@ -754,7 +761,11 @@ func (i *IDrac9) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	endpoint = "sysmgmt/2012/server/network/ssl/cert"
 	status, _, err = i.post(endpoint, []byte(resourceURI), "")
 	if err != nil || status != 201 {
-		i.log.V(1).Error(err, "Cert form upload POST request failed, expected 201.",
+		if err == nil {
+			err = fmt.Errorf("Cert form upload POST request to %s failed with status code %d.", endpoint, status)
+		}
+
+		i.log.V(1).Error(err, "UploadHTTPSCert(): Cert form upload POST request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,

@@ -318,6 +318,10 @@ func (i *IDrac9) Status() (status string, err error) {
 	url := "sysmgmt/2016/server/extended_health"
 	statusCode, payload, err := i.get(url, extraHeaders)
 	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+		}
+
 		return "", err
 	}
 
@@ -346,7 +350,11 @@ func (i *IDrac9) PowerKw() (power float64, err error) {
 	url := "sysmgmt/2015/server/sensor/power"
 	statusCode, response, err := i.get(url, nil)
 	if err != nil || statusCode != 200 {
-		return power, err
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+		}
+
+		return 0, err
 	}
 
 	iDracPowerData := &dell.IDrac9PowerData{}
@@ -486,6 +494,10 @@ func (i *IDrac9) slotC6420() (slot int, err error) {
 	url := "sysmgmt/2012/server/configgroup/System.ServerTopology"
 	statusCode, response, err := i.get(url, nil)
 	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+		}
+
 		return -1, err
 	}
 
@@ -545,7 +557,11 @@ func (i *IDrac9) License() (name string, licType string, err error) {
 	url := "sysmgmt/2012/server/license"
 	statusCode, response, err := i.get(url, extraHeaders)
 	if err != nil || statusCode != 200 {
-		return name, licType, err
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+		}
+
+		return "", "", err
 	}
 
 	iDracLicense := &dell.IDracLicense{}
@@ -597,7 +613,11 @@ func (i *IDrac9) TempC() (temp int, err error) {
 	url := "sysmgmt/2012/server/temperature"
 	statusCode, response, err := i.get(url, extraHeaders)
 	if err != nil || statusCode != 200 {
-		return temp, err
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+		}
+
+		return 0, err
 	}
 
 	iDracTemp := &dell.IDracTemp{}
@@ -679,6 +699,10 @@ func (i *IDrac9) Psus() (psus []*devices.Psu, err error) {
 	url := "sysmgmt/2013/server/sensor/powersupplyunit"
 	statusCode, response, err := i.get(url, extraHeaders)
 	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+		}
+
 		return psus, err
 	}
 

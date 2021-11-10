@@ -583,16 +583,19 @@ func (s *SupermicroX) UploadHTTPSCert(cert []byte, certFileName string, key []by
 	w.Close()
 
 	// 1. upload
-	status, err := s.post(endpoint, &url.Values{}, form.Bytes(), w.FormDataContentType())
-	if err != nil || status != 200 {
-		msg := "Cert form upload POST request failed, expected 200."
-		s.log.V(1).Info(msg,
+	statusCode, err := s.post(endpoint, &url.Values{}, form.Bytes(), w.FormDataContentType())
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("POST request to %s failed with status code %d.", endpoint, statusCode)
+		}
+
+		s.log.V(1).Error(err, "UploadHTTPSCert(): Cert form upload POST request failed.",
 			"step", helper.WhosCalling(),
 			"ip", s.ip,
 			"HardwareType", s.HardwareType(),
 			"endpoint", endpoint,
-			"statusCode", status,
-			"error", internal.ErrStringOrEmpty(err))
+			"StatusCode", statusCode,
+		)
 		return false, err
 	}
 
@@ -624,16 +627,19 @@ func (s *SupermicroX) validateSSL() error {
 	v.Set("SSL_VALIDATE.XML", "(0,0)")
 
 	endpoint := "ipmi.cgi"
-	status, err := s.post(endpoint, &v, []byte{}, "")
-	if err != nil || status != 200 {
-		msg := "Cert validate POST request failed, expected 200."
-		s.log.V(1).Info(msg,
+	statusCode, err := s.post(endpoint, &v, []byte{}, "")
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("POST request to %s failed with status code %d.", endpoint, statusCode)
+		}
+
+		s.log.V(1).Error(err, "Cert validate POST request failed, expected 200.",
 			"step", helper.WhosCalling(),
 			"ip", s.ip,
 			"HardwareType", s.HardwareType(),
 			"endpoint", endpoint,
-			"statusCode", status,
-			"error", internal.ErrStringOrEmpty(err))
+			"StatusCode", statusCode,
+		)
 		return err
 	}
 
@@ -648,16 +654,19 @@ func (s *SupermicroX) statusSSL() error {
 	v.Add("SSL_STATUS.XML", "(0,0)")
 
 	endpoint := "ipmi.cgi"
-	status, err := s.post(endpoint, &v, []byte{}, "")
-	if err != nil || status != 200 {
-		msg := "Cert status POST request failed, expected 200."
-		s.log.V(1).Info(msg,
+	statusCode, err := s.post(endpoint, &v, []byte{}, "")
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("POST request to %s failed with status code %d.", endpoint, statusCode)
+		}
+
+		s.log.V(1).Error(err, "statusSSL(): Cert status POST request failed.",
 			"step", helper.WhosCalling(),
 			"ip", s.ip,
 			"HardwareType", s.HardwareType(),
 			"endpoint", endpoint,
-			"statusCode", status,
-			"error", internal.ErrStringOrEmpty(err))
+			"StatusCode", statusCode,
+		)
 		return err
 	}
 

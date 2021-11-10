@@ -40,12 +40,20 @@ func (i *IDrac9) Screenshot() (response []byte, extension string, err error) {
 	url := "sysmgmt/2015/server/preview"
 	statusCode, _, err := i.get(url, &map[string]string{})
 	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+		}
+
 		return nil, "", err
 	}
 
 	url = "capconsole/scapture0.png"
 	statusCode, response, err = i.get(url, &map[string]string{})
 	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+		}
+
 		return nil, "", err
 	}
 
@@ -57,7 +65,11 @@ func (i *IDrac9) queryUsers() (users map[int]User, err error) {
 
 	statusCode, response, err := i.get(url, &map[string]string{})
 	if err != nil || statusCode != 200 {
-		i.log.V(1).Error(err, "GET request failed.",
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+		}
+
+		i.log.V(1).Error(err, "queryUsers(): GET request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", url,

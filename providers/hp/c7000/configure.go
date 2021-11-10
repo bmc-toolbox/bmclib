@@ -154,7 +154,11 @@ func (c *C7000) applysetLdapInfo4(cfg *cfgresources.Ldap) (err error) {
 
 	statusCode, _, err := c.postXML(payload)
 	if statusCode != 200 || err != nil {
-		c.log.V(1).Info("Ldap applysetLdapInfo4 apply request returned non 200.",
+		if err == nil {
+			err = fmt.Errorf("LDAP applysetLdapInfo4 request failed.")
+		}
+
+		c.log.V(1).Error(err, "applysetLdapInfo4(): POST request failed.",
 			"step", "applysetLdapInfo4",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
@@ -179,7 +183,11 @@ func (c *C7000) applyEnableLdapAuth(enable bool) (err error) {
 	payload := enableLdapAuthentication{EnableLdap: enable, EnableLocalUsers: true}
 	statusCode, _, err := c.postXML(payload)
 	if statusCode != 200 || err != nil {
-		c.log.V(1).Info("Ldap applyEnableLdapAuth apply request returned non 200.",
+		if err == nil {
+			err = fmt.Errorf("applyEnableLdapAuth() POST request returned %d.", statusCode)
+		}
+
+		c.log.V(1).Error(err, "applyEnableLdapAuth(): POST request failed.",
 			"step", "applyEnableLdapAuth",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
@@ -668,12 +676,15 @@ func (c *C7000) applyAddUserBayAccess(user string) (err error) {
 
 	statusCode, _, err := c.postXML(payload)
 	if statusCode != 200 || err != nil {
-		c.log.V(1).Error(err, "LDAP applyAddUserBayAccess apply request returned non 200.",
+		if err == nil {
+			err = fmt.Errorf("POST XML request failed with status code %d.", statusCode)
+		}
+
+		c.log.V(1).Error(err, "applyAddUserBayAccess(): POST request failed.",
 			"step", "applyAddUserBayAccess",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
-			"statusCode", statusCode,
-			"Error", internal.ErrStringOrEmpty(err),
+			"StatusCode", statusCode,
 		)
 		return err
 	}
@@ -735,7 +746,11 @@ func (c *C7000) Ntp(cfg *cfgresources.Ntp) (err error) {
 
 	statusCode, _, err := c.postXML(payload)
 	if err != nil || statusCode != 200 {
-		c.log.V(1).Info("NTP apply request returned non 200.",
+		if err == nil {
+			err = fmt.Errorf("POST XML request failed with status code %d.", statusCode)
+		}
+
+		c.log.V(1).Error(err, "Ntp(): POST request failed.",
 			"step", "applyNtpParams",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
@@ -844,11 +859,14 @@ func (c *C7000) applySyslogServer(server string) {
 	payload := SetRemoteSyslogServer{Server: server}
 	statusCode, _, err := c.postXML(payload)
 	if err != nil || statusCode != 200 {
-		c.log.V(1).Error(err, "Syslog set server request returned non 200.",
+		if err == nil {
+			err = fmt.Errorf("POST XML request failed with status code %d.", statusCode)
+		}
+
+		c.log.V(1).Error(err, "applySyslogServer(): Syslog set server request failed.",
 			"step", "applySyslogServer",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
-			"Error", internal.ErrStringOrEmpty(err),
 			"StatusCode", statusCode,
 		)
 		return
@@ -868,11 +886,14 @@ func (c *C7000) applySyslogPort(port int) {
 	payload := SetRemoteSyslogPort{Port: port}
 	statusCode, _, err := c.postXML(payload)
 	if err != nil || statusCode != 200 {
-		c.log.V(1).Error(err, "Syslog set port request returned non 200.",
+		if err == nil {
+			err = fmt.Errorf("POST XML request failed with status code %d.", statusCode)
+		}
+
+		c.log.V(1).Error(err, "applySyslogPort(): Syslog set port request failed.",
 			"step", "applySyslogPort",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
-			"Error", internal.ErrStringOrEmpty(err),
 			"StatusCode", statusCode,
 		)
 		return
@@ -892,11 +913,14 @@ func (c *C7000) applySyslogEnabled(enabled bool) {
 	payload := SetRemoteSyslogEnabled{Enabled: enabled}
 	statusCode, _, err := c.postXML(payload)
 	if err != nil || statusCode != 200 {
-		c.log.V(1).Error(err, "Syslog enable request returned non 200.",
+		if err == nil {
+			err = fmt.Errorf("POST XML request failed with status code %d.", statusCode)
+		}
+
+		c.log.V(1).Error(err, "applySyslogEnabled(): Syslog enable request failed.",
 			"step", "SetRemoteSyslogEnabled",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
-			"Error", internal.ErrStringOrEmpty(err),
 			"StatusCode", statusCode,
 		)
 		return

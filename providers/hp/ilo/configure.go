@@ -735,8 +735,11 @@ func (i *Ilo) Network(cfg *cfgresources.Network) (reset bool, err error) {
 
 		endpoint := "json/access_settings"
 		statusCode, _, err := i.post(endpoint, payload)
-		if err != nil || statusCode != 200 {
-			return reset, fmt.Errorf("Error/non 200 response calling access_settings, status: %d, error: %s", statusCode, err)
+		if err != nil {
+			return false, fmt.Errorf("Error calling access_settings: %s", err)
+		}
+		if statusCode != 200 {
+			return false, fmt.Errorf("Non-200 response calling access_settings: %d", statusCode)
 		}
 
 		reset = true
@@ -756,8 +759,11 @@ func (i *Ilo) Network(cfg *cfgresources.Network) (reset bool, err error) {
 
 		endpoint := "json/network_ipv4/interface/0"
 		statusCode, _, err := i.post(endpoint, payload)
-		if err != nil || statusCode != 200 {
-			return reset, fmt.Errorf("Error/non 200 response calling access_settings, status: %d, error: %s", statusCode, err)
+		if err != nil {
+			return reset, fmt.Errorf("Error calling access_settings: %s", err)
+		}
+		if statusCode != 200 {
+			return reset, fmt.Errorf("Non-200 response calling access_settings: %d", statusCode)
 		}
 
 		reset = true
@@ -819,8 +825,11 @@ func (i *Ilo) Power(cfg *cfgresources.Power) error {
 
 	endpoint := "json/power_regulator"
 	statusCode, _, err := i.post(endpoint, payload)
-	if err != nil || statusCode != 200 {
-		return fmt.Errorf("Error/non 200 response calling power_regulator, status: %d, error: %s", statusCode, err)
+	if err != nil {
+		return fmt.Errorf("Error calling power_regulator: %s", err)
+	}
+	if statusCode != 200 {
+		return fmt.Errorf("Non-200 response calling power_regulator: %d", statusCode)
 	}
 
 	i.log.V(1).Info("power_regulator config applied.",

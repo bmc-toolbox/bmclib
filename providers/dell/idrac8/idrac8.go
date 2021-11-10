@@ -312,7 +312,11 @@ func (i *IDrac8) Status() (status string, err error) {
 	url := "sysmgmt/2016/server/extended_health"
 	statusCode, response, err := i.get(url, extraHeaders)
 	if err != nil || statusCode != 200 {
-		return status, err
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+		}
+
+		return "", err
 	}
 
 	iDracHealthStatus := &dell.IDracHealthStatus{}
@@ -340,6 +344,10 @@ func (i *IDrac8) PowerKw() (power float64, err error) {
 	url := "data?get=powermonitordata"
 	statusCode, response, err := i.get(url, nil)
 	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+		}
+
 		return power, err
 	}
 
@@ -508,7 +516,11 @@ func (i *IDrac8) License() (name string, licType string, err error) {
 	url := "sysmgmt/2012/server/license"
 	statusCode, response, err := i.get(url, extraHeaders)
 	if err != nil || statusCode != 200 {
-		return name, licType, err
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+		}
+
+		return "", "", err
 	}
 
 	iDracLicense := &dell.IDracLicense{}
@@ -610,7 +622,11 @@ func (i *IDrac8) TempC() (temp int, err error) {
 	url := "sysmgmt/2012/server/temperature"
 	statusCode, response, err := i.get(url, extraHeaders)
 	if err != nil || statusCode != 200 {
-		return temp, err
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+		}
+
+		return 0, err
 	}
 
 	iDracTemp := &dell.IDracTemp{}
@@ -636,7 +652,11 @@ func (i *IDrac8) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCoun
 	url := "sysmgmt/2012/server/processor"
 	statusCode, response, err := i.get(url, extraHeaders)
 	if err != nil || statusCode != 200 {
-		return cpu, cpuCount, coreCount, hyperthreadCount, err
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+		}
+
+		return "", 0, 0, 0, err
 	}
 
 	dellBladeProc := &dell.BladeProcessorEndpoint{}
@@ -687,6 +707,10 @@ func (i *IDrac8) Psus() (psus []*devices.Psu, err error) {
 	url := "data?get=powerSupplies"
 	statusCode, response, err := i.get(url, nil)
 	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+		}
+
 		return psus, err
 	}
 

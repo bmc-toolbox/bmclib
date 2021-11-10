@@ -181,7 +181,12 @@ func (s *SupermicroX) User(users []*cfgresources.User) (err error) {
 		// 200 with this response: result=LANG_CONFUSR_RESULT_OK
 		response, statusCode, err := s.post(endpoint, &form, []byte{}, "")
 		if err != nil || statusCode != 200 {
-			msg := "POST request to set User config returned error."
+			if err == nil {
+				err = fmt.Errorf("Received a %d status code from the POST request to %s.", statusCode, endpoint)
+			} else {
+				err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
+			}
+
 			log.WithFields(log.Fields{
 				"IP":           s.ip,
 				"HardwareType": s.HardwareType(),
@@ -244,7 +249,12 @@ func (s *SupermicroX) Network(cfg *cfgresources.Network) (reset bool, err error)
 	form, _ := query.Values(configPort)
 	_, statusCode, err := s.post(endpoint, &form, []byte{}, "")
 	if err != nil || statusCode != 200 {
-		msg := "POST request to set Port config returned error."
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+		} else {
+			err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
+		}
+
 		log.WithFields(log.Fields{
 			"IP":           s.ip,
 			"HardwareType": s.HardwareType(),
@@ -337,7 +347,12 @@ func (s *SupermicroX) Ntp(cfg *cfgresources.Ntp) (err error) {
 	form, _ := query.Values(configDateTime)
 	_, statusCode, err := s.post(endpoint, &form, []byte{}, "")
 	if err != nil || statusCode != 200 {
-		msg := "POST request to set Syslog config returned error."
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+		} else {
+			err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
+		}
+
 		log.WithFields(log.Fields{
 			"IP":           s.ip,
 			"HardwareType": s.HardwareType(),
@@ -476,6 +491,11 @@ func (s *SupermicroX) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *c
 		form, _ := query.Values(configLdap)
 		_, statusCode, err := s.post(endpoint, &form, []byte{}, "")
 		if err != nil || statusCode != 200 {
+			if err == nil {
+				err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+			} else {
+				err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
+			}
 			msg := "POST request to set Ldap config returned error."
 			log.WithFields(log.Fields{
 				"IP":                s.ip,
@@ -550,7 +570,12 @@ func (s *SupermicroX) Syslog(cfg *cfgresources.Syslog) (err error) {
 
 	_, statusCode, err := s.post(endpoint, &form, []byte{}, "")
 	if err != nil || statusCode != 200 {
-		msg := "POST request to set Syslog config returned error."
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+		} else {
+			err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
+		}
+
 		log.WithFields(log.Fields{
 			"IP":           s.ip,
 			"HardwareType": s.HardwareType(),
@@ -570,7 +595,12 @@ func (s *SupermicroX) Syslog(cfg *cfgresources.Syslog) (err error) {
 
 	_, statusCode, err = s.post(endpoint, &form, []byte{}, "")
 	if err != nil || statusCode != 200 {
-		msg := "POST request to enable maintenance alerts returned error."
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+		} else {
+			err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
+		}
+
 		log.WithFields(log.Fields{
 			"IP":           s.ip,
 			"HardwareType": s.HardwareType(),

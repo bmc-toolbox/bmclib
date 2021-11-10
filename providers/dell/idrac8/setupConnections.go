@@ -83,8 +83,12 @@ func (i *IDrac8) loadHwData() (err error) {
 
 	url := "sysmgmt/2012/server/inventory/hardware"
 	statusCode, response, err := i.get(url, nil)
-	if err != nil || statusCode != 200 {
+	if err != nil {
 		return err
+	}
+
+	if statusCode != 200 {
+		return fmt.Errorf("Call to %s returned %d!", url, statusCode)
 	}
 
 	iDracInventory := &dell.IDracInventory{}

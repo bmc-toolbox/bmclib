@@ -55,6 +55,11 @@ func (i *Ilo) Screenshot() (response []byte, extension string, err error) {
 
 func (i *Ilo) queryDirectoryGroups() (directoryGroups []DirectoryGroups, err error) {
 	endpoint := "json/directory_groups"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+		}
 
 	payload, err := i.get(endpoint, true)
 	if err != nil {
@@ -210,10 +215,13 @@ func (i *Ilo) queryPowerRegulator() (PowerRegulator, error) {
 
 	var powerRegulator PowerRegulator
 
-	payload, err := i.get(endpoint, true)
-	if err != nil {
-		msg := "GET request failed."
-		i.log.V(1).Info(msg,
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+		}
+
+		i.log.V(1).Error(err, "queryPowerRegulator(): GET request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,

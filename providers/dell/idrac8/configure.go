@@ -287,7 +287,11 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 	endpoint := fmt.Sprintf("data?%s", queryStr)
 	statusCode, response, err := i.get(endpoint, nil)
 	if err != nil || statusCode != 200 {
-		i.log.V(1).Info("GET request failed.",
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+		}
+
+		i.log.V(1).Error(err, "applyNtpServerParam(): GET request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
@@ -313,9 +317,10 @@ func (i *IDrac8) Ldap(cfg *cfgresources.Ldap) error {
 	endpoint := fmt.Sprintf("data?set=xGLServer:%s", cfg.Server)
 	statusCode, response, err := i.get(endpoint, nil)
 	if err != nil || statusCode != 200 {
-		msg := "Request to set ldap server failed."
-		err = errors.New(msg)
-		i.log.V(1).Error(err, msg,
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+		}
+		i.log.V(1).Error(err, "Request to set LDAP server failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
@@ -348,8 +353,11 @@ func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) error {
 	endpoint := fmt.Sprintf("data?set=xGLSearchFilter:%s", escapeLdapString(cfg.SearchFilter))
 	statusCode, response, err := i.get(endpoint, nil)
 	if err != nil || statusCode != 200 {
-		msg := "request to set ldap search filter failed."
-		i.log.V(1).Error(err, msg,
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+		}
+
+		i.log.V(1).Error(err, "Request to set LDAP search filter failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
@@ -446,7 +454,11 @@ func (i *IDrac8) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 		endpoint := fmt.Sprintf("data?set=xGLGroup%dName:%s", groupID, groupDn)
 		statusCode, response, err := i.get(endpoint, nil)
 		if err != nil || statusCode != 200 {
-			i.log.V(1).Error(err, "GET request failed.",
+			if err == nil {
+				err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			}
+
+			i.log.V(1).Error(err, "LdapGroups(): GET request failed.",
 				"IP", i.ip,
 				"HardwareType", i.HardwareType(),
 				"endpoint", endpoint,
@@ -540,7 +552,11 @@ func (i *IDrac8) applyTimezoneParam(timezone string) {
 	endpoint := fmt.Sprintf("data?set=tm_tz_str_zone:%s", timezone)
 	statusCode, response, err := i.get(endpoint, nil)
 	if err != nil || statusCode != 200 {
-		i.log.V(1).Info("GET request failed.",
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+		}
+
+		i.log.V(1).Error(err, "applyTimezoneParam(): GET request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
@@ -624,7 +640,11 @@ func (i *IDrac8) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, er
 
 	statusCode, response, err := i.get(queryString, nil)
 	if err != nil || statusCode != 200 {
-		i.log.V(1).Error(err, "GET request failed.",
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+		}
+
+		i.log.V(1).Error(err, "GenerateCSR(): GET request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
@@ -681,7 +701,11 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	// 1. POST upload x509 cert
 	status, body, err := i.post(endpoint, form.Bytes(), w.FormDataContentType())
 	if err != nil || status != 201 {
-		i.log.V(1).Error(err, "Cert form upload POST request failed, expected 201.",
+		if err == nil {
+			err = fmt.Errorf("Cert form upload POST request to %s failed, expected 201.", endpoint)
+		}
+
+		i.log.V(1).Error(err, "UploadHTTPSCert(): Cert form upload POST request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
@@ -695,7 +719,7 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	certStore := new(certStore)
 	err = json.Unmarshal(body, certStore)
 	if err != nil {
-		i.log.V(1).Error(err, "Unable to unmarshal cert store response payload.",
+		i.log.V(1).Error(err, "UploadHTTPSCert(): Unable to unmarshal cert store response payload.",
 			"step", helper.WhosCalling(),
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
@@ -705,7 +729,7 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 
 	resourceURI, err := json.Marshal(certStore.File)
 	if err != nil {
-		i.log.V(1).Error(err, "Unable to marshal cert store resource URI.",
+		i.log.V(1).Error(err, "UploadHTTPSCert(): Unable to marshal cert store resource URI.",
 			"step", helper.WhosCalling(),
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
@@ -717,7 +741,11 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	endpoint = "sysmgmt/2012/server/network/ssl/cert"
 	status, _, err = i.post(endpoint, []byte(resourceURI), "")
 	if err != nil || status != 201 {
-		i.log.V(1).Error(err, "Cert form upload POST request failed, expected 201.",
+		if err == nil {
+			err = fmt.Errorf("Cert form upload POST request to %s failed, expected 201.", endpoint)
+		}
+
+		i.log.V(1).Error(err, "UploadHTTPSCert(): Cert form upload POST request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,

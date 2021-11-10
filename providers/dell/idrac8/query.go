@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/internal"
 	"github.com/bmc-toolbox/bmclib/internal/helper"
 )
 
@@ -47,6 +46,10 @@ func (i *IDrac8) Screenshot() (response []byte, extension string, err error) {
 	// here we expect an empty response
 	statusCode, response, err := i.get(endpoint, &map[string]string{"idracAutoRefresh": "1"})
 	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+		}
+
 		return []byte{}, extension, err
 	}
 
@@ -59,6 +62,10 @@ func (i *IDrac8) Screenshot() (response []byte, extension string, err error) {
 
 	statusCode, response, err = i.get(endpoint, &map[string]string{})
 	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+		}
+
 		return []byte{}, extension, err
 	}
 
@@ -73,7 +80,11 @@ func (i *IDrac8) queryUsers() (userInfo UserInfo, err error) {
 
 	statusCode, response, err := i.get(endpoint, &map[string]string{})
 	if err != nil || statusCode != 200 {
-		i.log.V(1).Error(err, "GET request failed.",
+		if err == nil {
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+		}
+
+		i.log.V(1).Error(err, "queryUsers(): GET request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
@@ -85,12 +96,11 @@ func (i *IDrac8) queryUsers() (userInfo UserInfo, err error) {
 	xmlData := XMLRoot{}
 	err = xml.Unmarshal(response, &xmlData)
 	if err != nil {
-		i.log.V(1).Error(err, "Unable to unmarshal payload.",
+		i.log.V(1).Error(err, "queryUsers(): Unable to unmarshal payload.",
 			"step", "queryUserInfo",
 			"resource", "User",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return userInfo, err
 	}
