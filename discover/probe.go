@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/bmc-toolbox/bmclib/devices"
 
@@ -38,6 +39,9 @@ type Probe struct {
 }
 
 func (p *Probe) hpIlo(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(time.Second*60))
+	defer cancel()
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("https://%s/xmldata?item=all", p.host), nil)
 	if err != nil {
 		return bmcConnection, err
@@ -86,6 +90,9 @@ func (p *Probe) hpIlo(ctx context.Context, log logr.Logger) (bmcConnection inter
 }
 
 func (p *Probe) hpC7000(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(time.Second*60))
+	defer cancel()
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("https://%s/xmldata?item=all", p.host), nil)
 	if err != nil {
 		return bmcConnection, err
@@ -124,7 +131,9 @@ func (p *Probe) hpC7000(ctx context.Context, log logr.Logger) (bmcConnection int
 
 // Attempts to identify an HPE Cloudline CL100 device.
 func (p *Probe) hpCl100(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {
-	// HPE Cloudline CL100
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(time.Second*60))
+	defer cancel()
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("https://%s/res/ok.png", p.host), nil)
 	if err != nil {
 		return bmcConnection, err
@@ -152,6 +161,9 @@ func (p *Probe) hpCl100(ctx context.Context, log logr.Logger) (bmcConnection int
 }
 
 func (p *Probe) idrac8(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(time.Second*60))
+	defer cancel()
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("https://%s/session?aimGetProp=hostname,gui_str_title_bar,OEMHostName,fwVersion,sysDesc", p.host), nil)
 	if err != nil {
 		return bmcConnection, err
@@ -178,6 +190,9 @@ func (p *Probe) idrac8(ctx context.Context, log logr.Logger) (bmcConnection inte
 }
 
 func (p *Probe) idrac9(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(time.Second*60))
+	defer cancel()
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("https://%s/sysmgmt/2015/bmc/info", p.host), nil)
 	if err != nil {
 		return bmcConnection, err
@@ -204,6 +219,9 @@ func (p *Probe) idrac9(ctx context.Context, log logr.Logger) (bmcConnection inte
 }
 
 func (p *Probe) m1000e(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(time.Second*60))
+	defer cancel()
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("https://%s/cgi-bin/webcgi/login", p.host), nil)
 	if err != nil {
 		return bmcConnection, err
@@ -230,6 +248,9 @@ func (p *Probe) m1000e(ctx context.Context, log logr.Logger) (bmcConnection inte
 }
 
 func (p *Probe) supermicrox(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(time.Second*60))
+	defer cancel()
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("https://%s/cgi/login.cgi", p.host), nil)
 	if err != nil {
 		return bmcConnection, err
@@ -267,6 +288,9 @@ func (p *Probe) supermicrox(ctx context.Context, log logr.Logger) (bmcConnection
 }
 
 func (p *Probe) supermicrox11(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(time.Second*60))
+	defer cancel()
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("https://%s/cgi/login.cgi", p.host), nil)
 	if err != nil {
 		return bmcConnection, err
@@ -303,6 +327,9 @@ func (p *Probe) supermicrox11(ctx context.Context, log logr.Logger) (bmcConnecti
 }
 
 func (p *Probe) quanta(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(time.Second*60))
+	defer cancel()
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("https://%s/page/login.html", p.host), nil)
 	if err != nil {
 		return bmcConnection, err
