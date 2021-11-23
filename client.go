@@ -100,7 +100,10 @@ func (c *Client) registerProviders() {
 
 // GetMetadata returns the metadata that is populated after each BMC function/method call
 func (c *Client) GetMetadata() bmc.Metadata {
-	return *c.metadata
+	if c.metadata != nil {
+		return *c.metadata
+	}
+	return bmc.Metadata{}
 }
 
 // setMetadata wraps setting metadata with a mutex for cases where users are
