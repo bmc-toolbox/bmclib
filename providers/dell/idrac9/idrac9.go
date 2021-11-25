@@ -103,12 +103,12 @@ func (i *IDrac9) get(endpoint string, extraHeaders *map[string]string) (statusCo
 }
 
 // PUTs data
-func (i *IDrac9) put(endpoint string, payload []byte) (statusCode int, response []byte, err error) {
+func (i *IDrac9) put(endpoint string, body []byte) (statusCode int, payload []byte, err error) {
 	bmcURL := fmt.Sprintf("https://%s", i.ip)
 
-	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/%s", bmcURL, endpoint), bytes.NewReader(payload))
+	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/%s", bmcURL, endpoint), bytes.NewReader(body))
 	if err != nil {
-		return statusCode, response, err
+		return statusCode, payload, err
 	}
 
 	req.Header.Add("XSRF-TOKEN", i.xsrfToken)
@@ -118,23 +118,23 @@ func (i *IDrac9) put(endpoint string, payload []byte) (statusCode int, response 
 
 	resp, err := i.httpClient.Do(req)
 	if err != nil {
-		return statusCode, response, err
+		return statusCode, payload, err
 	}
 	defer resp.Body.Close()
 
 	respDump, _ := httputil.DumpResponse(resp, true)
 	i.log.V(2).Info("responseTrace", "responseDump", string(respDump))
 
-	response, err = ioutil.ReadAll(resp.Body)
+	payload, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return statusCode, response, err
+		return statusCode, payload, err
 	}
 
 	if resp.StatusCode == 500 {
-		return resp.StatusCode, response, errors.Err500
+		return resp.StatusCode, payload, errors.Err500
 	}
 
-	return resp.StatusCode, response, err
+	return resp.StatusCode, payload, err
 }
 
 // calls delete on the given endpoint
@@ -155,6 +155,7 @@ func (i *IDrac9) delete(endpoint string) (statusCode int, payload []byte, err er
 	if err != nil {
 		return statusCode, payload, err
 	}
+
 	defer resp.Body.Close()
 
 	respDump, _ := httputil.DumpResponse(resp, true)
@@ -349,7 +350,7 @@ func (i *IDrac9) PowerKw() (power float64, err error) {
 	}
 
 	endpoint := "sysmgmt/2015/server/sensor/power"
-	statusCode, response, err := i.get(endpoint, nil)
+	statusCode, payload, err := i.get(endpoint, nil)
 	if err != nil || statusCode != 200 {
 		if err == nil {
 			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
@@ -359,7 +360,7 @@ func (i *IDrac9) PowerKw() (power float64, err error) {
 	}
 
 	iDracPowerData := &dell.IDrac9PowerData{}
-	err = json.Unmarshal(response, iDracPowerData)
+	err = json.Unmarshal(payload, iDracPowerData)
 	if err != nil {
 		return power, err
 	}
@@ -493,7 +494,7 @@ func (i *IDrac9) Slot() (slot int, err error) {
 // slotC6420 returns the current slot for the C6420 blade within the chassis
 func (i *IDrac9) slotC6420() (slot int, err error) {
 	endpoint := "sysmgmt/2012/server/configgroup/System.ServerTopology"
-	statusCode, response, err := i.get(endpoint, nil)
+	statusCode, payload, err := i.get(endpoint, nil)
 	if err != nil || statusCode != 200 {
 		if err == nil {
 			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
@@ -503,7 +504,7 @@ func (i *IDrac9) slotC6420() (slot int, err error) {
 	}
 
 	iDracSystemTopology := &dell.SystemTopology{}
-	err = json.Unmarshal(response, iDracSystemTopology)
+	err = json.Unmarshal(payload, iDracSystemTopology)
 	if err != nil {
 		return -1, err
 	}
@@ -557,7 +558,7 @@ func (i *IDrac9) License() (name string, licType string, err error) {
 	}
 
 	endpoint := "sysmgmt/2012/server/license"
-	statusCode, response, err := i.get(endpoint, extraHeaders)
+	statusCode, payload, err := i.get(endpoint, extraHeaders)
 	if err != nil || statusCode != 200 {
 		if err == nil {
 			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
@@ -567,7 +568,7 @@ func (i *IDrac9) License() (name string, licType string, err error) {
 	}
 
 	iDracLicense := &dell.IDracLicense{}
-	err = json.Unmarshal(response, iDracLicense)
+	err = json.Unmarshal(payload, iDracLicense)
 	if err != nil {
 		return "", "", err
 	}
@@ -613,7 +614,7 @@ func (i *IDrac9) TempC() (temp int, err error) {
 	}
 
 	endpoint := "sysmgmt/2012/server/temperature"
-	statusCode, response, err := i.get(endpoint, extraHeaders)
+	statusCode, payload, err := i.get(endpoint, extraHeaders)
 	if err != nil || statusCode != 200 {
 		if err == nil {
 			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
@@ -623,7 +624,7 @@ func (i *IDrac9) TempC() (temp int, err error) {
 	}
 
 	iDracTemp := &dell.IDracTemp{}
-	err = json.Unmarshal(response, iDracTemp)
+	err = json.Unmarshal(payload, iDracTemp)
 	if err != nil {
 		return 0, err
 	}
@@ -699,7 +700,7 @@ func (i *IDrac9) Psus() (psus []*devices.Psu, err error) {
 	}
 
 	endpoint := "sysmgmt/2013/server/sensor/powersupplyunit"
-	statusCode, response, err := i.get(endpoint, extraHeaders)
+	statusCode, payload, err := i.get(endpoint, extraHeaders)
 	if err != nil || statusCode != 200 {
 		if err == nil {
 			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
@@ -709,7 +710,7 @@ func (i *IDrac9) Psus() (psus []*devices.Psu, err error) {
 	}
 
 	iDracPowersupplyunit := &dell.IDracPowersupplyunit{}
-	err = json.Unmarshal(response, iDracPowersupplyunit)
+	err = json.Unmarshal(payload, iDracPowersupplyunit)
 	if err != nil {
 		return psus, err
 	}

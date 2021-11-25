@@ -89,5 +89,5 @@ func (i *IDrac9) queryUsers() (users UsersInfo, err error) {
 		return users, err
 	}
 
-	return userData["iDRAC.Users"], err
+	return userData["iDRAC.Users"], nil
 }
