@@ -138,11 +138,18 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return err
+		msg := "IDRAC9 User(): HTTP login failed: " + err.Error()
+		i.log.V(1).Error(err, msg,
+			"step", "applyUserParams",
+			"IP", i.ip,
+			"HardwareType", i.HardwareType(),
+		)
+		return errors.New(msg)
 	}
+
 	err = internal.ValidateUserConfig(cfgUsers)
 	if err != nil {
-		msg := "Config validation failed."
+		msg := "IDRAC9 User(): User config validation failed: " + err.Error()
 		i.log.V(1).Error(err, msg,
 			"step", "applyUserParams",
 			"IP", i.ip,
@@ -153,83 +160,90 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 
 	idracUsers, err := i.queryUsers()
 	if err != nil {
-		msg := "Unable to query existing users."
+		msg := "IDRAC9 User(): Unable to query existing users."
 		i.log.V(1).Error(err, msg,
 			"step", "applyUserParams",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
+			"Model", i.HardwareType(),
 		)
 		return errors.New(msg + " Error: " + err.Error())
 	}
 
-	for _, cfgUser := range cfgUsers {
-		userID, userInfo, uExists := userInIdrac(cfgUser.Name, idracUsers)
+	// This user is reserved for IDRAC usage, we can't delete it.
+	delete(idracUsers, 1)
 
-		if cfgUser.Enable {
-			// New user? Add them.
-			if !uExists {
-				userID, userInfo, err = getEmptyUserSlot(idracUsers)
-				if err != nil {
-					i.log.V(1).Error(err, "Unable to add new User.",
-						"IP", i.ip,
-						"HardwareType", i.HardwareType(),
-						"step", helper.WhosCalling(),
-						"User", cfgUser.Name,
-					)
-					continue
-				}
-			}
-
-			userInfo.Enable = "Enabled"
-			userInfo.SolEnable = "Enabled"
-			userInfo.UserName = cfgUser.Name
-			userInfo.Password = cfgUser.Password
-
-			if cfgUser.Role == "admin" {
-				userInfo.Privilege = "511"
-				userInfo.IpmiLanPrivilege = "Administrator"
-			} else {
-				userInfo.Privilege = "499"
-				userInfo.IpmiLanPrivilege = "Operator"
-			}
-
-			err = i.putUser(userID, userInfo)
-			if err != nil {
-				i.log.V(1).Error(err, "User(): Add/Update user request failed.",
-					"IP", i.ip,
-					"HardwareType", i.HardwareType(),
-					"step", helper.WhosCalling(),
-					"User", cfgUser.Name,
-				)
-				continue
-			}
+	// Start from a clean slate.
+	for id := range idracUsers {
+		statusCode, payload, err := i.delete(fmt.Sprintf("sysmgmt/2017/server/user?userid=%d", id))
+		if err != nil {
+			msg := fmt.Sprintf("IDRAC9 User(): Unable to remove existing user (ID %d): %s", id, err.Error())
+			i.log.V(1).Error(err, msg,
+				"step", "applyUserParams",
+				"IP", i.ip,
+				"HardwareType", i.HardwareType(),
+			)
+			return err
 		}
 
-		// User exists but is disabled in our config? Remove them.
-		if !cfgUser.Enable && uExists {
-			endpoint := fmt.Sprintf("sysmgmt/2017/server/user?userid=%d", userID)
-			statusCode, response, err := i.delete(endpoint)
-			if err != nil {
-				i.log.V(1).Error(err, "Delete user request failed.",
-					"IP", i.ip,
-					"HardwareType", i.HardwareType(),
-					"step", helper.WhosCalling(),
-					"User", cfgUser.Name,
-					"StatusCode", statusCode,
-					"Response", response,
-				)
-				continue
-			}
+		if statusCode > 299 {
+			err = fmt.Errorf("Request failed with status code %d and payload %s.", statusCode, string(payload))
+			msg := fmt.Sprintf("IDRAC9 User(): Unable to remove existing user (ID %d): %s", id, err.Error())
+			i.log.V(1).Error(err, msg,
+				"step", "applyUserParams",
+				"IP", i.ip,
+				"HardwareType", i.HardwareType(),
+			)
+			return err
 		}
-
-		i.log.V(1).Info("User parameters applied.",
-			"IP", i.ip,
-			"HardwareType", i.HardwareType(),
-			"User", cfgUser.Name,
-		)
 	}
 
-	return err
+	// As mentioned before, user ID 1 is reserved for IDRAC usage.
+	userID := 2
+
+	for _, cfgUser := range cfgUsers {
+		// If the user is not enabled in the config, just skip.
+		if !cfgUser.Enable {
+			continue
+		}
+
+		user := UserInfo{}
+		user.Enable = "Enabled"
+		user.UserName = cfgUser.Name
+		user.Password = cfgUser.Password
+		if cfgUser.SolEnable {
+			user.SolEnable = "Enabled"
+		} else {
+			user.SolEnable = "Disabled"
+		}
+		if cfgUser.SNMPv3Enable {
+			user.ProtocolEnable = "Enabled"
+		} else {
+			user.ProtocolEnable = "Disabled"
+		}
+		if cfgUser.Role == "admin" {
+			user.Privilege = "511"
+			user.IpmiLanPrivilege = "Administrator"
+		} else {
+			user.Privilege = "499"
+			user.IpmiLanPrivilege = "Operator"
+		}
+
+		err = i.putUser(userID, user)
+		if err != nil {
+			i.log.V(1).Error(err, "User(): Add/Update user request failed.",
+				"IP", i.ip,
+				"HardwareType", i.HardwareType(),
+				"step", helper.WhosCalling(),
+				"User", cfgUser.Name,
+			)
+			continue
+		}
+		i.log.V(1).Info("User parameters applied.", "IP", i.ip, "HardwareType", i.HardwareType(), "User", cfgUser.Name)
+		userID++
+	}
+
+	return nil
 }
 
 // Ldap applies LDAP configuration params.

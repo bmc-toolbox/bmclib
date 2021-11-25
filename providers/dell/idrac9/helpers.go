@@ -6,33 +6,6 @@ import (
 	"fmt"
 )
 
-// IDRAC9 supports upto 16 users, user 0 is reserved.
-// This function returns an empty user slot that can be used for a new user account.
-func getEmptyUserSlot(idracUsers userInfo) (userID int, user User, err error) {
-	for userID, user := range idracUsers {
-		if userID == 1 {
-			continue
-		}
-
-		if user.UserName == "" {
-			return userID, user, err
-		}
-	}
-
-	return 0, user, errors.New("All user account slots are in use, remove an account before adding a new one.")
-}
-
-// checks if a user is present in a given list
-func userInIdrac(user string, usersInfo userInfo) (userID int, userInfo User, exists bool) {
-	for userID, userInfo := range usersInfo {
-		if userInfo.UserName == user {
-			return userID, userInfo, true
-		}
-	}
-
-	return userID, userInfo, false
-}
-
 // PUTs user config
 func (i *IDrac9) putUser(userID int, user UserInfo) (err error) {
 	idracPayload := make(map[string]UserInfo)
