@@ -60,7 +60,7 @@ func (i *IDrac9) Screenshot() (response []byte, extension string, err error) {
 	return response, extension, nil
 }
 
-func (i *IDrac9) queryUsers() (users map[int]User, err error) {
+func (i *IDrac9) queryUsers() (users UsersInfo, err error) {
 	endpoint := "sysmgmt/2012/server/configgroup/iDRAC.Users"
 	statusCode, response, err := i.get(endpoint, &map[string]string{})
 	if err != nil || statusCode != 200 {
@@ -77,7 +77,7 @@ func (i *IDrac9) queryUsers() (users map[int]User, err error) {
 		return users, err
 	}
 
-	userData := make(idracUsers)
+	userData := make(IdracUsers)
 	err = json.Unmarshal(response, &userData)
 	if err != nil {
 		i.log.V(1).Error(err, "Unable to unmarshal payload.",

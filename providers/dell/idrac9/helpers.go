@@ -34,8 +34,8 @@ func userInIdrac(user string, usersInfo userInfo) (userID int, userInfo User, ex
 }
 
 // PUTs user config
-func (i *IDrac9) putUser(userID int, user User) (err error) {
-	idracPayload := make(map[string]User)
+func (i *IDrac9) putUser(userID int, user UserInfo) (err error) {
+	idracPayload := make(map[string]UserInfo)
 	idracPayload["iDRAC.Users"] = user
 
 	payload, err := json.Marshal(idracPayload)

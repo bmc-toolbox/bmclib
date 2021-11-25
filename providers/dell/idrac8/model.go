@@ -5,7 +5,7 @@ import (
 )
 
 // UserInfo type is used to unmarshal user accounts payload.
-type UserInfo map[int]User
+type UsersInfo map[int]UserInfo
 
 // Syslog struct holds syslog configuration payload
 // https://10.193.251.5/sysmgmt/2012/server/configgroup/iDRAC.SysLog
@@ -19,13 +19,14 @@ type Syslog struct {
 
 // User struct holds user account configuration payload
 // https://10.193.251.5/sysmgmt/2012/server/configgroup/iDRAC.Users.3
-type User struct {
+type UserInfo struct {
 	UserName         string `json:"UserName"`
 	Password         string `json:"Password"`
 	Enable           string `json:"Enable"`
 	Privilege        string `json:"Privilege"`
 	IpmiLanPrivilege string `json:"IpmiLanPrivilege"`
 	SolEnable        string `json:"SolEnable"`
+	SNMPv3Enable     string `json:"SNMPv3Enable"`
 }
 
 // certStore is the response received when uploading a multipart form,

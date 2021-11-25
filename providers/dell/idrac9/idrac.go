@@ -129,7 +129,7 @@ func (c *Conn) UserCreate(ctx context.Context, user, pass, role string) (ok bool
 		return false, errors.New("all user account slots are in use, remove an account before adding a new one")
 	}
 
-	var userToCreate User
+	var userToCreate UserInfo
 	userToCreate.Enable = "Enabled"
 	userToCreate.SolEnable = "Enabled"
 	userToCreate.UserName = user
@@ -172,7 +172,7 @@ func (c *Conn) UserUpdate(ctx context.Context, user, pass, role string) (ok bool
 	}
 
 	// create the user payload
-	var userPayload User
+	var userPayload UserInfo
 	userPayload.Enable = "Enabled"
 	userPayload.SolEnable = "Enabled"
 	userPayload.UserName = user

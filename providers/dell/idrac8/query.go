@@ -73,8 +73,8 @@ func (i *IDrac8) Screenshot() (response []byte, extension string, err error) {
 }
 
 // Queries for current user accounts.
-func (i *IDrac8) queryUsers() (userInfo UserInfo, err error) {
-	userInfo = make(UserInfo)
+func (i *IDrac8) queryUsers() (usersInfo UsersInfo, err error) {
+	usersInfo = make(UsersInfo)
 
 	endpoint := "data?get=user"
 
@@ -91,7 +91,7 @@ func (i *IDrac8) queryUsers() (userInfo UserInfo, err error) {
 			"StatusCode", statusCode,
 			"step", helper.WhosCalling(),
 		)
-		return userInfo, err
+		return usersInfo, err
 	}
 
 	xmlData := XMLRoot{}
@@ -103,11 +103,11 @@ func (i *IDrac8) queryUsers() (userInfo UserInfo, err error) {
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 		)
-		return userInfo, err
+		return usersInfo, err
 	}
 
 	for _, userAccount := range xmlData.XMLUserAccount {
-		user := User{
+		user := UserInfo{
 			UserName:  userAccount.Name,
 			Privilege: strconv.Itoa(userAccount.Privileges),
 		}
@@ -131,8 +131,8 @@ func (i *IDrac8) queryUsers() (userInfo UserInfo, err error) {
 			user.Enable = "disabled"
 		}
 
-		userInfo[userAccount.ID] = user
+		usersInfo[userAccount.ID] = user
 	}
 
-	return userInfo, err
+	return usersInfo, err
 }
