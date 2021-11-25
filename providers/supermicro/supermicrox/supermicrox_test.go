@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/bmc-toolbox/bmclib/devices"
-	"github.com/bombsimon/logrusr"
+	"github.com/bombsimon/logrusr/v2"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -144,7 +144,7 @@ func setup() (r *SupermicroX, err error) {
 	})
 
 	testLog := logrus.New()
-	r, err = New(context.TODO(), ip, username, password, logrusr.NewLogger(testLog))
+	r, err = New(context.TODO(), ip, username, password, logrusr.New(testLog))
 	if err != nil {
 		return r, err
 	}

@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/bmc-toolbox/bmclib"
-	"github.com/bombsimon/logrusr"
+	"github.com/bombsimon/logrusr/v2"
 	"github.com/sirupsen/logrus"
 )
 
@@ -26,7 +26,7 @@ func main() {
 
 	l := logrus.New()
 	l.Level = logrus.DebugLevel
-	logger := logrusr.NewLogger(l)
+	logger := logrusr.New(l)
 
 	var err error
 

@@ -3,7 +3,7 @@ package logging
 import (
 	"os"
 
-	"github.com/bombsimon/logrusr"
+	"github.com/bombsimon/logrusr/v2"
 	"github.com/go-logr/logr"
 	"github.com/sirupsen/logrus"
 )
@@ -24,5 +24,5 @@ func DefaultLogger() logr.Logger {
 		logrusLog.SetLevel(logrus.InfoLevel)
 	}
 
-	return logrusr.NewLogger(logrusLog)
+	return logrusr.New(logrusLog)
 }

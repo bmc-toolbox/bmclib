@@ -5,7 +5,8 @@ import (
 	"testing"
 
 	"github.com/bmc-toolbox/bmclib/sshmock"
-	"github.com/bombsimon/logrusr"
+	"github.com/bombsimon/logrusr/v2"
+	"github.com/go-logr/logr"
 	"github.com/sirupsen/logrus"
 )
 
@@ -47,7 +48,7 @@ var (
 )
 
 func setupBMC() (func(), *IDrac8, error) {
-	ssh, err := sshmock.New(sshAnswers, nil)
+	ssh, err := sshmock.New(sshAnswers, logr.Discard())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -57,7 +58,7 @@ func setupBMC() (func(), *IDrac8, error) {
 	}
 
 	testLogger := logrus.New()
-	bmc, err := New(context.TODO(), address, sshUsername, sshPassword, logrusr.NewLogger(testLogger))
+	bmc, err := New(context.TODO(), address, sshUsername, sshPassword, logrusr.New(testLogger))
 	if err != nil {
 		tearDown()
 		return nil, nil, err

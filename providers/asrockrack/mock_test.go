@@ -13,7 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bombsimon/logrusr"
+	"github.com/bombsimon/logrusr/v2"
 	"github.com/sirupsen/logrus"
 )
 
@@ -55,7 +55,7 @@ func TestMain(m *testing.M) {
 	l := logrus.New()
 	l.Level = logrus.DebugLevel
 	// setup bmc client
-	tLog := logrusr.NewLogger(l)
+	tLog := logrusr.New(l)
 	aClient, err = New(bmcURL.Host, "foo", "bar", tLog)
 	if err != nil {
 		log.Fatal(err.Error())
