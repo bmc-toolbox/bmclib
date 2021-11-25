@@ -72,10 +72,12 @@ type bladesPower struct {
 
 // User struct holds a BMC user account configuration.
 type User struct {
-	Name     string `yaml:"name"`
-	Password string `yaml:"password"`
-	Role     string `yaml:"role"`
-	Enable   bool   `yaml:"enable,omitempty"`
+	Name         string `yaml:"name"`
+	Password     string `yaml:"password"`
+	Role         string `yaml:"role"`
+	Enable       bool   `yaml:"enable,omitempty"`
+	SolEnable    bool   `yaml:"solEnable,omitempty"`
+	SNMPv3Enable bool   `yaml:"snmpV3Enable,omitempty"`
 }
 
 // Syslog struct holds BMC syslog configuration.
