@@ -58,7 +58,7 @@ func (i *Ilo) isRoleValid(role string) bool {
 	return false
 }
 
-// checks if a user is present in a given list
+// Checks if a user is present in a given list.
 func userExists(user string, usersInfo []UserInfo) (userInfo UserInfo, exists bool) {
 	for _, userInfo := range usersInfo {
 		if userInfo.UserName == user || userInfo.LoginName == user {
@@ -69,14 +69,13 @@ func userExists(user string, usersInfo []UserInfo) (userInfo UserInfo, exists bo
 	return userInfo, false
 }
 
-// User applies the User configuration resource,
-// if the user exists, it updates the users password,
+// User applies the User configuration resource.
+// If the user exists, it updates the password.
 // User implements the Configure interface.
-// nolint: gocyclo
 func (i *Ilo) User(users []*cfgresources.User) (err error) {
 	existingUsers, err := i.queryUsers()
 	if err != nil {
-		msg := "Unable to query existing users."
+		msg := "ILO User(): Unable to query existing users."
 		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
@@ -85,9 +84,8 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 		return err
 	}
 
+	// Validation cycle.
 	for _, user := range users {
-		var postPayload bool
-
 		if user.Name == "" {
 			msg := "User resource expects parameter: Name."
 			i.log.V(1).Info(msg, "step", "applyUserParams")
@@ -105,6 +103,10 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 			i.log.V(1).Info(msg, "step", "applyUserParams", "Username", user.Name)
 			return errors.New(msg)
 		}
+	}
+
+	for _, user := range users {
+		var postPayload bool
 
 		userinfo, uexists := userExists(user.Name, existingUsers)
 		userinfo.SessionKey = i.sessionKey
@@ -140,6 +142,7 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 			postPayload = true
 		}
 
+		// If the user is disabled, remove them.
 		if !user.Enable && uexists {
 			userinfo.Method = "del_user"
 			userinfo.UserID = userinfo.ID
