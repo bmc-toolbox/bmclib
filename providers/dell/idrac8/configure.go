@@ -65,10 +65,44 @@ func escapeLdapString(s string) string {
 	return r
 }
 
-// User applies the User configuration resource,
-// if the user exists, it updates the users password,
-// User implements the Configure interface.
-// Iterate over iDrac users and adds/removes/modifies user accounts
+func (i *IDrac8) runSshCommand(command string, id int) (success bool) {
+	output, err := i.sshClient.Run(command)
+	if err != nil {
+		// "The specified value is not allowed to be configured if the user name \nor password is blank\n"
+		//   is an acceptable error while cleaning. Don't log that.
+		errString := err.Error()
+		if !strings.Contains(errString, "is blank") {
+			msg := fmt.Sprintf("IDRAC8 User(): Unable to reset existing user (ID %d). Error: %s", id, errString)
+			i.log.V(1).Error(err, msg,
+				"step", "applyUserParams",
+				"IP", i.ip,
+				"HardwareType", i.HardwareType(),
+			)
+		}
+		return false
+	}
+
+	if !strings.Contains(output, "successful") {
+		msg := fmt.Sprintf("IDRAC8 User(): Unable to reset existing user (ID %d). Output: %s", id, output)
+		// "The specified value is not allowed to be configured if the user name \nor password is blank\n"
+		//   is an acceptable error while cleaning. Don't log that.
+		if !strings.Contains(output, "is blank") {
+			err = errors.New("The output of the command `" + command + "` is " + output)
+			i.log.V(1).Error(err, msg,
+				"step", "applyUserParams",
+				"IP", i.ip,
+				"HardwareType", i.HardwareType(),
+			)
+			return false
+		}
+	}
+
+	return true
+}
+
+// Applies the User configuration resource, obliterating any existing users.
+// Implements the Configure interface.
+// TODO: Forgives any errors happening (just logs though). Maybe that's not what we want?
 func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 	err = internal.ValidateUserConfig(cfgUsers)
 	if err != nil {
@@ -82,85 +116,160 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 		return err
 	}
 
-	idracUsers, err := i.queryUsers()
+	usersInfo, err := i.queryUsers()
 	if err != nil {
-		msg := "Unable to query existing users."
-		err = errors.New(msg)
+		msg := "IDRAC8 User(): Unable to query existing users."
 		i.log.V(1).Error(err, msg,
-			"step", "applyUserParams",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 		)
-		return err
+		return errors.New(msg + " Error: " + err.Error())
 	}
 
+	usedIDs := make(map[int]bool)
 	for _, cfgUser := range cfgUsers {
+		// If the user is not enabled in the config, just skip.
+		// The next section is going to wipe it out.
+		if !cfgUser.Enable {
+			continue
+		}
 
-		userID, userInfo, uExists := userInIdrac(cfgUser.Name, idracUsers)
-		if cfgUser.Enable {
-			// New user? Add them.
-			if !uExists {
-				userID, userInfo, err = getEmptyUserSlot(idracUsers)
-				if err != nil {
-					i.log.V(1).Error(err, "Unable to add new User.",
-						"IP", i.ip,
-						"HardwareType", i.HardwareType(),
-						"step", helper.WhosCalling(),
-						"User", cfgUser.Name,
-					)
-					continue
+		// Does the user already exist?
+		newID := 0
+		for userID, userInfo := range usersInfo {
+			if userInfo.UserName == cfgUser.Name {
+				usedIDs[userID] = true
+				newID = userID
+				break
+			}
+		}
+
+		// New user, pick an available ID.
+		if newID == 0 {
+			for userID := 2; userID <= 16; userID++ {
+				if !usedIDs[userID] {
+					usedIDs[userID] = true
+					newID = userID
+					break
 				}
 			}
-
-			userInfo.Enable = "Enabled"
-			userInfo.SolEnable = "Enabled"
-			userInfo.UserName = cfgUser.Name
-			userInfo.Password = cfgUser.Password
-
-			if cfgUser.Role == "admin" {
-				userInfo.Privilege = "511"
-				userInfo.IpmiLanPrivilege = "Administrator"
-			} else {
-				userInfo.Privilege = "499"
-				userInfo.IpmiLanPrivilege = "Operator"
-			}
-
-			err = i.putUser(userID, userInfo)
-			if err != nil {
-				i.log.V(1).Error(err, "User(): Add/Update user request failed.",
-					"IP", i.ip,
-					"HardwareType", i.HardwareType(),
-					"step", helper.WhosCalling(),
-					"User", cfgUser.Name,
-				)
-				continue
-			}
 		}
 
-		// User exists but is disabled in our config? Remove them.
-		if !cfgUser.Enable && uExists {
-
-			userInfo.Enable = "Disabled"
-			userInfo.SolEnable = "Disabled"
-			userInfo.UserName = cfgUser.Name
-			userInfo.Privilege = "0"
-			userInfo.IpmiLanPrivilege = "No Access"
-
-			err = i.putUser(userID, userInfo)
-			if err != nil {
-				i.log.V(1).Error(err, "User(): Disable user request failed.",
-					"IP", i.ip,
-					"HardwareType", i.HardwareType(),
-					"step", helper.WhosCalling(),
-					"User", cfgUser.Name,
-				)
-			}
+		// No available slots!
+		if newID == 0 {
+			msg := "IDRAC8 User(): Finding an empty user slot failed."
+			err = errors.New("No more available slots!")
+			i.log.V(1).Error(err, msg,
+				"IP", i.ip,
+				"HardwareType", i.HardwareType(),
+			)
+			return errors.New(msg + " Error: " + err.Error())
 		}
 
-		i.log.V(1).Info("User parameters applied.", "IP", i.ip, "HardwareType", i.HardwareType(), "User", cfgUser.Name)
+		mainCommand := fmt.Sprintf("racadm set iDRAC.Users.%d.", newID)
+
+		command := mainCommand + fmt.Sprintf("Username \"%s\"", cfgUser.Name)
+		i.runSshCommand(command, newID)
+
+		command = mainCommand + fmt.Sprintf("Password \"%s\"", cfgUser.Password)
+		i.runSshCommand(command, newID)
+
+		command = mainCommand + "Enable \"Enabled\""
+		i.runSshCommand(command, newID)
+
+		if cfgUser.SolEnable {
+			command = mainCommand + "SolEnable \"Enabled\""
+		} else {
+			command = mainCommand + "SolEnable \"Disabled\""
+		}
+		i.runSshCommand(command, newID)
+
+		if cfgUser.SNMPv3Enable {
+			command = mainCommand + "SNMPv3Enable \"Enabled\""
+		} else {
+			command = mainCommand + "SNMPv3Enable \"Disabled\""
+		}
+		i.runSshCommand(command, newID)
+
+		if cfgUser.Role == "admin" {
+			// The number comes from 0x1FF. We reverse-engineered that by setting the user
+			//   manually to have Administrator access in IDRAC's UI, and then SSH and run
+			//   `racadm get iDRAC.Users.4` (replace 4 by the user you have edited).
+			// You get something like
+			//   [Key=iDRAC.Embedded.1#Users.4]
+			//   Enable=Enabled
+			//   IpmiLanPrivilege=3
+			//   MD5v3Key=...
+			//   !!Password=******** (Write-Only)
+			//   Privilege=0x1ff
+			//   SHA1v3Key=...
+			//   SHA256Password=...
+			//   SHA256PasswordSalt=...
+			//   SNMPv3AuthenticationType=SHA
+			//   SNMPv3Enable=Disabled
+			//   SNMPv3PrivacyType=AES
+			//   SolEnable=Disabled
+			//   UserName=HOperator
+			command = mainCommand + "Privilege 511"
+		} else if cfgUser.Role == "operator" {
+			// The number comes from 0x1F3.
+			command = mainCommand + "Privilege 499"
+		} else if cfgUser.Role == "user" {
+			// This one is actually called Read Only in IDRAC, but for simplicity
+			//   we use the same value for both Privilege and IpmiLanPrivilege.
+			command = mainCommand + "Privilege 1"
+		} else {
+			command = mainCommand + "Privilege 0" // No Access!
+		}
+		i.runSshCommand(command, newID)
+
+		if cfgUser.Role == "admin" {
+			command = mainCommand + "IpmiLanPrivilege 4"
+		} else if cfgUser.Role == "operator" {
+			command = mainCommand + "IpmiLanPrivilege 3"
+		} else if cfgUser.Role == "user" {
+			command = mainCommand + "IpmiLanPrivilege 2"
+		} else {
+			command = mainCommand + "IpmiLanPrivilege 15" // No Access!
+		}
+		i.runSshCommand(command, newID)
 	}
 
-	return err
+	for userID := 2; userID <= 16; userID++ {
+		// Avoid used slots.
+		if usedIDs[userID] {
+			continue
+		}
+
+		mainCommand := fmt.Sprintf("racadm set iDRAC.Users.%d.", userID)
+
+		// Just temporarily. Some of the commands will fail with the message
+		//   "The specified value is not allowed to be configured if the user name or password is blank."
+		// That's why we give a temporary name, and then blank it at the end.
+		command := mainCommand + fmt.Sprintf("Username \"TempUser%02d\"", userID)
+		i.runSshCommand(command, userID)
+
+		command = mainCommand + "Enable \"Disabled\""
+		i.runSshCommand(command, userID)
+
+		command = mainCommand + "SolEnable \"Disabled\""
+		i.runSshCommand(command, userID)
+
+		command = mainCommand + "SNMPv3Enable \"Disabled\""
+		i.runSshCommand(command, userID)
+
+		command = mainCommand + "Privilege 0"
+		i.runSshCommand(command, userID)
+
+		command = mainCommand + "IpmiLanPrivilege 15"
+		i.runSshCommand(command, userID)
+
+		// Now, really clean the username.
+		command = mainCommand + "Username \"\""
+		i.runSshCommand(command, userID)
+	}
+
+	return nil
 }
 
 // Syslog applies the Syslog configuration resource
