@@ -13,7 +13,7 @@ func IsntLetterOrNumber(c rune) bool {
 }
 
 func IsRoleValid(role string) bool {
-	return role == "admin" || role == "user"
+	return role == "admin" || role == "user" || role == "operator"
 }
 
 func ValidateUserConfig(cfgUsers []*cfgresources.User) (err error) {
