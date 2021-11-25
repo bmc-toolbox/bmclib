@@ -106,11 +106,11 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 }
 
 func (c *Conn) UserCreate(ctx context.Context, user, pass, role string) (ok bool, err error) {
-	idrac := &IDrac9{ip: c.Host, username: c.User, password: c.Pass, log: c.Log}
-	idrac.xsrfToken = c.xsrfToken
-	idrac.httpClient = c.conn
+	idrac9 := &IDrac9{ip: c.Host, username: c.User, password: c.Pass, log: c.Log}
+	idrac9.xsrfToken = c.xsrfToken
+	idrac9.httpClient = c.conn
 	// check if user already exists and capture any open user slots
-	users, err := idrac.queryUsers()
+	users, err := idrac9.queryUsers()
 	if err != nil {
 		return false, errors.Wrap(err, "IDRAC9 UserCreate(): Unable to query existing users.")
 	}
@@ -144,7 +144,7 @@ func (c *Conn) UserCreate(ctx context.Context, user, pass, role string) (ok bool
 	}
 
 	// create the user
-	err = idrac.putUser(availableID, userToCreate)
+	err = idrac9.putUser(availableID, userToCreate)
 	if err != nil {
 		return false, errors.Wrap(err, "error creating user")
 	}
