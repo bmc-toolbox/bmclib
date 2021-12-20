@@ -153,9 +153,9 @@ func (i *IDrac9) purgeJob(jobID string) (err error) {
 
 	statusCode, _, err := i.queryRedfish("DELETE", endpoint, nil)
 	if err != nil {
-		return fmt.Errorf("POST request to purge job %s failed with error %s!", jobID, err.Error())
+		return fmt.Errorf("DELETE request to purge job %s failed with error %s!", jobID, err.Error())
 	} else if statusCode != 200 {
-		return fmt.Errorf("POST request to purge job %s failed with status code %d!", jobID, statusCode)
+		return fmt.Errorf("DELETE request to purge job %s failed with status code %d!", jobID, statusCode)
 	}
 
 	return nil

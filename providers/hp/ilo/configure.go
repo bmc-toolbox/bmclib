@@ -172,7 +172,7 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 			statusCode, response, err := i.post(endpoint, payload)
 			if err != nil || statusCode != 200 {
 				if err == nil {
-					err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+					err = fmt.Errorf("Received a %d status code from the POST request to %s.", statusCode, endpoint)
 				} else {
 					err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
 				}
@@ -247,7 +247,7 @@ func (i *Ilo) Syslog(cfg *cfgresources.Syslog) (err error) {
 	statusCode, response, err := i.post(endpoint, payload)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+			err = fmt.Errorf("Received a %d status code from the POST request to %s.", statusCode, endpoint)
 		} else {
 			err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
 		}
@@ -298,7 +298,7 @@ func (i *Ilo) SetLicense(cfg *cfgresources.License) (err error) {
 	statusCode, response, err := i.post(endpoint, payload)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+			err = fmt.Errorf("Received a %d status code from the POST request to %s.", statusCode, endpoint)
 		} else {
 			err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
 		}
@@ -405,7 +405,7 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 	statusCode, response, err := i.post(endpoint, payload)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+			err = fmt.Errorf("Received a %d status code from the POST request to %s.", statusCode, endpoint)
 		} else {
 			err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
 		}
@@ -462,7 +462,7 @@ func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresour
 		statusCode, response, err := i.post(endpoint, payload)
 		if err != nil || statusCode != 200 {
 			if err == nil {
-				err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+				err = fmt.Errorf("Received a %d status code from the POST request to %s.", statusCode, endpoint)
 			} else {
 				err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
 			}
@@ -552,7 +552,7 @@ func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresour
 		statusCode, response, err := i.post(endpoint, payload)
 		if err != nil || statusCode != 200 {
 			if err == nil {
-				err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+				err = fmt.Errorf("Received a %d status code from the POST request to %s.", statusCode, endpoint)
 			} else {
 				err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
 			}
@@ -646,7 +646,7 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 	statusCode, response, err := i.post(endpoint, payload)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+			err = fmt.Errorf("Received a %d status code from the POST request to %s.", statusCode, endpoint)
 		} else {
 			err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
 		}
