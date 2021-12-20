@@ -96,7 +96,7 @@ func (c *C7000) Model() (model string, err error) {
 
 // Serial returns the device serial
 func (c *C7000) Serial() (serial string, err error) {
-	return strings.ToLower(strings.TrimSpace(c.Rimp.Infra2.EnclSn)), err
+	return strings.ToLower(strings.TrimSpace(c.Rimp.Infra2.EnclSn)), nil
 }
 
 // PowerKw returns the current power usage in Kw

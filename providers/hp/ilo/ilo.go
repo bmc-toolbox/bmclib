@@ -200,7 +200,7 @@ func (i *Ilo) post(endpoint string, data []byte) (statusCode int, body []byte, e
 
 // Serial returns the device serial
 func (i *Ilo) Serial() (serial string, err error) {
-	return strings.ToLower(strings.TrimSpace(i.rimpBlade.HSI.Sbsn)), err
+	return strings.ToLower(strings.TrimSpace(i.rimpBlade.HSI.Sbsn)), nil
 }
 
 // Returns the serial number of the chassis where the blade is attached.

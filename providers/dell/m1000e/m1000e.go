@@ -121,7 +121,8 @@ func (m *M1000e) Serial() (serial string, err error) {
 	if err != nil {
 		return serial, err
 	}
-	return strings.ToLower(m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.ChassisStatus.ROChassisServiceTag), err
+
+	return strings.ToLower(m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.ChassisStatus.ROChassisServiceTag), nil
 }
 
 // PowerKw returns the current power usage in Kw

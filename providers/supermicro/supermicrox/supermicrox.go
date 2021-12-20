@@ -233,14 +233,14 @@ func (s *SupermicroX) query(requestType string) (ipmi *supermicro.IPMI, err erro
 func (s *SupermicroX) Serial() (serial string, err error) {
 	ipmi, err := s.query("FRU_INFO.XML=(0,0)")
 	if err != nil {
-		return serial, err
+		return "", err
 	}
 
 	if ipmi.FruInfo == nil || ipmi.FruInfo.Board == nil {
-		return serial, errors.ErrInvalidSerial
+		return "", errors.ErrInvalidSerial
 	}
 
-	return strings.ToLower(ipmi.FruInfo.Board.SerialNum), err
+	return strings.ToLower(ipmi.FruInfo.Board.SerialNum), nil
 }
 
 // ChassisSerial returns the serial number of the chassis where the blade is attached

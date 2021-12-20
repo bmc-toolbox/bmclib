@@ -277,7 +277,8 @@ func (i *IDrac8) Serial() (serial string, err error) {
 			}
 		}
 	}
-	return "", nil
+
+	return "", fmt.Errorf("IDrac8 Serial(): Serial not found!")
 }
 
 // ChassisSerial returns the serial number of the chassis where the blade is attached
