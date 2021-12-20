@@ -482,6 +482,8 @@ func (c *C7000) applyAddLdapGroupBayAccess(group string) (err error) {
 // Implements the Configure interface.
 // If the user exists, updates their password.
 func (c *C7000) User(users []*cfgresources.User) (err error) {
+	// Sanity checks come first.
+	// This reduces the probability of succeeding with some users and failing with others.
 	for _, cfg := range users {
 		if cfg.Name == "" {
 			err = errors.New("user resource expects parameter: Name")
@@ -510,18 +512,25 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 			)
 			return err
 		}
+	}
 
+	// Actual work.
+	allErrors := ""
+	for _, cfg := range users {
 		username := Username{Text: cfg.Name}
 		password := Password{Text: cfg.Password}
 
 		// User account is disabled? Remove them.
 		if !cfg.Enable {
 			payload := RemoveUser{Username: username}
-			statusCode, _, _ := c.postXML(payload)
-
-			// User doesn't exist? Nothing to do, success claimed!
-			if statusCode != 400 {
-				return nil
+			statusCode, _, err := c.postXML(payload)
+			if err != nil || statusCode != 200 {
+				if err == nil {
+					allErrors += fmt.Sprintf("Received a %d status code from the POST request to remove user %s.", statusCode, username)
+				} else {
+					allErrors += fmt.Sprintf("POST request to remove user %s failed with error: %s", username, err.Error())
+				}
+				continue
 			}
 
 			c.log.V(1).Info("User removed.",
@@ -529,14 +538,18 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 				"HardwareType", c.HardwareType(),
 				"User", cfg.Name,
 			)
-
-			return nil
+			continue
 		}
 
 		payload := AddUser{Username: username, Password: password}
 		statusCode, _, err := c.postXML(payload)
-		if err != nil {
-			return err
+		if err != nil || statusCode != 200 {
+			if err == nil {
+				allErrors += fmt.Sprintf("Received a %d status code from the POST request to add user %s.", statusCode, username)
+			} else {
+				allErrors += fmt.Sprintf("POST request to add user %s failed with error: %s", username, err.Error())
+			}
+			continue
 		}
 
 		if statusCode == 400 {
@@ -550,17 +563,20 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 
 			err := c.setUserPassword(cfg.Name, cfg.Password)
 			if err != nil {
-				return err
+				allErrors += fmt.Sprintf("Error configuring user %s: %s\n", cfg.Name, err.Error())
+				continue
 			}
 
 			err = c.setUserACL(cfg.Name, cfg.Role)
 			if err != nil {
-				return err
+				allErrors += fmt.Sprintf("Error configuring user %s: %s\n", cfg.Name, err.Error())
+				continue
 			}
 
 			err = c.applyAddUserBayAccess(cfg.Name)
 			if err != nil {
-				return err
+				allErrors += fmt.Sprintf("Error configuring user %s: %s\n", cfg.Name, err.Error())
+				continue
 			}
 		}
 
@@ -570,7 +586,12 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 			"user", cfg.Name,
 		)
 	}
-	return nil
+
+	if allErrors == "" {
+		return nil
+	} else {
+		return fmt.Errorf(allErrors)
+	}
 }
 
 func (c *C7000) setUserPassword(user string, password string) (err error) {
