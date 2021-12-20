@@ -438,7 +438,7 @@ func (i *Ilo) PowerKw() (power float64, err error) {
 		return 0, err
 	}
 
-	return float64(hpPowerSummary.PowerSupplyInputPower) / 1024, nil
+	return float64(hpPowerSummary.PowerSupplyInputPower) / 1000, nil
 }
 
 // PowerState returns the current power state of the machine
