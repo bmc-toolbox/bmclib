@@ -495,7 +495,8 @@ func (i *IDrac8) Model() (model string, err error) {
 			}
 		}
 	}
-	return model, err
+
+	return "", fmt.Errorf("IDrac8 Model(): Model not found!")
 }
 
 // HardwareType returns the type of bmc we are talking to

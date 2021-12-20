@@ -240,7 +240,7 @@ func (i *Ilo) ChassisSerial() (string, error) {
 
 // Model returns the device model
 func (i *Ilo) Model() (model string, err error) {
-	return i.rimpBlade.HSI.Spn, err
+	return i.rimpBlade.HSI.Spn, nil
 }
 
 // HardwareType returns the type of bmc we are talking to

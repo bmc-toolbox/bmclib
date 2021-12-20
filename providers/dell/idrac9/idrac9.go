@@ -538,7 +538,7 @@ func (i *IDrac9) Model() (model string, err error) {
 		}
 	}
 
-	return "", nil
+	return "", fmt.Errorf("IDrac9 Model(): Model not found!")
 }
 
 // HardwareType returns the type of bmc we are talking to

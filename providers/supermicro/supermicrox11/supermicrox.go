@@ -261,10 +261,10 @@ func (s *SupermicroX) Model() (model string, err error) {
 	}
 
 	if ipmi.FruInfo != nil && ipmi.FruInfo.Board != nil {
-		return ipmi.FruInfo.Board.PartNum, err
+		return ipmi.FruInfo.Board.PartNum, nil
 	}
 
-	return model, err
+	return "", fmt.Errorf("SupermicroX Model(): Model not found!")
 }
 
 // Version returns the version of the bmc we are running

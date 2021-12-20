@@ -112,7 +112,7 @@ func (m *M1000e) Model() (model string, err error) {
 	if err != nil {
 		return model, err
 	}
-	return strings.TrimSpace(m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.ChassisStatus.ROChassisProductname), err
+	return strings.TrimSpace(m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.ChassisStatus.ROChassisProductname), nil
 }
 
 // Serial returns the device serial
