@@ -636,7 +636,7 @@ func (i *IDrac9) TempC() (temp int, err error) {
 func (i *IDrac9) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCount int, err error) {
 	err = i.loadHwData()
 	if err != nil {
-		return cpu, cpuCount, coreCount, hyperthreadCount, err
+		return "", 0, 0, 0, err
 	}
 
 	for _, component := range i.iDracInventory.Component {

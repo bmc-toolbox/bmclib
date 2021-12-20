@@ -344,11 +344,11 @@ func (s *SupermicroX) Memory() (mem int, err error) {
 func (s *SupermicroX) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCount int, err error) {
 	ipmi, err := s.query("op=SMBIOS_INFO.XML&r=(0,0)")
 	if err != nil {
-		return cpu, cpuCount, coreCount, hyperthreadCount, err
+		return "", 0, 0, 0, err
 	}
 
 	if len(ipmi.CPU) == 0 {
-		return cpu, cpuCount, coreCount, hyperthreadCount, err
+		return "", 0, 0, 0, nil
 	}
 
 	entry := ipmi.CPU[0]
@@ -357,12 +357,11 @@ func (s *SupermicroX) CPU() (cpu string, cpuCount int, coreCount int, hyperthrea
 
 	coreCount, err = strconv.Atoi(entry.Core)
 	if err != nil {
-		return cpu, cpuCount, coreCount, hyperthreadCount, err
+		return cpu, cpuCount, 0, 0, err
 	}
 
 	hyperthreadCount = coreCount
-
-	return cpu, cpuCount, coreCount, hyperthreadCount, err
+	return cpu, cpuCount, coreCount, hyperthreadCount, nil
 }
 
 // BiosVersion returns the current version of the bios

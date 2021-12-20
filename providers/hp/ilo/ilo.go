@@ -382,7 +382,7 @@ func (i *Ilo) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCount i
 		return httpclient.StandardizeProcessorName(proc.ProcName), len(hpProcData.Processors), proc.ProcNumCores, proc.ProcNumThreads, nil
 	}
 
-	return cpu, cpuCount, coreCount, hyperthreadCount, err
+	return "", 0, 0, 0, fmt.Errorf("Ilo CPU(): No CPUs?!")
 }
 
 // Returns the current version of the BIOS.
