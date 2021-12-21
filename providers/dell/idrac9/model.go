@@ -1,44 +1,40 @@
 package idrac9
 
-type userInfo map[int]User
-type idracUsers map[string]userInfo
+type UsersInfo map[int]UserInfo
+type IdracUsers map[string]UsersInfo
 
 // User struct declares user configuration payload.
-type User struct {
-	UserName               string `json:"UserName,omitempty"`
-	Password               string `json:"Password,omitempty"`
-	Enable                 string `json:"Enable,omitempty"`                 //Enabled, Disabled
-	Privilege              string `json:"Privilege,omitempty"`              //511, 499
-	IpmiLanPrivilege       string `json:"IpmiLanPrivilege,omitempty"`       //Administrator, Operator
-	SolEnable              string `json:"SolEnable,omitempty"`              //Disabled, Enabled
-	ProtocolEnable         string `json:"ProtocolEnable,omitempty"`         //Disabled, Enabled (SNMPv2)
-	AuthenticationProtocol string `json:"AuthenticationProtocol,omitempty"` //SHA, MD5, None
-	PrivacyProtocol        string `json:"PrivacyProtocol,omitempty"`        //AES, DES, None
+type UserInfo struct {
+	UserName         string `json:"UserName,omitempty"`
+	Password         string `json:"Password,omitempty"`
+	Enable           string `json:"Enable,omitempty"`           // Enabled, Disabled
+	Privilege        string `json:"Privilege,omitempty"`        // 511, 499
+	IpmiLanPrivilege string `json:"IpmiLanPrivilege,omitempty"` // Administrator, Operator
+	SolEnable        string `json:"SolEnable,omitempty"`        // Disabled, Enabled
+	ProtocolEnable   string `json:"ProtocolEnable,omitempty"`   // Disabled, Enabled (SNMPv3)
 }
 
 // Ldap struct declares Ldap configuration payload.
 type Ldap struct {
-	BaseDN               string `json:"BaseDN"`               //dell
-	BindDN               string `json:"BindDN"`               //cn=dell
-	CertValidationEnable string `json:"CertValidationEnable"` //Disabled
-	Enable               string `json:"Enable"`               //Enabled
-	GroupAttribute       string `json:"GroupAttribute"`       //memberUid
-	GroupAttributeIsDN   string `json:"GroupAttributeIsDN"`   //Enabled
-	Port                 string `json:"Port"`                 //636
-	SearchFilter         string `json:"SearchFilter"`         //objectClass=posixAccount
-	Server               string `json:"Server"`               //ldap.example.com"
-	UserAttribute        string `json:"UserAttribute"`        //uid
+	BaseDN               string `json:"BaseDN"`               // dell
+	BindDN               string `json:"BindDN"`               // cn=dell
+	CertValidationEnable string `json:"CertValidationEnable"` // Disabled
+	Enable               string `json:"Enable"`               // Enabled
+	GroupAttribute       string `json:"GroupAttribute"`       // memberUid
+	GroupAttributeIsDN   string `json:"GroupAttributeIsDN"`   // Enabled
+	Port                 string `json:"Port"`                 // 636
+	SearchFilter         string `json:"SearchFilter"`         // objectClass=posixAccount
+	Server               string `json:"Server"`               // ldap.example.com"
+	UserAttribute        string `json:"UserAttribute"`        // uid
 }
 
-type idracLdapRoleGroups map[string]LdapRoleGroups
-
-// LdapRoleGroups declares the format in which ldap role groups are un/marshaled.
+// LdapRoleGroups declares the format in which LDAP role groups are (un)marshaled.
 type LdapRoleGroups map[string]LdapRoleGroup
 
 // LdapRoleGroup declares Ldap role group configuration payload.
 type LdapRoleGroup struct {
-	DN        string `json:"DN"`        //cn=dell,cn=bmcAdmins
-	Privilege string `json:"Privilege"` //511 (Administrator), 499 (Operator)
+	DN        string `json:"DN"`        // cn=dell,cn=bmcAdmins
+	Privilege string `json:"Privilege"` // 511 (Administrator), 499 (Operator)
 }
 
 // Syslog declares syslog configuration payload.
@@ -52,42 +48,42 @@ type Syslog struct {
 
 // NtpConfig declares NTP configuration payload.
 type NtpConfig struct {
-	Enable string `json:"NTPEnable"` //Enabled
-	NTP1   string `json:"NTP1"`      //example0.ntp.com
-	NTP2   string `json:"NTP2"`      //example1.ntp.com
-	NTP3   string `json:"NTP3"`      //example2.ntp.com
+	Enable string `json:"NTPEnable"` // Enabled
+	NTP1   string `json:"NTP1"`      // example0.ntp.com
+	NTP2   string `json:"NTP2"`      // example1.ntp.com
+	NTP3   string `json:"NTP3"`      // example2.ntp.com
 }
 
 // Ipv4 declares IPv4 configuration payload.
 type Ipv4 struct {
-	Enable      string `json:"Enable"`      //Enabled
-	DHCPEnable  string `json:"DHCPEnable"`  //Enabled
-	DNSFromDHCP string `json:"DNSFromDHCP"` //Enabled
+	Enable      string `json:"Enable"`      // Enabled
+	DHCPEnable  string `json:"DHCPEnable"`  // Enabled
+	DNSFromDHCP string `json:"DNSFromDHCP"` // Enabled
 }
 
 // IpmiOverLan declares IpmiOverLan configuration payload.
 type IpmiOverLan struct {
-	Enable        string `json:"Enable"`        //Enabled
-	PrivLimit     string `json:"PrivLimit"`     //Administrator
-	EncryptionKey string `json:"EncryptionKey"` //0000000000000000000000000000000000000000
+	Enable        string `json:"Enable"`        // Enabled
+	PrivLimit     string `json:"PrivLimit"`     // Administrator
+	EncryptionKey string `json:"EncryptionKey"` // 0000000000000000000000000000000000000000
 }
 
 // SerialRedirection declares serial console configuration payload.
 type SerialRedirection struct {
-	Enable  string `json:"Enable"`  //Enabled
+	Enable  string `json:"Enable"`  // Enabled
 	QuitKey string `json:"QuitKey"` //^\\
 }
 
-// SerialOverLan declares serial over lan configuration payload.
+// SerialOverLan configuration payload.
 type SerialOverLan struct {
-	Enable       string `json:"Enable"`       //Enabled
-	BaudRate     string `json:"BaudRate"`     //115200
-	MinPrivilege string `json:"MinPrivilege"` //Administrator
+	Enable       string `json:"Enable"`       // Enabled
+	BaudRate     string `json:"BaudRate"`     // 115200
+	MinPrivilege string `json:"MinPrivilege"` // Administrator
 }
 
 // Timezone declares timezone configuration payload.
 type Timezone struct {
-	Timezone string `json:"Timezone"` //CET
+	Timezone string `json:"Timezone"` // CET
 }
 
 // CSRInfo declares SSL/TLS CSR request payloads.

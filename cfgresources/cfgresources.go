@@ -28,7 +28,7 @@ type ResourcesConfig struct {
 	Ntp          *Ntp          `yaml:"ntp"`
 	Bios         *Bios         `yaml:"bios"`
 	Power        *Power        `yaml:"power"`
-	Supermicro   *Supermicro   `yaml:"supermicro"` // supermicro specific config, example of issue #34
+	Supermicro   *Supermicro   `yaml:"supermicro"`
 	SetupChassis *SetupChassis `yaml:"setupChassis"`
 }
 
@@ -55,7 +55,6 @@ type flexAddress struct {
 	Enable bool `yaml:"enable"`
 }
 
-// Enable/Disable ipmi over lan
 type ipmiOverLan struct {
 	Enable bool `yaml:"enable"`
 }
@@ -73,10 +72,12 @@ type bladesPower struct {
 
 // User struct holds a BMC user account configuration.
 type User struct {
-	Name     string `yaml:"name"`
-	Password string `yaml:"password"`
-	Role     string `yaml:"role"`
-	Enable   bool   `yaml:"enable,omitempty"`
+	Name         string `yaml:"name"`
+	Password     string `yaml:"password"`
+	Role         string `yaml:"role"`
+	Enable       bool   `yaml:"enable,omitempty"`
+	SolEnable    bool   `yaml:"solEnable,omitempty"`
+	SNMPv3Enable bool   `yaml:"snmpV3Enable,omitempty"`
 }
 
 // Syslog struct holds BMC syslog configuration.
@@ -122,10 +123,10 @@ type LdapGroups struct {
 
 // If you want to add extra groups at runtime using a script, you have
 //   the option of specifying
-//   * Bin.Executor: Usually /bin/sh or /bin/bash and the like
-//   * Bin.Path: Path your actual script
-// You get the serial of the asset and its vendor as two arguments
-// If you want more, create a GitHub issue and we will take a look
+//   * Bin.Executor: Usually /bin/sh or /bin/bash and the like.
+//   * Bin.Path: Path your actual script.
+// You get the serial of the asset and its vendor as two arguments.
+// If you want more, create a GitHub issue and we will take a look.
 func (l *LdapGroups) GetExtraGroups(serial, vendor string) (string, error) {
 	if l.Bin.Path == "" {
 		return "nothing", nil
@@ -139,7 +140,7 @@ func (l *LdapGroups) GetExtraGroups(serial, vendor string) (string, error) {
 
 	err = json.Unmarshal(stdout, &l)
 	if err != nil {
-		return "", err
+		return string(stdout), err
 	}
 
 	l.Groups = append(l.Groups, l.ExtraAdminGroups...)
@@ -183,7 +184,7 @@ type Network struct {
 	DNSFromDHCP    bool   `yaml:"dnsFromDhcp"`
 	SSHEnable      bool   `yaml:"sshEnable"`
 	SSHPort        int    `yaml:"sshPort"`
-	SolEnable      bool   `yaml:"solEnable"` // Serial over lan
+	SolEnable      bool   `yaml:"solEnable"` // SerialOverLan
 	IpmiEnable     bool   `yaml:"ipmiEnable"`
 	DhcpEnable     bool   `yaml:"dhcpEnable"`
 	IpmiPort       int    `yaml:"ipmiPort"`

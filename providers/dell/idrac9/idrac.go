@@ -27,21 +27,17 @@ type Conn struct {
 }
 
 const (
-	// ProviderName for the provider implementation
-	ProviderName = "idrac9"
-	// ProviderProtocol for the provider implementation
+	ProviderName     = "idrac9"
 	ProviderProtocol = "webgui"
 )
 
-var (
-	// Features implemented by dell idrac9 provider
-	Features = registrar.Features{
-		providers.FeatureUserCreate,
-		providers.FeatureUserUpdate,
-		providers.FeatureUserRead,
-		providers.FeatureUserDelete,
-	}
-)
+// Features implemented by Dell's idrac9 provider:
+var Features = registrar.Features{
+	providers.FeatureUserCreate,
+	providers.FeatureUserUpdate,
+	providers.FeatureUserRead,
+	providers.FeatureUserDelete,
+}
 
 func (c *Conn) Name() string {
 	return ProviderName
@@ -110,13 +106,13 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 }
 
 func (c *Conn) UserCreate(ctx context.Context, user, pass, role string) (ok bool, err error) {
-	idrac := &IDrac9{ip: c.Host, username: c.User, password: c.Pass, log: c.Log}
-	idrac.xsrfToken = c.xsrfToken
-	idrac.httpClient = c.conn
+	idrac9 := &IDrac9{ip: c.Host, username: c.User, password: c.Pass, log: c.Log}
+	idrac9.xsrfToken = c.xsrfToken
+	idrac9.httpClient = c.conn
 	// check if user already exists and capture any open user slots
-	users, err := idrac.queryUsers()
+	users, err := idrac9.queryUsers()
 	if err != nil {
-		return false, errors.Wrap(err, "unable to query existing users")
+		return false, errors.Wrap(err, "IDRAC9 UserCreate(): Unable to query existing users.")
 	}
 	var availableID int
 	for id, usr := range users {
@@ -133,7 +129,7 @@ func (c *Conn) UserCreate(ctx context.Context, user, pass, role string) (ok bool
 		return false, errors.New("all user account slots are in use, remove an account before adding a new one")
 	}
 
-	var userToCreate User
+	var userToCreate UserInfo
 	userToCreate.Enable = "Enabled"
 	userToCreate.SolEnable = "Enabled"
 	userToCreate.UserName = user
@@ -148,7 +144,7 @@ func (c *Conn) UserCreate(ctx context.Context, user, pass, role string) (ok bool
 	}
 
 	// create the user
-	err = idrac.putUser(availableID, userToCreate)
+	err = idrac9.putUser(availableID, userToCreate)
 	if err != nil {
 		return false, errors.Wrap(err, "error creating user")
 	}
@@ -163,7 +159,7 @@ func (c *Conn) UserUpdate(ctx context.Context, user, pass, role string) (ok bool
 	// check if user exists and capture its ID
 	users, err := idrac.queryUsers()
 	if err != nil {
-		return false, errors.Wrap(err, "unable to query existing users")
+		return false, errors.Wrap(err, "IDRAC9 UserUpdate(): Unable to query existing users.")
 	}
 	var id int
 	for idx, usr := range users {
@@ -176,7 +172,7 @@ func (c *Conn) UserUpdate(ctx context.Context, user, pass, role string) (ok bool
 	}
 
 	// create the user payload
-	var userPayload User
+	var userPayload UserInfo
 	userPayload.Enable = "Enabled"
 	userPayload.SolEnable = "Enabled"
 	userPayload.UserName = user
@@ -205,7 +201,7 @@ func (c *Conn) UserDelete(ctx context.Context, user string) (ok bool, err error)
 	// get the user ID from a name
 	users, err := idrac.queryUsers()
 	if err != nil {
-		return false, errors.Wrap(err, "unable to query existing users")
+		return false, errors.Wrap(err, "UserDelete(): Unable to query existing users.")
 	}
 	var userID int
 	for id, usr := range users {
@@ -238,7 +234,7 @@ func (c *Conn) UserRead(ctx context.Context) (users []map[string]string, err err
 	// get the user ID from a name
 	existingUsers, err := idrac.queryUsers()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to query existing users")
+		return nil, errors.Wrap(err, "IDRAC9 UserRead(): Unable to query existing users.")
 	}
 	for id, usr := range existingUsers {
 		if usr.UserName == "" {

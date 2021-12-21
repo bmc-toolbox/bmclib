@@ -105,19 +105,24 @@ func (i *Ilo) CheckCredentials() (err error) {
 	return err
 }
 
-// get calls a given json endpoint of the iLO and returns the data
-func (i *Ilo) get(endpoint string, useSession bool) (payload []byte, err error) {
-	i.log.V(1).Info("retrieving data from bmc", "step", "bmc connection", "vendor", hp.VendorID, "ip", i.ip, "endpoint", endpoint)
+// Calls a given JSON ILO endpoint and returns the status code and the data.
+func (i *Ilo) get(endpoint string, useSession bool) (int, []byte, error) {
+	i.log.V(1).Info("Retrieving data from ILO...",
+		"step", "bmc connection",
+		"vendor", hp.VendorID,
+		"ip", i.ip,
+		"endpoint", endpoint,
+	)
 
 	bmcURL := fmt.Sprintf("https://%s", i.ip)
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s", bmcURL, endpoint), nil)
 	if err != nil {
-		return payload, err
+		return 0, nil, err
 	}
 
 	u, err := url.Parse(bmcURL)
 	if err != nil {
-		return payload, err
+		return 0, nil, err
 	}
 
 	if useSession {
@@ -135,22 +140,22 @@ func (i *Ilo) get(endpoint string, useSession bool) (payload []byte, err error) 
 
 	resp, err := i.httpClient.Do(req)
 	if err != nil {
-		return payload, err
+		return 0, nil, err
 	}
 	defer resp.Body.Close()
 	respDump, _ := httputil.DumpResponse(resp, true)
 	i.log.V(2).Info("responseTrace", "responseDump", string(respDump))
 
-	payload, err = ioutil.ReadAll(resp.Body)
+	payload, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return payload, err
+		return 0, nil, err
 	}
 
 	if resp.StatusCode == 404 {
-		return payload, errors.ErrPageNotFound
+		return 404, nil, errors.ErrPageNotFound
 	}
 
-	return payload, err
+	return resp.StatusCode, payload, nil
 }
 
 // posts the payload to the given endpoint
@@ -179,7 +184,9 @@ func (i *Ilo) post(endpoint string, data []byte) (statusCode int, body []byte, e
 	if err != nil {
 		return 0, []byte{}, err
 	}
+
 	defer resp.Body.Close()
+
 	respDump, _ := httputil.DumpResponse(resp, true)
 	i.log.V(2).Info("responseTrace", "responseDump", string(respDump))
 
@@ -196,15 +203,20 @@ func (i *Ilo) Serial() (serial string, err error) {
 	return strings.ToLower(strings.TrimSpace(i.rimpBlade.HSI.Sbsn)), err
 }
 
-// ChassisSerial returns the serial number of the chassis where the blade is attached
+// Returns the serial number of the chassis where the blade is attached.
 func (i *Ilo) ChassisSerial() (string, error) {
 	err := i.httpLogin()
 	if err != nil {
 		return "", err
 	}
 
-	payload, err := i.get("json/rck_info", true)
-	if err != nil {
+	endpoint := "json/rck_info"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+		}
+
 		return "", err
 	}
 
@@ -252,39 +264,45 @@ func (i *Ilo) Version() (bmcVersion string, err error) {
 	return i.rimpBlade.MP.Fwri, err
 }
 
-// Name returns the name of this server from the iLO point of view
+// Returns the name of this server from the ILO point of view.
 func (i *Ilo) Name() (name string, err error) {
 	err = i.httpLogin()
 	if err != nil {
 		return name, err
 	}
 
-	url := "json/overview"
-	payload, err := i.get(url, true)
-	if err != nil {
-		return name, err
+	endpoint := "json/overview"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+		}
+		return "", err
 	}
 
 	overview := &hp.Overview{}
 	err = json.Unmarshal(payload, overview)
 	if err != nil {
-		return name, err
+		return "", err
 	}
 
 	return overview.ServerName, err
 }
 
-// Status returns health string status from the bmc
+// Returns the health status from the ILO point of view.
 func (i *Ilo) Status() (health string, err error) {
 	err = i.httpLogin()
 	if err != nil {
 		return health, err
 	}
 
-	url := "json/overview"
-	payload, err := i.get(url, true)
-	if err != nil {
-		return health, err
+	endpoint := "json/overview"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+		}
+		return "", err
 	}
 
 	overview := &hp.Overview{}
@@ -300,158 +318,183 @@ func (i *Ilo) Status() (health string, err error) {
 	return overview.SystemHealth, err
 }
 
-// Memory returns the total amount of memory of the server
+// Returns the total amount of memory of the server.
 func (i *Ilo) Memory() (mem int, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return mem, err
+		return 0, err
 	}
 
-	url := "json/mem_info"
-	payload, err := i.get(url, true)
-	if err != nil {
-		return mem, err
+	endpoint := "json/mem_info"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+		}
+
+		return 0, err
 	}
 
 	hpMemData := &hp.Mem{}
 	err = json.Unmarshal(payload, hpMemData)
 	if err != nil {
-		return mem, err
+		return 0, err
 	}
 
 	if hpMemData.MemTotalMemSize != 0 {
-		return hpMemData.MemTotalMemSize / 1024, err
+		return hpMemData.MemTotalMemSize / 1024, nil
 	}
 
 	for _, slot := range hpMemData.Memory {
 		mem = mem + slot.MemSize
 	}
 
-	return mem / 1024, err
+	return mem / 1024, nil
 }
 
-// CPU returns the cpu, cores and hyperthreads of the server
+// Finds the CPUs.
+// Returns the description, cores count, and hyperthreads count of the first CPU it finds.
+// Returns also the CPU count.
+// TODO: Does this make any sense?! We either return all the information about all CPUs, or just say something generic!
 func (i *Ilo) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCount int, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return cpu, cpuCount, coreCount, hyperthreadCount, err
+		return "", 0, 0, 0, err
 	}
 
-	url := "json/proc_info"
-	payload, err := i.get(url, true)
-	if err != nil {
-		return cpu, cpuCount, coreCount, hyperthreadCount, err
+	endpoint := "json/proc_info"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+		}
+
+		return "", 0, 0, 0, err
 	}
 
 	hpProcData := &hp.Procs{}
 	err = json.Unmarshal(payload, hpProcData)
 	if err != nil {
-		return cpu, cpuCount, coreCount, hyperthreadCount, err
+		return "", 0, 0, 0, err
 	}
 
 	for _, proc := range hpProcData.Processors {
-		return httpclient.StandardizeProcessorName(proc.ProcName), len(hpProcData.Processors), proc.ProcNumCores, proc.ProcNumThreads, err
+		return httpclient.StandardizeProcessorName(proc.ProcName), len(hpProcData.Processors), proc.ProcNumCores, proc.ProcNumThreads, nil
 	}
 
 	return cpu, cpuCount, coreCount, hyperthreadCount, err
 }
 
-// BiosVersion returns the current version of the bios
+// Returns the current version of the BIOS.
 func (i *Ilo) BiosVersion() (version string, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return version, err
+		return "", err
 	}
 
-	url := "json/overview"
-	payload, err := i.get(url, true)
-	if err != nil {
-		return version, err
+	endpoint := "json/overview"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+		}
+
+		return "", err
 	}
 
 	overview := &hp.Overview{}
 	err = json.Unmarshal(payload, overview)
 	if err != nil {
-		return version, err
+		return "", err
 	}
 
 	if overview.SystemRom != "" {
-		return overview.SystemRom, err
+		return overview.SystemRom, nil
 	}
 
-	return version, errors.ErrBiosNotFound
+	return "", errors.ErrBiosNotFound
 }
 
 // PowerKw returns the current power usage in Kw
 func (i *Ilo) PowerKw() (power float64, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return power, err
+		return 0, err
 	}
 
-	url := "json/power_summary"
-	payload, err := i.get(url, true)
-	if err != nil {
-		return power, err
+	endpoint := "json/power_summary"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+		}
+
+		return 0, err
 	}
 
 	hpPowerSummary := &hp.PowerSummary{}
 	err = json.Unmarshal(payload, hpPowerSummary)
 	if err != nil {
-		return power, err
+		return 0, err
 	}
 
-	return float64(hpPowerSummary.PowerSupplyInputPower) / 1024, err
+	return float64(hpPowerSummary.PowerSupplyInputPower) / 1024, nil
 }
 
 // PowerState returns the current power state of the machine
 func (i *Ilo) PowerState() (state string, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return state, err
+		return "", err
 	}
 
-	url := "json/power_summary"
-	payload, err := i.get(url, true)
-	if err != nil {
-		return state, err
+	endpoint := "json/power_summary"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+		}
+		return "", err
 	}
 
 	hpPowerSummary := &hp.PowerSummary{}
 	err = json.Unmarshal(payload, hpPowerSummary)
 	if err != nil {
-		return state, err
+		return "", err
 	}
 
-	return strings.ToLower(hpPowerSummary.HostpwrState), err
+	return strings.ToLower(hpPowerSummary.HostpwrState), nil
 }
 
-// TempC returns the current temperature of the machine
+// Returns the current temperature of the server.
 func (i *Ilo) TempC() (temp int, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return temp, err
+		return 0, err
 	}
 
-	url := "json/health_temperature"
-	payload, err := i.get(url, true)
-	if err != nil {
-		return temp, err
+	endpoint := "json/health_temperature"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+		}
+		return 0, err
 	}
 
 	hpHealthTemperature := &hp.HealthTemperature{}
 	err = json.Unmarshal(payload, hpHealthTemperature)
 	if err != nil {
-		return temp, err
+		return 0, err
 	}
 
 	for _, item := range hpHealthTemperature.Temperature {
 		if item.Location == "Ambient" {
-			return item.Currentreading, err
+			return item.Currentreading, nil
 		}
 	}
 
-	return temp, err
+	return 0, errors.ErrFeatureUnavailable
 }
 
 // Nics returns all found Nics in the device
@@ -479,26 +522,30 @@ func (i *Ilo) Nics() (nics []*devices.Nic, err error) {
 	return nics, err
 }
 
-// License returns the iLO's license information
+// Returns the ILO's license information.
 func (i *Ilo) License() (name string, licType string, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return name, licType, err
+		return "", "", err
 	}
 
-	url := "json/license"
-	payload, err := i.get(url, true)
-	if err != nil {
-		return name, licType, err
+	endpoint := "json/license"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+		}
+
+		return "", "", err
 	}
 
 	hpIloLicense := &hp.IloLicense{}
 	err = json.Unmarshal(payload, hpIloLicense)
 	if err != nil {
-		return name, licType, err
+		return "", "", err
 	}
 
-	return hpIloLicense.Name, hpIloLicense.Type, err
+	return hpIloLicense.Name, hpIloLicense.Type, nil
 }
 
 func (i *Ilo) parseChassisInfo() (*hp.ChassisInfo, error) {
@@ -509,8 +556,8 @@ func (i *Ilo) parseChassisInfo() (*hp.ChassisInfo, error) {
 
 	chassisInfo := &hp.ChassisInfo{}
 	// We try the new way of doing things first (RedFish).
-	payload, err := i.get(hp.ChassisInfoNewURL, false)
-	if err == nil {
+	statusCode, payload, err := i.get(hp.ChassisInfoNewURL, false)
+	if err == nil && statusCode == 200 {
 		err = json.Unmarshal(payload, chassisInfo)
 		if err != nil {
 			return nil, err
@@ -525,10 +572,15 @@ func (i *Ilo) parseChassisInfo() (*hp.ChassisInfo, error) {
 
 		if chassisInfo.Links.ContainedBy.ID == "/"+hp.ChassisInfoChassisURL {
 			chassisInfo.ChassisType = "Blade"
-			payload, err = i.get(hp.ChassisInfoChassisURL, false)
-			if err != nil {
+			statusCode, payload, err = i.get(hp.ChassisInfoChassisURL, false)
+			if err != nil || statusCode != 200 {
+				if err == nil {
+					err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, hp.ChassisInfoChassisURL)
+				}
+
 				return nil, err
 			}
+
 			chassisExtendedInfo := &hp.ChassisInfo{}
 			err = json.Unmarshal(payload, chassisExtendedInfo)
 			if err != nil {
@@ -553,8 +605,12 @@ func (i *Ilo) parseChassisInfo() (*hp.ChassisInfo, error) {
 	}
 
 	// This just means that we have to try the old way of doing things, since RedFish is not available.
-	payload, err = i.get(hp.ChassisInfoOldURL, true)
-	if err != nil {
+	statusCode, payload, err = i.get(hp.ChassisInfoOldURL, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, hp.ChassisInfoOldURL)
+		}
+
 		return nil, err
 	}
 
@@ -573,9 +629,13 @@ func (i *Ilo) Psus() (psus []*devices.Psu, err error) {
 		return psus, err
 	}
 
-	url := "json/power_supplies"
-	payload, err := i.get(url, true)
-	if err != nil {
+	endpoint := "json/power_supplies"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+		}
+
 		return psus, err
 	}
 
@@ -616,9 +676,13 @@ func (i *Ilo) Disks() (disks []*devices.Disk, err error) {
 		return disks, err
 	}
 
-	url := "json/health_phy_drives"
-	payload, err := i.get(url, true)
-	if err != nil {
+	endpoint := "json/health_phy_drives"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+		}
+
 		return disks, err
 	}
 

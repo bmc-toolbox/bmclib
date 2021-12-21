@@ -78,13 +78,17 @@ func (i *IDrac8) loadHwData() (err error) {
 	}
 
 	if i.iDracInventory != nil {
-		return err
+		return nil
 	}
 
 	url := "sysmgmt/2012/server/inventory/hardware"
 	statusCode, response, err := i.get(url, nil)
-	if err != nil || statusCode != 200 {
+	if err != nil {
 		return err
+	}
+
+	if statusCode != 200 {
+		return fmt.Errorf("Call to %s returned %d!", url, statusCode)
 	}
 
 	iDracInventory := &dell.IDracInventory{}
@@ -98,8 +102,7 @@ func (i *IDrac8) loadHwData() (err error) {
 	}
 
 	i.iDracInventory = iDracInventory
-
-	return err
+	return nil
 }
 
 // Close closes the connection properly

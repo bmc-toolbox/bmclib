@@ -25,12 +25,12 @@ func (c *C7000) httpLogin() (err error) {
 		return err
 	}
 
-	//setup the login payload
+	// setup the login payload
 	username := Username{Text: c.username}
 	password := Password{Text: c.password}
 	userlogin := UserLogIn{Username: username, Password: password}
 
-	//wrap the XML doc in the SOAP envelope
+	// wrap the XML doc in the SOAP envelope
 	doc := wrapXML(userlogin, "")
 
 	payload, err := xml.MarshalIndent(doc, "  ", "    ")

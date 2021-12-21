@@ -4,11 +4,11 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"fmt"
 	"net"
 	"time"
 
 	"github.com/bmc-toolbox/bmclib/errors"
-	"github.com/bmc-toolbox/bmclib/internal"
 	"github.com/bmc-toolbox/bmclib/internal/helper"
 )
 
@@ -21,7 +21,6 @@ func (i *Ilo) CurrentHTTPSCert() ([]*x509.Certificate, bool, error) {
 	}
 
 	conn, err := tls.DialWithDialer(dialer, "tcp", i.ip+":"+"443", &tls.Config{InsecureSkipVerify: true})
-
 	if err != nil {
 		return []*x509.Certificate{{}}, true, err
 	}
@@ -33,189 +32,183 @@ func (i *Ilo) CurrentHTTPSCert() ([]*x509.Certificate, bool, error) {
 
 // Screenshot returns a thumbnail of video display from the bmc.
 func (i *Ilo) Screenshot() (response []byte, extension string, err error) {
+	// Screen thumbnails are only available in ILO5.
+	if i.HardwareType() != "ilo5" {
+		return nil, "", errors.ErrFeatureUnavailable
+	}
+
 	err = i.httpLogin()
 	if err != nil {
-		return response, extension, err
+		return nil, "", err
 	}
 
 	endpoint := "images/thumbnail.bmp"
-	extension = "bmp"
+	statusCode, response, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+		}
 
-	// screen thumbnails are only available in ilo5.
-	if i.HardwareType() != "ilo5" {
-		return response, extension, errors.ErrFeatureUnavailable
+		return nil, "", err
 	}
 
-	response, err = i.get(endpoint, true)
-	if err != nil {
-		return []byte{}, extension, err
-	}
-
-	return response, extension, err
+	return response, "bmp", nil
 }
 
-func (i *Ilo) queryDirectoryGroups() (directoryGroups []DirectoryGroups, err error) {
+func (i *Ilo) queryDirectoryGroups() ([]DirectoryGroups, error) {
 	endpoint := "json/directory_groups"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+		}
 
-	payload, err := i.get(endpoint, true)
-	if err != nil {
-		msg := "GET request failed."
-		i.log.V(1).Info(msg,
+		i.log.V(1).Error(err, "queryDirectoryGroups(): GET request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
-		return directoryGroups, err
+		return nil, err
 	}
 
 	var directoryGroupAccts DirectoryGroupAccts
-	//fmt.Printf("--> %+v\n", userinfo["users"])
 	err = json.Unmarshal(payload, &directoryGroupAccts)
 	if err != nil {
-		msg := "Unable to unmarshal payload."
-		i.log.V(1).Info(msg,
+		msg := "queryDirectoryGroups(): Unable to unmarshal payload."
+		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
-		return directoryGroups, err
+		return nil, err
 	}
 
-	return directoryGroupAccts.Groups, err
+	return directoryGroupAccts.Groups, nil
 }
 
-func (i *Ilo) queryUsers() (usersInfo []UserInfo, err error) {
+func (i *Ilo) queryUsers() ([]UserInfo, error) {
 	endpoint := "json/user_info"
-
-	payload, err := i.get(endpoint, true)
-	if err != nil {
-		msg := "GET request failed."
-		i.log.V(1).Info(msg,
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+		}
+		i.log.V(1).Error(err, "queryUsers(): GET request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
-		return usersInfo, err
+		return nil, err
 	}
 
 	var users Users
-	//fmt.Printf("--> %+v\n", userinfo["users"])
 	err = json.Unmarshal(payload, &users)
 	if err != nil {
 		msg := "Unable to unmarshal payload."
-		i.log.V(1).Info(msg,
+		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"resource", "User",
 			"step", "queryUserInfo",
-			"Error", internal.ErrStringOrEmpty(err),
 		)
-		return usersInfo, err
+		return nil, err
 	}
 
-	return users.UsersInfo, err
+	return users.UsersInfo, nil
 }
 
 func (i *Ilo) queryNetworkSntp() (networkSntp NetworkSntp, err error) {
 	endpoint := "json/network_sntp/interface/0"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+		}
 
-	payload, err := i.get(endpoint, true)
-	if err != nil {
-		msg := "GET request failed."
-		i.log.V(1).Info(msg,
+		i.log.V(1).Error(err, "queryNetworkSntp(): GET request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return networkSntp, err
 	}
 
 	err = json.Unmarshal(payload, &networkSntp)
 	if err != nil {
-		msg := "Unable to unmarshal payload."
-		i.log.V(1).Info(msg,
+		msg := "queryNetworkSntp(): Unable to unmarshal payload."
+		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return networkSntp, err
 	}
 
-	return networkSntp, err
+	return networkSntp, nil
 }
 
-func (i *Ilo) queryAccessSettings() (AccessSettings, error) {
+func (i *Ilo) queryAccessSettings() (accessSettings AccessSettings, err error) {
 	endpoint := "json/access_settings"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+		}
 
-	var accessSettings AccessSettings
-
-	payload, err := i.get(endpoint, true)
-	if err != nil {
-		msg := "GET request failed."
-		i.log.V(1).Info(msg,
+		i.log.V(1).Error(err, "queryAccessSettings(): GET request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return accessSettings, err
 	}
 
 	err = json.Unmarshal(payload, &accessSettings)
 	if err != nil {
-		msg := "Unable to unmarshal payload."
-		i.log.V(1).Info(msg,
+		msg := "queryAccessSettings(): Unable to unmarshal payload."
+		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return accessSettings, err
 	}
 
-	return accessSettings, err
+	return accessSettings, nil
 }
 
-func (i *Ilo) queryNetworkIPv4() (NetworkIPv4, error) {
+func (i *Ilo) queryNetworkIPv4() (networkIPv4 NetworkIPv4, err error) {
 	endpoint := "json/network_ipv4/interface/0"
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+		}
 
-	var networkIPv4 NetworkIPv4
-
-	payload, err := i.get(endpoint, true)
-	if err != nil {
-		msg := "GET request failed."
-		i.log.V(1).Info(msg,
+		i.log.V(1).Error(err, "queryNetworkIPv4(): GET request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return networkIPv4, err
 	}
 
 	err = json.Unmarshal(payload, &networkIPv4)
 	if err != nil {
-		msg := "Unable to unmarshal payload."
-		i.log.V(1).Info(msg,
+		i.log.V(1).Error(err, "queryNetworkIPv4(): Unable to unmarshal payload.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return networkIPv4, err
 	}
 
-	return networkIPv4, err
+	return networkIPv4, nil
 }
 
 func (i *Ilo) queryPowerRegulator() (PowerRegulator, error) {
@@ -223,27 +216,28 @@ func (i *Ilo) queryPowerRegulator() (PowerRegulator, error) {
 
 	var powerRegulator PowerRegulator
 
-	payload, err := i.get(endpoint, true)
-	if err != nil {
-		msg := "GET request failed."
-		i.log.V(1).Info(msg,
+	statusCode, payload, err := i.get(endpoint, true)
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+		}
+
+		i.log.V(1).Error(err, "queryPowerRegulator(): GET request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return PowerRegulator{}, err
 	}
 
 	err = json.Unmarshal(payload, &powerRegulator)
 	if err != nil {
-		msg := "Unable to unmarshal payload."
-		i.log.V(1).Info(msg,
+		msg := "queryPowerRegulator(): Unable to unmarshal payload."
+		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return PowerRegulator{}, err
 	}

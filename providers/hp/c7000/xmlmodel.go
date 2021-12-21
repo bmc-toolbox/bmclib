@@ -243,7 +243,7 @@ type bays struct {
 
 type oaAccess struct {
 	XMLName xml.Name `xml:"hpoa:oaAccess"`
-	Text    bool     `xml:",chardata"` //bool
+	Text    bool     `xml:",chardata"`
 }
 
 type bladeBays struct {

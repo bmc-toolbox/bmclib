@@ -42,7 +42,7 @@ func (i *Ibmc) BiosVersion() (string, error) {
 
 // HardwareType implements the Bmc interface
 func (i *Ibmc) HardwareType() string {
-	return ""
+	return "ibmc"
 }
 
 // Version implements the Bmc interface
@@ -157,7 +157,7 @@ func (i *Ibmc) TempC() (int, error) {
 
 // Vendor implements the Bmc interface
 func (i *Ibmc) Vendor() string {
-	return ""
+	return "Ibmc"
 }
 
 // Screenshot implements the Bmc interface
@@ -184,10 +184,6 @@ func (i *Ibmc) UpdateFirmware(string, string) (bool, string, error) {
 	return false, "Not yet implemented", fmt.Errorf("not yet implemented")
 }
 
-func (i *Ibmc) CheckFirmwareVersion() (version string, err error) {
-	return "Not yet implemented", fmt.Errorf("not yet implemented")
-}
-
 // IsOn implements the Bmc interface
 func (i *Ibmc) IsOn() (status bool, err error) {
 	return false, nil
@@ -206,4 +202,8 @@ func (i *Ibmc) GetBMCVersion(ctx context.Context) (string, error) {
 // Updates the BMC firmware, implements the Firmware interface
 func (i *Ibmc) FirmwareUpdateBMC(ctx context.Context, filePath string) error {
 	return errors.ErrNotImplemented
+}
+
+func (i *Ibmc) CheckFirmwareVersion() (version string, err error) {
+	return "", fmt.Errorf("not yet implemented")
 }

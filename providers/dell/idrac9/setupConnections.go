@@ -67,22 +67,21 @@ func (i *IDrac9) httpLogin() (err error) {
 		return err
 	}
 
-	//0 = login success.
-	//7 = login success with default credentials.
+	// 0 = Login successful.
+	// 7 = Login successful with default credentials.
 	if iDracAuth.AuthResult != 0 && iDracAuth.AuthResult != 7 {
 		return errors.ErrLoginFailed
 	}
 
 	i.httpClient = httpClient
-
-	return err
+	return nil
 }
 
 // loadHwData load the full hardware information from the iDrac
 func (i *IDrac9) loadHwData() (err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return err
+		return fmt.Errorf("IDrac9.loadHwData(): HTTP login problem: " + err.Error())
 	}
 
 	url := "sysmgmt/2012/server/inventory/hardware"
@@ -100,16 +99,15 @@ func (i *IDrac9) loadHwData() (err error) {
 	iDracInventory := &dell.IDracInventory{}
 	err = xml.Unmarshal(response, iDracInventory)
 	if err != nil {
-		return err
+		return fmt.Errorf("IDrac9.loadHwData(): XML unmarshal problem: " + err.Error())
 	}
 
 	if iDracInventory.Component == nil {
-		return errors.ErrUnableToReadData
+		return fmt.Errorf("IDrac9.loadHwData(): HTTP login problem: " + errors.ErrUnableToReadData.Error())
 	}
 
 	i.iDracInventory = iDracInventory
-
-	return err
+	return nil
 }
 
 // Close closes the connection properly
