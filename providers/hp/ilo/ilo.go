@@ -200,7 +200,7 @@ func (i *Ilo) post(endpoint string, data []byte) (statusCode int, body []byte, e
 
 // Serial returns the device serial
 func (i *Ilo) Serial() (serial string, err error) {
-	return strings.ToLower(strings.TrimSpace(i.rimpBlade.HSI.Sbsn)), err
+	return strings.ToLower(strings.TrimSpace(i.rimpBlade.HSI.Sbsn)), nil
 }
 
 // Returns the serial number of the chassis where the blade is attached.
@@ -240,7 +240,7 @@ func (i *Ilo) ChassisSerial() (string, error) {
 
 // Model returns the device model
 func (i *Ilo) Model() (model string, err error) {
-	return i.rimpBlade.HSI.Spn, err
+	return i.rimpBlade.HSI.Spn, nil
 }
 
 // HardwareType returns the type of bmc we are talking to
@@ -382,7 +382,7 @@ func (i *Ilo) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCount i
 		return httpclient.StandardizeProcessorName(proc.ProcName), len(hpProcData.Processors), proc.ProcNumCores, proc.ProcNumThreads, nil
 	}
 
-	return cpu, cpuCount, coreCount, hyperthreadCount, err
+	return "", 0, 0, 0, fmt.Errorf("Ilo CPU(): No CPUs?!")
 }
 
 // Returns the current version of the BIOS.

@@ -91,12 +91,12 @@ func (c *C7000) HardwareType() (model string) {
 
 // Model returns the full device model string
 func (c *C7000) Model() (model string, err error) {
-	return c.Rimp.MP.Pn, err
+	return c.Rimp.MP.Pn, nil
 }
 
 // Serial returns the device serial
 func (c *C7000) Serial() (serial string, err error) {
-	return strings.ToLower(strings.TrimSpace(c.Rimp.Infra2.EnclSn)), err
+	return strings.ToLower(strings.TrimSpace(c.Rimp.Infra2.EnclSn)), nil
 }
 
 // PowerKw returns the current power usage in Kw

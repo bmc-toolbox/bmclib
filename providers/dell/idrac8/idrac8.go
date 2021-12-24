@@ -277,7 +277,8 @@ func (i *IDrac8) Serial() (serial string, err error) {
 			}
 		}
 	}
-	return "", nil
+
+	return "", fmt.Errorf("IDrac8 Serial(): Serial not found!")
 }
 
 // ChassisSerial returns the serial number of the chassis where the blade is attached
@@ -495,7 +496,8 @@ func (i *IDrac8) Model() (model string, err error) {
 			}
 		}
 	}
-	return model, err
+
+	return "", fmt.Errorf("IDrac8 Model(): Model not found!")
 }
 
 // HardwareType returns the type of bmc we are talking to
@@ -643,7 +645,7 @@ func (i *IDrac8) TempC() (temp int, err error) {
 func (i *IDrac8) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCount int, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return cpu, cpuCount, coreCount, hyperthreadCount, err
+		return "", 0, 0, 0, err
 	}
 
 	extraHeaders := &map[string]string{
@@ -663,7 +665,7 @@ func (i *IDrac8) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCoun
 	dellBladeProc := &dell.BladeProcessorEndpoint{}
 	err = json.Unmarshal(response, dellBladeProc)
 	if err != nil {
-		return cpu, cpuCount, coreCount, hyperthreadCount, err
+		return "", 0, 0, 0, err
 	}
 
 	for _, proc := range dellBladeProc.Proccessors {
@@ -673,10 +675,10 @@ func (i *IDrac8) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCoun
 				hasHT = 2
 			}
 		}
-		return httpclient.StandardizeProcessorName(proc.Brand), len(dellBladeProc.Proccessors), proc.CoreCount, proc.CoreCount * hasHT, err
+		return httpclient.StandardizeProcessorName(proc.Brand), len(dellBladeProc.Proccessors), proc.CoreCount, proc.CoreCount * hasHT, nil
 	}
 
-	return cpu, cpuCount, coreCount, hyperthreadCount, err
+	return "", 0, 0, 0, fmt.Errorf("IDRAC8 CPU(): No CPUs?!")
 }
 
 // IsBlade returns if the current hardware is a blade or not

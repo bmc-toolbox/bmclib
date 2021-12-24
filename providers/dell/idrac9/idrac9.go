@@ -284,7 +284,7 @@ func (i *IDrac9) Serial() (serial string, err error) {
 		}
 	}
 
-	return "", nil
+	return "", fmt.Errorf("IDrac9 Serial(): Serial not found!")
 }
 
 // ChassisSerial returns the serial number of the chassis where the blade is attached
@@ -538,7 +538,7 @@ func (i *IDrac9) Model() (model string, err error) {
 		}
 	}
 
-	return "", nil
+	return "", fmt.Errorf("IDrac9 Model(): Model not found!")
 }
 
 // HardwareType returns the type of bmc we are talking to
@@ -636,7 +636,7 @@ func (i *IDrac9) TempC() (temp int, err error) {
 func (i *IDrac9) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCount int, err error) {
 	err = i.loadHwData()
 	if err != nil {
-		return cpu, cpuCount, coreCount, hyperthreadCount, err
+		return "", 0, 0, 0, err
 	}
 
 	for _, component := range i.iDracInventory.Component {
