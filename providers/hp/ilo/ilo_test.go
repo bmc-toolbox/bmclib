@@ -396,7 +396,7 @@ func TestIloBiosVersion(t *testing.T) {
 }
 
 func TestIloPowerKW(t *testing.T) {
-	expectedAnswer := 0.1416015625
+	expectedAnswer := 0.145
 
 	bmc, err := setup()
 	if err != nil {
