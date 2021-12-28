@@ -158,19 +158,6 @@ func (i *Ipmi) PowerOn(ctx context.Context) (status bool, err error) {
 	return false, fmt.Errorf("stderr/stdout: %v", output)
 }
 
-// PowerOnForce power on the machine via bmc even when the machine is already on (Thanks HP!)
-func (i *Ipmi) PowerOnForce(ctx context.Context) (status bool, err error) {
-	output, err := i.run(ctx, []string{"chassis", "power", "on"})
-	if err != nil {
-		return false, fmt.Errorf("%v: %v", err, output)
-	}
-
-	if strings.HasPrefix(output, "Chassis Power Control: Up/On") {
-		return true, err
-	}
-	return false, fmt.Errorf("%v: %v", err, output)
-}
-
 // PowerOff power off the machine via bmc
 func (i *Ipmi) PowerOff(ctx context.Context) (status bool, err error) {
 	s, err := i.IsOn(ctx)
