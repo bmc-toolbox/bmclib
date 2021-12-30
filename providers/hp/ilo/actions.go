@@ -71,22 +71,21 @@ func (i *Ilo) PowerOff() (bool, error) {
 
 // PxeOnce makes the machine to boot via pxe once
 func (i *Ilo) PxeOnce() (bool, error) {
-	im, err := ipmi.New(i.username, i.password, i.ip)
+	p, err := ipmi.New(i.username, i.password, i.ip)
 	if err != nil {
 		return false, err
 	}
-	// PXE using uefi, does't work for some models
-	// directly. It only works if you pxe, powercycle and
-	// power on.
-	if _, err = im.PxeOnceEfi(context.Background()); err != nil {
+	// PXE using UEFI does't work for some models directly.
+	// It only works if you PXE, PowerCycle, and PowerOn.
+	if _, err = p.PxeOnceEfi(context.Background()); err != nil {
 		return false, err
 	}
 
-	if _, err := im.PowerCycle(context.Background()); err != nil {
+	if _, err := p.ForceRestart(context.Background()); err != nil {
 		return false, err
 	}
 
-	return im.PowerOnForce(context.Background())
+	return p.PowerOn(context.Background())
 }
 
 // IsOn tells if a machine is currently powered on

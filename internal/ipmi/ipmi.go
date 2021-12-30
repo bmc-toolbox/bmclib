@@ -69,6 +69,35 @@ func (i *Ipmi) PowerCycle(ctx context.Context) (status bool, err error) {
 	return false, fmt.Errorf("%v: %v", err, output)
 }
 
+// ForceRestart does the chassis power cycle even if the chassis is turned off.
+// From the RedFish spec (https://www.dmtf.org/sites/default/files/standards/documents/DSP2046_2018.1.pdf):
+//   Perform an immediate (non-graceful) shutdown, followed by a restart.
+func (i *Ipmi) ForceRestart(ctx context.Context) (status bool, err error) {
+	output, err := i.run(ctx, []string{"chassis", "power", "status"})
+	if err != nil {
+		return false, fmt.Errorf("%v: %v", err, output)
+	}
+
+	command := "on"
+	reply := "Up/On"
+	if strings.HasPrefix(output, "Chassis Power is on") {
+		command = "cycle"
+		reply = "Cycle"
+	} else if !strings.HasPrefix(output, "Chassis Power is off") {
+		return false, fmt.Errorf("%v: %v", err, output)
+	}
+
+	output, err = i.run(ctx, []string{"chassis", "power", command})
+	if err != nil {
+		return false, fmt.Errorf("%v: %v", err, output)
+	}
+
+	if strings.HasPrefix(output, "Chassis Power Control: "+reply) {
+		return true, err
+	}
+	return false, fmt.Errorf("%v: %v", err, output)
+}
+
 // PowerReset reboots the machine via bmc
 func (i *Ipmi) PowerReset(ctx context.Context) (status bool, err error) {
 	output, err := i.run(ctx, []string{"chassis", "power", "reset"})
