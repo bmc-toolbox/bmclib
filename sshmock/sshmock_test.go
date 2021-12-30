@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/bmc-toolbox/bmclib/internal/sshclient"
+	"github.com/go-logr/logr"
 )
 
 func Test_Server(t *testing.T) {
@@ -14,7 +15,7 @@ func Test_Server(t *testing.T) {
 		"exit":  []byte("see you"),
 	}
 
-	s, err := New(answers, nil)
+	s, err := New(answers, logr.Discard())
 	if err != nil {
 		t.Fatalf(err.Error())
 	}

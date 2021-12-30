@@ -30,7 +30,7 @@ func ScanAndConnect(host string, username string, password string, options ...Op
 	for _, optFn := range options {
 		optFn(opts)
 	}
-	if opts.Logger == nil {
+	if opts.Logger.GetSink() == nil {
 		// create a default logger
 		opts.Logger = logging.DefaultLogger()
 	}

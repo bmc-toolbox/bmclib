@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/bmc-toolbox/bmclib/devices"
-	"github.com/bombsimon/logrusr"
+	"github.com/bombsimon/logrusr/v2"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -172,7 +172,7 @@ func setup() (bmc *Ilo, err error) {
 	}
 
 	testLog := logrus.New()
-	bmc, err = New(context.TODO(), ip, username, password, logrusr.NewLogger(testLog))
+	bmc, err = New(context.TODO(), ip, username, password, logrusr.New(testLog))
 	if err != nil {
 		return bmc, err
 	}

@@ -6,7 +6,7 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/discover"
-	"github.com/bombsimon/logrusr"
+	"github.com/bombsimon/logrusr/v2"
 	"github.com/sirupsen/logrus"
 )
 
@@ -46,7 +46,7 @@ func main() {
 }
 
 func withUserDefinedLogger(ip, user, pass string, logger *logrus.Logger) (interface{}, error) {
-	myLog := logrusr.NewLogger(logger)
+	myLog := logrusr.New(logger)
 
 	return discover.ScanAndConnect(ip, user, pass, discover.WithLogger(myLog))
 }

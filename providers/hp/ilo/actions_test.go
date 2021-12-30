@@ -3,6 +3,7 @@ package ilo
 import (
 	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/sshmock"
+	"github.com/go-logr/logr"
 
 	"testing"
 )
@@ -26,7 +27,7 @@ var (
 )
 
 func setupBMC() (func(), *Ilo, error) {
-	ssh, err := sshmock.New(sshAnswers, nil)
+	ssh, err := sshmock.New(sshAnswers, logr.Discard())
 	if err != nil {
 		return nil, nil, err
 	}

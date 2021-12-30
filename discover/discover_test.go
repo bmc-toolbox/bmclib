@@ -15,7 +15,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/providers/hp/ilo"
 	"github.com/bmc-toolbox/bmclib/providers/supermicro/supermicrox"
 	"github.com/bmc-toolbox/bmclib/providers/supermicro/supermicrox11"
-	"github.com/bombsimon/logrusr"
+	"github.com/bombsimon/logrusr/v2"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -71,7 +71,7 @@ func setup(vendor string, answers map[string][]byte) (scanAndConnectCurry func(o
 
 	return func(opts ...Option) (bmc interface{}, err error) {
 			l := logrus.New()
-			opts = append(opts, WithLogger(logrusr.NewLogger(l)))
+			opts = append(opts, WithLogger(logrusr.New(l)))
 			return ScanAndConnect(ip, username, password, opts...)
 		},
 		server.Close

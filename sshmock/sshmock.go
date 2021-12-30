@@ -12,7 +12,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/bombsimon/logrusr"
+	"github.com/bombsimon/logrusr/v2"
 	"github.com/go-logr/logr"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
@@ -47,9 +47,9 @@ func New(answers map[string][]byte, log logr.Logger) (*Server, error) {
 	}
 
 	config.AddHostKey(privateKey)
-	if log == nil {
+	if log.GetSink() == nil {
 		l := logrus.New()
-		log = logrusr.NewLogger(l)
+		log = logrusr.New(l)
 	}
 
 	server := &Server{
