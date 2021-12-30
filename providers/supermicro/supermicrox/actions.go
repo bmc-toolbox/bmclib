@@ -57,7 +57,7 @@ func (s *SupermicroX) PxeOnce() (status bool, err error) {
 	if err != nil {
 		return false, err
 	}
-	return i.PowerCycle(context.Background())
+	return i.ForceRestart(context.Background())
 }
 
 // IsOn tells if a machine is currently powered on
