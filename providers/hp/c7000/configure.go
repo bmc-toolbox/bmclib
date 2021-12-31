@@ -543,12 +543,8 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 
 		payload := AddUser{Username: username, Password: password}
 		statusCode, _, err := c.postXML(payload)
-		if err != nil || statusCode != 200 && statusCode != 400 {
-			if err == nil {
-				allErrors += fmt.Sprintf("Received a %d status code from the POST request to add user %s.", statusCode, cfg.Name)
-			} else {
-				allErrors += fmt.Sprintf("POST request to add user %s failed with error: %s", cfg.Name, err.Error())
-			}
+		if err != nil {
+			allErrors += fmt.Sprintf("POST request to add user %s failed with error: %s", cfg.Name, err.Error())
 			continue
 		}
 
@@ -578,6 +574,11 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 				allErrors += fmt.Sprintf("Error configuring user %s: %s\n", cfg.Name, err.Error())
 				continue
 			}
+		}
+
+		if statusCode != 200 {
+			allErrors += fmt.Sprintf("Received a %d status code from the POST request to add user %s.", statusCode, cfg.Name)
+			continue
 		}
 
 		c.log.V(1).Info("User config applied.",
