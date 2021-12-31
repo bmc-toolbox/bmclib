@@ -543,11 +543,11 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 
 		payload := AddUser{Username: username, Password: password}
 		statusCode, _, err := c.postXML(payload)
-		if err != nil || statusCode != 200 {
+		if err != nil || statusCode != 200 && statusCode != 400 {
 			if err == nil {
-				allErrors += fmt.Sprintf("Received a %d status code from the POST request to add user %s.", statusCode, username)
+				allErrors += fmt.Sprintf("Received a %d status code from the POST request to add user %s.", statusCode, cfg.Name)
 			} else {
-				allErrors += fmt.Sprintf("POST request to add user %s failed with error: %s", username, err.Error())
+				allErrors += fmt.Sprintf("POST request to add user %s failed with error: %s", cfg.Name, err.Error())
 			}
 			continue
 		}
