@@ -1,4 +1,4 @@
-// Package bmclib client.go is intended to be the main the public API.
+// Package bmclib client.go is intended to be the main public API.
 // Its purpose is to make interacting with bmclib as friendly as possible.
 package bmclib
 
@@ -10,7 +10,6 @@ import (
 	"github.com/bmc-toolbox/bmclib/bmc"
 	"github.com/bmc-toolbox/bmclib/providers/asrockrack"
 	"github.com/bmc-toolbox/bmclib/providers/dell/idrac9"
-	"github.com/bmc-toolbox/bmclib/providers/goipmi"
 	"github.com/bmc-toolbox/bmclib/providers/ipmitool"
 	"github.com/bmc-toolbox/bmclib/providers/redfish"
 	"github.com/go-logr/logr"
@@ -79,10 +78,6 @@ func (c *Client) registerProviders() {
 	// register ASRR vendorapi provider
 	driverAsrockrack, _ := asrockrack.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger)
 	c.Registry.Register(asrockrack.ProviderName, asrockrack.ProviderProtocol, asrockrack.Features, nil, driverAsrockrack)
-
-	// register goipmi provider
-	driverGoIpmi := &goipmi.Conn{Host: c.Auth.Host, Port: c.Auth.Port, User: c.Auth.User, Pass: c.Auth.Pass, Log: c.Logger}
-	c.Registry.Register(goipmi.ProviderName, goipmi.ProviderProtocol, goipmi.Features, nil, driverGoIpmi)
 
 	// register gofish provider
 	driverGoFish := &redfish.Conn{Host: c.Auth.Host, Port: c.Auth.Port, User: c.Auth.User, Pass: c.Auth.Pass, Log: c.Logger}
