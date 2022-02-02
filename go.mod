@@ -3,7 +3,6 @@ module github.com/bmc-toolbox/bmclib
 go 1.15
 
 require (
-	bou.ke/monkey v1.0.2
 	github.com/bombsimon/logrusr/v2 v2.0.1
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-logr/logr v1.2.0
