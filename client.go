@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/bmc-toolbox/bmclib/bmc"
+	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/providers/asrockrack"
 	"github.com/bmc-toolbox/bmclib/providers/dell/idrac9"
 	"github.com/bmc-toolbox/bmclib/providers/ipmitool"
@@ -218,4 +219,24 @@ func (c *Client) GetBIOSVersion(ctx context.Context) (version string, err error)
 // UpdateBIOSFirmware pass through library function
 func (c *Client) UpdateBIOSFirmware(ctx context.Context, fileReader io.Reader, fileSize int64) (err error) {
 	return bmc.UpdateBIOSFirmwareFromInterfaces(ctx, fileReader, fileSize, c.Registry.GetDriverInterfaces())
+}
+
+// GetPowerSensors pass through library function
+func (c *Client) GetPowerSensors(ctx context.Context) (sensors []*devices.PowerSensor, err error) {
+	return bmc.GetPowerSensorsFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+}
+
+// GetTemperatureSensors pass through library function
+func (c *Client) GetTemperatureSensors(ctx context.Context) (sensors []*devices.TemperatureSensor, err error) {
+	return bmc.GetTemperatureSensorsFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+}
+
+// GetFanSensors pass through library function
+func (c *Client) GetFanSensors(ctx context.Context) (sensors []*devices.FanSensor, err error) {
+	return bmc.GetFanSensorsFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+}
+
+// GetChassisHealth pass through library function
+func (c *Client) GetChassisHealth(ctx context.Context) (health []*devices.ChassisHealth, err error) {
+	return bmc.GetChassisHealthFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
 }

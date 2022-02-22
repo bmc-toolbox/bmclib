@@ -7,7 +7,9 @@ import (
 	"strings"
 	"time"
 
+	bmcErrs "github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/providers"
+
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 	"github.com/pkg/errors"
@@ -27,17 +29,35 @@ var (
 	Features = registrar.Features{
 		providers.FeaturePowerSet,
 		providers.FeaturePowerState,
+		providers.FeaturePowerSensors,
+		providers.FeatureTemperatureSensors,
+		providers.FeatureFanSensors,
+		providers.FeatureChassisHealth,
 	}
+
+	// Supported Chassis Odata IDs
+	chassisOdataIdURLs = []string{
+		// Dells
+		"/redfish/v1/Chassis/System.Embedded.1",
+		// Supermicro
+		"/redfish/v1/Chassis/1",
+		// MegaRAC
+		"/redfish/v1/Chassis/Self",
+	}
+
+	ErrRedfishChassisOdataID = errors.New("no compatible chassis Odata IDs identified")
+	ErrRedfishServiceNil     = errors.New("redfish connection returned a nil redfish Service object")
 )
 
 // Conn details for redfish client
 type Conn struct {
-	Host string
-	Port string
-	User string
-	Pass string
-	conn *gofish.APIClient
-	Log  logr.Logger
+	Host   string
+	Port   string
+	User   string
+	Pass   string
+	Vendor string
+	conn   *gofish.APIClient
+	Log    logr.Logger
 }
 
 // Open a connection to a BMC via redfish
@@ -57,7 +77,7 @@ func (c *Conn) Open(ctx context.Context) (err error) {
 
 	c.conn, err = gofish.ConnectContext(ctx, config)
 	if err != nil {
-		return err
+		return errors.Wrap(bmcErrs.ErrLoginFailed, err.Error())
 	}
 	return nil
 }
