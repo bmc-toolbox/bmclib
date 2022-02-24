@@ -27,6 +27,9 @@ var (
 	Features = registrar.Features{
 		providers.FeaturePowerSet,
 		providers.FeaturePowerState,
+		providers.FeatureUserCreate,
+		providers.FeatureUserUpdate,
+		providers.FeatureUserDelete,
 	}
 )
 
