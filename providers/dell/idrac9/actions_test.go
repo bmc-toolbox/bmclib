@@ -18,16 +18,15 @@ const (
 	sshPassword = "test"
 )
 
-var (
-	sshAnswers = map[string][]byte{
-		"racadm serveraction hardreset": []byte(`Server power operation successful`),
-		"racadm racreset hard": []byte(`RAC reset operation initiated successfully. It may take a few
+var sshAnswers = map[string][]byte{
+	"racadm serveraction hardreset": []byte(`Server power operation successful`),
+	"racadm racreset hard": []byte(`RAC reset operation initiated successfully. It may take a few
 			minutes for the RAC to come online again.
 		   `),
-		"racadm serveraction powerup":     []byte(`Server power operation successful`),
-		"racadm serveraction powerdown":   []byte(`Server power operation successful`),
-		"racadm serveraction powerstatus": []byte(`Server power status: ON`),
-		"racadm config -g cfgServerInfo -o cfgServerBootOnce 1": []byte(`Object value modified successfully
+	"racadm serveraction powerup":     []byte(`Server power operation successful`),
+	"racadm serveraction powerdown":   []byte(`Server power operation successful`),
+	"racadm serveraction powerstatus": []byte(`Server power status: ON`),
+	"racadm config -g cfgServerInfo -o cfgServerBootOnce 1": []byte(`Object value modified successfully
 
 
 			RAC1169: The RACADM "config" command will be deprecated in a
@@ -37,7 +36,7 @@ var (
 			"racadm help set".
 			
 			`),
-		"racadm config -g cfgServerInfo -o cfgServerFirstBootDevice PXE": []byte(`Object value modified successfully
+	"racadm config -g cfgServerInfo -o cfgServerFirstBootDevice PXE": []byte(`Object value modified successfully
 
 
 			RAC1169: The RACADM "config" command will be deprecated in a
@@ -47,8 +46,7 @@ var (
 			"racadm help set".
 			
 			`),
-	}
-)
+}
 
 var _answers = map[string][]byte{
 	"/sysmgmt/2015/bmc/info":    []byte(`{"Attributes":{"ADEnabled":"Disabled","BuildVersion":"37","FwVer":"3.15.15.15","GUITitleBar":"spare-H16Z4M2","IsOEMBranded":"0","License":"Enterprise","SSOEnabled":"Disabled","SecurityPolicyMessage":"By accessing this computer, you confirm that such access complies with your organization's security policy.","ServerGen":"14G","SrvPrcName":"NULL","SystemLockdown":"Disabled","SystemModelName":"PowerEdge M640","TFAEnabled":"Disabled","iDRACName":"spare-H16Z4M2"}}`),

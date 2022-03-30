@@ -1,11 +1,11 @@
 package ilo
 
 import (
+	"testing"
+
 	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/sshmock"
 	"github.com/go-logr/logr"
-
-	"testing"
 )
 
 // Test server based on:
@@ -16,15 +16,13 @@ const (
 	sshPassword = "test"
 )
 
-var (
-	sshAnswers = map[string][]byte{
-		"power reset":    []byte(`Server resetting .......`),
-		"reset /map1":    []byte(`Resetting iLO`),
-		"power on":       []byte(`Server powering on .......`),
-		"power off hard": []byte(`Forcing server power off .......`),
-		"power":          []byte(`power: server power is currently: On`),
-	}
-)
+var sshAnswers = map[string][]byte{
+	"power reset":    []byte(`Server resetting .......`),
+	"reset /map1":    []byte(`Resetting iLO`),
+	"power on":       []byte(`Server powering on .......`),
+	"power off hard": []byte(`Forcing server power off .......`),
+	"power":          []byte(`power: server power is currently: On`),
+}
 
 func setupBMC() (func(), *Ilo, error) {
 	ssh, err := sshmock.New(sshAnswers, logr.Discard())

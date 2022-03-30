@@ -15,16 +15,15 @@ const (
 	sshPassword = "test"
 )
 
-var (
-	sshAnswers = map[string][]byte{
-		"racadm serveraction hardreset": []byte(`Server power operation successful`),
-		"racadm racreset hard": []byte(`RAC reset operation initiated successfully. It may take a few
+var sshAnswers = map[string][]byte{
+	"racadm serveraction hardreset": []byte(`Server power operation successful`),
+	"racadm racreset hard": []byte(`RAC reset operation initiated successfully. It may take a few
 			minutes for the RAC to come online again.
 		   `),
-		"racadm serveraction powerup":     []byte(`Server power operation successful`),
-		"racadm serveraction powerdown":   []byte(`Server power operation successful`),
-		"racadm serveraction powerstatus": []byte(`Server power status: ON`),
-		"racadm config -g cfgServerInfo -o cfgServerBootOnce 1": []byte(`Object value modified successfully
+	"racadm serveraction powerup":     []byte(`Server power operation successful`),
+	"racadm serveraction powerdown":   []byte(`Server power operation successful`),
+	"racadm serveraction powerstatus": []byte(`Server power status: ON`),
+	"racadm config -g cfgServerInfo -o cfgServerBootOnce 1": []byte(`Object value modified successfully
 
 
 			RAC1169: The RACADM "config" command will be deprecated in a
@@ -34,7 +33,7 @@ var (
 			"racadm help set".
 			
 			`),
-		"racadm config -g cfgServerInfo -o cfgServerFirstBootDevice PXE": []byte(`Object value modified successfully
+	"racadm config -g cfgServerInfo -o cfgServerFirstBootDevice PXE": []byte(`Object value modified successfully
 
 
 			RAC1169: The RACADM "config" command will be deprecated in a
@@ -44,8 +43,7 @@ var (
 			"racadm help set".
 			
 			`),
-	}
-)
+}
 
 func setupBMC() (func(), *IDrac8, error) {
 	ssh, err := sshmock.New(sshAnswers, logr.Discard())

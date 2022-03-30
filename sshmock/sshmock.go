@@ -5,12 +5,11 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
-
-	mrand "math/rand"
-
 	"fmt"
 	"net"
 	"time"
+
+	mrand "math/rand"
 
 	"github.com/bombsimon/logrusr/v2"
 	"github.com/go-logr/logr"

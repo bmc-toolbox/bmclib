@@ -1,11 +1,11 @@
 package c7000
 
 import (
+	"testing"
+
 	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/sshmock"
 	"github.com/go-logr/logr"
-
-	"testing"
 )
 
 // Test server based on:
@@ -16,10 +16,9 @@ const (
 	sshPassword = "test"
 )
 
-var (
-	sshAnswers = map[string][]byte{
-		"RESTART OA ACTIVE": []byte(`Restarting Onboard Administrator in bay`),
-		"SHOW SERVER NAMES": []byte(`
+var sshAnswers = map[string][]byte{
+	"RESTART OA ACTIVE": []byte(`Restarting Onboard Administrator in bay`),
+	"SHOW SERVER NAMES": []byte(`
 			Bay Server Name                                       Serial Number   Status   Power   UID Partner
 			--- ------------------------------------------------- --------------- -------- ------- --- -------
 			  1 fdi                                               CZXXXXXXEK      OK       On      Off 
@@ -40,11 +39,11 @@ var (
 			 16 [Absent]                                          
 			Totals: 1 server blades installed, 1 powered on.
 			`),
-		"REBOOT SERVER 1 FORCE":   []byte(`Forcing reboot of Blade 1`),
-		"RESET SERVER 1":          []byte(`Successfully reset the E-Fuse for device bay 1.`),
-		"POWERON SERVER 1":        []byte(`Powering on blade 1.`),
-		"POWEROFF SERVER 1 FORCE": []byte(`Blade 1 is powering down.`),
-		"SHOW SERVER STATUS 1": []byte(`Blade #1 Status:
+	"REBOOT SERVER 1 FORCE":   []byte(`Forcing reboot of Blade 1`),
+	"RESET SERVER 1":          []byte(`Successfully reset the E-Fuse for device bay 1.`),
+	"POWERON SERVER 1":        []byte(`Powering on blade 1.`),
+	"POWEROFF SERVER 1 FORCE": []byte(`Blade 1 is powering down.`),
+	"SHOW SERVER STATUS 1": []byte(`Blade #1 Status:
 			Power: On
 			Current Wattage used: 500
 			Health: OK
@@ -61,9 +60,9 @@ var (
 					iLO Network                              OK
 					Mezzanine Card                           OK
         	`),
-		"RESET ILO 1":                []byte(`Bay 1: Successfully reset iLO through Hardware reset`),
-		"SET SERVER BOOT ONCE PXE 1": []byte(`Blade #1 boot order changed to PXE`),
-		"SET POWER SAVINGS OFF": []byte(`Power Settings were updated to:
+	"RESET ILO 1":                []byte(`Bay 1: Successfully reset iLO through Hardware reset`),
+	"SET SERVER BOOT ONCE PXE 1": []byte(`Blade #1 boot order changed to PXE`),
+	"SET POWER SAVINGS OFF": []byte(`Power Settings were updated to:
 
 			Power Mode: Redundant
 			Dynamic Power: Disabled
@@ -75,7 +74,7 @@ var (
 			Present Power:                884 Watts AC
 			Power Limit:                 6445 Watts AC			
 			`),
-		"SHOW OA INFO": []byte(`Onboard Administrator #1 information:
+	"SHOW OA INFO": []byte(`Onboard Administrator #1 information:
 			Product Name  : BladeSystem c7000 DDR2 Onboard Administrator with KVM
 			Part Number   : XXXXXX-XXX
 			Spare Part No.: XXXXXX-XXX
@@ -94,8 +93,7 @@ var (
 				Flow control: None
 	
 	`),
-	}
-)
+}
 
 func setupBMC() (func(), *C7000, error) {
 	ssh, err := sshmock.New(sshAnswers, logr.Discard())
@@ -186,7 +184,6 @@ func Test_FindBladePosition(t *testing.T) {
 	want, wantErr := 1, false
 
 	got, err := bmc.FindBladePosition("CZXXXXXXEK")
-
 	if err != nil {
 		t.Errorf("error = %v, wantErr %v", err, wantErr)
 	}

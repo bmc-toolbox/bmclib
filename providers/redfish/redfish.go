@@ -22,16 +22,14 @@ const (
 	ProviderProtocol = "redfish"
 )
 
-var (
-	// Features implemented by gofish
-	Features = registrar.Features{
-		providers.FeaturePowerSet,
-		providers.FeaturePowerState,
-		providers.FeatureUserCreate,
-		providers.FeatureUserUpdate,
-		providers.FeatureUserDelete,
-	}
-)
+// Features implemented by gofish
+var Features = registrar.Features{
+	providers.FeaturePowerSet,
+	providers.FeaturePowerState,
+	providers.FeatureUserCreate,
+	providers.FeatureUserUpdate,
+	providers.FeatureUserDelete,
+}
 
 // Conn details for redfish client
 type Conn struct {
@@ -45,7 +43,6 @@ type Conn struct {
 
 // Open a connection to a BMC via redfish
 func (c *Conn) Open(ctx context.Context) (err error) {
-
 	config := gofish.ClientConfig{
 		Endpoint: "https://" + c.Host,
 		Username: c.User,

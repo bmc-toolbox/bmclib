@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 		os.Setenv("PATH", path)
 		fmt.Println(os.Getenv("PATH"))
 		f := filepath.Join(tempDir, "ipmitool")
-		err = ioutil.WriteFile(f, []byte{}, 0755)
+		err = ioutil.WriteFile(f, []byte{}, 0o755)
 		if err != nil {
 			os.RemoveAll(tempDir)
 			os.Exit(3)

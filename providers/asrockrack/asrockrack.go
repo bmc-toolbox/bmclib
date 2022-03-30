@@ -21,15 +21,13 @@ const (
 	ProviderProtocol = "vendorapi"
 )
 
-var (
-	// Features implemented by asrockrack https
-	Features = registrar.Features{
-		providers.FeatureBiosVersionRead,
-		providers.FeatureBmcVersionRead,
-		providers.FeatureBiosFirmwareUpdate,
-		providers.FeatureBmcFirmwareUpdate,
-	}
-)
+// Features implemented by asrockrack https
+var Features = registrar.Features{
+	providers.FeatureBiosVersionRead,
+	providers.FeatureBmcVersionRead,
+	providers.FeatureBiosFirmwareUpdate,
+	providers.FeatureBmcFirmwareUpdate,
+}
 
 // ASRockRack holds the status and properties of a connection to a asrockrack bmc
 type ASRockRack struct {

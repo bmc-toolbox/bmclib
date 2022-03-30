@@ -23,28 +23,26 @@ type testCase struct {
 	tName string
 }
 
-var (
-	// common set of test cases
-	testCases = []testCase{
+// common set of test cases
+var testCases = []testCase{
 
-		{
-			"foo",
-			"baz",
-			"",
-			false,
-			bmclibErrs.ErrInvalidUserRole,
-			"role not defined",
-		},
-		{
-			"foo",
-			"",
-			"Administrator",
-			false,
-			bmclibErrs.ErrUserParamsRequired,
-			"param not defined",
-		},
-	}
-)
+	{
+		"foo",
+		"baz",
+		"",
+		false,
+		bmclibErrs.ErrInvalidUserRole,
+		"role not defined",
+	},
+	{
+		"foo",
+		"",
+		"Administrator",
+		false,
+		bmclibErrs.ErrUserParamsRequired,
+		"param not defined",
+	},
+}
 
 func Test_UserRead(t *testing.T) {
 	expected := []map[string]string{
@@ -87,17 +85,17 @@ func Test_UserRead(t *testing.T) {
 }
 
 func Test_UserCreate(t *testing.T) {
-
 	tests := testCases
 	tests = append(tests,
-		[]testCase{{
-			"root",
-			"calvin",
-			"Administrator",
-			true,
-			nil,
-			"user account is created",
-		},
+		[]testCase{
+			{
+				"root",
+				"calvin",
+				"Administrator",
+				true,
+				nil,
+				"user account is created",
+			},
 			{
 				"admin",
 				"foo",
@@ -196,7 +194,6 @@ func Test_createUser(t *testing.T) {
 	}
 
 	assert.Equal(t, "application/json", contentType)
-
 }
 
 func Test_userAccounts(t *testing.T) {

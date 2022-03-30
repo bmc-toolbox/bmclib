@@ -15,9 +15,9 @@ import (
 )
 
 func main() {
-	//ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	// ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	ctx := context.TODO()
-	//defer cancel()
+	// defer cancel()
 	host := ""
 	user := ""
 	pass := ""
@@ -33,7 +33,6 @@ func main() {
 		discover.WithContext(ctx),
 		discover.WithLogger(logger),
 	)
-
 	if err != nil {
 		logger.Error(err, "Error connecting to bmc")
 	}
@@ -54,5 +53,4 @@ func main() {
 		os.Exit(1)
 	}
 	fmt.Println(s)
-
 }

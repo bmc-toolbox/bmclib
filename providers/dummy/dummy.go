@@ -21,12 +21,10 @@ const (
 	ProviderProtocol = "ipmi"
 )
 
-var (
-	// Features implemented by ipmitool
-	Features = registrar.Features{
-		providers.FeaturePowerState,
-	}
-)
+// Features implemented by ipmitool
+var Features = registrar.Features{
+	providers.FeaturePowerState,
+}
 
 type Conn struct {
 	FailOpen bool
@@ -56,6 +54,6 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 
 // PowerStateGet gets the power state of a BMC machine
 func (c *Conn) PowerStateGet(ctx context.Context) (state string, err error) {
-	//panic("testing")
+	// panic("testing")
 	return "on", errors.New("bad")
 }

@@ -48,7 +48,7 @@ func (c *C7000) httpLogin() (err error) {
 		return err
 	}
 
-	//req.Header.Add("Content-Type", "application/soap+xml; charset=utf-8")
+	// req.Header.Add("Content-Type", "application/soap+xml; charset=utf-8")
 	req.Header.Add("Content-Type", "text/plain;charset=UTF-8")
 
 	reqDump, _ := httputil.DumpRequestOut(req, true)

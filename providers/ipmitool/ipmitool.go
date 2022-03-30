@@ -18,16 +18,14 @@ const (
 	ProviderProtocol = "ipmi"
 )
 
-var (
-	// Features implemented by ipmitool
-	Features = registrar.Features{
-		providers.FeaturePowerSet,
-		providers.FeaturePowerState,
-		providers.FeatureUserRead,
-		providers.FeatureBmcReset,
-		providers.FeatureBootDeviceSet,
-	}
-)
+// Features implemented by ipmitool
+var Features = registrar.Features{
+	providers.FeaturePowerSet,
+	providers.FeaturePowerState,
+	providers.FeatureUserRead,
+	providers.FeatureBmcReset,
+	providers.FeatureBootDeviceSet,
+}
 
 // Conn for Ipmitool connection details
 type Conn struct {

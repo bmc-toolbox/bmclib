@@ -196,7 +196,8 @@ var (
 			"/sysmgmt/2015/bmc/info":    []byte(`{"Attributes":{"ADEnabled":"Disabled","BuildVersion":"37","FwVer":"3.15.15.15","GUITitleBar":"spare-H16Z4M2","IsOEMBranded":"0","License":"Enterprise","SSOEnabled":"Disabled","SecurityPolicyMessage":"By accessing this computer, you confirm that such access complies with your organization's security policy.","ServerGen":"14G","SrvPrcName":"NULL","SystemLockdown":"Disabled","SystemModelName":"PowerEdge M640","TFAEnabled":"Disabled","iDRACName":"spare-H16Z4M2"}}`),
 			"/sysmgmt/2015/bmc/session": []byte(`{"status": "good", "authResult": 7, "forwardUrl": "something", "errorMsg": "none"}`),
 		},
-		"SupermicroX": {"/cgi/login.cgi": []byte("ATEN International"),
+		"SupermicroX": {
+			"/cgi/login.cgi": []byte("ATEN International"),
 			"/cgi/ipmi.cgi": []byte(`<?xml version="1.0"?>
 		<IPMI>
 		  <FRU_INFO RES="1">
@@ -205,7 +206,8 @@ var (
 			<BOARD LAN="0" MFG_DATE="1996/01/01 00:00:00" PROD_NAME="X10DRFF-CTG" MFC_NAME="Supermicro" SERIAL_NUM="VM158S009467" PART_NUM="X10DRFF-CTG"/>
 			<PRODUCT LAN="0" MFC_NAME="Supermicro" PROD_NAME="NONE" PART_NUM="SYS-F618H6-FTPTL+" VERSION="NONE" SERIAL_NUM="A19627226A05569" ASSET_TAG="NONE"/>
 		  </FRU_INFO>
-		</IPMI>`)},
+		</IPMI>`),
+		},
 		"SupermicroX11": {"/cgi/login.cgi": []byte("ATEN International"), "/cgi/ipmi.cgi": []byte(`<?xml version="1.0"?>
 		<IPMI>
 			<FRU_INFO RES="1">

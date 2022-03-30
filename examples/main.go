@@ -20,14 +20,13 @@ import (
 // github.com/sirupsen/logrus: logrusr
 // github.com/wojas/genericr: genericr
 func main() {
-
 	ip := ""
 	user := "admin"
 	pass := "admin"
 
 	logger := logrus.New()
 	logger.SetLevel(logrus.DebugLevel)
-	//logger.SetFormatter(&logrus.JSONFormatter{})
+	// logger.SetFormatter(&logrus.JSONFormatter{})
 
 	logger.Info("printing status with a user defined logger")
 	conn, err := withUserDefinedLogger(ip, user, pass, logger)

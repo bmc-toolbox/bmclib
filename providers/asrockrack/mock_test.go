@@ -30,9 +30,11 @@ var (
 )
 
 // setup test BMC
-var server *httptest.Server
-var bmcURL *url.URL
-var fwUpgradeState *testFwUpgradeState
+var (
+	server         *httptest.Server
+	bmcURL         *url.URL
+	fwUpgradeState *testFwUpgradeState
+)
 
 type testFwUpgradeState struct {
 	FlashModeSet     bool
@@ -256,11 +258,11 @@ func session(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 		}
 	case "DELETE":
-		//1for h, values := range r.Header {
-		//1	for _, v := range values {
-		//1		fmt.Println(h, v)
-		//1	}
-		//1}
+		// 1for h, values := range r.Header {
+		// 1	for _, v := range values {
+		// 1		fmt.Println(h, v)
+		// 1	}
+		// 1}
 		if r.Header.Get("X-Csrftoken") != "l5L29IP7" {
 			w.WriteHeader(http.StatusBadRequest)
 		}

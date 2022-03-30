@@ -48,7 +48,7 @@ func WithRegistry(registry *registrar.Registry) Option {
 
 // NewClient returns a new Client struct
 func NewClient(host, port, user, pass string, opts ...Option) *Client {
-	var defaultClient = &Client{
+	defaultClient := &Client{
 		Logger:   logr.Discard(),
 		Registry: registrar.NewRegistry(),
 	}

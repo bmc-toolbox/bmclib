@@ -15,14 +15,13 @@ const (
 	sshPassword = "test"
 )
 
-var (
-	sshAnswers = map[string][]byte{
-		"racadm racreset": []byte(`CMC reset operation initiated successfully. It may take up to a minute 
+var sshAnswers = map[string][]byte{
+	"racadm racreset": []byte(`CMC reset operation initiated successfully. It may take up to a minute 
 			for the CMC to come back online again.
 			`),
-		"chassisaction powerup":   []byte(`Module power operation successful`),
-		"chassisaction powerdown": []byte(`Module power operation successful`),
-		"getsysinfo": []byte(`CMC Information:                         
+	"chassisaction powerup":   []byte(`Module power operation successful`),
+	"chassisaction powerdown": []byte(`Module power operation successful`),
+	"getsysinfo": []byte(`CMC Information:                         
 			CMC Date/Time             = Tue Jan 04 2000 22:35      
 			Primary CMC Location      = CMC-2      
 			Primary CMC Version       = 6.10                                                                    
@@ -70,7 +69,7 @@ var (
 			Power Status              = ON                                                                             
 			System ID                 = 1486                 
 	        `),
-		"getsvctag": []byte(`<Module>        <ServiceTag>
+	"getsvctag": []byte(`<Module>        <ServiceTag>
 			Chassis         5XXXXXX
 			Switch-1        0000000
 			Switch-2        N/A
@@ -95,24 +94,23 @@ var (
 			Server-15       N/A
 			Server-16       N/A
 			`),
-		"serveraction -m server-2 hardreset":   []byte(`Server power operation successful`),
-		"serveraction -m server-2 reseat -f":   []byte(`Server power operation successful`),
-		"serveraction -m server-2 powerup":     []byte(`Server power operation successful`),
-		"serveraction -m server-2 powerdown":   []byte(`Server power operation successful`),
-		"serveraction -m server-2 powerstatus": []byte(`ON`),
-		"serveraction -m server-1 powerstatus": []byte(`OFF`),
-		"racreset -m server-2": []byte(`RAC reset operation initiated successfully for server-2.
+	"serveraction -m server-2 hardreset":   []byte(`Server power operation successful`),
+	"serveraction -m server-2 reseat -f":   []byte(`Server power operation successful`),
+	"serveraction -m server-2 powerup":     []byte(`Server power operation successful`),
+	"serveraction -m server-2 powerdown":   []byte(`Server power operation successful`),
+	"serveraction -m server-2 powerstatus": []byte(`ON`),
+	"serveraction -m server-1 powerstatus": []byte(`OFF`),
+	"racreset -m server-2": []byte(`RAC reset operation initiated successfully for server-2.
 			It may take up to a minute for the RAC(s) to come back online again.`),
-		"deploy -m server-2 -b PXE -o yes":                                    []byte(`The blade was deployed successfully.`),
-		"config -g cfgServerInfo -o cfgServerIPMIOverLanEnable -i 2 1":        []byte(`Object value modified successfully`),
-		"config -g cfgChassisPower -o cfgChassisDynamicPSUEngagementEnable 1": []byte(`Object value modified successfully`),
-		"racadm setflexaddr -i 1 0": []byte(`Slot 2 FlexAddress state set successfully.
+	"deploy -m server-2 -b PXE -o yes":                                    []byte(`The blade was deployed successfully.`),
+	"config -g cfgServerInfo -o cfgServerIPMIOverLanEnable -i 2 1":        []byte(`Object value modified successfully`),
+	"config -g cfgChassisPower -o cfgChassisDynamicPSUEngagementEnable 1": []byte(`Object value modified successfully`),
+	"racadm setflexaddr -i 1 0": []byte(`Slot 2 FlexAddress state set successfully.
 			This will force a reset on hardware affected by the Flex Address change.
 			Please wait for up to a few minutes before performing additional power
 			related actions (eg. reset, powerdown) on the affected hardware.
 			`),
-	}
-)
+}
 
 func setupBMC() (func(), *M1000e, error) {
 	ssh, err := sshmock.New(sshAnswers, logr.Discard())
