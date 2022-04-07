@@ -2,6 +2,7 @@ package asrockrack
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,6 +12,7 @@ import (
 	"net/http/httputil"
 	"os"
 
+	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/errors"
 )
 
@@ -34,6 +36,66 @@ type firmwareInfo struct {
 	NodeID           string `json:"Node_id"`
 }
 
+type biosPOSTCode struct {
+	PostStatus int `json:"poststatus"`
+	PostData   int `json:"postdata"`
+}
+
+// component is part of a payload returned by the inventory info endpoint
+type component struct {
+	DeviceID                int    `json:"device_id"`
+	DeviceName              string `json:"device_name"`
+	DeviceType              string `json:"device_type"`
+	ProductManufacturerName string `json:"product_manufacturer_name"`
+	ProductName             string `json:"product_name"`
+	ProductPartNumber       string `json:"product_part_number"`
+	ProductVersion          string `json:"product_version"`
+	ProductSerialNumber     string `json:"product_serial_number"`
+	ProductAssetTag         string `json:"product_asset_tag"`
+	ProductExtra            string `json:"product_extra"`
+}
+
+// fru is part of a payload returned by the fru info endpoint
+type fru struct {
+	Component      string
+	Version        int    `json:"version"`
+	Length         int    `json:"length"`
+	Language       int    `json:"language"`
+	Manufacturer   string `json:"manufacturer"`
+	ProductName    string `json:"product_name"`
+	PartNumber     string `json:"part_number"`
+	ProductVersion string `json:"product_version"`
+	SerialNumber   string `json:"serial_number"`
+	AssetTag       string `json:"asset_tag"`
+	FruFileID      string `json:"fru_file_id"`
+	Type           string `json:"type"`
+	CustomFields   string `json:"custom_fields"`
+}
+
+// sensor is part of the payload returned by the sensors endpoint
+type sensor struct {
+	ID                            int     `json:"id"`
+	SensorNumber                  int     `json:"sensor_number"`
+	Name                          string  `json:"name"`
+	OwnerID                       int     `json:"owner_id"`
+	OwnerLun                      int     `json:"owner_lun"`
+	RawReading                    float64 `json:"raw_reading"`
+	Type                          string  `json:"type"`
+	TypeNumber                    int     `json:"type_number"`
+	Reading                       float64 `json:"reading"`
+	SensorState                   int     `json:"sensor_state"`
+	DiscreteState                 int     `json:"discrete_state"`
+	SettableReadableThreshMask    int     `json:"settable_readable_threshMask"`
+	LowerNonRecoverableThreshold  float64 `json:"lower_non_recoverable_threshold"`
+	LowerCriticalThreshold        float64 `json:"lower_critical_threshold"`
+	LowerNonCriticalThreshold     float64 `json:"lower_non_critical_threshold"`
+	HigherNonCriticalThreshold    float64 `json:"higher_non_critical_threshold"`
+	HigherCriticalThreshold       float64 `json:"higher_critical_threshold"`
+	HigherNonRecoverableThreshold float64 `json:"higher_non_recoverable_threshold"`
+	Accessible                    int     `json:"accessible"`
+	Unit                          string  `json:"unit"`
+}
+
 // Payload to preseve config when updating the BMC firmware
 type preserveConfig struct {
 	FlashStatus     int `json:"flash_status"` // 1 = full firmware flash, 2 = section based flash, 3 - version compare flash
@@ -52,6 +114,12 @@ type upgradeProgress struct {
 	State    int    `json:"state,omitempty"`
 }
 
+// Chassis status struct
+type chassisStatus struct {
+	PowerStatus int `json:"power_status"`
+	LEDStatus   int `json:"led_status"`
+}
+
 // BIOS upgrade commands
 // 2 == configure
 // 3 == apply upgrade
@@ -59,10 +127,20 @@ type biosUpdateAction struct {
 	Action int `json:"action"`
 }
 
-func (a *ASRockRack) listUsers() ([]*UserAccount, error) {
+var (
+	knownPOSTCodes = map[int]string{
+		160: devices.POSTStateOS,
+		2:   devices.POSTStateBootINIT, // no differentiation between BIOS init and PXE boot
+		144: devices.POSTStateUEFI,
+		154: devices.POSTStateUEFI,
+		178: devices.POSTStateUEFI,
+	}
+)
+
+func (a *ASRockRack) listUsers(ctx context.Context) ([]*UserAccount, error) {
 	endpoint := "api/settings/users"
 
-	resp, statusCode, err := a.queryHTTPS(endpoint, "GET", nil, nil, 0)
+	resp, statusCode, err := a.queryHTTPS(ctx, endpoint, "GET", nil, nil, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +159,7 @@ func (a *ASRockRack) listUsers() ([]*UserAccount, error) {
 	return accounts, nil
 }
 
-func (a *ASRockRack) createUpdateUser(account *UserAccount) error {
+func (a *ASRockRack) createUpdateUser(ctx context.Context, account *UserAccount) error {
 	endpoint := "api/settings/users/" + fmt.Sprintf("%d", account.ID)
 
 	payload, err := json.Marshal(account)
@@ -90,7 +168,7 @@ func (a *ASRockRack) createUpdateUser(account *UserAccount) error {
 	}
 
 	headers := map[string]string{"Content-Type": "application/json"}
-	_, statusCode, err := a.queryHTTPS(endpoint, "PUT", bytes.NewReader(payload), headers, 0)
+	_, statusCode, err := a.queryHTTPS(ctx, endpoint, "PUT", bytes.NewReader(payload), headers, 0)
 	if err != nil {
 		return err
 	}
@@ -105,10 +183,10 @@ func (a *ASRockRack) createUpdateUser(account *UserAccount) error {
 // 1 Set BMC to flash mode and prepare flash area
 // at this point all logged in sessions are terminated
 // and no logins are permitted
-func (a *ASRockRack) setFlashMode() error {
+func (a *ASRockRack) setFlashMode(ctx context.Context) error {
 	endpoint := "api/maintenance/flash"
 
-	_, statusCode, err := a.queryHTTPS(endpoint, "PUT", nil, nil, 0)
+	_, statusCode, err := a.queryHTTPS(ctx, endpoint, "PUT", nil, nil, 0)
 	if err != nil {
 		return err
 	}
@@ -131,7 +209,7 @@ func multipartSize(fieldname, filename string) int64 {
 }
 
 // 2 Upload the firmware file
-func (a *ASRockRack) uploadFirmware(endpoint string, fwReader io.Reader, fileSize int64) error {
+func (a *ASRockRack) uploadFirmware(ctx context.Context, endpoint string, fwReader io.Reader, fileSize int64) error {
 	fieldName, fileName := "fwimage", "image"
 	contentLength := multipartSize(fieldName, fileName) + fileSize
 
@@ -170,7 +248,7 @@ func (a *ASRockRack) uploadFirmware(endpoint string, fwReader io.Reader, fileSiz
 	}
 
 	// POST payload
-	_, statusCode, err := a.queryHTTPS(endpoint, "POST", pipeReader, headers, contentLength)
+	_, statusCode, err := a.queryHTTPS(ctx, endpoint, "POST", pipeReader, headers, contentLength)
 	if err != nil {
 		return err
 	}
@@ -183,10 +261,10 @@ func (a *ASRockRack) uploadFirmware(endpoint string, fwReader io.Reader, fileSiz
 }
 
 // 3. Verify uploaded firmware file - to be invoked after uploadFirmware()
-func (a *ASRockRack) verifyUploadedFirmware() error {
+func (a *ASRockRack) verifyUploadedFirmware(ctx context.Context) error {
 	endpoint := "api/maintenance/firmware/verification"
 
-	_, statusCode, err := a.queryHTTPS(endpoint, "GET", nil, nil, 0)
+	_, statusCode, err := a.queryHTTPS(ctx, endpoint, "GET", nil, nil, 0)
 	if err != nil {
 		return err
 	}
@@ -199,7 +277,7 @@ func (a *ASRockRack) verifyUploadedFirmware() error {
 }
 
 // 4. Start firmware flashing process - to be invoked after verifyUploadedFirmware
-func (a *ASRockRack) upgradeBMC() error {
+func (a *ASRockRack) upgradeBMC(ctx context.Context) error {
 	endpoint := "api/maintenance/firmware/upgrade"
 
 	// preserve all configuration during upgrade, full flash
@@ -210,23 +288,7 @@ func (a *ASRockRack) upgradeBMC() error {
 	}
 
 	headers := map[string]string{"Content-Type": "application/json"}
-	_, statusCode, err := a.queryHTTPS(endpoint, "PUT", bytes.NewReader(payload), headers, 0)
-	if err != nil {
-		return err
-	}
-
-	if statusCode != http.StatusOK {
-		return fmt.Errorf("non 200 response: %d", statusCode)
-	}
-
-	return nil
-}
-
-// 4. reset BMC
-func (a *ASRockRack) reset() error {
-	endpoint := "api/maintenance/reset"
-
-	_, statusCode, err := a.queryHTTPS(endpoint, "POST", nil, nil, 0)
+	_, statusCode, err := a.queryHTTPS(ctx, endpoint, "PUT", bytes.NewReader(payload), headers, 0)
 	if err != nil {
 		return err
 	}
@@ -239,8 +301,8 @@ func (a *ASRockRack) reset() error {
 }
 
 // 5. firmware flash progress
-func (a *ASRockRack) flashProgress(endpoint string) (*upgradeProgress, error) {
-	resp, statusCode, err := a.queryHTTPS(endpoint, "GET", nil, nil, 0)
+func (a *ASRockRack) flashProgress(ctx context.Context, endpoint string) (*upgradeProgress, error) {
+	resp, statusCode, err := a.queryHTTPS(ctx, endpoint, "GET", nil, nil, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -259,10 +321,10 @@ func (a *ASRockRack) flashProgress(endpoint string) (*upgradeProgress, error) {
 }
 
 // Query firmware information from the BMC
-func (a *ASRockRack) firmwareInfo() (*firmwareInfo, error) {
+func (a *ASRockRack) firmwareInfo(ctx context.Context) (*firmwareInfo, error) {
 	endpoint := "api/asrr/fw-info"
 
-	resp, statusCode, err := a.queryHTTPS(endpoint, "GET", nil, nil, 0)
+	resp, statusCode, err := a.queryHTTPS(ctx, endpoint, "GET", nil, nil, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -280,9 +342,123 @@ func (a *ASRockRack) firmwareInfo() (*firmwareInfo, error) {
 	return f, nil
 }
 
+// Query BIOS/UEFI POST code information from the BMC
+func (a *ASRockRack) postCodeInfo(ctx context.Context) (*biosPOSTCode, error) {
+	endpoint := "/api/asrr/getbioscode"
+
+	resp, statusCode, err := a.queryHTTPS(ctx, endpoint, "GET", nil, nil, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	if statusCode != http.StatusOK {
+		return nil, fmt.Errorf("non 200 response: %d", statusCode)
+	}
+
+	b := &biosPOSTCode{}
+	err = json.Unmarshal(resp, b)
+	if err != nil {
+		return nil, err
+	}
+
+	return b, nil
+}
+
+// Query the inventory info endpoint
+func (a *ASRockRack) inventoryInfo(ctx context.Context) ([]*component, error) {
+	endpoint := "api/asrr/inventory_info"
+
+	resp, statusCode, err := a.queryHTTPS(ctx, endpoint, "GET", nil, nil, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	if statusCode != http.StatusOK {
+		return nil, fmt.Errorf("non 200 response: %d", statusCode)
+	}
+
+	components := []*component{}
+	err = json.Unmarshal(resp, &components)
+	if err != nil {
+		return nil, err
+	}
+
+	return components, nil
+}
+
+// Query the fru info endpoint
+func (a *ASRockRack) fruInfo(ctx context.Context) ([]*fru, error) {
+	endpoint := "api/fru"
+
+	resp, statusCode, err := a.queryHTTPS(ctx, endpoint, "GET", nil, nil, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	if statusCode != http.StatusOK {
+		return nil, fmt.Errorf("non 200 response: %d", statusCode)
+	}
+
+	data := []map[string]*fru{}
+	err = json.Unmarshal(resp, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(data) == 0 {
+		return nil, fmt.Errorf("no FRU data returned")
+	}
+
+	frus := []*fru{}
+	for key, f := range data[0] {
+		switch key {
+		case "chassis", "board", "product":
+			frus = append(frus, &fru{
+				Component:      key,
+				Version:        f.Version,
+				Length:         f.Length,
+				Language:       f.Language,
+				Manufacturer:   f.Manufacturer,
+				ProductName:    f.ProductName,
+				PartNumber:     f.PartNumber,
+				ProductVersion: f.ProductVersion,
+				SerialNumber:   f.SerialNumber,
+				AssetTag:       f.SerialNumber,
+				FruFileID:      f.FruFileID,
+				CustomFields:   f.CustomFields,
+				Type:           f.Type,
+			})
+		}
+	}
+
+	return frus, nil
+}
+
+// Query the sensors  endpoint
+func (a *ASRockRack) sensors(ctx context.Context) ([]*sensor, error) {
+	endpoint := "api/sensors"
+
+	resp, statusCode, err := a.queryHTTPS(ctx, endpoint, "GET", nil, nil, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	if statusCode != http.StatusOK {
+		return nil, fmt.Errorf("non 200 response: %d", statusCode)
+	}
+
+	sensors := []*sensor{}
+	err = json.Unmarshal(resp, &sensors)
+	if err != nil {
+		return nil, err
+	}
+
+	return sensors, nil
+}
+
 // Set the BIOS upgrade configuration
 //  - preserve current configuration
-func (a *ASRockRack) biosUpgradeConfiguration() error {
+func (a *ASRockRack) biosUpgradeConfiguration(ctx context.Context) error {
 	endpoint := "api/asrr/maintenance/BIOS/configuration"
 
 	// Preserve existing configuration?
@@ -293,7 +469,7 @@ func (a *ASRockRack) biosUpgradeConfiguration() error {
 	}
 
 	headers := map[string]string{"Content-Type": "application/json"}
-	resp, statusCode, err := a.queryHTTPS(endpoint, "POST", bytes.NewReader(payload), headers, 0)
+	resp, statusCode, err := a.queryHTTPS(ctx, endpoint, "POST", bytes.NewReader(payload), headers, 0)
 	if err != nil {
 		return err
 	}
@@ -312,7 +488,7 @@ func (a *ASRockRack) biosUpgradeConfiguration() error {
 }
 
 // Run BIOS upgrade
-func (a *ASRockRack) biosUpgrade() error {
+func (a *ASRockRack) upgradeBIOS(ctx context.Context) error {
 	endpoint := "api/asrr/maintenance/BIOS/upgrade"
 
 	// Run upgrade
@@ -323,7 +499,7 @@ func (a *ASRockRack) biosUpgrade() error {
 	}
 
 	headers := map[string]string{"Content-Type": "application/json"}
-	resp, statusCode, err := a.queryHTTPS(endpoint, "POST", bytes.NewReader(payload), headers, 0)
+	resp, statusCode, err := a.queryHTTPS(ctx, endpoint, "POST", bytes.NewReader(payload), headers, 0)
 	if err != nil {
 		return err
 	}
@@ -341,8 +517,30 @@ func (a *ASRockRack) biosUpgrade() error {
 	return nil
 }
 
+// Returns the chassis status object which includes the power state
+func (a *ASRockRack) chassisStatusInfo(ctx context.Context) (*chassisStatus, error) {
+	endpoint := "/api/chassis-status"
+
+	resp, statusCode, err := a.queryHTTPS(ctx, endpoint, "GET", nil, nil, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	if statusCode != http.StatusOK {
+		return nil, fmt.Errorf("non 200 response: %d", statusCode)
+	}
+
+	chassisStatus := chassisStatus{}
+	err = json.Unmarshal(resp, &chassisStatus)
+	if err != nil {
+		return nil, err
+	}
+
+	return &chassisStatus, nil
+}
+
 // Aquires a session id cookie and a csrf token
-func (a *ASRockRack) httpsLogin() error {
+func (a *ASRockRack) httpsLogin(ctx context.Context) error {
 	urlEndpoint := "api/session"
 
 	// login payload
@@ -355,7 +553,7 @@ func (a *ASRockRack) httpsLogin() error {
 
 	headers := map[string]string{"Content-Type": "application/x-www-form-urlencoded"}
 
-	resp, statusCode, err := a.queryHTTPS(urlEndpoint, "POST", bytes.NewReader(payload), headers, 0)
+	resp, statusCode, err := a.queryHTTPS(ctx, urlEndpoint, "POST", bytes.NewReader(payload), headers, 0)
 	if err != nil {
 		return fmt.Errorf("Error logging in: " + err.Error())
 	}
@@ -374,10 +572,10 @@ func (a *ASRockRack) httpsLogin() error {
 }
 
 // Close ends the BMC session
-func (a *ASRockRack) httpsLogout() error {
+func (a *ASRockRack) httpsLogout(ctx context.Context) error {
 	urlEndpoint := "api/session"
 
-	_, statusCode, err := a.queryHTTPS(urlEndpoint, "DELETE", nil, nil, 0)
+	_, statusCode, err := a.queryHTTPS(ctx, urlEndpoint, "DELETE", nil, nil, 0)
 	if err != nil {
 		return fmt.Errorf("Error logging out: " + err.Error())
 	}
@@ -395,13 +593,13 @@ func (a *ASRockRack) httpsLogout() error {
 // queryHTTPS run the HTTPS query passing in the required headers
 // the / suffix should be excluded from the URLendpoint
 // returns - response body, http status code, error if any
-func (a *ASRockRack) queryHTTPS(URLendpoint, method string, payload io.Reader, headers map[string]string, contentLength int64) ([]byte, int, error) {
+func (a *ASRockRack) queryHTTPS(ctx context.Context, endpoint, method string, payload io.Reader, headers map[string]string, contentLength int64) ([]byte, int, error) {
 	var body []byte
 	var err error
 	var req *http.Request
 
-	URL := fmt.Sprintf("https://%s/%s", a.ip, URLendpoint)
-	req, err = http.NewRequest(method, URL, payload)
+	URL := fmt.Sprintf("https://%s/%s", a.ip, endpoint)
+	req, err = http.NewRequestWithContext(ctx, method, URL, payload)
 	if err != nil {
 		return nil, 0, err
 	}

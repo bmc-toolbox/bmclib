@@ -60,7 +60,7 @@ func Test_UserRead(t *testing.T) {
 		},
 	}
 
-	err := aClient.httpsLogin()
+	err := aClient.httpsLogin(context.TODO())
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -109,7 +109,7 @@ func Test_UserCreate(t *testing.T) {
 		}...,
 	)
 
-	err := aClient.httpsLogin()
+	err := aClient.httpsLogin(context.TODO())
 	if err != nil {
 		t.Error(err)
 	}
@@ -144,7 +144,7 @@ func Test_UserUpdate(t *testing.T) {
 		}...,
 	)
 
-	err := aClient.httpsLogin()
+	err := aClient.httpsLogin(context.TODO())
 	if err != nil {
 		t.Error(err)
 	}
@@ -157,7 +157,7 @@ func Test_UserUpdate(t *testing.T) {
 }
 
 func Test_createUser(t *testing.T) {
-	err := aClient.httpsLogin()
+	err := aClient.httpsLogin(context.TODO())
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -181,7 +181,7 @@ func Test_createUser(t *testing.T) {
 		PasswordSize:                 "",
 	}
 
-	err = aClient.createUpdateUser(account)
+	err = aClient.createUpdateUser(context.TODO(), account)
 	if err != nil {
 		t.Error(err)
 	}
@@ -200,7 +200,7 @@ func Test_createUser(t *testing.T) {
 }
 
 func Test_userAccounts(t *testing.T) {
-	err := aClient.httpsLogin()
+	err := aClient.httpsLogin(context.TODO())
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -225,7 +225,7 @@ func Test_userAccounts(t *testing.T) {
 		EmailFormat:                  "ami_format",
 	}
 
-	accounts, err := aClient.listUsers()
+	accounts, err := aClient.listUsers(context.TODO())
 	if err != nil {
 		t.Error(err)
 	}
