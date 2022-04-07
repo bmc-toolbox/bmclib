@@ -1,0 +1,486 @@
+{
+  "oem": false,
+  "vendor": "Dell Inc.",
+  "model": "PowerEdge R6515",
+  "serial": "FOOBAR",
+  "bios": {
+    "description": "BIOS Configuration Current Settings",
+    "firmware": {
+      "installed": "2.2.4",
+      "software_id": "159",
+      "previous": [
+        {
+          "installed": "1.3.1",
+          "software_id": "159"
+        }
+      ],
+      "metadata": {
+        "name": "BIOS"
+      }
+    }
+  },
+  "bmc": {
+    "id": "iDRAC.Embedded.1",
+    "description": "BMC",
+    "vendor": "Dell Inc.",
+    "model": "PowerEdge R6515",
+    "status": {
+      "Health": "OK",
+      "State": "Enabled"
+    },
+    "firmware": {
+      "installed": "5.00.00.00",
+      "software_id": "25227",
+      "previous": [
+        {
+          "installed": "4.10.10.10",
+          "software_id": "25227"
+        }
+      ],
+      "metadata": {
+        "name": "Integrated Dell Remote Access Controller"
+      }
+    }
+  },
+  "mainboard": {},
+  "cplds": [
+    {
+      "description": "System CPLD",
+      "vendor": "Dell Inc.",
+      "model": "PowerEdge R6515",
+      "firmware": {
+        "installed": "1.0.3",
+        "software_id": "27763",
+        "metadata": {
+          "name": "System CPLD"
+        }
+      }
+    }
+  ],
+  "tpms": [
+    {
+      "interface_type": "TPM2_0",
+      "firmware": {
+        "installed": "1.3.1.0",
+        "software_id": "109673",
+        "metadata": {
+          "name": "TPM"
+        }
+      },
+      "status": {
+        "Health": "",
+        "State": "Enabled"
+      }
+    }
+  ],
+  "cpus": [
+    {
+      "id": "CPU.Socket.1",
+      "description": "Represents the properties of a Processor attached to this System",
+      "vendor": "AMD",
+      "model": "AMD EPYC 7402P 24-Core Processor",
+      "slot": "CPU.Socket.1",
+      "architecture": "x86",
+      "clock_speeed_hz": 3900,
+      "cores": 24,
+      "threads": 48,
+      "status": {
+        "Health": "OK",
+        "State": "Enabled"
+      },
+      "firmware": {
+        "installed": "0x830104D"
+      }
+    }
+  ],
+  "memory": [
+    {
+      "description": "DIMM A7",
+      "slot": "DIMM.Socket.A7",
+      "type": "DRAM",
+      "vendor": "Hynix Semiconductor",
+      "serial": "537385EF",
+      "size_bytes": 8192,
+      "part_number": "HMA81GR7CJR8N-XN",
+      "clock_speed_hz": 3200,
+      "status": {
+        "Health": "OK",
+        "State": "Enabled"
+      }
+    },
+    {
+      "description": "DIMM A6",
+      "slot": "DIMM.Socket.A6",
+      "type": "DRAM",
+      "vendor": "Hynix Semiconductor",
+      "serial": "53738538",
+      "size_bytes": 8192,
+      "part_number": "HMA81GR7CJR8N-XN",
+      "clock_speed_hz": 3200,
+      "status": {
+        "Health": "OK",
+        "State": "Enabled"
+      }
+    },
+    {
+      "description": "DIMM A3",
+      "slot": "DIMM.Socket.A3",
+      "type": "DRAM",
+      "vendor": "Hynix Semiconductor",
+      "serial": "53738536",
+      "size_bytes": 8192,
+      "part_number": "HMA81GR7CJR8N-XN",
+      "clock_speed_hz": 3200,
+      "status": {
+        "Health": "OK",
+        "State": "Enabled"
+      }
+    },
+    {
+      "description": "DIMM A8",
+      "slot": "DIMM.Socket.A8",
+      "type": "DRAM",
+      "vendor": "Hynix Semiconductor",
+      "serial": "5373856E",
+      "size_bytes": 8192,
+      "part_number": "HMA81GR7CJR8N-XN",
+      "clock_speed_hz": 3200,
+      "status": {
+        "Health": "OK",
+        "State": "Enabled"
+      }
+    },
+    {
+      "description": "DIMM A2",
+      "slot": "DIMM.Socket.A2",
+      "type": "DRAM",
+      "vendor": "Hynix Semiconductor",
+      "serial": "5373858E",
+      "size_bytes": 8192,
+      "part_number": "HMA81GR7CJR8N-XN",
+      "clock_speed_hz": 3200,
+      "status": {
+        "Health": "OK",
+        "State": "Enabled"
+      }
+    },
+    {
+      "description": "DIMM A4",
+      "slot": "DIMM.Socket.A4",
+      "type": "DRAM",
+      "vendor": "Hynix Semiconductor",
+      "serial": "537385CA",
+      "size_bytes": 8192,
+      "part_number": "HMA81GR7CJR8N-XN",
+      "clock_speed_hz": 3200,
+      "status": {
+        "Health": "OK",
+        "State": "Enabled"
+      }
+    },
+    {
+      "description": "DIMM A5",
+      "slot": "DIMM.Socket.A5",
+      "type": "DRAM",
+      "vendor": "Hynix Semiconductor",
+      "serial": "53738537",
+      "size_bytes": 8192,
+      "part_number": "HMA81GR7CJR8N-XN",
+      "clock_speed_hz": 3200,
+      "status": {
+        "Health": "OK",
+        "State": "Enabled"
+      }
+    },
+    {
+      "description": "DIMM A1",
+      "slot": "DIMM.Socket.A1",
+      "type": "DRAM",
+      "vendor": "Hynix Semiconductor",
+      "serial": "53738568",
+      "size_bytes": 8192,
+      "part_number": "HMA81GR7CJR8N-XN",
+      "clock_speed_hz": 3200,
+      "status": {
+        "Health": "OK",
+        "State": "Enabled"
+      }
+    }
+  ],
+  "nics": [
+    {
+      "id": "NIC.Embedded.1",
+      "description": "Embedded NIC 1 Port 1 Partition 1",
+      "speed_bits": 6,
+      "oem": false,
+      "metadata": null,
+      "status": {
+        "Health": "OK",
+        "State": "Enabled"
+      },
+      "firmware": {
+        "installed": "1.5.12"
+      }
+    },
+    {
+      "id": "NIC.Slot.3",
+      "description": "NIC in Slot 3 Port 2 Partition 1",
+      "vendor": "Intel Corporation",
+      "model": "Intel(R) 10GbE 2P X710 Adapter",
+      "serial": "MYFLMIT06404GD",
+      "speed_bits": 100006,
+      "macaddress": "F8:F2:1E:A6:89:A1",
+      "oem": false,
+      "metadata": null,
+      "status": {
+        "Health": "OK",
+        "State": "Enabled"
+      },
+      "firmware": {
+        "installed": "20.0.17",
+        "software_id": "102302",
+        "previous": [
+          {
+            "installed": "19.5.12",
+            "software_id": "102301"
+          },
+          {
+            "installed": "19.5.12",
+            "software_id": "102302"
+          }
+        ],
+        "metadata": {
+          "name": "Intel(R) Ethernet Converged Network Adapter X710 - F8:F2:1E:A6:89:A1"
+        }
+      }
+    }
+  ],
+  "drives": [
+    {
+      "id": "Disk.Bay.1:Enclosure.Internal.0-1:NonRAID.Integrated.1-1",
+      "name": "MZ7LH480HBHQ0D3",
+      "drive_type": "SSD",
+      "description": "Disk 1 in Backplane 1 of Integrated Storage Controller 1",
+      "serial": "S5YJNE0N503923",
+      "storage_controller": "NonRAID.Integrated.1-1",
+      "vendor": "SAMSUNG",
+      "model": "MZ7LH480HBHQ0D3",
+      "protocol": "SATA",
+      "capacity_bytes": 480103980544,
+      "block_size_bytes": 512,
+      "capable_speed_gbps": 6,
+      "negotiated_speed_gbps": 6,
+      "firmware": {
+        "installed": "HG58",
+        "software_id": "108622",
+        "metadata": {
+          "name": "Disk 1 in Backplane 1 of Integrated Storage Controller 1"
+        }
+      },
+      "status": {
+        "Health": "OK",
+        "State": "Enabled"
+      }
+    },
+    {
+      "id": "Disk.Bay.0:Enclosure.Internal.0-1:NonRAID.Integrated.1-1",
+      "name": "MZ7LH480HBHQ0D3",
+      "drive_type": "SSD",
+      "description": "Disk 0 in Backplane 1 of Integrated Storage Controller 1",
+      "serial": "S5YJNE0N503924",
+      "storage_controller": "NonRAID.Integrated.1-1",
+      "vendor": "SAMSUNG",
+      "model": "MZ7LH480HBHQ0D3",
+      "protocol": "SATA",
+      "capacity_bytes": 480103980544,
+      "block_size_bytes": 512,
+      "capable_speed_gbps": 6,
+      "negotiated_speed_gbps": 6,
+      "firmware": {
+        "installed": "HG58",
+        "software_id": "108622",
+        "metadata": {
+          "name": "Disk 0 in Backplane 1 of Integrated Storage Controller 1"
+        }
+      },
+      "status": {
+        "Health": "OK",
+        "State": "Enabled"
+      }
+    },
+    {
+      "id": "Disk.Direct.0-0:AHCI.Slot.2-1",
+      "name": "SSDSCKKB240G8R",
+      "drive_type": "SSD",
+      "description": "Disk 0 on AHCI Controller in slot 2",
+      "serial": "PHYH011400V5240J",
+      "storage_controller": "AHCI.Slot.2-1",
+      "vendor": "INTEL",
+      "model": "SSDSCKKB240G8R",
+      "protocol": "SATA",
+      "capacity_bytes": 240057409536,
+      "block_size_bytes": 512,
+      "capable_speed_gbps": 6,
+      "negotiated_speed_gbps": 6,
+      "firmware": {
+        "installed": "DL6R",
+        "software_id": "108313",
+        "metadata": {
+          "name": "Disk 0 on AHCI Controller in slot 2"
+        }
+      },
+      "status": {
+        "Health": "OK",
+        "State": "Enabled"
+      }
+    },
+    {
+      "id": "Disk.Direct.1-1:AHCI.Slot.2-1",
+      "name": "SSDSCKKB240G8R",
+      "drive_type": "SSD",
+      "description": "Disk 1 on AHCI Controller in slot 2",
+      "serial": "PHYH011303RM240J",
+      "storage_controller": "AHCI.Slot.2-1",
+      "vendor": "INTEL",
+      "model": "SSDSCKKB240G8R",
+      "protocol": "SATA",
+      "capacity_bytes": 240057409536,
+      "block_size_bytes": 512,
+      "capable_speed_gbps": 6,
+      "negotiated_speed_gbps": 6,
+      "firmware": {
+        "installed": "DL6R",
+        "software_id": "108313",
+        "metadata": {
+          "name": "Disk 1 on AHCI Controller in slot 2"
+        }
+      },
+      "status": {
+        "Health": "OK",
+        "State": "Enabled"
+      }
+    }
+  ],
+  "storage_controller": [
+    {
+      "description": "Dell HBA330 Mini",
+      "vendor": "DELL",
+      "speed_gbps": 12,
+      "oem": false,
+      "status": {
+        "Health": "OK",
+        "State": "Enabled"
+      },
+      "metadata": null,
+      "firmware": {
+        "installed": "16.17.01.00",
+        "software_id": "104298",
+        "metadata": {
+          "name": "Dell HBA330 Mini"
+        }
+      }
+    },
+    {
+      "description": "BOSS-S1",
+      "vendor": "DELL",
+      "speed_gbps": 6,
+      "oem": false,
+      "status": {
+        "Health": "OK",
+        "State": "Enabled"
+      },
+      "metadata": null,
+      "firmware": {
+        "installed": "2.5.13.3024",
+        "software_id": "106883",
+        "metadata": {
+          "name": "BOSS-S1"
+        }
+      }
+    }
+  ],
+  "power_supplies": [
+    {
+      "description": "PS1 Status",
+      "vendor": "DELL",
+      "model": "PWR SPLY,550W,RDNT,DELTA",
+      "serial": "CNDED000330FBL",
+      "power_capacity_watts": 550,
+      "oem": false,
+      "status": {
+        "Health": "OK",
+        "State": "Enabled"
+      },
+      "firmware": {
+        "installed": "00.0C.7D"
+      }
+    },
+    {
+      "description": "PS2 Status",
+      "vendor": "DELL",
+      "model": "PWR SPLY,550W,RDNT,DELTA",
+      "serial": "CNDED000330FFI",
+      "power_capacity_watts": 550,
+      "oem": false,
+      "status": {
+        "Health": "OK",
+        "State": "Enabled"
+      },
+      "firmware": {
+        "installed": "00.0C.7D"
+      }
+    }
+  ],
+  "enclosures": [
+    {
+      "id": "System.Embedded.1",
+      "description": "It represents the properties for physical components for any system.It represent racks, rackmount servers, blades, standalone, modular systems,enclosures, and all other containers.The non-cpu/device centric parts of the schema are all accessed either directly or indirectly through this resource.",
+      "chassis_type": "RackMount",
+      "vendor": "Dell Inc.",
+      "model": "PowerEdge R6515",
+      "firmware": {},
+      "status": {
+        "Health": "OK",
+        "State": "Enabled"
+      }
+    },
+    {
+      "id": "Enclosure.Internal.0-1:NonRAID.Integrated.1-1",
+      "description": "Backplane 1 on Connector 0 of Integrated Storage Controller 1",
+      "chassis_type": "StorageEnclosure",
+      "model": "BP14G+ 0:1",
+      "firmware": {
+        "installed": "HG58",
+        "software_id": "108622",
+        "metadata": {
+          "name": "Disk 1 in Backplane 1 of Integrated Storage Controller 1"
+        }
+      },
+      "status": {
+        "Health": "OK",
+        "State": "Enabled"
+      }
+    },
+    {
+      "id": "Enclosure.Internal.0-1",
+      "description": "PCIe SSD Backplane 1",
+      "chassis_type": "StorageEnclosure",
+      "model": "PCIe SSD Backplane 1",
+      "firmware": {
+        "installed": "HG58",
+        "software_id": "108622",
+        "metadata": {
+          "name": "Disk 1 in Backplane 1 of Integrated Storage Controller 1"
+        }
+      },
+      "status": {
+        "Health": "OK",
+        "State": "Enabled"
+      }
+    }
+  ],
+  "status": {
+    "Health": "",
+    "State": ""
+  }
+}
