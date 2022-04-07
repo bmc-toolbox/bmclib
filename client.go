@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/bmc-toolbox/bmclib/bmc"
+	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/providers/asrockrack"
 	"github.com/bmc-toolbox/bmclib/providers/dell/idrac9"
 	"github.com/bmc-toolbox/bmclib/providers/ipmitool"
@@ -200,22 +201,31 @@ func (c *Client) ResetBMC(ctx context.Context, resetType string) (ok bool, err e
 	return ok, err
 }
 
-// GetBMCVersion pass through library function
-func (c *Client) GetBMCVersion(ctx context.Context) (version string, err error) {
-	return bmc.GetBMCVersionFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+// GetInventory pass through library function to collect hardware and firmware inventory
+func (c *Client) GetInventory(ctx context.Context) (device *devices.Device, err error) {
+	device, metadata, err := bmc.GetInventoryFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+	c.setMetadata(metadata)
+	return device, err
 }
 
-// UpdateBMCFirmware pass through library function
-func (c *Client) UpdateBMCFirmware(ctx context.Context, fileReader io.Reader, fileSize int64) (err error) {
-	return bmc.UpdateBMCFirmwareFromInterfaces(ctx, fileReader, fileSize, c.Registry.GetDriverInterfaces())
+// FirmwareInstall pass through library function to upload firmware and install firmware
+func (c *Client) FirmwareInstall(ctx context.Context, component, applyAt string, forceInstall bool, reader io.Reader) (taskID string, err error) {
+	taskID, metadata, err := bmc.FirmwareInstallFromInterfaces(ctx, component, applyAt, forceInstall, reader, c.Registry.GetDriverInterfaces())
+	c.setMetadata(metadata)
+	return taskID, err
 }
 
-// GetBIOSVersion pass through library function
-func (c *Client) GetBIOSVersion(ctx context.Context) (version string, err error) {
-	return bmc.GetBIOSVersionFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+// FirmwareInstallStatus pass through library function to check firmware install status
+func (c *Client) FirmwareInstallStatus(ctx context.Context, component, installVersion, taskID string) (status string, err error) {
+	status, metadata, err := bmc.FirmwareInstallStatusFromInterfaces(ctx, component, installVersion, taskID, c.Registry.GetDriverInterfaces())
+	c.setMetadata(metadata)
+	return status, err
+
 }
 
-// UpdateBIOSFirmware pass through library function
-func (c *Client) UpdateBIOSFirmware(ctx context.Context, fileReader io.Reader, fileSize int64) (err error) {
-	return bmc.UpdateBIOSFirmwareFromInterfaces(ctx, fileReader, fileSize, c.Registry.GetDriverInterfaces())
+// PostCodeGetter pass through library function to return the BIOS/UEFI POST code
+func (c *Client) GetPostCode(ctx context.Context) (status string, code int, err error) {
+	status, code, metadata, err := bmc.GetPostCodeInterfaces(ctx, c.Registry.GetDriverInterfaces())
+	c.setMetadata(metadata)
+	return status, code, err
 }
