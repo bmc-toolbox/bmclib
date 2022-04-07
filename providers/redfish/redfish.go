@@ -33,6 +33,9 @@ var (
 		providers.FeatureUserCreate,
 		providers.FeatureUserUpdate,
 		providers.FeatureUserDelete,
+		providers.FeatureInventoryRead,
+		providers.FeatureFirmwareInstall,
+		providers.FeatureFirmwareInstallStatus,
 	}
 )
 
@@ -82,6 +85,10 @@ func New(host, port, user, pass string, log logr.Logger, opts ...Option) *Conn {
 
 // Open a connection to a BMC via redfish
 func (c *Conn) Open(ctx context.Context) (err error) {
+	if !strings.HasPrefix(c.Host, "https://") && !strings.HasPrefix(c.Host, "http://") {
+		c.Host = "https://" + c.Host
+	}
+
 	config := gofish.ClientConfig{
 		Endpoint:   "https://" + c.Host,
 		Username:   c.User,
