@@ -21,12 +21,12 @@ const (
 	FeatureBmcReset registrar.Feature = "bmcreset"
 	// FeatureBootDeviceSet means an implementation the next boot device
 	FeatureBootDeviceSet registrar.Feature = "bootdeviceset"
-	// FeatureBmcVersionRead means an implementation that returns the BMC firmware version
-	FeatureBmcVersionRead registrar.Feature = "bmcversionread"
-	// FeatureBiosVersionRead means an implementation that returns the BIOS firmware version
-	FeatureBiosVersionRead registrar.Feature = "biosversionread"
-	// FeatureBmcFirmwareUpdate means an implementation that updates the BMC firmware
-	FeatureBmcFirmwareUpdate registrar.Feature = "bmcfirwareupdate"
-	// FeatureBiosFirmwareUpdate means an implementation that updates the BIOS firmware
-	FeatureBiosFirmwareUpdate registrar.Feature = "biosfirwareupdate"
+	// FeatureFirmwareInstall means an implementation that initiates the firmware install process
+	FeatureFirmwareInstall registrar.Feature = "firmwareinstall"
+	// FeatureFirmwareInstallSatus means an implementation that returns the firmware install status
+	FeatureFirmwareInstallStatus registrar.Feature = "firmwareinstallstatus"
+	// FeatureInventoryRead means an implementation that returns the hardware and firmware inventory
+	FeatureInventoryRead registrar.Feature = "inventoryread"
+	// FeaturePostCodeRead means an implmentation that returns the boot BIOS/UEFI post code status and value
+	FeaturePostCodeRead registrar.Feature = "postcoderead"
 )
