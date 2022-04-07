@@ -2,38 +2,43 @@ package bmc
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
+
+	bmclibErrs "github.com/bmc-toolbox/bmclib/errors"
+
+	"github.com/pkg/errors"
 
 	"github.com/hashicorp/go-multierror"
 )
 
-// BMCVersionGetter retrieves the current BMC firmware version information
-type BMCVersionGetter interface {
-	GetBMCVersion(ctx context.Context) (version string, err error)
+// FirmwareInstaller defines an interface to install firmware updates
+type FirmwareInstaller interface {
+	// FirmwareInstall uploads firmware update payload to the BMC returning the task ID
+	FirmwareInstall(ctx context.Context, component, applyAt string, forceInstall bool, reader io.Reader) (jobID string, err error)
 }
 
-// BMCFirmwareUpdater upgrades the BMC firmware
-type BMCFirmwareUpdater interface {
-	FirmwareUpdateBMC(ctx context.Context, fileReader io.Reader, fileSize int64) (err error)
+// firmwareInstallerProvider is an internal struct to correlate an implementation/provider and its name
+type firmwareInstallerProvider struct {
+	name string
+	FirmwareInstaller
 }
 
-// BIOSVersionGetter retrieves the current BIOS firmware version information
-type BIOSVersionGetter interface {
-	GetBIOSVersion(ctx context.Context) (version string, err error)
-}
-
-// BIOSFirmwareUpdater upgrades the BIOS firmware
-type BIOSFirmwareUpdater interface {
-	FirmwareUpdateBIOS(ctx context.Context, fileReader io.Reader, fileSize int64) (err error)
-}
-
-// GetBMCVersion returns the BMC firmware version, trying all interface implementations passed in
-func GetBMCVersion(ctx context.Context, p []BMCVersionGetter) (version string, err error) {
+// FirmwareInstall uploads and initiates firmware update for the component
+//
+// parameters:
+// component - the component slug for the component update being installed
+// applyAt - one of "Immediate", "OnReset"
+// forceInstall - purge the install task queued/scheduled firmware install BMC task (if any)
+// reader - the io.reader to the firmware update file
+//
+// return values:
+// taskID - A taskID is returned if the update process on the BMC returns an identifier for the update process
+func FirmwareInstall(ctx context.Context, component, applyAt string, forceInstall bool, reader io.Reader, generic []firmwareInstallerProvider) (taskID string, metadata Metadata, err error) {
+	var metadataLocal Metadata
 Loop:
-	for _, elem := range p {
-		if elem == nil {
+	for _, elem := range generic {
+		if elem.FirmwareInstaller == nil {
 			continue
 		}
 		select {
@@ -41,42 +46,73 @@ Loop:
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			version, vErr := elem.GetBMCVersion(ctx)
+			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			taskID, vErr := elem.FirmwareInstall(ctx, component, applyAt, forceInstall, reader)
 			if vErr != nil {
+				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				err = multierror.Append(err, vErr)
 				continue
+
 			}
-			return version, nil
+			metadataLocal.SuccessfulProvider = elem.name
+			return taskID, metadataLocal, nil
 		}
 	}
 
-	return version, multierror.Append(err, errors.New("failed to get BMC version"))
+	return taskID, metadataLocal, multierror.Append(err, errors.New("failure in FirmwareInstall"))
 }
 
-// GetBMCVersionFromInterfaces pass through to library function
-func GetBMCVersionFromInterfaces(ctx context.Context, generic []interface{}) (version string, err error) {
-	bmcVersionGetter := make([]BMCVersionGetter, 0)
+// FirmwareInstallFromInterfaces pass through to library function
+func FirmwareInstallFromInterfaces(ctx context.Context, component, applyAt string, forceInstall bool, reader io.Reader, generic []interface{}) (taskID string, metadata Metadata, err error) {
+	implementations := make([]firmwareInstallerProvider, 0)
 	for _, elem := range generic {
+		temp := firmwareInstallerProvider{name: getProviderName(elem)}
 		switch p := elem.(type) {
-		case BMCVersionGetter:
-			bmcVersionGetter = append(bmcVersionGetter, p)
+		case FirmwareInstaller:
+			temp.FirmwareInstaller = p
+			implementations = append(implementations, temp)
 		default:
-			e := fmt.Sprintf("not a BMCVersionGetter implementation: %T", p)
+			e := fmt.Sprintf("not a FirmwareInstaller implementation: %T", p)
 			err = multierror.Append(err, errors.New(e))
 		}
 	}
-	if len(bmcVersionGetter) == 0 {
-		return version, multierror.Append(err, errors.New("no BMCVersionGetter implementations found"))
+	if len(implementations) == 0 {
+		return taskID, metadata, multierror.Append(
+			err,
+			errors.Wrap(
+				bmclibErrs.ErrProviderImplementation,
+				("no FirmwareInstaller implementations found"),
+			),
+		)
 	}
 
-	return GetBMCVersion(ctx, bmcVersionGetter)
+	return FirmwareInstall(ctx, component, applyAt, forceInstall, reader, implementations)
 }
 
-// UpdateBMCFirmware upgrades the BMC firmware, trying all interface implementations passed ini
-func UpdateBMCFirmware(ctx context.Context, fileReader io.Reader, fileSize int64, p []BMCFirmwareUpdater) (err error) {
+// FirmwareInstallVerifier defines an interface to check firmware install status
+type FirmwareInstallVerifier interface {
+	FirmwareInstallStatus(ctx context.Context, component, installVersion, taskID string) (status string, err error)
+}
+
+// firmwareInstallVerifierProvider is an internal struct to correlate an implementation/provider and its name
+type firmwareInstallVerifierProvider struct {
+	name string
+	FirmwareInstallVerifier
+}
+
+// FirmwareInstallStatus returns the status of the firmware install process
+//
+// parameters:
+// component (optional) - the component slug for the component update being installed
+// taskID (optional) - the task identifier
+//
+// return values:
+// status - returns one of the FirmwareInstall statuses (see devices/constants.go)
+func FirmwareInstallStatus(ctx context.Context, component, installVersion, taskID string, generic []firmwareInstallVerifierProvider) (status string, metadata Metadata, err error) {
+	var metadataLocal Metadata
 Loop:
-	for _, elem := range p {
-		if elem == nil {
+	for _, elem := range generic {
+		if elem.FirmwareInstallVerifier == nil {
 			continue
 		}
 		select {
@@ -84,119 +120,45 @@ Loop:
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			uErr := elem.FirmwareUpdateBMC(ctx, fileReader, fileSize)
-			if uErr != nil {
-				err = multierror.Append(err, uErr)
-				continue
-			}
-			return nil
-		}
-	}
-
-	return multierror.Append(err, errors.New("failed to update BMC firmware"))
-}
-
-// UpdateBMCFirmwareFromInterfaces pass through to library function
-func UpdateBMCFirmwareFromInterfaces(ctx context.Context, fileReader io.Reader, fileSize int64, generic []interface{}) (err error) {
-	bmcFirmwareUpdater := make([]BMCFirmwareUpdater, 0)
-	for _, elem := range generic {
-		switch p := elem.(type) {
-		case BMCFirmwareUpdater:
-			bmcFirmwareUpdater = append(bmcFirmwareUpdater, p)
-		default:
-			e := fmt.Sprintf("not a BMCFirmwareUpdater implementation: %T", p)
-			err = multierror.Append(err, errors.New(e))
-		}
-	}
-	if len(bmcFirmwareUpdater) == 0 {
-		return multierror.Append(err, errors.New("no BMCFirmwareUpdater implementations found"))
-	}
-
-	return UpdateBMCFirmware(ctx, fileReader, fileSize, bmcFirmwareUpdater)
-}
-
-// GetBIOSVersion returns the BMC firmware version, trying all interface implementations passed in
-func GetBIOSVersion(ctx context.Context, p []BIOSVersionGetter) (version string, err error) {
-Loop:
-	for _, elem := range p {
-		if elem == nil {
-			continue
-		}
-		select {
-		case <-ctx.Done():
-			err = multierror.Append(err, ctx.Err())
-			break Loop
-		default:
-			version, vErr := elem.GetBIOSVersion(ctx)
+			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			status, vErr := elem.FirmwareInstallStatus(ctx, component, installVersion, taskID)
 			if vErr != nil {
+				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				err = multierror.Append(err, vErr)
 				continue
+
 			}
-			return version, nil
+			metadataLocal.SuccessfulProvider = elem.name
+			return status, metadataLocal, nil
 		}
 	}
 
-	return version, multierror.Append(err, errors.New("failed to get BIOS version"))
+	return status, metadataLocal, multierror.Append(err, errors.New("failure in FirmwareInstallStatus"))
 }
 
-// GetBIOSVersionFromInterfaces pass through to library function
-func GetBIOSVersionFromInterfaces(ctx context.Context, generic []interface{}) (version string, err error) {
-	biosVersionGetter := make([]BIOSVersionGetter, 0)
+// FirmwareInstallStatusFromInterfaces pass through to library function
+func FirmwareInstallStatusFromInterfaces(ctx context.Context, component, installVersion, taskID string, generic []interface{}) (status string, metadata Metadata, err error) {
+	implementations := make([]firmwareInstallVerifierProvider, 0)
 	for _, elem := range generic {
+		temp := firmwareInstallVerifierProvider{name: getProviderName(elem)}
 		switch p := elem.(type) {
-		case BIOSVersionGetter:
-			biosVersionGetter = append(biosVersionGetter, p)
+		case FirmwareInstallVerifier:
+			temp.FirmwareInstallVerifier = p
+			implementations = append(implementations, temp)
 		default:
-			e := fmt.Sprintf("not a BIOSVersionGetter implementation: %T", p)
+			e := fmt.Sprintf("not a FirmwareInstallVerifier implementation: %T", p)
 			err = multierror.Append(err, errors.New(e))
 		}
 	}
-	if len(biosVersionGetter) == 0 {
-		return version, multierror.Append(err, errors.New("no BIOSVersionGetter implementations found"))
+	if len(implementations) == 0 {
+		return taskID, metadata, multierror.Append(
+			err,
+			errors.Wrap(
+				bmclibErrs.ErrProviderImplementation,
+				("no FirmwareInstallVerifier implementations found"),
+			),
+		)
 	}
 
-	return GetBIOSVersion(ctx, biosVersionGetter)
-}
-
-// UpdateBIOSFirmware upgrades the BIOS firmware, trying all interface implementations passed ini
-func UpdateBIOSFirmware(ctx context.Context, fileReader io.Reader, fileSize int64, p []BIOSFirmwareUpdater) (err error) {
-Loop:
-	for _, elem := range p {
-		if elem == nil {
-			continue
-		}
-		select {
-		case <-ctx.Done():
-			err = multierror.Append(err, ctx.Err())
-			break Loop
-		default:
-			uErr := elem.FirmwareUpdateBIOS(ctx, fileReader, fileSize)
-			if uErr != nil {
-				err = multierror.Append(err, uErr)
-				continue
-			}
-			return nil
-		}
-	}
-
-	return multierror.Append(err, errors.New("failed to update BIOS firmware"))
-}
-
-// GetBMCVersionFromInterfaces pass through to library function
-func UpdateBIOSFirmwareFromInterfaces(ctx context.Context, fileReader io.Reader, fileSize int64, generic []interface{}) (err error) {
-	biosFirmwareUpdater := make([]BIOSFirmwareUpdater, 0)
-	for _, elem := range generic {
-		switch p := elem.(type) {
-		case BIOSFirmwareUpdater:
-			biosFirmwareUpdater = append(biosFirmwareUpdater, p)
-		default:
-			e := fmt.Sprintf("not a BIOSFirmwareUpdater implementation: %T", p)
-			err = multierror.Append(err, errors.New(e))
-		}
-	}
-	if len(biosFirmwareUpdater) == 0 {
-		return multierror.Append(err, errors.New("no BIOSFirmwareUpdater implementations found"))
-	}
-
-	return UpdateBIOSFirmware(ctx, fileReader, fileSize, biosFirmwareUpdater)
+	return FirmwareInstallStatus(ctx, component, installVersion, taskID, implementations)
 }
