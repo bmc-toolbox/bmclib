@@ -127,7 +127,7 @@ func (a *ASRockRack) CheckCredentials(ctx context.Context) (err error) {
 	return a.httpsLogin(ctx)
 }
 
-func (a *ASRockRack) GetPostCode(ctx context.Context) (status string, code int, err error) {
+func (a *ASRockRack) PostCode(ctx context.Context) (status string, code int, err error) {
 	postInfo, err := a.postCodeInfo(ctx)
 	if err != nil {
 		return status, code, err

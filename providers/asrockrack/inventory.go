@@ -6,7 +6,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/devices"
 )
 
-func (a *ASRockRack) GetInventory(ctx context.Context) (device *devices.Device, err error) {
+func (a *ASRockRack) Inventory(ctx context.Context) (device *devices.Device, err error) {
 	// initialize device to be populated with inventory
 	device = devices.NewDevice()
 	device.Metadata = map[string]string{}
@@ -63,7 +63,7 @@ func (a *ASRockRack) systemHealth(ctx context.Context, device *devices.Device) e
 	}
 
 	// we don't want to fail inventory collection hence ignore POST code collection error
-	device.Status.PostCodeStatus, device.Status.PostCode, _ = a.GetPostCode(ctx)
+	device.Status.PostCodeStatus, device.Status.PostCode, _ = a.PostCode(ctx)
 
 	return nil
 }

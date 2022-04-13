@@ -229,8 +229,8 @@ func (c *Client) ResetBMC(ctx context.Context, resetType string) (ok bool, err e
 	return ok, err
 }
 
-// GetInventory pass through library function to collect hardware and firmware inventory
-func (c *Client) GetInventory(ctx context.Context) (device *devices.Device, err error) {
+// Inventory pass through library function to collect hardware and firmware inventory
+func (c *Client) Inventory(ctx context.Context) (device *devices.Device, err error) {
 	device, metadata, err := bmc.GetInventoryFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return device, err
@@ -252,7 +252,7 @@ func (c *Client) FirmwareInstallStatus(ctx context.Context, component, installVe
 }
 
 // PostCodeGetter pass through library function to return the BIOS/UEFI POST code
-func (c *Client) GetPostCode(ctx context.Context) (status string, code int, err error) {
+func (c *Client) PostCode(ctx context.Context) (status string, code int, err error) {
 	status, code, metadata, err := bmc.GetPostCodeInterfaces(ctx, c.Registry.GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return status, code, err

@@ -11,11 +11,11 @@ import (
 
 // PostCodeGetter defines methods to retrieve device BIOS/UEFI POST code
 type PostCodeGetter interface {
-	// GetPostCode retrieves the BIOS/UEFI POST code from a device
+	// PostCode retrieves the BIOS/UEFI POST code from a device
 	//
 	// returns 'status' which is a (bmclib specific) string identifier for the POST code
 	// and 'code' with the actual POST code returned to bmclib by the device
-	GetPostCode(ctx context.Context) (status string, code int, err error)
+	PostCode(ctx context.Context) (status string, code int, err error)
 }
 
 type postCodeGetterProvider struct {
@@ -23,8 +23,8 @@ type postCodeGetterProvider struct {
 	PostCodeGetter
 }
 
-// GetPostCode returns the device BIOS/UEFI POST code
-func GetPostCode(ctx context.Context, generic []postCodeGetterProvider) (status string, code int, metadata Metadata, err error) {
+// PostCode returns the device BIOS/UEFI POST code
+func PostCode(ctx context.Context, generic []postCodeGetterProvider) (status string, code int, metadata Metadata, err error) {
 	var metadataLocal Metadata
 Loop:
 	for _, elem := range generic {
@@ -37,7 +37,7 @@ Loop:
 			break Loop
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
-			status, code, vErr := elem.GetPostCode(ctx)
+			status, code, vErr := elem.PostCode(ctx)
 			if vErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				err = multierror.Append(err, vErr)
@@ -76,5 +76,5 @@ func GetPostCodeInterfaces(ctx context.Context, generic []interface{}) (status s
 		)
 	}
 
-	return GetPostCode(ctx, implementations)
+	return PostCode(ctx, implementations)
 }

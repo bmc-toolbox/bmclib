@@ -39,7 +39,7 @@ func main() {
 
 	defer cl.Close(ctx)
 
-	inv, err := cl.GetInventory(ctx)
+	inv, err := cl.Inventory(ctx)
 	if err != nil {
 		l.Error(err)
 	}

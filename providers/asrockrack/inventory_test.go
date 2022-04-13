@@ -8,7 +8,7 @@ import (
 )
 
 func Test_GetInventory(t *testing.T) {
-	device, err := aClient.GetInventory(context.TODO())
+	device, err := aClient.Inventory(context.TODO())
 	if err != nil {
 		t.Fatal(err)
 	}
