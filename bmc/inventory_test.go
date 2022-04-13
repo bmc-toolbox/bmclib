@@ -16,7 +16,7 @@ type inventoryGetterTester struct {
 	returnError  error
 }
 
-func (f *inventoryGetterTester) GetInventory(ctx context.Context) (device *devices.Device, err error) {
+func (f *inventoryGetterTester) Inventory(ctx context.Context) (device *devices.Device, err error) {
 	return f.returnDevice, f.returnError
 }
 
@@ -24,7 +24,7 @@ func (f *inventoryGetterTester) Name() string {
 	return "foo"
 }
 
-func TestGetInventory(t *testing.T) {
+func TestInventory(t *testing.T) {
 	testCases := []struct {
 		testName           string
 		returnDevice       *devices.Device
@@ -46,7 +46,7 @@ func TestGetInventory(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			device, metadata, err := GetInventory(ctx, []inventoryGetterProvider{{tc.providerName, &testImplementation}})
+			device, metadata, err := Inventory(ctx, []inventoryGetterProvider{{tc.providerName, &testImplementation}})
 			if tc.returnError != nil {
 				assert.ErrorIs(t, err, tc.returnError)
 				return
@@ -62,7 +62,7 @@ func TestGetInventory(t *testing.T) {
 	}
 }
 
-func TestGetInventoryFromInterfaces(t *testing.T) {
+func TestInventoryFromInterfaces(t *testing.T) {
 	testCases := []struct {
 		testName           string
 		returnDevice       *devices.Device

@@ -16,7 +16,7 @@ type postCodeGetterTester struct {
 	returnError  error
 }
 
-func (p *postCodeGetterTester) GetPostCode(ctx context.Context) (status string, code int, err error) {
+func (p *postCodeGetterTester) PostCode(ctx context.Context) (status string, code int, err error) {
 	return p.returnStatus, p.returnCode, p.returnError
 }
 
@@ -24,7 +24,7 @@ func (p *postCodeGetterTester) Name() string {
 	return "foo"
 }
 
-func TestGetPostCode(t *testing.T) {
+func TestPostCode(t *testing.T) {
 	testCases := []struct {
 		testName           string
 		returnStatus       string
@@ -47,7 +47,7 @@ func TestGetPostCode(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			status, code, metadata, err := GetPostCode(ctx, []postCodeGetterProvider{{tc.providerName, &testImplementation}})
+			status, code, metadata, err := PostCode(ctx, []postCodeGetterProvider{{tc.providerName, &testImplementation}})
 			if tc.returnError != nil {
 				assert.ErrorIs(t, err, tc.returnError)
 				return
@@ -64,7 +64,7 @@ func TestGetPostCode(t *testing.T) {
 	}
 }
 
-func TestGetPostCodeFromInterfaces(t *testing.T) {
+func TestPostCodeFromInterfaces(t *testing.T) {
 	testCases := []struct {
 		testName           string
 		returnStatus       string

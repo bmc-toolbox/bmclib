@@ -13,7 +13,7 @@ import (
 
 // InventoryGetter defines methods to retrieve device hardware and firmware inventory
 type InventoryGetter interface {
-	GetInventory(ctx context.Context) (device *devices.Device, err error)
+	Inventory(ctx context.Context) (device *devices.Device, err error)
 }
 
 type inventoryGetterProvider struct {
@@ -21,8 +21,8 @@ type inventoryGetterProvider struct {
 	InventoryGetter
 }
 
-// GetInventory returns hardware and firmware inventory
-func GetInventory(ctx context.Context, generic []inventoryGetterProvider) (device *devices.Device, metadata Metadata, err error) {
+// Inventory returns hardware and firmware inventory
+func Inventory(ctx context.Context, generic []inventoryGetterProvider) (device *devices.Device, metadata Metadata, err error) {
 	var metadataLocal Metadata
 Loop:
 	for _, elem := range generic {
@@ -35,7 +35,7 @@ Loop:
 			break Loop
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
-			device, vErr := elem.GetInventory(ctx)
+			device, vErr := elem.Inventory(ctx)
 			if vErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				err = multierror.Append(err, vErr)
@@ -74,5 +74,5 @@ func GetInventoryFromInterfaces(ctx context.Context, generic []interface{}) (dev
 		)
 	}
 
-	return GetInventory(ctx, implementations)
+	return Inventory(ctx, implementations)
 }
