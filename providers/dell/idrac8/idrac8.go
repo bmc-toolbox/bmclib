@@ -3,6 +3,7 @@ package idrac8
 import (
 	"bytes"
 	"context"
+	"crypto/x509"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -28,26 +29,48 @@ const (
 
 // IDrac8 holds the status and properties of a connection to an iDrac device
 type IDrac8 struct {
-	ip             string
-	username       string
-	password       string
-	httpClient     *http.Client
-	sshClient      *sshclient.SSHClient
-	st1            string
-	st2            string
-	iDracInventory *dell.IDracInventory
-	ctx            context.Context
-	log            logr.Logger
+	ip                   string
+	username             string
+	password             string
+	httpClient           *http.Client
+	sshClient            *sshclient.SSHClient
+	st1                  string
+	st2                  string
+	iDracInventory       *dell.IDracInventory
+	ctx                  context.Context
+	log                  logr.Logger
+	httpClientSetupFuncs []func(*http.Client)
+}
+
+// IDrac8Option is a type that can configure an *IDrac8
+type IDrac8Option func(*IDrac8)
+
+// WithSecureTLS enforces trusted TLS connections, with an optional CA certificate pool.
+// Using this option with an nil pool uses the system CAs.
+func WithSecureTLS(rootCAs *x509.CertPool) IDrac8Option {
+	return func(i *IDrac8) {
+		i.httpClientSetupFuncs = append(i.httpClientSetupFuncs, httpclient.SecureTLSOption(rootCAs))
+	}
 }
 
 // New returns a new IDrac8 ready to be used
 func New(ctx context.Context, host string, username string, password string, log logr.Logger) (*IDrac8, error) {
+	return NewWithOptions(ctx, host, username, password, log)
+}
+
+// NewWithOptions returns a new IDrac8 with options ready to be used
+func NewWithOptions(ctx context.Context, host string, username string, password string, log logr.Logger, opts ...IDrac8Option) (*IDrac8, error) {
 	sshClient, err := sshclient.New(host, username, password)
 	if err != nil {
 		return nil, err
 	}
 
-	return &IDrac8{ip: host, username: username, password: password, sshClient: sshClient, ctx: ctx, log: log}, err
+	i := &IDrac8{ip: host, username: username, password: password, sshClient: sshClient, ctx: ctx, log: log}
+
+	for _, opt := range opts {
+		opt(i)
+	}
+	return i, nil
 }
 
 // CheckCredentials verify whether the credentials are valid or not

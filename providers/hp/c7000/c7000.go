@@ -2,6 +2,7 @@ package c7000
 
 import (
 	"context"
+	"crypto/x509"
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
@@ -23,20 +24,44 @@ const (
 
 // C7000 holds the status and properties of a connection to a BladeSystem device
 type C7000 struct {
-	ip         string
-	username   string
-	password   string
-	XMLToken   string // Required to send SOAP XML payloads.
-	httpClient *http.Client
-	sshClient  *sshclient.SSHClient
-	Rimp       *hp.Rimp
-	ctx        context.Context
-	log        logr.Logger
+	ip                   string
+	username             string
+	password             string
+	XMLToken             string // Required to send SOAP XML payloads.
+	httpClient           *http.Client
+	sshClient            *sshclient.SSHClient
+	Rimp                 *hp.Rimp
+	ctx                  context.Context
+	log                  logr.Logger
+	httpClientSetupFuncs []func(*http.Client)
+}
+
+// C7000Option is a type that can configure an *C7000
+type C7000Option func(*C7000)
+
+// WithSecureTLS enforces trusted TLS connections, with an optional CA certificate pool.
+// Using this option with an nil pool uses the system CAs.
+func WithSecureTLS(rootCAs *x509.CertPool) C7000Option {
+	return func(i *C7000) {
+		i.httpClientSetupFuncs = append(i.httpClientSetupFuncs, httpclient.SecureTLSOption(rootCAs))
+	}
 }
 
 // New returns a connection to C7000
 func New(ctx context.Context, host string, username string, password string, log logr.Logger) (*C7000, error) {
-	client, err := httpclient.Build()
+	return NewWithOptions(ctx, host, username, password, log)
+}
+
+// NewWithOptions returns a new C7000 with options ready to be used
+func NewWithOptions(ctx context.Context, host string, username string, password string, log logr.Logger, opts ...C7000Option) (*C7000, error) {
+	c := &C7000{ip: host, username: username, password: password, ctx: ctx, log: log}
+
+	// apply options early in case we need to set httpClientSetupFunc during setup
+	for _, opt := range opts {
+		opt(c)
+	}
+
+	client, err := httpclient.Build(c.httpClientSetupFuncs...)
 	if err != nil {
 		return nil, err
 	}
@@ -57,6 +82,7 @@ func New(ctx context.Context, host string, username string, password string, log
 	if err != nil {
 		return nil, err
 	}
+	c.Rimp = Rimp
 
 	if Rimp.Infra2 == nil {
 		return nil, errors.ErrUnableToReadData
@@ -66,8 +92,14 @@ func New(ctx context.Context, host string, username string, password string, log
 	if err != nil {
 		return nil, err
 	}
+	c.sshClient = sshClient
 
-	return &C7000{ip: host, username: username, password: password, Rimp: Rimp, sshClient: sshClient, ctx: ctx, log: log}, nil
+	// apply options again because we may want to override sshClient/Rimp
+	for _, opt := range opts {
+		opt(c)
+	}
+
+	return c, nil
 }
 
 // CheckCredentials verify whether the credentials are valid or not

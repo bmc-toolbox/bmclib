@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/x509"
 	"os"
 
 	"github.com/bmc-toolbox/bmclib/devices"
@@ -43,6 +44,13 @@ func main() {
 		logger.Fatal(err)
 	}
 	printStatus(conn, logger)
+
+	logger.Info("printing status with the default secure TLS")
+	conn, err = withSecureTLS(ip, user, pass, nil)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	printStatus(conn, logger)
 }
 
 func withUserDefinedLogger(ip, user, pass string, logger *logrus.Logger) (interface{}, error) {
@@ -53,6 +61,10 @@ func withUserDefinedLogger(ip, user, pass string, logger *logrus.Logger) (interf
 
 func withDefaultBuiltinLogger(ip, user, pass string) (interface{}, error) {
 	return discover.ScanAndConnect(ip, user, pass)
+}
+
+func withSecureTLS(ip, user, pass string, pool *x509.CertPool) (interface{}, error) {
+	return discover.ScanAndConnect(ip, user, pass, discover.WithSecureTLS(pool))
 }
 
 func printStatus(connection interface{}, logger *logrus.Logger) {

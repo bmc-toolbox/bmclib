@@ -3,6 +3,7 @@ package m1000e
 import (
 	"bytes"
 	"context"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/errors"
+	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/providers/dell"
 	"github.com/go-logr/logr"
@@ -31,26 +33,48 @@ var (
 
 // Holds the status and properties of a connection to a CMC device.
 type M1000e struct {
-	ip           string
-	username     string
-	password     string
-	httpClient   *http.Client
-	sshClient    *sshclient.SSHClient
-	cmcJSON      *dell.CMC
-	cmcWWN       *dell.CMCWWN
-	SessionToken string // Required to set config!
-	ctx          context.Context
-	log          logr.Logger
+	ip                   string
+	username             string
+	password             string
+	httpClient           *http.Client
+	sshClient            *sshclient.SSHClient
+	cmcJSON              *dell.CMC
+	cmcWWN               *dell.CMCWWN
+	SessionToken         string // Required to set config!
+	ctx                  context.Context
+	log                  logr.Logger
+	httpClientSetupFuncs []func(*http.Client)
+}
+
+// M1000eOption is a type that can configure a *M1000e
+type M1000eOption func(*M1000e)
+
+// WithSecureTLS enforces trusted TLS connections, with an optional CA certificate pool.
+// Using this option with an nil pool uses the system CAs.
+func WithSecureTLS(rootCAs *x509.CertPool) M1000eOption {
+	return func(m *M1000e) {
+		m.httpClientSetupFuncs = append(m.httpClientSetupFuncs, httpclient.SecureTLSOption(rootCAs))
+	}
 }
 
 // Returns a connection to an M1000e.
 func New(ctx context.Context, host string, username string, password string, log logr.Logger) (*M1000e, error) {
+	return NewWithOptions(ctx, host, username, password, log)
+}
+
+// NewWithOptions returns a new M1000e with options ready to be used
+func NewWithOptions(ctx context.Context, host string, username string, password string, log logr.Logger, opts ...M1000eOption) (*M1000e, error) {
 	sshClient, err := sshclient.New(host, username, password)
 	if err != nil {
 		return nil, err
 	}
 
-	return &M1000e{ip: host, username: username, password: password, sshClient: sshClient, ctx: ctx, log: log}, nil
+	m := &M1000e{ip: host, username: username, password: password, sshClient: sshClient, ctx: ctx, log: log}
+
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m, nil
 }
 
 // CheckCredentials verify whether the credentials are valid or not

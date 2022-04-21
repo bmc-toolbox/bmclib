@@ -3,6 +3,7 @@ package supermicrox11
 import (
 	"bytes"
 	"context"
+	"crypto/x509"
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
@@ -30,24 +31,45 @@ const (
 
 // SupermicroX holds the status and properties of a connection to a supermicro bmc
 type SupermicroX struct {
-	ip         string
-	username   string
-	password   string
-	sid        *http.Cookie
-	httpClient *http.Client
-	ctx        context.Context
-	log        logr.Logger
+	ip                   string
+	username             string
+	password             string
+	sid                  *http.Cookie
+	httpClient           *http.Client
+	ctx                  context.Context
+	log                  logr.Logger
+	httpClientSetupFuncs []func(*http.Client)
+}
+
+// SupermicroXOption is a type that can configure a *SupermicroX
+type SupermicroXOption func(*SupermicroX)
+
+// WithSecureTLS enforces trusted TLS connections, with an optional CA certificate pool.
+// Using this option with an nil pool uses the system CAs.
+func WithSecureTLS(rootCAs *x509.CertPool) SupermicroXOption {
+	return func(i *SupermicroX) {
+		i.httpClientSetupFuncs = append(i.httpClientSetupFuncs, httpclient.SecureTLSOption(rootCAs))
+	}
 }
 
 // New returns a new SupermicroX instance ready to be used
 func New(ctx context.Context, ip string, username string, password string, log logr.Logger) (sm *SupermicroX, err error) {
-	return &SupermicroX{
+	return NewWithOptions(ctx, ip, username, password, log)
+}
+
+// NewWithOptions returns a new SupermicroX with options ready to be used
+func NewWithOptions(ctx context.Context, ip string, username string, password string, log logr.Logger, opts ...SupermicroXOption) (*SupermicroX, error) {
+	sm := &SupermicroX{
 		ip:       ip,
 		username: username,
 		password: password,
 		ctx:      ctx,
 		log:      log,
-	}, err
+	}
+	for _, opt := range opts {
+		opt(sm)
+	}
+	return sm, nil
 }
 
 // CheckCredentials verify whether the credentials are valid or not

@@ -2,11 +2,13 @@ package redfish
 
 import (
 	"context"
+	"crypto/x509"
 	"fmt"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/providers"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
@@ -45,12 +47,26 @@ type Conn struct {
 
 // Open a connection to a BMC via redfish
 func (c *Conn) Open(ctx context.Context) (err error) {
+	return c.OpenWithTLS(ctx, false, nil)
+}
+
+// OpenWithTLS creates a connection to a BMC via redfish with an *http.Client
+func (c *Conn) OpenWithTLS(ctx context.Context, secureTLS bool, rootCAs *x509.CertPool) (err error) {
 
 	config := gofish.ClientConfig{
 		Endpoint: "https://" + c.Host,
 		Username: c.User,
 		Password: c.Pass,
 		Insecure: true,
+	}
+
+	if secureTLS {
+		config.HTTPClient, err = httpclient.Build(httpclient.SecureTLSOption(rootCAs))
+		if err != nil {
+			return err
+		}
+		// gofish ignores this field if HTTPClient is set, but we set it explicitly if that ever changes
+		config.Insecure = false
 	}
 
 	debug := os.Getenv("DEBUG_BMCLIB")

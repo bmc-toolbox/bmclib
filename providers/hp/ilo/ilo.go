@@ -3,6 +3,7 @@ package ilo
 import (
 	"bytes"
 	"context"
+	"crypto/x509"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -36,26 +37,54 @@ const (
 
 // Ilo holds the status and properties of a connection to an iLO device
 type Ilo struct {
-	ip         string
-	username   string
-	password   string
-	sessionKey string
-	httpClient *http.Client
-	sshClient  *sshclient.SSHClient
-	loginURL   *url.URL
-	rimpBlade  *hp.RimpBlade
-	ctx        context.Context
-	log        logr.Logger
+	ip                   string
+	username             string
+	password             string
+	sessionKey           string
+	httpClient           *http.Client
+	sshClient            *sshclient.SSHClient
+	loginURL             *url.URL
+	rimpBlade            *hp.RimpBlade
+	ctx                  context.Context
+	log                  logr.Logger
+	httpClientSetupFuncs []func(*http.Client)
+}
+
+// IloOption is a type that can configure an *Ilo
+type IloOption func(*Ilo)
+
+// WithSecureTLS enforces trusted TLS connections, with an optional CA certificate pool.
+// Using this option with an nil pool uses the system CAs.
+func WithSecureTLS(rootCAs *x509.CertPool) IloOption {
+	return func(i *Ilo) {
+		i.httpClientSetupFuncs = append(i.httpClientSetupFuncs, httpclient.SecureTLSOption(rootCAs))
+	}
 }
 
 // New returns a new Ilo ready to be used
 func New(ctx context.Context, host string, username string, password string, log logr.Logger) (*Ilo, error) {
+	return NewWithOptions(ctx, host, username, password, log)
+}
+
+// NewWithOptions returns a new Ilo with options ready to be used
+func NewWithOptions(ctx context.Context, host string, username string, password string, log logr.Logger, opts ...IloOption) (*Ilo, error) {
+	ilo := &Ilo{
+		ip:       host,
+		username: username,
+		password: password,
+		ctx:      ctx,
+		log:      log,
+	}
+	// apply options early in case we need to set httpClientSetupFunc during setup
+	for _, opt := range opts {
+		opt(ilo)
+	}
 	loginURL, err := url.Parse(fmt.Sprintf("https://%s/json/login_session", host))
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := httpclient.Build()
+	client, err := httpclient.Build(ilo.httpClientSetupFuncs...)
 	if err != nil {
 		return nil, err
 	}
@@ -83,15 +112,13 @@ func New(ctx context.Context, host string, username string, password string, log
 		return nil, err
 	}
 
-	ilo := &Ilo{
-		ip:        host,
-		username:  username,
-		password:  password,
-		loginURL:  loginURL,
-		rimpBlade: rimpBlade,
-		sshClient: sshClient,
-		ctx:       ctx,
-		log:       log,
+	ilo.loginURL = loginURL
+	ilo.rimpBlade = rimpBlade
+	ilo.sshClient = sshClient
+
+	// apply options again because we may want to override sshClient/Rimp/loginURL
+	for _, opt := range opts {
+		opt(ilo)
 	}
 	return ilo, nil
 }

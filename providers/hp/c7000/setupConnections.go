@@ -20,7 +20,7 @@ func (c *C7000) httpLogin() (err error) {
 		return
 	}
 
-	httpClient, err := httpclient.Build()
+	httpClient, err := httpclient.Build(c.httpClientSetupFuncs...)
 	if err != nil {
 		return err
 	}

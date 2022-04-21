@@ -31,21 +31,21 @@ var (
 
 
 			RAC1169: The RACADM "config" command will be deprecated in a
-			future version of iDRAC firmware. Run the RACADM 
+			future version of iDRAC firmware. Run the RACADM
 			"racadm set" command to configure the iDRAC configuration parameters.
 			For more information on the set command, run the RACADM command
 			"racadm help set".
-			
+
 			`),
 		"racadm config -g cfgServerInfo -o cfgServerFirstBootDevice PXE": []byte(`Object value modified successfully
 
 
 			RAC1169: The RACADM "config" command will be deprecated in a
-			future version of iDRAC firmware. Run the RACADM 
+			future version of iDRAC firmware. Run the RACADM
 			"racadm set" command to configure the iDRAC configuration parameters.
 			For more information on the set command, run the RACADM command
 			"racadm help set".
-			
+
 			`),
 	}
 )

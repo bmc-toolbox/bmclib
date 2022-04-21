@@ -24,7 +24,7 @@ func (i *Ilo) httpLogin() (err error) {
 		return
 	}
 
-	httpClient, err := httpclient.Build()
+	httpClient, err := httpclient.Build(i.httpClientSetupFuncs...)
 	if err != nil {
 		return err
 	}
