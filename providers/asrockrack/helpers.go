@@ -275,7 +275,7 @@ func (a *ASRockRack) upgradeBMC(ctx context.Context) error {
 	endpoint := "api/maintenance/firmware/upgrade"
 
 	// preserve all configuration during upgrade, full flash
-	pConfig := &preserveConfig{PreserveConfig: 1, FlashStatus: 1}
+	pConfig := &preserveConfig{FlashStatus: 1, PreserveConfig: 1, PreserveNetwork: 1, PreserveUser: 1}
 	payload, err := json.Marshal(pConfig)
 	if err != nil {
 		return err
