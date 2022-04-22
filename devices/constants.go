@@ -78,8 +78,10 @@ const (
 	FirmwareInstallFailed = "failed"
 
 	// FirmwareInstallPowerCycleHost indicates the firmware install requires a host power cycle
-	// this covers the dell redfish state - 'scheduled'
 	FirmwareInstallPowerCyleHost = "powercycle-host"
+
+	// FirmwareInstallPowerCycleBMC indicates the firmware install requires a BMC power cycle
+	FirmwareInstallPowerCycleBMC = "powercycle-bmc"
 
 	FirmwareInstallUnknown = "unknown"
 
