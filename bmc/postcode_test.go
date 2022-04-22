@@ -47,7 +47,7 @@ func TestPostCode(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			status, code, metadata, err := PostCode(ctx, []postCodeGetterProvider{{tc.providerName, &testImplementation}})
+			status, code, metadata, err := postCode(ctx, []postCodeGetterProvider{{tc.providerName, &testImplementation}})
 			if tc.returnError != nil {
 				assert.ErrorIs(t, err, tc.returnError)
 				return

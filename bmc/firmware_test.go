@@ -51,7 +51,7 @@ func TestFirmwareInstall(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			taskID, metadata, err := FirmwareInstall(ctx, tc.component, tc.applyAt, tc.forceInstall, tc.reader, []firmwareInstallerProvider{{tc.providerName, &testImplementation}})
+			taskID, metadata, err := firmwareInstall(ctx, tc.component, tc.applyAt, tc.forceInstall, tc.reader, []firmwareInstallerProvider{{tc.providerName, &testImplementation}})
 			if tc.returnError != nil {
 				assert.ErrorIs(t, err, tc.returnError)
 				return
@@ -146,7 +146,7 @@ func TestFirmwareInstallStatus(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			taskID, metadata, err := FirmwareInstallStatus(ctx, tc.component, tc.installVersion, tc.taskID, []firmwareInstallVerifierProvider{{tc.providerName, &testImplementation}})
+			taskID, metadata, err := firmwareInstallStatus(ctx, tc.component, tc.installVersion, tc.taskID, []firmwareInstallVerifierProvider{{tc.providerName, &testImplementation}})
 			if tc.returnError != nil {
 				assert.ErrorIs(t, err, tc.returnError)
 				return

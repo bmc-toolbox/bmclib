@@ -10,7 +10,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/sirupsen/logrus"
+	"github.com/go-logr/logr"
 )
 
 const (
@@ -70,8 +70,7 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 
-	l := logrus.New()
-	l.Level = logrus.DebugLevel
+	mockClient.Log = logr.Discard()
 
 	os.Exit(m.Run())
 }

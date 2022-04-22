@@ -126,6 +126,14 @@ func VendorFromProductName(productName string) string {
 	switch {
 	case strings.Contains(n, "intel"):
 		return Intel
+	case strings.Contains(n, "dell"):
+		return Dell
+	case strings.Contains(n, "supermicro"):
+		return Supermicro
+	case strings.Contains(n, "cloudline"):
+		return Cloudline
+	case strings.Contains(n, "quanta"):
+		return Quanta
 	default:
 		return productName
 	}

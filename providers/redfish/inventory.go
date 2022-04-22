@@ -62,7 +62,7 @@ func (c *Conn) DeviceVendorModel(ctx context.Context) (vendor, model string, err
 	return vendor, model, bmclibErrs.ErrRedfishSystemOdataID
 }
 
-func (c *Conn) Inventory(ctx context.Context) (device *devices.Device, err error) {
+func (c *Conn) GetInventory(ctx context.Context) (device *devices.Device, err error) {
 	// initialize inventory object
 	inv := &inventory{conn: c.conn}
 	// TODO: this can soft fail
@@ -408,7 +408,6 @@ func (i *inventory) collectBIOS(sys *redfish.ComputerSystem, device *devices.Dev
 		return err
 	}
 
-	//bios.Attributes.String("SystemCpldVersion")
 	device.BIOS = &devices.BIOS{
 		Description: bios.Description,
 		Firmware: &devices.Firmware{
@@ -492,9 +491,6 @@ func (i *inventory) collectStorageControllers(sys *redfish.ComputerSystem, devic
 				Model:       controller.PartNumber,
 				Serial:      controller.SerialNumber,
 				SpeedGbps:   int64(controller.SpeedGbps),
-				// SupportedControllerProtocols: join(controller.SupportedControllerProtocols),
-				// SupportedDeviceProtocols:     join(controller.SupportedDeviceProtocols),
-				// SupportedRAIDTypes:           join(controller.SupportedRAIDTypes),
 				Status: &devices.Status{
 					Health: string(controller.Status.Health),
 					State:  string(controller.Status.State),

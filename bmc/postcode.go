@@ -23,8 +23,8 @@ type postCodeGetterProvider struct {
 	PostCodeGetter
 }
 
-// PostCode returns the device BIOS/UEFI POST code
-func PostCode(ctx context.Context, generic []postCodeGetterProvider) (status string, code int, metadata Metadata, err error) {
+// postCode returns the device BIOS/UEFI POST code
+func postCode(ctx context.Context, generic []postCodeGetterProvider) (status string, code int, metadata Metadata, err error) {
 	var metadataLocal Metadata
 Loop:
 	for _, elem := range generic {
@@ -76,5 +76,5 @@ func GetPostCodeInterfaces(ctx context.Context, generic []interface{}) (status s
 		)
 	}
 
-	return PostCode(ctx, implementations)
+	return postCode(ctx, implementations)
 }

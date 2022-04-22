@@ -138,9 +138,7 @@ var (
 )
 
 func (a *ASRockRack) listUsers(ctx context.Context) ([]*UserAccount, error) {
-	endpoint := "api/settings/users"
-
-	resp, statusCode, err := a.queryHTTPS(ctx, endpoint, "GET", nil, nil, 0)
+	resp, statusCode, err := a.queryHTTPS(ctx, "api/settings/users", "GET", nil, nil, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -184,9 +182,7 @@ func (a *ASRockRack) createUpdateUser(ctx context.Context, account *UserAccount)
 // at this point all logged in sessions are terminated
 // and no logins are permitted
 func (a *ASRockRack) setFlashMode(ctx context.Context) error {
-	endpoint := "api/maintenance/flash"
-
-	_, statusCode, err := a.queryHTTPS(ctx, endpoint, "PUT", nil, nil, 0)
+	_, statusCode, err := a.queryHTTPS(ctx, "api/maintenance/flash", "PUT", nil, nil, 0)
 	if err != nil {
 		return err
 	}
@@ -262,9 +258,7 @@ func (a *ASRockRack) uploadFirmware(ctx context.Context, endpoint string, fwRead
 
 // 3. Verify uploaded firmware file - to be invoked after uploadFirmware()
 func (a *ASRockRack) verifyUploadedFirmware(ctx context.Context) error {
-	endpoint := "api/maintenance/firmware/verification"
-
-	_, statusCode, err := a.queryHTTPS(ctx, endpoint, "GET", nil, nil, 0)
+	_, statusCode, err := a.queryHTTPS(ctx, "api/maintenance/firmware/verification", "GET", nil, nil, 0)
 	if err != nil {
 		return err
 	}
@@ -322,9 +316,7 @@ func (a *ASRockRack) flashProgress(ctx context.Context, endpoint string) (*upgra
 
 // Query firmware information from the BMC
 func (a *ASRockRack) firmwareInfo(ctx context.Context) (*firmwareInfo, error) {
-	endpoint := "api/asrr/fw-info"
-
-	resp, statusCode, err := a.queryHTTPS(ctx, endpoint, "GET", nil, nil, 0)
+	resp, statusCode, err := a.queryHTTPS(ctx, "api/asrr/fw-info", "GET", nil, nil, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -344,9 +336,7 @@ func (a *ASRockRack) firmwareInfo(ctx context.Context) (*firmwareInfo, error) {
 
 // Query BIOS/UEFI POST code information from the BMC
 func (a *ASRockRack) postCodeInfo(ctx context.Context) (*biosPOSTCode, error) {
-	endpoint := "/api/asrr/getbioscode"
-
-	resp, statusCode, err := a.queryHTTPS(ctx, endpoint, "GET", nil, nil, 0)
+	resp, statusCode, err := a.queryHTTPS(ctx, "/api/asrr/getbioscode", "GET", nil, nil, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -366,9 +356,7 @@ func (a *ASRockRack) postCodeInfo(ctx context.Context) (*biosPOSTCode, error) {
 
 // Query the inventory info endpoint
 func (a *ASRockRack) inventoryInfo(ctx context.Context) ([]*component, error) {
-	endpoint := "api/asrr/inventory_info"
-
-	resp, statusCode, err := a.queryHTTPS(ctx, endpoint, "GET", nil, nil, 0)
+	resp, statusCode, err := a.queryHTTPS(ctx, "api/asrr/inventory_info", "GET", nil, nil, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -388,9 +376,7 @@ func (a *ASRockRack) inventoryInfo(ctx context.Context) ([]*component, error) {
 
 // Query the fru info endpoint
 func (a *ASRockRack) fruInfo(ctx context.Context) ([]*fru, error) {
-	endpoint := "api/fru"
-
-	resp, statusCode, err := a.queryHTTPS(ctx, endpoint, "GET", nil, nil, 0)
+	resp, statusCode, err := a.queryHTTPS(ctx, "api/fru", "GET", nil, nil, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -436,9 +422,7 @@ func (a *ASRockRack) fruInfo(ctx context.Context) ([]*fru, error) {
 
 // Query the sensors  endpoint
 func (a *ASRockRack) sensors(ctx context.Context) ([]*sensor, error) {
-	endpoint := "api/sensors"
-
-	resp, statusCode, err := a.queryHTTPS(ctx, endpoint, "GET", nil, nil, 0)
+	resp, statusCode, err := a.queryHTTPS(ctx, "api/sensors", "GET", nil, nil, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -519,9 +503,7 @@ func (a *ASRockRack) upgradeBIOS(ctx context.Context) error {
 
 // Returns the chassis status object which includes the power state
 func (a *ASRockRack) chassisStatusInfo(ctx context.Context) (*chassisStatus, error) {
-	endpoint := "/api/chassis-status"
-
-	resp, statusCode, err := a.queryHTTPS(ctx, endpoint, "GET", nil, nil, 0)
+	resp, statusCode, err := a.queryHTTPS(ctx, "/api/chassis-status", "GET", nil, nil, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -573,9 +555,7 @@ func (a *ASRockRack) httpsLogin(ctx context.Context) error {
 
 // Close ends the BMC session
 func (a *ASRockRack) httpsLogout(ctx context.Context) error {
-	urlEndpoint := "api/session"
-
-	_, statusCode, err := a.queryHTTPS(ctx, urlEndpoint, "DELETE", nil, nil, 0)
+	_, statusCode, err := a.queryHTTPS(ctx, "api/session", "DELETE", nil, nil, 0)
 	if err != nil {
 		return fmt.Errorf("Error logging out: " + err.Error())
 	}
