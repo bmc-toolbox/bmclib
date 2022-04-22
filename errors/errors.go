@@ -93,8 +93,11 @@ var (
 	// ErrFirmwareUpload is returned when a firmware upload method fails
 	ErrFirmwareUpload = errors.New("error uploading firmware")
 
-	// ErrFirmwareInstall is returned for firmware update failures
+	// ErrFirmwareInstall is returned for firmware install failures
 	ErrFirmwareInstall = errors.New("error updating firmware")
+
+	// ErrFirmwareInstallStatus is returned for firmware install status read
+	ErrFirmwareInstallStatus = errors.New("error querying firmware install status")
 
 	// ErrRedfishUpdateService is returned on redfish update service errors
 	ErrRedfishUpdateService = errors.New("redfish update service error")
