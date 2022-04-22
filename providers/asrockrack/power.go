@@ -86,8 +86,17 @@ func (a *ASRockRack) powerAction(ctx context.Context, action int) (ok bool, err 
 	return true, nil
 }
 
-// 4. reset BMC
-// nolint: unused // left here for reference
+// BmcReset will reset the BMC - ASRR BMCs only support a cold reset.
+func (a *ASRockRack) BmcReset(ctx context.Context, resetType string) (ok bool, err error) {
+	err = a.resetBMC(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+// 4. reset BMC - performs a cold reset
 func (a *ASRockRack) resetBMC(ctx context.Context) error {
 	endpoint := "api/maintenance/reset"
 
