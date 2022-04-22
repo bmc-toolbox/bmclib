@@ -62,7 +62,7 @@ func (c *Conn) DeviceVendorModel(ctx context.Context) (vendor, model string, err
 	return vendor, model, bmclibErrs.ErrRedfishSystemOdataID
 }
 
-func (c *Conn) GetInventory(ctx context.Context) (device *devices.Device, err error) {
+func (c *Conn) Inventory(ctx context.Context) (device *devices.Device, err error) {
 	// initialize inventory object
 	inv := &inventory{conn: c.conn}
 	// TODO: this can soft fail
