@@ -14,6 +14,13 @@ import (
 	bmclibErrs "github.com/bmc-toolbox/bmclib/errors"
 )
 
+const (
+	versionStrError    = -1
+	versionStrMatch    = 0
+	versionStrMismatch = 1
+	versionStrEmpty    = 2
+)
+
 // FirmwareInstall uploads and initiates firmware update for the component
 func (a *ASRockRack) FirmwareInstall(ctx context.Context, component, applyAt string, forceInstall bool, reader io.Reader) (jobID string, err error) {
 	var size int64
@@ -42,12 +49,10 @@ func (a *ASRockRack) FirmwareInstall(ctx context.Context, component, applyAt str
 // FirmwareInstallStatus returns the status of the firmware install process, a bool value indicating if the component requires a reset
 func (a *ASRockRack) FirmwareInstallStatus(ctx context.Context, component, installVersion, taskID string) (status string, err error) {
 	switch component {
-	case devices.SlugBIOS:
-		return a.firmwareUpdateBIOSStatus(ctx, installVersion)
-	case devices.SlugBMC:
-		return a.firmwareUpdateBMCStatus(ctx, installVersion)
+	case devices.SlugBIOS, devices.SlugBMC:
+		return a.firmwareUpdateStatus(ctx, component, installVersion)
 	default:
-		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, "component unsupported: "+component)
+		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, "component unsupported: "+component)
 	}
 }
 
@@ -114,92 +119,74 @@ func (a *ASRockRack) firmwareInstallBIOS(ctx context.Context, reader io.Reader, 
 	return nil
 }
 
-// firmwareUpdateBMCStatus returns the BMC firmware install status
-func (a *ASRockRack) firmwareUpdateBMCStatus(ctx context.Context, installVersion string) (status string, err error) {
-	p, progressErr := a.flashProgress(ctx, "api/maintenance/firmware/flash-progress")
-	if progressErr != nil {
-		installed, versionErr := a.versionInstalled(ctx, devices.SlugBMC, installVersion)
-		if err != nil {
-			return "", versionErr
-		}
-
-		if installed {
-			return devices.FirmwareInstallComplete, nil
-		}
-
-		return "", progressErr
-	}
-
-	switch p.State {
-	case 0:
-		return devices.FirmwareInstallRunning, nil
-	case 2:
-		return devices.FirmwareInstallComplete, nil
-	default:
-		a.log.V(3).Info("warn", "bmc returned unknown flash progress state: "+strconv.Itoa(p.State))
-	}
-
-	// at this point the flash-progress endpoint isn't returning useful information
-	// query the fimware info endpoint to identify the installed version
-	installed, err := a.versionInstalled(ctx, devices.SlugBMC, installVersion)
-	if err != nil {
-		return "", err
-	}
-
-	if installed {
-		return devices.FirmwareInstallComplete, nil
-	}
-
-	return devices.FirmwareInstallUnknown, nil
-}
-
 // firmwareUpdateBIOSStatus returns the BIOS firmware install status
-func (a *ASRockRack) firmwareUpdateBIOSStatus(ctx context.Context, installVersion string) (status string, err error) {
-	p, progressErr := a.flashProgress(ctx, "api/asrr/maintenance/BIOS/flash-progress")
-	if progressErr != nil {
-		installed, versionErr := a.versionInstalled(ctx, devices.SlugBIOS, installVersion)
-		if versionErr != nil {
-			return "", versionErr
-		}
+func (a *ASRockRack) firmwareUpdateStatus(ctx context.Context, component string, installVersion string) (status string, err error) {
+	// TODO: purge debug logging
+	os.Setenv("BMCLIB_LOG_LEVEL", "trace")
+	defer os.Unsetenv("BMCLIB_LOG_LEVEL")
 
-		if installed {
-			return devices.FirmwareInstallComplete, nil
-		}
-
-		return "", progressErr
-	}
-
-	switch p.State {
-	// Note: we're  ignoring case 1 here, should it just be part of case 0
-	case 0:
-		return devices.FirmwareInstallRunning, nil
-	case 2:
-		return devices.FirmwareInstallComplete, nil
+	var endpoint string
+	switch component {
+	case devices.SlugBIOS:
+		endpoint = "api/asrr/maintenance/BIOS/flash-progress"
+	case devices.SlugBMC:
+		endpoint = "api/maintenance/firmware/flash-progress"
 	default:
-		a.log.V(3).Info("warn", "bmc returned unknown flash progress state: "+strconv.Itoa(p.State))
+		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, "component unsupported: "+component)
 	}
 
-	// at this point the flash-progress endpoint isn't returning useful information
-	// query the fimware info endpoint to identify the installed version
-	installed, err := a.versionInstalled(ctx, devices.SlugBIOS, installVersion)
+	// 1. query the flash progress endpoint
+	//
+	// once an update completes/fails this endpoint will return 500
+	progress, err := a.flashProgress(ctx, endpoint)
 	if err != nil {
-		return "", err
+		a.log.V(3).Info("warn", "bmc query for install progress returned error: "+err.Error())
 	}
 
-	if installed {
+	if progress != nil {
+		switch progress.State {
+		case 0:
+			return devices.FirmwareInstallRunning, nil
+		case 2:
+			return devices.FirmwareInstallComplete, nil
+		default:
+			a.log.V(3).Info("warn", "bmc returned unknown flash progress state: "+strconv.Itoa(progress.State))
+		}
+	}
+
+	// 2. query the firmware info endpoint to determine the update status
+	//
+	// at this point the flash-progress endpoint isn't returning useful information
+	var installStatus int
+
+	installStatus, err = a.versionInstalled(ctx, component, installVersion)
+	if err != nil {
+		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, err.Error())
+	}
+
+	switch installStatus {
+	case versionStrMatch:
 		return devices.FirmwareInstallComplete, nil
+	case versionStrEmpty:
+		return devices.FirmwareInstallUnknown, nil
+	case versionStrMismatch:
+		return devices.FirmwareInstallRunning, nil
 	}
 
 	return devices.FirmwareInstallUnknown, nil
 }
 
-// versionInstalled returns a
-func (a *ASRockRack) versionInstalled(ctx context.Context, component, version string) (bool, error) {
+// versionInstalled returns int values on the status of the firmware version install
+//
+// - 0 indicates the given version parameter matches the version installed
+// - 1 indicates the given version parameter does not match the version installed
+// - 2 the version parameter returned from the BMC is empty (which means the BMC needs a reset)
+func (a *ASRockRack) versionInstalled(ctx context.Context, component, version string) (status int, err error) {
 	fwInfo, err := a.firmwareInfo(ctx)
 	if err != nil {
 		err = errors.Wrap(err, "error querying for firmware info: ")
 		a.log.V(3).Info("warn", err.Error())
-		return false, err
+		return versionStrError, err
 	}
 
 	var installed string
@@ -210,12 +197,19 @@ func (a *ASRockRack) versionInstalled(ctx context.Context, component, version st
 	case devices.SlugBMC:
 		installed = fwInfo.BMCVersion
 	default:
-		return false, errors.Wrap(bmclibErrs.ErrFirmwareInstall, "component unsupported: "+component)
+		return versionStrError, errors.Wrap(bmclibErrs.ErrFirmwareInstall, "component unsupported: "+component)
 	}
 
+	// version match
 	if strings.EqualFold(installed, version) {
-		return true, nil
+		return versionStrMatch, nil
 	}
 
-	return false, nil
+	// fwinfo returned an empty string for firmware revision
+	// this indicates the BMC is out of sync with the firmware versions installed
+	if strings.TrimSpace(installed) == "" {
+		return versionStrEmpty, nil
+	}
+
+	return 1, nil
 }
