@@ -21,8 +21,8 @@ type inventoryGetterProvider struct {
 	InventoryGetter
 }
 
-// Inventory returns hardware and firmware inventory
-func Inventory(ctx context.Context, generic []inventoryGetterProvider) (device *devices.Device, metadata Metadata, err error) {
+// inventory returns hardware and firmware inventory
+func inventory(ctx context.Context, generic []inventoryGetterProvider) (device *devices.Device, metadata Metadata, err error) {
 	var metadataLocal Metadata
 Loop:
 	for _, elem := range generic {
@@ -74,5 +74,5 @@ func GetInventoryFromInterfaces(ctx context.Context, generic []interface{}) (dev
 		)
 	}
 
-	return Inventory(ctx, implementations)
+	return inventory(ctx, implementations)
 }

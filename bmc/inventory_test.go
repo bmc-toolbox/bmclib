@@ -46,7 +46,7 @@ func TestInventory(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			device, metadata, err := Inventory(ctx, []inventoryGetterProvider{{tc.providerName, &testImplementation}})
+			device, metadata, err := inventory(ctx, []inventoryGetterProvider{{tc.providerName, &testImplementation}})
 			if tc.returnError != nil {
 				assert.ErrorIs(t, err, tc.returnError)
 				return

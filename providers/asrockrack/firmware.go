@@ -14,8 +14,6 @@ import (
 	bmclibErrs "github.com/bmc-toolbox/bmclib/errors"
 )
 
-
-
 // FirmwareInstall uploads and initiates firmware update for the component
 func (a *ASRockRack) FirmwareInstall(ctx context.Context, component, applyAt string, forceInstall bool, reader io.Reader) (jobID string, err error) {
 	var size int64
@@ -118,10 +116,7 @@ func (a *ASRockRack) firmwareInstallBIOS(ctx context.Context, reader io.Reader, 
 
 // firmwareUpdateBMCStatus returns the BMC firmware install status
 func (a *ASRockRack) firmwareUpdateBMCStatus(ctx context.Context, installVersion string) (status string, err error) {
-	os.Setenv("BMCLIB_LOG_LEVEL", "trace")
-	defer os.Unsetenv("BMCLIB_LOG_LEVEL")
-	endpoint := "api/maintenance/firmware/flash-progress"
-	p, progressErr := a.flashProgress(ctx, endpoint)
+	p, progressErr := a.flashProgress(ctx, "api/maintenance/firmware/flash-progress")
 	if progressErr != nil {
 		installed, versionErr := a.versionInstalled(ctx, devices.SlugBMC, installVersion)
 		if err != nil {
@@ -160,11 +155,7 @@ func (a *ASRockRack) firmwareUpdateBMCStatus(ctx context.Context, installVersion
 
 // firmwareUpdateBIOSStatus returns the BIOS firmware install status
 func (a *ASRockRack) firmwareUpdateBIOSStatus(ctx context.Context, installVersion string) (status string, err error) {
-	os.Setenv("BMCLIB_LOG_LEVEL", "trace")
-	defer os.Unsetenv("BMCLIB_LOG_LEVEL")
-
-	endpoint := "api/asrr/maintenance/BIOS/flash-progress"
-	p, progressErr := a.flashProgress(ctx, endpoint)
+	p, progressErr := a.flashProgress(ctx, "api/asrr/maintenance/BIOS/flash-progress")
 	if progressErr != nil {
 		installed, versionErr := a.versionInstalled(ctx, devices.SlugBIOS, installVersion)
 		if versionErr != nil {
@@ -223,7 +214,6 @@ func (a *ASRockRack) versionInstalled(ctx context.Context, component, version st
 	}
 
 	if strings.EqualFold(installed, version) {
-		fmt.Println("YEP!")
 		return true, nil
 	}
 

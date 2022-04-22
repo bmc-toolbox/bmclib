@@ -3,6 +3,7 @@ package redfish
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -20,16 +21,16 @@ import (
 	bmclibErrs "github.com/bmc-toolbox/bmclib/errors"
 )
 
-var (
-	FirmwareApplyAt = []string{
+// SupportedFirmwareApplyAtValues returns the supported redfish firmware applyAt values
+func SupportedFirmwareApplyAtValues() []string {
+	return []string{
 		devices.FirmwareApplyImmediate,
 		devices.FirmwareApplyOnReset,
 	}
-	FirmwareDownloadProtocols = []string{"HTTP", "NFS", "CIFS", "TFTP", "HTTPS"}
-)
+}
 
 // FirmwareInstall uploads and initiates the firmware install process
-func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, forceInstall bool, reader io.Reader) (jobID string, err error) {
+func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, forceInstall bool, reader io.Reader) (taskID string, err error) {
 	// validate firmware update mechanism is supported
 	err = c.firmwareUpdateCompatible(ctx)
 	if err != nil {
@@ -37,8 +38,8 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 	}
 
 	// validate applyAt parameter
-	if !stringInSlice(applyAt, FirmwareApplyAt) {
-		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, "invalid applyAt parameter: %s"+applyAt)
+	if !stringInSlice(applyAt, SupportedFirmwareApplyAtValues()) {
+		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, "invalid applyAt parameter: "+applyAt)
 	}
 
 	// list redfish firmware install task if theres one present
@@ -61,9 +62,19 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 		}
 	}
 
-	updateParameters := []byte(
-		fmt.Sprintf(`{"Targets": [], "@Redfish.OperationApplyTime": "%s", "Oem": {}}`, applyAt),
-	)
+	updateParameters, err := json.Marshal(struct {
+		Targets            []string `json:"Targets"`
+		RedfishOpApplyTime string   `json:"@Redfish.OperationApplyTime"`
+		Oem                struct{} `json:"Oem"`
+	}{
+		[]string{},
+		applyAt,
+		struct{}{},
+	})
+
+	if err != nil {
+		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, err.Error())
+	}
 
 	payload := map[string]io.Reader{
 		"UpdateParameters": bytes.NewReader(updateParameters),
@@ -72,11 +83,11 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 
 	resp, err := c.runRequestWithMultipartPayload(http.MethodPost, "/redfish/v1/UpdateService/MultipartUpload", payload)
 	if err != nil {
-		return jobID, errors.Wrap(bmclibErrs.ErrFirmwareUpload, err.Error())
+		return "", errors.Wrap(bmclibErrs.ErrFirmwareUpload, err.Error())
 	}
 
 	if resp.StatusCode != http.StatusAccepted {
-		return jobID, errors.Wrap(
+		return "", errors.Wrap(
 			bmclibErrs.ErrFirmwareUpload,
 			"non 202 status code returned: "+strconv.Itoa(resp.StatusCode),
 		)
@@ -85,10 +96,10 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 	// The response contains a location header pointing to the task URI
 	// Location: /redfish/v1/TaskService/Tasks/JID_467696020275
 	if strings.Contains(resp.Header.Get("Location"), "JID_") {
-		jobID = strings.Split(resp.Header.Get("Location"), "JID_")[1]
+		taskID = strings.Split(resp.Header.Get("Location"), "JID_")[1]
 	}
 
-	return jobID, nil
+	return taskID, nil
 }
 
 // FirmwareInstallStatus returns the status of the firmware install task queued
