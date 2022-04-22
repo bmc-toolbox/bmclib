@@ -53,6 +53,13 @@ func WithSecureTLS(rootCAs *x509.CertPool) IDrac9Option {
 	}
 }
 
+// WithHTTPClient sets an HTTP client on an *IDrac9
+func WithHTTPClient(c *http.Client) IDrac9Option {
+	return func(i *IDrac9) {
+		i.httpClient = c
+	}
+}
+
 // New returns a new IDrac9 ready to be used
 func New(ctx context.Context, host string, httpHost string, username string, password string, log logr.Logger) (*IDrac9, error) {
 	return NewWithOptions(ctx, host, httpHost, username, password, log)
@@ -69,6 +76,11 @@ func NewWithOptions(ctx context.Context, host, httpHost string, username string,
 
 	for _, opt := range opts {
 		opt(idrac)
+	}
+	if idrac.httpClient != nil {
+		for _, setupFunc := range idrac.httpClientSetupFuncs {
+			setupFunc(idrac.httpClient)
+		}
 	}
 	return idrac, nil
 }

@@ -15,6 +15,9 @@ import (
 // SecureTLS disables InsecureSkipVerify and adds a cert pool to an HTTP client's
 // TLS config
 func SecureTLS(c *http.Client, rootCAs *x509.CertPool) {
+	if c == nil {
+		return
+	}
 	tp := DefaultTransport()
 	if c.Transport != nil {
 		if assertedTransport, ok := c.Transport.(*http.Transport); ok {

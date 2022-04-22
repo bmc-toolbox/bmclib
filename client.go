@@ -4,10 +4,13 @@ package bmclib
 
 import (
 	"context"
+	"crypto/x509"
 	"io"
+	"net/http"
 	"sync"
 
 	"github.com/bmc-toolbox/bmclib/bmc"
+	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/providers/asrockrack"
 	"github.com/bmc-toolbox/bmclib/providers/dell/idrac9"
 	"github.com/bmc-toolbox/bmclib/providers/ipmitool"
@@ -23,6 +26,9 @@ type Client struct {
 	Registry *registrar.Registry
 	metadata *bmc.Metadata
 	mdLock   *sync.Mutex
+
+	httpClient           *http.Client
+	httpClientSetupFuncs []func(*http.Client)
 }
 
 // Auth details for connecting to a BMC
@@ -46,6 +52,21 @@ func WithRegistry(registry *registrar.Registry) Option {
 	return func(args *Client) { args.Registry = registry }
 }
 
+// WithSecureTLS enforces trusted TLS connections, with an optional CA certificate pool.
+// Using this option with an nil pool uses the system CAs.
+func WithSecureTLS(rootCAs *x509.CertPool) Option {
+	return func(args *Client) {
+		args.httpClientSetupFuncs = append(args.httpClientSetupFuncs, httpclient.SecureTLSOption(rootCAs))
+	}
+}
+
+// WithHTTPClient sets an http client
+func WithHTTPClient(c *http.Client) Option {
+	return func(args *Client) {
+		args.httpClient = c
+	}
+}
+
 // NewClient returns a new Client struct
 func NewClient(host, port, user, pass string, opts ...Option) *Client {
 	var defaultClient = &Client{
@@ -55,6 +76,13 @@ func NewClient(host, port, user, pass string, opts ...Option) *Client {
 
 	for _, opt := range opts {
 		opt(defaultClient)
+	}
+	if defaultClient.httpClient == nil {
+		defaultClient.httpClient, _ = httpclient.Build(defaultClient.httpClientSetupFuncs...)
+	} else {
+		for _, setupFunc := range defaultClient.httpClientSetupFuncs {
+			setupFunc(defaultClient.httpClient)
+		}
 	}
 
 	defaultClient.Registry.Logger = defaultClient.Logger
@@ -76,15 +104,15 @@ func (c *Client) registerProviders() {
 	c.Registry.Register(ipmitool.ProviderName, ipmitool.ProviderProtocol, ipmitool.Features, nil, driverIpmitool)
 
 	// register ASRR vendorapi provider
-	driverAsrockrack, _ := asrockrack.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger)
+	driverAsrockrack, _ := asrockrack.NewWithOptions(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger, asrockrack.WithHTTPClient(c.httpClient))
 	c.Registry.Register(asrockrack.ProviderName, asrockrack.ProviderProtocol, asrockrack.Features, nil, driverAsrockrack)
 
 	// register gofish provider
-	driverGoFish := &redfish.Conn{Host: c.Auth.Host, Port: c.Auth.Port, User: c.Auth.User, Pass: c.Auth.Pass, Log: c.Logger}
+	driverGoFish := redfish.New(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger, redfish.WithHTTPClient(c.httpClient))
 	c.Registry.Register(redfish.ProviderName, redfish.ProviderProtocol, redfish.Features, nil, driverGoFish)
 
 	// register dell idrac9 provider
-	driverIdrac9 := &idrac9.Conn{Host: c.Auth.Host, Port: c.Auth.Port, User: c.Auth.User, Pass: c.Auth.Pass, Log: c.Logger}
+	driverIdrac9 := idrac9.NewConn(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger, idrac9.WithHTTPClientConnOption(c.httpClient))
 	c.Registry.Register(idrac9.ProviderName, idrac9.ProviderProtocol, idrac9.Features, nil, driverIdrac9)
 	/*
 		// dummy used for testing

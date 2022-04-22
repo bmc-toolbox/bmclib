@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/x509"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -37,36 +38,67 @@ var (
 
 // Conn details for redfish client
 type Conn struct {
-	Host string
-	Port string
-	User string
-	Pass string
-	conn *gofish.APIClient
-	Log  logr.Logger
+	Host                 string
+	Port                 string
+	User                 string
+	Pass                 string
+	conn                 *gofish.APIClient
+	Log                  logr.Logger
+	httpClient           *http.Client
+	httpClientSetupFuncs []func(*http.Client)
+}
+
+// Option is a function applied to a *Conn
+type Option func(*Conn)
+
+// WithHTTPClient returns an option that sets an HTTP client for the connecion
+func WithHTTPClient(cli *http.Client) Option {
+	return func(c *Conn) {
+		c.httpClient = cli
+	}
+}
+
+// WithSecureTLS returns an option that enables secure TLS with an optional cert pool.
+func WithSecureTLS(rootCAs *x509.CertPool) Option {
+	return func(c *Conn) {
+		c.httpClientSetupFuncs = append(c.httpClientSetupFuncs, httpclient.SecureTLSOption(rootCAs))
+	}
+}
+
+// New returns a redfish *Conn
+func New(host, port, user, pass string, log logr.Logger, opts ...Option) *Conn {
+	conn := &Conn{
+		Host: host,
+		Port: port,
+		User: user,
+		Pass: pass,
+		Log:  log,
+	}
+	for _, opt := range opts {
+		opt(conn)
+	}
+	return conn
 }
 
 // Open a connection to a BMC via redfish
 func (c *Conn) Open(ctx context.Context) (err error) {
-	return c.OpenWithTLS(ctx, false, nil)
-}
-
-// OpenWithTLS creates a connection to a BMC via redfish with an *http.Client
-func (c *Conn) OpenWithTLS(ctx context.Context, secureTLS bool, rootCAs *x509.CertPool) (err error) {
-
 	config := gofish.ClientConfig{
-		Endpoint: "https://" + c.Host,
-		Username: c.User,
-		Password: c.Pass,
-		Insecure: true,
+		Endpoint:   "https://" + c.Host,
+		Username:   c.User,
+		Password:   c.Pass,
+		Insecure:   true,
+		HTTPClient: c.httpClient,
 	}
 
-	if secureTLS {
-		config.HTTPClient, err = httpclient.Build(httpclient.SecureTLSOption(rootCAs))
+	if config.HTTPClient == nil {
+		config.HTTPClient, err = httpclient.Build(c.httpClientSetupFuncs...)
 		if err != nil {
 			return err
 		}
-		// gofish ignores this field if HTTPClient is set, but we set it explicitly if that ever changes
-		config.Insecure = false
+	} else {
+		for _, setupFunc := range c.httpClientSetupFuncs {
+			setupFunc(config.HTTPClient)
+		}
 	}
 
 	debug := os.Getenv("DEBUG_BMCLIB")

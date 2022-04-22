@@ -56,6 +56,13 @@ func WithSecureTLS(rootCAs *x509.CertPool) ASRockOption {
 	}
 }
 
+// WithHTTPClient sets an HTTP client on the ASRockRack
+func WithHTTPClient(c *http.Client) ASRockOption {
+	return func(ar *ASRockRack) {
+		ar.httpClient = c
+	}
+}
+
 // New returns a new ASRockRack instance ready to be used
 func New(ip string, username string, password string, log logr.Logger) (*ASRockRack, error) {
 	return NewWithOptions(ip, username, password, log)
@@ -73,9 +80,15 @@ func NewWithOptions(ip string, username string, password string, log logr.Logger
 	for _, opt := range opts {
 		opt(r)
 	}
-	r.httpClient, err = httpclient.Build(r.httpClientSetupFuncs...)
-	if err != nil {
-		return nil, err
+	if r.httpClient == nil {
+		r.httpClient, err = httpclient.Build(r.httpClientSetupFuncs...)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		for _, setupFunc := range r.httpClientSetupFuncs {
+			setupFunc(r.httpClient)
+		}
 	}
 	return r, nil
 }
