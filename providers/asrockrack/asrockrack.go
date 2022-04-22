@@ -26,6 +26,7 @@ var (
 		providers.FeatureFirmwareInstall,
 		providers.FeatureFirmwareInstallStatus,
 		providers.FeaturePostCodeRead,
+		providers.FeatureBmcReset,
 	}
 )
 
