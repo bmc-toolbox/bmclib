@@ -22,7 +22,7 @@ func (s *SupermicroX) httpLogin() (err error) {
 		return
 	}
 
-	httpClient, err := httpclient.Build()
+	httpClient, err := httpclient.Build(s.httpClientSetupFuncs...)
 	if err != nil {
 		return err
 	}

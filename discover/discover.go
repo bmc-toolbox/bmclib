@@ -2,6 +2,8 @@ package discover
 
 import (
 	"context"
+	"crypto/x509"
+	"net/http"
 	"os"
 
 	"github.com/bmc-toolbox/bmclib/errors"
@@ -46,12 +48,12 @@ func ScanAndConnect(host string, username string, password string, options ...Op
 		return bmc, err
 	}
 
-	client, err := httpclient.Build()
+	client, err := httpclient.Build(opts.httpClientSetupFuncs...)
 	if err != nil {
 		return nil, err
 	}
 
-	probe := Probe{client: client, username: username, password: password, host: host}
+	probe := Probe{client: client, username: username, password: password, host: host, secureTLS: opts.secureTLS}
 
 	devices := map[string]func(context.Context, logr.Logger) (interface{}, error){
 		ProbeHpIlo:         probe.hpIlo,
@@ -122,11 +124,28 @@ type Options struct {
 	HintCallback func(string) error
 	Logger       logr.Logger
 	Context      context.Context
+
+	secureTLS            bool
+	certPool             *x509.CertPool
+	httpClientSetupFuncs []func(*http.Client)
 }
 
 // Option is part of the functional options pattern, see the `With*` functions and
 // https://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis
 type Option func(*Options)
+
+// WithSecureTLS enforces trusted TLS connections, with an optional CA certificate pool.
+// Using this option with an nil pool uses the system CAs.
+func WithSecureTLS(rootCAs *x509.CertPool) Option {
+	return func(arg *Options) {
+		// this function modifies an *http.Client's transport to verify server certs
+		arg.httpClientSetupFuncs = append(arg.httpClientSetupFuncs, func(c *http.Client) {
+			httpclient.SecureTLS(c, rootCAs)
+			arg.secureTLS = true
+			arg.certPool = rootCAs
+		})
+	}
+}
 
 // WithProbeHint sets the Options.Hint option.
 func WithProbeHint(hint string) Option { return func(args *Options) { args.Hint = hint } }

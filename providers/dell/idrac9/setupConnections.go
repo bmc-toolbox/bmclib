@@ -16,13 +16,12 @@ import (
 )
 
 func (i *IDrac9) httpLogin() (err error) {
-	if i.httpClient != nil {
-		return
-	}
-
-	httpClient, err := httpclient.Build()
-	if err != nil {
-		return err
+	var httpClient = i.httpClient
+	if i.httpClient == nil {
+		httpClient, err = httpclient.Build(i.httpClientSetupFuncs...)
+		if err != nil {
+			return err
+		}
 	}
 
 	i.log.V(1).Info("connecting to bmc", "step", "bmc connection", "vendor", dell.VendorID, "ip", i.ip)

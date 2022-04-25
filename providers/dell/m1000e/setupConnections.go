@@ -85,7 +85,7 @@ func (m *M1000e) httpLogin() (err error) {
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-	httpClient, err := httpclient.Build()
+	httpClient, err := httpclient.Build(m.httpClientSetupFuncs...)
 	if err != nil {
 		return err
 	}

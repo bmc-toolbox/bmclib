@@ -3,6 +3,7 @@ package idrac9
 import (
 	"bytes"
 	"context"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -29,25 +30,58 @@ const (
 
 // IDrac9 holds the status and properties of a connection to an iDrac device
 type IDrac9 struct {
-	ip             string
-	username       string
-	password       string
-	xsrfToken      string
-	httpClient     *http.Client
-	sshClient      *sshclient.SSHClient
-	iDracInventory *dell.IDracInventory
-	ctx            context.Context
-	log            logr.Logger
+	ip                   string
+	username             string
+	password             string
+	xsrfToken            string
+	httpClient           *http.Client
+	sshClient            *sshclient.SSHClient
+	iDracInventory       *dell.IDracInventory
+	ctx                  context.Context
+	log                  logr.Logger
+	httpClientSetupFuncs []func(*http.Client)
+}
+
+// IDrac9Option is a type that can configure an *IDrac9
+type IDrac9Option func(*IDrac9)
+
+// WithSecureTLS enforces trusted TLS connections, with an optional CA certificate pool.
+// Using this option with an nil pool uses the system CAs.
+func WithSecureTLS(rootCAs *x509.CertPool) IDrac9Option {
+	return func(i *IDrac9) {
+		i.httpClientSetupFuncs = append(i.httpClientSetupFuncs, httpclient.SecureTLSOption(rootCAs))
+	}
+}
+
+// WithHTTPClient sets an HTTP client on an *IDrac9
+func WithHTTPClient(c *http.Client) IDrac9Option {
+	return func(i *IDrac9) {
+		i.httpClient = c
+	}
 }
 
 // New returns a new IDrac9 ready to be used
 func New(ctx context.Context, host string, httpHost string, username string, password string, log logr.Logger) (*IDrac9, error) {
+	return NewWithOptions(ctx, host, httpHost, username, password, log)
+}
+
+// NewWithOptions returns a new IDrac9 with options ready to be used
+func NewWithOptions(ctx context.Context, host, httpHost string, username string, password string, log logr.Logger, opts ...IDrac9Option) (*IDrac9, error) {
 	sshClient, err := sshclient.New(host, username, password)
 	if err != nil {
 		return nil, err
 	}
 
 	idrac := &IDrac9{ip: httpHost, username: username, password: password, sshClient: sshClient, ctx: ctx, log: log}
+
+	for _, opt := range opts {
+		opt(idrac)
+	}
+	if idrac.httpClient != nil {
+		for _, setupFunc := range idrac.httpClientSetupFuncs {
+			setupFunc(idrac.httpClient)
+		}
+	}
 	return idrac, nil
 }
 

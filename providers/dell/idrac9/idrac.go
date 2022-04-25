@@ -39,12 +39,33 @@ var Features = registrar.Features{
 	providers.FeatureUserDelete,
 }
 
+// ConnOption sets connection options
+type ConnOption func(*Conn)
+
+func WithHTTPClientConnOption(cli *http.Client) ConnOption {
+	return func(c *Conn) {
+		c.conn = cli
+	}
+}
+
+func NewConn(host, port, user, pass string, log logr.Logger, opts ...ConnOption) *Conn {
+	conn := &Conn{Host: host, Port: port, User: user, Pass: pass, Log: log}
+	for _, opt := range opts {
+		opt(conn)
+	}
+	return conn
+}
+
+func (c *Conn) newIdrac9() *IDrac9 {
+	return &IDrac9{ip: c.Host, username: c.User, password: c.Pass, log: c.Log, httpClient: c.conn}
+}
+
 func (c *Conn) Name() string {
 	return ProviderName
 }
 
 func (c *Conn) Open(ctx context.Context) error {
-	idrac := &IDrac9{ip: c.Host, username: c.User, password: c.Pass, log: c.Log}
+	idrac := c.newIdrac9()
 	err := idrac.httpLogin()
 	if err != nil {
 		return err
@@ -58,7 +79,7 @@ func (c *Conn) Open(ctx context.Context) error {
 }
 
 func (c *Conn) Close(ctx context.Context) error {
-	idrac := &IDrac9{ip: c.Host, username: c.User, password: c.Pass, log: c.Log}
+	idrac := c.newIdrac9()
 	idrac.xsrfToken = c.xsrfToken
 	idrac.httpClient = c.conn
 	if idrac.httpClient != nil {
@@ -106,11 +127,11 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 }
 
 func (c *Conn) UserCreate(ctx context.Context, user, pass, role string) (ok bool, err error) {
-	idrac9 := &IDrac9{ip: c.Host, username: c.User, password: c.Pass, log: c.Log}
-	idrac9.xsrfToken = c.xsrfToken
-	idrac9.httpClient = c.conn
+	idrac := c.newIdrac9()
+	idrac.xsrfToken = c.xsrfToken
+	idrac.httpClient = c.conn
 	// check if user already exists and capture any open user slots
-	users, err := idrac9.queryUsers()
+	users, err := idrac.queryUsers()
 	if err != nil {
 		return false, errors.Wrap(err, "IDRAC9 UserCreate(): Unable to query existing users.")
 	}
@@ -144,7 +165,7 @@ func (c *Conn) UserCreate(ctx context.Context, user, pass, role string) (ok bool
 	}
 
 	// create the user
-	err = idrac9.putUser(availableID, userToCreate)
+	err = idrac.putUser(availableID, userToCreate)
 	if err != nil {
 		return false, errors.Wrap(err, "error creating user")
 	}
@@ -153,7 +174,7 @@ func (c *Conn) UserCreate(ctx context.Context, user, pass, role string) (ok bool
 }
 
 func (c *Conn) UserUpdate(ctx context.Context, user, pass, role string) (ok bool, err error) {
-	idrac := &IDrac9{ip: c.Host, username: c.User, password: c.Pass, log: c.Log}
+	idrac := c.newIdrac9()
 	idrac.xsrfToken = c.xsrfToken
 	idrac.httpClient = c.conn
 	// check if user exists and capture its ID
@@ -195,7 +216,7 @@ func (c *Conn) UserUpdate(ctx context.Context, user, pass, role string) (ok bool
 }
 
 func (c *Conn) UserDelete(ctx context.Context, user string) (ok bool, err error) {
-	idrac := &IDrac9{ip: c.Host, username: c.User, password: c.Pass, log: c.Log}
+	idrac := c.newIdrac9()
 	idrac.xsrfToken = c.xsrfToken
 	idrac.httpClient = c.conn
 	// get the user ID from a name
@@ -228,7 +249,7 @@ func (c *Conn) UserDelete(ctx context.Context, user string) (ok bool, err error)
 }
 
 func (c *Conn) UserRead(ctx context.Context) (users []map[string]string, err error) {
-	idrac := &IDrac9{ip: c.Host, username: c.User, password: c.Pass, log: c.Log}
+	idrac := c.newIdrac9()
 	idrac.xsrfToken = c.xsrfToken
 	idrac.httpClient = c.conn
 	// get the user ID from a name

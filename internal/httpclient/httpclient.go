@@ -2,6 +2,7 @@ package httpclient
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"net"
 	"net/http"
 	"net/http/cookiejar"
@@ -11,9 +12,27 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
-// Build builds a client session with our default parameters
-func Build() (client *http.Client, err error) {
-	tr := &http.Transport{
+// SecureTLS disables InsecureSkipVerify and adds a cert pool to an HTTP client's
+// TLS config
+func SecureTLS(c *http.Client, rootCAs *x509.CertPool) {
+	if c == nil {
+		return
+	}
+	tp := DefaultTransport()
+	if c.Transport != nil {
+		if assertedTransport, ok := c.Transport.(*http.Transport); ok {
+			tp = assertedTransport
+		}
+		// otherwise, we overwrite the transport
+	}
+	tp.TLSClientConfig.InsecureSkipVerify = false
+	tp.TLSClientConfig.RootCAs = rootCAs
+	c.Transport = tp
+}
+
+// DefaultTransport sets an HTTP Transport
+func DefaultTransport() *http.Transport {
+	return &http.Transport{
 		TLSClientConfig:   &tls.Config{InsecureSkipVerify: true},
 		DisableKeepAlives: true,
 		Dial: (&net.Dialer{
@@ -23,7 +42,18 @@ func Build() (client *http.Client, err error) {
 		TLSHandshakeTimeout:   120 * time.Second,
 		ResponseHeaderTimeout: 120 * time.Second,
 	}
+}
 
+// SecureTLSOption disables InsecureSkipVerify and adds a cert pool to an HTTP client's
+// TLS config
+func SecureTLSOption(rootCAs *x509.CertPool) func(*http.Client) {
+	return func(c *http.Client) {
+		SecureTLS(c, rootCAs)
+	}
+}
+
+// Build builds a client session with our default parameters
+func Build(opts ...func(*http.Client)) (client *http.Client, err error) {
 	jar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
 	if err != nil {
 		return client, err
@@ -31,8 +61,14 @@ func Build() (client *http.Client, err error) {
 
 	client = &http.Client{
 		Timeout:   time.Second * 120,
-		Transport: tr,
+		Transport: DefaultTransport(),
 		Jar:       jar,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(client)
+		}
 	}
 
 	return client, err

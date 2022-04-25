@@ -3,6 +3,7 @@ package discover
 import (
 	"bytes"
 	"context"
+	"crypto/x509"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -32,10 +33,12 @@ var (
 )
 
 type Probe struct {
-	client   *http.Client
-	host     string
-	username string
-	password string
+	client    *http.Client
+	host      string
+	username  string
+	password  string
+	certPool  *x509.CertPool
+	secureTLS bool
 }
 
 func (p *Probe) hpIlo(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {
@@ -78,8 +81,12 @@ func (p *Probe) hpIlo(ctx context.Context, log logr.Logger) (bmcConnection inter
 
 		if iloXML.HSI != nil {
 			if strings.HasPrefix(iloXML.MP.Pn, "Integrated Lights-Out") {
+				opts := []ilo.IloOption{}
+				if p.secureTLS {
+					opts = append(opts, ilo.WithSecureTLS(p.certPool))
+				}
 				log.V(1).Info("step", "ScanAndConnect", "host", p.host, "vendor", string(devices.HP), "msg", "it's a HP with iLo")
-				return ilo.New(ctx, p.host, p.username, p.password, log)
+				return ilo.NewWithOptions(ctx, p.host, p.username, p.password, log, opts...)
 			}
 
 			return bmcConnection, fmt.Errorf("it's an HP, but I cound't not identify the hardware type. Please verify")
@@ -122,8 +129,12 @@ func (p *Probe) hpC7000(ctx context.Context, log logr.Logger) (bmcConnection int
 		}
 
 		if iloXMLC.Infra2 != nil {
+			opts := []c7000.C7000Option{}
+			if p.secureTLS {
+				opts = append(opts, c7000.WithSecureTLS(p.certPool))
+			}
 			log.V(1).Info("step", "ScanAndConnect", "host", p.host, "vendor", string(devices.HP), "msg", "it's a chassis")
-			return c7000.New(ctx, p.host, p.username, p.password, log)
+			return c7000.NewWithOptions(ctx, p.host, p.username, p.password, log, opts...)
 		}
 	}
 	return bmcConnection, errors.ErrDeviceNotMatched
@@ -182,8 +193,12 @@ func (p *Probe) idrac8(ctx context.Context, log logr.Logger) (bmcConnection inte
 	}
 
 	if resp.StatusCode == 200 && containsAnySubStr(payload, idrac8SysDesc) {
+		opts := []idrac8.IDrac8Option{}
+		if p.secureTLS {
+			opts = append(opts, idrac8.WithSecureTLS(p.certPool))
+		}
 		log.V(1).Info("step", "connection", "host", p.host, "vendor", string(devices.Dell), "msg", "it's a idrac8")
-		return idrac8.New(ctx, p.host, p.username, p.password, log)
+		return idrac8.NewWithOptions(ctx, p.host, p.username, p.password, log, opts...)
 	}
 
 	return bmcConnection, errors.ErrDeviceNotMatched
@@ -211,8 +226,12 @@ func (p *Probe) idrac9(ctx context.Context, log logr.Logger) (bmcConnection inte
 	}
 
 	if resp.StatusCode == 200 && containsAnySubStr(payload, idrac9SysDesc) {
+		opts := []idrac9.IDrac9Option{}
+		if p.secureTLS {
+			opts = append(opts, idrac9.WithSecureTLS(p.certPool))
+		}
 		log.V(1).Info("step", "connection", "host", p.host, "vendor", string(devices.Dell), "msg", "it's a idrac9")
-		return idrac9.New(ctx, p.host, p.host, p.username, p.password, log)
+		return idrac9.NewWithOptions(ctx, p.host, p.host, p.username, p.password, log, opts...)
 	}
 
 	return bmcConnection, errors.ErrDeviceNotMatched
@@ -240,8 +259,12 @@ func (p *Probe) m1000e(ctx context.Context, log logr.Logger) (bmcConnection inte
 	}
 
 	if resp.StatusCode == 200 && containsAnySubStr(payload, m1000eSysDesc) {
+		opts := []m1000e.M1000eOption{}
+		if p.secureTLS {
+			opts = append(opts, m1000e.WithSecureTLS(p.certPool))
+		}
 		log.V(1).Info("step", "connection", "host", p.host, "vendor", string(devices.Dell), "msg", "it's a m1000e chassis")
-		return m1000e.New(ctx, p.host, p.username, p.password, log)
+		return m1000e.NewWithOptions(ctx, p.host, p.username, p.password, log, opts...)
 	}
 
 	return bmcConnection, errors.ErrDeviceNotMatched
@@ -270,9 +293,13 @@ func (p *Probe) supermicrox(ctx context.Context, log logr.Logger) (bmcConnection
 
 	// looking for ATEN in the response payload isn't the most ideal way, although it is unique to Supermicros
 	if resp.StatusCode == 200 && bytes.Contains(payload, []byte("ATEN International")) {
+		opts := []supermicrox.SupermicroXOption{}
+		if p.secureTLS {
+			opts = append(opts, supermicrox.WithSecureTLS(p.certPool))
+		}
 		log.V(1).Info("it's a supermicro", "step", "connection", "host", p.host, "vendor", devices.Supermicro, "hardwareType", supermicrox.X10)
 
-		conn, err := supermicrox.New(ctx, p.host, p.username, p.password, log)
+		conn, err := supermicrox.NewWithOptions(ctx, p.host, p.username, p.password, log, opts...)
 		if err != nil {
 			return bmcConnection, err
 		}
@@ -309,9 +336,13 @@ func (p *Probe) supermicrox11(ctx context.Context, log logr.Logger) (bmcConnecti
 
 	// looking for ATEN in the response payload isn't the most ideal way, although it is unique to Supermicros
 	if resp.StatusCode == 200 && bytes.Contains(payload, []byte("ATEN International")) {
+		opts := []supermicrox11.SupermicroXOption{}
+		if p.secureTLS {
+			opts = append(opts, supermicrox11.WithSecureTLS(p.certPool))
+		}
 		log.V(1).Info("it's a supermicrox11", "step", "connection", "host", p.host, "vendor", devices.Supermicro, "hardwareType", supermicrox11.X11)
 
-		conn, err := supermicrox11.New(ctx, p.host, p.username, p.password, log)
+		conn, err := supermicrox11.NewWithOptions(ctx, p.host, p.username, p.password, log, opts...)
 		if err != nil {
 			return bmcConnection, err
 		}
