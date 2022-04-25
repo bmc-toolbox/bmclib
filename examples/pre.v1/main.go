@@ -5,8 +5,7 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"os"
+	"flag"
 
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/discover"
@@ -15,44 +14,44 @@ import (
 )
 
 func main() {
-	//ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	user := flag.String("user", "", "Username to login with")
+	pass := flag.String("password", "", "Username to login with")
+	host := flag.String("host", "", "BMC hostname to connect to")
+	flag.Parse()
 	ctx := context.TODO()
-	//defer cancel()
-	host := ""
-	user := ""
-	pass := ""
 
 	l := logrus.New()
 	l.Level = logrus.TraceLevel
 	logger := logrusr.New(l)
+	if *host == "" || *user == "" || *pass == "" {
+		l.Fatal("required host/user/pass parameters not defined")
+	}
 
 	c, err := discover.ScanAndConnect(
-		host,
-		user,
-		pass,
+		*host,
+		*user,
+		*pass,
 		discover.WithContext(ctx),
 		discover.WithLogger(logger),
 	)
 
 	if err != nil {
-		logger.Error(err, "Error connecting to bmc")
+		l.WithError(err).Fatal("Error connecting to bmc")
 	}
 
 	bmc := c.(devices.Bmc)
 
 	err = bmc.CheckCredentials()
 	if err != nil {
-		logger.Error(err, "Failed to validate credentials")
-		os.Exit(1)
+		l.WithError(err).Fatal("Failed to validate credentials")
 	}
 
 	defer bmc.Close(ctx)
 
 	s, err := bmc.Serial()
 	if err != nil {
-		logger.Error(err, "Error getting bmc serial")
-		os.Exit(1)
+		l.WithError(err).Fatal("Error getting bmc serial")
 	}
-	fmt.Println(s)
+	l.WithField("serial", s).Info()
 
 }

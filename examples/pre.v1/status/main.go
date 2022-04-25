@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/x509"
+	"flag"
 	"os"
 
 	"github.com/bmc-toolbox/bmclib/devices"
@@ -21,17 +22,17 @@ import (
 // github.com/sirupsen/logrus: logrusr
 // github.com/wojas/genericr: genericr
 func main() {
-
-	ip := ""
-	user := "admin"
-	pass := "admin"
+	user := flag.String("user", "", "Username to login with")
+	pass := flag.String("password", "", "Username to login with")
+	host := flag.String("host", "", "BMC hostname to connect to")
+	flag.Parse()
 
 	logger := logrus.New()
 	logger.SetLevel(logrus.DebugLevel)
 	//logger.SetFormatter(&logrus.JSONFormatter{})
 
 	logger.Info("printing status with a user defined logger")
-	conn, err := withUserDefinedLogger(ip, user, pass, logger)
+	conn, err := withUserDefinedLogger(*host, *user, *pass, logger)
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -39,14 +40,14 @@ func main() {
 
 	logger.Info("printing status with the default builtin logger")
 	os.Setenv("BMCLIB_LOG_LEVEL", "trace")
-	conn, err = withDefaultBuiltinLogger(ip, user, pass)
+	conn, err = withDefaultBuiltinLogger(*host, *user, *pass)
 	if err != nil {
 		logger.Fatal(err)
 	}
 	printStatus(conn, logger)
 
 	logger.Info("printing status with the default secure TLS")
-	conn, err = withSecureTLS(ip, user, pass, nil)
+	conn, err = withSecureTLS(*host, *user, *pass, nil)
 	if err != nil {
 		logger.Fatal(err)
 	}
