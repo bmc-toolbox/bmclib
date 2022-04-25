@@ -10,19 +10,34 @@ jobs:
       CGO_ENABLED: 0
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Install Go
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v3
       with:
         go-version: '1.17'
-
     - name: Run golangci-lint
       uses: golangci/golangci-lint-action@v3
       with:
         args: -v --config .golangci.yml --timeout=5m
         version: latest
-
-    - name: goimports
+    - name: goimports-check
       run: go get golang.org/x/tools/cmd/goimports && make goimports-check
-    - name: go test
-      run: make test
+    - name: make all-checks
+      run: make all-checks
+  test:
+    runs-on: ubuntu-latest
+    env:
+      CGO_ENABLED: 0
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 2
+    - name: Install Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: '1.17'
+    - name: make all-tests
+      run: make all-tests
+    - name: upload codecov
+      run: bash <(curl -s https://codecov.io/bash)

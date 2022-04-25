@@ -292,10 +292,14 @@ func TestUpdateBIOSFirmware(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			testImplementation := firmwareTester{MakeErrorOut: tc.makeFail}
 			if tc.ctxTimeout == 0 {
-				tc.ctxTimeout = time.Second * 3
+				tc.ctxTimeout = time.Second * 4
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
+			if tc.ctxTimeout != time.Second*4 {
+				// sleep the timeout length to force timeout
+				time.Sleep(tc.ctxTimeout)
+			}
 			err := UpdateBIOSFirmware(ctx, bytes.NewReader([]byte(`foo`)), 0, []BIOSFirmwareUpdater{&testImplementation})
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
