@@ -1,5 +1,12 @@
 package redfish
 
+import (
+	"strings"
+
+	"github.com/bmc-toolbox/bmclib/devices"
+	"github.com/stmcginnis/gofish/redfish"
+)
+
 // defines various inventory collection helper methods
 
 // collectEnclosure collects Enclosure information
