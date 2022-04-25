@@ -113,7 +113,7 @@ type firmwareInstallStatusTester struct {
 	returnError  error
 }
 
-func (f *firmwareInstallStatusTester) FirmwareInstallStatus(ctx context.Context, component, installVersion, taskID string) (status string, err error) {
+func (f *firmwareInstallStatusTester) FirmwareInstallStatus(ctx context.Context, installVersion, component, taskID string) (status string, err error) {
 	return f.returnStatus, f.returnError
 }
 
@@ -146,7 +146,7 @@ func TestFirmwareInstallStatus(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			taskID, metadata, err := firmwareInstallStatus(ctx, tc.component, tc.installVersion, tc.taskID, []firmwareInstallVerifierProvider{{tc.providerName, &testImplementation}})
+			taskID, metadata, err := firmwareInstallStatus(ctx, tc.installVersion, tc.component, tc.taskID, []firmwareInstallVerifierProvider{{tc.providerName, &testImplementation}})
 			if tc.returnError != nil {
 				assert.ErrorIs(t, err, tc.returnError)
 				return
@@ -165,16 +165,15 @@ func TestFirmwareInstallStatusFromInterfaces(t *testing.T) {
 	testCases := []struct {
 		testName          string
 		component         string
-		applyAt           string
-		forceInstall      bool
-		reader            io.Reader
-		returnTaskID      string
+		installVersion    string
+		taskID            string
+		returnStatus      string
 		returnError       error
 		providerName      string
 		badImplementation bool
 	}{
-		{"success with metadata", devices.SlugBIOS, devices.FirmwareApplyOnReset, false, nil, "1234", nil, "foo", false},
-		{"failure with bad implementation", devices.SlugBIOS, devices.FirmwareApplyOnReset, false, nil, "1234", bmclibErrs.ErrProviderImplementation, "foo", true},
+		{"success with metadata", devices.SlugBIOS, "1.1", "1234", "status-done", nil, "foo", false},
+		{"failure with bad implementation", devices.SlugBIOS, "1.1", "1234", "status-done", bmclibErrs.ErrProviderImplementation, "foo", true},
 	}
 
 	for _, tc := range testCases {
@@ -184,10 +183,10 @@ func TestFirmwareInstallStatusFromInterfaces(t *testing.T) {
 				badImplementation := struct{}{}
 				generic = []interface{}{&badImplementation}
 			} else {
-				testImplementation := &firmwareInstallTester{returnTaskID: tc.returnTaskID, returnError: tc.returnError}
+				testImplementation := &firmwareInstallStatusTester{returnStatus: tc.returnStatus, returnError: tc.returnError}
 				generic = []interface{}{testImplementation}
 			}
-			taskID, metadata, err := FirmwareInstallFromInterfaces(context.Background(), tc.component, tc.applyAt, tc.forceInstall, tc.reader, generic)
+			status, metadata, err := FirmwareInstallStatusFromInterfaces(context.Background(), tc.component, tc.installVersion, tc.taskID, generic)
 			if tc.returnError != nil {
 				assert.ErrorIs(t, err, tc.returnError)
 				return
@@ -197,7 +196,7 @@ func TestFirmwareInstallStatusFromInterfaces(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			assert.Equal(t, tc.returnTaskID, taskID)
+			assert.Equal(t, tc.returnStatus, status)
 			assert.Equal(t, tc.providerName, metadata.SuccessfulProvider)
 		})
 	}

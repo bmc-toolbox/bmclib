@@ -244,8 +244,8 @@ func (c *Client) FirmwareInstall(ctx context.Context, component, applyAt string,
 }
 
 // FirmwareInstallStatus pass through library function to check firmware install status
-func (c *Client) FirmwareInstallStatus(ctx context.Context, component, installVersion, taskID string) (status string, err error) {
-	status, metadata, err := bmc.FirmwareInstallStatusFromInterfaces(ctx, component, installVersion, taskID, c.Registry.GetDriverInterfaces())
+func (c *Client) FirmwareInstallStatus(ctx context.Context, installVersion, component, taskID string) (status string, err error) {
+	status, metadata, err := bmc.FirmwareInstallStatusFromInterfaces(ctx, installVersion, component, taskID, c.Registry.GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return status, err
 
