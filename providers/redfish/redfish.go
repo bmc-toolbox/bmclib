@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	bmcerrors "github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/providers"
 	"github.com/go-logr/logr"
@@ -36,13 +37,19 @@ var (
 	}
 )
 
+// gofishClient is an interface around methods used in *gofish.APIClient
+type gofishClient interface {
+	GetService() *gofish.Service
+	Logout()
+}
+
 // Conn details for redfish client
 type Conn struct {
 	Host                 string
 	Port                 string
 	User                 string
 	Pass                 string
-	conn                 *gofish.APIClient
+	conn                 gofishClient
 	Log                  logr.Logger
 	httpClient           *http.Client
 	httpClientSetupFuncs []func(*http.Client)
@@ -162,8 +169,7 @@ func (c *Conn) PowerSet(ctx context.Context, state string) (ok bool, err error) 
 }
 
 func (c *Conn) on(ctx context.Context) (ok bool, err error) {
-	service := c.conn.Service
-	ss, err := service.Systems()
+	ss, err := c.conn.GetService().Systems()
 	if err != nil {
 		return false, err
 	}
@@ -180,8 +186,7 @@ func (c *Conn) on(ctx context.Context) (ok bool, err error) {
 }
 
 func (c *Conn) off(ctx context.Context) (ok bool, err error) {
-	service := c.conn.Service
-	ss, err := service.Systems()
+	ss, err := c.conn.GetService().Systems()
 	if err != nil {
 		return false, err
 	}
@@ -198,8 +203,7 @@ func (c *Conn) off(ctx context.Context) (ok bool, err error) {
 }
 
 func (c *Conn) status(ctx context.Context) (result string, err error) {
-	service := c.conn.Service
-	ss, err := service.Systems()
+	ss, err := c.conn.GetService().Systems()
 	if err != nil {
 		return "", err
 	}
@@ -210,8 +214,7 @@ func (c *Conn) status(ctx context.Context) (result string, err error) {
 }
 
 func (c *Conn) reset(ctx context.Context) (ok bool, err error) {
-	service := c.conn.Service
-	ss, err := service.Systems()
+	ss, err := c.conn.GetService().Systems()
 	if err != nil {
 		return false, err
 	}
@@ -234,9 +237,8 @@ func (c *Conn) reset(ctx context.Context) (ok bool, err error) {
 	return true, nil
 }
 
-func (r *Conn) hardoff(ctx context.Context) (ok bool, err error) {
-	service := r.conn.Service
-	ss, err := service.Systems()
+func (c *Conn) hardoff(ctx context.Context) (ok bool, err error) {
+	ss, err := c.conn.GetService().Systems()
 	if err != nil {
 		return false, err
 	}
@@ -252,13 +254,12 @@ func (r *Conn) hardoff(ctx context.Context) (ok bool, err error) {
 	return true, nil
 }
 
-func (r *Conn) cycle(ctx context.Context) (ok bool, err error) {
-	service := r.conn.Service
-	ss, err := service.Systems()
+func (c *Conn) cycle(ctx context.Context) (ok bool, err error) {
+	ss, err := c.conn.GetService().Systems()
 	if err != nil {
 		return false, err
 	}
-	res, err := r.status(ctx)
+	res, err := c.status(ctx)
 	if err != nil {
 		return false, fmt.Errorf("power cycle failed: unable to get current state")
 	}
@@ -273,4 +274,28 @@ func (r *Conn) cycle(ctx context.Context) (ok bool, err error) {
 		}
 	}
 	return true, nil
+}
+
+// GetBIOSVersion returns the first BIOS version found, implements the Firmware interface
+func (c *Conn) GetBIOSVersion(ctx context.Context) (string, error) {
+	systems, err := c.conn.GetService().Systems()
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	for _, system := range systems {
+		return system.BIOSVersion, nil
+	}
+	return "", bmcerrors.ErrNotImplemented
+}
+
+// GetBMCVersion returns the first BMC version found, implements the Firmware interface
+func (c *Conn) GetBMCVersion(ctx context.Context) (string, error) {
+	managers, err := c.conn.GetService().Managers()
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	for _, system := range managers {
+		return system.FirmwareVersion, nil
+	}
+	return "", bmcerrors.ErrNotImplemented
 }

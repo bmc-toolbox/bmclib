@@ -12,10 +12,10 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.7.1
-	github.com/stmcginnis/gofish v0.12.0
+	github.com/stmcginnis/gofish v0.13.1-0.20220425185044-2faf7e2ed881
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.0.0-20210317152858-513c2a44f670
-	golang.org/x/net v0.0.0-20210316092652-d523dce5a7f4
+	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
 	gopkg.in/go-playground/assert.v1 v1.2.1
 	gopkg.in/go-playground/validator.v9 v9.31.0
 )
