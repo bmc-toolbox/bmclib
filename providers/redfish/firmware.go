@@ -103,7 +103,7 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 }
 
 // FirmwareInstallStatus returns the status of the firmware install task queued
-func (c *Conn) FirmwareInstallStatus(ctx context.Context, component, installVersion, taskID string) (state string, err error) {
+func (c *Conn) FirmwareInstallStatus(ctx context.Context, installVersion, component, taskID string) (state string, err error) {
 	vendor, _, err := c.DeviceVendorModel(ctx)
 	if err != nil {
 		return state, errors.Wrap(err, "unable to determine device vendor, model attributes")

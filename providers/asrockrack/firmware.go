@@ -2,7 +2,6 @@ package asrockrack
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"strconv"
@@ -40,14 +39,17 @@ func (a *ASRockRack) FirmwareInstall(ctx context.Context, component, applyAt str
 		err = a.firmwareInstallBMC(ctx, reader, size)
 	default:
 		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, "component unsupported: "+component)
+	}
 
+	if err != nil {
+		err = errors.Wrap(bmclibErrs.ErrFirmwareInstall, err.Error())
 	}
 
 	return jobID, err
 }
 
 // FirmwareInstallStatus returns the status of the firmware install process, a bool value indicating if the component requires a reset
-func (a *ASRockRack) FirmwareInstallStatus(ctx context.Context, component, installVersion, taskID string) (status string, err error) {
+func (a *ASRockRack) FirmwareInstallStatus(ctx context.Context, installVersion, component, taskID string) (status string, err error) {
 	switch component {
 	case devices.SlugBIOS, devices.SlugBMC:
 		return a.firmwareUpdateStatus(ctx, component, installVersion)
@@ -64,28 +66,28 @@ func (a *ASRockRack) firmwareInstallBMC(ctx context.Context, reader io.Reader, f
 	a.log.V(2).Info("info", "action", "set device to flash mode, takes a minute...", "step", "1/4")
 	err = a.setFlashMode(ctx)
 	if err != nil {
-		return fmt.Errorf("failed in step 1/4 - set device to flash mode: " + err.Error())
+		return errors.Wrap(err, "failed in step 1/4 - set device to flash mode")
 	}
 
 	// 2. upload firmware image file
 	a.log.V(2).Info("info", "action", "upload BMC firmware image", "step", "2/4")
 	err = a.uploadFirmware(ctx, "api/maintenance/firmware", reader, fileSize)
 	if err != nil {
-		return fmt.Errorf("failed in step 2/4 - upload BMC firmware image: " + err.Error())
+		return errors.Wrap(err, "failed in step 2/4 - upload BMC firmware image")
 	}
 
 	// 3. BMC to verify the uploaded file
 	err = a.verifyUploadedFirmware(ctx)
 	a.log.V(2).Info("info", "action", "BMC verify uploaded firmware", "step", "3/4")
 	if err != nil {
-		return fmt.Errorf("failed in step 3/4 - BMC verify uploaded firmware: " + err.Error())
+		return errors.Wrap(err, "failed in step 3/4 - BMC verify uploaded firmware")
 	}
 
 	// 4. Run the upgrade - preserving current config
 	a.log.V(2).Info("info", "action", "proceed with upgrade, preserve current configuration", "step", "4/4")
 	err = a.upgradeBMC(ctx)
 	if err != nil {
-		return fmt.Errorf("failed in step 4/4 - proceed with upgrade: " + err.Error())
+		return errors.Wrap(err, "failed in step 4/4 - proceed with upgrade")
 	}
 
 	return nil
@@ -99,21 +101,21 @@ func (a *ASRockRack) firmwareInstallBIOS(ctx context.Context, reader io.Reader, 
 	a.log.V(2).Info("info", "action", "upload BIOS firmware image", "step", "1/3")
 	err = a.uploadFirmware(ctx, "api/asrr/maintenance/BIOS/firmware", reader, fileSize)
 	if err != nil {
-		return fmt.Errorf("failed in step 1/3 - upload firmware image: " + err.Error())
+		return errors.Wrap(err, "failed in step 1/3 - upload firmware image")
 	}
 
 	// 2. set update parameters to preserve configurations
 	a.log.V(2).Info("info", "action", "set flash configuration", "step", "2/3")
 	err = a.biosUpgradeConfiguration(ctx)
 	if err != nil {
-		return fmt.Errorf("failed in step 2/3 - set flash configuration: " + err.Error())
+		return errors.Wrap(err, "failed in step 2/3 - set flash configuration")
 	}
 
 	// 3. run upgrade
 	a.log.V(2).Info("info", "action", "proceed with upgrade", "step", "3/3")
 	err = a.upgradeBIOS(ctx)
 	if err != nil {
-		return fmt.Errorf("failed in step 3/3 - proceed with upgrade: " + err.Error())
+		return errors.Wrap(err, "failed in step 3/3 - proceed with upgrade")
 	}
 
 	return nil

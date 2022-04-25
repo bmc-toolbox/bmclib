@@ -93,13 +93,13 @@ type FirmwareInstallVerifier interface {
 	// FirmwareInstallStatus returns the status of the firmware install process.
 	//
 	// parameters:
-	// component (optional) - the component slug for the component update being installed.
 	// installVersion (required) - the version this method should check is installed.
+	// component (optional) - the component slug for the component update being installed.
 	// taskID (optional) - the task identifier.
 	//
 	// return values:
 	// status - returns one of the FirmwareInstall statuses (see devices/constants.go).
-	FirmwareInstallStatus(ctx context.Context, component, installVersion, taskID string) (status string, err error)
+	FirmwareInstallStatus(ctx context.Context, installVersion, component, taskID string) (status string, err error)
 }
 
 // firmwareInstallVerifierProvider is an internal struct to correlate an implementation/provider and its name
@@ -109,7 +109,7 @@ type firmwareInstallVerifierProvider struct {
 }
 
 // firmwareInstallStatus returns the status of the firmware install process
-func firmwareInstallStatus(ctx context.Context, component, installVersion, taskID string, generic []firmwareInstallVerifierProvider) (status string, metadata Metadata, err error) {
+func firmwareInstallStatus(ctx context.Context, installVersion, component, taskID string, generic []firmwareInstallVerifierProvider) (status string, metadata Metadata, err error) {
 	var metadataLocal Metadata
 Loop:
 	for _, elem := range generic {
@@ -122,7 +122,7 @@ Loop:
 			break Loop
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
-			status, vErr := elem.FirmwareInstallStatus(ctx, component, installVersion, taskID)
+			status, vErr := elem.FirmwareInstallStatus(ctx, installVersion, component, taskID)
 			if vErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				err = multierror.Append(err, vErr)
@@ -138,7 +138,7 @@ Loop:
 }
 
 // FirmwareInstallStatusFromInterfaces pass through to library function
-func FirmwareInstallStatusFromInterfaces(ctx context.Context, component, installVersion, taskID string, generic []interface{}) (status string, metadata Metadata, err error) {
+func FirmwareInstallStatusFromInterfaces(ctx context.Context, installVersion, component, taskID string, generic []interface{}) (status string, metadata Metadata, err error) {
 	implementations := make([]firmwareInstallVerifierProvider, 0)
 	for _, elem := range generic {
 		temp := firmwareInstallVerifierProvider{name: getProviderName(elem)}
@@ -161,5 +161,5 @@ func FirmwareInstallStatusFromInterfaces(ctx context.Context, component, install
 		)
 	}
 
-	return firmwareInstallStatus(ctx, component, installVersion, taskID, implementations)
+	return firmwareInstallStatus(ctx, installVersion, component, taskID, implementations)
 }
