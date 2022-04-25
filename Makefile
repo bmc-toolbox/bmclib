@@ -3,17 +3,18 @@ help:
 
 .PHONY: test
 test: ## Run unit tests
-	go mod tidy
 	go test -gcflags=-l -v -covermode=count ./...
 
 .PHONY: cover
 cover: ## Run unit tests with coverage report
-	go test -gcflags=-l -coverprofile=cover.out ./...
-	go tool cover -func=cover.out
-	rm -rf cover.out
+	go test -gcflags=-l -coverprofile=coverage.txt ./...
+	go tool cover -func=coverage.txt
+
+.PHONY: all-tests
+all-tests: test cover ## run all tests
 
 .PHONY: lint
-lint:  ## Run linting
+lint: ## Run linting
 	@echo be sure golangci-lint is installed: https://golangci-lint.run/usage/install/
 	golangci-lint run --config .golangci.yml
 
@@ -28,5 +29,6 @@ goimports-check: ## run goimports displaying diffs
 	goimports -d . | (! grep .)
 
 .PHONY: all-checks
-all-checks: cover lint goimports ## run all tests and formatters
+all-checks: lint goimports ## run all formatters
+	go mod tidy
 	go vet ./...
