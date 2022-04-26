@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/x509"
-	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/bmc-toolbox/bmclib/devices"

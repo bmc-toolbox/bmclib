@@ -91,7 +91,7 @@ func (c *Conn) Open(ctx context.Context) (err error) {
 	}
 
 	config := gofish.ClientConfig{
-		Endpoint:   "https://" + c.Host,
+		Endpoint:   c.Host,
 		Username:   c.User,
 		Password:   c.Pass,
 		Insecure:   true,

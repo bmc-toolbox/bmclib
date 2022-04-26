@@ -10,6 +10,7 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/devices"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/errors"
+	"github.com/bmc-toolbox/bmclib/internal"
 )
 
 const (
@@ -179,6 +180,10 @@ func (a *ASRockRack) firmwareUpdateStatus(ctx context.Context, component string,
 // - 1 indicates the given version parameter does not match the version installed
 // - 2 the version parameter returned from the BMC is empty (which means the BMC needs a reset)
 func (a *ASRockRack) versionInstalled(ctx context.Context, component, version string) (status int, err error) {
+	if !internal.StringInSlice(component, []string{devices.SlugBIOS, devices.SlugBMC}) {
+		return versionStrError, errors.Wrap(bmclibErrs.ErrFirmwareInstall, "component unsupported: "+component)
+	}
+
 	fwInfo, err := a.firmwareInfo(ctx)
 	if err != nil {
 		err = errors.Wrap(err, "error querying for firmware info: ")
@@ -193,8 +198,6 @@ func (a *ASRockRack) versionInstalled(ctx context.Context, component, version st
 		installed = fwInfo.BIOSVersion
 	case devices.SlugBMC:
 		installed = fwInfo.BMCVersion
-	default:
-		return versionStrError, errors.Wrap(bmclibErrs.ErrFirmwareInstall, "component unsupported: "+component)
 	}
 
 	// version match
