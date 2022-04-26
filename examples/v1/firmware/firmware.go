@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"time"
@@ -18,13 +17,13 @@ func main() {
 	defer cancel()
 
 	// set BMC parameters here
-	host := ""
+	host := "10.247.150.161"
 	port := ""
-	user := "root"
-	pass := ""
+	user := "admin"
+	pass := "RmrJ56BFUarn6g"
 
 	l := logrus.New()
-	l.Level = logrus.DebugLevel
+	l.Level = logrus.TraceLevel
 	logger := logrusr.New(l)
 
 	if host == "" || user == "" || pass == "" {
@@ -40,23 +39,17 @@ func main() {
 
 	defer cl.Close(ctx)
 
-	for _, update := range []string{"/tmp/iDRAC-with-Lifecycle-Controller_Firmware_F87RP_WN64_5.00.00.00_A00.EXE"} {
+	for _, update := range []string{"/tmp/E6D4INL2.09C.ima"} {
 		fh, err := os.Open(update)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		taskID, err := cl.FirmwareInstall(ctx, devices.SlugBMC, devices.FirmwareApplyOnReset, true, fh)
+		_, err = cl.FirmwareInstall(ctx, devices.SlugBMC, devices.FirmwareApplyOnReset, true, fh)
 		if err != nil {
 			l.Error(err)
 		}
 
-		state, err := cl.FirmwareInstallStatus(ctx, "", taskID, "5.00.00.00")
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		fmt.Printf("state: %s\n", state)
 	}
 
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"io"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -26,7 +25,7 @@ func (a *ASRockRack) FirmwareInstall(ctx context.Context, component, applyAt str
 	if file, ok := reader.(*os.File); ok {
 		finfo, err := file.Stat()
 		if err != nil {
-			a.log.V(2).Info("warn", "unable to determine file size: "+err.Error())
+			a.log.V(2).Error(err, "unable to determine file size")
 		}
 
 		size = finfo.Size()
@@ -63,14 +62,14 @@ func (a *ASRockRack) firmwareInstallBMC(ctx context.Context, reader io.Reader, f
 	var err error
 
 	// 1. set the device to flash mode - prepares the flash
-	a.log.V(2).Info("info", "action", "set device to flash mode, takes a minute...", "step", "1/4")
+	a.log.V(2).WithValues("step", "1/4").Info("set device to flash mode, takes a minute...")
 	err = a.setFlashMode(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed in step 1/4 - set device to flash mode")
 	}
 
 	// 2. upload firmware image file
-	a.log.V(2).Info("info", "action", "upload BMC firmware image", "step", "2/4")
+	a.log.V(2).WithValues("step", "2/4").Info("upload BMC firmware image")
 	err = a.uploadFirmware(ctx, "api/maintenance/firmware", reader, fileSize)
 	if err != nil {
 		return errors.Wrap(err, "failed in step 2/4 - upload BMC firmware image")
@@ -78,16 +77,16 @@ func (a *ASRockRack) firmwareInstallBMC(ctx context.Context, reader io.Reader, f
 
 	// 3. BMC to verify the uploaded file
 	err = a.verifyUploadedFirmware(ctx)
-	a.log.V(2).Info("info", "action", "BMC verify uploaded firmware", "step", "3/4")
+	a.log.V(2).WithValues("step", "3/4").Info("verify uploaded BMC firmware")
 	if err != nil {
-		return errors.Wrap(err, "failed in step 3/4 - BMC verify uploaded firmware")
+		return errors.Wrap(err, "failed in step 3/4 - verify uploaded BMC firmware")
 	}
 
 	// 4. Run the upgrade - preserving current config
-	a.log.V(2).Info("info", "action", "proceed with upgrade, preserve current configuration", "step", "4/4")
+	a.log.V(2).WithValues("step", "4/4").Info("proceed with BMC firmware install, preserve current configuration")
 	err = a.upgradeBMC(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed in step 4/4 - proceed with upgrade")
+		return errors.Wrap(err, "failed in step 4/4 - proceed with BMC firmware install")
 	}
 
 	return nil
@@ -98,24 +97,24 @@ func (a *ASRockRack) firmwareInstallBIOS(ctx context.Context, reader io.Reader, 
 	var err error
 
 	// 1. upload firmware image file
-	a.log.V(2).Info("info", "action", "upload BIOS firmware image", "step", "1/3")
+	a.log.V(2).WithValues("step", "1/3").Info("upload BIOS firmware image")
 	err = a.uploadFirmware(ctx, "api/asrr/maintenance/BIOS/firmware", reader, fileSize)
 	if err != nil {
-		return errors.Wrap(err, "failed in step 1/3 - upload firmware image")
+		return errors.Wrap(err, "failed in step 1/3 - upload BIOS firmware image")
 	}
 
 	// 2. set update parameters to preserve configurations
-	a.log.V(2).Info("info", "action", "set flash configuration", "step", "2/3")
+	a.log.V(2).WithValues("step", "2/3").Info("set BIOS preserve flash configuration")
 	err = a.biosUpgradeConfiguration(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed in step 2/3 - set flash configuration")
 	}
 
 	// 3. run upgrade
-	a.log.V(2).Info("info", "action", "proceed with upgrade", "step", "3/3")
+	a.log.V(2).WithValues("step", "3/3").Info("proceed with BIOS firmware install")
 	err = a.upgradeBIOS(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed in step 3/3 - proceed with upgrade")
+		return errors.Wrap(err, "failed in step 3/3 - proceed with BIOS firmware install")
 	}
 
 	return nil
@@ -123,10 +122,6 @@ func (a *ASRockRack) firmwareInstallBIOS(ctx context.Context, reader io.Reader, 
 
 // firmwareUpdateBIOSStatus returns the BIOS firmware install status
 func (a *ASRockRack) firmwareUpdateStatus(ctx context.Context, component string, installVersion string) (status string, err error) {
-	// TODO: purge debug logging
-	os.Setenv("BMCLIB_LOG_LEVEL", "trace")
-	defer os.Unsetenv("BMCLIB_LOG_LEVEL")
-
 	var endpoint string
 	switch component {
 	case devices.SlugBIOS:
@@ -142,7 +137,7 @@ func (a *ASRockRack) firmwareUpdateStatus(ctx context.Context, component string,
 	// once an update completes/fails this endpoint will return 500
 	progress, err := a.flashProgress(ctx, endpoint)
 	if err != nil {
-		a.log.V(3).Info("warn", "bmc query for install progress returned error: "+err.Error())
+		a.log.V(3).Error(err, "bmc query for install progress returned error: "+err.Error())
 	}
 
 	if progress != nil {
@@ -152,7 +147,7 @@ func (a *ASRockRack) firmwareUpdateStatus(ctx context.Context, component string,
 		case 2:
 			return devices.FirmwareInstallComplete, nil
 		default:
-			a.log.V(3).Info("warn", "bmc returned unknown flash progress state: "+strconv.Itoa(progress.State))
+			a.log.V(3).WithValues("state", progress.State).Info("warn", "bmc returned unknown flash progress state")
 		}
 	}
 
