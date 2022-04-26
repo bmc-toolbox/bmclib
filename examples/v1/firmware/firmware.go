@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -17,10 +18,10 @@ func main() {
 	defer cancel()
 
 	// set BMC parameters here
-	host := "10.247.150.161"
+	host := ""
 	port := ""
-	user := "admin"
-	pass := "RmrJ56BFUarn6g"
+	user := ""
+	pass := ""
 
 	l := logrus.New()
 	l.Level = logrus.TraceLevel
@@ -42,14 +43,20 @@ func main() {
 	for _, update := range []string{"/tmp/E6D4INL2.09C.ima"} {
 		fh, err := os.Open(update)
 		if err != nil {
-			log.Fatal(err)
+			l.Fatal(err)
 		}
 
-		_, err = cl.FirmwareInstall(ctx, devices.SlugBMC, devices.FirmwareApplyOnReset, true, fh)
+		taskID, err := cl.FirmwareInstall(ctx, devices.SlugBMC, devices.FirmwareApplyOnReset, true, fh)
 		if err != nil {
-			l.Error(err)
+			l.Fatal(err)
 		}
 
+		state, err := cl.FirmwareInstallStatus(ctx, "", taskID, "5.00.00.00")
+		if err != nil {
+			l.Fatal(err)
+		}
+
+		fmt.Printf("taskID: %s, state: %s\n", taskID, state)
 	}
 
 }
