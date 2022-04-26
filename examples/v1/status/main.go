@@ -59,11 +59,12 @@ func main() {
 	}
 	defer cl.Close(ctx)
 
-	version, err := cl.GetBMCVersion(ctx)
+	inventory, err := cl.Inventory(ctx)
 	if err != nil {
-		l.WithError(err).Error()
+		l.Fatal(err)
 	}
-	l.WithField("bmc-version", version).Info()
+
+	l.WithField("bmc-version", inventory.BMC.Firmware.Installed).Info()
 
 	state, err := cl.GetPowerState(ctx)
 	if err != nil {
@@ -71,9 +72,5 @@ func main() {
 	}
 	l.WithField("power-state", state).Info()
 
-	version, err = cl.GetBIOSVersion(ctx)
-	if err != nil {
-		l.WithError(err).Error()
-	}
-	l.WithField("bios-version", version).Info()
+	l.WithField("bios-version", inventory.BIOS.Firmware.Installed).Info()
 }

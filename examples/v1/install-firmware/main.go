@@ -9,11 +9,13 @@ import (
 	"crypto/x509"
 	"flag"
 	"io/ioutil"
+	"log"
 	"os"
 	"strconv"
 	"time"
 
 	"github.com/bmc-toolbox/bmclib"
+	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bombsimon/logrusr/v2"
 	"github.com/sirupsen/logrus"
 )
@@ -26,6 +28,8 @@ func main() {
 	withSecureTLS := flag.Bool("secure-tls", false, "Enable secure TLS")
 	certPoolPath := flag.String("cert-pool", "", "Path to an file containing x509 CAs. An empty string uses the system CAs. Only takes effect when --secure-tls=true")
 	firmwarePath := flag.String("firmware", "", "The firmware path to read")
+	firmwareVersion := flag.String("version", "", "The firmware version being installed")
+
 	flag.Parse()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
@@ -62,11 +66,13 @@ func main() {
 
 	defer cl.Close(ctx)
 
-	v, err := cl.GetBMCVersion(ctx)
+	// collect inventory
+	inventory, err := cl.Inventory(ctx)
 	if err != nil {
-		l.Fatal(err, "unable to retrieve BMC version")
+		l.Fatal(err)
 	}
-	logger.Info("BMC version", v)
+
+	l.WithField("bmc-version", inventory.BMC.Firmware.Installed).Info()
 
 	// open file handle
 	fh, err := os.Open(*firmwarePath)
@@ -75,14 +81,17 @@ func main() {
 	}
 	defer fh.Close()
 
-	fi, err := fh.Stat()
+	// SlugBMC hardcoded here, this can be any of the existing component slugs from devices/constants.go
+	// assuming that the BMC provider implements the required component firmware update support
+	taskID, err := cl.FirmwareInstall(ctx, devices.SlugBMC, devices.FirmwareApplyOnReset, true, fh)
 	if err != nil {
-		l.Fatal(err)
+		l.Error(err)
 	}
 
-	err = cl.UpdateBMCFirmware(ctx, fh, fi.Size())
+	state, err := cl.FirmwareInstallStatus(ctx, taskID, devices.SlugBMC, *firmwareVersion)
 	if err != nil {
-		l.Fatal(err)
+		log.Fatal(err)
 	}
-	logger.WithValues("host", *host).Info("Updated BMC firmware")
+
+	l.WithField("state", state).Info("BMC firmware install state")
 }
