@@ -63,7 +63,7 @@ func main() {
 		l.Error(err)
 	}
 
-	b, err := json.MarshalIndent(inv, " ", " ")
+	b, err := json.MarshalIndent(inv, "", "  ")
 	if err != nil {
 		l.Error(err)
 	}
