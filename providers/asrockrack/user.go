@@ -49,7 +49,7 @@ func (a *ASRockRack) UserRead(ctx context.Context) (users []map[string]string, e
 		return nil, err
 	}
 
-	accounts, err := a.listUsers()
+	accounts, err := a.listUsers(ctx)
 	if err != nil {
 		return nil, errors.Wrap(bmclibErrs.ErrRetrievingUserAccounts, err.Error())
 	}
@@ -80,7 +80,7 @@ func (a *ASRockRack) UserCreate(ctx context.Context, user, pass, role string) (o
 	}
 
 	// fetch current list of accounts
-	accounts, err := a.listUsers()
+	accounts, err := a.listUsers(ctx)
 	if err != nil {
 		return false, errors.Wrap(bmclibErrs.ErrRetrievingUserAccounts, err.Error())
 	}
@@ -99,7 +99,7 @@ func (a *ASRockRack) UserCreate(ctx context.Context, user, pass, role string) (o
 
 		if account.Access == 0 && account.Name == "" {
 			newAccount := newUserAccount(account.ID, user, pass, strings.ToLower(role))
-			err := a.createUpdateUser(newAccount)
+			err := a.createUpdateUser(ctx, newAccount)
 			if err != nil {
 				return false, err
 			}
@@ -122,7 +122,7 @@ func (a *ASRockRack) UserUpdate(ctx context.Context, user, pass, role string) (o
 		return false, bmclibErrs.ErrUserParamsRequired
 	}
 
-	accounts, err := a.listUsers()
+	accounts, err := a.listUsers(ctx)
 	if err != nil {
 		return false, errors.Wrap(bmclibErrs.ErrRetrievingUserAccounts, err.Error())
 	}
@@ -141,7 +141,7 @@ func (a *ASRockRack) UserUpdate(ctx context.Context, user, pass, role string) (o
 				user.CreationTime = 6000 // doesn't mean anything.
 			}
 
-			err := a.createUpdateUser(user)
+			err := a.createUpdateUser(ctx, user)
 			if err != nil {
 				return false, errors.Wrap(bmclibErrs.ErrUserAccountUpdate, err.Error())
 			}

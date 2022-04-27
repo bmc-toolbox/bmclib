@@ -25,6 +25,11 @@ var (
 	fwVerificationResponse = []byte(`[ { "id": 1, "current_image_name": "ast2500e", "current_image_version1": "0.01.00", "current_image_version2": "", "new_image_version": "0.03.00", "section_status": 0, "verification_status": 5 } ]`)
 	fwUpgradeProgress      = []byte(`{ "id": 1, "action": "Flashing...", "progress": "__PERCENT__% done         ", "state": __STATE__ }`)
 	usersPayload           = []byte(`[ { "id": 1, "name": "anonymous", "access": 0, "kvm": 1, "vmedia": 1, "snmp": 0, "prev_snmp": 0, "network_privilege": "administrator", "fixed_user_count": 2, "snmp_access": "", "OEMProprietary_level_Privilege": 1, "privilege_limit_serial": "none", "snmp_authentication_protocol": "", "snmp_privacy_protocol": "", "email_id": "", "email_format": "ami_format", "ssh_key": "Not Available", "creation_time": 4802 }, { "id": 2, "name": "admin", "access": 1, "kvm": 1, "vmedia": 1, "snmp": 0, "prev_snmp": 0, "network_privilege": "administrator", "fixed_user_count": 2, "snmp_access": "", "OEMProprietary_level_Privilege": 1, "privilege_limit_serial": "none", "snmp_authentication_protocol": "", "snmp_privacy_protocol": "", "email_id": "", "email_format": "ami_format", "ssh_key": "Not Available", "creation_time": 188 }, { "id": 3, "name": "foo", "access": 1, "kvm": 1, "vmedia": 1, "snmp": 0, "prev_snmp": 0, "network_privilege": "administrator", "fixed_user_count": 2, "snmp_access": "", "OEMProprietary_level_Privilege": 1, "privilege_limit_serial": "none", "snmp_authentication_protocol": "", "snmp_privacy_protocol": "", "email_id": "", "email_format": "ami_format", "ssh_key": "Not Available", "creation_time": 4802 }, { "id": 4, "name": "", "access": 0, "kvm": 0, "vmedia": 0, "snmp": 0, "prev_snmp": 0, "network_privilege": "", "fixed_user_count": 2, "snmp_access": "", "OEMProprietary_level_Privilege": 1, "privilege_limit_serial": "", "snmp_authentication_protocol": "", "snmp_privacy_protocol": "", "email_id": "", "email_format": "", "ssh_key": "Not Available", "creation_time": 0 }, { "id": 5, "name": "", "access": 0, "kvm": 0, "vmedia": 0, "snmp": 0, "prev_snmp": 0, "network_privilege": "", "fixed_user_count": 2, "snmp_access": "", "OEMProprietary_level_Privilege": 1, "privilege_limit_serial": "", "snmp_authentication_protocol": "", "snmp_privacy_protocol": "", "email_id": "", "email_format": "", "ssh_key": "Not Available", "creation_time": 0 }, { "id": 6, "name": "", "access": 0, "kvm": 0, "vmedia": 0, "snmp": 0, "prev_snmp": 0, "network_privilege": "", "fixed_user_count": 2, "snmp_access": "", "OEMProprietary_level_Privilege": 1, "privilege_limit_serial": "", "snmp_authentication_protocol": "", "snmp_privacy_protocol": "", "email_id": "", "email_format": "", "ssh_key": "Not Available", "creation_time": 0 }, { "id": 7, "name": "", "access": 0, "kvm": 0, "vmedia": 0, "snmp": 0, "prev_snmp": 0, "network_privilege": "", "fixed_user_count": 2, "snmp_access": "", "OEMProprietary_level_Privilege": 1, "privilege_limit_serial": "", "snmp_authentication_protocol": "", "snmp_privacy_protocol": "", "email_id": "", "email_format": "", "ssh_key": "Not Available", "creation_time": 0 }, { "id": 8, "name": "", "access": 0, "kvm": 0, "vmedia": 0, "snmp": 0, "prev_snmp": 0, "network_privilege": "", "fixed_user_count": 2, "snmp_access": "", "OEMProprietary_level_Privilege": 1, "privilege_limit_serial": "", "snmp_authentication_protocol": "", "snmp_privacy_protocol": "", "email_id": "", "email_format": "", "ssh_key": "Not Available", "creation_time": 0 }, { "id": 9, "name": "", "access": 0, "kvm": 0, "vmedia": 0, "snmp": 0, "prev_snmp": 0, "network_privilege": "", "fixed_user_count": 2, "snmp_access": "", "OEMProprietary_level_Privilege": 1, "privilege_limit_serial": "", "snmp_authentication_protocol": "", "snmp_privacy_protocol": "", "email_id": "", "email_format": "", "ssh_key": "Not Available", "creation_time": 0 }, { "id": 10, "name": "", "access": 0, "kvm": 0, "vmedia": 0, "snmp": 0, "prev_snmp": 0, "network_privilege": "", "fixed_user_count": 2, "snmp_access": "", "OEMProprietary_level_Privilege": 1, "privilege_limit_serial": "", "snmp_authentication_protocol": "", "snmp_privacy_protocol": "", "email_id": "", "email_format": "", "ssh_key": "Not Available", "creation_time": 0 } ]`)
+	inventoryinfoResponse  = []byte(`[ { "device_id": 1, "device_name": "CPU1", "device_type": "CPU", "product_manufacturer_name": "Intel(R) Corporation", "product_name": "Intel(R) Xeon(R) E-2278G CPU @ 3.40GHz", "product_part_number": "N\/A", "product_version": "N\/A", "product_serial_number": "N\/A", "product_asset_tag": "N\/A", "product_extra": "N\/A" }, { "device_id": 5, "device_name": "DDR4_A1", "device_type": "Memory", "product_manufacturer_name": "Micron", "product_name": "SODIMM", "product_part_number": "18ASF2G72HZ-2G6E1   ", "product_version": "N\/A", "product_serial_number": "2724B52D", "product_asset_tag": "N\/A", "product_extra": "2666 MT\/s  16GB" }, { "device_id": 7, "device_name": "DDR4_B1", "device_type": "Memory", "product_manufacturer_name": "Micron", "product_name": "SODIMM", "product_part_number": "18ASF2G72HZ-2G6E1   ", "product_version": "N\/A", "product_serial_number": "2724B58A", "product_asset_tag": "N\/A", "product_extra": "2666 MT\/s  16GB" }, { "device_id": 37, "device_name": "PCIe card 1", "device_type": "PCIe & OCP Card", "product_manufacturer_name": "8086(Intel Corporation)", "product_name": "020000(Ethernet controller)", "product_part_number": "1572", "product_version": "N\/A", "product_serial_number": "N\/A", "product_asset_tag": "PCIE7", "product_extra": "N\/A" }, { "device_id": 105, "device_name": "Storage ", "device_type": "Storage device", "product_manufacturer_name": "N\/A", "product_name": "N\/A", "product_part_number": "INTEL SSDSC2KB480G8", "product_version": "N\/A", "product_serial_number": "PHYF001303ED480BGN", "product_asset_tag": "SATA_4", "product_extra": "N\/A" }, { "device_id": 106, "device_name": "Storage ", "device_type": "Storage device", "product_manufacturer_name": "N\/A", "product_name": "N\/A", "product_part_number": "INTEL SSDSC2KB480G8", "product_version": "N\/A", "product_serial_number": "BTYF01940L38480BGN", "product_asset_tag": "SATA_5", "product_extra": "N\/A" } ]`)
+	fruinfoResponse        = []byte(`[ { "device": { "id": 0, "name": "BMC_FRU" }, "common_header": { "version": 1, "internal_use_area_start_offset": 0, "chassis_info_area_start_offset": 1, "board_info_area_start_offset": 4, "product_info_area_start_offset": 11, "multi_record_area_start_offset": 0 }, "chassis": { "version": 1, "length": 3, "type": "Main Server Chassis", "part_number": "", "serial_number": "K61206147700263", "custom_fields": "" }, "board": { "version": 1, "length": 7, "language": 0, "date": "Mon Jul 20 06:04:00 2020\\n", "manufacturer": "ASRockRack", "product_name": "E3C246D4I-NL", "serial_number": "197965920000514", "part_number": "", "fru_file_id": "", "custom_fields": "" }, "product": { "version": 1, "length": 7, "language": 0, "manufacturer": "Packet", "product_name": "c3.small.x86", "part_number": "Open19", "product_version": "R1.00", "serial_number": "D6S0R8000736", "asset_tag": "", "fru_file_id": "", "custom_fields": "" } } ]`)
+	biosPOSTCodeResponse   = []byte(`{ "poststatus": 1, "postdata": 160 }`)
+	chassisStatusResponse  = []byte(`{ "power_status": 1, "led_status": 0 }`)
+
 	// TODO: implement under rw mutex
 	httpRequestTestVar *http.Request
 )
@@ -72,6 +77,11 @@ func mockASRockBMC() *httptest.Server {
 	handler.HandleFunc("/", index)
 	handler.HandleFunc("/api/session", session)
 	handler.HandleFunc("/api/asrr/fw-info", fwinfo)
+	handler.HandleFunc("/api/fru", fruinfo)
+	handler.HandleFunc("/api/asrr/inventory_info", inventoryinfo)
+	handler.HandleFunc("/api/sensors", sensorsinfo)
+	handler.HandleFunc("/api/asrr/getbioscode", biosPOSTCodeinfo)
+	handler.HandleFunc("/api/chassis-status", chassisStatusInfo)
 
 	// fw update endpoints - in order of invocation
 	handler.HandleFunc("/api/maintenance/flash", bmcFirmwareUpgrade)
@@ -235,6 +245,50 @@ func fwinfo(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		_, _ = w.Write(fwinfoResponse)
+	}
+}
+
+func fruinfo(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		_, _ = w.Write(fruinfoResponse)
+	}
+}
+
+func inventoryinfo(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		_, _ = w.Write(inventoryinfoResponse)
+	}
+}
+
+func sensorsinfo(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		fh, err := os.Open("./fixtures/E3C246D4I-NL/sensors.json")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		b, err := ioutil.ReadAll(fh)
+		if err != nil {
+			log.Fatal(err)
+		}
+		_, _ = w.Write(b)
+	}
+}
+
+func biosPOSTCodeinfo(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		_, _ = w.Write(biosPOSTCodeResponse)
+	}
+}
+
+func chassisStatusInfo(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		_, _ = w.Write(chassisStatusResponse)
 	}
 }
 

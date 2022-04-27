@@ -3,8 +3,11 @@ package main
 import (
 	"context"
 	"crypto/x509"
+	"encoding/json"
 	"flag"
+	"fmt"
 	"io/ioutil"
+	"log"
 	"strconv"
 	"time"
 
@@ -14,6 +17,9 @@ import (
 )
 
 func main() {
+	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
+	defer cancel()
+
 	user := flag.String("user", "", "Username to login with")
 	pass := flag.String("password", "", "Username to login with")
 	host := flag.String("host", "", "BMC hostname to connect to")
@@ -25,10 +31,6 @@ func main() {
 	l := logrus.New()
 	l.Level = logrus.DebugLevel
 	logger := logrusr.New(l)
-
-	if *host == "" || *user == "" || *pass == "" {
-		l.Fatal("required host/user/pass parameters not defined")
-	}
 
 	clientOpts := []bmclib.Option{bmclib.WithLogger(logger)}
 
@@ -48,29 +50,24 @@ func main() {
 
 	cl := bmclib.NewClient(*host, strconv.Itoa(*port), *user, *pass, clientOpts...)
 	cl.Registry.Drivers = cl.Registry.Using("redfish")
-	// cl.Registry.Drivers = cl.Registry.Using("vendorapi")
-
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-	defer cancel()
 
 	err := cl.Open(ctx)
 	if err != nil {
-		l.WithError(err).Fatal(err, "BMC login failed")
+		log.Fatal(err, "bmc login failed")
 	}
+
 	defer cl.Close(ctx)
 
-	inventory, err := cl.Inventory(ctx)
+	inv, err := cl.Inventory(ctx)
 	if err != nil {
-		l.Fatal(err)
+		l.Error(err)
 	}
 
-	l.WithField("bmc-version", inventory.BMC.Firmware.Installed).Info()
-
-	state, err := cl.GetPowerState(ctx)
+	b, err := json.MarshalIndent(inv, "", "  ")
 	if err != nil {
-		l.WithError(err).Error()
+		l.Error(err)
 	}
-	l.WithField("power-state", state).Info()
 
-	l.WithField("bios-version", inventory.BIOS.Firmware.Installed).Info()
+	fmt.Println(string(b))
+
 }

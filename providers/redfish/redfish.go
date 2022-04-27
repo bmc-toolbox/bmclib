@@ -33,6 +33,10 @@ var (
 		providers.FeatureUserCreate,
 		providers.FeatureUserUpdate,
 		providers.FeatureUserDelete,
+		providers.FeatureInventoryRead,
+		providers.FeatureFirmwareInstall,
+		providers.FeatureFirmwareInstallStatus,
+		providers.FeatureBmcReset,
 	}
 )
 
@@ -82,8 +86,12 @@ func New(host, port, user, pass string, log logr.Logger, opts ...Option) *Conn {
 
 // Open a connection to a BMC via redfish
 func (c *Conn) Open(ctx context.Context) (err error) {
+	if !strings.HasPrefix(c.Host, "https://") && !strings.HasPrefix(c.Host, "http://") {
+		c.Host = "https://" + c.Host
+	}
+
 	config := gofish.ClientConfig{
-		Endpoint:   "https://" + c.Host,
+		Endpoint:   c.Host,
 		Username:   c.User,
 		Password:   c.Pass,
 		Insecure:   true,
@@ -136,6 +144,23 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 		c.Log.V(0).Error(err, "error checking compatibility: power state get failed")
 	}
 	return err == nil
+}
+
+// BmcReset powercycles the BMC
+func (c *Conn) BmcReset(ctx context.Context, resetType string) (ok bool, err error) {
+	managers, err := c.conn.Service.Managers()
+	if err != nil {
+		return false, err
+	}
+
+	for _, manager := range managers {
+		err = manager.Reset(rf.ResetType(resetType))
+		if err != nil {
+			return false, err
+		}
+	}
+
+	return true, nil
 }
 
 // PowerStateGet gets the power state of a BMC machine

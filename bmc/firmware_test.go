@@ -1,345 +1,203 @@
 package bmc
 
 import (
-	"bytes"
 	"context"
-	"errors"
 	"io"
 	"testing"
 	"time"
 
-	"github.com/google/go-cmp/cmp"
-	"github.com/hashicorp/go-multierror"
+	"github.com/bmc-toolbox/bmclib/devices"
+	"github.com/bmc-toolbox/bmclib/errors"
+	bmclibErrs "github.com/bmc-toolbox/bmclib/errors"
+	"github.com/stretchr/testify/assert"
 )
 
-type firmwareTester struct {
-	MakeNotOK    bool
-	MakeErrorOut bool
+type firmwareInstallTester struct {
+	returnTaskID string
+	returnError  error
 }
 
-func (f *firmwareTester) GetBMCVersion(ctx context.Context) (version string, err error) {
-	if f.MakeErrorOut {
-		return "", errors.New("failed to get BMC version")
-	}
-	if f.MakeNotOK {
-		return "", nil
-	}
-	return "1.33.7", nil
+func (f *firmwareInstallTester) FirmwareInstall(ctx context.Context, component, applyAt string, forceInstall bool, reader io.Reader) (taskID string, err error) {
+	return f.returnTaskID, f.returnError
 }
 
-func (f *firmwareTester) FirmwareUpdateBMC(ctx context.Context, fileReader io.Reader, fileSize int64) (err error) {
-	if f.MakeErrorOut {
-		return errors.New("failed update")
-	}
-
-	return nil
+func (r *firmwareInstallTester) Name() string {
+	return "foo"
 }
 
-func (f *firmwareTester) FirmwareUpdateBIOS(ctx context.Context, fileReader io.Reader, fileSize int64) (err error) {
-	if f.MakeErrorOut {
-		return errors.New("failed update")
-	}
-	return nil
-}
-
-func (f *firmwareTester) GetBIOSVersion(ctx context.Context) (version string, err error) {
-	if f.MakeErrorOut {
-		return "", errors.New("failed to get BIOS version")
-	}
-	if f.MakeNotOK {
-		return "", nil
-	}
-	return "1.44.7", nil
-}
-
-func TestGetBMCVersion(t *testing.T) {
+func TestFirmwareInstall(t *testing.T) {
 	testCases := []struct {
-		name       string
-		version    string
-		makeFail   bool
-		err        error
-		ctxTimeout time.Duration
+		testName           string
+		component          string
+		applyAt            string
+		forceInstall       bool
+		reader             io.Reader
+		returnTaskID       string
+		returnError        error
+		ctxTimeout         time.Duration
+		providerName       string
+		providersAttempted int
 	}{
-		{name: "success", version: "1.33.7", err: nil},
-		{name: "failure", version: "", makeFail: true, err: &multierror.Error{Errors: []error{errors.New("failed to get BMC version"), errors.New("failed to get BMC version")}}},
-		{name: "fail context timeout", version: "", makeFail: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to get BMC version")}}, ctxTimeout: time.Nanosecond * 1},
+		{"success with metadata", devices.SlugBIOS, devices.FirmwareApplyOnReset, false, nil, "1234", nil, 5 * time.Second, "foo", 1},
+		{"failure with metadata", devices.SlugBIOS, devices.FirmwareApplyOnReset, false, nil, "1234", errors.ErrNon200Response, 5 * time.Second, "foo", 1},
+		{"failure with context timeout", devices.SlugBIOS, devices.FirmwareApplyOnReset, false, nil, "1234", context.DeadlineExceeded, 1 * time.Nanosecond, "foo", 1},
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			testImplementation := firmwareTester{MakeErrorOut: tc.makeFail}
-			expectedResult := tc.version
+		t.Run(tc.testName, func(t *testing.T) {
+			testImplementation := firmwareInstallTester{returnTaskID: tc.returnTaskID, returnError: tc.returnError}
 			if tc.ctxTimeout == 0 {
 				tc.ctxTimeout = time.Second * 3
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, err := GetBMCVersion(ctx, []BMCVersionGetter{&testImplementation})
-			if err != nil {
-				diff := cmp.Diff(tc.err.Error(), err.Error())
-				if diff != "" {
-					t.Fatal(diff)
-				}
-			} else {
-				diff := cmp.Diff(expectedResult, result)
-				if diff != "" {
-					t.Fatal(diff)
-				}
+			taskID, metadata, err := firmwareInstall(ctx, tc.component, tc.applyAt, tc.forceInstall, tc.reader, []firmwareInstallerProvider{{tc.providerName, &testImplementation}})
+			if tc.returnError != nil {
+				assert.ErrorIs(t, err, tc.returnError)
+				return
 			}
+
+			if err != nil {
+				t.Fatal(err)
+			}
+			assert.Equal(t, tc.returnTaskID, taskID)
+			assert.Equal(t, tc.providerName, metadata.SuccessfulProvider)
+			assert.Equal(t, tc.providersAttempted, len(metadata.ProvidersAttempted))
 		})
 	}
 }
-
-func TestGetBMCVersionFromInterfaces(t *testing.T) {
+func TestFirmwareInstallFromInterfaces(t *testing.T) {
 	testCases := []struct {
-		name              string
-		version           string
-		err               error
+		testName          string
+		component         string
+		applyAt           string
+		forceInstall      bool
+		reader            io.Reader
+		returnTaskID      string
+		returnError       error
+		providerName      string
 		badImplementation bool
-		want              string
 	}{
-		{name: "success", version: "1.33.7", err: nil},
-		{name: "no implementations found", version: "", want: "", badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a BMCVersionGetter implementation: *struct {}"), errors.New("no BMCVersionGetter implementations found")}}},
+		{"success with metadata", devices.SlugBIOS, devices.FirmwareApplyOnReset, false, nil, "1234", nil, "foo", false},
+		{"failure with metadata", devices.SlugBIOS, devices.FirmwareApplyOnReset, false, nil, "1234", bmclibErrs.ErrProviderImplementation, "foo", true},
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
+		t.Run(tc.testName, func(t *testing.T) {
 			var generic []interface{}
 			if tc.badImplementation {
 				badImplementation := struct{}{}
 				generic = []interface{}{&badImplementation}
 			} else {
-				testImplementation := firmwareTester{}
-				generic = []interface{}{&testImplementation}
+				testImplementation := &firmwareInstallTester{returnTaskID: tc.returnTaskID, returnError: tc.returnError}
+				generic = []interface{}{testImplementation}
 			}
-			expectedResult := tc.version
-			result, err := GetBMCVersionFromInterfaces(context.Background(), generic)
+			taskID, metadata, err := FirmwareInstallFromInterfaces(context.Background(), tc.component, tc.applyAt, tc.forceInstall, tc.reader, generic)
+			if tc.returnError != nil {
+				assert.ErrorIs(t, err, tc.returnError)
+				return
+			}
+
 			if err != nil {
-				diff := cmp.Diff(tc.err.Error(), err.Error())
-				if diff != "" {
-					t.Fatal(diff)
-				}
-			} else {
-				diff := cmp.Diff(expectedResult, result)
-				if diff != "" {
-					t.Fatal(diff)
-				}
+				t.Fatal(err)
 			}
+
+			assert.Equal(t, tc.returnTaskID, taskID)
+			assert.Equal(t, tc.providerName, metadata.SuccessfulProvider)
 		})
 	}
 }
 
-func TestUpdateBMCFirmware(t *testing.T) {
-	testCases := []struct {
-		name       string
-		makeFail   bool
-		err        error
-		ctxTimeout time.Duration
-	}{
-		{name: "success", err: nil},
-		{name: "failure", makeFail: true, err: &multierror.Error{Errors: []error{errors.New("failed update"), errors.New("failed to update BMC firmware")}}},
-		{name: "fail context timeout", makeFail: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to update BMC firmware")}}, ctxTimeout: time.Nanosecond * 1},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			testImplementation := firmwareTester{MakeErrorOut: tc.makeFail}
-			if tc.ctxTimeout == 0 {
-				tc.ctxTimeout = time.Second * 3
-			}
-			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
-			defer cancel()
-			err := UpdateBMCFirmware(ctx, bytes.NewReader([]byte(`foo`)), 0, []BMCFirmwareUpdater{&testImplementation})
-			if err != nil {
-				diff := cmp.Diff(tc.err.Error(), err.Error())
-				if diff != "" {
-					t.Fatal(diff)
-				}
-			}
-		})
-	}
+type firmwareInstallStatusTester struct {
+	returnStatus string
+	returnError  error
 }
 
-func TestUpdateBMCFirmwareFromInterfaces(t *testing.T) {
-	testCases := []struct {
-		name              string
-		err               error
-		badImplementation bool
-		want              string
-	}{
-		{name: "success", err: nil},
-		{name: "no implementations found", want: "", badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a BMCFirmwareUpdater implementation: *struct {}"), errors.New("no BMCFirmwareUpdater implementations found")}}},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			var generic []interface{}
-			if tc.badImplementation {
-				badImplementation := struct{}{}
-				generic = []interface{}{&badImplementation}
-			} else {
-				testImplementation := firmwareTester{}
-				generic = []interface{}{&testImplementation}
-			}
-			err := UpdateBMCFirmwareFromInterfaces(context.Background(), bytes.NewReader([]byte(`foo`)), 0, generic)
-			if err != nil {
-				diff := cmp.Diff(tc.err.Error(), err.Error())
-				if diff != "" {
-					t.Fatal(diff)
-				}
-			}
-		})
-	}
+func (f *firmwareInstallStatusTester) FirmwareInstallStatus(ctx context.Context, installVersion, component, taskID string) (status string, err error) {
+	return f.returnStatus, f.returnError
 }
 
-func TestGetBIOSVersion(t *testing.T) {
-	testCases := []struct {
-		name       string
-		version    string
-		makeFail   bool
-		err        error
-		ctxTimeout time.Duration
-	}{
-		{name: "success", version: "1.44.7", err: nil},
-		{name: "failure", version: "", makeFail: true, err: &multierror.Error{Errors: []error{errors.New("failed to get BIOS version"), errors.New("failed to get BIOS version")}}},
-		{name: "fail context timeout", version: "", makeFail: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to get BIOS version")}}, ctxTimeout: time.Nanosecond * 1},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			testImplementation := firmwareTester{MakeErrorOut: tc.makeFail}
-			expectedResult := tc.version
-			if tc.ctxTimeout == 0 {
-				tc.ctxTimeout = time.Second * 3
-			}
-			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
-			defer cancel()
-			result, err := GetBIOSVersion(ctx, []BIOSVersionGetter{&testImplementation})
-			if err != nil {
-				diff := cmp.Diff(tc.err.Error(), err.Error())
-				if diff != "" {
-					t.Fatal(diff)
-				}
-			} else {
-				diff := cmp.Diff(expectedResult, result)
-				if diff != "" {
-					t.Fatal(diff)
-				}
-			}
-		})
-	}
+func (r *firmwareInstallStatusTester) Name() string {
+	return "foo"
 }
 
-func TestGetBIOSVersionFromInterfaces(t *testing.T) {
+func TestFirmwareInstallStatus(t *testing.T) {
 	testCases := []struct {
-		name              string
-		version           string
-		err               error
-		badImplementation bool
-		want              string
+		testName           string
+		component          string
+		installVersion     string
+		taskID             string
+		returnStatus       string
+		returnError        error
+		ctxTimeout         time.Duration
+		providerName       string
+		providersAttempted int
 	}{
-		{name: "success", version: "1.44.7", err: nil},
-		{name: "no implementations found", version: "", want: "", badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a BIOSVersionGetter implementation: *struct {}"), errors.New("no BIOSVersionGetter implementations found")}}},
+		{"success with metadata", devices.SlugBIOS, "1.1", "1234", devices.FirmwareInstallComplete, nil, 5 * time.Second, "foo", 1},
+		{"failure with metadata", devices.SlugBIOS, "1.1", "1234", devices.FirmwareInstallFailed, errors.ErrNon200Response, 5 * time.Second, "foo", 1},
+		{"failure with context timeout", devices.SlugBIOS, "1.1", "1234", "", context.DeadlineExceeded, 1 * time.Nanosecond, "foo", 1},
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			var generic []interface{}
-			if tc.badImplementation {
-				badImplementation := struct{}{}
-				generic = []interface{}{&badImplementation}
-			} else {
-				testImplementation := firmwareTester{}
-				generic = []interface{}{&testImplementation}
-			}
-			expectedResult := tc.version
-			result, err := GetBIOSVersionFromInterfaces(context.Background(), generic)
-			if err != nil {
-				diff := cmp.Diff(tc.err.Error(), err.Error())
-				if diff != "" {
-					t.Fatal(diff)
-				}
-			} else {
-				diff := cmp.Diff(expectedResult, result)
-				if diff != "" {
-					t.Fatal(diff)
-				}
-			}
-		})
-	}
-}
-
-func TestUpdateBIOSFirmware(t *testing.T) {
-	testCases := []struct {
-		name       string
-		makeFail   bool
-		err        error
-		ctxTimeout time.Duration
-	}{
-		{name: "success", err: nil},
-		{name: "failure", makeFail: true, err: &multierror.Error{Errors: []error{errors.New("failed update"), errors.New("failed to update BIOS firmware")}}},
-		{name: "fail context timeout", makeFail: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to update BIOS firmware")}}, ctxTimeout: time.Nanosecond * 1},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			testImplementation := firmwareTester{MakeErrorOut: tc.makeFail}
+		t.Run(tc.testName, func(t *testing.T) {
+			testImplementation := firmwareInstallStatusTester{returnStatus: tc.returnStatus, returnError: tc.returnError}
 			if tc.ctxTimeout == 0 {
 				tc.ctxTimeout = time.Second * 4
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			if tc.ctxTimeout != time.Second*4 {
-				// sleep the timeout length to force timeout
-				time.Sleep(tc.ctxTimeout)
+			taskID, metadata, err := firmwareInstallStatus(ctx, tc.installVersion, tc.component, tc.taskID, []firmwareInstallVerifierProvider{{tc.providerName, &testImplementation}})
+			if tc.returnError != nil {
+				assert.ErrorIs(t, err, tc.returnError)
+				return
 			}
-			err := UpdateBIOSFirmware(ctx, bytes.NewReader([]byte(`foo`)), 0, []BIOSFirmwareUpdater{&testImplementation})
+
 			if err != nil {
-				diff := cmp.Diff(tc.err.Error(), err.Error())
-				if diff != "" {
-					t.Fatal(diff)
-				}
+				t.Fatal(err)
 			}
+			assert.Equal(t, tc.returnStatus, taskID)
+			assert.Equal(t, tc.providerName, metadata.SuccessfulProvider)
+			assert.Equal(t, tc.providersAttempted, len(metadata.ProvidersAttempted))
 		})
 	}
 }
-
-func TestUpdateBIOSFirmwareFromInterfaces(t *testing.T) {
+func TestFirmwareInstallStatusFromInterfaces(t *testing.T) {
 	testCases := []struct {
-		name              string
-		err               error
+		testName          string
+		component         string
+		installVersion    string
+		taskID            string
+		returnStatus      string
+		returnError       error
+		providerName      string
 		badImplementation bool
-		want              string
 	}{
-		{name: "success", err: nil},
-		{name: "no implementations found", want: "", badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a BIOSFirmwareUpdater implementation: *struct {}"), errors.New("no BIOSFirmwareUpdater implementations found")}}},
+		{"success with metadata", devices.SlugBIOS, "1.1", "1234", "status-done", nil, "foo", false},
+		{"failure with bad implementation", devices.SlugBIOS, "1.1", "1234", "status-done", bmclibErrs.ErrProviderImplementation, "foo", true},
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
+		t.Run(tc.testName, func(t *testing.T) {
 			var generic []interface{}
 			if tc.badImplementation {
 				badImplementation := struct{}{}
 				generic = []interface{}{&badImplementation}
 			} else {
-				testImplementation := firmwareTester{}
-				generic = []interface{}{&testImplementation}
+				testImplementation := &firmwareInstallStatusTester{returnStatus: tc.returnStatus, returnError: tc.returnError}
+				generic = []interface{}{testImplementation}
 			}
-			err := UpdateBIOSFirmwareFromInterfaces(context.Background(), bytes.NewReader([]byte(`foo`)), 0, generic)
+			status, metadata, err := FirmwareInstallStatusFromInterfaces(context.Background(), tc.component, tc.installVersion, tc.taskID, generic)
+			if tc.returnError != nil {
+				assert.ErrorIs(t, err, tc.returnError)
+				return
+			}
+
 			if err != nil {
-				diff := cmp.Diff(tc.err.Error(), err.Error())
-				if diff != "" {
-					t.Fatal(diff)
-				}
+				t.Fatal(err)
 			}
+
+			assert.Equal(t, tc.returnStatus, status)
+			assert.Equal(t, tc.providerName, metadata.SuccessfulProvider)
 		})
 	}
 }

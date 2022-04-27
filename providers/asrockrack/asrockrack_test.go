@@ -9,14 +9,14 @@ import (
 )
 
 func Test_Compatible(t *testing.T) {
-	b := aClient.Compatible()
+	b := aClient.Compatible(context.TODO())
 	if !b {
 		t.Errorf("expected true, got false")
 	}
 }
 
 func Test_httpLogin(t *testing.T) {
-	err := aClient.httpsLogin()
+	err := aClient.httpsLogin(context.TODO())
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -25,44 +25,19 @@ func Test_httpLogin(t *testing.T) {
 }
 
 func Test_Close(t *testing.T) {
-	err := aClient.httpsLogin()
+	err := aClient.httpsLogin(context.TODO())
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 
-	err = aClient.httpsLogout()
+	err = aClient.httpsLogout(context.TODO())
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-}
-
-func Test_FirmwareInfo(t *testing.T) {
-	expected := firmwareInfo{
-		BMCVersion:       "0.01.00",
-		BIOSVersion:      "L2.07B",
-		MEVersion:        "5.1.3.78",
-		MicrocodeVersion: "000000ca",
-		CPLDVersion:      "N/A",
-		CMVersion:        "0.13.01",
-		BPBVersion:       "0.0.002.0",
-		NodeID:           "2",
-	}
-
-	err := aClient.httpsLogin()
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-
-	fwInfo, err := aClient.firmwareInfo()
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	assert.Equal(t, expected, fwInfo)
 }
 
 func Test_FirwmwareUpdateBMC(t *testing.T) {
-	err := aClient.httpsLogin()
+	err := aClient.httpsLogin(context.TODO())
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -79,7 +54,7 @@ func Test_FirwmwareUpdateBMC(t *testing.T) {
 	}
 
 	defer fh.Close()
-	err = aClient.FirmwareUpdateBMC(context.TODO(), fh, 0)
+	err = aClient.firmwareInstallBMC(context.TODO(), fh, 0)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
