@@ -9,7 +9,7 @@ import (
 )
 
 func Test_Compatible(t *testing.T) {
-	b := aClient.Compatible()
+	b := aClient.Compatible(context.TODO())
 	if !b {
 		t.Errorf("expected true, got false")
 	}
