@@ -42,7 +42,16 @@ type Conn struct {
 // Open a connection to a BMC
 func (c *Conn) Open(ctx context.Context) (err error) {
 	c.con, err = ipmi.New(c.User, c.Pass, c.Host+":"+c.Port)
-	return err
+	if err != nil {
+		return err
+	}
+
+	_, err = c.con.PowerState(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Close a connection to a BMC
