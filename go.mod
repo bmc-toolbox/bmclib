@@ -4,11 +4,11 @@ go 1.17
 
 require (
 	github.com/bombsimon/logrusr/v2 v2.0.1
-	github.com/go-logr/logr v1.2.0
-	github.com/google/go-cmp v0.5.6
+	github.com/go-logr/logr v1.2.3
+	github.com/google/go-cmp v0.5.8
 	github.com/google/go-querystring v1.0.0
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/jacobweinstock/registrar v0.4.5
+	github.com/jacobweinstock/registrar v0.4.6
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.7.1
