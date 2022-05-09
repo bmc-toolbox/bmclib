@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	bmclibErrs "github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/providers"
 	"github.com/go-logr/logr"
@@ -135,14 +136,23 @@ func (c *Conn) Name() string {
 func (c *Conn) Compatible(ctx context.Context) bool {
 	err := c.Open(ctx)
 	if err != nil {
-		c.Log.V(0).Error(err, "error checking compatibility: open connection failed")
+		c.Log.V(2).WithValues(
+			"provider",
+			c.Name(),
+		).Info("warn", bmclibErrs.ErrCompatibilityCheck.Error(), err.Error())
+
 		return false
 	}
 	defer c.Close(ctx)
+
 	_, err = c.PowerStateGet(ctx)
 	if err != nil {
-		c.Log.V(0).Error(err, "error checking compatibility: power state get failed")
+		c.Log.V(2).WithValues(
+			"provider",
+			c.Name(),
+		).Info("warn", bmclibErrs.ErrCompatibilityCheck.Error(), err.Error())
 	}
+
 	return err == nil
 }
 

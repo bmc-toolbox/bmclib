@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 
+	bmclibErrs "github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/providers"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
@@ -96,33 +97,55 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 	log := c.Log.WithValues("url", url)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		log.V(0).Error(err, "error creating http request")
+		log.V(2).WithValues(
+			"provider",
+			c.Name(),
+		).Info("warn", bmclibErrs.ErrCompatibilityCheck.Error(), err.Error())
+
 		return false
 	}
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.V(0).Error(err, "error making http request")
+		log.V(2).WithValues(
+			"provider",
+			c.Name(),
+		).Info("warn", bmclibErrs.ErrCompatibilityCheck.Error(), err.Error())
+
 		return false
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		log.V(0).Error(errors.New("error checking compatibility"), "status code not 200", "status_code", resp.StatusCode)
+		log.V(2).WithValues(
+			"provider",
+			c.Name(),
+		).Info("warn", bmclibErrs.ErrCompatibilityCheck.Error(), "status code not 200", "status_code", resp.StatusCode)
+
 		return false
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.V(0).Error(err, "error reading response body")
+		log.V(2).WithValues(
+			"provider",
+			c.Name(),
+		).Info("warn", bmclibErrs.ErrCompatibilityCheck.Error(), err.Error())
+
 		return false
 	}
+
 	models := []string{"PowerEdge M640", "PowerEdge R640", "PowerEdge R6415", "PowerEdge R6515", "PowerEdge R740xd"}
 	for _, subStr := range models {
 		if bytes.Contains(body, []byte(subStr)) {
 			return true
 		}
 	}
-	log.V(0).Error(errors.New("error checking compatibility"), "url did not contain expected string", "expected_strings", models)
+
+	log.V(2).WithValues(
+		"provider",
+		c.Name(),
+	).Info("warn", bmclibErrs.ErrCompatibilityCheck.Error(), "response did not include one of: ", models)
+
 	return false
 }
 
