@@ -48,7 +48,6 @@ func main() {
 
 	cl := bmclib.NewClient(*host, strconv.Itoa(*port), *user, *pass, clientOpts...)
 	cl.Registry.Drivers = cl.Registry.Using("redfish")
-	// cl.Registry.Drivers = cl.Registry.Using("vendorapi")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()

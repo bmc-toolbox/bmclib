@@ -1,9 +1,5 @@
 package main
 
-/*
- This utilizes what is to tbe the 'v1' bmclib interface methods to flash a firmware image
-*/
-
 import (
 	"context"
 	"crypto/x509"
@@ -27,7 +23,7 @@ func main() {
 	port := flag.Int("port", 443, "BMC port to connect to")
 	withSecureTLS := flag.Bool("secure-tls", false, "Enable secure TLS")
 	certPoolPath := flag.String("cert-pool", "", "Path to an file containing x509 CAs. An empty string uses the system CAs. Only takes effect when --secure-tls=true")
-	firmwarePath := flag.String("firmware", "", "The firmware path to read")
+	firmwarePath := flag.String("firmware", "", "The local path of the firmware to install")
 	firmwareVersion := flag.String("version", "", "The firmware version being installed")
 
 	flag.Parse()
