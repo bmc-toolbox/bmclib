@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/errors"
-
 	"github.com/bmc-toolbox/bmclib/internal/ipmi"
 	"github.com/bmc-toolbox/bmclib/providers"
 	"github.com/go-logr/logr"
