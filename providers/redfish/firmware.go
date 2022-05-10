@@ -132,7 +132,7 @@ func (c *Conn) FirmwareInstallStatus(ctx context.Context, installVersion, compon
 
 	// so much for standards...
 	switch state {
-	case "starting", "downloading":
+	case "starting", "downloading", "downloaded":
 		return devices.FirmwareInstallInitializing, nil
 	case "running", "stopping", "cancelling", "scheduling":
 		return devices.FirmwareInstallRunning, nil
