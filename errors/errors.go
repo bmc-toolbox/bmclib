@@ -116,6 +116,9 @@ var (
 
 	// ErrProviderImplementation is returned when theres an error in the BMC provider implementation
 	ErrProviderImplementation = errors.New("error in provider implementation")
+
+	// ErrCompatibilityCheck is returned when the compatibility probe failed to complete successfully.
+	ErrCompatibilityCheck = errors.New("compatibility check failed")
 )
 
 type ErrUnsupportedHardware struct {

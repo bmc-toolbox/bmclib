@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 
+	bmclibErrs "github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/ipmi"
 	"github.com/bmc-toolbox/bmclib/providers"
 	"github.com/go-logr/logr"
@@ -63,14 +64,23 @@ func (c *Conn) Close(ctx context.Context) (err error) {
 func (c *Conn) Compatible(ctx context.Context) bool {
 	err := c.Open(ctx)
 	if err != nil {
-		c.Log.V(0).Error(err, "error checking compatibility opening connection")
+		c.Log.V(2).WithValues(
+			"provider",
+			c.Name(),
+		).Info("warn", bmclibErrs.ErrCompatibilityCheck.Error(), err.Error())
+
 		return false
 	}
 	defer c.Close(ctx)
+
 	_, err = c.con.PowerState(ctx)
 	if err != nil {
-		c.Log.V(0).Error(err, "error checking compatibility through power status")
+		c.Log.V(2).WithValues(
+			"provider",
+			c.Name(),
+		).Info("warn", bmclibErrs.ErrCompatibilityCheck.Error(), err.Error())
 	}
+
 	return err == nil
 }
 
