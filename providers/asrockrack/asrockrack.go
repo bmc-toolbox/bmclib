@@ -28,6 +28,8 @@ var (
 		providers.FeatureFirmwareInstallStatus,
 		providers.FeaturePostCodeRead,
 		providers.FeatureBmcReset,
+		providers.FeatureUserCreate,
+		providers.FeatureUserUpdate,
 	}
 )
 
