@@ -24,6 +24,7 @@ type ResourcesConfig struct {
 	Network      *Network      `yaml:"network"`
 	Syslog       *Syslog       `yaml:"syslog"`
 	User         []*User       `yaml:"user"`
+	ExtraUsers   *ExtraUsers   `yaml:"extraUsers"`
 	HTTPSCert    *HTTPSCert    `yaml:"httpsCert"`
 	Ntp          *Ntp          `yaml:"ntp"`
 	Bios         *Bios         `yaml:"bios"`
@@ -80,6 +81,35 @@ type User struct {
 	SNMPv3Enable bool   `yaml:"snmpV3Enable,omitempty"`
 }
 
+// ExtraUsers enables you to add users at runtime.
+type ExtraUsers struct {
+	Bin   *ExtraBin `yaml:"bin"`
+	Users []*User   `yaml:"users"`
+}
+
+// If you want to add extra users at runtime using a script, you have
+//   the option of specifying the extraUsers field.
+// You get the serial of the asset and its vendor as two arguments.
+// If you want more, create a GitHub issue and we will take a look.
+func (u *ExtraUsers) GetExtraUsers(serial, vendor string) (string, error) {
+	if u.Bin.Path == "" {
+		return "nothing", nil
+	}
+
+	cmd := exec.Command(u.Bin.Executor, u.Bin.Path, serial, vendor)
+	stdout, err := cmd.CombinedOutput()
+	if err != nil {
+		return string(stdout), err
+	}
+
+	err = json.Unmarshal(stdout, &u.Users)
+	if err == nil {
+		return "success", nil
+	} else {
+		return string(stdout), err
+	}
+}
+
 // Syslog struct holds BMC syslog configuration.
 type Syslog struct {
 	Server string `yaml:"server"`
@@ -107,7 +137,7 @@ type License struct {
 	Key string `yaml:"key"`
 }
 
-type LdapBin struct {
+type ExtraBin struct {
 	Executor string `yaml:"executor"`
 	Path     string `yaml:"path"`
 }
@@ -115,7 +145,7 @@ type LdapBin struct {
 // LdapGroups holds all group-related configuration parameters.
 // ExtraGroups is used in combination with Bin to add more groups at runtime.
 type LdapGroups struct {
-	Bin              *LdapBin     `yaml:"bin"`
+	Bin              *ExtraBin    `yaml:"bin"`
 	Groups           []*LdapGroup `yaml:"groups"`
 	ExtraAdminGroups []*LdapGroup `json:"admins"`
 	ExtraUserGroups  []*LdapGroup `json:"users"`
@@ -124,7 +154,7 @@ type LdapGroups struct {
 // If you want to add extra groups at runtime using a script, you have
 //   the option of specifying
 //   * Bin.Executor: Usually /bin/sh or /bin/bash and the like.
-//   * Bin.Path: Path your actual script.
+//   * Bin.Path: Path to your actual script.
 // You get the serial of the asset and its vendor as two arguments.
 // If you want more, create a GitHub issue and we will take a look.
 func (l *LdapGroups) GetExtraGroups(serial, vendor string) (string, error) {
