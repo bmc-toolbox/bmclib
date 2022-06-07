@@ -76,9 +76,9 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, err.Error())
 	}
 
-	payload := map[string]io.Reader{
-		"UpdateParameters": bytes.NewReader(updateParameters),
-		"UpdateFile":       reader,
+	payload := []map[string]io.Reader{
+		{"UpdateParameters": bytes.NewReader(updateParameters)},
+		{"UpdateFile": reader},
 	}
 
 	resp, err := c.runRequestWithMultipartPayload(http.MethodPost, "/redfish/v1/UpdateService/MultipartUpload", payload)
@@ -245,7 +245,7 @@ func multipartPayloadSize(payload []map[string]io.Reader) (int64, *bytes.Buffer,
 //
 // hey.
 // --------------------------1771f60800cb2801--
-func (c *Conn) runRequestWithMultipartPayload(method, url string, payload map[string]io.Reader) (*http.Response, error) {
+func (c *Conn) runRequestWithMultipartPayload(method, url string, payload []map[string]io.Reader) (*http.Response, error) {
 	if url == "" {
 		return nil, fmt.Errorf("unable to execute request, no target provided")
 	}
