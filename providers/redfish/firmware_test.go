@@ -1,7 +1,9 @@
 package redfish
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -29,6 +31,9 @@ func multipartUpload(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
+	// payload size
+	expectedContentLength := "476"
+
 	expected := []string{
 		`Content-Disposition: form-data; name="UpdateParameters"`,
 		`Content-Type: application/json`,
@@ -43,6 +48,10 @@ func multipartUpload(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(string(body))
 			log.Fatal("expected value not in multipartUpload payload: " + string(want))
 		}
+	}
+
+	if r.Header.Get("Content-Length") != expectedContentLength {
+		log.Fatal("Header Content-Length does not match expected")
 	}
 
 	w.Header().Add("Location", "/redfish/v1/TaskService/Tasks/JID_467696020275")
@@ -126,6 +135,63 @@ func Test_FirmwareInstall(t *testing.T) {
 		})
 	}
 
+}
+
+func Test_multipartPayloadSize(t *testing.T) {
+	updateParameters, err := json.Marshal(struct {
+		Targets            []string `json:"Targets"`
+		RedfishOpApplyTime string   `json:"@Redfish.OperationApplyTime"`
+		Oem                struct{} `json:"Oem"`
+	}{
+		[]string{},
+		"foobar",
+		struct{}{},
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tmpdir := t.TempDir()
+	binPath := filepath.Join(tmpdir, "test.bin")
+	err = os.WriteFile(binPath, []byte(`HELLOWORLD`), 0600)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	testfileFH, err := os.Open(binPath)
+	if err != nil {
+		t.Fatalf("%s -> %s", err.Error(), binPath)
+	}
+
+	testCases := []struct {
+		testName     string
+		payload      []map[string]io.Reader
+		expectedSize int64
+		errorMsg     string
+	}{
+		{
+			"content length as expected",
+			[]map[string]io.Reader{
+				{"UpdateParameters": bytes.NewReader(updateParameters)},
+				{"UpdateFile": testfileFH},
+			},
+			475,
+			"",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.testName, func(t *testing.T) {
+			gotSize, _, err := multipartPayloadSize(tc.payload)
+			if tc.errorMsg != "" {
+				assert.Contains(t, err.Error(), tc.errorMsg)
+			}
+
+			assert.Nil(t, err)
+			assert.Equal(t, tc.expectedSize, gotSize)
+		})
+	}
 }
 
 func Test_firmwareUpdateCompatible(t *testing.T) {
