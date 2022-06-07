@@ -172,25 +172,77 @@ func (c *Conn) firmwareUpdateCompatible(ctx context.Context) (err error) {
 	return nil
 }
 
-// runRequestWithMultipartPayload is a copy of https://github.com/stmcginnis/gofish/blob/main/client.go#L349
-// with a change to add the UpdateParameters multipart form field with a json content type header
-// the resulting form ends up in this format
+// multipartPayloadSize prepares a temporary multipart form to determine the form size
+func multipartPayloadSize(payload []map[string]io.Reader) (int64, *bytes.Buffer, error) {
+	body := &bytes.Buffer{}
+	form := multipart.NewWriter(body)
+
+	var size int64
+	var err error
+	for idx, elem := range payload {
+		for key, reader := range elem {
+			var part io.Writer
+			if file, ok := reader.(*os.File); ok {
+				// Add update file fields
+				if _, err = form.CreateFormFile(key, filepath.Base(file.Name())); err != nil {
+					return 0, body, err
+				}
+
+				// determine file size
+				finfo, err := file.Stat()
+				if err != nil {
+					return 0, body, err
+				}
+
+				size = finfo.Size()
+
+			} else {
+				// Add other fields
+				if part, err = updateParametersFormField(key, form); err != nil {
+					return 0, body, err
+				}
+
+				// use a tee reader so the
+				buf := bytes.Buffer{}
+				teeReader := io.TeeReader(reader, &buf)
+
+				if _, err = io.Copy(part, teeReader); err != nil {
+					return 0, body, err
+				}
+
+				// place it back so its available to be read again
+				payload[idx][key] = bytes.NewReader(buf.Bytes())
+			}
+		}
+	}
+
+	err = form.Close()
+	if err != nil {
+		return 0, body, err
+	}
+
+	return int64(body.Len()) + size, body, nil
+}
+
+// runRequestWithMultipartPayload sets up the mutipart payload to upload the firmware binary as a stream.
+//
+// The multipart form format is described below,
 //
 // Content-Length: 416
 // Content-Type: multipart/form-data; boundary=--------------------
 // ----1771f60800cb2801
-
+//
 // --------------------------1771f60800cb2801
 // Content-Disposition: form-data; name="UpdateParameters"
 // Content-Type: application/json
-
+//
 // {"Targets": [], "@Redfish.OperationApplyTime": "OnReset", "Oem":
 //  {}}
 // --------------------------1771f60800cb2801
 // Content-Disposition: form-data; name="UpdateFile"; filename="dum
 // myfile"
 // Content-Type: application/octet-stream
-
+//
 // hey.
 // --------------------------1771f60800cb2801--
 func (c *Conn) runRequestWithMultipartPayload(method, url string, payload map[string]io.Reader) (*http.Response, error) {
@@ -198,29 +250,86 @@ func (c *Conn) runRequestWithMultipartPayload(method, url string, payload map[st
 		return nil, fmt.Errorf("unable to execute request, no target provided")
 	}
 
-	var payloadBuffer bytes.Buffer
-	var err error
-	payloadWriter := multipart.NewWriter(&payloadBuffer)
-	for key, reader := range payload {
-		var partWriter io.Writer
-		if file, ok := reader.(*os.File); ok {
-			// Add a file stream
-			if partWriter, err = payloadWriter.CreateFormFile(key, filepath.Base(file.Name())); err != nil {
-				return nil, err
-			}
-		} else {
-			// Add other fields
-			if partWriter, err = updateParametersFormField(key, payloadWriter); err != nil {
-				return nil, err
-			}
-		}
-		if _, err = io.Copy(partWriter, reader); err != nil {
-			return nil, err
-		}
+	// A content-lenght header is passed in to indicate the payload size
+	contentLength, _, err := multipartPayloadSize(payload)
+	if err != nil {
+		return nil, errors.Wrap(err, "error determining multipart payload size")
 	}
-	payloadWriter.Close()
 
-	return c.conn.RunRawRequestWithHeaders(method, url, bytes.NewReader(payloadBuffer.Bytes()), payloadWriter.FormDataContentType(), nil)
+	// setup pipe to stream multipart payload
+	//
+	// pipeReader, the reader end of the pipe is given to the http client executing the request.
+	// pipeWriter, the routine below copies to the writer end of the pipe.
+	pipeReader, pipeWriter := io.Pipe()
+	defer pipeReader.Close()
+
+	// form containing multipart payload
+	form := multipart.NewWriter(pipeWriter)
+
+	// routine spawned to copy the multipart payload when pipeReader is being read from
+	go func() {
+		var err error
+		defer func() {
+			if err != nil {
+				c.Log.Error(err, "multipart upload error occured")
+			}
+		}()
+
+		defer pipeWriter.Close()
+
+		for _, elem := range payload {
+			for key, reader := range elem {
+				var part io.Writer
+				// add update file multipart form header
+				//  Content-Disposition: form-data; name="UpdateFile"; filename="dum
+				//  myfile"
+				//  Content-Type: application/octet-stream
+				if file, ok := reader.(*os.File); ok {
+					if part, err = form.CreateFormFile(key, filepath.Base(file.Name())); err != nil {
+						return
+					}
+				} else {
+					// add update parameters multipart form header
+					//  Content-Disposition: form-data; name="UpdateParameters"
+					//  Content-Type: application/json
+					if part, err = updateParametersFormField(key, form); err != nil {
+						return
+					}
+				}
+
+				// copy multipart form data from reader
+				_, err := io.Copy(part, reader)
+				if err != nil {
+					return
+				}
+
+			}
+		}
+
+		// add terminating boundary to multipart form
+		err = form.Close()
+	}()
+
+	// pipeReader wrapped as a io.ReadSeeker to satisfy the gofish method signature
+	readSeeker := pipeReaderFakeSeeker{pipeReader}
+
+	headers := map[string]string{"Content-Length": strconv.FormatInt(contentLength, 10)}
+
+	return c.conn.RunRawRequestWithHeaders(method, url, readSeeker, form.FormDataContentType(), headers)
+}
+
+// pipeReaderFakeSeeker wraps the io.PipeReader and implements the io.Seeker interface
+// to meet the API requirements for the Gofish client https://github.com/stmcginnis/gofish/blob/main/client.go#L390
+//
+// The Gofish method linked does not currently perform seeks and so a PR will be suggested
+// to change the method signature to accept an io.Reader instead.
+type pipeReaderFakeSeeker struct {
+	*io.PipeReader
+}
+
+// Seek impelements the io.Seeker interface only to panic if called
+func (p pipeReaderFakeSeeker) Seek(offset int64, whence int) (int64, error) {
+	panic("Seek() not implemented, runRequestWithMultipartPayload() will require a rework to split the firmware file into smaller chunks.")
 }
 
 // sets up the UpdateParameters MIMEHeader for the multipart form
