@@ -1,0 +1,24 @@
+{
+    "@Message.ExtendedInfo": [
+        {
+            "Message": "Successfully Completed Request",
+            "MessageArgs": [],
+            "MessageArgs@odata.count": 0,
+            "MessageId": "Base.1.7.Success",
+            "RelatedProperties": [],
+            "RelatedProperties@odata.count": 0,
+            "Resolution": "None",
+            "Severity": "OK"
+        },
+        {
+            "Message": "The operation successfully completed.",
+            "MessageArgs": [],
+            "MessageArgs@odata.count": 0,
+            "MessageId": "IDRAC.2.4.SYS413",
+            "RelatedProperties": [],
+            "RelatedProperties@odata.count": 0,
+            "Resolution": "No response action is required.",
+            "Severity": "Informational"
+        }
+    ]
+}
