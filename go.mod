@@ -12,7 +12,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.7.1
-	github.com/stmcginnis/gofish v0.12.1-0.20220311113027-6072260f4c8d
+	github.com/stmcginnis/gofish v0.13.1-0.20220607130030-441f9352fa9b
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f
