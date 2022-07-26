@@ -9,13 +9,12 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/bmc-toolbox/bmclib/bmc"
-	"github.com/bmc-toolbox/bmclib/devices"
-	"github.com/bmc-toolbox/bmclib/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/providers/asrockrack"
-	"github.com/bmc-toolbox/bmclib/providers/dell/idrac9"
-	"github.com/bmc-toolbox/bmclib/providers/ipmitool"
-	"github.com/bmc-toolbox/bmclib/providers/redfish"
+	"github.com/bmc-toolbox/bmclib/v2/bmc"
+	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
+	"github.com/bmc-toolbox/bmclib/v2/providers/asrockrack"
+	"github.com/bmc-toolbox/bmclib/v2/providers/ipmitool"
+	"github.com/bmc-toolbox/bmclib/v2/providers/redfish"
+	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 )
@@ -113,8 +112,9 @@ func (c *Client) registerProviders() {
 	c.Registry.Register(redfish.ProviderName, redfish.ProviderProtocol, redfish.Features, nil, driverGoFish)
 
 	// register dell idrac9 provider
-	driverIdrac9 := idrac9.NewConn(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger, idrac9.WithHTTPClientConnOption(c.httpClient))
-	c.Registry.Register(idrac9.ProviderName, idrac9.ProviderProtocol, idrac9.Features, nil, driverIdrac9)
+	// driverIdrac9 := idrac9.NewConn(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger, idrac9.WithHTTPClientConnOption(c.httpClient))
+	// c.Registry.Register(idrac9.ProviderName, idrac9.ProviderProtocol, idrac9.Features, nil, driverIdrac9)
+
 	/*
 		// dummy used for testing
 		driverDummy := &dummy.Conn{FailOpen: true}
@@ -230,7 +230,7 @@ func (c *Client) ResetBMC(ctx context.Context, resetType string) (ok bool, err e
 }
 
 // Inventory pass through library function to collect hardware and firmware inventory
-func (c *Client) Inventory(ctx context.Context) (device *devices.Device, err error) {
+func (c *Client) Inventory(ctx context.Context) (device *common.Device, err error) {
 	device, metadata, err := bmc.GetInventoryFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return device, err

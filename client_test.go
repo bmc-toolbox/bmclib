@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/logging"
+	"github.com/bmc-toolbox/bmclib/v2/logging"
 )
 
 func TestBMC(t *testing.T) {
