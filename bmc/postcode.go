@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/errors"
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 )
@@ -52,7 +52,7 @@ Loop:
 	return status, code, metadataLocal, multierror.Append(err, errors.New("failure to get device POST code"))
 }
 
-// GetPostCodeFromInterfaces is a pass through to library function
+// GetPostCodeFromInterfaces identifies implementations of the PostCodeGetter interface and passes the found implementations to the postCode() wrapper method.
 func GetPostCodeInterfaces(ctx context.Context, generic []interface{}) (status string, code int, metadata Metadata, err error) {
 	implementations := make([]postCodeGetterProvider, 0)
 	for _, elem := range generic {

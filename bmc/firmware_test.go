@@ -6,9 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/devices"
-	"github.com/bmc-toolbox/bmclib/errors"
-	bmclibErrs "github.com/bmc-toolbox/bmclib/errors"
+	"github.com/bmc-toolbox/bmclib/v2/constants"
+	"github.com/bmc-toolbox/bmclib/v2/errors"
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/bmc-toolbox/common"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -38,9 +39,9 @@ func TestFirmwareInstall(t *testing.T) {
 		providerName       string
 		providersAttempted int
 	}{
-		{"success with metadata", devices.SlugBIOS, devices.FirmwareApplyOnReset, false, nil, "1234", nil, 5 * time.Second, "foo", 1},
-		{"failure with metadata", devices.SlugBIOS, devices.FirmwareApplyOnReset, false, nil, "1234", errors.ErrNon200Response, 5 * time.Second, "foo", 1},
-		{"failure with context timeout", devices.SlugBIOS, devices.FirmwareApplyOnReset, false, nil, "1234", context.DeadlineExceeded, 1 * time.Nanosecond, "foo", 1},
+		{"success with metadata", common.SlugBIOS, constants.FirmwareApplyOnReset, false, nil, "1234", nil, 5 * time.Second, "foo", 1},
+		{"failure with metadata", common.SlugBIOS, constants.FirmwareApplyOnReset, false, nil, "1234", errors.ErrNon200Response, 5 * time.Second, "foo", 1},
+		{"failure with context timeout", common.SlugBIOS, constants.FirmwareApplyOnReset, false, nil, "1234", context.DeadlineExceeded, 1 * time.Nanosecond, "foo", 1},
 	}
 
 	for _, tc := range testCases {
@@ -78,8 +79,8 @@ func TestFirmwareInstallFromInterfaces(t *testing.T) {
 		providerName      string
 		badImplementation bool
 	}{
-		{"success with metadata", devices.SlugBIOS, devices.FirmwareApplyOnReset, false, nil, "1234", nil, "foo", false},
-		{"failure with metadata", devices.SlugBIOS, devices.FirmwareApplyOnReset, false, nil, "1234", bmclibErrs.ErrProviderImplementation, "foo", true},
+		{"success with metadata", common.SlugBIOS, constants.FirmwareApplyOnReset, false, nil, "1234", nil, "foo", false},
+		{"failure with metadata", common.SlugBIOS, constants.FirmwareApplyOnReset, false, nil, "1234", bmclibErrs.ErrProviderImplementation, "foo", true},
 	}
 
 	for _, tc := range testCases {
@@ -133,9 +134,9 @@ func TestFirmwareInstallStatus(t *testing.T) {
 		providerName       string
 		providersAttempted int
 	}{
-		{"success with metadata", devices.SlugBIOS, "1.1", "1234", devices.FirmwareInstallComplete, nil, 5 * time.Second, "foo", 1},
-		{"failure with metadata", devices.SlugBIOS, "1.1", "1234", devices.FirmwareInstallFailed, errors.ErrNon200Response, 5 * time.Second, "foo", 1},
-		{"failure with context timeout", devices.SlugBIOS, "1.1", "1234", "", context.DeadlineExceeded, 1 * time.Nanosecond, "foo", 1},
+		{"success with metadata", common.SlugBIOS, "1.1", "1234", constants.FirmwareInstallComplete, nil, 5 * time.Second, "foo", 1},
+		{"failure with metadata", common.SlugBIOS, "1.1", "1234", constants.FirmwareInstallFailed, errors.ErrNon200Response, 5 * time.Second, "foo", 1},
+		{"failure with context timeout", common.SlugBIOS, "1.1", "1234", "", context.DeadlineExceeded, 1 * time.Nanosecond, "foo", 1},
 	}
 
 	for _, tc := range testCases {
@@ -172,8 +173,8 @@ func TestFirmwareInstallStatusFromInterfaces(t *testing.T) {
 		providerName      string
 		badImplementation bool
 	}{
-		{"success with metadata", devices.SlugBIOS, "1.1", "1234", "status-done", nil, "foo", false},
-		{"failure with bad implementation", devices.SlugBIOS, "1.1", "1234", "status-done", bmclibErrs.ErrProviderImplementation, "foo", true},
+		{"success with metadata", common.SlugBIOS, "1.1", "1234", "status-done", nil, "foo", false},
+		{"failure with bad implementation", common.SlugBIOS, "1.1", "1234", "status-done", bmclibErrs.ErrProviderImplementation, "foo", true},
 	}
 
 	for _, tc := range testCases {

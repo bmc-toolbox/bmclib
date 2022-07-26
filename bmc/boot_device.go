@@ -13,15 +13,17 @@ type BootDeviceSetter interface {
 	BootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error)
 }
 
-// powerProviders is an internal struct to correlate an implementation/provider and its name
+// bootDeviceProviders is an internal struct to correlate an implementation/provider and its name
 type bootDeviceProviders struct {
 	name             string
 	bootDeviceSetter BootDeviceSetter
 }
 
-// SetBootDevice sets the boot device. Next boot only unless setPersistent=true
-// if a successfulProviderName is passed in, it will be updated to be the name of the provider that successfully executed
-func SetBootDevice(ctx context.Context, bootDevice string, setPersistent, efiBoot bool, b []bootDeviceProviders) (ok bool, metadata Metadata, err error) {
+// setBootDevice sets the next boot device.
+//
+// setPersistent persists the next boot device.
+// efiBoot sets up the device to boot off UEFI instead of legacy.
+func setBootDevice(ctx context.Context, bootDevice string, setPersistent, efiBoot bool, b []bootDeviceProviders) (ok bool, metadata Metadata, err error) {
 	var metadataLocal Metadata
 Loop:
 	for _, elem := range b {
@@ -50,8 +52,7 @@ Loop:
 	return ok, metadataLocal, multierror.Append(err, errors.New("failed to set boot device"))
 }
 
-// SetBootDeviceFromInterfaces pass through to library function
-// if a successfulProviderName is passed in, it will be updated to be the name of the provider that successfully executed
+// SetBootDeviceFromInterfaces identifies implementations of the BootDeviceSetter interface and passes the found implementations to the setBootDevice() wrapper
 func SetBootDeviceFromInterfaces(ctx context.Context, bootDevice string, setPersistent, efiBoot bool, generic []interface{}) (ok bool, metadata Metadata, err error) {
 	bdSetters := make([]bootDeviceProviders, 0)
 	for _, elem := range generic {
@@ -68,5 +69,5 @@ func SetBootDeviceFromInterfaces(ctx context.Context, bootDevice string, setPers
 	if len(bdSetters) == 0 {
 		return ok, metadata, multierror.Append(err, errors.New("no BootDeviceSetter implementations found"))
 	}
-	return SetBootDevice(ctx, bootDevice, setPersistent, efiBoot, bdSetters)
+	return setBootDevice(ctx, bootDevice, setPersistent, efiBoot, bdSetters)
 }

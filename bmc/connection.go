@@ -62,8 +62,8 @@ Loop:
 	return opened, metadataLocal, nil
 }
 
-// CloseConnection closes a connection to a BMC, trying all interface implementations passed in
-func CloseConnection(ctx context.Context, c []connectionProviders) (metadata Metadata, err error) {
+// closeConnection closes a connection to a BMC, trying all interface implementations passed in
+func closeConnection(ctx context.Context, c []connectionProviders) (metadata Metadata, err error) {
 	var metadataLocal Metadata
 	var connClosed bool
 Loop:
@@ -92,7 +92,7 @@ Loop:
 	return metadataLocal, multierror.Append(err, errors.New("failed to close connection"))
 }
 
-// CloseConnectionFromInterfaces pass through to library function
+// CloseConnectionFromInterfaces identifies implementations of the Closer() interface and and passes the found implementations to the closeConnection() wrapper
 func CloseConnectionFromInterfaces(ctx context.Context, generic []interface{}) (metadata Metadata, err error) {
 	closers := make([]connectionProviders, 0)
 	for _, elem := range generic {
@@ -109,5 +109,5 @@ func CloseConnectionFromInterfaces(ctx context.Context, generic []interface{}) (
 	if len(closers) == 0 {
 		return metadata, multierror.Append(err, errors.New("no Closer implementations found"))
 	}
-	return CloseConnection(ctx, closers)
+	return closeConnection(ctx, closers)
 }

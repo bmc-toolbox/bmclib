@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/errors"
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
@@ -61,7 +61,7 @@ Loop:
 	return taskID, metadataLocal, multierror.Append(err, errors.New("failure in FirmwareInstall"))
 }
 
-// FirmwareInstallFromInterfaces pass through to library function
+// FirmwareInstallFromInterfaces identifies implementations of the FirmwareInstaller interface and passes the found implementations to the firmwareInstall() wrapper
 func FirmwareInstallFromInterfaces(ctx context.Context, component, applyAt string, forceInstall bool, reader io.Reader, generic []interface{}) (taskID string, metadata Metadata, err error) {
 	implementations := make([]firmwareInstallerProvider, 0)
 	for _, elem := range generic {
@@ -137,7 +137,7 @@ Loop:
 	return status, metadataLocal, multierror.Append(err, errors.New("failure in FirmwareInstallStatus"))
 }
 
-// FirmwareInstallStatusFromInterfaces pass through to library function
+// FirmwareInstallStatusFromInterfaces identifies implementations of the FirmwareInstallVerifier interface and passes the found implementations to the firmwareInstallStatus() wrapper.
 func FirmwareInstallStatusFromInterfaces(ctx context.Context, installVersion, component, taskID string, generic []interface{}) (status string, metadata Metadata, err error) {
 	implementations := make([]firmwareInstallVerifierProvider, 0)
 	for _, elem := range generic {

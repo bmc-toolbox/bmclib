@@ -60,7 +60,7 @@ func TestSetPowerState(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, _, err := SetPowerState(ctx, tc.state, []powerProviders{{"test provider", nil, &testImplementation}})
+			result, _, err := setPowerState(ctx, tc.state, []powerProviders{{"test provider", nil, &testImplementation}})
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
@@ -146,7 +146,7 @@ func TestGetPowerState(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, _, err := GetPowerState(ctx, []powerProviders{{"test provider", &testImplementation, nil}})
+			result, _, err := getPowerState(ctx, []powerProviders{{"test provider", &testImplementation, nil}})
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {

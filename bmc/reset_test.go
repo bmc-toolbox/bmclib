@@ -53,7 +53,7 @@ func TestResetBMC(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, _, err := ResetBMC(ctx, tc.resetType, []bmcProviders{{"test provider", &testImplementation}})
+			result, _, err := resetBMC(ctx, tc.resetType, []bmcProviders{{"test provider", &testImplementation}})
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {

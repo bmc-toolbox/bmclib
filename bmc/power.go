@@ -36,9 +36,8 @@ type powerProviders struct {
 	powerSetter      PowerSetter
 }
 
-// SetPowerState sets the power state for a BMC, trying all interface implementations passed in
-// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
-func SetPowerState(ctx context.Context, state string, p []powerProviders) (ok bool, metadata Metadata, err error) {
+// setPowerState sets the power state for a BMC, trying all interface implementations passed in
+func setPowerState(ctx context.Context, state string, p []powerProviders) (ok bool, metadata Metadata, err error) {
 	var metadataLocal Metadata
 Loop:
 	for _, elem := range p {
@@ -67,8 +66,7 @@ Loop:
 	return ok, metadataLocal, multierror.Append(err, errors.New("failed to set power state"))
 }
 
-// SetPowerStateFromInterfaces pass through to library function
-// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
+// SetPowerStateFromInterfaces identifies implementations of the PostStateSetter interface and passes the found implementations to the setPowerState() wrapper.
 func SetPowerStateFromInterfaces(ctx context.Context, state string, generic []interface{}) (ok bool, metadata Metadata, err error) {
 	powerSetter := make([]powerProviders, 0)
 	for _, elem := range generic {
@@ -85,12 +83,11 @@ func SetPowerStateFromInterfaces(ctx context.Context, state string, generic []in
 	if len(powerSetter) == 0 {
 		return ok, metadata, multierror.Append(err, errors.New("no PowerSetter implementations found"))
 	}
-	return SetPowerState(ctx, state, powerSetter)
+	return setPowerState(ctx, state, powerSetter)
 }
 
-// GetPowerState sets the power state for a BMC, trying all interface implementations passed in
-// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
-func GetPowerState(ctx context.Context, p []powerProviders) (state string, metadata Metadata, err error) {
+// getPowerState gets the power state for a BMC, trying all interface implementations passed in
+func getPowerState(ctx context.Context, p []powerProviders) (state string, metadata Metadata, err error) {
 Loop:
 	for _, elem := range p {
 		if elem.powerStateGetter == nil {
@@ -114,8 +111,7 @@ Loop:
 	return state, metadata, multierror.Append(err, errors.New("failed to get power state"))
 }
 
-// GetPowerStateFromInterfaces pass through to library function
-// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
+// GetPowerStateFromInterfaces identifies implementations of the PostStateGetter interface and passes the found implementations to the getPowerState() wrapper.
 func GetPowerStateFromInterfaces(ctx context.Context, generic []interface{}) (state string, metadata Metadata, err error) {
 	powerStateGetter := make([]powerProviders, 0)
 	for _, elem := range generic {
@@ -132,5 +128,5 @@ func GetPowerStateFromInterfaces(ctx context.Context, generic []interface{}) (st
 	if len(powerStateGetter) == 0 {
 		return state, metadata, multierror.Append(err, errors.New("no PowerStateGetter implementations found"))
 	}
-	return GetPowerState(ctx, powerStateGetter)
+	return getPowerState(ctx, powerStateGetter)
 }

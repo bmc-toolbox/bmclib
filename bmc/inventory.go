@@ -4,16 +4,16 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/errors"
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/bmc-toolbox/common"
 )
 
 // InventoryGetter defines methods to retrieve device hardware and firmware inventory
 type InventoryGetter interface {
-	Inventory(ctx context.Context) (device *devices.Device, err error)
+	Inventory(ctx context.Context) (device *common.Device, err error)
 }
 
 type inventoryGetterProvider struct {
@@ -22,7 +22,7 @@ type inventoryGetterProvider struct {
 }
 
 // inventory returns hardware and firmware inventory
-func inventory(ctx context.Context, generic []inventoryGetterProvider) (device *devices.Device, metadata Metadata, err error) {
+func inventory(ctx context.Context, generic []inventoryGetterProvider) (device *common.Device, metadata Metadata, err error) {
 	var metadataLocal Metadata
 Loop:
 	for _, elem := range generic {
@@ -50,8 +50,8 @@ Loop:
 	return device, metadataLocal, multierror.Append(err, errors.New("failure to get device inventory"))
 }
 
-// GetInventoryFromInterfaces is a pass through to library function
-func GetInventoryFromInterfaces(ctx context.Context, generic []interface{}) (device *devices.Device, metadata Metadata, err error) {
+// GetInventoryFromInterfaces identifies implementations of the InventoryGetter interface and passes the found implementations to the inventory() wrapper method
+func GetInventoryFromInterfaces(ctx context.Context, generic []interface{}) (device *common.Device, metadata Metadata, err error) {
 	implementations := make([]inventoryGetterProvider, 0)
 	for _, elem := range generic {
 		temp := inventoryGetterProvider{name: getProviderName(elem)}

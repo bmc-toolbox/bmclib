@@ -37,9 +37,8 @@ type userProviders struct {
 	userReader  UserReader
 }
 
-// CreateUser creates a user using the passed in implementation
-// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
-func CreateUser(ctx context.Context, user, pass, role string, u []userProviders) (ok bool, metadata Metadata, err error) {
+// createUser creates a user using the passed in implementation
+func createUser(ctx context.Context, user, pass, role string, u []userProviders) (ok bool, metadata Metadata, err error) {
 	var metadataLocal Metadata
 Loop:
 	for _, elem := range u {
@@ -68,8 +67,7 @@ Loop:
 	return ok, metadataLocal, multierror.Append(err, errors.New("failed to create user"))
 }
 
-// CreateUserFromInterfaces pass through to library function
-// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
+// CreateUsersFromInterfaces identifies implementations of the UserCreator interface and passes them to the createUser() wrapper method.
 func CreateUserFromInterfaces(ctx context.Context, user, pass, role string, generic []interface{}) (ok bool, metadata Metadata, err error) {
 	userCreators := make([]userProviders, 0)
 	for _, elem := range generic {
@@ -86,12 +84,11 @@ func CreateUserFromInterfaces(ctx context.Context, user, pass, role string, gene
 	if len(userCreators) == 0 {
 		return ok, metadata, multierror.Append(err, errors.New("no UserCreator implementations found"))
 	}
-	return CreateUser(ctx, user, pass, role, userCreators)
+	return createUser(ctx, user, pass, role, userCreators)
 }
 
-// UpdateUser updates a user's settings
-// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
-func UpdateUser(ctx context.Context, user, pass, role string, u []userProviders) (ok bool, metadata Metadata, err error) {
+// updateUser updates a user's settings
+func updateUser(ctx context.Context, user, pass, role string, u []userProviders) (ok bool, metadata Metadata, err error) {
 	var metadataLocal Metadata
 Loop:
 	for _, elem := range u {
@@ -120,8 +117,7 @@ Loop:
 	return ok, metadataLocal, multierror.Append(err, errors.New("failed to update user"))
 }
 
-// UpdateUserFromInterfaces pass through to library function
-// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
+// UpdateUsersFromInterfaces identifies implementations of the UserUpdater interface and passes them to the updateUser() wrapper method.
 func UpdateUserFromInterfaces(ctx context.Context, user, pass, role string, generic []interface{}) (ok bool, metadata Metadata, err error) {
 	userUpdaters := make([]userProviders, 0)
 	for _, elem := range generic {
@@ -138,12 +134,11 @@ func UpdateUserFromInterfaces(ctx context.Context, user, pass, role string, gene
 	if len(userUpdaters) == 0 {
 		return ok, metadata, multierror.Append(err, errors.New("no UserUpdater implementations found"))
 	}
-	return UpdateUser(ctx, user, pass, role, userUpdaters)
+	return updateUser(ctx, user, pass, role, userUpdaters)
 }
 
-// DeleteUser deletes a user from a BMC
-// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
-func DeleteUser(ctx context.Context, user string, u []userProviders) (ok bool, metadata Metadata, err error) {
+// deleteUser deletes a user from a BMC
+func deleteUser(ctx context.Context, user string, u []userProviders) (ok bool, metadata Metadata, err error) {
 	var metadataLocal Metadata
 Loop:
 	for _, elem := range u {
@@ -172,8 +167,7 @@ Loop:
 	return ok, metadataLocal, multierror.Append(err, errors.New("failed to delete user"))
 }
 
-// DeleteUserFromInterfaces pass through to library function
-// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
+// DeleteUsersFromInterfaces identifies implementations of the UserDeleter interface and passes them to the deleteUser() wrapper method.
 func DeleteUserFromInterfaces(ctx context.Context, user string, generic []interface{}) (ok bool, metadata Metadata, err error) {
 	userDeleters := make([]userProviders, 0)
 	for _, elem := range generic {
@@ -190,12 +184,11 @@ func DeleteUserFromInterfaces(ctx context.Context, user string, generic []interf
 	if len(userDeleters) == 0 {
 		return ok, metadata, multierror.Append(err, errors.New("no UserDeleter implementations found"))
 	}
-	return DeleteUser(ctx, user, userDeleters)
+	return deleteUser(ctx, user, userDeleters)
 }
 
-// ReadUsers returns all users from a BMC
-// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
-func ReadUsers(ctx context.Context, u []userProviders) (users []map[string]string, metadata Metadata, err error) {
+// readUsers returns all users from a BMC
+func readUsers(ctx context.Context, u []userProviders) (users []map[string]string, metadata Metadata, err error) {
 	var metadataLocal Metadata
 Loop:
 	for _, elem := range u {
@@ -220,8 +213,7 @@ Loop:
 	return users, metadataLocal, multierror.Append(err, errors.New("failed to read users"))
 }
 
-// ReadUsersFromInterfaces pass through to library function
-// if a metadata is passed in, it will be updated to be the name of the provider that successfully executed
+// ReadUsersFromInterfaces identifies implementations of the UserReader interface and passes them to the readUsers() wrapper method.
 func ReadUsersFromInterfaces(ctx context.Context, generic []interface{}) (users []map[string]string, metadata Metadata, err error) {
 	userReaders := make([]userProviders, 0)
 	for _, elem := range generic {
@@ -238,5 +230,5 @@ func ReadUsersFromInterfaces(ctx context.Context, generic []interface{}) (users 
 	if len(userReaders) == 0 {
 		return users, metadata, multierror.Append(err, errors.New("no UserReader implementations found"))
 	}
-	return ReadUsers(ctx, userReaders)
+	return readUsers(ctx, userReaders)
 }

@@ -105,7 +105,7 @@ func TestCloseConnection(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			_, err := CloseConnection(ctx, []connectionProviders{{"test provider", &testImplementation}})
+			_, err := closeConnection(ctx, []connectionProviders{{"test provider", &testImplementation}})
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {

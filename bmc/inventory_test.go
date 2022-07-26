@@ -5,18 +5,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/devices"
-	"github.com/bmc-toolbox/bmclib/errors"
-	bmclibErrs "github.com/bmc-toolbox/bmclib/errors"
+	"github.com/bmc-toolbox/bmclib/v2/errors"
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/bmc-toolbox/common"
 	"github.com/stretchr/testify/assert"
 )
 
 type inventoryGetterTester struct {
-	returnDevice *devices.Device
+	returnDevice *common.Device
 	returnError  error
 }
 
-func (f *inventoryGetterTester) Inventory(ctx context.Context) (device *devices.Device, err error) {
+func (f *inventoryGetterTester) Inventory(ctx context.Context) (device *common.Device, err error) {
 	return f.returnDevice, f.returnError
 }
 
@@ -27,13 +27,13 @@ func (f *inventoryGetterTester) Name() string {
 func TestInventory(t *testing.T) {
 	testCases := []struct {
 		testName           string
-		returnDevice       *devices.Device
+		returnDevice       *common.Device
 		returnError        error
 		ctxTimeout         time.Duration
 		providerName       string
 		providersAttempted int
 	}{
-		{"success with metadata", &devices.Device{Vendor: "foo"}, nil, 5 * time.Second, "foo", 1},
+		{"success with metadata", &common.Device{Common: common.Common{Vendor: "foo"}}, nil, 5 * time.Second, "foo", 1},
 		{"failure with metadata", nil, errors.ErrNon200Response, 5 * time.Second, "foo", 1},
 		{"failure with context timeout", nil, context.DeadlineExceeded, 1 * time.Nanosecond, "foo", 1},
 	}
@@ -65,14 +65,14 @@ func TestInventory(t *testing.T) {
 func TestInventoryFromInterfaces(t *testing.T) {
 	testCases := []struct {
 		testName           string
-		returnDevice       *devices.Device
+		returnDevice       *common.Device
 		returnError        error
 		ctxTimeout         time.Duration
 		providerName       string
 		providersAttempted int
 		badImplementation  bool
 	}{
-		{"success with metadata", &devices.Device{Vendor: "foo"}, nil, 5 * time.Second, "foo", 1, false},
+		{"success with metadata", &common.Device{Common: common.Common{Vendor: "foo"}}, nil, 5 * time.Second, "foo", 1, false},
 		{"failure with bad implementation", nil, bmclibErrs.ErrProviderImplementation, 5 * time.Second, "foo", 1, true},
 	}
 

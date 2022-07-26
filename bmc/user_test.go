@@ -92,7 +92,7 @@ func TestUserCreate(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, _, err := CreateUser(ctx, user, pass, role, []userProviders{{"", &testImplementation, nil, nil, nil}})
+			result, _, err := createUser(ctx, user, pass, role, []userProviders{{"", &testImplementation, nil, nil, nil}})
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
@@ -186,7 +186,7 @@ func TestUpdateUser(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, _, err := UpdateUser(ctx, user, pass, role, []userProviders{{"", nil, &testImplementation, nil, nil}})
+			result, _, err := updateUser(ctx, user, pass, role, []userProviders{{"", nil, &testImplementation, nil, nil}})
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
@@ -277,7 +277,7 @@ func TestDeleteUser(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, _, err := DeleteUser(ctx, user, []userProviders{{"", nil, nil, &testImplementation, nil}})
+			result, _, err := deleteUser(ctx, user, []userProviders{{"", nil, nil, &testImplementation, nil}})
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
@@ -372,7 +372,7 @@ func TestReadUsers(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, _, err := ReadUsers(ctx, []userProviders{{"", nil, nil, nil, &testImplementation}})
+			result, _, err := readUsers(ctx, []userProviders{{"", nil, nil, nil, &testImplementation}})
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {

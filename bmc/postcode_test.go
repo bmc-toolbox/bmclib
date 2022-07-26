@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/devices"
-	bmclibErrs "github.com/bmc-toolbox/bmclib/errors"
+	"github.com/bmc-toolbox/bmclib/v2/constants"
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -34,8 +34,8 @@ func TestPostCode(t *testing.T) {
 		providerName       string
 		providersAttempted int
 	}{
-		{"success with metadata", devices.POSTStateOS, 164, nil, 5 * time.Second, "foo", 1},
-		{"failure with metadata", devices.POSTCodeUnknown, 0, bmclibErrs.ErrNon200Response, 5 * time.Second, "foo", 1},
+		{"success with metadata", constants.POSTStateOS, 164, nil, 5 * time.Second, "foo", 1},
+		{"failure with metadata", constants.POSTCodeUnknown, 0, bmclibErrs.ErrNon200Response, 5 * time.Second, "foo", 1},
 		{"failure with context timeout", "", 0, context.DeadlineExceeded, 1 * time.Nanosecond, "foo", 1},
 	}
 
@@ -75,7 +75,7 @@ func TestPostCodeFromInterfaces(t *testing.T) {
 		providersAttempted int
 		badImplementation  bool
 	}{
-		{"success with metadata", devices.POSTStateOS, 164, nil, 5 * time.Second, "foo", 1, false},
+		{"success with metadata", constants.POSTStateOS, 164, nil, 5 * time.Second, "foo", 1, false},
 		{"failure with bad implementation", "", 0, bmclibErrs.ErrProviderImplementation, 1 * time.Nanosecond, "foo", 1, true},
 	}
 
