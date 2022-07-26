@@ -10,8 +10,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib"
-	"github.com/bmc-toolbox/bmclib/devices"
+	bmclib "github.com/bmc-toolbox/bmclib/v2"
+	"github.com/bmc-toolbox/bmclib/v2/constants"
+	"github.com/bmc-toolbox/common"
 	"github.com/bombsimon/logrusr/v2"
 	"github.com/sirupsen/logrus"
 )
@@ -79,12 +80,12 @@ func main() {
 
 	// SlugBMC hardcoded here, this can be any of the existing component slugs from devices/constants.go
 	// assuming that the BMC provider implements the required component firmware update support
-	taskID, err := cl.FirmwareInstall(ctx, devices.SlugBMC, devices.FirmwareApplyOnReset, true, fh)
+	taskID, err := cl.FirmwareInstall(ctx, common.SlugBMC, constants.FirmwareApplyOnReset, true, fh)
 	if err != nil {
 		l.Error(err)
 	}
 
-	state, err := cl.FirmwareInstallStatus(ctx, taskID, devices.SlugBMC, *firmwareVersion)
+	state, err := cl.FirmwareInstallStatus(ctx, taskID, common.SlugBMC, *firmwareVersion)
 	if err != nil {
 		log.Fatal(err)
 	}

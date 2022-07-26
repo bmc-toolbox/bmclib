@@ -5,10 +5,14 @@ import (
 	"crypto/x509"
 	"flag"
 	"io/ioutil"
+	"log"
+	"os"
 	"strconv"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib"
+	bmclib "github.com/bmc-toolbox/bmclib/v2"
+	"github.com/bmc-toolbox/bmclib/v2/constants"
+	"github.com/bmc-toolbox/common"
 	"github.com/bombsimon/logrusr/v2"
 	"github.com/sirupsen/logrus"
 )
@@ -19,8 +23,14 @@ func main() {
 	host := flag.String("host", "", "BMC hostname to connect to")
 	port := flag.Int("port", 443, "BMC port to connect to")
 	withSecureTLS := flag.Bool("secure-tls", false, "Enable secure TLS")
-	certPoolFile := flag.String("cert-pool", "", "Path to an file containing x509 CAs. An empty string uses the system CAs. Only takes effect when --secure-tls=true")
+	certPoolPath := flag.String("cert-pool", "", "Path to an file containing x509 CAs. An empty string uses the system CAs. Only takes effect when --secure-tls=true")
+	firmwarePath := flag.String("firmware", "", "The local path of the firmware to install")
+	firmwareVersion := flag.String("version", "", "The firmware version being installed")
+
 	flag.Parse()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
 
 	l := logrus.New()
 	l.Level = logrus.DebugLevel
@@ -29,14 +39,13 @@ func main() {
 	if *host == "" || *user == "" || *pass == "" {
 		l.Fatal("required host/user/pass parameters not defined")
 	}
-
 	clientOpts := []bmclib.Option{bmclib.WithLogger(logger)}
 
 	if *withSecureTLS {
 		var pool *x509.CertPool
-		if *certPoolFile != "" {
+		if *certPoolPath != "" {
 			pool = x509.NewCertPool()
-			data, err := ioutil.ReadFile(*certPoolFile)
+			data, err := ioutil.ReadFile(*certPoolPath)
 			if err != nil {
 				l.Fatal(err)
 			}
@@ -47,17 +56,14 @@ func main() {
 	}
 
 	cl := bmclib.NewClient(*host, strconv.Itoa(*port), *user, *pass, clientOpts...)
-	cl.Registry.Drivers = cl.Registry.Using("redfish")
-
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-	defer cancel()
-
 	err := cl.Open(ctx)
 	if err != nil {
-		l.WithError(err).Fatal(err, "BMC login failed")
+		l.Fatal(err, "bmc login failed")
 	}
+
 	defer cl.Close(ctx)
 
+	// collect inventory
 	inventory, err := cl.Inventory(ctx)
 	if err != nil {
 		l.Fatal(err)
@@ -65,11 +71,24 @@ func main() {
 
 	l.WithField("bmc-version", inventory.BMC.Firmware.Installed).Info()
 
-	state, err := cl.GetPowerState(ctx)
+	// open file handle
+	fh, err := os.Open(*firmwarePath)
 	if err != nil {
-		l.WithError(err).Error()
+		l.Fatal(err)
 	}
-	l.WithField("power-state", state).Info()
+	defer fh.Close()
 
-	l.WithField("bios-version", inventory.BIOS.Firmware.Installed).Info()
+	// SlugBMC hardcoded here, this can be any of the existing component slugs from devices/constants.go
+	// assuming that the BMC provider implements the required component firmware update support
+	taskID, err := cl.FirmwareInstall(ctx, common.SlugBMC, constants.FirmwareApplyOnReset, true, fh)
+	if err != nil {
+		l.Error(err)
+	}
+
+	state, err := cl.FirmwareInstallStatus(ctx, taskID, common.SlugBMC, *firmwareVersion)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	l.WithField("state", state).Info("BMC firmware install state")
 }

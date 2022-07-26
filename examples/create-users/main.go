@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib"
+	bmclib "github.com/bmc-toolbox/bmclib/v2"
 	"github.com/bombsimon/logrusr/v2"
 	"github.com/sirupsen/logrus"
 )

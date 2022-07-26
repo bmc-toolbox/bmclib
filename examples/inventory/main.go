@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib"
+	bmclib "github.com/bmc-toolbox/bmclib/v2"
 	"github.com/bombsimon/logrusr/v2"
 	"github.com/sirupsen/logrus"
 )
@@ -49,7 +49,7 @@ func main() {
 	}
 
 	cl := bmclib.NewClient(*host, strconv.Itoa(*port), *user, *pass, clientOpts...)
-	cl.Registry.Drivers = cl.Registry.Using("redfish")
+	//	cl.Registry.Drivers = cl.Registry.Using("redfish")
 
 	err := cl.Open(ctx)
 	if err != nil {
