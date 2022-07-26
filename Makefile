@@ -18,17 +18,7 @@ lint: ## Run linting
 	@echo be sure golangci-lint is installed: https://golangci-lint.run/usage/install/
 	golangci-lint run --config .golangci.yml
 
-.PHONY: goimports
-goimports: ## run goimports updating files in place
-	@echo be sure goimports is installed
-	goimports -w .
-
-.PHONY: goimports-check
-goimports-check: ## run goimports displaying diffs
-	@echo be sure goimports is installed
-	goimports -d . | (! grep .)
-
 .PHONY: all-checks
-all-checks: lint goimports ## run all formatters
+all-checks: lint ## run all formatters
 	go mod tidy
 	go vet ./...

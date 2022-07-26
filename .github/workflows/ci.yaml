@@ -14,14 +14,12 @@ jobs:
     - name: Install Go
       uses: actions/setup-go@v3
       with:
-        go-version: '1.17'
+        go-version: '1.18'
     - name: Run golangci-lint
       uses: golangci/golangci-lint-action@v3
       with:
         args: -v --config .golangci.yml --timeout=5m
         version: latest
-    - name: goimports-check
-      run: go get golang.org/x/tools/cmd/goimports && make goimports-check
     - name: make all-checks
       run: make all-checks
   test:
@@ -36,7 +34,7 @@ jobs:
     - name: Install Go
       uses: actions/setup-go@v3
       with:
-        go-version: '1.17'
+        go-version: '1.18'
     - name: make all-tests
       run: make all-tests
     - name: upload codecov

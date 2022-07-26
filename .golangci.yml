@@ -1,8 +1,8 @@
   govet:
+    auto-fix: true
     linters-settings:
-    # TODO: enable and fix struct alignments
-    #enable:
-    #  - fieldalignment
+    enable:
+     - fieldalignment
     check-shadowing: true
     settings:
       printf:
@@ -48,8 +48,6 @@
     auto-fix: true
   wsl:
     auto-fix: true
-  govet:
-    auto-fix: true
   stylecheck:
     auto-fix: true
 
@@ -59,7 +57,7 @@ linters:
     - gosimple
     - govet
     - gofmt
-      #- gocyclo
+    - gocyclo
     - ineffassign
     - stylecheck
     - deadcode
@@ -77,9 +75,8 @@ linters:
     - goimports
     - golint
     - misspell
-    # enable when we're ready
-      #- goerr113
-      #- noctx
+    - goerr113
+    - noctx
   enable-all: false
   disable-all: true
 

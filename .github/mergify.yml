@@ -1,4 +1,4 @@
-queue_rules:
+queue_rule:
   - name: default
     conditions:
       # Conditions to get out of the queue (= merged)
@@ -8,11 +8,11 @@ queue_rules:
 pull_request_rules:
   - name: Automatic merge on approval
     conditions:
-      - base=master
+      - base=v2
       - "#approved-reviews-by>=1"
       - "#changes-requested-reviews-by=0"
-      - check-success=lint
-      - check-success=test
+      - check-success='lint'
+      - check-success='test'
       - label!=do-not-merge
       - label=ready-to-merge
     actions:
@@ -21,4 +21,3 @@ pull_request_rules:
         name: default
         commit_message_template: |
           {{ title }} (#{{ number }})
-
