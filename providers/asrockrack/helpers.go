@@ -12,8 +12,8 @@ import (
 	"net/http/httputil"
 	"os"
 
-	"github.com/bmc-toolbox/bmclib/devices"
-	"github.com/bmc-toolbox/bmclib/errors"
+	"github.com/bmc-toolbox/bmclib/v2/constants"
+	"github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 // API session setup response payload
@@ -129,11 +129,11 @@ type biosUpdateAction struct {
 
 var (
 	knownPOSTCodes = map[int]string{
-		160: devices.POSTStateOS,
-		2:   devices.POSTStateBootINIT, // no differentiation between BIOS init and PXE boot
-		144: devices.POSTStateUEFI,
-		154: devices.POSTStateUEFI,
-		178: devices.POSTStateUEFI,
+		160: constants.POSTStateOS,
+		2:   constants.POSTStateBootINIT, // no differentiation between BIOS init and PXE boot
+		144: constants.POSTStateUEFI,
+		154: constants.POSTStateUEFI,
+		178: constants.POSTStateUEFI,
 	}
 )
 

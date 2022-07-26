@@ -6,9 +6,9 @@ import (
 	"crypto/x509"
 	"net/http"
 
-	"github.com/bmc-toolbox/bmclib/devices"
-	"github.com/bmc-toolbox/bmclib/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/providers"
+	"github.com/bmc-toolbox/bmclib/v2/constants"
+	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
+	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 )
@@ -137,7 +137,7 @@ func (a *ASRockRack) PostCode(ctx context.Context) (status string, code int, err
 	code = postInfo.PostData
 	status, exists := knownPOSTCodes[code]
 	if !exists {
-		status = devices.POSTCodeUnknown
+		status = constants.POSTCodeUnknown
 	}
 
 	return status, code, nil

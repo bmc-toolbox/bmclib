@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/bmc-toolbox/bmclib/internal/ipmi"
-	"github.com/bmc-toolbox/bmclib/logging"
+	"github.com/bmc-toolbox/bmclib/v2/internal/ipmi"
+	"github.com/bmc-toolbox/bmclib/v2/logging"
 )
 
 func TestMain(m *testing.M) {

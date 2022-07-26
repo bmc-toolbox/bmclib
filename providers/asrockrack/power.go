@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/errors"
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/pkg/errors"
 )
 

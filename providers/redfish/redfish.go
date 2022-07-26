@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/errors"
-	"github.com/bmc-toolbox/bmclib/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/providers"
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
+	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 	"github.com/pkg/errors"

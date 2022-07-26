@@ -14,8 +14,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/bmc-toolbox/bmclib/devices"
-	bmclibErrs "github.com/bmc-toolbox/bmclib/errors"
+	"github.com/bmc-toolbox/bmclib/v2/constants"
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/bmc-toolbox/common"
 )
 
 // handler registered in mock_test.go
@@ -80,7 +81,7 @@ func Test_FirmwareInstall(t *testing.T) {
 		testName        string
 	}{
 		{
-			devices.SlugBIOS,
+			common.SlugBIOS,
 			"invalidApplyAt",
 			false,
 			nil,
@@ -90,8 +91,8 @@ func Test_FirmwareInstall(t *testing.T) {
 			"applyAt parameter invalid",
 		},
 		{
-			devices.SlugBIOS,
-			devices.FirmwareApplyOnReset,
+			common.SlugBIOS,
+			constants.FirmwareApplyOnReset,
 			false,
 			fh,
 			"467696020275",
@@ -100,8 +101,8 @@ func Test_FirmwareInstall(t *testing.T) {
 			"task ID exists",
 		},
 		{
-			devices.SlugBIOS,
-			devices.FirmwareApplyOnReset,
+			common.SlugBIOS,
+			constants.FirmwareApplyOnReset,
 			true,
 			fh,
 			"467696020275",

@@ -8,9 +8,10 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/bmc-toolbox/bmclib/devices"
-	bmclibErrs "github.com/bmc-toolbox/bmclib/errors"
-	"github.com/bmc-toolbox/bmclib/internal"
+	"github.com/bmc-toolbox/bmclib/v2/constants"
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/bmc-toolbox/bmclib/v2/internal"
+	"github.com/bmc-toolbox/common"
 )
 
 const (
@@ -33,9 +34,9 @@ func (a *ASRockRack) FirmwareInstall(ctx context.Context, component, applyAt str
 	}
 
 	switch component {
-	case devices.SlugBIOS:
+	case common.SlugBIOS:
 		err = a.firmwareInstallBIOS(ctx, reader, size)
-	case devices.SlugBMC:
+	case common.SlugBMC:
 		err = a.firmwareInstallBMC(ctx, reader, size)
 	default:
 		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, "component unsupported: "+component)
@@ -51,7 +52,7 @@ func (a *ASRockRack) FirmwareInstall(ctx context.Context, component, applyAt str
 // FirmwareInstallStatus returns the status of the firmware install process, a bool value indicating if the component requires a reset
 func (a *ASRockRack) FirmwareInstallStatus(ctx context.Context, installVersion, component, taskID string) (status string, err error) {
 	switch component {
-	case devices.SlugBIOS, devices.SlugBMC:
+	case common.SlugBIOS, common.SlugBMC:
 		return a.firmwareUpdateStatus(ctx, component, installVersion)
 	default:
 		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, "component unsupported: "+component)
@@ -125,9 +126,9 @@ func (a *ASRockRack) firmwareInstallBIOS(ctx context.Context, reader io.Reader, 
 func (a *ASRockRack) firmwareUpdateStatus(ctx context.Context, component string, installVersion string) (status string, err error) {
 	var endpoint string
 	switch component {
-	case devices.SlugBIOS:
+	case common.SlugBIOS:
 		endpoint = "api/asrr/maintenance/BIOS/flash-progress"
-	case devices.SlugBMC:
+	case common.SlugBMC:
 		endpoint = "api/maintenance/firmware/flash-progress"
 	default:
 		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, "component unsupported: "+component)
@@ -144,9 +145,9 @@ func (a *ASRockRack) firmwareUpdateStatus(ctx context.Context, component string,
 	if progress != nil {
 		switch progress.State {
 		case 0:
-			return devices.FirmwareInstallRunning, nil
+			return constants.FirmwareInstallRunning, nil
 		case 2:
-			return devices.FirmwareInstallComplete, nil
+			return constants.FirmwareInstallComplete, nil
 		default:
 			a.log.V(3).WithValues("state", progress.State).Info("warn", "bmc returned unknown flash progress state")
 		}
@@ -164,14 +165,14 @@ func (a *ASRockRack) firmwareUpdateStatus(ctx context.Context, component string,
 
 	switch installStatus {
 	case versionStrMatch:
-		return devices.FirmwareInstallComplete, nil
+		return constants.FirmwareInstallComplete, nil
 	case versionStrEmpty:
-		return devices.FirmwareInstallUnknown, nil
+		return constants.FirmwareInstallUnknown, nil
 	case versionStrMismatch:
-		return devices.FirmwareInstallRunning, nil
+		return constants.FirmwareInstallRunning, nil
 	}
 
-	return devices.FirmwareInstallUnknown, nil
+	return constants.FirmwareInstallUnknown, nil
 }
 
 // versionInstalled returns int values on the status of the firmware version install
@@ -180,7 +181,7 @@ func (a *ASRockRack) firmwareUpdateStatus(ctx context.Context, component string,
 // - 1 indicates the given version parameter does not match the version installed
 // - 2 the version parameter returned from the BMC is empty (which means the BMC needs a reset)
 func (a *ASRockRack) versionInstalled(ctx context.Context, component, version string) (status int, err error) {
-	if !internal.StringInSlice(component, []string{devices.SlugBIOS, devices.SlugBMC}) {
+	if !internal.StringInSlice(component, []string{common.SlugBIOS, common.SlugBMC}) {
 		return versionStrError, errors.Wrap(bmclibErrs.ErrFirmwareInstall, "component unsupported: "+component)
 	}
 
@@ -194,9 +195,9 @@ func (a *ASRockRack) versionInstalled(ctx context.Context, component, version st
 	var installed string
 
 	switch component {
-	case devices.SlugBIOS:
+	case common.SlugBIOS:
 		installed = fwInfo.BIOSVersion
-	case devices.SlugBMC:
+	case common.SlugBMC:
 		installed = fwInfo.BMCVersion
 	}
 

@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bmc-toolbox/bmclib/devices"
-	bmcliberrs "github.com/bmc-toolbox/bmclib/errors"
+	bmcliberrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/bmc-toolbox/common"
 	"github.com/pkg/errors"
 
 	rfcommon "github.com/stmcginnis/gofish/common"
@@ -18,8 +18,8 @@ import (
 
 var (
 	componentSlugDellJobName = map[string]string{
-		devices.SlugBIOS: "Firmware Update: BIOS",
-		devices.SlugBMC:  "Firmware Update: iDRAC with Lifecycle Controller",
+		common.SlugBIOS: "Firmware Update: BIOS",
+		common.SlugBMC:  "Firmware Update: iDRAC with Lifecycle Controller",
 	}
 )
 

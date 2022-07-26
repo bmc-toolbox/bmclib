@@ -3,12 +3,17 @@ package asrockrack
 import (
 	"context"
 
-	"github.com/bmc-toolbox/bmclib/devices"
+	"github.com/bmc-toolbox/bmclib/v2/constants"
+	"github.com/bmc-toolbox/common"
 )
 
-func (a *ASRockRack) Inventory(ctx context.Context) (device *devices.Device, err error) {
+// Inventory returns hardware and firmware inventory
+func (a *ASRockRack) Inventory(ctx context.Context) (device *common.Device, err error) {
 	// initialize device to be populated with inventory
-	device = devices.NewDevice()
+	newDevice := common.NewDevice()
+	device = &newDevice
+	device.Status = &common.Status{}
+
 	device.Metadata = map[string]string{}
 
 	// populate device BMC, BIOS component attributes
@@ -33,7 +38,7 @@ func (a *ASRockRack) Inventory(ctx context.Context) (device *devices.Device, err
 }
 
 // systemHealth collects system health information based on the sensors data
-func (a *ASRockRack) systemHealth(ctx context.Context, device *devices.Device) error {
+func (a *ASRockRack) systemHealth(ctx context.Context, device *common.Device) error {
 	sensors, err := a.sensors(ctx)
 	if err != nil {
 		return err
@@ -69,7 +74,7 @@ func (a *ASRockRack) systemHealth(ctx context.Context, device *devices.Device) e
 }
 
 // fruAttributes collects chassis information
-func (a *ASRockRack) fruAttributes(ctx context.Context, device *devices.Device) error {
+func (a *ASRockRack) fruAttributes(ctx context.Context, device *common.Device) error {
 	components, err := a.fruInfo(ctx)
 	if err != nil {
 		return err
@@ -82,9 +87,11 @@ func (a *ASRockRack) fruAttributes(ctx context.Context, device *devices.Device) 
 			device.Model = component.ProductName
 			device.Serial = component.SerialNumber
 		case "chassis":
-			device.Enclosures = append(device.Enclosures, &devices.Enclosure{
-				Serial:      component.SerialNumber,
-				Description: component.Type,
+			device.Enclosures = append(device.Enclosures, &common.Enclosure{
+				Common: common.Common{
+					Serial:      component.SerialNumber,
+					Description: component.Type,
+				},
 			})
 		case "product":
 			device.Metadata["product.manufacturer"] = component.Manufacturer
@@ -99,29 +106,35 @@ func (a *ASRockRack) fruAttributes(ctx context.Context, device *devices.Device) 
 }
 
 // systemAttributes collects system component attributes
-func (a *ASRockRack) systemAttributes(ctx context.Context, device *devices.Device) error {
+func (a *ASRockRack) systemAttributes(ctx context.Context, device *common.Device) error {
 	fwInfo, err := a.firmwareInfo(ctx)
 	if err != nil {
 		return err
 	}
 
-	device.BIOS = &devices.BIOS{
-		Vendor:   device.Vendor,
-		Model:    device.Model,
-		Firmware: &devices.Firmware{Installed: fwInfo.BIOSVersion},
+	device.BIOS = &common.BIOS{
+		Common: common.Common{
+			Vendor:   device.Vendor,
+			Model:    device.Model,
+			Firmware: &common.Firmware{Installed: fwInfo.BIOSVersion},
+		},
 	}
 
-	device.BMC = &devices.BMC{
-		Vendor:   device.Vendor,
-		Model:    device.Model,
-		Firmware: &devices.Firmware{Installed: fwInfo.BMCVersion},
+	device.BMC = &common.BMC{
+		Common: common.Common{
+			Vendor:   device.Vendor,
+			Model:    device.Model,
+			Firmware: &common.Firmware{Installed: fwInfo.BMCVersion},
+		},
 	}
 
 	if fwInfo.CPLDVersion != "N/A" {
-		device.CPLDs = append(device.CPLDs, &devices.CPLD{
-			Vendor:   device.Vendor,
-			Model:    device.Model,
-			Firmware: &devices.Firmware{Installed: fwInfo.CPLDVersion},
+		device.CPLDs = append(device.CPLDs, &common.CPLD{
+			Common: common.Common{
+				Vendor:   device.Vendor,
+				Model:    device.Model,
+				Firmware: &common.Firmware{Installed: fwInfo.CPLDVersion},
+			},
 		})
 	}
 
@@ -136,25 +149,30 @@ func (a *ASRockRack) systemAttributes(ctx context.Context, device *devices.Devic
 		switch component.DeviceType {
 		case "CPU":
 			device.CPUs = append(device.CPUs,
-				&devices.CPU{
-					Vendor: component.ProductManufacturerName,
-					Model:  component.ProductName,
-					Firmware: &devices.Firmware{
-						Installed: fwInfo.MicrocodeVersion,
-						Metadata: map[string]string{
-							"Intel_ME_version": fwInfo.MEVersion,
+				&common.CPU{
+					Common: common.Common{
+						Vendor: component.ProductManufacturerName,
+						Model:  component.ProductName,
+						Firmware: &common.Firmware{
+							Installed: fwInfo.MicrocodeVersion,
+							Metadata: map[string]string{
+								"Intel_ME_version": fwInfo.MEVersion,
+							},
 						},
 					},
 				},
 			)
 		case "Memory":
 			device.Memory = append(device.Memory,
-				&devices.Memory{
-					Vendor:      component.ProductManufacturerName,
-					Serial:      component.ProductSerialNumber,
-					PartNumber:  component.ProductPartNumber,
-					Type:        component.DeviceName,
-					Description: component.ProductExtra,
+				&common.Memory{
+					Common: common.Common{
+						Vendor:      component.ProductManufacturerName,
+						Serial:      component.ProductSerialNumber,
+						Description: component.ProductExtra,
+					},
+
+					PartNumber: component.ProductPartNumber,
+					Type:       component.DeviceName,
 				},
 			)
 
@@ -163,14 +181,16 @@ func (a *ASRockRack) systemAttributes(ctx context.Context, device *devices.Devic
 
 			if component.ProductManufacturerName == "N/A" &&
 				component.ProductPartNumber != "N/A" {
-				vendor = devices.VendorFromProductName(component.ProductPartNumber)
+				vendor = constants.VendorFromProductName(component.ProductPartNumber)
 			}
 
 			device.Drives = append(device.Drives,
-				&devices.Drive{
-					Vendor:      vendor,
-					Serial:      component.ProductSerialNumber,
-					ProductName: component.ProductPartNumber,
+				&common.Drive{
+					Common: common.Common{
+						Vendor:      vendor,
+						Serial:      component.ProductSerialNumber,
+						ProductName: component.ProductPartNumber,
+					},
 				},
 			)
 		}

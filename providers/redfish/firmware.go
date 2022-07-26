@@ -17,15 +17,16 @@ import (
 	"github.com/pkg/errors"
 	rf "github.com/stmcginnis/gofish/redfish"
 
-	"github.com/bmc-toolbox/bmclib/devices"
-	bmclibErrs "github.com/bmc-toolbox/bmclib/errors"
+	"github.com/bmc-toolbox/bmclib/v2/constants"
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/bmc-toolbox/bmclib/v2/internal"
 )
 
 // SupportedFirmwareApplyAtValues returns the supported redfish firmware applyAt values
 func SupportedFirmwareApplyAtValues() []string {
 	return []string{
-		devices.FirmwareApplyImmediate,
-		devices.FirmwareApplyOnReset,
+		constants.FirmwareApplyImmediate,
+		constants.FirmwareApplyOnReset,
 	}
 }
 
@@ -38,7 +39,7 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 	}
 
 	// validate applyAt parameter
-	if !stringInSlice(applyAt, SupportedFirmwareApplyAtValues()) {
+	if !internal.StringInSlice(applyAt, SupportedFirmwareApplyAtValues()) {
 		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, "invalid applyAt parameter: "+applyAt)
 	}
 
@@ -111,7 +112,7 @@ func (c *Conn) FirmwareInstallStatus(ctx context.Context, installVersion, compon
 
 	var task *rf.Task
 	switch {
-	case strings.Contains(vendor, devices.Dell):
+	case strings.Contains(vendor, constants.Dell):
 		task, err = c.dellJobAsRedfishTask(taskID)
 	default:
 		err = errors.Wrap(
@@ -133,19 +134,19 @@ func (c *Conn) FirmwareInstallStatus(ctx context.Context, installVersion, compon
 	// so much for standards...
 	switch state {
 	case "starting", "downloading", "downloaded":
-		return devices.FirmwareInstallInitializing, nil
+		return constants.FirmwareInstallInitializing, nil
 	case "running", "stopping", "cancelling", "scheduling":
-		return devices.FirmwareInstallRunning, nil
+		return constants.FirmwareInstallRunning, nil
 	case "pending", "new":
-		return devices.FirmwareInstallQueued, nil
+		return constants.FirmwareInstallQueued, nil
 	case "scheduled":
-		return devices.FirmwareInstallPowerCyleHost, nil
+		return constants.FirmwareInstallPowerCyleHost, nil
 	case "interrupted", "killed", "exception", "cancelled", "suspended", "failed":
-		return devices.FirmwareInstallFailed, nil
+		return constants.FirmwareInstallFailed, nil
 	case "completed":
-		return devices.FirmwareInstallComplete, nil
+		return constants.FirmwareInstallComplete, nil
 	default:
-		return devices.FirmwareInstallUnknown + ": " + state, nil
+		return constants.FirmwareInstallUnknown + ": " + state, nil
 	}
 
 }
@@ -249,7 +250,7 @@ func (c *Conn) GetFirmwareInstallTaskQueued(ctx context.Context, component strin
 
 	// check an update task for the component is currently scheduled
 	switch {
-	case strings.Contains(vendor, devices.Dell):
+	case strings.Contains(vendor, constants.Dell):
 		task, err = c.getDellFirmwareInstallTaskScheduled(component)
 	default:
 		err = errors.Wrap(
@@ -274,7 +275,7 @@ func (c *Conn) purgeQueuedFirmwareInstallTask(ctx context.Context, component str
 
 	// check an update task for the component is currently scheduled
 	switch {
-	case strings.Contains(vendor, devices.Dell):
+	case strings.Contains(vendor, constants.Dell):
 		err = c.dellPurgeScheduledFirmwareInstallJob(component)
 	default:
 		err = errors.Wrap(

@@ -7,8 +7,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/errors"
-	"github.com/bmc-toolbox/bmclib/internal"
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/bmc-toolbox/bmclib/v2/internal"
 )
 
 var (

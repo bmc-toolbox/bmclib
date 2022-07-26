@@ -4,12 +4,12 @@ import (
 	"context"
 	"strings"
 
-	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish"
 	"github.com/stmcginnis/gofish/redfish"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/errors"
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/bmc-toolbox/common"
 )
 
 var (
@@ -62,7 +62,7 @@ func (c *Conn) DeviceVendorModel(ctx context.Context) (vendor, model string, err
 	return vendor, model, bmclibErrs.ErrRedfishSystemOdataID
 }
 
-func (c *Conn) Inventory(ctx context.Context) (device *devices.Device, err error) {
+func (c *Conn) Inventory(ctx context.Context) (device *common.Device, err error) {
 	// initialize inventory object
 	inv := &inventory{conn: c.conn}
 	// TODO: this can soft fail
@@ -72,7 +72,8 @@ func (c *Conn) Inventory(ctx context.Context) (device *devices.Device, err error
 	}
 
 	// initialize device to be populated with inventory
-	device = devices.NewDevice()
+	newDevice := common.NewDevice()
+	device = &newDevice
 
 	// populate device Chassis components attributes
 	err = inv.chassisAttributes(device)
@@ -111,7 +112,7 @@ func (i *inventory) collectSoftwareInventory() ([]*redfish.SoftwareInventory, er
 }
 
 // bmcAttributes collects BMC component attributes
-func (i *inventory) bmcAttributes(device *devices.Device) (err error) {
+func (i *inventory) bmcAttributes(device *common.Device) (err error) {
 	service := i.conn.Service
 	if service == nil {
 		return bmclibErrs.ErrRedfishServiceNil
@@ -134,18 +135,21 @@ func (i *inventory) bmcAttributes(device *devices.Device) (err error) {
 			continue
 		}
 
-		device.BMC = &devices.BMC{
-			ID:          manager.ID,
-			Description: manager.Description,
-			Vendor:      device.Vendor,
-			Model:       device.Model,
-			Status: &devices.Status{
-				Health: string(manager.Status.Health),
-				State:  string(manager.Status.State),
+		device.BMC = &common.BMC{
+			Common: common.Common{
+				Description: manager.Description,
+				Vendor:      device.Vendor,
+				Model:       device.Model,
+				Status: &common.Status{
+					Health: string(manager.Status.Health),
+					State:  string(manager.Status.State),
+				},
+				Firmware: &common.Firmware{
+					Installed: manager.FirmwareVersion,
+				},
 			},
-			Firmware: &devices.Firmware{
-				Installed: manager.FirmwareVersion,
-			},
+
+			ID: manager.ID,
 		}
 
 		// include additional firmware attributes from redfish firmware inventory
@@ -160,7 +164,7 @@ func (i *inventory) bmcAttributes(device *devices.Device) (err error) {
 }
 
 // chassisAttributes populates the device chassis attributes
-func (i *inventory) chassisAttributes(device *devices.Device) (err error) {
+func (i *inventory) chassisAttributes(device *common.Device) (err error) {
 	service := i.conn.Service
 	if service == nil {
 		return bmclibErrs.ErrRedfishServiceNil
@@ -204,7 +208,7 @@ func (i *inventory) chassisAttributes(device *devices.Device) (err error) {
 
 }
 
-func (i *inventory) systemAttributes(device *devices.Device) (err error) {
+func (i *inventory) systemAttributes(device *common.Device) (err error) {
 	service := i.conn.Service
 	if service == nil {
 		return bmclibErrs.ErrRedfishServiceNil
@@ -230,7 +234,7 @@ func (i *inventory) systemAttributes(device *devices.Device) (err error) {
 		}
 
 		// slice of collector methods
-		funcs := []func(sys *redfish.ComputerSystem, device *devices.Device) error{
+		funcs := []func(sys *redfish.ComputerSystem, device *common.Device) error{
 			i.collectCPUs,
 			i.collectDIMMs,
 			i.collectDrives,
@@ -263,7 +267,7 @@ func (i *inventory) systemAttributes(device *devices.Device) (err error) {
 // slug - the component slug constant
 // id - the component ID
 // previous - when true returns previously installed firmware, else returns the current
-func (i *inventory) firmwareAttributes(slug, id string, firmwareObj *devices.Firmware) {
+func (i *inventory) firmwareAttributes(slug, id string, firmwareObj *common.Firmware) {
 	if len(i.softwareInventory) == 0 {
 		return
 	}
@@ -278,14 +282,14 @@ func (i *inventory) firmwareAttributes(slug, id string, firmwareObj *devices.Fir
 			if strings.Contains(inv.ID, id) || strings.EqualFold(slug, inv.Name) {
 
 				if firmwareObj == nil {
-					firmwareObj = &devices.Firmware{}
+					firmwareObj = &common.Firmware{}
 				}
 
 				if firmwareObj.Installed == inv.Version {
 					continue
 				}
 
-				firmwareObj.Previous = append(firmwareObj.Previous, &devices.Firmware{
+				firmwareObj.Previous = append(firmwareObj.Previous, &common.Firmware{
 					Installed:  inv.Version,
 					SoftwareID: inv.SoftwareID,
 				})
@@ -297,7 +301,7 @@ func (i *inventory) firmwareAttributes(slug, id string, firmwareObj *devices.Fir
 			if strings.Contains(inv.ID, id) || strings.EqualFold(slug, inv.Name) {
 
 				if firmwareObj == nil {
-					firmwareObj = &devices.Firmware{}
+					firmwareObj = &common.Firmware{}
 				}
 
 				if firmwareObj.Installed == "" || firmwareObj.Installed != inv.Version {
@@ -314,16 +318,6 @@ func (i *inventory) firmwareAttributes(slug, id string, firmwareObj *devices.Fir
 func compatibleOdataID(OdataID string, knownOdataIDs []string) bool {
 	for _, url := range knownOdataIDs {
 		if url == OdataID {
-			return true
-		}
-	}
-
-	return false
-}
-
-func stringInSlice(s string, sl []string) bool {
-	for _, elem := range sl {
-		if elem == s {
 			return true
 		}
 	}

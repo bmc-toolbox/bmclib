@@ -3,30 +3,33 @@ package redfish
 import (
 	"strings"
 
-	"github.com/bmc-toolbox/bmclib/devices"
+	"github.com/bmc-toolbox/common"
 	"github.com/stmcginnis/gofish/redfish"
 )
 
 // defines various inventory collection helper methods
 
 // collectEnclosure collects Enclosure information
-func (i *inventory) collectEnclosure(ch *redfish.Chassis, device *devices.Device) (err error) {
+func (i *inventory) collectEnclosure(ch *redfish.Chassis, device *common.Device) (err error) {
 
-	e := &devices.Enclosure{
-		ID:          ch.ID,
-		Description: ch.Description,
-		Vendor:      ch.Manufacturer,
-		Model:       ch.Model,
-		ChassisType: string(ch.ChassisType),
-		Status: &devices.Status{
-			Health: string(ch.Status.Health),
-			State:  string(ch.Status.State),
+	e := &common.Enclosure{
+		Common: common.Common{
+			Description: ch.Description,
+			Vendor:      ch.Manufacturer,
+			Model:       ch.Model,
+			Status: &common.Status{
+				Health: string(ch.Status.Health),
+				State:  string(ch.Status.State),
+			},
+			Firmware: &common.Firmware{},
 		},
-		Firmware: &devices.Firmware{},
+
+		ID:          ch.ID,
+		ChassisType: string(ch.ChassisType),
 	}
 
 	// include additional firmware attributes from redfish firmware inventory
-	i.firmwareAttributes(devices.SlugEnclosure, e.ID, e.Firmware)
+	i.firmwareAttributes(common.SlugEnclosure, e.ID, e.Firmware)
 
 	device.Enclosures = append(device.Enclosures, e)
 
@@ -34,7 +37,7 @@ func (i *inventory) collectEnclosure(ch *redfish.Chassis, device *devices.Device
 }
 
 // collectPSUs collects Power Supply Unit component information
-func (i *inventory) collectPSUs(ch *redfish.Chassis, device *devices.Device) (err error) {
+func (i *inventory) collectPSUs(ch *redfish.Chassis, device *common.Device) (err error) {
 	power, err := ch.Power()
 	if err != nil {
 		return err
@@ -45,24 +48,28 @@ func (i *inventory) collectPSUs(ch *redfish.Chassis, device *devices.Device) (er
 	}
 
 	for _, psu := range power.PowerSupplies {
-		p := &devices.PSU{
+		p := &common.PSU{
+			Common: common.Common{
+				Description: psu.Name,
+				Vendor:      psu.Manufacturer,
+				Model:       psu.Model,
+				Serial:      psu.SerialNumber,
+
+				Status: &common.Status{
+					Health: string(psu.Status.Health),
+					State:  string(psu.Status.State),
+				},
+				Firmware: &common.Firmware{
+					Installed: psu.FirmwareVersion,
+				},
+			},
+
 			ID:                 psu.ID,
-			Description:        psu.Name,
-			Vendor:             psu.Manufacturer,
-			Model:              psu.Model,
-			Serial:             psu.SerialNumber,
 			PowerCapacityWatts: int64(psu.PowerCapacityWatts),
-			Status: &devices.Status{
-				Health: string(psu.Status.Health),
-				State:  string(psu.Status.State),
-			},
-			Firmware: &devices.Firmware{
-				Installed: psu.FirmwareVersion,
-			},
 		}
 
 		// include additional firmware attributes from redfish firmware inventory
-		i.firmwareAttributes(devices.SlugPSU, psu.ID, p.Firmware)
+		i.firmwareAttributes(common.SlugPSU, psu.ID, p.Firmware)
 
 		device.PSUs = append(device.PSUs, p)
 
@@ -71,22 +78,25 @@ func (i *inventory) collectPSUs(ch *redfish.Chassis, device *devices.Device) (er
 }
 
 // collectTPMs collects Trusted Platform Module component information
-func (i *inventory) collectTPMs(sys *redfish.ComputerSystem, device *devices.Device) (err error) {
+func (i *inventory) collectTPMs(sys *redfish.ComputerSystem, device *common.Device) (err error) {
 	for _, module := range sys.TrustedModules {
 
-		tpm := &devices.TPM{
+		tpm := &common.TPM{
+			Common: common.Common{
+				Firmware: &common.Firmware{
+					Installed: module.FirmwareVersion,
+				},
+				Status: &common.Status{
+					State:  string(module.Status.State),
+					Health: string(module.Status.Health),
+				},
+			},
+
 			InterfaceType: string(module.InterfaceType),
-			Firmware: &devices.Firmware{
-				Installed: module.FirmwareVersion,
-			},
-			Status: &devices.Status{
-				State:  string(module.Status.State),
-				Health: string(module.Status.Health),
-			},
 		}
 
 		// include additional firmware attributes from redfish firmware inventory
-		i.firmwareAttributes(devices.SlugTPM, "TPM", tpm.Firmware)
+		i.firmwareAttributes(common.SlugTPM, "TPM", tpm.Firmware)
 
 		device.TPMs = append(device.TPMs, tpm)
 	}
@@ -95,7 +105,7 @@ func (i *inventory) collectTPMs(sys *redfish.ComputerSystem, device *devices.Dev
 }
 
 // collectNICs collects network interface component information
-func (i *inventory) collectNICs(sys *redfish.ComputerSystem, device *devices.Device) (err error) {
+func (i *inventory) collectNICs(sys *redfish.ComputerSystem, device *common.Device) (err error) {
 	// collect network interface information
 	nics, err := sys.NetworkInterfaces()
 	if err != nil {
@@ -116,19 +126,22 @@ func (i *inventory) collectNICs(sys *redfish.ComputerSystem, device *devices.Dev
 			return err
 		}
 
-		n := &devices.NIC{
-			ID:     nic.ID, // "Id": "NIC.Slot.3",
-			Vendor: adapter.Manufacturer,
-			Model:  adapter.Model,
-			Serial: adapter.SerialNumber,
-			Status: &devices.Status{
-				State:  string(nic.Status.State),
-				Health: string(nic.Status.Health),
+		n := &common.NIC{
+			Common: common.Common{
+				Vendor: adapter.Manufacturer,
+				Model:  adapter.Model,
+				Serial: adapter.SerialNumber,
+				Status: &common.Status{
+					State:  string(nic.Status.State),
+					Health: string(nic.Status.Health),
+				},
 			},
+
+			ID: nic.ID, // "Id": "NIC.Slot.3",
 		}
 
 		if len(adapter.Controllers) > 0 {
-			n.Firmware = &devices.Firmware{
+			n.Firmware = &common.Firmware{
 				Installed: adapter.Controllers[0].FirmwarePackageVersion,
 			}
 		}
@@ -147,7 +160,7 @@ func (i *inventory) collectNICs(sys *redfish.ComputerSystem, device *devices.Dev
 		}
 
 		// include additional firmware attributes from redfish firmware inventory
-		i.firmwareAttributes(devices.SlugNIC, n.ID, n.Firmware)
+		i.firmwareAttributes(common.SlugNIC, n.ID, n.Firmware)
 
 		device.NICs = append(device.NICs, n)
 	}
@@ -155,27 +168,29 @@ func (i *inventory) collectNICs(sys *redfish.ComputerSystem, device *devices.Dev
 	return nil
 }
 
-func (i *inventory) collectBIOS(sys *redfish.ComputerSystem, device *devices.Device) (err error) {
+func (i *inventory) collectBIOS(sys *redfish.ComputerSystem, device *common.Device) (err error) {
 	bios, err := sys.Bios()
 	if err != nil {
 		return err
 	}
 
-	device.BIOS = &devices.BIOS{
-		Description: bios.Description,
-		Firmware: &devices.Firmware{
-			Installed: sys.BIOSVersion,
+	device.BIOS = &common.BIOS{
+		Common: common.Common{
+			Description: bios.Description,
+			Firmware: &common.Firmware{
+				Installed: sys.BIOSVersion,
+			},
 		},
 	}
 
 	// include additional firmware attributes from redfish firmware inventory
-	i.firmwareAttributes(devices.SlugBIOS, "BIOS", device.BIOS.Firmware)
+	i.firmwareAttributes(common.SlugBIOS, "BIOS", device.BIOS.Firmware)
 
 	return nil
 }
 
 // collectDrives collects drive component information
-func (i *inventory) collectDrives(sys *redfish.ComputerSystem, device *devices.Device) (err error) {
+func (i *inventory) collectDrives(sys *redfish.ComputerSystem, device *common.Device) (err error) {
 	storage, err := sys.Storage()
 	if err != nil {
 		return err
@@ -192,27 +207,30 @@ func (i *inventory) collectDrives(sys *redfish.ComputerSystem, device *devices.D
 		}
 
 		for _, drive := range drives {
-			d := &devices.Drive{
+			d := &common.Drive{
+				Common: common.Common{
+					ProductName: drive.Model,
+					Description: drive.Description,
+					Serial:      drive.SerialNumber,
+					Vendor:      drive.Manufacturer,
+					Model:       drive.Model,
+					Firmware: &common.Firmware{
+						Installed: drive.Revision,
+					},
+					Status: &common.Status{
+						Health: string(drive.Status.Health),
+						State:  string(drive.Status.State),
+					},
+				},
+
 				ID:                  drive.ID,
-				ProductName:         drive.Model,
 				Type:                string(drive.MediaType),
-				Description:         drive.Description,
-				Serial:              drive.SerialNumber,
 				StorageController:   member.ID,
-				Vendor:              drive.Manufacturer,
-				Model:               drive.Model,
 				Protocol:            string(drive.Protocol),
 				CapacityBytes:       drive.CapacityBytes,
 				CapableSpeedGbps:    int64(drive.CapableSpeedGbs),
 				NegotiatedSpeedGbps: int64(drive.NegotiatedSpeedGbs),
 				BlockSizeBytes:      int64(drive.BlockSizeBytes),
-				Firmware: &devices.Firmware{
-					Installed: drive.Revision,
-				},
-				Status: &devices.Status{
-					Health: string(drive.Status.Health),
-					State:  string(drive.Status.State),
-				},
 			}
 
 			// include additional firmware attributes from redfish firmware inventory
@@ -228,7 +246,7 @@ func (i *inventory) collectDrives(sys *redfish.ComputerSystem, device *devices.D
 }
 
 // collectStorageControllers populates the device with Storage controller component attributes
-func (i *inventory) collectStorageControllers(sys *redfish.ComputerSystem, device *devices.Device) (err error) {
+func (i *inventory) collectStorageControllers(sys *redfish.ComputerSystem, device *common.Device) (err error) {
 	storage, err := sys.Storage()
 	if err != nil {
 		return err
@@ -237,20 +255,23 @@ func (i *inventory) collectStorageControllers(sys *redfish.ComputerSystem, devic
 	for _, member := range storage {
 		for _, controller := range member.StorageControllers {
 
-			c := &devices.StorageController{
-				ID:          controller.ID,
-				Description: controller.Name,
-				Vendor:      controller.Manufacturer,
-				Model:       controller.PartNumber,
-				Serial:      controller.SerialNumber,
-				SpeedGbps:   int64(controller.SpeedGbps),
-				Status: &devices.Status{
-					Health: string(controller.Status.Health),
-					State:  string(controller.Status.State),
+			c := &common.StorageController{
+				Common: common.Common{
+					Description: controller.Name,
+					Vendor:      controller.Manufacturer,
+					Model:       controller.PartNumber,
+					Serial:      controller.SerialNumber,
+					Status: &common.Status{
+						Health: string(controller.Status.Health),
+						State:  string(controller.Status.State),
+					},
+					Firmware: &common.Firmware{
+						Installed: controller.FirmwareVersion,
+					},
 				},
-				Firmware: &devices.Firmware{
-					Installed: controller.FirmwareVersion,
-				},
+
+				ID:        controller.ID,
+				SpeedGbps: int64(controller.SpeedGbps),
 			}
 
 			// include additional firmware attributes from redfish firmware inventory
@@ -265,7 +286,7 @@ func (i *inventory) collectStorageControllers(sys *redfish.ComputerSystem, devic
 }
 
 // collectCPUs populates the device with CPU component attributes
-func (i *inventory) collectCPUs(sys *redfish.ComputerSystem, device *devices.Device) (err error) {
+func (i *inventory) collectCPUs(sys *redfish.ComputerSystem, device *common.Device) (err error) {
 	procs, err := sys.Processors()
 	if err != nil {
 		return err
@@ -277,24 +298,26 @@ func (i *inventory) collectCPUs(sys *redfish.ComputerSystem, device *devices.Dev
 			continue
 		}
 
-		device.CPUs = append(device.CPUs, &devices.CPU{
+		device.CPUs = append(device.CPUs, &common.CPU{
+			Common: common.Common{
+				Description: proc.Description,
+				Vendor:      proc.Manufacturer,
+				Model:       proc.Model,
+				Serial:      "",
+				Status: &common.Status{
+					Health: string(proc.Status.Health),
+					State:  string(proc.Status.State),
+				},
+				Firmware: &common.Firmware{
+					Installed: proc.ProcessorID.MicrocodeInfo,
+				},
+			},
 			ID:           proc.ID,
-			Description:  proc.Description,
-			Vendor:       proc.Manufacturer,
-			Model:        proc.Model,
 			Architecture: string(proc.ProcessorArchitecture),
-			Serial:       "",
 			Slot:         proc.Socket,
 			ClockSpeedHz: int64(proc.MaxSpeedMHz),
 			Cores:        proc.TotalCores,
 			Threads:      proc.TotalThreads,
-			Status: &devices.Status{
-				Health: string(proc.Status.Health),
-				State:  string(proc.Status.State),
-			},
-			Firmware: &devices.Firmware{
-				Installed: proc.ProcessorID.MicrocodeInfo,
-			},
 		})
 	}
 
@@ -302,28 +325,31 @@ func (i *inventory) collectCPUs(sys *redfish.ComputerSystem, device *devices.Dev
 }
 
 // collectDIMMs populates the device with memory component attributes
-func (i *inventory) collectDIMMs(sys *redfish.ComputerSystem, device *devices.Device) (err error) {
+func (i *inventory) collectDIMMs(sys *redfish.ComputerSystem, device *common.Device) (err error) {
 	dimms, err := sys.Memory()
 	if err != nil {
 		return err
 	}
 
 	for _, dimm := range dimms {
-		device.Memory = append(device.Memory, &devices.Memory{
-			Description:  dimm.Description,
+		device.Memory = append(device.Memory, &common.Memory{
+			Common: common.Common{
+				Description: dimm.Description,
+				Vendor:      dimm.Manufacturer,
+				Model:       "",
+				Serial:      dimm.SerialNumber,
+				Status: &common.Status{
+					Health: string(dimm.Status.Health),
+					State:  string(dimm.Status.State),
+				},
+			},
+
 			Slot:         dimm.ID,
 			Type:         string(dimm.MemoryType),
-			Vendor:       dimm.Manufacturer,
-			Model:        "",
-			Serial:       dimm.SerialNumber,
 			SizeBytes:    int64(dimm.VolatileSizeMiB),
 			FormFactor:   "",
 			PartNumber:   dimm.PartNumber,
 			ClockSpeedHz: int64(dimm.OperatingSpeedMhz),
-			Status: &devices.Status{
-				Health: string(dimm.Status.Health),
-				State:  string(dimm.Status.State),
-			},
 		})
 	}
 
@@ -331,21 +357,23 @@ func (i *inventory) collectDIMMs(sys *redfish.ComputerSystem, device *devices.De
 }
 
 // collecCPLDs populates the device with CPLD component attributes
-func (i *inventory) collectCPLDs(device *devices.Device) (err error) {
+func (i *inventory) collectCPLDs(device *common.Device) (err error) {
 
-	cpld := &devices.CPLD{
-		Vendor:   device.Vendor,
-		Model:    device.Model,
-		Firmware: &devices.Firmware{Metadata: make(map[string]string)},
+	cpld := &common.CPLD{
+		Common: common.Common{
+			Vendor:   device.Vendor,
+			Model:    device.Model,
+			Firmware: &common.Firmware{Metadata: make(map[string]string)},
+		},
 	}
 
-	i.firmwareAttributes(devices.SlugCPLD, "", cpld.Firmware)
+	i.firmwareAttributes(common.SlugCPLD, "", cpld.Firmware)
 	name, exists := cpld.Firmware.Metadata["name"]
 	if exists {
 		cpld.Description = name
 	}
 
-	device.CPLDs = []*devices.CPLD{cpld}
+	device.CPLDs = []*common.CPLD{cpld}
 
 	return nil
 }
