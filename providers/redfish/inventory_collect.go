@@ -346,10 +346,10 @@ func (i *inventory) collectDIMMs(sys *redfish.ComputerSystem, device *common.Dev
 
 			Slot:         dimm.ID,
 			Type:         string(dimm.MemoryType),
-			SizeBytes:    int64(dimm.VolatileSizeMiB),
+			SizeBytes:    int64(dimm.VolatileSizeMiB * 1024 * 1024),
 			FormFactor:   "",
 			PartNumber:   dimm.PartNumber,
-			ClockSpeedHz: int64(dimm.OperatingSpeedMhz),
+			ClockSpeedHz: int64(dimm.OperatingSpeedMhz * 1000 * 1000),
 		})
 	}
 
