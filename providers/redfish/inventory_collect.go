@@ -315,7 +315,7 @@ func (i *inventory) collectCPUs(sys *redfish.ComputerSystem, device *common.Devi
 			ID:           proc.ID,
 			Architecture: string(proc.ProcessorArchitecture),
 			Slot:         proc.Socket,
-			ClockSpeedHz: int64(proc.MaxSpeedMHz),
+			ClockSpeedHz: int64(proc.MaxSpeedMHz * 1000 * 1000),
 			Cores:        proc.TotalCores,
 			Threads:      proc.TotalThreads,
 		})
