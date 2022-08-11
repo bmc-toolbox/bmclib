@@ -4,6 +4,7 @@
     #enable:
     #  - fieldalignment
     check-shadowing: true
+    auto-fix: true
     settings:
       printf:
         funcs:
@@ -47,8 +48,6 @@
     extra-rules: true
     auto-fix: true
   wsl:
-    auto-fix: true
-  govet:
     auto-fix: true
   stylecheck:
     auto-fix: true

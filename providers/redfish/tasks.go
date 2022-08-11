@@ -6,20 +6,24 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bmc-toolbox/bmclib/devices"
 	bmcliberrs "github.com/bmc-toolbox/bmclib/errors"
 	"github.com/pkg/errors"
 
 	rfcommon "github.com/stmcginnis/gofish/common"
 	rf "github.com/stmcginnis/gofish/redfish"
+
+	"github.com/bmc-toolbox/common"
 )
 
 // Dell specific redfish methods
 
 var (
 	componentSlugDellJobName = map[string]string{
-		devices.SlugBIOS: "Firmware Update: BIOS",
-		devices.SlugBMC:  "Firmware Update: iDRAC with Lifecycle Controller",
+		common.SlugBIOS:              "Firmware Update: BIOS",
+		common.SlugBMC:               "Firmware Update: iDRAC with Lifecycle Controller",
+		common.SlugNIC:               "Firmware Update: Network",
+		common.SlugDrive:             "Firmware Update: Serial ATA",
+		common.SlugStorageController: "Firmware Update: SAS RAID",
 	}
 )
 
@@ -57,7 +61,6 @@ func (c *Conn) getDellFirmwareInstallTaskScheduled(slug string) (*rf.Task, error
 
 	// filter to match the task Name based on the component slug
 	for _, task := range tasks {
-		// Firmware Update: BIOS
 		if task.Name == componentSlugDellJobName[strings.ToUpper(slug)] {
 			return task, nil
 		}
@@ -75,7 +78,6 @@ func (c *Conn) dellPurgeScheduledFirmwareInstallJob(slug string) error {
 
 	// filter to match the task Name based on the component slug
 	for _, task := range tasks {
-		// Firmware Update: BIOS
 		if task.Name == componentSlugDellJobName[strings.ToUpper(slug)] {
 			err = c.dellPurgeJob(task.ID)
 			if err != nil {
