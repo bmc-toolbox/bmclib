@@ -341,7 +341,7 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 
 	// ideally ilo5 ilo4 should be split up into its own device
 	// instead of depending on HardwareType.
-	if i.HardwareType() == "ilo5" {
+	if i.HardwareType() == Ilo5 {
 		timezones = TimezonesIlo5
 	} else {
 		timezones = TimezonesIlo4
