@@ -100,6 +100,8 @@ func (i *Ilo) cmpAccessSettings(cfg *cfgresources.Network) (AccessSettings, bool
 		serialEnable = 2
 	}
 
+	// SNMP status is in cfg.SNMPEnable as a boolean
+
 	currentConfig, err := i.queryAccessSettings()
 	if err != nil {
 		return AccessSettings{}, false, err
@@ -135,6 +137,18 @@ func (i *Ilo) cmpAccessSettings(cfg *cfgresources.Network) (AccessSettings, bool
 		if currentConfig.VirtualMediaPort != cfg.KVMMediaPort {
 			return false
 		}
+		// Comparing SNMP settings for iLO 4 and iLO5
+		switch i.HardwareType() {
+		case "ilo4":
+			if (cfg.SNMPEnable && *currentConfig.SNMPSettings.SnmpExternalDisableIlo4 == 1) || (!cfg.SNMPEnable && *currentConfig.SNMPSettings.SnmpExternalDisableIlo4 == 0) {
+				return false
+			}
+		case "ilo5":
+			if (cfg.SNMPEnable && *currentConfig.SNMPSettings.SnmpExternalEnabledIlo5 == 0) ||
+				(!cfg.SNMPEnable && *currentConfig.SNMPSettings.SnmpExternalEnabledIlo5 == 1) {
+				return false
+			}
+		}
 
 		return true
 	}
@@ -146,6 +160,28 @@ func (i *Ilo) cmpAccessSettings(cfg *cfgresources.Network) (AccessSettings, bool
 	currentConfig.IpmiPort = cfg.IpmiPort
 	currentConfig.SSHStatus = sshEnable
 	currentConfig.SSHPort = cfg.SSHPort
+	snmpSettings := new(SNMPSettings)
+	snmpSettings.SnmpPort = 161 // TODO: Change this to something user-configurable
+	snmpSettings.TrapPort = 162 // TODO: Change this to something user-configurable
+	switch i.HardwareType() {
+	case "ilo4":
+		snmpDisable := new(int)
+		if cfg.SNMPEnable {
+			*snmpDisable = 0
+		} else {
+			*snmpDisable = 1
+		}
+		snmpSettings.SnmpExternalDisableIlo4 = snmpDisable
+	case "ilo5":
+		snmpEnabled := new(int)
+		if cfg.SNMPEnable {
+			*snmpEnabled = 1
+		} else {
+			*snmpEnabled = 0
+		}
+		snmpSettings.SnmpExternalEnabledIlo5 = snmpEnabled
+	}
+	currentConfig.SNMPSettings = *snmpSettings
 	currentConfig.RemoteConsolePort = cfg.KVMConsolePort
 	currentConfig.VirtualMediaPort = cfg.KVMMediaPort
 	currentConfig.IpmiLanStatus = ipmiEnable

@@ -184,6 +184,7 @@ type Network struct {
 	DNSFromDHCP    bool   `yaml:"dnsFromDhcp"`
 	SSHEnable      bool   `yaml:"sshEnable"`
 	SSHPort        int    `yaml:"sshPort"`
+	SNMPEnable     bool   `yaml:"snmpEnable"`
 	SolEnable      bool   `yaml:"solEnable"` // SerialOverLan
 	IpmiEnable     bool   `yaml:"ipmiEnable"`
 	DhcpEnable     bool   `yaml:"dhcpEnable"`
