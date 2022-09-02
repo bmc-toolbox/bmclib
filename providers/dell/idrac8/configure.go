@@ -692,6 +692,20 @@ func (i *IDrac8) applyTimezoneParam(timezone string) {
 	i.log.V(1).Info("Timezone param applied.", "IP", i.ip, "HardwareType", i.HardwareType())
 }
 
+func (i *IDrac8) setSnmp(cfg cfgresources.Network) error {
+	enableSNMP := 1
+	if !cfg.SNMPEnable {
+		enableSNMP = 0
+	}
+
+	sshSnmpCommand := fmt.Sprint("racadm set iDRAC.SNMP.AgentEnable ", enableSNMP)
+
+	_, err := i.sshClient.Run(sshSnmpCommand)
+
+	return err
+
+}
+
 // Network method implements the Configure interface
 // applies various network parameters.
 func (i *IDrac8) Network(cfg *cfgresources.Network) (reset bool, err error) {
@@ -739,7 +753,29 @@ func (i *IDrac8) Network(cfg *cfgresources.Network) (reset bool, err error) {
 		return reset, err
 	}
 
-	i.log.V(1).Info("Network config parameters applied.", "IP", i.ip, "HardwareType", i.HardwareType())
+	i.log.V(1).Info("Network config parameters applied.",
+		"IP", i.ip,
+		"HardwareType", i.HardwareType())
+
+	// SNMP section
+	// Due to the hacky nature of reverse engineered APIs, I am using SSH here, as I was not able to
+	// get the HTTP version working.
+
+	err = i.setSnmp(*cfg)
+	if err != nil {
+		msg := "Unable to set SNMP settings"
+		i.log.V(1).Error(err, msg,
+			"step", "SNMPEnable",
+			"IP", i.ip,
+			"HardwareType", i.HardwareType(),
+		)
+		return reset, err
+	} else {
+		i.log.V(1).Info("SNMP parameters applied.",
+			"IP", i.ip,
+			"HardwareType", i.HardwareType())
+	}
+
 	return reset, err
 }
 
