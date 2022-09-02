@@ -552,6 +552,20 @@ func (i *IDrac9) Syslog(cfg *cfgresources.Syslog) (err error) {
 	return err
 }
 
+func (i *IDrac9) setSnmp(cfg cfgresources.Network) error {
+	enableSNMP := 1
+	if !cfg.SNMPEnable {
+		enableSNMP = 0
+	}
+
+	sshSnmpCommand := fmt.Sprint("racadm set iDRAC.SNMP.AgentEnable ", enableSNMP)
+
+	_, err := i.sshClient.Run(sshSnmpCommand)
+
+	return err
+
+}
+
 // Network method implements the Configure interface
 // applies various network parameters.
 func (i *IDrac9) Network(cfg *cfgresources.Network) (reset bool, err error) {
@@ -636,18 +650,13 @@ func (i *IDrac9) Network(cfg *cfgresources.Network) (reset bool, err error) {
 		)
 	}
 
-	i.log.V(1).Info("Network config parameters applied.", "IP", i.ip, "HardwareType", i.HardwareType())
+	i.log.V(1).Info("Network config parameters applied.",
+		"IP", i.ip,
+		"HardwareType", i.HardwareType())
 
 	// SNMP section
 
-	enableSNMP := 1
-	if !cfg.SNMPEnable {
-		enableSNMP = 0
-	}
-
-	sshSnmpCommand := fmt.Sprint("racadm set iDRAC.SNMP.AgentEnable ", enableSNMP)
-
-	_, err = i.sshClient.Run(sshSnmpCommand)
+	err = i.setSnmp(*cfg)
 	if err != nil {
 		msg := "Unable to set SNMP settings"
 		i.log.V(1).Error(err, msg,
@@ -657,10 +666,13 @@ func (i *IDrac9) Network(cfg *cfgresources.Network) (reset bool, err error) {
 		)
 		return reset, err
 	} else {
-		i.log.V(1).Info("SNMP parameters applied.", "IP", i.ip, "HardwareType", i.HardwareType())
+		i.log.V(1).Info("SNMP parameters applied.", "IP",
+			i.ip, "HardwareType",
+			i.HardwareType())
 	}
 
 	return reset, err
+
 }
 
 // SetLicense implements the Configure interface.
