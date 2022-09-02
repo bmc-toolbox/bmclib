@@ -750,7 +750,7 @@ func (i *IDrac8) Network(cfg *cfgresources.Network) (reset bool, err error) {
 		params["EnableSNMP"] = 0
 	}
 
-	sshSnmpCommand := fmt.Sprintf("racadm set iDRAC.SNMP.AgentEnable %d", params["EnableSNMP"])
+	sshSnmpCommand := fmt.Sprint("racadm set iDRAC.SNMP.AgentEnable ", params["EnableSNMP"])
 
 	_, err = i.sshClient.Run(sshSnmpCommand)
 	if err != nil {
