@@ -637,6 +637,29 @@ func (i *IDrac9) Network(cfg *cfgresources.Network) (reset bool, err error) {
 	}
 
 	i.log.V(1).Info("Network config parameters applied.", "IP", i.ip, "HardwareType", i.HardwareType())
+
+	// SNMP section
+
+	enableSNMP := 1
+	if !cfg.SNMPEnable {
+		enableSNMP = 0
+	}
+
+	sshSnmpCommand := fmt.Sprintf("racadm set iDRAC.SNMP.AgentEnable %d", enableSNMP)
+
+	_, err = i.sshClient.Run(sshSnmpCommand)
+	if err != nil {
+		msg := fmt.Sprintf("Unable to set SNMP settings")
+		i.log.V(1).Error(err, msg,
+			"step", "SNMPEnable",
+			"IP", i.ip,
+			"HardwareType", i.HardwareType(),
+		)
+		return reset, err
+	} else {
+		i.log.V(1).Info("SNMP parameters applied.", "IP", i.ip, "HardwareType", i.HardwareType())
+	}
+
 	return reset, err
 }
 

@@ -702,6 +702,7 @@ func (i *IDrac8) Network(cfg *cfgresources.Network) (reset bool, err error) {
 		"EnableSerialOverLan":     1,
 		"EnableSerialRedirection": 1,
 		"EnableIpmiOverLan":       1,
+		"EnableSNMP":              1,
 	}
 
 	if !cfg.DNSFromDHCP {
@@ -740,6 +741,30 @@ func (i *IDrac8) Network(cfg *cfgresources.Network) (reset bool, err error) {
 	}
 
 	i.log.V(1).Info("Network config parameters applied.", "IP", i.ip, "HardwareType", i.HardwareType())
+
+	// SNMP section
+	// Due to the hacky nature of reverse engineered APIs, I am using SSH here, as I was not able to
+	// get the HTTP version working.
+
+	if !cfg.SNMPEnable {
+		params["EnableSNMP"] = 0
+	}
+
+	sshSnmpCommand := fmt.Sprintf("racadm set iDRAC.SNMP.AgentEnable %d", params["EnableSNMP"])
+
+	_, err = i.sshClient.Run(sshSnmpCommand)
+	if err != nil {
+		msg := fmt.Sprintf("Unable to set SNMP settings")
+		i.log.V(1).Error(err, msg,
+			"step", "SNMPEnable",
+			"IP", i.ip,
+			"HardwareType", i.HardwareType(),
+		)
+		return reset, err
+	} else {
+		i.log.V(1).Info("SNMP parameters applied.", "IP", i.ip, "HardwareType", i.HardwareType())
+	}
+
 	return reset, err
 }
 
