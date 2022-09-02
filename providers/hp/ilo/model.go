@@ -138,41 +138,42 @@ type certImport struct {
 // AccessSettings declares BMC network service ports
 // Updating these params requires the BMC to be reset.
 type AccessSettings struct {
-	SSHStatus                    int           `json:"ssh_status"`
-	SSHPort                      int           `json:"ssh_port"`
-	HTTPPort                     int           `json:"http_port"`
-	HTTPSPort                    int           `json:"https_port"`
-	RemoteConsolePort            int           `json:"remote_console_port"`
-	VirtualMediaPort             int           `json:"virtual_media_port"`
-	IpmiLanStatus                int           `json:"ipmi_lan_status"`
-	IpmiPort                     int           `json:"ipmi_port"`
-	SNMPSettings                 *SNMPSettings `json:"snmp_settings"`
-	SessionTimeout               int           `json:"session_timeout"`
-	IloFunctEnabled              int           `json:"ilo_funct_enabled"`
-	IloFunctRequired             int           `json:"ilo_funct_required"`
-	RbsuEnabled                  int           `json:"rbsu_enabled"`
-	F8LoginRequired              int           `json:"f8_login_required"`
-	RbsuPostIP                   int           `json:"rbsu_post_ip"`
-	SerialCliStatus              int           `json:"serial_cli_status"`
-	SystemNoUart                 int           `json:"system_no_uart"`
-	SerialCliSpeed               int           `json:"serial_cli_speed"`
-	VspLogging                   int           `json:"vsp_logging"`
-	AuthenticationFailureLogging int           `json:"authentication_failure_logging"`
-	MinPassword                  int           `json:"min_password"`
-	AuthFailureDelayTime         int           `json:"auth_failure_delay_time"`
-	AuthNodelayFailures          int           `json:"auth_nodelay_failures"`
-	ServerName                   string        `json:"server_name"`
-	ServerFqdn                   string        `json:"server_fqdn"`
-	DefaultLang                  string        `json:"default_lang"`
-	SessionKey                   string        `json:"session_key"`
-	Method                       string        `json:"method"`
+	SSHStatus                    int          `json:"ssh_status"`
+	SSHPort                      int          `json:"ssh_port"`
+	HTTPPort                     int          `json:"http_port"`
+	HTTPSPort                    int          `json:"https_port"`
+	RemoteConsolePort            int          `json:"remote_console_port"`
+	VirtualMediaPort             int          `json:"virtual_media_port"`
+	IpmiLanStatus                int          `json:"ipmi_lan_status"`
+	IpmiPort                     int          `json:"ipmi_port"`
+	SNMPSettings                 SNMPSettings `json:"snmp_settings"`
+	SessionTimeout               int          `json:"session_timeout"`
+	IloFunctEnabled              int          `json:"ilo_funct_enabled"`
+	IloFunctRequired             int          `json:"ilo_funct_required"`
+	RbsuEnabled                  int          `json:"rbsu_enabled"`
+	F8LoginRequired              int          `json:"f8_login_required"`
+	RbsuPostIP                   int          `json:"rbsu_post_ip"`
+	SerialCliStatus              int          `json:"serial_cli_status"`
+	SystemNoUart                 int          `json:"system_no_uart"`
+	SerialCliSpeed               int          `json:"serial_cli_speed"`
+	VspLogging                   int          `json:"vsp_logging"`
+	AuthenticationFailureLogging int          `json:"authentication_failure_logging"`
+	MinPassword                  int          `json:"min_password"`
+	AuthFailureDelayTime         int          `json:"auth_failure_delay_time"`
+	AuthNodelayFailures          int          `json:"auth_nodelay_failures"`
+	ServerName                   string       `json:"server_name"`
+	ServerFqdn                   string       `json:"server_fqdn"`
+	DefaultLang                  string       `json:"default_lang"`
+	SessionKey                   string       `json:"session_key"`
+	Method                       string       `json:"method"`
 }
 
 // SNMPSettings declares BMC SNMP params
 type SNMPSettings struct {
-	SnmpPort            int `json:"snmp_port"`
-	TrapPort            int `json:"trap_port"`
-	SnmpExternalDisable int `json:"snmp_external_disable"`
+	SnmpPort                int  `json:"snmp_port"`
+	TrapPort                int  `json:"trap_port"`
+	SnmpExternalDisableIlo4 *int `json:"snmp_external_disable,omitempty"` // this is iLO4
+	SnmpExternalEnabledIlo5 *int `json:"snmp_external_enabled,omitempty"` // this is iLO5
 }
 
 // NetworkIPv4 sets IPv4 network settings

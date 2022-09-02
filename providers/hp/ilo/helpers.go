@@ -79,6 +79,50 @@ func (i *Ilo) cmpNetworkIPv4Settings(cfg *cfgresources.Network) (NetworkIPv4, bo
 	return currentConfig, true, nil
 }
 
+func setSnmpSettings(hardwareType string, snmpEnable bool) *SNMPSettings {
+	snmpSettings := new(SNMPSettings)
+	snmpSettings.SnmpPort = 161 // TODO: Change this to something user-configurable
+	snmpSettings.TrapPort = 162 // TODO: Change this to something user-configurable
+
+	switch hardwareType {
+	case Ilo4:
+		snmpDisable := new(int)
+		if snmpEnable {
+			*snmpDisable = 0
+		} else {
+			*snmpDisable = 1
+		}
+		snmpSettings.SnmpExternalDisableIlo4 = snmpDisable
+	case Ilo5:
+		snmpEnabled := new(int)
+		if snmpEnable {
+			*snmpEnabled = 1
+		} else {
+			*snmpEnabled = 0
+		}
+		snmpSettings.SnmpExternalEnabledIlo5 = snmpEnabled
+	}
+
+	return snmpSettings
+
+}
+
+func isUpdateRequiredSNMPIlo4(snmpEnable bool, bmcSettings SNMPSettings) bool {
+	if (snmpEnable && *bmcSettings.SnmpExternalDisableIlo4 == 1) ||
+		(!snmpEnable && *bmcSettings.SnmpExternalDisableIlo4 == 0) {
+		return true // means the current settings applied on the BMC and the declared configuration are different
+	}
+	return false // settings are equal, update not required
+}
+
+func isUpdateRequiredSNMPIlo5(snmpEnable bool, bmcSettings SNMPSettings) bool {
+	if (snmpEnable && *bmcSettings.SnmpExternalEnabledIlo5 == 0) ||
+		(!snmpEnable && *bmcSettings.SnmpExternalEnabledIlo5 == 1) {
+		return true // means the current settings applied on the BMC and the declared configuration are different
+	}
+	return false //settings are equal, update not required
+}
+
 // compares the current AccessSettings struct field values
 // with the given Network configuration resource,
 // returning an updated AccessSettings struct if an update is required.
@@ -99,6 +143,8 @@ func (i *Ilo) cmpAccessSettings(cfg *cfgresources.Network) (AccessSettings, bool
 		// enable with Auth
 		serialEnable = 2
 	}
+
+	// SNMP status is in cfg.SNMPEnable as a boolean
 
 	currentConfig, err := i.queryAccessSettings()
 	if err != nil {
@@ -135,6 +181,17 @@ func (i *Ilo) cmpAccessSettings(cfg *cfgresources.Network) (AccessSettings, bool
 		if currentConfig.VirtualMediaPort != cfg.KVMMediaPort {
 			return false
 		}
+		// Comparing SNMP settings for iLO 4 and iLO5
+		switch i.HardwareType() {
+		case Ilo4:
+			if isUpdateRequiredSNMPIlo4(cfg.SNMPEnable, currentConfig.SNMPSettings) {
+				return false
+			}
+		case Ilo5:
+			if isUpdateRequiredSNMPIlo5(cfg.SNMPEnable, currentConfig.SNMPSettings) {
+				return false
+			}
+		}
 
 		return true
 	}
@@ -146,6 +203,7 @@ func (i *Ilo) cmpAccessSettings(cfg *cfgresources.Network) (AccessSettings, bool
 	currentConfig.IpmiPort = cfg.IpmiPort
 	currentConfig.SSHStatus = sshEnable
 	currentConfig.SSHPort = cfg.SSHPort
+	currentConfig.SNMPSettings = *setSnmpSettings(i.HardwareType(), cfg.SNMPEnable)
 	currentConfig.RemoteConsolePort = cfg.KVMConsolePort
 	currentConfig.VirtualMediaPort = cfg.KVMMediaPort
 	currentConfig.IpmiLanStatus = ipmiEnable
