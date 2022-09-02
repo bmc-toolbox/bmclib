@@ -649,7 +649,7 @@ func (i *IDrac9) Network(cfg *cfgresources.Network) (reset bool, err error) {
 
 	_, err = i.sshClient.Run(sshSnmpCommand)
 	if err != nil {
-		msg := fmt.Sprintf("Unable to set SNMP settings")
+		msg := "Unable to set SNMP settings"
 		i.log.V(1).Error(err, msg,
 			"step", "SNMPEnable",
 			"IP", i.ip,
