@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
@@ -724,12 +725,29 @@ func (i *Ilo) UploadHTTPSCert(cert []byte, certFileName string, key []byte, keyF
 		SessionKey:      i.sessionKey,
 	}
 
+	endpoint := "json/certificate"
 	payload, err := json.Marshal(certPayload)
 	if err != nil {
 		return false, err
 	}
 
-	endpoint := "json/certificate"
+	type RedfishCertificatePayload struct {
+		Certificate string `json:"Certificate"`
+	}
+	iloVersion, _ := i.Version()
+	if iloVersion != "" {
+		if iloVersionFloat, err := strconv.ParseFloat(iloVersion, 64); err == nil {
+			if iloVersionFloat >= 2.55 {
+				endpoint = "redfish/v1/Managers/1/SecurityService/HttpsCert/Actions/HpeHttpsCert.ImportCertificate/"
+				redfishCertPayload := RedfishCertificatePayload{string(cert)}
+				payload, err = json.Marshal(redfishCertPayload)
+				if err != nil {
+					return false, err
+				}
+			}
+		}
+	}
+
 	statusCode, _, err := i.post(endpoint, payload)
 	if err != nil {
 		return false, err
