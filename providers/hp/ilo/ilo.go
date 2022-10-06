@@ -201,6 +201,9 @@ func (i *Ilo) post(endpoint string, data []byte) (statusCode int, body []byte, e
 	for _, cookie := range i.httpClient.Jar.Cookies(u) {
 		if cookie.Name == "sessionKey" {
 			req.AddCookie(cookie)
+			if strings.Contains(u.String(), "redfish") {
+				req.Header.Add("X-Auth-Token", cookie.Value)
+			}
 		}
 	}
 
