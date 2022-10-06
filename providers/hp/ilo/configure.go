@@ -718,18 +718,17 @@ func (i *Ilo) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, error
 // UploadHTTPSCert implements the Configure interface.
 // return true if the bmc requires a reset.
 func (i *Ilo) UploadHTTPSCert(cert []byte, certFileName string, key []byte, keyFileName string) (bool, error) {
-	certPayload := &certImport{
-		Method:          "import_certificate",
-		CertificateData: string(cert),
-		SessionKey:      i.sessionKey,
+	type RedfishCertificatePayload struct {
+		Certificate string `json:"Certificate"`
 	}
+	endpoint := "redfish/v1/Managers/1/SecurityService/HttpsCert/Actions/HpeHttpsCert.ImportCertificate/"
+	certPayload := RedfishCertificatePayload{string(cert)}
 
 	payload, err := json.Marshal(certPayload)
 	if err != nil {
 		return false, err
 	}
 
-	endpoint := "json/certificate"
 	statusCode, _, err := i.post(endpoint, payload)
 	if err != nil {
 		return false, err
