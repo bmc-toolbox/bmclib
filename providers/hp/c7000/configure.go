@@ -4,6 +4,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
@@ -542,13 +543,18 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 		}
 
 		payload := AddUser{Username: username, Password: password}
-		statusCode, _, err := c.postXML(payload)
+		statusCode, body, err := c.postXML(payload)
 		if err != nil {
 			allErrors += fmt.Sprintf("POST request to add user %s failed with error: %s", cfg.Name, err.Error())
 			continue
 		}
 
-		if statusCode == 400 {
+		userExists := false
+		if strings.Contains(string(body), "User already exists") || strings.Contains(string(body), "The string is reserved") {
+			userExists = true
+		}
+
+		if userExists {
 			c.log.V(1).Info("User already exists, setting password.",
 				"step", "applyUserParams",
 				"user", cfg.Name,
@@ -575,8 +581,7 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 				continue
 			}
 		}
-
-		if statusCode != 200 {
+		if statusCode != 200 && !userExists {
 			allErrors += fmt.Sprintf("Received a %d status code from the POST request to add user %s.", statusCode, cfg.Name)
 			continue
 		}
