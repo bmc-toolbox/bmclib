@@ -4,6 +4,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
@@ -549,7 +550,7 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 			continue
 		}
 
-		userExists := false
+		var userExists bool
 		if strings.Contains(string(body), "User already exists") || strings.Contains(string(body), "The string is reserved") {
 			userExists = true
 		}
@@ -581,7 +582,7 @@ func (c *C7000) User(users []*cfgresources.User) (err error) {
 				continue
 			}
 		}
-		if statusCode != 200 && !userExists {
+		if statusCode != http.StatusOK && !userExists {
 			allErrors += fmt.Sprintf("Received a %d status code from the POST request to add user %s.", statusCode, cfg.Name)
 			continue
 		}
