@@ -97,7 +97,7 @@ func (p *Probe) hpIlo(ctx context.Context, log logr.Logger) (bmcConnection inter
 }
 
 func (p *Probe) hpC7000(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {
-	ctx, cancel := context.WithTimeout(ctx, time.Duration(time.Second*60))
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(time.Second*120))
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("https://%s/xmldata?item=all", p.host), nil)
