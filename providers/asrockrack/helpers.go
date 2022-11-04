@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"net/http/httputil"
@@ -105,8 +104,8 @@ type preserveConfig struct {
 }
 
 // Firmware flash progress
-//{ "id": 1, "action": "Flashing...", "progress": "12% done         ", "state": 0 }
-//{ "id": 1, "action": "Flashing...", "progress": "100% done", "state": 0 }
+// { "id": 1, "action": "Flashing...", "progress": "12% done         ", "state": 0 }
+// { "id": 1, "action": "Flashing...", "progress": "100% done", "state": 0 }
 type upgradeProgress struct {
 	ID       int    `json:"id,omitempty"`
 	Action   string `json:"action,omitempty"`
@@ -441,7 +440,7 @@ func (a *ASRockRack) sensors(ctx context.Context) ([]*sensor, error) {
 }
 
 // Set the BIOS upgrade configuration
-//  - preserve current configuration
+//   - preserve current configuration
 func (a *ASRockRack) biosUpgradeConfiguration(ctx context.Context) error {
 	endpoint := "api/asrr/maintenance/BIOS/configuration"
 
@@ -463,12 +462,7 @@ func (a *ASRockRack) biosUpgradeConfiguration(ctx context.Context) error {
 	}
 
 	f := &firmwareInfo{}
-	err = json.Unmarshal(resp, f)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return json.Unmarshal(resp, f)
 }
 
 // Run BIOS upgrade
@@ -493,12 +487,7 @@ func (a *ASRockRack) upgradeBIOS(ctx context.Context) error {
 	}
 
 	f := &firmwareInfo{}
-	err = json.Unmarshal(resp, f)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return json.Unmarshal(resp, f)
 }
 
 // Returns the chassis status object which includes the power state
@@ -560,10 +549,6 @@ func (a *ASRockRack) httpsLogout(ctx context.Context) error {
 		return fmt.Errorf("Error logging out: " + err.Error())
 	}
 
-	if err != nil {
-		return fmt.Errorf("Error logging out: " + err.Error())
-	}
-
 	if statusCode != http.StatusOK {
 		return fmt.Errorf("non 200 response at https logout: %d", statusCode)
 	}
@@ -614,7 +599,7 @@ func (a *ASRockRack) queryHTTPS(ctx context.Context, endpoint, method string, pa
 		a.log.V(3).Info("trace", "responseDump", string(respDump))
 	}
 
-	body, err = ioutil.ReadAll(resp.Body)
+	body, err = io.ReadAll(resp.Body)
 	if err != nil {
 		return body, 0, err
 	}
