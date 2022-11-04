@@ -3,6 +3,7 @@ package redfish
 import (
 	"context"
 
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/bmc-toolbox/bmclib/v2/internal"
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish/redfish"
@@ -19,6 +20,11 @@ var (
 
 // UserRead returns a list of enabled user accounts
 func (c *Conn) UserRead(ctx context.Context) (users []map[string]string, err error) {
+	_, err = c.conn.GetSession()
+	if err != nil {
+		return nil, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
+	}
+
 	service, err := c.conn.Service.AccountService()
 	if err != nil {
 		return nil, err
@@ -48,6 +54,11 @@ func (c *Conn) UserRead(ctx context.Context) (users []map[string]string, err err
 
 // UserUpdate updates a user password and role
 func (c *Conn) UserUpdate(ctx context.Context, user, pass, role string) (ok bool, err error) {
+	_, err = c.conn.GetSession()
+	if err != nil {
+		return false, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
+	}
+
 	service, err := c.conn.Service.AccountService()
 	if err != nil {
 		return false, err
@@ -91,6 +102,11 @@ func (c *Conn) UserCreate(ctx context.Context, user, pass, role string) (ok bool
 
 	if user == "" || pass == "" {
 		return false, ErrUserPassParams
+	}
+
+	_, err = c.conn.GetSession()
+	if err != nil {
+		return false, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
 	service, err := c.conn.Service.AccountService()
@@ -138,6 +154,11 @@ func (c *Conn) UserCreate(ctx context.Context, user, pass, role string) (ok bool
 func (c *Conn) UserDelete(ctx context.Context, user string) (ok bool, err error) {
 	if user == "" {
 		return false, ErrUserPassParams
+	}
+
+	_, err = c.conn.GetSession()
+	if err != nil {
+		return false, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
 	service, err := c.conn.Service.AccountService()
