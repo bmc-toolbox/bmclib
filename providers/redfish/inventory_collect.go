@@ -274,6 +274,11 @@ func (i *inventory) collectStorageControllers(sys *redfish.ComputerSystem, devic
 				SpeedGbps: int64(controller.SpeedGbps),
 			}
 
+			// In some cases the storage controller model number is present in the Name field
+			if strings.TrimSpace(c.Model) == "" && strings.TrimSpace(controller.Name) != "" {
+				c.Model = controller.Name
+			}
+
 			// include additional firmware attributes from redfish firmware inventory
 			i.firmwareAttributes(c.Description, c.ID, c.Firmware)
 
