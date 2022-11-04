@@ -26,6 +26,8 @@ var (
 		providers.FeatureInventoryRead,
 		providers.FeatureFirmwareInstall,
 		providers.FeatureFirmwareInstallStatus,
+		providers.FeaturePowerSet,
+		providers.FeaturePowerState,
 		providers.FeaturePostCodeRead,
 		providers.FeatureBmcReset,
 		providers.FeatureUserCreate,
