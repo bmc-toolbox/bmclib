@@ -284,9 +284,5 @@ func (c *Conn) purgeQueuedFirmwareInstallTask(ctx context.Context, component str
 		)
 	}
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }

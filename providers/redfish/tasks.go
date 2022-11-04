@@ -2,7 +2,7 @@ package redfish
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"strconv"
 	"strings"
 
@@ -137,7 +137,7 @@ func (c *Conn) dellJobs(state string) ([]*rf.Task, error) {
 		return nil, errors.New("dell jobs endpoint returned unexpected status code: " + strconv.Itoa(resp.StatusCode))
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}

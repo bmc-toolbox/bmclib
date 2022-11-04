@@ -116,10 +116,7 @@ func (c *Conn) Open(ctx context.Context) (err error) {
 	}
 
 	c.conn, err = gofish.ConnectContext(ctx, config)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // Close a connection to a BMC via redfish
