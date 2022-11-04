@@ -46,9 +46,8 @@ type inventory struct {
 
 // DeviceVendorModel returns the device vendor and model attributes
 func (c *Conn) DeviceVendorModel(ctx context.Context) (vendor, model string, err error) {
-	_, err = c.conn.GetSession()
-	if err != nil {
-		return "", "", errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
+	if err := c.sessionActive(ctx); err != nil {
+		return "", "", err
 	}
 
 	systems, err := c.conn.Service.Systems()
@@ -68,9 +67,8 @@ func (c *Conn) DeviceVendorModel(ctx context.Context) (vendor, model string, err
 }
 
 func (c *Conn) Inventory(ctx context.Context) (device *common.Device, err error) {
-	_, err = c.conn.GetSession()
-	if err != nil {
-		return nil, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
+	if err := c.sessionActive(ctx); err != nil {
+		return nil, err
 	}
 
 	// initialize inventory object
