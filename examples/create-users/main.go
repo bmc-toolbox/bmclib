@@ -6,7 +6,6 @@ import (
 	"encoding/csv"
 	"flag"
 	"io"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"time"
@@ -41,7 +40,7 @@ func main() {
 		var pool *x509.CertPool
 		if *certPoolFile != "" {
 			pool = x509.NewCertPool()
-			data, err := ioutil.ReadFile(*certPoolFile)
+			data, err := os.ReadFile(*certPoolFile)
 			if err != nil {
 				l.Fatal(err)
 			}

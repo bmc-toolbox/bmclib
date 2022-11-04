@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/x509"
 	"flag"
-	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
@@ -45,7 +44,7 @@ func main() {
 		var pool *x509.CertPool
 		if *certPoolPath != "" {
 			pool = x509.NewCertPool()
-			data, err := ioutil.ReadFile(*certPoolPath)
+			data, err := os.ReadFile(*certPoolPath)
 			if err != nil {
 				l.Fatal(err)
 			}
