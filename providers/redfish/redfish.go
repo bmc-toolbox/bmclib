@@ -10,6 +10,7 @@ import (
 	"time"
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/bmc-toolbox/bmclib/v2/internal"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/go-logr/logr"
@@ -154,6 +155,11 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 }
 
 func (c *Conn) sessionActive(ctx context.Context) error {
+	// skip session active checks for tests
+	if os.Getenv(internal.EnvBmclibTestActive) == "true" {
+		return nil
+	}
+
 	if c.conn == nil {
 		return bmclibErrs.ErrNotAuthenticated
 	}

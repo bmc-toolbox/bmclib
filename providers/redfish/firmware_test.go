@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -16,6 +15,7 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/bmc-toolbox/bmclib/v2/internal"
 	"github.com/bmc-toolbox/common"
 )
 
@@ -25,7 +25,7 @@ func multipartUpload(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	}
 
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -62,6 +62,9 @@ func Test_FirmwareInstall(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	os.Setenv(internal.EnvBmclibTestActive, "true")
+	defer os.Unsetenv(internal.EnvBmclibTestActive)
 
 	fh, err := os.Open(binPath)
 	if err != nil {
