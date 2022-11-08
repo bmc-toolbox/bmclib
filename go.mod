@@ -11,7 +11,7 @@ require (
 	github.com/jacobweinstock/registrar v0.4.6
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.1
-	github.com/stmcginnis/gofish v0.13.0
+	github.com/stmcginnis/gofish v0.13.1-0.20221107140645-5cc43fad050f
 	github.com/stretchr/testify v1.7.2
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
 	golang.org/x/net v0.0.0-20220615171555-694bf12d69de
