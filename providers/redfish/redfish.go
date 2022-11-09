@@ -122,7 +122,12 @@ func (c *Conn) Open(ctx context.Context) (err error) {
 
 // Close a connection to a BMC via redfish
 func (c *Conn) Close(ctx context.Context) error {
+	if c.conn == nil {
+		return nil
+	}
+
 	c.conn.Logout()
+
 	return nil
 }
 
