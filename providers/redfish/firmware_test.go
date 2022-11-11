@@ -15,7 +15,6 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
-	"github.com/bmc-toolbox/bmclib/v2/internal"
 	"github.com/bmc-toolbox/common"
 )
 
@@ -62,9 +61,6 @@ func Test_FirmwareInstall(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	os.Setenv(internal.EnvBmclibTestActive, "true")
-	defer os.Unsetenv(internal.EnvBmclibTestActive)
 
 	fh, err := os.Open(binPath)
 	if err != nil {
