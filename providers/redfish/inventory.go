@@ -46,6 +46,10 @@ type inventory struct {
 
 // DeviceVendorModel returns the device vendor and model attributes
 func (c *Conn) DeviceVendorModel(ctx context.Context) (vendor, model string, err error) {
+	if err := c.sessionActive(ctx); err != nil {
+		return "", "", err
+	}
+
 	systems, err := c.conn.Service.Systems()
 	if err != nil {
 		return vendor, model, err
@@ -63,6 +67,10 @@ func (c *Conn) DeviceVendorModel(ctx context.Context) (vendor, model string, err
 }
 
 func (c *Conn) Inventory(ctx context.Context) (device *common.Device, err error) {
+	if err := c.sessionActive(ctx); err != nil {
+		return nil, err
+	}
+
 	// initialize inventory object
 	inv := &inventory{conn: c.conn}
 	// TODO: this can soft fail

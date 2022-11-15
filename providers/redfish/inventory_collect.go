@@ -15,7 +15,7 @@ func (i *inventory) collectEnclosure(ch *redfish.Chassis, device *common.Device)
 	e := &common.Enclosure{
 		Common: common.Common{
 			Description: ch.Description,
-			Vendor:      ch.Manufacturer,
+			Vendor:      common.FormatVendorName(ch.Manufacturer),
 			Model:       ch.Model,
 			Status: &common.Status{
 				Health: string(ch.Status.Health),
@@ -51,7 +51,7 @@ func (i *inventory) collectPSUs(ch *redfish.Chassis, device *common.Device) (err
 		p := &common.PSU{
 			Common: common.Common{
 				Description: psu.Name,
-				Vendor:      psu.Manufacturer,
+				Vendor:      common.FormatVendorName(psu.Manufacturer),
 				Model:       psu.Model,
 				Serial:      psu.SerialNumber,
 
@@ -128,7 +128,7 @@ func (i *inventory) collectNICs(sys *redfish.ComputerSystem, device *common.Devi
 
 		n := &common.NIC{
 			Common: common.Common{
-				Vendor: adapter.Manufacturer,
+				Vendor: common.FormatVendorName(adapter.Manufacturer),
 				Model:  adapter.Model,
 				Serial: adapter.SerialNumber,
 				Status: &common.Status{
@@ -212,7 +212,7 @@ func (i *inventory) collectDrives(sys *redfish.ComputerSystem, device *common.De
 					ProductName: drive.Model,
 					Description: drive.Description,
 					Serial:      drive.SerialNumber,
-					Vendor:      drive.Manufacturer,
+					Vendor:      common.FormatVendorName(drive.Manufacturer),
 					Model:       drive.Model,
 					Firmware: &common.Firmware{
 						Installed: drive.Revision,
@@ -258,7 +258,7 @@ func (i *inventory) collectStorageControllers(sys *redfish.ComputerSystem, devic
 			c := &common.StorageController{
 				Common: common.Common{
 					Description: controller.Name,
-					Vendor:      controller.Manufacturer,
+					Vendor:      common.FormatVendorName(controller.Manufacturer),
 					Model:       controller.PartNumber,
 					Serial:      controller.SerialNumber,
 					Status: &common.Status{
@@ -272,6 +272,11 @@ func (i *inventory) collectStorageControllers(sys *redfish.ComputerSystem, devic
 
 				ID:        controller.ID,
 				SpeedGbps: int64(controller.SpeedGbps),
+			}
+
+			// In some cases the storage controller model number is present in the Name field
+			if strings.TrimSpace(c.Model) == "" && strings.TrimSpace(controller.Name) != "" {
+				c.Model = controller.Name
 			}
 
 			// include additional firmware attributes from redfish firmware inventory
@@ -301,7 +306,7 @@ func (i *inventory) collectCPUs(sys *redfish.ComputerSystem, device *common.Devi
 		device.CPUs = append(device.CPUs, &common.CPU{
 			Common: common.Common{
 				Description: proc.Description,
-				Vendor:      proc.Manufacturer,
+				Vendor:      common.FormatVendorName(proc.Manufacturer),
 				Model:       proc.Model,
 				Serial:      "",
 				Status: &common.Status{
@@ -335,7 +340,7 @@ func (i *inventory) collectDIMMs(sys *redfish.ComputerSystem, device *common.Dev
 		device.Memory = append(device.Memory, &common.Memory{
 			Common: common.Common{
 				Description: dimm.Description,
-				Vendor:      dimm.Manufacturer,
+				Vendor:      common.FormatVendorName(dimm.Manufacturer),
 				Model:       "",
 				Serial:      dimm.SerialNumber,
 				Status: &common.Status{
@@ -361,7 +366,7 @@ func (i *inventory) collectCPLDs(device *common.Device) (err error) {
 
 	cpld := &common.CPLD{
 		Common: common.Common{
-			Vendor:   device.Vendor,
+			Vendor:   common.FormatVendorName(device.Vendor),
 			Model:    device.Model,
 			Firmware: &common.Firmware{Metadata: make(map[string]string)},
 		},

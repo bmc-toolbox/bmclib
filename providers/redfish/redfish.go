@@ -116,15 +116,17 @@ func (c *Conn) Open(ctx context.Context) (err error) {
 	}
 
 	c.conn, err = gofish.ConnectContext(ctx, config)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // Close a connection to a BMC via redfish
 func (c *Conn) Close(ctx context.Context) error {
+	if c.conn == nil {
+		return nil
+	}
+
 	c.conn.Logout()
+
 	return nil
 }
 
@@ -156,8 +158,25 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 	return err == nil
 }
 
+func (c *Conn) sessionActive(ctx context.Context) error {
+	if c.conn == nil {
+		return bmclibErrs.ErrNotAuthenticated
+	}
+
+	_, err := c.conn.GetSession()
+	if err != nil {
+		return errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
+	}
+
+	return nil
+}
+
 // BmcReset powercycles the BMC
 func (c *Conn) BmcReset(ctx context.Context, resetType string) (ok bool, err error) {
+	if err := c.sessionActive(ctx); err != nil {
+		return false, err
+	}
+
 	managers, err := c.conn.Service.Managers()
 	if err != nil {
 		return false, err
@@ -175,11 +194,19 @@ func (c *Conn) BmcReset(ctx context.Context, resetType string) (ok bool, err err
 
 // PowerStateGet gets the power state of a BMC machine
 func (c *Conn) PowerStateGet(ctx context.Context) (state string, err error) {
+	if err := c.sessionActive(ctx); err != nil {
+		return "", err
+	}
+
 	return c.status(ctx)
 }
 
 // PowerSet sets the power state of a BMC via redfish
 func (c *Conn) PowerSet(ctx context.Context, state string) (ok bool, err error) {
+	if err := c.sessionActive(ctx); err != nil {
+		return false, err
+	}
+
 	switch strings.ToLower(state) {
 	case "on":
 		return c.on(ctx)

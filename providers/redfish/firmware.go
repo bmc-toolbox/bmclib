@@ -32,6 +32,10 @@ func SupportedFirmwareApplyAtValues() []string {
 
 // FirmwareInstall uploads and initiates the firmware install process
 func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, forceInstall bool, reader io.Reader) (taskID string, err error) {
+	if err := c.sessionActive(ctx); err != nil {
+		return "", err
+	}
+
 	// validate firmware update mechanism is supported
 	err = c.firmwareUpdateCompatible(ctx)
 	if err != nil {
@@ -105,6 +109,10 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 
 // FirmwareInstallStatus returns the status of the firmware install task queued
 func (c *Conn) FirmwareInstallStatus(ctx context.Context, installVersion, component, taskID string) (state string, err error) {
+	if err := c.sessionActive(ctx); err != nil {
+		return "", err
+	}
+
 	vendor, _, err := c.DeviceVendorModel(ctx)
 	if err != nil {
 		return state, errors.Wrap(err, "unable to determine device vendor, model attributes")
@@ -284,9 +292,5 @@ func (c *Conn) purgeQueuedFirmwareInstallTask(ctx context.Context, component str
 		)
 	}
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }

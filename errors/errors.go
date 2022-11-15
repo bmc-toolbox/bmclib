@@ -9,6 +9,12 @@ var (
 	// ErrLoginFailed is returned when we fail to login to a bmc
 	ErrLoginFailed = errors.New("failed to login")
 
+	// ErrLogoutFailed is returned when we fail to logout from a bmc
+	ErrLogoutFailed = errors.New("failed to logout")
+
+	// ErrNotAuthenticated is returned when the session is not active.
+	ErrNotAuthenticated = errors.New("not authenticated")
+
 	// ErrNon200Response is returned when bmclib recieves an unexpected non-200 status code for a query
 	ErrNon200Response = errors.New("non-200 response returned for the endpoint")
 

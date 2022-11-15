@@ -2,6 +2,7 @@ package redfish
 
 import (
 	"context"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -56,6 +57,7 @@ func TestMain(m *testing.M) {
 	mockServer = func() *httptest.Server {
 		handler := http.NewServeMux()
 		handler.HandleFunc("/redfish/v1/", serviceRoot)
+		handler.HandleFunc("/redfish/v1/SessionService/Sessions", sessionService)
 		handler.HandleFunc("/redfish/v1/UpdateService/MultipartUpload", multipartUpload)
 		handler.HandleFunc("/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/Jobs?$expand=*($levels=1)", dellJobs)
 
@@ -64,7 +66,7 @@ func TestMain(m *testing.M) {
 
 	mockBMCHost, _ = url.Parse(mockServer.URL)
 
-	mockClient = &Conn{Host: mockBMCHost.String()}
+	mockClient = &Conn{Host: mockBMCHost.String(), User: "foo", Pass: "bar"}
 	err := mockClient.Open(context.TODO())
 	if err != nil {
 		log.Fatal(err)
@@ -76,9 +78,25 @@ func TestMain(m *testing.M) {
 }
 
 func serviceRoot(w http.ResponseWriter, r *http.Request) {
+	// expect either GET or Delete methods
 	if r.Method != http.MethodGet && r.Method != http.MethodDelete {
 		w.WriteHeader(http.StatusNotFound)
 	}
 
 	_, _ = w.Write(jsonResponse(r.RequestURI))
+}
+
+func sessionService(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusNotFound)
+	}
+
+	_, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	w.Header().Set("X-Auth-Token", "hunter2")
+	w.Header().Set("Location", r.URL.String())
+	_, _ = w.Write([]byte(`is cool`))
 }
