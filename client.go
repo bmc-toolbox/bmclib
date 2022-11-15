@@ -11,6 +11,7 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/v2/bmc"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
+	"github.com/bmc-toolbox/bmclib/v2/providers/amt"
 	"github.com/bmc-toolbox/bmclib/v2/providers/asrockrack"
 	"github.com/bmc-toolbox/bmclib/v2/providers/ipmitool"
 	"github.com/bmc-toolbox/bmclib/v2/providers/redfish"
@@ -110,6 +111,10 @@ func (c *Client) registerProviders() {
 	// register gofish provider
 	driverGoFish := redfish.New(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger, redfish.WithHTTPClient(c.httpClient))
 	c.Registry.Register(redfish.ProviderName, redfish.ProviderProtocol, redfish.Features, nil, driverGoFish)
+
+	// register AMT provider
+	driverAMT := amt.New(c.Logger, c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass)
+	c.Registry.Register(amt.ProviderName, amt.ProviderProtocol, amt.Features, nil, driverAMT)
 
 	// register dell idrac9 provider
 	// driverIdrac9 := idrac9.NewConn(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger, idrac9.WithHTTPClientConnOption(c.httpClient))
