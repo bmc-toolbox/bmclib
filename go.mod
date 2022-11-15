@@ -8,7 +8,6 @@ require (
 	github.com/bmc-toolbox/common v0.0.0-20220707135204-5368ecd5d175
 	github.com/bombsimon/logrusr/v2 v2.0.1
 	github.com/go-logr/logr v1.2.3
-	github.com/go-logr/stdr v1.2.2
 	github.com/google/go-cmp v0.5.8
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/jacobweinstock/registrar v0.4.6
