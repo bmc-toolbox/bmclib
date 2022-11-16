@@ -1,4 +1,4 @@
-package amt
+package intelamt
 
 import (
 	"context"

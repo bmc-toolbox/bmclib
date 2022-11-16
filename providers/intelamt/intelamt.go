@@ -1,4 +1,4 @@
-package amt
+package intelamt
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 
 const (
 	// ProviderName for the provider AMT implementation
-	ProviderName = "AMT"
+	ProviderName = "IntelAMT"
 	// ProviderProtocol for the provider AMT implementation
 	ProviderProtocol = "AMT"
 )
@@ -78,7 +78,7 @@ func (c *Conn) Name() string {
 	return ProviderName
 }
 
-// Open a connection to a the BMC via AMT.
+// Open a connection to the BMC via AMT.
 // The AMT library does not do/use sessions so opening just instantiates the Conn.client.
 // It will communicate with the BMC.
 func (c *Conn) Open(ctx context.Context) (err error) {
@@ -161,11 +161,6 @@ func (c *Conn) PowerSet(ctx context.Context, state string) (ok bool, err error) 
 		}
 		ok = true
 	case "cycle":
-		if !on {
-			if err := c.client.PowerOn(ctx); err != nil {
-				return false, err
-			}
-		}
 		if err := c.client.PowerCycle(ctx); err != nil {
 			return false, err
 		}
