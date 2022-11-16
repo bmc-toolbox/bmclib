@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/ammmze/go-amt"
-	"github.com/bmc-toolbox/bmclib/providers"
+	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 )

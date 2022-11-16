@@ -4,8 +4,7 @@ go 1.18
 
 require (
 	github.com/ammmze/go-amt v0.0.4
-	github.com/bmc-toolbox/bmclib v0.5.4
-	github.com/bmc-toolbox/common v0.0.0-20220707135204-5368ecd5d175
+	github.com/bmc-toolbox/common v0.0.0-20221115135648-0b584f504396
 	github.com/bombsimon/logrusr/v2 v2.0.1
 	github.com/go-logr/logr v1.2.3
 	github.com/google/go-cmp v0.5.8
