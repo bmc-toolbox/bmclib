@@ -1,4 +1,4 @@
-# BEGIN: lint-install github.com/bmc-toolbox/bmclib
+# BEGIN: lint-install github.com/bmc-toolbox/bmclib/v2
 # http://github.com/tinkerbell/lint-install
 
 .PHONY: lint
@@ -42,4 +42,4 @@ _lint: $(LINTERS)
 .PHONY: fix $(FIXERS)
 fix: $(FIXERS)
 
-# END: lint-install github.com/bmc-toolbox/bmclib
+# END: lint-install github.com/bmc-toolbox/bmclib/v2
