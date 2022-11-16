@@ -30,3 +30,5 @@ tags
 
 # vscode
 *.code-workspace
+# added by lint-install
+out/
