@@ -37,35 +37,35 @@ import (
 )
 
     // setup logger
-	l := logrus.New()
-	l.Level = logrus.DebugLevel
-	logger := logrusr.New(l)
+    l := logrus.New()
+    l.Level = logrus.DebugLevel
+    logger := logrusr.New(l)
 
-	clientOpts := []bmclib.Option{bmclib.WithLogger(logger)}
+    clientOpts := []bmclib.Option{bmclib.WithLogger(logger)}
 
     // init client
     client := bmclib.NewClient(*host, "", "admin", "hunter2", clientOpts...)
 
     // open BMC session
-	err := client.Open(ctx)
-	if err != nil {
-		log.Fatal(err, "bmc login failed")
-	}
+    err := client.Open(ctx)
+    if err != nil {
+        log.Fatal(err, "bmc login failed")
+    }
 
-	defer client.Close(ctx)
+    defer client.Close(ctx)
 
     // retrieve inventory data
-	inventory, err := client.Inventory(ctx)
-	if err != nil {
-		l.Error(err)
-	}
+    inventory, err := client.Inventory(ctx)
+    if err != nil {
+        l.Error(err)
+    }
 
-	b, err := json.MarshalIndent(inventory, "", "  ")
-	if err != nil {
-		l.Error(err)
-	}
+    b, err := json.MarshalIndent(inventory, "", "  ")
+    if err != nil {
+        l.Error(err)
+    }
 
-	fmt.Println(string(b))
+    fmt.Println(string(b))
 ```
 
 More sample code can be found in [examples](./examples/)
