@@ -4,16 +4,15 @@ import (
 	"context"
 	"strings"
 
-	"github.com/pkg/errors"
-	"github.com/stmcginnis/gofish"
-	"github.com/stmcginnis/gofish/redfish"
-
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
+
 	"github.com/bmc-toolbox/common"
+	"github.com/pkg/errors"
+	gofishrf "github.com/stmcginnis/gofish/redfish"
 )
 
 var (
-
 	// Supported Chassis Odata IDs
 	chassisOdataIDs = []string{
 		// Dells
@@ -40,41 +39,22 @@ var (
 
 // inventory struct wraps redfish connection
 type inventory struct {
-	conn              *gofish.APIClient
-	softwareInventory []*redfish.SoftwareInventory
-}
-
-// DeviceVendorModel returns the device vendor and model attributes
-func (c *Conn) DeviceVendorModel(ctx context.Context) (vendor, model string, err error) {
-	if err := c.sessionActive(ctx); err != nil {
-		return "", "", err
-	}
-
-	systems, err := c.conn.Service.Systems()
-	if err != nil {
-		return vendor, model, err
-	}
-
-	for _, sys := range systems {
-		if !compatibleOdataID(sys.ODataID, systemsOdataIDs) {
-			continue
-		}
-
-		return sys.Manufacturer, sys.Model, nil
-	}
-
-	return vendor, model, bmclibErrs.ErrRedfishSystemOdataID
+	client            *redfishwrapper.Client
+	softwareInventory []*gofishrf.SoftwareInventory
 }
 
 func (c *Conn) Inventory(ctx context.Context) (device *common.Device, err error) {
-	if err := c.sessionActive(ctx); err != nil {
-		return nil, err
+	// initialize inventory object
+	// the redfish client is assigned here to perform redfish Get/Delete requests
+	inv := &inventory{client: c.redfishwrapper}
+
+	// TODO: this can soft fail
+	updateService, err := c.redfishwrapper.UpdateService()
+	if err != nil {
+		return nil, errors.Wrap(bmclibErrs.ErrRedfishSoftwareInventory, err.Error())
 	}
 
-	// initialize inventory object
-	inv := &inventory{conn: c.conn}
-	// TODO: this can soft fail
-	inv.softwareInventory, err = inv.collectSoftwareInventory()
+	inv.softwareInventory, err = updateService.FirmwareInventories()
 	if err != nil {
 		return nil, errors.Wrap(bmclibErrs.ErrRedfishSoftwareInventory, err.Error())
 	}
@@ -84,19 +64,19 @@ func (c *Conn) Inventory(ctx context.Context) (device *common.Device, err error)
 	device = &newDevice
 
 	// populate device Chassis components attributes
-	err = inv.chassisAttributes(device)
+	err = inv.chassisAttributes(ctx, device)
 	if err != nil {
 		return nil, err
 	}
 
 	// populate device System components attributes
-	err = inv.systemAttributes(device)
+	err = inv.systemAttributes(ctx, device)
 	if err != nil {
 		return nil, err
 	}
 
 	// populate device BMC component attributes
-	err = inv.bmcAttributes(device)
+	err = inv.bmcAttributes(ctx, device)
 	if err != nil {
 		return nil, err
 	}
@@ -104,29 +84,11 @@ func (c *Conn) Inventory(ctx context.Context) (device *common.Device, err error)
 	return device, nil
 }
 
-// collectSoftwareInventory returns redfish software inventory
-func (i *inventory) collectSoftwareInventory() ([]*redfish.SoftwareInventory, error) {
-	service := i.conn.Service
-	if service == nil {
-		return nil, bmclibErrs.ErrRedfishServiceNil
-	}
-
-	updateService, err := service.UpdateService()
-	if err != nil {
-		return nil, err
-	}
-
-	return updateService.FirmwareInventories()
-}
+// DeviceVendorModel returns the device vendor and model attributes
 
 // bmcAttributes collects BMC component attributes
-func (i *inventory) bmcAttributes(device *common.Device) (err error) {
-	service := i.conn.Service
-	if service == nil {
-		return bmclibErrs.ErrRedfishServiceNil
-	}
-
-	managers, err := service.Managers()
+func (i *inventory) bmcAttributes(ctx context.Context, device *common.Device) (err error) {
+	managers, err := i.client.Managers(ctx)
 	if err != nil {
 		return err
 	}
@@ -172,13 +134,8 @@ func (i *inventory) bmcAttributes(device *common.Device) (err error) {
 }
 
 // chassisAttributes populates the device chassis attributes
-func (i *inventory) chassisAttributes(device *common.Device) (err error) {
-	service := i.conn.Service
-	if service == nil {
-		return bmclibErrs.ErrRedfishServiceNil
-	}
-
-	chassis, err := service.Chassis()
+func (i *inventory) chassisAttributes(ctx context.Context, device *common.Device) (err error) {
+	chassis, err := i.client.Chassis(ctx)
 	if err != nil {
 		return err
 	}
@@ -216,13 +173,8 @@ func (i *inventory) chassisAttributes(device *common.Device) (err error) {
 
 }
 
-func (i *inventory) systemAttributes(device *common.Device) (err error) {
-	service := i.conn.Service
-	if service == nil {
-		return bmclibErrs.ErrRedfishServiceNil
-	}
-
-	systems, err := service.Systems()
+func (i *inventory) systemAttributes(ctx context.Context, device *common.Device) (err error) {
+	systems, err := i.client.Systems()
 	if err != nil {
 		return err
 	}
@@ -242,7 +194,7 @@ func (i *inventory) systemAttributes(device *common.Device) (err error) {
 		}
 
 		// slice of collector methods
-		funcs := []func(sys *redfish.ComputerSystem, device *common.Device) error{
+		funcs := []func(sys *gofishrf.ComputerSystem, device *common.Device) error{
 			i.collectCPUs,
 			i.collectDIMMs,
 			i.collectDrives,
