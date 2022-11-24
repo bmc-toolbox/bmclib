@@ -3,7 +3,6 @@ package ipmitool
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,7 +16,7 @@ func TestMain(m *testing.M) {
 	var tempDir string
 	_, err := exec.LookPath("ipmitool")
 	if err != nil {
-		tempDir, err = ioutil.TempDir("/tmp", "")
+		tempDir, err = os.MkdirTemp("/tmp", "")
 		if err != nil {
 			os.Exit(2)
 		}
@@ -25,7 +24,7 @@ func TestMain(m *testing.M) {
 		os.Setenv("PATH", path)
 		fmt.Println(os.Getenv("PATH"))
 		f := filepath.Join(tempDir, "ipmitool")
-		err = ioutil.WriteFile(f, []byte{}, 0755)
+		err = os.WriteFile(f, []byte{}, 0755)
 		if err != nil {
 			os.RemoveAll(tempDir)
 			os.Exit(3)

@@ -3,7 +3,7 @@ package asrockrack
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -71,7 +71,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-/////////////// mock bmc service ///////////////////////////
+// ///////////// mock bmc service ///////////////////////////
 func mockASRockBMC() *httptest.Server {
 	handler := http.NewServeMux()
 	handler.HandleFunc("/", index)
@@ -270,7 +270,7 @@ func sensorsinfo(w http.ResponseWriter, r *http.Request) {
 			log.Fatal(err)
 		}
 
-		b, err := ioutil.ReadAll(fh)
+		b, err := io.ReadAll(fh)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -296,7 +296,7 @@ func session(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "POST":
 		// login to BMC
-		b, _ := ioutil.ReadAll(r.Body)
+		b, _ := io.ReadAll(r.Body)
 		if string(b) == string(loginPayload) {
 			// login request needs to be of the right content-typ
 			if r.Header.Get("Content-Type") != "application/x-www-form-urlencoded" {
