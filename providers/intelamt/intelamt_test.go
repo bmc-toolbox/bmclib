@@ -5,10 +5,10 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/ammmze/go-amt"
 	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/jacobweinstock/go-amt"
 )
 
 type mock struct {
