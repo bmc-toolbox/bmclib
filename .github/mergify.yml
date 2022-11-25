@@ -8,7 +8,7 @@ queue_rule:
 pull_request_rules:
   - name: Automatic merge on approval
     conditions:
-      - base=v2
+      - base=main
       - "#approved-reviews-by>=1"
       - "#changes-requested-reviews-by=0"
       - check-success='lint'
