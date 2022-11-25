@@ -20,12 +20,12 @@ github.com/hashicorp/errwrap v1.1.0 h1:OxrOeh75EUXMY8TBjag2fzXGZ40LB6IKw45YeGUDY
 github.com/hashicorp/errwrap v1.1.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
 github.com/hashicorp/go-multierror v1.1.1 h1:H5DkEtf6CXdFp0N0Em5UCwQpXMWke8IA0+lD48awMYo=
 github.com/hashicorp/go-multierror v1.1.1/go.mod h1:iw975J/qwKPdAO1clOe2L8331t/9/fmwbPZ6JB6eMoM=
-github.com/jacobweinstock/go-amt v0.0.0-20221115190754-36c39f21b864 h1:zxKkYlCaG1m44m8t7gWFshvkV1R9lW7BtIqkbT1KN78=
-github.com/jacobweinstock/go-amt v0.0.0-20221115190754-36c39f21b864/go.mod h1:m5VV8U4094KLqoHHV319u18LVhIVCD5yGxeX6uM8IkE=
+github.com/jacobweinstock/go-amt v0.0.0-20221125040441-53475f4ae023 h1:ethqol+SkT5WtPI23GXlgQhRu/AYSHFTelrve/Acsr4=
+github.com/jacobweinstock/go-amt v0.0.0-20221125040441-53475f4ae023/go.mod h1:5SFONG5z/Tqp3iZuxd/k5p/YX2Gu7vVhxpLEmCLrJRQ=
 github.com/jacobweinstock/registrar v0.4.6 h1:0O3g2jT2Lx+Bf+yl4QsMUN48fVZxUpM3kS+NtIJ+ucw=
 github.com/jacobweinstock/registrar v0.4.6/go.mod h1:IDx65tQ7DLJ2UqiVjE1zo74jMZZfel9YZW8VrC26m6o=
-github.com/jacobweinstock/wsman v0.0.0-20221115191137-e06ce6a5341d h1:cqP9HwELK3GwWH5NZs4EFp8PzwwGVyVzwIng1cv5hX0=
-github.com/jacobweinstock/wsman v0.0.0-20221115191137-e06ce6a5341d/go.mod h1:TJdzGFrJZfTvF3Mu+tCLrXqap5/75eqPVguHUXbYoHA=
+github.com/jacobweinstock/wsman v0.0.0-20221125035617-2eae65734c77 h1:ks0g5tEGDIW4y+2vGQsfF1Um47u6Cw2AzH6sQC4uGD4=
+github.com/jacobweinstock/wsman v0.0.0-20221125035617-2eae65734c77/go.mod h1:XHdWy9hT+4XUjR4lnmA/129m9XGA2gh4EB+GbG/cC+c=
 github.com/konsorten/go-windows-terminal-sequences v1.0.3/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/kr/pretty v0.2.1 h1:Fmg33tUaq4/8ym9TJN1x7sLJnHVwhP33CNkpYV/7rwI=
 github.com/kr/pretty v0.2.1/go.mod h1:ipq/a2n7PKx3OHsz4KJII5eveXtPO4qwEXGdVfWzfnI=
