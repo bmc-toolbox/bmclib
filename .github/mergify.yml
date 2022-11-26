@@ -1,4 +1,4 @@
-queue_rule:
+queue_rules:
   - name: default
     conditions:
       # Conditions to get out of the queue (= merged)
