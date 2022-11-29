@@ -11,8 +11,8 @@ import (
 	rf "github.com/stmcginnis/gofish/redfish"
 )
 
-// BmcReset powercycles the BMC.
-func (c *Client) BmcReset(ctx context.Context, resetType string) (ok bool, err error) {
+// BMCReset powercycles the BMC.
+func (c *Client) BMCReset(ctx context.Context, resetType string) (ok bool, err error) {
 	if err := c.SessionActive(); err != nil {
 		return false, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}

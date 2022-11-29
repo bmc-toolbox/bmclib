@@ -108,7 +108,7 @@ func (c *Conn) DeviceVendorModel(ctx context.Context) (vendor, model string, err
 
 // BmcReset power cycles the BMC
 func (c *Conn) BmcReset(ctx context.Context, resetType string) (ok bool, err error) {
-	return c.redfishwrapper.BmcReset(ctx, resetType)
+	return c.redfishwrapper.BMCReset(ctx, resetType)
 }
 
 // PowerStateGet gets the power state of a BMC machine
