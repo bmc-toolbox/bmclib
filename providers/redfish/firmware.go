@@ -15,7 +15,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	rf "github.com/stmcginnis/gofish/redfish"
+	gofishrf "github.com/stmcginnis/gofish/redfish"
 
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
@@ -32,10 +32,6 @@ func SupportedFirmwareApplyAtValues() []string {
 
 // FirmwareInstall uploads and initiates the firmware install process
 func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, forceInstall bool, reader io.Reader) (taskID string, err error) {
-	if err := c.sessionActive(ctx); err != nil {
-		return "", err
-	}
-
 	// validate firmware update mechanism is supported
 	err = c.firmwareUpdateCompatible(ctx)
 	if err != nil {
@@ -109,16 +105,12 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 
 // FirmwareInstallStatus returns the status of the firmware install task queued
 func (c *Conn) FirmwareInstallStatus(ctx context.Context, installVersion, component, taskID string) (state string, err error) {
-	if err := c.sessionActive(ctx); err != nil {
-		return "", err
-	}
-
 	vendor, _, err := c.DeviceVendorModel(ctx)
 	if err != nil {
 		return state, errors.Wrap(err, "unable to determine device vendor, model attributes")
 	}
 
-	var task *rf.Task
+	var task *gofishrf.Task
 	switch {
 	case strings.Contains(vendor, constants.Dell):
 		task, err = c.dellJobAsRedfishTask(taskID)
@@ -161,7 +153,7 @@ func (c *Conn) FirmwareInstallStatus(ctx context.Context, installVersion, compon
 
 // firmwareUpdateCompatible retuns an error if the firmware update process for the BMC is not supported
 func (c *Conn) firmwareUpdateCompatible(ctx context.Context) (err error) {
-	updateService, err := c.conn.Service.UpdateService()
+	updateService, err := c.redfishwrapper.UpdateService()
 	if err != nil {
 		return err
 	}
@@ -229,7 +221,7 @@ func (c *Conn) runRequestWithMultipartPayload(method, url string, payload map[st
 	}
 	payloadWriter.Close()
 
-	return c.conn.RunRawRequestWithHeaders(method, url, bytes.NewReader(payloadBuffer.Bytes()), payloadWriter.FormDataContentType(), nil)
+	return c.redfishwrapper.RunRawRequestWithHeaders(method, url, bytes.NewReader(payloadBuffer.Bytes()), payloadWriter.FormDataContentType(), nil)
 }
 
 // sets up the UpdateParameters MIMEHeader for the multipart form
@@ -248,13 +240,13 @@ func updateParametersFormField(fieldName string, writer *multipart.Writer) (io.W
 }
 
 // GetFirmwareInstallTaskQueued returns the redfish task object for a queued update task
-func (c *Conn) GetFirmwareInstallTaskQueued(ctx context.Context, component string) (*rf.Task, error) {
+func (c *Conn) GetFirmwareInstallTaskQueued(ctx context.Context, component string) (*gofishrf.Task, error) {
 	vendor, _, err := c.DeviceVendorModel(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to determine device vendor, model attributes")
 	}
 
-	var task *rf.Task
+	var task *gofishrf.Task
 
 	// check an update task for the component is currently scheduled
 	switch {

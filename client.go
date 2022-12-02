@@ -11,8 +11,9 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/v2/bmc"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/v2/providers/intelamt"
+	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/bmc-toolbox/bmclib/v2/providers/asrockrack"
+	"github.com/bmc-toolbox/bmclib/v2/providers/intelamt"
 	"github.com/bmc-toolbox/bmclib/v2/providers/ipmitool"
 	"github.com/bmc-toolbox/bmclib/v2/providers/redfish"
 	"github.com/bmc-toolbox/common"
@@ -109,7 +110,7 @@ func (c *Client) registerProviders() {
 	c.Registry.Register(asrockrack.ProviderName, asrockrack.ProviderProtocol, asrockrack.Features, nil, driverAsrockrack)
 
 	// register gofish provider
-	driverGoFish := redfish.New(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger, redfish.WithHTTPClient(c.httpClient))
+	driverGoFish := redfish.New(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger, redfishwrapper.WithHTTPClient(c.httpClient))
 	c.Registry.Register(redfish.ProviderName, redfish.ProviderProtocol, redfish.Features, nil, driverGoFish)
 
 	// register AMT provider

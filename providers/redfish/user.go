@@ -19,11 +19,7 @@ var (
 
 // UserRead returns a list of enabled user accounts
 func (c *Conn) UserRead(ctx context.Context) (users []map[string]string, err error) {
-	if err := c.sessionActive(ctx); err != nil {
-		return nil, err
-	}
-
-	service, err := c.conn.Service.AccountService()
+	service, err := c.redfishwrapper.AccountService()
 	if err != nil {
 		return nil, err
 	}
@@ -52,11 +48,7 @@ func (c *Conn) UserRead(ctx context.Context) (users []map[string]string, err err
 
 // UserUpdate updates a user password and role
 func (c *Conn) UserUpdate(ctx context.Context, user, pass, role string) (ok bool, err error) {
-	if err := c.sessionActive(ctx); err != nil {
-		return false, err
-	}
-
-	service, err := c.conn.Service.AccountService()
+	service, err := c.redfishwrapper.AccountService()
 	if err != nil {
 		return false, err
 	}
@@ -101,11 +93,7 @@ func (c *Conn) UserCreate(ctx context.Context, user, pass, role string) (ok bool
 		return false, ErrUserPassParams
 	}
 
-	if err := c.sessionActive(ctx); err != nil {
-		return false, err
-	}
-
-	service, err := c.conn.Service.AccountService()
+	service, err := c.redfishwrapper.AccountService()
 	if err != nil {
 		return false, err
 	}
@@ -152,11 +140,7 @@ func (c *Conn) UserDelete(ctx context.Context, user string) (ok bool, err error)
 		return false, ErrUserPassParams
 	}
 
-	if err := c.sessionActive(ctx); err != nil {
-		return false, err
-	}
-
-	service, err := c.conn.Service.AccountService()
+	service, err := c.redfishwrapper.AccountService()
 	if err != nil {
 		return false, err
 	}

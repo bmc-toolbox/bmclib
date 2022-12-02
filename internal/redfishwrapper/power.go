@@ -1,0 +1,191 @@
+package redfishwrapper
+
+import (
+	"context"
+	"fmt"
+	"strings"
+	"time"
+
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/pkg/errors"
+	rf "github.com/stmcginnis/gofish/redfish"
+)
+
+// BMCReset powercycles the BMC.
+func (c *Client) BMCReset(ctx context.Context, resetType string) (ok bool, err error) {
+	if err := c.SessionActive(); err != nil {
+		return false, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
+	}
+
+	managers, err := c.client.Service.Managers()
+	if err != nil {
+		return false, err
+	}
+
+	for _, manager := range managers {
+		err = manager.Reset(rf.ResetType(resetType))
+		if err != nil {
+			return false, err
+		}
+	}
+
+	return true, nil
+}
+
+// SystemPowerOn powers on the system.
+func (c *Client) SystemPowerOn(ctx context.Context) (ok bool, err error) {
+	if err := c.SessionActive(); err != nil {
+		return false, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
+	}
+
+	service := c.client.Service
+	ss, err := service.Systems()
+	if err != nil {
+		return false, err
+	}
+
+	for _, system := range ss {
+		if system.PowerState == rf.OnPowerState {
+			break
+		}
+		err = system.Reset(rf.OnResetType)
+		if err != nil {
+			return false, err
+		}
+	}
+	return true, nil
+}
+
+// SystemPowerOff powers off the system.
+func (c *Client) SystemPowerOff(ctx context.Context) (ok bool, err error) {
+	if err := c.SessionActive(); err != nil {
+		return false, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
+	}
+
+	service := c.client.Service
+	ss, err := service.Systems()
+	if err != nil {
+		return false, err
+	}
+
+	for _, system := range ss {
+		if system.PowerState == rf.OffPowerState {
+			break
+		}
+		err = system.Reset(rf.GracefulShutdownResetType)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	return false, nil
+}
+
+// SystemReset power cycles the system.
+func (c *Client) SystemReset(ctx context.Context) (ok bool, err error) {
+	if err := c.SessionActive(); err != nil {
+		return false, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
+	}
+
+	service := c.client.Service
+	ss, err := service.Systems()
+	if err != nil {
+		return false, err
+	}
+
+	for _, system := range ss {
+		err = system.Reset(rf.PowerCycleResetType)
+		if err != nil {
+
+			_, _ = c.SystemPowerOff(ctx)
+
+			for wait := 1; wait < 10; wait++ {
+				status, _ := c.SystemPowerStatus(ctx)
+				if status == "off" {
+					break
+				}
+				time.Sleep(1 * time.Second)
+			}
+
+			_, errMsg := c.SystemPowerOn(ctx)
+
+			return true, errMsg
+		}
+	}
+	return true, nil
+}
+
+// SystemPowerCycle power cycles the system.
+func (c *Client) SystemPowerCycle(ctx context.Context) (ok bool, err error) {
+	if err := c.SessionActive(); err != nil {
+		return false, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
+	}
+
+	service := c.client.Service
+	ss, err := service.Systems()
+	if err != nil {
+		return false, err
+	}
+
+	res, err := c.SystemPowerStatus(ctx)
+	if err != nil {
+		return false, fmt.Errorf("power cycle failed: unable to get current state")
+	}
+
+	if strings.ToLower(res) == "off" {
+		return false, fmt.Errorf("power cycle failed: Command not supported in present state: %v", res)
+	}
+
+	for _, system := range ss {
+		err = system.Reset(rf.ForceRestartResetType)
+		if err != nil {
+			return false, errors.WithMessage(err, "power cycle failed")
+		}
+	}
+
+	return true, nil
+}
+
+// SystemPowerStatus returns the system power state.
+func (c *Client) SystemPowerStatus(ctx context.Context) (result string, err error) {
+	if err := c.SessionActive(); err != nil {
+		return result, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
+	}
+
+	service := c.client.Service
+	ss, err := service.Systems()
+	if err != nil {
+		return "", err
+	}
+
+	for _, system := range ss {
+		return string(system.PowerState), nil
+	}
+
+	return "", errors.New("unable to retrieve status")
+}
+
+// SystemForceOff powers off the system, without waiting for the OS to shutdown.
+func (c *Client) SystemForceOff(ctx context.Context) (ok bool, err error) {
+	if err := c.SessionActive(); err != nil {
+		return false, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
+	}
+
+	service := c.client.Service
+	ss, err := service.Systems()
+	if err != nil {
+		return false, err
+	}
+
+	for _, system := range ss {
+		if system.PowerState == rf.OffPowerState {
+			break
+		}
+		err = system.Reset(rf.ForceOffResetType)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	return true, nil
+}

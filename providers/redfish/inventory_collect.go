@@ -4,14 +4,13 @@ import (
 	"strings"
 
 	"github.com/bmc-toolbox/common"
-	"github.com/stmcginnis/gofish/redfish"
+	gofishrf "github.com/stmcginnis/gofish/redfish"
 )
 
 // defines various inventory collection helper methods
 
 // collectEnclosure collects Enclosure information
-func (i *inventory) collectEnclosure(ch *redfish.Chassis, device *common.Device) (err error) {
-
+func (i *inventory) collectEnclosure(ch *gofishrf.Chassis, device *common.Device) (err error) {
 	e := &common.Enclosure{
 		Common: common.Common{
 			Description: ch.Description,
@@ -37,7 +36,7 @@ func (i *inventory) collectEnclosure(ch *redfish.Chassis, device *common.Device)
 }
 
 // collectPSUs collects Power Supply Unit component information
-func (i *inventory) collectPSUs(ch *redfish.Chassis, device *common.Device) (err error) {
+func (i *inventory) collectPSUs(ch *gofishrf.Chassis, device *common.Device) (err error) {
 	power, err := ch.Power()
 	if err != nil {
 		return err
@@ -78,9 +77,8 @@ func (i *inventory) collectPSUs(ch *redfish.Chassis, device *common.Device) (err
 }
 
 // collectTPMs collects Trusted Platform Module component information
-func (i *inventory) collectTPMs(sys *redfish.ComputerSystem, device *common.Device) (err error) {
+func (i *inventory) collectTPMs(sys *gofishrf.ComputerSystem, device *common.Device) (err error) {
 	for _, module := range sys.TrustedModules {
-
 		tpm := &common.TPM{
 			Common: common.Common{
 				Firmware: &common.Firmware{
@@ -105,7 +103,7 @@ func (i *inventory) collectTPMs(sys *redfish.ComputerSystem, device *common.Devi
 }
 
 // collectNICs collects network interface component information
-func (i *inventory) collectNICs(sys *redfish.ComputerSystem, device *common.Device) (err error) {
+func (i *inventory) collectNICs(sys *gofishrf.ComputerSystem, device *common.Device) (err error) {
 	// collect network interface information
 	nics, err := sys.NetworkInterfaces()
 	if err != nil {
@@ -168,7 +166,7 @@ func (i *inventory) collectNICs(sys *redfish.ComputerSystem, device *common.Devi
 	return nil
 }
 
-func (i *inventory) collectBIOS(sys *redfish.ComputerSystem, device *common.Device) (err error) {
+func (i *inventory) collectBIOS(sys *gofishrf.ComputerSystem, device *common.Device) (err error) {
 	bios, err := sys.Bios()
 	if err != nil {
 		return err
@@ -190,7 +188,7 @@ func (i *inventory) collectBIOS(sys *redfish.ComputerSystem, device *common.Devi
 }
 
 // collectDrives collects drive component information
-func (i *inventory) collectDrives(sys *redfish.ComputerSystem, device *common.Device) (err error) {
+func (i *inventory) collectDrives(sys *gofishrf.ComputerSystem, device *common.Device) (err error) {
 	storage, err := sys.Storage()
 	if err != nil {
 		return err
@@ -246,7 +244,7 @@ func (i *inventory) collectDrives(sys *redfish.ComputerSystem, device *common.De
 }
 
 // collectStorageControllers populates the device with Storage controller component attributes
-func (i *inventory) collectStorageControllers(sys *redfish.ComputerSystem, device *common.Device) (err error) {
+func (i *inventory) collectStorageControllers(sys *gofishrf.ComputerSystem, device *common.Device) (err error) {
 	storage, err := sys.Storage()
 	if err != nil {
 		return err
@@ -291,7 +289,7 @@ func (i *inventory) collectStorageControllers(sys *redfish.ComputerSystem, devic
 }
 
 // collectCPUs populates the device with CPU component attributes
-func (i *inventory) collectCPUs(sys *redfish.ComputerSystem, device *common.Device) (err error) {
+func (i *inventory) collectCPUs(sys *gofishrf.ComputerSystem, device *common.Device) (err error) {
 	procs, err := sys.Processors()
 	if err != nil {
 		return err
@@ -330,7 +328,7 @@ func (i *inventory) collectCPUs(sys *redfish.ComputerSystem, device *common.Devi
 }
 
 // collectDIMMs populates the device with memory component attributes
-func (i *inventory) collectDIMMs(sys *redfish.ComputerSystem, device *common.Device) (err error) {
+func (i *inventory) collectDIMMs(sys *gofishrf.ComputerSystem, device *common.Device) (err error) {
 	dimms, err := sys.Memory()
 	if err != nil {
 		return err

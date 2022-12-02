@@ -10,8 +10,8 @@ import (
 	"github.com/bmc-toolbox/common"
 	"github.com/pkg/errors"
 
-	rfcommon "github.com/stmcginnis/gofish/common"
-	rf "github.com/stmcginnis/gofish/redfish"
+	gofishcommon "github.com/stmcginnis/gofish/common"
+	gofishrf "github.com/stmcginnis/gofish/redfish"
 )
 
 // Dell specific redfish methods
@@ -51,7 +51,7 @@ func dellJobID(id string) string {
 	return id
 }
 
-func (c *Conn) getDellFirmwareInstallTaskScheduled(slug string) (*rf.Task, error) {
+func (c *Conn) getDellFirmwareInstallTaskScheduled(slug string) (*gofishrf.Task, error) {
 	// get tasks by state
 	tasks, err := c.dellJobs("scheduled")
 	if err != nil {
@@ -93,7 +93,7 @@ func (c *Conn) dellPurgeJob(id string) error {
 
 	endpoint := "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/Jobs/" + id
 
-	resp, err := c.conn.Delete(endpoint)
+	resp, err := c.redfishwrapper.Delete(endpoint)
 	if err != nil {
 		return errors.Wrap(bmcliberrs.ErrTaskPurge, err.Error())
 	}
@@ -106,7 +106,7 @@ func (c *Conn) dellPurgeJob(id string) error {
 }
 
 // dellFirmwareUpdateTaskStatus looks up the Dell Job and returns it as a redfish task object
-func (c *Conn) dellJobAsRedfishTask(jobID string) (*rf.Task, error) {
+func (c *Conn) dellJobAsRedfishTask(jobID string) (*gofishrf.Task, error) {
 	jobID = dellJobID(jobID)
 
 	tasks, err := c.dellJobs("")
@@ -125,10 +125,10 @@ func (c *Conn) dellJobAsRedfishTask(jobID string) (*rf.Task, error) {
 
 // dellJobs returns all dell jobs as redfish task objects
 // state: optional
-func (c *Conn) dellJobs(state string) ([]*rf.Task, error) {
+func (c *Conn) dellJobs(state string) ([]*gofishrf.Task, error) {
 	endpoint := "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/Jobs?$expand=*($levels=1)"
 
-	resp, err := c.conn.Get(endpoint)
+	resp, err := c.redfishwrapper.Get(endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -148,25 +148,24 @@ func (c *Conn) dellJobs(state string) ([]*rf.Task, error) {
 		return nil, err
 	}
 
-	tasks := []*rf.Task{}
+	tasks := []*gofishrf.Task{}
 	for _, job := range data.Members {
 		if state != "" && !strings.EqualFold(job.JobState, state) {
 			continue
 		}
 
-		tasks = append(tasks, &rf.Task{
-			Entity: rfcommon.Entity{
+		tasks = append(tasks, &gofishrf.Task{
+			Entity: gofishcommon.Entity{
 				ID:      job.ID,
 				ODataID: job.OdataID,
 				Name:    job.Name,
-				Client:  c.conn,
 			},
 			Description:     job.Name,
 			PercentComplete: job.PercentComplete,
 			StartTime:       job.StartTime,
 			EndTime:         job.CompletionTime,
-			TaskState:       rf.TaskState(job.JobState),
-			TaskStatus:      rfcommon.Health(job.Message), // abuse the TaskStatus to include any status message
+			TaskState:       gofishrf.TaskState(job.JobState),
+			TaskStatus:      gofishcommon.Health(job.Message), // abuse the TaskStatus to include any status message
 		})
 	}
 
