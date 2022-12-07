@@ -2,7 +2,6 @@ package redfish
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
@@ -30,11 +29,15 @@ var (
 	systemsOdataIDs = []string{
 		// Dells
 		"/redfish/v1/Systems/System.Embedded.1",
+		// Supermicros
+		"/redfish/v1/Systems/1",
 	}
 
 	// Supported Manager Odata IDs (BMCs)
 	managerOdataIDs = []string{
 		"/redfish/v1/Managers/iDRAC.Embedded.1",
+		// Supermicros
+		"/redfish/v1/Managers/1",
 	}
 )
 
@@ -55,9 +58,11 @@ func (c *Conn) Inventory(ctx context.Context) (device *common.Device, err error)
 		return nil, errors.Wrap(bmclibErrs.ErrRedfishSoftwareInventory, err.Error())
 	}
 
-	inv.softwareInventory, err = updateService.FirmwareInventories()
-	if err != nil {
-		return nil, errors.Wrap(bmclibErrs.ErrRedfishSoftwareInventory, err.Error())
+	if updateService != nil {
+		inv.softwareInventory, err = updateService.FirmwareInventories()
+		if err != nil && inv.failOnError {
+			return nil, errors.Wrap(bmclibErrs.ErrRedfishSoftwareInventory, err.Error())
+		}
 	}
 
 	// initialize device to be populated with inventory

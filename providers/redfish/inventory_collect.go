@@ -16,6 +16,7 @@ func (i *inventory) collectEnclosure(ch *gofishrf.Chassis, device *common.Device
 			Description: ch.Description,
 			Vendor:      common.FormatVendorName(ch.Manufacturer),
 			Model:       ch.Model,
+			Serial:      ch.SerialNumber,
 			Status: &common.Status{
 				Health: string(ch.Status.Health),
 				State:  string(ch.Status.State),
@@ -25,6 +26,10 @@ func (i *inventory) collectEnclosure(ch *gofishrf.Chassis, device *common.Device
 
 		ID:          ch.ID,
 		ChassisType: string(ch.ChassisType),
+	}
+
+	if e.Model == "" && ch.PartNumber != "" {
+		e.Model = ch.PartNumber
 	}
 
 	// include additional firmware attributes from redfish firmware inventory
@@ -167,18 +172,21 @@ func (i *inventory) collectNICs(sys *gofishrf.ComputerSystem, device *common.Dev
 }
 
 func (i *inventory) collectBIOS(sys *gofishrf.ComputerSystem, device *common.Device) (err error) {
+	device.BIOS = &common.BIOS{
+		Common: common.Common{
+			Firmware: &common.Firmware{
+				Installed: sys.BIOSVersion,
+			},
+		},
+	}
+
 	bios, err := sys.Bios()
 	if err != nil {
 		return err
 	}
 
-	device.BIOS = &common.BIOS{
-		Common: common.Common{
-			Description: bios.Description,
-			Firmware: &common.Firmware{
-				Installed: sys.BIOSVersion,
-			},
-		},
+	if bios != nil {
+		device.BIOS.Description = bios.Description
 	}
 
 	// include additional firmware attributes from redfish firmware inventory
