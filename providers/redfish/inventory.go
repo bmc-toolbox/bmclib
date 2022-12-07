@@ -2,13 +2,14 @@ package redfish
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
+	"github.com/pkg/errors"
 
 	"github.com/bmc-toolbox/common"
-	"github.com/pkg/errors"
 	gofishrf "github.com/stmcginnis/gofish/redfish"
 )
 
@@ -40,17 +41,17 @@ var (
 // inventory struct wraps redfish connection
 type inventory struct {
 	client            *redfishwrapper.Client
+	failOnError       bool
 	softwareInventory []*gofishrf.SoftwareInventory
 }
 
 func (c *Conn) Inventory(ctx context.Context) (device *common.Device, err error) {
 	// initialize inventory object
 	// the redfish client is assigned here to perform redfish Get/Delete requests
-	inv := &inventory{client: c.redfishwrapper}
+	inv := &inventory{client: c.redfishwrapper, failOnError: c.failInventoryOnError}
 
-	// TODO: this can soft fail
 	updateService, err := c.redfishwrapper.UpdateService()
-	if err != nil {
+	if err != nil && inv.failOnError {
 		return nil, errors.Wrap(bmclibErrs.ErrRedfishSoftwareInventory, err.Error())
 	}
 
@@ -65,19 +66,19 @@ func (c *Conn) Inventory(ctx context.Context) (device *common.Device, err error)
 
 	// populate device Chassis components attributes
 	err = inv.chassisAttributes(ctx, device)
-	if err != nil {
+	if err != nil && inv.failOnError {
 		return nil, err
 	}
 
 	// populate device System components attributes
 	err = inv.systemAttributes(ctx, device)
-	if err != nil {
+	if err != nil && inv.failOnError {
 		return nil, err
 	}
 
 	// populate device BMC component attributes
 	err = inv.bmcAttributes(ctx, device)
-	if err != nil {
+	if err != nil && inv.failOnError {
 		return nil, err
 	}
 
@@ -149,19 +150,19 @@ func (i *inventory) chassisAttributes(ctx context.Context, device *common.Device
 		compatible++
 
 		err = i.collectEnclosure(ch, device)
-		if err != nil {
+		if err != nil && i.failOnError {
 			return err
 		}
 
 		err = i.collectPSUs(ch, device)
-		if err != nil {
+		if err != nil && i.failOnError {
 			return err
 		}
 
 	}
 
 	err = i.collectCPLDs(device)
-	if err != nil {
+	if err != nil && i.failOnError {
 		return err
 	}
 
@@ -207,7 +208,7 @@ func (i *inventory) systemAttributes(ctx context.Context, device *common.Device)
 		// execute collector methods
 		for _, f := range funcs {
 			err := f(sys, device)
-			if err != nil {
+			if err != nil && i.failOnError {
 				return err
 			}
 		}
