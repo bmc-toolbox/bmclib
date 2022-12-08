@@ -122,11 +122,14 @@ func (i *inventory) collectNICs(sys *gofishrf.ComputerSystem, device *common.Dev
 	}
 
 	for _, nic := range nics {
-
 		// collect network interface adaptor information
 		adapter, err := nic.NetworkAdapter()
 		if err != nil {
 			return err
+		}
+
+		if adapter == nil {
+			continue
 		}
 
 		n := &common.NIC{
