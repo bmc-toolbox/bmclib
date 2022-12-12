@@ -37,15 +37,17 @@ var (
 
 // Conn details for redfish client
 type Conn struct {
-	redfishwrapper *redfishwrapper.Client
-	Log            logr.Logger
+	redfishwrapper       *redfishwrapper.Client
+	failInventoryOnError bool
+	Log                  logr.Logger
 }
 
 // New returns connection with a redfish client initialized
 func New(host, port, user, pass string, log logr.Logger, opts ...redfishwrapper.Option) *Conn {
 	return &Conn{
-		Log:            log,
-		redfishwrapper: redfishwrapper.NewClient(host, port, user, pass, opts...),
+		Log:                  log,
+		failInventoryOnError: false,
+		redfishwrapper:       redfishwrapper.NewClient(host, port, user, pass, opts...),
 	}
 }
 
