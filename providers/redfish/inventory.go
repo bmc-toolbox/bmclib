@@ -23,6 +23,8 @@ var (
 		"/redfish/v1/Chassis/1",
 		// MegaRAC
 		"/redfish/v1/Chassis/Self",
+		// OpenBMC on ASRock
+		"/redfish/v1/Chassis/ASRock_ROMED8HM3",
 	}
 
 	// Supported System Odata IDs
@@ -31,6 +33,8 @@ var (
 		"/redfish/v1/Systems/System.Embedded.1",
 		// Supermicros
 		"/redfish/v1/Systems/1",
+		// OpenBMC on ASRock
+		"/redfish/v1/Systems/system",
 	}
 
 	// Supported Manager Odata IDs (BMCs)
@@ -38,6 +42,8 @@ var (
 		"/redfish/v1/Managers/iDRAC.Embedded.1",
 		// Supermicros
 		"/redfish/v1/Managers/1",
+		// OpenBMC on ASRock
+		"/redfish/v1/Managers/bmc",
 	}
 )
 
