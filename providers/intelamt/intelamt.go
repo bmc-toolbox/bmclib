@@ -107,7 +107,12 @@ func (c *Conn) Close() (err error) {
 
 // Compatible tests whether a BMC is compatible with the ipmitool provider
 func (c *Conn) Compatible(ctx context.Context) bool {
-	if _, err := c.client.IsPoweredOn(ctx); err != nil {
+	amtclient, ok := c.client.(*amt.Client)
+	if !ok || amtclient == nil {
+		return false
+	}
+
+	if _, err := amtclient.IsPoweredOn(ctx); err != nil {
 		return false
 	}
 
