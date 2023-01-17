@@ -29,6 +29,7 @@ var (
 		providers.FeatureUserUpdate,
 		providers.FeatureUserDelete,
 		providers.FeatureBootDeviceSet,
+		providers.FeatureVirtualMedia,
 		providers.FeatureInventoryRead,
 		providers.FeatureFirmwareInstall,
 		providers.FeatureFirmwareInstallStatus,
@@ -149,4 +150,9 @@ func (c *Conn) PowerSet(ctx context.Context, state string) (ok bool, err error) 
 // BootDeviceSet sets the boot device
 func (c *Conn) BootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
 	return c.redfishwrapper.SystemBootDeviceSet(ctx, bootDevice, setPersistent, efiBoot)
+}
+
+// SetVirtualMedia sets the virtual media
+func (c *Conn) SetVirtualMedia(ctx context.Context, kind string, mediaURL string) (ok bool, err error) {
+	return c.redfishwrapper.SetVirtualMedia(ctx, kind, mediaURL)
 }

@@ -21,6 +21,8 @@ const (
 	FeatureBmcReset registrar.Feature = "bmcreset"
 	// FeatureBootDeviceSet means an implementation the next boot device
 	FeatureBootDeviceSet registrar.Feature = "bootdeviceset"
+	// FeaturesVirtualMedia means an implementation can manage virtual media devices
+	FeatureVirtualMedia registrar.Feature = "virtualmedia"
 	// FeatureFirmwareInstall means an implementation that initiates the firmware install process
 	FeatureFirmwareInstall registrar.Feature = "firmwareinstall"
 	// FeatureFirmwareInstallSatus means an implementation that returns the firmware install status
