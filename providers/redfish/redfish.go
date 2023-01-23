@@ -28,6 +28,7 @@ var (
 		providers.FeatureUserCreate,
 		providers.FeatureUserUpdate,
 		providers.FeatureUserDelete,
+		providers.FeatureBootDeviceSet,
 		providers.FeatureInventoryRead,
 		providers.FeatureFirmwareInstall,
 		providers.FeatureFirmwareInstallStatus,
@@ -134,4 +135,9 @@ func (c *Conn) PowerSet(ctx context.Context, state string) (ok bool, err error) 
 	default:
 		return false, errors.New("unknown power action")
 	}
+}
+
+// BootDeviceSet sets the boot device
+func (c * Conn) BootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
+	return c.redfishwrapper.SystemBootDeviceSet(ctx, bootDevice, setPersistent, efiBoot)
 }
