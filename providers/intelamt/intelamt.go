@@ -28,6 +28,8 @@ var (
 	}
 )
 
+
+
 type amtProvider interface {
 	IsPoweredOn(context.Context) (bool, error)
 	PowerOn(context.Context) error
@@ -53,21 +55,13 @@ func New(log logr.Logger, host string, port string, user string, pass string) *C
 	if err != nil {
 		p = 16992
 	}
-	conn := amt.Connection{
-		Host:   host,
-		Port:   uint32(p),
-		User:   user,
-		Pass:   pass,
-		Logger: log,
-	}
-	client, _ := amt.NewClient(conn)
+
 	c := &Conn{
-		Host:   host,
-		Port:   uint32(p),
-		User:   user,
-		Pass:   pass,
-		Log:    log,
-		client: client,
+		Host: host,
+		Port: uint32(p),
+		User: user,
+		Pass: pass,
+		Log:  log,
 	}
 
 	return c
@@ -78,24 +72,25 @@ func (c *Conn) Name() string {
 	return ProviderName
 }
 
+
+
 // Open a connection to the BMC via AMT.
 // The AMT library does not do/use sessions so opening just instantiates the Conn.client.
 // It will communicate with the BMC.
 func (c *Conn) Open(ctx context.Context) (err error) {
-	if c.client == nil {
-		conn := amt.Connection{
-			Host:   c.Host,
-			Port:   c.Port,
-			User:   c.User,
-			Pass:   c.Pass,
-			Logger: c.Log,
-		}
-		client, err := amt.NewClient(conn)
-		if err != nil {
-			return err
-		}
-		c.client = client
+	conn := amt.Connection{
+		Host:   c.Host,
+		Port:   c.Port,
+		User:   c.User,
+		Pass:   c.Pass,
+		Logger: c.Log,
 	}
+	// amt.NewClient is used here in Open instead of in New because amt.NewClient makes a connection to the BMC.
+	client, err := amt.NewClient(conn)
+	if err != nil {
+		return err
+	}
+	c.client = client
 
 	return nil
 }
@@ -107,12 +102,11 @@ func (c *Conn) Close() (err error) {
 
 // Compatible tests whether a BMC is compatible with the ipmitool provider
 func (c *Conn) Compatible(ctx context.Context) bool {
-	amtclient, ok := c.client.(*amt.Client)
-	if !ok || amtclient == nil {
+	if err := c.Open(ctx); err != nil {
 		return false
 	}
 
-	if _, err := amtclient.IsPoweredOn(ctx); err != nil {
+	if _, err := c.client.IsPoweredOn(ctx); err != nil {
 		return false
 	}
 

@@ -47,17 +47,6 @@ func (m *mock) SetPXE(ctx context.Context) error {
 	return m.errSetPXE
 }
 
-func TestOpen(t *testing.T) {
-	conn := &Conn{client: &mock{}}
-	if err := conn.Open(context.Background()); err != nil {
-		t.Fatal(err)
-	}
-	conn = &Conn{}
-	if err := conn.Open(context.Background()); err == nil {
-		t.Fatal("expected error, got nil")
-	}
-}
-
 func TestClose(t *testing.T) {
 	conn := &Conn{client: &mock{}}
 	if err := conn.Close(); err != nil {
@@ -176,30 +165,6 @@ func TestPowerSet(t *testing.T) {
 			if err != nil && tt.err == nil {
 				t.Fatalf("expected nil error, got: %v", err)
 			}
-			if diff := cmp.Diff(got, tt.want); diff != "" {
-				t.Fatal(diff)
-			}
-		})
-	}
-}
-
-func TestCompatible(t *testing.T) {
-	tests := map[string]struct {
-		want bool
-	}{
-		"compatible":     {want: true},
-		"not compatible": {want: false},
-	}
-
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			var err error
-			if !tt.want {
-				err = errors.New("not compatible")
-			}
-			m := &mock{errIsPoweredOn: err}
-			conn := &Conn{client: m}
-			got := conn.Compatible(context.Background())
 			if diff := cmp.Diff(got, tt.want); diff != "" {
 				t.Fatal(diff)
 			}
