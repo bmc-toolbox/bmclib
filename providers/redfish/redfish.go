@@ -80,6 +80,15 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 	}
 	defer c.Close(ctx)
 
+	if !c.redfishwrapper.VersionCompatible() {
+		c.Log.V(2).WithValues(
+			"provider",
+			c.Name(),
+		).Info("info", bmclibErrs.ErrCompatibilityCheck.Error(), "incompatible redfish version")
+
+		return false
+	}
+
 	_, err = c.PowerStateGet(ctx)
 	if err != nil {
 		c.Log.V(2).WithValues(
@@ -138,6 +147,6 @@ func (c *Conn) PowerSet(ctx context.Context, state string) (ok bool, err error) 
 }
 
 // BootDeviceSet sets the boot device
-func (c * Conn) BootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
+func (c *Conn) BootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
 	return c.redfishwrapper.SystemBootDeviceSet(ctx, bootDevice, setPersistent, efiBoot)
 }

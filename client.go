@@ -29,8 +29,9 @@ type Client struct {
 	metadata *bmc.Metadata
 	mdLock   *sync.Mutex
 
-	httpClient           *http.Client
-	httpClientSetupFuncs []func(*http.Client)
+	redfishVersionsNotCompatible []string
+	httpClient                   *http.Client
+	httpClientSetupFuncs         []func(*http.Client)
 }
 
 // Auth details for connecting to a BMC
@@ -69,11 +70,22 @@ func WithHTTPClient(c *http.Client) Option {
 	}
 }
 
+// WithRedfishVersionsNotCompatible sets the list of incompatible redfish versions.
+//
+// With this option set, The bmclib.Registry.FilterForCompatible(ctx) method will not proceed on
+// devices with the given redfish version(s).
+func WithRedfishVersionsNotCompatible(versions []string) Option {
+	return func(args *Client) {
+		args.redfishVersionsNotCompatible = append(args.redfishVersionsNotCompatible, versions...)
+	}
+}
+
 // NewClient returns a new Client struct
 func NewClient(host, port, user, pass string, opts ...Option) *Client {
 	var defaultClient = &Client{
-		Logger:   logr.Discard(),
-		Registry: registrar.NewRegistry(),
+		Logger:                       logr.Discard(),
+		Registry:                     registrar.NewRegistry(),
+		redfishVersionsNotCompatible: []string{},
 	}
 
 	for _, opt := range opts {
@@ -110,7 +122,7 @@ func (c *Client) registerProviders() {
 	c.Registry.Register(asrockrack.ProviderName, asrockrack.ProviderProtocol, asrockrack.Features, nil, driverAsrockrack)
 
 	// register gofish provider
-	driverGoFish := redfish.New(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger, redfishwrapper.WithHTTPClient(c.httpClient))
+	driverGoFish := redfish.New(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger, redfishwrapper.WithHTTPClient(c.httpClient), redfishwrapper.WithVersionsNotCompatible(c.redfishVersionsNotCompatible))
 	c.Registry.Register(redfish.ProviderName, redfish.ProviderProtocol, redfish.Features, nil, driverGoFish)
 
 	// register AMT provider

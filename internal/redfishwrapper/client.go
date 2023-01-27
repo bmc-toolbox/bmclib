@@ -12,17 +12,19 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish"
+	"golang.org/x/exp/slices"
 )
 
 // Client is a redfishwrapper client which wraps the gofish client.
 type Client struct {
-	host                 string
-	port                 string
-	user                 string
-	pass                 string
-	client               *gofish.APIClient
-	httpClient           *http.Client
-	httpClientSetupFuncs []func(*http.Client)
+	host                  string
+	port                  string
+	user                  string
+	pass                  string
+	versionsNotCompatible []string // a slice of redfish versions to ignore as incompatible
+	client                *gofish.APIClient
+	httpClient            *http.Client
+	httpClientSetupFuncs  []func(*http.Client)
 }
 
 // Option is a function applied to a *Conn
@@ -42,6 +44,16 @@ func WithSecureTLS(rootCAs *x509.CertPool) Option {
 	}
 }
 
+// WithVersionsNotCompatible returns an option that sets the redfish versions to ignore as incompatible.
+//
+// The version string value must match the value returned by
+// curl -k  "https://10.247.133.39/redfish/v1" | jq .RedfishVersion
+func WithVersionsNotCompatible(versions []string) Option {
+	return func(c *Client) {
+		c.versionsNotCompatible = append(c.versionsNotCompatible, versions...)
+	}
+}
+
 // NewClient returns a redfishwrapper client
 func NewClient(host, port, user, pass string, opts ...Option) *Client {
 	if !strings.HasPrefix(host, "https://") && !strings.HasPrefix(host, "http://") {
@@ -49,10 +61,11 @@ func NewClient(host, port, user, pass string, opts ...Option) *Client {
 	}
 
 	client := &Client{
-		host: host,
-		port: port,
-		user: user,
-		pass: pass,
+		host:                  host,
+		port:                  port,
+		user:                  user,
+		pass:                  pass,
+		versionsNotCompatible: []string{},
 	}
 
 	for _, opt := range opts {
@@ -91,11 +104,8 @@ func (c *Client) Open(ctx context.Context) error {
 
 	var err error
 	c.client, err = gofish.ConnectContext(ctx, config)
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
 // Close closes the redfish session.
@@ -138,4 +148,17 @@ func (c *Client) Delete(url string) (*http.Response, error) {
 
 func (c *Client) Get(url string) (*http.Response, error) {
 	return c.client.Get(url)
+}
+
+// VersionCompatible compares the redfish version reported by the BMC with the blacklist if specified.
+func (c *Client) VersionCompatible() bool {
+	if len(c.versionsNotCompatible) == 0 {
+		return true
+	}
+
+	if err := c.SessionActive(); err != nil {
+		return false
+	}
+
+	return !slices.Contains(c.versionsNotCompatible, c.client.Service.RedfishVersion)
 }
