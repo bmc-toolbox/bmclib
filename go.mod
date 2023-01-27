@@ -14,8 +14,8 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stmcginnis/gofish v0.13.1-0.20221107140645-5cc43fad050f
 	github.com/stretchr/testify v1.7.2
-	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
-	golang.org/x/net v0.0.0-20220615171555-694bf12d69de
+	golang.org/x/crypto v0.1.0
+	golang.org/x/net v0.1.0
 	gopkg.in/go-playground/assert.v1 v1.2.1
 )
 
@@ -28,9 +28,8 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/satori/go.uuid v1.2.0 // indirect
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
-	golang.org/x/mod v0.5.1 // indirect
-	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
-	golang.org/x/tools v0.1.8 // indirect
-	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	golang.org/x/mod v0.6.0 // indirect
+	golang.org/x/sys v0.1.0 // indirect
+	golang.org/x/tools v0.2.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
