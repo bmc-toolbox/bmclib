@@ -21,11 +21,14 @@ type UserAccount struct {
 	ID                           int    `json:"id"`
 	Name                         string `json:"name"`
 	Access                       int    `json:"access"`
+	AccessByChannel              string `json:"accessByChannel,omitempty"`
 	Kvm                          int    `json:"kvm"`
 	Vmedia                       int    `json:"vmedia"`
 	NetworkPrivilege             string `json:"network_privilege"`
 	FixedUserCount               int    `json:"fixed_user_count"`
 	OEMProprietaryLevelPrivilege int    `json:"OEMProprietary_level_Privilege"`
+	Privilege                    string `json:"privilege,omitempty"`
+	PrivilegeByChannel           string `json:"privilegeByChannel,omitempty"`
 	PrivilegeLimitSerial         string `json:"privilege_limit_serial"`
 	SSHKey                       string `json:"ssh_key"`
 	CreationTime                 int    `json:"creation_time"`
@@ -134,6 +137,10 @@ func (a *ASRockRack) UserUpdate(ctx context.Context, user, pass, role string) (o
 		account := account
 		if account.Name == user {
 			user := newUserAccount(account.ID, user, pass, role)
+
+			user.AccessByChannel = account.AccessByChannel
+			user.PrivilegeByChannel = account.PrivilegeByChannel
+			user.Privilege = role
 
 			if role == "administrator" {
 				user.PrivilegeLimitSerial = "none"
