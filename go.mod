@@ -15,6 +15,7 @@ require (
 	github.com/stmcginnis/gofish v0.13.1-0.20221107140645-5cc43fad050f
 	github.com/stretchr/testify v1.7.2
 	golang.org/x/crypto v0.1.0
+	golang.org/x/exp v0.0.0-20230127130021-4ca2cb1a16b7
 	golang.org/x/net v0.1.0
 	gopkg.in/go-playground/assert.v1 v1.2.1
 )

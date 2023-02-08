@@ -6,9 +6,10 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	bmclib "github.com/bmc-toolbox/bmclib/v2"
@@ -24,6 +25,7 @@ func main() {
 	pass := flag.String("password", "", "Username to login with")
 	host := flag.String("host", "", "BMC hostname to connect to")
 	port := flag.Int("port", 443, "BMC port to connect to")
+	incompatibleRedfishVersions := flag.String("incompatible-redfish-versions", "", "Comma separated list of redfish versions to deem incompatible")
 	withSecureTLS := flag.Bool("secure-tls", false, "Enable secure TLS")
 	certPoolFile := flag.String("cert-pool", "", "Path to an file containing x509 CAs. An empty string uses the system CAs. Only takes effect when --secure-tls=true")
 	flag.Parse()
@@ -38,7 +40,7 @@ func main() {
 		var pool *x509.CertPool
 		if *certPoolFile != "" {
 			pool = x509.NewCertPool()
-			data, err := ioutil.ReadFile(*certPoolFile)
+			data, err := os.ReadFile(*certPoolFile)
 			if err != nil {
 				l.Fatal(err)
 			}
@@ -48,8 +50,16 @@ func main() {
 		clientOpts = append(clientOpts, bmclib.WithSecureTLS(pool))
 	}
 
+	if len(*incompatibleRedfishVersions) > 0 {
+		// blacklist a redfish version
+		clientOpts = append(
+			clientOpts,
+			bmclib.WithRedfishVersionsNotCompatible(strings.Split(*incompatibleRedfishVersions, ",")))
+	}
+
 	cl := bmclib.NewClient(*host, strconv.Itoa(*port), *user, *pass, clientOpts...)
-	//	cl.Registry.Drivers = cl.Registry.Using("redfish")
+
+	cl.Registry.Drivers = cl.Registry.FilterForCompatible(ctx)
 
 	err := cl.Open(ctx)
 	if err != nil {
