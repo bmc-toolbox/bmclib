@@ -240,7 +240,10 @@ func (c *Client) SetBootDevice(ctx context.Context, bootDevice string, setPersis
 	return ok, err
 }
 
-// SetVirtualMedia pass through to library functino
+// SetVirtualMedia controls the virtual media simulated by the BMC as being connected to the
+// server. Specifically, the method ejects any currently attached virtual media, and then if
+// mediaURL isn't empty, attaches a virtual media device of type kind whose contents are
+// streamed from the indicated URL.
 func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL string) (ok bool, err error) {
 	ok, metadata, err := bmc.SetVirtualMediaFromInterfaces(ctx, kind, mediaURL, c.Registry.GetDriverInterfaces())
 	c.setMetadata(metadata)
