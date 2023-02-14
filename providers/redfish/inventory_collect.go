@@ -152,6 +152,8 @@ func (i *inventory) collectNICs(sys *gofishrf.ComputerSystem, device *common.Dev
 			}
 		}
 
+		var subNICs []*common.NIC
+
 		// populate mac addresses from ethernet interfaces
 		for _, ethInterface := range ethernetInterfaces {
 			// the ethernet interface includes the port and position number NIC.Slot.3-1-1
@@ -163,12 +165,35 @@ func (i *inventory) collectNICs(sys *gofishrf.ComputerSystem, device *common.Dev
 			n.Description = ethInterface.Description
 			n.MacAddress = ethInterface.MACAddress
 			n.SpeedBits = int64(ethInterface.SpeedMbps*10 ^ 6)
+
+			subNIC := &common.NIC{
+				Common: common.Common{
+					Vendor: common.FormatVendorName(adapter.Manufacturer),
+					Model:  adapter.Model,
+					Serial: adapter.SerialNumber,
+					Status: &common.Status{
+						State:  string(ethInterface.Status.State),
+						Health: string(ethInterface.Status.Health),
+					},
+				},
+
+				ID:          ethInterface.ID, // "Id": "NIC.Slot.3-1-1"
+				Description: n.Description,
+				MacAddress:  n.MacAddress,
+				SpeedBits:   n.SpeedBits,
+			}
+			i.firmwareAttributes(common.SlugNIC, subNIC.ID, subNIC.Firmware)
+			subNICs = append(subNICs, subNIC)
 		}
 
 		// include additional firmware attributes from redfish firmware inventory
 		i.firmwareAttributes(common.SlugNIC, n.ID, n.Firmware)
 
-		device.NICs = append(device.NICs, n)
+		if len(subNICs) > 1 {
+			device.NICs = append(device.NICs, subNICs...)
+		} else {
+			device.NICs = append(device.NICs, n)
+		}
 	}
 
 	return nil
