@@ -1,6 +1,7 @@
 package redfish
 
 import (
+	"math"
 	"strings"
 
 	"github.com/bmc-toolbox/common"
@@ -109,6 +110,10 @@ func (i *inventory) collectTPMs(sys *gofishrf.ComputerSystem, device *common.Dev
 
 // collectNICs collects network interface component information
 func (i *inventory) collectNICs(sys *gofishrf.ComputerSystem, device *common.Device) (err error) {
+	if sys == nil || device == nil {
+		return nil
+	}
+
 	// collect network interface information
 	nics, err := sys.NetworkInterfaces()
 	if err != nil {
@@ -134,9 +139,10 @@ func (i *inventory) collectNICs(sys *gofishrf.ComputerSystem, device *common.Dev
 
 		n := &common.NIC{
 			Common: common.Common{
-				Vendor: common.FormatVendorName(adapter.Manufacturer),
-				Model:  adapter.Model,
-				Serial: adapter.SerialNumber,
+				Vendor:      common.FormatVendorName(adapter.Manufacturer),
+				Model:       adapter.Model,
+				Serial:      adapter.SerialNumber,
+				ProductName: adapter.PartNumber,
 				Status: &common.Status{
 					State:  string(nic.Status.State),
 					Health: string(nic.Status.Health),
@@ -146,32 +152,134 @@ func (i *inventory) collectNICs(sys *gofishrf.ComputerSystem, device *common.Dev
 			ID: nic.ID, // "Id": "NIC.Slot.3",
 		}
 
-		if len(adapter.Controllers) > 0 {
-			n.Firmware = &common.Firmware{
-				Installed: adapter.Controllers[0].FirmwarePackageVersion,
-			}
+		ports, err := adapter.NetworkPorts()
+		if err != nil {
+			return err
 		}
 
-		// populate mac addresses from ethernet interfaces
-		for _, ethInterface := range ethernetInterfaces {
-			// the ethernet interface includes the port and position number NIC.Slot.3-1-1
-			if !strings.HasPrefix(ethInterface.ID, adapter.ID) {
-				continue
-			}
+		portFirmwareVersion := getFirmwareVersionFromController(adapter.Controllers, len(ports))
 
-			// The ethernet interface description is
-			n.Description = ethInterface.Description
-			n.MacAddress = ethInterface.MACAddress
-			n.SpeedBits = int64(ethInterface.SpeedMbps*10 ^ 6)
+		for _, networkPort := range ports {
+
+			// populate network ports general data
+			nicPort := &common.NICPort{}
+			i.collectNetworkPortInfo(nicPort, adapter, networkPort, portFirmwareVersion)
+
+			if networkPort.ActiveLinkTechnology == gofishrf.EthernetLinkNetworkTechnology {
+				// ethernet specific data
+				i.collectEthernetInfo(nicPort, ethernetInterfaces)
+			}
+			n.NICPorts = append(n.NICPorts, nicPort)
 		}
 
 		// include additional firmware attributes from redfish firmware inventory
 		i.firmwareAttributes(common.SlugNIC, n.ID, n.Firmware)
+		if len(portFirmwareVersion) > 0 {
+			if n.Firmware == nil {
+				n.Firmware = &common.Firmware{}
+			}
+			n.Firmware.Installed = portFirmwareVersion
+		}
 
 		device.NICs = append(device.NICs, n)
 	}
 
 	return nil
+}
+
+func (i *inventory) collectNetworkPortInfo(
+	nicPort *common.NICPort, adapter *gofishrf.NetworkAdapter, networkPort *gofishrf.NetworkPort, firmware string) {
+
+	if adapter != nil {
+		nicPort.Vendor = adapter.Manufacturer
+		nicPort.Model = adapter.Model
+	}
+
+	if networkPort != nil {
+
+		nicPort.Description = networkPort.Description
+		nicPort.PCIVendorID = networkPort.VendorID
+		nicPort.Status = &common.Status{
+			Health: string(networkPort.Status.Health),
+			State:  string(networkPort.Status.State),
+		}
+		nicPort.ID = networkPort.ID
+		nicPort.PhysicalID = networkPort.PhysicalPortNumber
+		nicPort.LinkStatus = string(networkPort.LinkStatus)
+		nicPort.ActiveLinkTechnology = string(networkPort.ActiveLinkTechnology)
+
+		if networkPort.CurrentLinkSpeedMbps > 0 {
+			nicPort.SpeedBits = int64(networkPort.CurrentLinkSpeedMbps) * int64(math.Pow10(6))
+		}
+
+		if len(networkPort.AssociatedNetworkAddresses) > 0 {
+			for _, macAddress := range networkPort.AssociatedNetworkAddresses {
+				if len(macAddress) > 0 && macAddress != "00:00:00:00:00:00" {
+					nicPort.MacAddress = macAddress // first valid value only
+					break
+				}
+			}
+		}
+
+		i.firmwareAttributes(common.SlugNIC, networkPort.ID, nicPort.Firmware)
+	}
+	if len(firmware) > 0 {
+		if nicPort.Firmware == nil {
+			nicPort.Firmware = &common.Firmware{}
+		}
+		nicPort.Firmware.Installed = firmware
+	}
+}
+
+func (i *inventory) collectEthernetInfo(nicPort *common.NICPort, ethernetInterfaces []*gofishrf.EthernetInterface) {
+	if nicPort == nil {
+		return
+	}
+
+	// populate mac address et al. from matching ethernet interface
+	for _, ethInterface := range ethernetInterfaces {
+		// the ethernet interface includes the port, position number and function NIC.Slot.3-1-1
+		if !strings.HasPrefix(ethInterface.ID, nicPort.ID) {
+			continue
+		}
+
+		// override values only if needed
+		if len(ethInterface.Description) > 0 {
+			nicPort.Description = ethInterface.Description
+		}
+		if len(ethInterface.Status.Health) > 0 {
+			if nicPort.Status == nil {
+				nicPort.Status = &common.Status{}
+			}
+			nicPort.Status.Health = string(ethInterface.Status.Health)
+		}
+		if len(ethInterface.Status.State) > 0 {
+			if nicPort.Status == nil {
+				nicPort.Status = &common.Status{}
+			}
+			nicPort.Status.State = string(ethInterface.Status.State)
+		}
+		nicPort.ID = ethInterface.ID // override ID
+		if ethInterface.SpeedMbps > 0 {
+			nicPort.SpeedBits = int64(ethInterface.SpeedMbps) * int64(math.Pow10(6))
+		}
+
+		nicPort.AutoNeg = ethInterface.AutoNeg
+		nicPort.MTUSize = ethInterface.MTUSize
+
+		// always override mac address
+		nicPort.MacAddress = ethInterface.MACAddress
+		break // stop at first match
+	}
+}
+
+func getFirmwareVersionFromController(controllers []gofishrf.Controllers, portCount int) string {
+	for _, controller := range controllers {
+		if controller.ControllerCapabilities.NetworkPortCount == portCount {
+			return controller.FirmwarePackageVersion
+		}
+	}
+	return ""
 }
 
 func (i *inventory) collectBIOS(sys *gofishrf.ComputerSystem, device *common.Device) (err error) {
