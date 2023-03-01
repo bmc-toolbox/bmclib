@@ -82,7 +82,7 @@ func (c *Conn) Open(ctx context.Context) (err error) {
 		Logger: c.Log,
 	}
 
-	connChan := make(chan error, 0)
+	connChan := make(chan error)
 
 	// since we can't pass a context into amt.NewClient()
 	// spawn a routine and watch for timeouts in the select below.

@@ -81,3 +81,30 @@ func TestWithRedfishVersionsNotCompatible(t *testing.T) {
 		})
 	}
 }
+
+func TestWithConnectionTimeout(t *testing.T) {
+	host := "127.0.0.1"
+	port := "623"
+	user := "ADMIN"
+	pass := "ADMIN"
+
+	tests := []struct {
+		name    string
+		timeout time.Duration
+	}{
+		{
+			"no connection timeout",
+			0,
+		},
+		{
+			"with timeout",
+			5 * time.Second,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cl := NewClient(host, port, user, pass, WithConnectTimeout(tt.timeout))
+			assert.Equal(t, tt.timeout, cl.connectTimeout)
+		})
+	}
+}
