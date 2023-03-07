@@ -264,6 +264,12 @@ func (c *Client) Inventory(ctx context.Context) (device *common.Device, err erro
 	return device, err
 }
 
+func (c *Client) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]string, err error) {
+	biosConfig, metadata, err := bmc.GetBiosConfigurationInterfaces(ctx, c.Registry.GetDriverInterfaces())
+	c.setMetadata(metadata)
+	return biosConfig, err
+}
+
 // FirmwareInstall pass through library function to upload firmware and install firmware
 func (c *Client) FirmwareInstall(ctx context.Context, component, applyAt string, forceInstall bool, reader io.Reader) (taskID string, err error) {
 	taskID, metadata, err := bmc.FirmwareInstallFromInterfaces(ctx, component, applyAt, forceInstall, reader, c.Registry.GetDriverInterfaces())
