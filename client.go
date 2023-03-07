@@ -36,6 +36,11 @@ type Client struct {
 	httpClientSetupFuncs         []func(*http.Client)
 }
 
+var (
+	// default connection open timeout
+	defaultConnectTimeout = 30 * time.Second
+)
+
 // Auth details for connecting to a BMC
 type Auth struct {
 	Host string
@@ -73,14 +78,7 @@ func WithHTTPClient(c *http.Client) Option {
 }
 
 // WithConnectTimeout sets the timeout when connecting to a BMC to create a new session.
-// When not defined the deadline value passed in through the context applies.
-//
-// This timeout value will take effect when its lesser than the passed in context deadline value.
-//
-// The context deadline timeout value is shared between all the bmclib providers
-// that is - when creating an a new connection/session on a BMC. The shared timeout value
-// entails that a single provider can consume the whole timeout value depending on how long
-// it takes to respond, thus leaving the other providers with no chance to connect.
+// When not defined the default connection timeout applies.
 func WithConnectTimeout(t time.Duration) Option {
 	return func(args *Client) {
 		args.connectTimeout = t
@@ -103,6 +101,7 @@ func NewClient(host, port, user, pass string, opts ...Option) *Client {
 		Logger:                       logr.Discard(),
 		Registry:                     registrar.NewRegistry(),
 		redfishVersionsNotCompatible: []string{},
+		connectTimeout:               defaultConnectTimeout,
 	}
 
 	for _, opt := range opts {
@@ -183,14 +182,7 @@ func (c *Client) setMetadata(metadata bmc.Metadata) {
 // from the client.Registry.Drivers. If client.Registry.Drivers ends up
 // being empty then we error.
 func (c *Client) Open(ctx context.Context) error {
-	// When defined override the context timeout for opening connections.
-	if c.connectTimeout > 0 {
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, c.connectTimeout)
-		defer cancel()
-	}
-
-	ifs, metadata, err := bmc.OpenConnectionFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+	ifs, metadata, err := bmc.OpenConnectionFromInterfaces(ctx, c.connectTimeout, c.Registry.GetDriverInterfaces())
 	if err != nil {
 		return err
 	}
