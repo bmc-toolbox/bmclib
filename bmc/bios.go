@@ -7,6 +7,7 @@ import (
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
+	"github.com/sanity-io/litter"
 )
 
 type BiosConfigurationGetter interface {
@@ -48,8 +49,12 @@ Loop:
 
 func GetBiosConfigurationInterfaces(ctx context.Context, generic []interface{}) (biosConfig map[string]string, metadata Metadata, err error) {
 	implementations := make([]biosConfigurationGetterProvider, 0)
+	litter.Dump(generic)
 	for _, elem := range generic {
+		litter.Dump(elem)
 		temp := biosConfigurationGetterProvider{name: getProviderName(elem)}
+		litter.Dump(getProviderName(elem))
+		litter.Dump(temp)
 		switch p := elem.(type) {
 		case BiosConfigurationGetter:
 			temp.BiosConfigurationGetter = p
