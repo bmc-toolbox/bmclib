@@ -17,7 +17,7 @@ func (c *Client) AccountService() (*gofishrf.AccountService, error) {
 		return nil, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
-	return c.client.Service.AccountService()
+	return c.Client.Service.AccountService()
 }
 
 // UpdateService gets the update service instance.
@@ -26,7 +26,7 @@ func (c *Client) UpdateService() (*gofishrf.UpdateService, error) {
 		return nil, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
-	return c.client.Service.UpdateService()
+	return c.Client.Service.UpdateService()
 }
 
 // Systems get the system instances from the service.
@@ -35,7 +35,7 @@ func (c *Client) Systems() ([]*gofishrf.ComputerSystem, error) {
 		return nil, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
-	return c.client.Service.Systems()
+	return c.Client.Service.Systems()
 }
 
 // Managers gets the manager instances of this service.
@@ -44,7 +44,7 @@ func (c *Client) Managers(ctx context.Context) ([]*gofishrf.Manager, error) {
 		return nil, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
-	return c.client.Service.Managers()
+	return c.Client.Service.Managers()
 }
 
 // Chassis gets the chassis instances managed by this service.
@@ -53,5 +53,5 @@ func (c *Client) Chassis(ctx context.Context) ([]*gofishrf.Chassis, error) {
 		return nil, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
-	return c.client.Service.Chassis()
+	return c.Client.Service.Chassis()
 }

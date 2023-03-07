@@ -14,7 +14,7 @@ func (c *Client) SystemBootDeviceSet(ctx context.Context, bootDevice string, set
 		return false, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
-	systems, err := c.client.Service.Systems()
+	systems, err := c.Client.Service.Systems()
 	if err != nil {
 		return false, err
 	}

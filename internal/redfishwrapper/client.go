@@ -22,7 +22,7 @@ type Client struct {
 	user                  string
 	pass                  string
 	versionsNotCompatible []string // a slice of redfish versions to ignore as incompatible
-	client                *gofish.APIClient
+	Client                *gofish.APIClient
 	httpClient            *http.Client
 	httpClientSetupFuncs  []func(*http.Client)
 }
@@ -103,29 +103,29 @@ func (c *Client) Open(ctx context.Context) error {
 	}
 
 	var err error
-	c.client, err = gofish.ConnectContext(ctx, config)
+	c.Client, err = gofish.ConnectContext(ctx, config)
 
 	return err
 }
 
 // Close closes the redfish session.
 func (c *Client) Close(ctx context.Context) error {
-	if c == nil || c.client.Service == nil {
+	if c == nil || c.Client.Service == nil {
 		return nil
 	}
 
-	c.client.Logout()
+	c.Client.Logout()
 
 	return nil
 }
 
 // SessionActive returns an error if a redfish session is not active.
 func (c *Client) SessionActive() error {
-	if c.client == nil || c.client.Service == nil {
+	if c.Client == nil || c.Client.Service == nil {
 		return bmclibErrs.ErrNotAuthenticated
 	}
 
-	_, err := c.client.GetSession()
+	_, err := c.Client.GetSession()
 	if err != nil {
 		return errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
@@ -139,15 +139,15 @@ func (c *Client) RunRawRequestWithHeaders(method, url string, payloadBuffer io.R
 		return nil, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
-	return c.client.RunRawRequestWithHeaders(method, url, payloadBuffer, contentType, customHeaders)
+	return c.Client.RunRawRequestWithHeaders(method, url, payloadBuffer, contentType, customHeaders)
 }
 
 func (c *Client) Delete(url string) (*http.Response, error) {
-	return c.client.Delete(url)
+	return c.Client.Delete(url)
 }
 
 func (c *Client) Get(url string) (*http.Response, error) {
-	return c.client.Get(url)
+	return c.Client.Get(url)
 }
 
 // VersionCompatible compares the redfish version reported by the BMC with the blacklist if specified.
@@ -160,5 +160,5 @@ func (c *Client) VersionCompatible() bool {
 		return false
 	}
 
-	return !slices.Contains(c.versionsNotCompatible, c.client.Service.RedfishVersion)
+	return !slices.Contains(c.versionsNotCompatible, c.Client.Service.RedfishVersion)
 }

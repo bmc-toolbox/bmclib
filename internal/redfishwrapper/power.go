@@ -17,7 +17,7 @@ func (c *Client) BMCReset(ctx context.Context, resetType string) (ok bool, err e
 		return false, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
-	managers, err := c.client.Service.Managers()
+	managers, err := c.Client.Service.Managers()
 	if err != nil {
 		return false, err
 	}
@@ -38,7 +38,7 @@ func (c *Client) SystemPowerOn(ctx context.Context) (ok bool, err error) {
 		return false, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
-	service := c.client.Service
+	service := c.Client.Service
 	ss, err := service.Systems()
 	if err != nil {
 		return false, err
@@ -62,7 +62,7 @@ func (c *Client) SystemPowerOff(ctx context.Context) (ok bool, err error) {
 		return false, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
-	service := c.client.Service
+	service := c.Client.Service
 	ss, err := service.Systems()
 	if err != nil {
 		return false, err
@@ -87,7 +87,7 @@ func (c *Client) SystemReset(ctx context.Context) (ok bool, err error) {
 		return false, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
-	service := c.client.Service
+	service := c.Client.Service
 	ss, err := service.Systems()
 	if err != nil {
 		return false, err
@@ -121,7 +121,7 @@ func (c *Client) SystemPowerCycle(ctx context.Context) (ok bool, err error) {
 		return false, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
-	service := c.client.Service
+	service := c.Client.Service
 	ss, err := service.Systems()
 	if err != nil {
 		return false, err
@@ -152,7 +152,7 @@ func (c *Client) SystemPowerStatus(ctx context.Context) (result string, err erro
 		return result, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
-	service := c.client.Service
+	service := c.Client.Service
 	ss, err := service.Systems()
 	if err != nil {
 		return "", err
@@ -171,7 +171,7 @@ func (c *Client) SystemForceOff(ctx context.Context) (ok bool, err error) {
 		return false, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
-	service := c.client.Service
+	service := c.Client.Service
 	ss, err := service.Systems()
 	if err != nil {
 		return false, err
