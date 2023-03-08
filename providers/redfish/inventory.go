@@ -31,6 +31,7 @@ var (
 	systemsOdataIDs = []string{
 		// Dells
 		"/redfish/v1/Systems/System.Embedded.1",
+		"/redfish/v1/Systems/System.Embedded.1/Bios",
 		// Supermicros
 		"/redfish/v1/Systems/1",
 		// OpenBMC on ASRock
