@@ -8,7 +8,6 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/jacobweinstock/iamt"
 )
 
 type mock struct {
@@ -224,14 +223,13 @@ func TestCompatible(t *testing.T) {
 }
 
 func TestNew(t *testing.T) {
-	wantClient := iamt.NewClient(logr.Discard(), "localhost", "", "admin", "pass")
+	wantClient := &mock{}
 	want := &Conn{client: wantClient}
 	got := New(logr.Discard(), "localhost", "", "admin", "pass")
 	t.Log(got == nil)
 	c := Conn{}
-	a := iamt.Client{}
 	l := logr.Logger{}
-	if diff := cmp.Diff(got, want, cmpopts.IgnoreUnexported(c, a, l)); diff != "" { //nolint:govet
+	if diff := cmp.Diff(got, want, cmpopts.IgnoreUnexported(c, l)); diff != "" {
 		t.Fatal(diff)
 	}
 }
