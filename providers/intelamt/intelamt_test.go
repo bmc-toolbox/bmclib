@@ -231,7 +231,7 @@ func TestNew(t *testing.T) {
 	c := Conn{}
 	a := iamt.Client{}
 	l := logr.Logger{}
-	if diff := cmp.Diff(got, want, cmpopts.IgnoreUnexported(c, a, l)); diff != "" {
+	if diff := cmp.Diff(got, want, cmpopts.IgnoreUnexported(c, a, l)); diff != "" { //nolint:govet
 		t.Fatal(diff)
 	}
 }
