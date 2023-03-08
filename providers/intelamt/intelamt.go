@@ -82,25 +82,13 @@ func (c *Conn) Open(ctx context.Context) (err error) {
 		Logger: c.Log,
 	}
 
-	connChan := make(chan error)
-
-	// since we can't pass a context into amt.NewClient()
-	// spawn a routine and watch for timeouts in the select below.
-	go func() {
-		var err error
-		// amt.NewClient is used here in Open instead of in New because amt.NewClient makes a connection to the BMC.
-		c.client, err = amt.NewClient(conn)
-		connChan <- err
-	}()
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case err := <-connChan:
-		if err != nil {
-			return err
-		}
+	// amt.NewClient is used here in Open instead of in New because amt.NewClient makes a connection to the BMC.
+	client, err := amt.NewClient(conn)
+	if err != nil {
+		return err
 	}
+
+	c.client = client
 
 	return nil
 }
