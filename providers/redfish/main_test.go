@@ -31,6 +31,7 @@ func jsonResponse(endpoint string) []byte {
 		"/redfish/v1/Systems":       fixturesDir + "/v1/systems.json",
 
 		"/redfish/v1/Systems/System.Embedded.1":                                    fixturesDir + "/v1/dell/system.embedded.1.json",
+		"/redfish/v1/Systems/System.Embedded.1/Bios":                               fixturesDir + "/v1/dell/bios.json",
 		"/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/Jobs?$expand=*($levels=1)": fixturesDir + "/v1/dell/jobs.json",
 		"/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/Jobs/JID_467762674724":     fixturesDir + "/v1/dell/job_delete_ok.json",
 	}
