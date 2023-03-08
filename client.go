@@ -78,6 +78,7 @@ func WithHTTPClient(c *http.Client) Option {
 }
 
 // WithConnectTimeout sets the timeout when connecting to a BMC to create a new session.
+// This timeout value applies for each provider.
 // When not defined the default connection timeout applies.
 func WithConnectTimeout(t time.Duration) Option {
 	return func(args *Client) {
