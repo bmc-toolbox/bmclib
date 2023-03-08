@@ -28,8 +28,6 @@ var (
 	}
 )
 
-
-
 type amtProvider interface {
 	IsPoweredOn(context.Context) (bool, error)
 	PowerOn(context.Context) error
@@ -72,8 +70,6 @@ func (c *Conn) Name() string {
 	return ProviderName
 }
 
-
-
 // Open a connection to the BMC via AMT.
 // The AMT library does not do/use sessions so opening just instantiates the Conn.client.
 // It will communicate with the BMC.
@@ -85,11 +81,13 @@ func (c *Conn) Open(ctx context.Context) (err error) {
 		Pass:   c.Pass,
 		Logger: c.Log,
 	}
+
 	// amt.NewClient is used here in Open instead of in New because amt.NewClient makes a connection to the BMC.
 	client, err := amt.NewClient(conn)
 	if err != nil {
 		return err
 	}
+
 	c.client = client
 
 	return nil

@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/bmc-toolbox/bmclib/v2/bmc"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
@@ -23,16 +24,22 @@ import (
 
 // Client for BMC interactions
 type Client struct {
-	Auth     Auth
-	Logger   logr.Logger
-	Registry *registrar.Registry
-	metadata *bmc.Metadata
-	mdLock   *sync.Mutex
+	Auth           Auth
+	connectTimeout time.Duration
+	Logger         logr.Logger
+	Registry       *registrar.Registry
+	metadata       *bmc.Metadata
+	mdLock         *sync.Mutex
 
 	redfishVersionsNotCompatible []string
 	httpClient                   *http.Client
 	httpClientSetupFuncs         []func(*http.Client)
 }
+
+var (
+	// default connection open timeout
+	defaultConnectTimeout = 30 * time.Second
+)
 
 // Auth details for connecting to a BMC
 type Auth struct {
@@ -70,6 +77,15 @@ func WithHTTPClient(c *http.Client) Option {
 	}
 }
 
+// WithConnectTimeout sets the timeout when connecting to a BMC to create a new session.
+// This timeout value applies for each provider.
+// When not defined the default connection timeout applies.
+func WithConnectTimeout(t time.Duration) Option {
+	return func(args *Client) {
+		args.connectTimeout = t
+	}
+}
+
 // WithRedfishVersionsNotCompatible sets the list of incompatible redfish versions.
 //
 // With this option set, The bmclib.Registry.FilterForCompatible(ctx) method will not proceed on
@@ -86,6 +102,7 @@ func NewClient(host, port, user, pass string, opts ...Option) *Client {
 		Logger:                       logr.Discard(),
 		Registry:                     registrar.NewRegistry(),
 		redfishVersionsNotCompatible: []string{},
+		connectTimeout:               defaultConnectTimeout,
 	}
 
 	for _, opt := range opts {
@@ -166,7 +183,7 @@ func (c *Client) setMetadata(metadata bmc.Metadata) {
 // from the client.Registry.Drivers. If client.Registry.Drivers ends up
 // being empty then we error.
 func (c *Client) Open(ctx context.Context) error {
-	ifs, metadata, err := bmc.OpenConnectionFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+	ifs, metadata, err := bmc.OpenConnectionFromInterfaces(ctx, c.connectTimeout, c.Registry.GetDriverInterfaces())
 	if err != nil {
 		return err
 	}
