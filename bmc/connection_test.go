@@ -118,7 +118,7 @@ func TestCloseConnection(t *testing.T) {
 		ctxTimeout   time.Duration
 	}{
 		"success":                {},
-		"error context deadline": {err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to close connection")}}, ctxTimeout: time.Nanosecond * 1},
+		"error context deadline": {err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded")}}, ctxTimeout: time.Nanosecond * 1},
 		"error":                  {makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider: close connection failed"), errors.New("failed to close connection")}}},
 	}
 
@@ -132,7 +132,7 @@ func TestCloseConnection(t *testing.T) {
 			defer cancel()
 			_, err := closeConnection(ctx, []connectionProviders{{"test provider", &testImplementation}})
 			if err != nil {
-				diff := cmp.Diff(err.Error(), tc.err.Error())
+				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {
 					t.Fatal(diff)
 				}

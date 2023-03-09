@@ -24,20 +24,20 @@ import (
 
 // Client for BMC interactions
 type Client struct {
-	Auth           Auth
-	connectTimeout time.Duration
-	Logger         logr.Logger
-	Registry       *registrar.Registry
-	metadata       *bmc.Metadata
-	mdLock         *sync.Mutex
+	Auth     Auth
+	Logger   logr.Logger
+	Registry *registrar.Registry
 
-	redfishVersionsNotCompatible []string
 	httpClient                   *http.Client
 	httpClientSetupFuncs         []func(*http.Client)
+	mdLock                       *sync.Mutex
+	metadata                     *bmc.Metadata
+	perProviderTimeout           func(context.Context) time.Duration
+	redfishVersionsNotCompatible []string
 }
 
-var (
-	// default connection open timeout
+const (
+	// default connection timeout
 	defaultConnectTimeout = 30 * time.Second
 )
 
@@ -77,12 +77,16 @@ func WithHTTPClient(c *http.Client) Option {
 	}
 }
 
-// WithConnectTimeout sets the timeout when connecting to a BMC to create a new session.
-// This timeout value applies for each provider.
-// When not defined the default connection timeout applies.
-func WithConnectTimeout(t time.Duration) Option {
+// WithPerProviderTimeout sets the timeout when interacting with a BMC.
+// This timeout value is applied per provider.
+// When not defined and a context with a timeout is passed to a method, the default timeout
+// will be the context timeout duration divided by the number of providers in the registry,
+// meaning, the len(Client.Registry.Drivers).
+// If this per provider timeout is not defined and no context timeout is defined,
+// the defaultConnectTimeout is used.
+func WithPerProviderTimeout(timeout time.Duration) Option {
 	return func(args *Client) {
-		args.connectTimeout = t
+		args.perProviderTimeout = func(context.Context) time.Duration { return timeout }
 	}
 }
 
@@ -102,7 +106,6 @@ func NewClient(host, port, user, pass string, opts ...Option) *Client {
 		Logger:                       logr.Discard(),
 		Registry:                     registrar.NewRegistry(),
 		redfishVersionsNotCompatible: []string{},
-		connectTimeout:               defaultConnectTimeout,
 	}
 
 	for _, opt := range opts {
@@ -126,7 +129,24 @@ func NewClient(host, port, user, pass string, opts ...Option) *Client {
 		defaultClient.registerProviders()
 	}
 	defaultClient.mdLock = &sync.Mutex{}
+	if defaultClient.perProviderTimeout == nil {
+		defaultClient.perProviderTimeout = defaultClient.defaultTimeout
+	}
+
 	return defaultClient
+}
+
+func (c *Client) defaultTimeout(ctx context.Context) time.Duration {
+	deadline, ok := ctx.Deadline()
+	if !ok {
+		return defaultConnectTimeout
+	}
+
+	l := len(c.Registry.Drivers)
+	if l == 0 {
+		return time.Until(deadline)
+	}
+	return time.Until(deadline) / time.Duration(l)
 }
 
 func (c *Client) registerProviders() {
@@ -145,16 +165,6 @@ func (c *Client) registerProviders() {
 	// register AMT provider
 	driverAMT := intelamt.New(c.Logger, c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass)
 	c.Registry.Register(intelamt.ProviderName, intelamt.ProviderProtocol, intelamt.Features, nil, driverAMT)
-
-	// register dell idrac9 provider
-	// driverIdrac9 := idrac9.NewConn(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger, idrac9.WithHTTPClientConnOption(c.httpClient))
-	// c.Registry.Register(idrac9.ProviderName, idrac9.ProviderProtocol, idrac9.Features, nil, driverIdrac9)
-
-	/*
-		// dummy used for testing
-		driverDummy := &dummy.Conn{FailOpen: true}
-		c.Registry.Register(dummy.ProviderName, dummy.ProviderProtocol, dummy.Features, nil, driverDummy)
-	*/
 }
 
 // GetMetadata returns the metadata that is populated after each BMC function/method call
@@ -183,7 +193,7 @@ func (c *Client) setMetadata(metadata bmc.Metadata) {
 // from the client.Registry.Drivers. If client.Registry.Drivers ends up
 // being empty then we error.
 func (c *Client) Open(ctx context.Context) error {
-	ifs, metadata, err := bmc.OpenConnectionFromInterfaces(ctx, c.connectTimeout, c.Registry.GetDriverInterfaces())
+	ifs, metadata, err := bmc.OpenConnectionFromInterfaces(ctx, c.perProviderTimeout(ctx), c.Registry.GetDriverInterfaces())
 	if err != nil {
 		return err
 	}
@@ -208,51 +218,57 @@ func (c *Client) Close(ctx context.Context) (err error) {
 	return err
 }
 
+func (c *Client) FilterForCompatible(ctx context.Context) {
+	perProviderTimeout, cancel := context.WithTimeout(ctx, c.perProviderTimeout(ctx))
+	defer cancel()
+	c.Registry.Drivers = c.Registry.FilterForCompatible(perProviderTimeout)
+}
+
 // GetPowerState pass through to library function
 func (c *Client) GetPowerState(ctx context.Context) (state string, err error) {
-	state, metadata, err := bmc.GetPowerStateFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+	state, metadata, err := bmc.GetPowerStateFromInterfaces(ctx, c.perProviderTimeout(ctx), c.Registry.GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return state, err
 }
 
 // SetPowerState pass through to library function
 func (c *Client) SetPowerState(ctx context.Context, state string) (ok bool, err error) {
-	ok, metadata, err := bmc.SetPowerStateFromInterfaces(ctx, state, c.Registry.GetDriverInterfaces())
+	ok, metadata, err := bmc.SetPowerStateFromInterfaces(ctx, c.perProviderTimeout(ctx), state, c.Registry.GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return ok, err
 }
 
 // CreateUser pass through to library function
 func (c *Client) CreateUser(ctx context.Context, user, pass, role string) (ok bool, err error) {
-	ok, metadata, err := bmc.CreateUserFromInterfaces(ctx, user, pass, role, c.Registry.GetDriverInterfaces())
+	ok, metadata, err := bmc.CreateUserFromInterfaces(ctx, c.perProviderTimeout(ctx), user, pass, role, c.Registry.GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return ok, err
 }
 
 // UpdateUser pass through to library function
 func (c *Client) UpdateUser(ctx context.Context, user, pass, role string) (ok bool, err error) {
-	ok, metadata, err := bmc.UpdateUserFromInterfaces(ctx, user, pass, role, c.Registry.GetDriverInterfaces())
+	ok, metadata, err := bmc.UpdateUserFromInterfaces(ctx, c.perProviderTimeout(ctx), user, pass, role, c.Registry.GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return ok, err
 }
 
 // DeleteUser pass through to library function
 func (c *Client) DeleteUser(ctx context.Context, user string) (ok bool, err error) {
-	ok, metadata, err := bmc.DeleteUserFromInterfaces(ctx, user, c.Registry.GetDriverInterfaces())
+	ok, metadata, err := bmc.DeleteUserFromInterfaces(ctx, c.perProviderTimeout(ctx), user, c.Registry.GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return ok, err
 }
 
 // ReadUsers pass through to library function
 func (c *Client) ReadUsers(ctx context.Context) (users []map[string]string, err error) {
-	users, metadata, err := bmc.ReadUsersFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+	users, metadata, err := bmc.ReadUsersFromInterfaces(ctx, c.perProviderTimeout(ctx), c.Registry.GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return users, err
 }
 
 // SetBootDevice pass through to library function
 func (c *Client) SetBootDevice(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
-	ok, metadata, err := bmc.SetBootDeviceFromInterfaces(ctx, bootDevice, setPersistent, efiBoot, c.Registry.GetDriverInterfaces())
+	ok, metadata, err := bmc.SetBootDeviceFromInterfaces(ctx, c.perProviderTimeout(ctx), bootDevice, setPersistent, efiBoot, c.Registry.GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return ok, err
 }
@@ -269,7 +285,7 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL stri
 
 // ResetBMC pass through to library function
 func (c *Client) ResetBMC(ctx context.Context, resetType string) (ok bool, err error) {
-	ok, metadata, err := bmc.ResetBMCFromInterfaces(ctx, resetType, c.Registry.GetDriverInterfaces())
+	ok, metadata, err := bmc.ResetBMCFromInterfaces(ctx, c.perProviderTimeout(ctx), resetType, c.Registry.GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return ok, err
 }

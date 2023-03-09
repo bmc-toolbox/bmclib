@@ -41,7 +41,7 @@ func TestResetBMC(t *testing.T) {
 		"success":               {resetType: "cold", want: true},
 		"not ok return":         {resetType: "warm", want: false, makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider, failed to reset BMC"), errors.New("failed to reset BMC")}}},
 		"error":                 {resetType: "cold", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider: bmc reset failed"), errors.New("failed to reset BMC")}}},
-		"error context timeout": {resetType: "cold", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to reset BMC")}}, ctxTimeout: time.Nanosecond * 1},
+		"error context timeout": {resetType: "cold", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded")}}, ctxTimeout: time.Nanosecond * 1},
 	}
 
 	for name, tc := range testCases {
@@ -53,7 +53,7 @@ func TestResetBMC(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, _, err := resetBMC(ctx, tc.resetType, []bmcProviders{{"test provider", &testImplementation}})
+			result, _, err := resetBMC(ctx, 0, tc.resetType, []bmcProviders{{"test provider", &testImplementation}})
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
@@ -93,7 +93,7 @@ func TestResetBMCFromInterfaces(t *testing.T) {
 				generic = []interface{}{&testImplementation}
 			}
 			expectedResult := tc.want
-			result, metadata, err := ResetBMCFromInterfaces(context.Background(), tc.resetType, generic)
+			result, metadata, err := ResetBMCFromInterfaces(context.Background(), 0, tc.resetType, generic)
 			if err != nil {
 				if tc.err != nil {
 					diff := cmp.Diff(err.Error(), tc.err.Error())

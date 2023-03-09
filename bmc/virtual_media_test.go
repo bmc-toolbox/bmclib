@@ -42,7 +42,7 @@ func TestSetVirtualMedia(t *testing.T) {
 		"success":               {kind: "cdrom", mediaURL: "example.com/some.iso", want: true},
 		"not ok return":         {kind: "cdrom", mediaURL: "example.com/some.iso", want: false, makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider, failed to set virtual media"), errors.New("failed to set virtual media")}}},
 		"error":                 {kind: "cdrom", mediaURL: "example.com/some.iso", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider: setting virtual media failed"), errors.New("failed to set virtual media")}}},
-		"error context timeout": {kind: "cdrom", mediaURL: "example.com/some.iso", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to set virtual media")}}, ctxTimeout: time.Nanosecond * 1},
+		"error context timeout": {kind: "cdrom", mediaURL: "example.com/some.iso", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded")}}, ctxTimeout: time.Nanosecond * 1},
 	}
 
 	for name, tc := range testCases {

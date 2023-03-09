@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/go-multierror"
 )
@@ -38,9 +39,9 @@ type userProviders struct {
 }
 
 // createUser creates a user using the passed in implementation
-func createUser(ctx context.Context, user, pass, role string, u []userProviders) (ok bool, metadata Metadata, err error) {
+func createUser(ctx context.Context, timeout time.Duration, user, pass, role string, u []userProviders) (ok bool, metadata Metadata, err error) {
 	var metadataLocal Metadata
-Loop:
+
 	for _, elem := range u {
 		if elem.userCreator == nil {
 			continue
@@ -48,9 +49,12 @@ Loop:
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
-			break Loop
+
+			return false, metadata, err
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			ctx, cancel := context.WithTimeout(ctx, timeout)
+			defer cancel()
 			ok, createErr := elem.userCreator.UserCreate(ctx, user, pass, role)
 			if createErr != nil {
 				err = multierror.Append(err, createErr)
@@ -68,7 +72,7 @@ Loop:
 }
 
 // CreateUsersFromInterfaces identifies implementations of the UserCreator interface and passes them to the createUser() wrapper method.
-func CreateUserFromInterfaces(ctx context.Context, user, pass, role string, generic []interface{}) (ok bool, metadata Metadata, err error) {
+func CreateUserFromInterfaces(ctx context.Context, timeout time.Duration, user, pass, role string, generic []interface{}) (ok bool, metadata Metadata, err error) {
 	userCreators := make([]userProviders, 0)
 	for _, elem := range generic {
 		temp := userProviders{name: getProviderName(elem)}
@@ -84,13 +88,13 @@ func CreateUserFromInterfaces(ctx context.Context, user, pass, role string, gene
 	if len(userCreators) == 0 {
 		return ok, metadata, multierror.Append(err, errors.New("no UserCreator implementations found"))
 	}
-	return createUser(ctx, user, pass, role, userCreators)
+	return createUser(ctx, timeout, user, pass, role, userCreators)
 }
 
 // updateUser updates a user's settings
-func updateUser(ctx context.Context, user, pass, role string, u []userProviders) (ok bool, metadata Metadata, err error) {
+func updateUser(ctx context.Context, timeout time.Duration, user, pass, role string, u []userProviders) (ok bool, metadata Metadata, err error) {
 	var metadataLocal Metadata
-Loop:
+
 	for _, elem := range u {
 		if elem.userUpdater == nil {
 			continue
@@ -98,9 +102,12 @@ Loop:
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
-			break Loop
+
+			return false, metadata, err
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			ctx, cancel := context.WithTimeout(ctx, timeout)
+			defer cancel()
 			ok, UpdateErr := elem.userUpdater.UserUpdate(ctx, user, pass, role)
 			if UpdateErr != nil {
 				err = multierror.Append(err, UpdateErr)
@@ -118,7 +125,7 @@ Loop:
 }
 
 // UpdateUsersFromInterfaces identifies implementations of the UserUpdater interface and passes them to the updateUser() wrapper method.
-func UpdateUserFromInterfaces(ctx context.Context, user, pass, role string, generic []interface{}) (ok bool, metadata Metadata, err error) {
+func UpdateUserFromInterfaces(ctx context.Context, timeout time.Duration, user, pass, role string, generic []interface{}) (ok bool, metadata Metadata, err error) {
 	userUpdaters := make([]userProviders, 0)
 	for _, elem := range generic {
 		temp := userProviders{name: getProviderName(elem)}
@@ -134,13 +141,13 @@ func UpdateUserFromInterfaces(ctx context.Context, user, pass, role string, gene
 	if len(userUpdaters) == 0 {
 		return ok, metadata, multierror.Append(err, errors.New("no UserUpdater implementations found"))
 	}
-	return updateUser(ctx, user, pass, role, userUpdaters)
+	return updateUser(ctx, timeout, user, pass, role, userUpdaters)
 }
 
 // deleteUser deletes a user from a BMC
-func deleteUser(ctx context.Context, user string, u []userProviders) (ok bool, metadata Metadata, err error) {
+func deleteUser(ctx context.Context, timeout time.Duration, user string, u []userProviders) (ok bool, metadata Metadata, err error) {
 	var metadataLocal Metadata
-Loop:
+
 	for _, elem := range u {
 		if elem.userDeleter == nil {
 			continue
@@ -148,9 +155,12 @@ Loop:
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
-			break Loop
+
+			return false, metadata, err
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			ctx, cancel := context.WithTimeout(ctx, timeout)
+			defer cancel()
 			ok, deleteErr := elem.userDeleter.UserDelete(ctx, user)
 			if deleteErr != nil {
 				err = multierror.Append(err, deleteErr)
@@ -168,7 +178,7 @@ Loop:
 }
 
 // DeleteUsersFromInterfaces identifies implementations of the UserDeleter interface and passes them to the deleteUser() wrapper method.
-func DeleteUserFromInterfaces(ctx context.Context, user string, generic []interface{}) (ok bool, metadata Metadata, err error) {
+func DeleteUserFromInterfaces(ctx context.Context, timeout time.Duration, user string, generic []interface{}) (ok bool, metadata Metadata, err error) {
 	userDeleters := make([]userProviders, 0)
 	for _, elem := range generic {
 		temp := userProviders{name: getProviderName(elem)}
@@ -184,13 +194,13 @@ func DeleteUserFromInterfaces(ctx context.Context, user string, generic []interf
 	if len(userDeleters) == 0 {
 		return ok, metadata, multierror.Append(err, errors.New("no UserDeleter implementations found"))
 	}
-	return deleteUser(ctx, user, userDeleters)
+	return deleteUser(ctx, timeout, user, userDeleters)
 }
 
 // readUsers returns all users from a BMC
-func readUsers(ctx context.Context, u []userProviders) (users []map[string]string, metadata Metadata, err error) {
+func readUsers(ctx context.Context, timeout time.Duration, u []userProviders) (users []map[string]string, metadata Metadata, err error) {
 	var metadataLocal Metadata
-Loop:
+
 	for _, elem := range u {
 		if elem.userReader == nil {
 			continue
@@ -198,9 +208,12 @@ Loop:
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
-			break Loop
+
+			return users, metadata, err
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			ctx, cancel := context.WithTimeout(ctx, timeout)
+			defer cancel()
 			users, readErr := elem.userReader.UserRead(ctx)
 			if readErr != nil {
 				err = multierror.Append(err, readErr)
@@ -214,7 +227,7 @@ Loop:
 }
 
 // ReadUsersFromInterfaces identifies implementations of the UserReader interface and passes them to the readUsers() wrapper method.
-func ReadUsersFromInterfaces(ctx context.Context, generic []interface{}) (users []map[string]string, metadata Metadata, err error) {
+func ReadUsersFromInterfaces(ctx context.Context, timeout time.Duration, generic []interface{}) (users []map[string]string, metadata Metadata, err error) {
 	userReaders := make([]userProviders, 0)
 	for _, elem := range generic {
 		temp := userProviders{name: getProviderName(elem)}
@@ -230,5 +243,5 @@ func ReadUsersFromInterfaces(ctx context.Context, generic []interface{}) (users 
 	if len(userReaders) == 0 {
 		return users, metadata, multierror.Append(err, errors.New("no UserReader implementations found"))
 	}
-	return readUsers(ctx, userReaders)
+	return readUsers(ctx, timeout, userReaders)
 }

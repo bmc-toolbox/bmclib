@@ -30,13 +30,13 @@ type connectionProviders struct {
 // implementations that have connections wont nil pointer error when their connection fails.
 func OpenConnectionFromInterfaces(ctx context.Context, timeout time.Duration, generic []interface{}) (opened []interface{}, metadata Metadata, err error) {
 	var metadataLocal Metadata
-Loop:
+
 	for _, elem := range generic {
 		// return immediately if the context is done/terminated/etc
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
-			break Loop
+			return nil, metadata, err
 		default:
 		}
 		// get the provider name for use in metadata
@@ -45,11 +45,9 @@ Loop:
 		switch p := elem.(type) {
 		case Opener:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, providerName)
-
-			ctx, cancel := context.WithTimeout(ctx, timeout)
+			tmpctx, cancel := context.WithTimeout(ctx, timeout)
 			defer cancel()
-
-			er := p.Open(ctx)
+			er := p.Open(tmpctx)
 			if er != nil {
 				err = multierror.Append(err, errors.WithMessagef(er, "provider: %v", providerName))
 				continue
@@ -73,7 +71,7 @@ Loop:
 func closeConnection(ctx context.Context, c []connectionProviders) (metadata Metadata, err error) {
 	var metadataLocal Metadata
 	var connClosed bool
-Loop:
+
 	for _, elem := range c {
 		if elem.closer == nil {
 			continue
@@ -81,7 +79,8 @@ Loop:
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
-			break Loop
+
+			return metadata, err
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
 			closeErr := elem.closer.Close(ctx)

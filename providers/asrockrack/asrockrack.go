@@ -97,6 +97,9 @@ func NewWithOptions(ip string, username string, password string, log logr.Logger
 // Compatible implements the registrar.Verifier interface
 // returns true if the BMC is identified to be an asrockrack
 func (a *ASRockRack) Compatible(ctx context.Context) bool {
+	if err := a.Open(ctx); err != nil {
+		return false
+	}
 	resp, statusCode, err := a.queryHTTPS(ctx, "/", "GET", nil, nil, 0)
 	if err != nil {
 		return false

@@ -26,7 +26,7 @@ type postCodeGetterProvider struct {
 // postCode returns the device BIOS/UEFI POST code
 func postCode(ctx context.Context, generic []postCodeGetterProvider) (status string, code int, metadata Metadata, err error) {
 	var metadataLocal Metadata
-Loop:
+
 	for _, elem := range generic {
 		if elem.PostCodeGetter == nil {
 			continue
@@ -34,7 +34,8 @@ Loop:
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
-			break Loop
+
+			return status, code, metadata, err
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
 			status, code, vErr := elem.PostCode(ctx)

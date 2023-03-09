@@ -3,6 +3,7 @@ package bmc
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
@@ -22,9 +23,9 @@ type bmcProviders struct {
 }
 
 // resetBMC tries all implementations for a success BMC reset
-func resetBMC(ctx context.Context, resetType string, b []bmcProviders) (ok bool, metadata Metadata, err error) {
+func resetBMC(ctx context.Context, timeout time.Duration, resetType string, b []bmcProviders) (ok bool, metadata Metadata, err error) {
 	var metadataLocal Metadata
-Loop:
+
 	for _, elem := range b {
 		if elem.bmcResetter == nil {
 			continue
@@ -32,9 +33,12 @@ Loop:
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
-			break Loop
+			
+			return false, metadata, err
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			ctx, cancel := context.WithTimeout(ctx, timeout)
+			defer cancel()
 			ok, setErr := elem.bmcResetter.BmcReset(ctx, resetType)
 			if setErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(setErr, "provider: %v", elem.name))
@@ -52,7 +56,7 @@ Loop:
 }
 
 // ResetBMCFromInterfaces identifies implementations of the BMCResetter interface and passes them to the resetBMC() wrapper method.
-func ResetBMCFromInterfaces(ctx context.Context, resetType string, generic []interface{}) (ok bool, metadata Metadata, err error) {
+func ResetBMCFromInterfaces(ctx context.Context, timeout time.Duration, resetType string, generic []interface{}) (ok bool, metadata Metadata, err error) {
 	bmcSetters := make([]bmcProviders, 0)
 	for _, elem := range generic {
 		temp := bmcProviders{name: getProviderName(elem)}
@@ -68,5 +72,5 @@ func ResetBMCFromInterfaces(ctx context.Context, resetType string, generic []int
 	if len(bmcSetters) == 0 {
 		return ok, metadata, multierror.Append(err, errors.New("no BMCResetter implementations found"))
 	}
-	return resetBMC(ctx, resetType, bmcSetters)
+	return resetBMC(ctx, timeout, resetType, bmcSetters)
 }
