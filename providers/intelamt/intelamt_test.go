@@ -8,7 +8,6 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/jacobweinstock/go-amt"
 )
 
 type mock struct {
@@ -18,9 +17,14 @@ type mock struct {
 	errPowerOn     error
 	errPowerOff    error
 	errPowerCycle  error
+	errOpen        error
 }
 
-func (m *mock) Close() error {
+func (m *mock) Open(ctx context.Context) error {
+	return m.errOpen
+}
+
+func (m *mock) Close(ctx context.Context) error {
 	return nil
 }
 
@@ -80,7 +84,12 @@ func TestBootDeviceSet(t *testing.T) {
 				m = &mock{errSetPXE: tt.err}
 			}
 			conn := &Conn{client: m}
-			got, err := conn.BootDeviceSet(context.Background(), tt.device, false, false)
+			ctx := context.Background()
+			if err := conn.Open(ctx); err != nil {
+				t.Fatal(err)
+			}
+			defer conn.Close()
+			got, err := conn.BootDeviceSet(ctx, tt.device, false, false)
 			if err != nil && tt.err == nil {
 				t.Fatalf("expected nil error, got: %v", err)
 			}
@@ -114,7 +123,12 @@ func TestPowerStateGet(t *testing.T) {
 			}
 			m := &mock{poweredON: state, errIsPoweredOn: tt.err}
 			conn := &Conn{client: m}
-			got, err := conn.PowerStateGet(context.Background())
+			ctx := context.Background()
+			if err := conn.Open(ctx); err != nil {
+				t.Fatal(err)
+			}
+			defer conn.Close()
+			got, err := conn.PowerStateGet(ctx)
 			if err != nil && tt.err == nil {
 				t.Fatalf("expected nil error, got: %v", err)
 			}
@@ -161,7 +175,12 @@ func TestPowerSet(t *testing.T) {
 			}
 			m.poweredON = tt.poweredOn
 			conn := &Conn{client: m}
-			got, err := conn.PowerSet(context.Background(), tt.wantState)
+			ctx := context.Background()
+			if err := conn.Open(ctx); err != nil {
+				t.Fatal(err)
+			}
+			defer conn.Close()
+			got, err := conn.PowerSet(ctx, tt.wantState)
 			if err != nil && tt.err == nil {
 				t.Fatalf("expected nil error, got: %v", err)
 			}
@@ -172,16 +191,45 @@ func TestPowerSet(t *testing.T) {
 	}
 }
 
+func TestCompatible(t *testing.T) {
+	tests := map[string]struct {
+		want       bool
+		failOnOpen bool
+	}{
+		"success":         {want: true},
+		"failed on open":  {want: false, failOnOpen: true},
+		"failed on power": {want: false},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			m := &mock{}
+			if !tt.want {
+				if tt.failOnOpen {
+					m.errOpen = errors.New("failed to open")
+				} else {
+					m.errIsPoweredOn = errors.New("failed to power on")
+				}
+			}
+			conn := &Conn{client: m}
+			ctx := context.Background()
+			defer conn.Close()
+			got := conn.Compatible(ctx)
+			if diff := cmp.Diff(got, tt.want); diff != "" {
+				t.Fatal(diff)
+			}
+		})
+	}
+}
+
 func TestNew(t *testing.T) {
-	conn := amt.Connection{Logger: logr.Discard()}
-	wantClient, _ := amt.NewClient(conn)
-	want := &Conn{client: wantClient, Host: "localhost", Port: 16992, User: "admin", Pass: "pass", Log: logr.Discard()}
+	wantClient := &mock{}
+	want := &Conn{client: wantClient}
 	got := New(logr.Discard(), "localhost", "", "admin", "pass")
 	t.Log(got == nil)
 	c := Conn{}
-	a := amt.Client{}
 	l := logr.Logger{}
-	if diff := cmp.Diff(got, want, cmpopts.IgnoreUnexported(c, a, l)); diff != "" {
+	if diff := cmp.Diff(got, want, cmpopts.IgnoreUnexported(c, l)); diff != "" {
 		t.Fatal(diff)
 	}
 }

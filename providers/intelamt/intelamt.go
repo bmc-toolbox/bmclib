@@ -8,7 +8,7 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/go-logr/logr"
-	"github.com/jacobweinstock/go-amt"
+	"github.com/jacobweinstock/iamt"
 	"github.com/jacobweinstock/registrar"
 )
 
@@ -28,38 +28,33 @@ var (
 	}
 )
 
-type amtProvider interface {
+// iamtClient is
+type iamtClient interface {
+	Close(context.Context) error
 	IsPoweredOn(context.Context) (bool, error)
-	PowerOn(context.Context) error
-	PowerOff(context.Context) error
+	Open(context.Context) error
 	PowerCycle(context.Context) error
+	PowerOff(context.Context) error
+	PowerOn(context.Context) error
 	SetPXE(context.Context) error
-	Close() error
 }
 
-// Conn is a connection to a BMC via AMT
+// Conn is a connection to a BMC via Intel AMT
 type Conn struct {
-	Host   string
-	Port   uint32
-	User   string
-	Pass   string
-	Log    logr.Logger
-	client amtProvider
+	client iamtClient
 }
 
 // New creates a new AMT connection
 func New(log logr.Logger, host string, port string, user string, pass string) *Conn {
 	p, err := strconv.Atoi(port)
-	if err != nil {
+	if err != nil || p == 623 {
 		p = 16992
 	}
 
+	cli := iamt.NewClient(log, host, "", user, pass)
+	cli.Port = uint32(p)
 	c := &Conn{
-		Host: host,
-		Port: uint32(p),
-		User: user,
-		Pass: pass,
-		Log:  log,
+		client: cli,
 	}
 
 	return c
@@ -70,37 +65,19 @@ func (c *Conn) Name() string {
 	return ProviderName
 }
 
-// Open a connection to the BMC via AMT.
-// The AMT library does not do/use sessions so opening just instantiates the Conn.client.
-// It will communicate with the BMC.
+// Open a connection to the BMC via Intel AMT.
 func (c *Conn) Open(ctx context.Context) (err error) {
-	conn := amt.Connection{
-		Host:   c.Host,
-		Port:   c.Port,
-		User:   c.User,
-		Pass:   c.Pass,
-		Logger: c.Log,
-	}
-
-	// amt.NewClient is used here in Open instead of in New because amt.NewClient makes a connection to the BMC.
-	client, err := amt.NewClient(conn)
-	if err != nil {
-		return err
-	}
-
-	c.client = client
-
-	return nil
+	return c.client.Open(ctx)
 }
 
 // Close a connection to a BMC
 func (c *Conn) Close() (err error) {
-	return c.client.Close()
+	return c.client.Close(context.Background())
 }
 
 // Compatible tests whether a BMC is compatible with the ipmitool provider
 func (c *Conn) Compatible(ctx context.Context) bool {
-	if err := c.Open(ctx); err != nil {
+	if err := c.client.Open(ctx); err != nil {
 		return false
 	}
 
@@ -129,11 +106,11 @@ func (c *Conn) PowerStateGet(ctx context.Context) (state string, err error) {
 	if err != nil {
 		return "", err
 	}
-	if !on {
-		return "off", nil
+	if on {
+		return "on", nil
 	}
 
-	return "on", nil
+	return "off", nil
 }
 
 // PowerSet sets the power state of a BMC machine
