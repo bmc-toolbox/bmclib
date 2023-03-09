@@ -3,7 +3,6 @@ package intelamt
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -103,7 +102,6 @@ func (c *Conn) BootDeviceSet(ctx context.Context, bootDevice string, setPersiste
 
 // PowerStateGet gets the power state of a BMC machine
 func (c *Conn) PowerStateGet(ctx context.Context) (state string, err error) {
-	fmt.Println("PowerStateGet")
 	on, err := c.client.IsPoweredOn(ctx)
 	if err != nil {
 		return "", err
