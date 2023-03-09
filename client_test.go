@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/bmc-toolbox/bmclib/v2/logging"
+	"github.com/google/go-cmp/cmp"
 	"gopkg.in/go-playground/assert.v1"
 )
 
@@ -105,6 +106,35 @@ func TestWithConnectionTimeout(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cl := NewClient(host, port, user, pass, WithPerProviderTimeout(tt.timeout))
 			assert.Equal(t, tt.timeout, cl.perProviderTimeout(nil))
+		})
+	}
+}
+
+func TestDefaultTimeout(t *testing.T) {
+	tests := map[string]struct {
+		ctx  context.Context
+		want time.Duration
+	}{
+		"no per provider timeout": {
+			ctx:  context.Background(),
+			want: 30 * time.Second,
+		},
+		"with per provider timeout": {
+			ctx: func() context.Context {
+				c, d := context.WithTimeout(context.Background(), 5*time.Second)
+				defer d()
+				return c
+			}(),
+			want: (5 * time.Second / time.Duration(4)),
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			c := NewClient("", "", "", "")
+			got := c.defaultTimeout(tt.ctx)
+			if diff := cmp.Diff(got.Round(time.Millisecond), tt.want); diff != "" {
+				t.Errorf("unexpected timeout (-want +got):\n%s", diff)
+			}
 		})
 	}
 }

@@ -218,6 +218,8 @@ func (c *Client) Close(ctx context.Context) (err error) {
 	return err
 }
 
+// FilterForCompatible removes any drivers/providers that are not compatible. It wraps the
+// Client.Registry.FilterForCompatible func in order to provide a per provider timeout.
 func (c *Client) FilterForCompatible(ctx context.Context) {
 	perProviderTimeout, cancel := context.WithTimeout(ctx, c.perProviderTimeout(ctx))
 	defer cancel()
