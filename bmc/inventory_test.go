@@ -46,7 +46,7 @@ func TestInventory(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			device, metadata, err := inventory(ctx, []inventoryGetterProvider{{tc.providerName, &testImplementation}})
+			device, metadata, err := inventory(ctx, tc.ctxTimeout, []inventoryGetterProvider{{tc.providerName, &testImplementation}})
 			if tc.returnError != nil {
 				assert.ErrorIs(t, err, tc.returnError)
 				return
@@ -86,7 +86,7 @@ func TestInventoryFromInterfaces(t *testing.T) {
 				testImplementation := &inventoryGetterTester{returnDevice: tc.returnDevice, returnError: tc.returnError}
 				generic = []interface{}{testImplementation}
 			}
-			device, metadata, err := GetInventoryFromInterfaces(context.Background(), generic)
+			device, metadata, err := GetInventoryFromInterfaces(context.Background(), tc.ctxTimeout, generic)
 			if tc.returnError != nil {
 				assert.ErrorIs(t, err, tc.returnError)
 				return

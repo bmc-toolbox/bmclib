@@ -3,6 +3,7 @@ package bmc
 import (
 	"context"
 	"fmt"
+	"time"
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/hashicorp/go-multierror"
@@ -18,7 +19,7 @@ type biosConfigurationGetterProvider struct {
 	BiosConfigurationGetter
 }
 
-func biosConfiguration(ctx context.Context, generic []biosConfigurationGetterProvider) (biosConfig map[string]string, metadata Metadata, err error) {
+func biosConfiguration(ctx context.Context, timeout time.Duration, generic []biosConfigurationGetterProvider) (biosConfig map[string]string, metadata Metadata, err error) {
 	var metadataLocal Metadata
 Loop:
 	for _, elem := range generic {
@@ -31,7 +32,12 @@ Loop:
 			break Loop
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
-			biosConfig, vErr := elem.GetBiosConfiguration(ctx)
+
+			// tmp context with timeout setup for each provider.
+			tmpctx, cancel := context.WithTimeout(ctx, timeout)
+			defer cancel()
+
+			biosConfig, vErr := elem.GetBiosConfiguration(tmpctx)
 			if vErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				err = multierror.Append(err, vErr)
@@ -46,7 +52,7 @@ Loop:
 	return biosConfig, metadataLocal, multierror.Append(err, errors.New("failure to get bios configuration"))
 }
 
-func GetBiosConfigurationInterfaces(ctx context.Context, generic []interface{}) (biosConfig map[string]string, metadata Metadata, err error) {
+func GetBiosConfigurationInterfaces(ctx context.Context, timeout time.Duration, generic []interface{}) (biosConfig map[string]string, metadata Metadata, err error) {
 	implementations := make([]biosConfigurationGetterProvider, 0)
 	for _, elem := range generic {
 		temp := biosConfigurationGetterProvider{name: getProviderName(elem)}
@@ -69,5 +75,5 @@ func GetBiosConfigurationInterfaces(ctx context.Context, generic []interface{}) 
 		)
 	}
 
-	return biosConfiguration(ctx, implementations)
+	return biosConfiguration(ctx, timeout, implementations)
 }

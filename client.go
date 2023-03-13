@@ -5,6 +5,7 @@ package bmclib
 import (
 	"context"
 	"crypto/x509"
+	"fmt"
 	"io"
 	"net/http"
 	"sync"
@@ -133,6 +134,7 @@ func NewClient(host, port, user, pass string, opts ...Option) *Client {
 		defaultClient.perProviderTimeout = defaultClient.defaultTimeout
 	}
 
+	fmt.Println(defaultClient.perProviderTimeout)
 	return defaultClient
 }
 
@@ -294,13 +296,13 @@ func (c *Client) ResetBMC(ctx context.Context, resetType string) (ok bool, err e
 
 // Inventory pass through library function to collect hardware and firmware inventory
 func (c *Client) Inventory(ctx context.Context) (device *common.Device, err error) {
-	device, metadata, err := bmc.GetInventoryFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+	device, metadata, err := bmc.GetInventoryFromInterfaces(ctx, c.perProviderTimeout(ctx), c.Registry.GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return device, err
 }
 
 func (c *Client) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]string, err error) {
-	biosConfig, metadata, err := bmc.GetBiosConfigurationInterfaces(ctx, c.Registry.GetDriverInterfaces())
+	biosConfig, metadata, err := bmc.GetBiosConfigurationInterfaces(ctx, c.perProviderTimeout(ctx), c.Registry.GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return biosConfig, err
 }

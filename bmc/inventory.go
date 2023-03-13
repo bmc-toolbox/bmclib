@@ -3,6 +3,7 @@ package bmc
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
@@ -22,7 +23,7 @@ type inventoryGetterProvider struct {
 }
 
 // inventory returns hardware and firmware inventory
-func inventory(ctx context.Context, generic []inventoryGetterProvider) (device *common.Device, metadata Metadata, err error) {
+func inventory(ctx context.Context, timeout time.Duration, generic []inventoryGetterProvider) (device *common.Device, metadata Metadata, err error) {
 	var metadataLocal Metadata
 
 	for _, elem := range generic {
@@ -36,7 +37,12 @@ func inventory(ctx context.Context, generic []inventoryGetterProvider) (device *
 			return device, metadata, err
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
-			device, vErr := elem.Inventory(ctx)
+
+			// tmp context with timeout setup for each provider.
+			tmpctx, cancel := context.WithTimeout(ctx, timeout)
+			defer cancel()
+
+			device, vErr := elem.Inventory(tmpctx)
 			if vErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				err = multierror.Append(err, vErr)
@@ -52,7 +58,7 @@ func inventory(ctx context.Context, generic []inventoryGetterProvider) (device *
 }
 
 // GetInventoryFromInterfaces identifies implementations of the InventoryGetter interface and passes the found implementations to the inventory() wrapper method
-func GetInventoryFromInterfaces(ctx context.Context, generic []interface{}) (device *common.Device, metadata Metadata, err error) {
+func GetInventoryFromInterfaces(ctx context.Context, timeout time.Duration, generic []interface{}) (device *common.Device, metadata Metadata, err error) {
 	implementations := make([]inventoryGetterProvider, 0)
 	for _, elem := range generic {
 		temp := inventoryGetterProvider{name: getProviderName(elem)}
@@ -75,5 +81,5 @@ func GetInventoryFromInterfaces(ctx context.Context, generic []interface{}) (dev
 		)
 	}
 
-	return inventory(ctx, implementations)
+	return inventory(ctx, timeout, implementations)
 }
