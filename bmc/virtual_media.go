@@ -22,7 +22,7 @@ type virtualMediaProviders struct {
 // setVirtualMedia sets the virtual media.
 func setVirtualMedia(ctx context.Context, kind string, mediaURL string, b []virtualMediaProviders) (ok bool, metadata Metadata, err error) {
 	var metadataLocal Metadata
-Loop:
+
 	for _, elem := range b {
 		if elem.virtualMediaSetter == nil {
 			continue
@@ -30,7 +30,8 @@ Loop:
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
-			break Loop
+
+			return false, metadata, err
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
 			ok, setErr := elem.virtualMediaSetter.SetVirtualMedia(ctx, kind, mediaURL)

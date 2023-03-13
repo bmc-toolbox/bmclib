@@ -41,7 +41,7 @@ func TestSetBootDevice(t *testing.T) {
 		"success":               {bootDevice: "pxe", want: true},
 		"not ok return":         {bootDevice: "pxe", want: false, makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider, failed to set boot device"), errors.New("failed to set boot device")}}},
 		"error":                 {bootDevice: "pxe", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider: boot device set failed"), errors.New("failed to set boot device")}}},
-		"error context timeout": {bootDevice: "pxe", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to set boot device")}}, ctxTimeout: time.Nanosecond * 1},
+		"error context timeout": {bootDevice: "pxe", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded")}}, ctxTimeout: time.Nanosecond * 1},
 	}
 
 	for name, tc := range testCases {
@@ -53,7 +53,7 @@ func TestSetBootDevice(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, _, err := setBootDevice(ctx, tc.bootDevice, false, false, []bootDeviceProviders{{"test provider", &testImplementation}})
+			result, _, err := setBootDevice(ctx, 0, tc.bootDevice, false, false, []bootDeviceProviders{{"test provider", &testImplementation}})
 			if err != nil {
 				if tc.err != nil {
 					diff := cmp.Diff(err.Error(), tc.err.Error())
@@ -97,7 +97,7 @@ func TestSetBootDeviceFromInterfaces(t *testing.T) {
 				generic = []interface{}{&testImplementation}
 			}
 			expectedResult := tc.want
-			result, metadata, err := SetBootDeviceFromInterfaces(context.Background(), tc.bootDevice, false, false, generic)
+			result, metadata, err := SetBootDeviceFromInterfaces(context.Background(), 0, tc.bootDevice, false, false, generic)
 			if err != nil {
 				diff := cmp.Diff(tc.err.Error(), err.Error())
 				if diff != "" {

@@ -3,6 +3,7 @@ package bmc
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
@@ -23,9 +24,9 @@ type bootDeviceProviders struct {
 //
 // setPersistent persists the next boot device.
 // efiBoot sets up the device to boot off UEFI instead of legacy.
-func setBootDevice(ctx context.Context, bootDevice string, setPersistent, efiBoot bool, b []bootDeviceProviders) (ok bool, metadata Metadata, err error) {
+func setBootDevice(ctx context.Context, timeout time.Duration, bootDevice string, setPersistent, efiBoot bool, b []bootDeviceProviders) (ok bool, metadata Metadata, err error) {
 	var metadataLocal Metadata
-Loop:
+
 	for _, elem := range b {
 		if elem.bootDeviceSetter == nil {
 			continue
@@ -33,9 +34,12 @@ Loop:
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
-			break Loop
+
+			return false, metadata, err
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			ctx, cancel := context.WithTimeout(ctx, timeout)
+			defer cancel()
 			ok, setErr := elem.bootDeviceSetter.BootDeviceSet(ctx, bootDevice, setPersistent, efiBoot)
 			if setErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(setErr, "provider: %v", elem.name))
@@ -53,7 +57,7 @@ Loop:
 }
 
 // SetBootDeviceFromInterfaces identifies implementations of the BootDeviceSetter interface and passes the found implementations to the setBootDevice() wrapper
-func SetBootDeviceFromInterfaces(ctx context.Context, bootDevice string, setPersistent, efiBoot bool, generic []interface{}) (ok bool, metadata Metadata, err error) {
+func SetBootDeviceFromInterfaces(ctx context.Context, timeout time.Duration, bootDevice string, setPersistent, efiBoot bool, generic []interface{}) (ok bool, metadata Metadata, err error) {
 	bdSetters := make([]bootDeviceProviders, 0)
 	for _, elem := range generic {
 		temp := bootDeviceProviders{name: getProviderName(elem)}
@@ -69,5 +73,5 @@ func SetBootDeviceFromInterfaces(ctx context.Context, bootDevice string, setPers
 	if len(bdSetters) == 0 {
 		return ok, metadata, multierror.Append(err, errors.New("no BootDeviceSetter implementations found"))
 	}
-	return setBootDevice(ctx, bootDevice, setPersistent, efiBoot, bdSetters)
+	return setBootDevice(ctx, timeout, bootDevice, setPersistent, efiBoot, bdSetters)
 }

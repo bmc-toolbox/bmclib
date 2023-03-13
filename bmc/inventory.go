@@ -24,7 +24,7 @@ type inventoryGetterProvider struct {
 // inventory returns hardware and firmware inventory
 func inventory(ctx context.Context, generic []inventoryGetterProvider) (device *common.Device, metadata Metadata, err error) {
 	var metadataLocal Metadata
-Loop:
+
 	for _, elem := range generic {
 		if elem.InventoryGetter == nil {
 			continue
@@ -32,7 +32,8 @@ Loop:
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
-			break Loop
+
+			return device, metadata, err
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
 			device, vErr := elem.Inventory(ctx)

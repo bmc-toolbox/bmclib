@@ -35,7 +35,7 @@ type firmwareInstallerProvider struct {
 // firmwareInstall uploads and initiates firmware update for the component
 func firmwareInstall(ctx context.Context, component, applyAt string, forceInstall bool, reader io.Reader, generic []firmwareInstallerProvider) (taskID string, metadata Metadata, err error) {
 	var metadataLocal Metadata
-Loop:
+
 	for _, elem := range generic {
 		if elem.FirmwareInstaller == nil {
 			continue
@@ -43,7 +43,8 @@ Loop:
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
-			break Loop
+
+			return taskID, metadata, err
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
 			taskID, vErr := elem.FirmwareInstall(ctx, component, applyAt, forceInstall, reader)
@@ -111,7 +112,7 @@ type firmwareInstallVerifierProvider struct {
 // firmwareInstallStatus returns the status of the firmware install process
 func firmwareInstallStatus(ctx context.Context, installVersion, component, taskID string, generic []firmwareInstallVerifierProvider) (status string, metadata Metadata, err error) {
 	var metadataLocal Metadata
-Loop:
+
 	for _, elem := range generic {
 		if elem.FirmwareInstallVerifier == nil {
 			continue
@@ -119,7 +120,8 @@ Loop:
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
-			break Loop
+
+			return status, metadata, err
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
 			status, vErr := elem.FirmwareInstallStatus(ctx, installVersion, component, taskID)

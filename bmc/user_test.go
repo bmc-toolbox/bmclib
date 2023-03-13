@@ -77,7 +77,7 @@ func TestUserCreate(t *testing.T) {
 		"success":               {want: true},
 		"not ok return":         {want: false, makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("failed to create user"), errors.New("failed to create user")}}},
 		"error":                 {makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("create user failed"), errors.New("failed to create user")}}},
-		"error context timeout": {makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to create user")}}, ctxTimeout: time.Nanosecond * 1},
+		"error context timeout": {makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded")}}, ctxTimeout: time.Nanosecond * 1},
 	}
 
 	for name, tc := range testCases {
@@ -92,7 +92,7 @@ func TestUserCreate(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, _, err := createUser(ctx, user, pass, role, []userProviders{{"", &testImplementation, nil, nil, nil}})
+			result, _, err := createUser(ctx, 0, user, pass, role, []userProviders{{"", &testImplementation, nil, nil, nil}})
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
@@ -134,7 +134,7 @@ func TestCreateUserFromInterfaces(t *testing.T) {
 			user := "ADMIN"
 			pass := "ADMIN"
 			role := "admin"
-			result, metadata, err := CreateUserFromInterfaces(context.Background(), user, pass, role, generic)
+			result, metadata, err := CreateUserFromInterfaces(context.Background(), 0, user, pass, role, generic)
 			if err != nil {
 				if tc.err != nil {
 					diff := cmp.Diff(err.Error(), tc.err.Error())
@@ -171,7 +171,7 @@ func TestUpdateUser(t *testing.T) {
 		"success":               {want: true},
 		"not ok return":         {want: false, makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("failed to update user"), errors.New("failed to update user")}}},
 		"error":                 {makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("update user failed"), errors.New("failed to update user")}}},
-		"error context timeout": {makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to update user")}}, ctxTimeout: time.Nanosecond * 1},
+		"error context timeout": {makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded")}}, ctxTimeout: time.Nanosecond * 1},
 	}
 
 	for name, tc := range testCases {
@@ -186,7 +186,7 @@ func TestUpdateUser(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, _, err := updateUser(ctx, user, pass, role, []userProviders{{"", nil, &testImplementation, nil, nil}})
+			result, _, err := updateUser(ctx, 0, user, pass, role, []userProviders{{"", nil, &testImplementation, nil, nil}})
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
@@ -228,7 +228,7 @@ func TestUpdateUserFromInterfaces(t *testing.T) {
 			user := "ADMIN"
 			pass := "ADMIN"
 			role := "admin"
-			result, metadata, err := UpdateUserFromInterfaces(context.Background(), user, pass, role, generic)
+			result, metadata, err := UpdateUserFromInterfaces(context.Background(), 0, user, pass, role, generic)
 			if err != nil {
 				if tc.err != nil {
 					diff := cmp.Diff(err.Error(), tc.err.Error())
@@ -264,7 +264,7 @@ func TestDeleteUser(t *testing.T) {
 		"success":               {want: true},
 		"not ok return":         {want: false, makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("failed to delete user"), errors.New("failed to delete user")}}},
 		"error":                 {makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("delete user failed"), errors.New("failed to delete user")}}},
-		"error context timeout": {makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to delete user")}}, ctxTimeout: time.Nanosecond * 1},
+		"error context timeout": {makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded")}}, ctxTimeout: time.Nanosecond * 1},
 	}
 
 	for name, tc := range testCases {
@@ -277,7 +277,7 @@ func TestDeleteUser(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, _, err := deleteUser(ctx, user, []userProviders{{"", nil, nil, &testImplementation, nil}})
+			result, _, err := deleteUser(ctx, 0, user, []userProviders{{"", nil, nil, &testImplementation, nil}})
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
@@ -317,7 +317,7 @@ func TestDeleteUserFromInterfaces(t *testing.T) {
 			}
 			expectedResult := tc.want
 			user := "ADMIN"
-			result, metadata, err := DeleteUserFromInterfaces(context.Background(), user, generic)
+			result, metadata, err := DeleteUserFromInterfaces(context.Background(), 0, user, generic)
 			if err != nil {
 				if tc.err != nil {
 					diff := cmp.Diff(err.Error(), tc.err.Error())
@@ -351,7 +351,7 @@ func TestReadUsers(t *testing.T) {
 	}{
 		"success":               {want: true},
 		"not ok return":         {want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("read users failed"), errors.New("failed to read users")}}},
-		"error context timeout": {want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to read users")}}, ctxTimeout: time.Nanosecond * 1},
+		"error context timeout": {want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded")}}, ctxTimeout: time.Nanosecond * 1},
 	}
 
 	users := []map[string]string{
@@ -372,7 +372,7 @@ func TestReadUsers(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, _, err := readUsers(ctx, []userProviders{{"", nil, nil, nil, &testImplementation}})
+			result, _, err := readUsers(ctx, 0, []userProviders{{"", nil, nil, nil, &testImplementation}})
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
@@ -420,7 +420,7 @@ func TestReadUsersFromInterfaces(t *testing.T) {
 				generic = []interface{}{&testImplementation}
 			}
 			expectedResult := users
-			result, metadata, err := ReadUsersFromInterfaces(context.Background(), generic)
+			result, metadata, err := ReadUsersFromInterfaces(context.Background(), 0, generic)
 			if err != nil {
 				if tc.err != nil {
 					diff := cmp.Diff(err.Error(), tc.err.Error())

@@ -48,7 +48,7 @@ func TestSetPowerState(t *testing.T) {
 		"success":               {state: "off", want: true},
 		"not ok return":         {state: "off", want: false, makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider, failed to set power state"), errors.New("failed to set power state")}}},
 		"error":                 {state: "off", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider: power set failed"), errors.New("failed to set power state")}}},
-		"error context timeout": {state: "off", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to set power state")}}, ctxTimeout: time.Nanosecond * 1},
+		"error context timeout": {state: "off", want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded")}}, ctxTimeout: time.Nanosecond * 1},
 	}
 
 	for name, tc := range testCases {
@@ -60,7 +60,7 @@ func TestSetPowerState(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, _, err := setPowerState(ctx, tc.state, []powerProviders{{"test provider", nil, &testImplementation}})
+			result, _, err := setPowerState(ctx, 0, tc.state, []powerProviders{{"test provider", nil, &testImplementation}})
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
@@ -100,7 +100,7 @@ func TestSetPowerStateFromInterfaces(t *testing.T) {
 				generic = []interface{}{&testImplementation}
 			}
 			expectedResult := tc.want
-			result, metadata, err := SetPowerStateFromInterfaces(context.Background(), tc.state, generic)
+			result, metadata, err := SetPowerStateFromInterfaces(context.Background(), 0, tc.state, generic)
 			if err != nil {
 				if tc.err != nil {
 					diff := cmp.Diff(err.Error(), tc.err.Error())
@@ -134,7 +134,7 @@ func TestGetPowerState(t *testing.T) {
 	}{
 		"success":              {state: "on", err: nil},
 		"failure":              {state: "on", makeFail: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider: power state get failed"), errors.New("failed to get power state")}}},
-		"fail context timeout": {state: "on", makeFail: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("failed to get power state")}}, ctxTimeout: time.Nanosecond * 1},
+		"fail context timeout": {state: "on", makeFail: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded")}}, ctxTimeout: time.Nanosecond * 1},
 	}
 
 	for name, tc := range testCases {
@@ -146,7 +146,7 @@ func TestGetPowerState(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			result, _, err := getPowerState(ctx, []powerProviders{{"test provider", &testImplementation, nil}})
+			result, _, err := getPowerState(ctx, 0, []powerProviders{{"test provider", &testImplementation, nil}})
 			if err != nil {
 				diff := cmp.Diff(err.Error(), tc.err.Error())
 				if diff != "" {
@@ -186,7 +186,7 @@ func TestGetPowerStateFromInterfaces(t *testing.T) {
 				generic = []interface{}{&testImplementation}
 			}
 			expectedResult := tc.want
-			result, metadata, err := GetPowerStateFromInterfaces(context.Background(), generic)
+			result, metadata, err := GetPowerStateFromInterfaces(context.Background(), 0, generic)
 			if err != nil {
 				if tc.err != nil {
 					diff := cmp.Diff(err.Error(), tc.err.Error())
