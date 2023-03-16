@@ -116,6 +116,71 @@ client := bmclib.NewClient("192.168.1.1", "", "admin", "hunter2", opt...)
 cl.Registry.Drivers = cl.Registry.FilterForCompatible(ctx)
 ```
 
+### Timeouts
+
+bmclib can be configured to apply timeouts to BMC interactions. The following options are available.
+
+**Total max timeout only** - The total time bmclib will wait for all BMC interactions to complete. This is specified using a single `context.WithTimeout` or `context.WithDeadline` that is passed to all method call. With this option, the per provider; per interaction timeout is calculated by the total max timeout divided by the number of providers (currently there are 4 providers).
+
+```Go
+cl := bmclib.NewClient(host, port, user, pass, bmclib.WithLogger(log))
+
+ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+defer cancel()
+
+if err = cl.Open(ctx); err != nil {
+  return(err)
+}
+defer cl.Close(ctx)
+
+state, err := cl.GetPowerState(ctx)
+```
+
+**Total max timeout and a per provider; per interaction timeout** - The total time bmclib will wait for all BMC interactions to complete. This is specified using a single `context.WithTimeout` or `context.WithDeadline` that is passed to all method call. This is honored above all timeouts. The per provider; per interaction timeout is specified using `bmclib.WithPerProviderTimeout` in the Client constructor.
+
+```Go
+cl := bmclib.NewClient(host, port, user, pass, bmclib.WithLogger(log), bmclib.WithPerProviderTimeout(15*time.Second))
+
+ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+defer cancel()
+
+if err = cl.Open(ctx); err != nil {
+  return(err)
+}
+defer cl.Close(ctx)
+
+state, err := cl.GetPowerState(ctx)
+```
+
+**Per provider; per interaction timeout. No total max timeout** - The time bmclib will wait for a specific provider to complete. This is specified using `bmclib.WithPerProviderTimeout` in the Client constructor.
+
+```Go
+cl := bmclib.NewClient(host, port, user, pass, bmclib.WithLogger(log), bmclib.WithPerProviderTimeout(15*time.Second))
+
+ctx := context.Background()
+
+if err = cl.Open(ctx); err != nil {
+  return(err)
+}
+defer cl.Close(ctx)
+
+state, err := cl.GetPowerState(ctx)
+```
+
+**Default timeout** - If no timeout is specified with a context or with `bmclib.WithPerProviderTimeout` the default is used. 30 seconds per provider; per interaction.
+
+```Go
+cl := bmclib.NewClient(host, port, user, pass, bmclib.WithLogger(log))
+
+ctx := context.Background()
+
+if err = cl.Open(ctx); err != nil {
+  return(err)
+}
+defer cl.Close(ctx)
+
+state, err := cl.GetPowerState(ctx)
+```
 
 ### bmclib versions
 
