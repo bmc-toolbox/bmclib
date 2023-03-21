@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
@@ -102,10 +103,22 @@ func (c *Client) Open(ctx context.Context) error {
 		config.DumpWriter = os.Stdout
 	}
 
+	if tm := getTimeout(ctx); tm != 0 {
+		config.HTTPClient.Timeout = tm
+	}
 	var err error
-	c.client, err = gofish.ConnectContext(ctx, config)
+	c.client, err = gofish.Connect(config)
 
 	return err
+}
+
+func getTimeout(ctx context.Context) time.Duration {
+	deadline, ok := ctx.Deadline()
+	if !ok {
+		return 0
+	}
+
+	return time.Until(deadline)
 }
 
 // Close closes the redfish session.

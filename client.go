@@ -213,6 +213,11 @@ func (c *Client) Open(ctx context.Context) error {
 
 // Close pass through to library function
 func (c *Client) Close(ctx context.Context) (err error) {
+	if err := ctx.Err(); err != nil {
+		var done context.CancelFunc
+		ctx, done = context.WithTimeout(context.Background(), defaultConnectTimeout)
+		defer done()
+	}
 	metadata, err := bmc.CloseConnectionFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return err

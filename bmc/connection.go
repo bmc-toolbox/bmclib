@@ -76,21 +76,14 @@ func closeConnection(ctx context.Context, c []connectionProviders) (metadata Met
 		if elem.closer == nil {
 			continue
 		}
-		select {
-		case <-ctx.Done():
-			err = multierror.Append(err, ctx.Err())
-
-			return metadata, err
-		default:
-			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
-			closeErr := elem.closer.Close(ctx)
-			if closeErr != nil {
-				err = multierror.Append(err, errors.WithMessagef(closeErr, "provider: %v", elem.name))
-				continue
-			}
-			connClosed = true
-			metadataLocal.SuccessfulCloseConns = append(metadataLocal.SuccessfulCloseConns, elem.name)
+		metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+		closeErr := elem.closer.Close(ctx)
+		if closeErr != nil {
+			err = multierror.Append(err, errors.WithMessagef(closeErr, "provider: %v", elem.name))
+			continue
 		}
+		connClosed = true
+		metadataLocal.SuccessfulCloseConns = append(metadataLocal.SuccessfulCloseConns, elem.name)
 	}
 	if connClosed {
 		return metadataLocal, nil
