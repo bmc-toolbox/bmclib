@@ -213,6 +213,16 @@ func (c *Client) Open(ctx context.Context) error {
 
 // Close pass through to library function
 func (c *Client) Close(ctx context.Context) (err error) {
+	// Generally, we always want the close function to run.
+	// We don't want a context timeout or cancellation to prevent this.
+	// But because the current model is to pass just a single context to all
+	// functions, we need to create a new context here allowing closing connections.
+	// This is a short term solution, and we should consider a better/more holistic model.
+	if err := ctx.Err(); err != nil {
+		var done context.CancelFunc
+		ctx, done = context.WithTimeout(context.Background(), defaultConnectTimeout)
+		defer done()
+	}
 	metadata, err := bmc.CloseConnectionFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return err
