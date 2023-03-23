@@ -2,6 +2,8 @@ package redfish
 
 import (
 	"context"
+
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 func (c *Conn) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]string, err error) {
@@ -21,9 +23,14 @@ func (c *Conn) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]
 			return nil, err
 		}
 
+		if bios == nil {
+			return nil, bmclibErrs.ErrNoBiosAttributes
+		}
+
 		for attr := range bios.Attributes {
 			biosConfig[attr] = bios.Attributes.String(attr)
 		}
 	}
+
 	return biosConfig, nil
 }

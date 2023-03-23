@@ -86,6 +86,9 @@ var (
 
 	// ErrCompatibilityCheck is returned when the compatibility probe failed to complete successfully.
 	ErrCompatibilityCheck = errors.New("compatibility check failed")
+
+	// ErrNoBiosAttributes is returned when no bios attributes are available from the BMC.
+	ErrNoBiosAttributes = errors.New("no BIOS attributes available")
 )
 
 type ErrUnsupportedHardware struct {
