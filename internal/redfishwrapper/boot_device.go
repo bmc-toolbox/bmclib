@@ -9,7 +9,7 @@ import (
 )
 
 // Set the boot device for the system.
-func (c *Client) SystemBootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
+func (c *Client) SystemBootDeviceSet(ctx context.Context, bootDevice string, setPersistent, _ bool) (ok bool, err error) {
 	if err := c.SessionActive(); err != nil {
 		return false, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
@@ -20,7 +20,7 @@ func (c *Client) SystemBootDeviceSet(ctx context.Context, bootDevice string, set
 	}
 
 	for _, system := range systems {
-		boot := system.Boot
+		boot := rf.Boot{}
 
 		switch bootDevice {
 		case "bios":
@@ -49,20 +49,12 @@ func (c *Client) SystemBootDeviceSet(ctx context.Context, bootDevice string, set
 			return false, errors.New("invalid boot device")
 		}
 
+		boot.BootSourceOverrideEnabled = rf.OnceBootSourceOverrideEnabled
 		if setPersistent {
 			boot.BootSourceOverrideEnabled = rf.ContinuousBootSourceOverrideEnabled
-		} else {
-			boot.BootSourceOverrideEnabled = rf.OnceBootSourceOverrideEnabled
 		}
 
-		if efiBoot {
-			boot.BootSourceOverrideMode = rf.UEFIBootSourceOverrideMode
-		} else {
-			boot.BootSourceOverrideMode = rf.LegacyBootSourceOverrideMode
-		}
-
-		err = system.SetBoot(boot)
-		if err != nil {
+		if err = system.SetBoot(boot); err != nil {
 			return false, err
 		}
 	}
