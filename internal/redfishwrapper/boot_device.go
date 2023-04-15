@@ -9,7 +9,7 @@ import (
 )
 
 // Set the boot device for the system.
-func (c *Client) SystemBootDeviceSet(ctx context.Context, bootDevice string, setPersistent, _ bool) (ok bool, err error) {
+func (c *Client) SystemBootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
 	if err := c.SessionActive(); err != nil {
 		return false, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
@@ -20,7 +20,7 @@ func (c *Client) SystemBootDeviceSet(ctx context.Context, bootDevice string, set
 	}
 
 	for _, system := range systems {
-		boot := rf.Boot{}
+		boot := system.Boot
 
 		switch bootDevice {
 		case "bios":
@@ -49,13 +49,28 @@ func (c *Client) SystemBootDeviceSet(ctx context.Context, bootDevice string, set
 			return false, errors.New("invalid boot device")
 		}
 
-		boot.BootSourceOverrideEnabled = rf.OnceBootSourceOverrideEnabled
 		if setPersistent {
 			boot.BootSourceOverrideEnabled = rf.ContinuousBootSourceOverrideEnabled
+		} else {
+			boot.BootSourceOverrideEnabled = rf.OnceBootSourceOverrideEnabled
+		}
+
+		if efiBoot {
+			boot.BootSourceOverrideMode = rf.UEFIBootSourceOverrideMode
+		} else {
+			boot.BootSourceOverrideMode = rf.LegacyBootSourceOverrideMode
 		}
 
 		if err = system.SetBoot(boot); err != nil {
-			return false, err
+			// Some redfish implementations don't like all the fields we're setting so we
+			// try again here with a minimal set of fields. This has shown to work with the
+			// Redfish implementation on HP DL160 Gen10.
+			secondTry := rf.Boot{}
+			secondTry.BootSourceOverrideTarget = boot.BootSourceOverrideTarget
+			secondTry.BootSourceOverrideEnabled = boot.BootSourceOverrideEnabled
+			if err = system.SetBoot(secondTry); err != nil {
+				return false, err
+			}
 		}
 	}
 
