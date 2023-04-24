@@ -61,9 +61,16 @@ func (c *Client) SystemBootDeviceSet(ctx context.Context, bootDevice string, set
 			boot.BootSourceOverrideMode = rf.LegacyBootSourceOverrideMode
 		}
 
-		err = system.SetBoot(boot)
-		if err != nil {
-			return false, err
+		if err = system.SetBoot(boot); err != nil {
+			// Some redfish implementations don't like all the fields we're setting so we
+			// try again here with a minimal set of fields. This has shown to work with the
+			// Redfish implementation on HP DL160 Gen10.
+			secondTry := rf.Boot{}
+			secondTry.BootSourceOverrideTarget = boot.BootSourceOverrideTarget
+			secondTry.BootSourceOverrideEnabled = boot.BootSourceOverrideEnabled
+			if err = system.SetBoot(secondTry); err != nil {
+				return false, err
+			}
 		}
 	}
 
