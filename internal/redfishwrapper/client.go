@@ -123,7 +123,7 @@ func getTimeout(ctx context.Context) time.Duration {
 
 // Close closes the redfish session.
 func (c *Client) Close(ctx context.Context) error {
-	if c == nil || c.client.Service == nil {
+	if c.client == nil || c.client.Service == nil {
 		return nil
 	}
 
