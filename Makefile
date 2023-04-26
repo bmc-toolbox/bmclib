@@ -1,5 +1,3 @@
--include lint.mk
-
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | cut -d":" -f2,3 | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[32m%-30s\033[0m %s\n", $$1, $$2}'
 
@@ -19,3 +17,5 @@ all-tests: test cover ## run all tests
 all-checks: lint ## run all formatters
 	go mod tidy
 	go vet ./...
+
+-include lint.mk
