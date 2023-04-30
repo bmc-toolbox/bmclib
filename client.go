@@ -22,32 +22,30 @@ import (
 	"github.com/jacobweinstock/registrar"
 )
 
+const (
+	// default connection timeout
+	defaultConnectTimeout = 30 * time.Second
+)
+
 // Client for BMC interactions
 type Client struct {
 	Auth     Auth
 	Logger   logr.Logger
 	Registry *registrar.Registry
 
-	httpClient                   *http.Client
-	httpClientSetupFuncs         []func(*http.Client)
-	mdLock                       *sync.Mutex
-	metadata                     *bmc.Metadata
-	perProviderTimeout           func(context.Context) time.Duration
-	redfishVersionsNotCompatible []string
-	redfishBasicAuthEnabled      bool
-	oneTimeRegistry              *registrar.Registry
-	oneTimeRegistryEnabled       bool
+	httpClient             *http.Client
+	httpClientSetupFuncs   []func(*http.Client)
+	mdLock                 *sync.Mutex
+	metadata               *bmc.Metadata
+	perProviderTimeout     func(context.Context) time.Duration
+	oneTimeRegistry        *registrar.Registry
+	oneTimeRegistryEnabled bool
+	providerConfig         providerConfig
 }
-
-const (
-	// default connection timeout
-	defaultConnectTimeout = 30 * time.Second
-)
 
 // Auth details for connecting to a BMC
 type Auth struct {
 	Host string
-	Port string
 	User string
 	Pass string
 }
@@ -93,31 +91,30 @@ func WithPerProviderTimeout(timeout time.Duration) Option {
 	}
 }
 
-// WithRedfishVersionsNotCompatible sets the list of incompatible redfish versions.
-//
-// With this option set, The bmclib.Registry.FilterForCompatible(ctx) method will not proceed on
-// devices with the given redfish version(s).
-func WithRedfishVersionsNotCompatible(versions []string) Option {
-	return func(args *Client) {
-		args.redfishVersionsNotCompatible = append(args.redfishVersionsNotCompatible, versions...)
-	}
-}
-
-// WithRedfishBasicAuth enables Basic Authentication on the Redfish driver.
-func WithRedfishBasicAuth() Option {
-	return func(args *Client) {
-		args.redfishBasicAuthEnabled = true
-	}
-}
-
 // NewClient returns a new Client struct
 func NewClient(host, port, user, pass string, opts ...Option) *Client {
 	var defaultClient = &Client{
-		Logger:                       logr.Discard(),
-		Registry:                     registrar.NewRegistry(),
-		redfishVersionsNotCompatible: []string{},
-		oneTimeRegistryEnabled:       false,
-		oneTimeRegistry:              registrar.NewRegistry(),
+		Logger:                 logr.Discard(),
+		Registry:               registrar.NewRegistry(),
+		oneTimeRegistryEnabled: false,
+		oneTimeRegistry:        registrar.NewRegistry(),
+		providerConfig: providerConfig{
+			ipmitool: ipmitoolConfig{
+				cipherSuite: 3,
+				port:        "623",
+			},
+			asrock: asrockrackConfig{
+				port: "443",
+			},
+			gofish: gofishConfig{
+				port:                  "443",
+				versionsNotCompatible: []string{},
+			},
+			intelamt: intelAMTConfig{
+				hostScheme: "http",
+				port:       "16992",
+			},
+		},
 	}
 
 	for _, opt := range opts {
@@ -130,10 +127,25 @@ func NewClient(host, port, user, pass string, opts ...Option) *Client {
 			setupFunc(defaultClient.httpClient)
 		}
 	}
+	if defaultClient.providerConfig.asrock.httpClient == nil {
+		httpClient := *defaultClient.httpClient
+		defaultClient.providerConfig.asrock.httpClient = &httpClient
+	} else {
+		for _, setupFunc := range defaultClient.httpClientSetupFuncs {
+			setupFunc(defaultClient.providerConfig.asrock.httpClient)
+		}
+	}
+	if defaultClient.providerConfig.gofish.httpClient == nil {
+		httpClient := *defaultClient.httpClient
+		defaultClient.providerConfig.gofish.httpClient = &httpClient
+	} else {
+		for _, setupFunc := range defaultClient.httpClientSetupFuncs {
+			setupFunc(defaultClient.providerConfig.gofish.httpClient)
+		}
+	}
 
 	defaultClient.Registry.Logger = defaultClient.Logger
 	defaultClient.Auth.Host = host
-	defaultClient.Auth.Port = port
 	defaultClient.Auth.User = user
 	defaultClient.Auth.Pass = pass
 	// len of 0 means that no Registry, with any registered providers was passed in.
@@ -163,25 +175,19 @@ func (c *Client) defaultTimeout(ctx context.Context) time.Duration {
 
 func (c *Client) registerProviders() {
 	// register ipmitool provider
-	driverIpmitool := &ipmitool.Conn{Host: c.Auth.Host, Port: c.Auth.Port, User: c.Auth.User, Pass: c.Auth.Pass, Log: c.Logger}
+	driverIpmitool := &ipmitool.Conn{Host: c.Auth.Host, Port: c.providerConfig.ipmitool.port, User: c.Auth.User, Pass: c.Auth.Pass, Log: c.Logger}
 	c.Registry.Register(ipmitool.ProviderName, ipmitool.ProviderProtocol, ipmitool.Features, nil, driverIpmitool)
 
 	// register ASRR vendorapi provider
-	driverAsrockrack, _ := asrockrack.NewWithOptions(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger, asrockrack.WithHTTPClient(c.httpClient))
+	driverAsrockrack, _ := asrockrack.NewWithOptions(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger, asrockrack.WithHTTPClient(c.providerConfig.asrock.httpClient))
 	c.Registry.Register(asrockrack.ProviderName, asrockrack.ProviderProtocol, asrockrack.Features, nil, driverAsrockrack)
 
 	// register gofish provider
-	httpClient := *c.httpClient
-	redfishOpts := []redfishwrapper.Option{
-		redfishwrapper.WithHTTPClient(&httpClient),
-		redfishwrapper.WithVersionsNotCompatible(c.redfishVersionsNotCompatible),
-		redfishwrapper.WithBasicAuthEnabled(c.redfishBasicAuthEnabled),
-	}
-	driverGoFish := redfish.New(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger, redfishOpts...)
+	driverGoFish := redfish.New(c.Auth.Host, c.providerConfig.gofish.port, c.Auth.User, c.Auth.Pass, c.Logger, redfishwrapper.WithHTTPClient(c.providerConfig.gofish.httpClient), redfishwrapper.WithVersionsNotCompatible(c.providerConfig.gofish.versionsNotCompatible))
 	c.Registry.Register(redfish.ProviderName, redfish.ProviderProtocol, redfish.Features, nil, driverGoFish)
 
-	// register AMT provider
-	driverAMT := intelamt.New(c.Logger, c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass)
+	// register Intel AMT provider
+	driverAMT := intelamt.New(c.Logger, c.Auth.Host, c.providerConfig.intelamt.port, c.Auth.User, c.Auth.Pass)
 	c.Registry.Register(intelamt.ProviderName, intelamt.ProviderProtocol, intelamt.Features, nil, driverAMT)
 }
 
