@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/go-multierror"
+	"go.uber.org/goleak"
 )
 
 type connTester1 struct {
@@ -66,6 +67,8 @@ func TestOpenConnectionFromInterfaces(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
+			defer goleak.VerifyNone(t)
+
 			var generic []interface{}
 			if tc.badImplementation {
 				badImplementation := struct{}{}
