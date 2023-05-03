@@ -36,8 +36,11 @@ func New(username string, password string, host string) (ipmi *Ipmi, err error) 
 }
 
 func (i *Ipmi) run(ctx context.Context, command []string) (output string, err error) {
-	ipmiArgs := []string{"-I", "lanplus", "-U", i.Username, "-E", "-N", "5"}
-	if strings.Contains(i.Host, ":") {
+    var out []byte
+    var ipmiCiphers = []string{"-C 17", "-C 3"}
+    ipmiArgs := []string{"-I", "lanplus", "-U", i.Username, "-E", "-N", "5"}
+    
+    if strings.Contains(i.Host, ":") {
 		host, port, err := net.SplitHostPort(i.Host)
 		if err == nil {
 			ipmiArgs = append(ipmiArgs, "-H", host, "-p", port)
@@ -46,14 +49,22 @@ func (i *Ipmi) run(ctx context.Context, command []string) (output string, err er
 		ipmiArgs = append(ipmiArgs, "-H", i.Host)
 	}
 
-	ipmiArgs = append(ipmiArgs, command...)
-	cmd := exec.CommandContext(ctx, i.ipmitool, ipmiArgs...)
-	cmd.Env = []string{fmt.Sprintf("IPMITOOL_PASSWORD=%s", i.Password)}
-	out, err := cmd.CombinedOutput()
-	if ctx.Err() == context.DeadlineExceeded {
-		return string(out), ctx.Err()
-	}
-	return string(out), errors.Wrap(err, strings.TrimSpace(string(out)))
+    for _, cipherString := range ipmiCiphers {
+        ipmiCmd := append(ipmiArgs, cipherString)
+        ipmiCmd = append(ipmiCmd, command...)
+        cmd := exec.CommandContext(ctx, i.ipmitool, ipmiCmd...)
+        cmd.Env = []string{fmt.Sprintf("IPMITOOL_PASSWORD=%s", i.Password)}
+        out, err = cmd.CombinedOutput()
+        if err == nil || ctx.Err() != nil {
+            break
+        }
+    }
+
+    if ctx.Err() == context.DeadlineExceeded {
+        return string(out), ctx.Err()
+    }
+
+    return string(out), errors.Wrap(err, strings.TrimSpace(string(out)))
 }
 
 // PowerCycle reboots the machine via bmc
