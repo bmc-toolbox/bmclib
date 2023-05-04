@@ -30,7 +30,10 @@ func main() {
 		l.Fatal("required host/user/pass parameters not defined")
 	}
 
-	clientOpts := []bmclib.Option{bmclib.WithLogger(logger)}
+	clientOpts := []bmclib.Option{
+		bmclib.WithLogger(logger),
+		bmclib.WithRedfishBasicAuth(),
+	}
 
 	if *withSecureTLS {
 		var pool *x509.CertPool
@@ -58,18 +61,9 @@ func main() {
 	}
 	defer cl.Close(ctx)
 
-	inventory, err := cl.Inventory(ctx)
-	if err != nil {
-		l.Fatal(err)
-	}
-
-	l.WithField("bmc-version", inventory.BMC.Firmware.Installed).Info()
-
 	state, err := cl.GetPowerState(ctx)
 	if err != nil {
 		l.WithError(err).Error()
 	}
 	l.WithField("power-state", state).Info()
-
-	l.WithField("bios-version", inventory.BIOS.Firmware.Installed).Info()
 }
