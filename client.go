@@ -12,7 +12,6 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/v2/bmc"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/bmc-toolbox/bmclib/v2/providers/asrockrack"
 	"github.com/bmc-toolbox/bmclib/v2/providers/intelamt"
 	"github.com/bmc-toolbox/bmclib/v2/providers/ipmitool"
@@ -48,6 +47,14 @@ type Auth struct {
 	Host string
 	User string
 	Pass string
+}
+
+// providerConfig contains per provider specific configuration.
+type providerConfig struct {
+	ipmitool ipmitool.Config
+	asrock   asrockrack.Config
+	gofish   redfish.Config
+	intelamt intelamt.Config
 }
 
 // Option for setting optional Client values
@@ -93,26 +100,26 @@ func WithPerProviderTimeout(timeout time.Duration) Option {
 
 // NewClient returns a new Client struct
 func NewClient(host, port, user, pass string, opts ...Option) *Client {
+	hc, _ := httpclient.Build()
 	var defaultClient = &Client{
 		Logger:                 logr.Discard(),
 		Registry:               registrar.NewRegistry(),
 		oneTimeRegistryEnabled: false,
 		oneTimeRegistry:        registrar.NewRegistry(),
+		httpClient:             hc,
 		providerConfig: providerConfig{
-			ipmitool: ipmitoolConfig{
-				cipherSuite: 3,
-				port:        "623",
+			ipmitool: ipmitool.Config{
+				CipherSuite: 3,
+				Port:        "623",
 			},
-			asrock: asrockrackConfig{
-				port: "443",
+			asrock: asrockrack.Config{},
+			gofish: redfish.Config{
+				Port:                  "443",
+				VersionsNotCompatible: []string{},
 			},
-			gofish: gofishConfig{
-				port:                  "443",
-				versionsNotCompatible: []string{},
-			},
-			intelamt: intelAMTConfig{
-				hostScheme: "http",
-				port:       "16992",
+			intelamt: intelamt.Config{
+				HostScheme: "http",
+				Port:       16992,
 			},
 		},
 	}
@@ -120,28 +127,8 @@ func NewClient(host, port, user, pass string, opts ...Option) *Client {
 	for _, opt := range opts {
 		opt(defaultClient)
 	}
-	if defaultClient.httpClient == nil {
-		defaultClient.httpClient, _ = httpclient.Build(defaultClient.httpClientSetupFuncs...)
-	} else {
-		for _, setupFunc := range defaultClient.httpClientSetupFuncs {
-			setupFunc(defaultClient.httpClient)
-		}
-	}
-	if defaultClient.providerConfig.asrock.httpClient == nil {
-		httpClient := *defaultClient.httpClient
-		defaultClient.providerConfig.asrock.httpClient = &httpClient
-	} else {
-		for _, setupFunc := range defaultClient.httpClientSetupFuncs {
-			setupFunc(defaultClient.providerConfig.asrock.httpClient)
-		}
-	}
-	if defaultClient.providerConfig.gofish.httpClient == nil {
-		httpClient := *defaultClient.httpClient
-		defaultClient.providerConfig.gofish.httpClient = &httpClient
-	} else {
-		for _, setupFunc := range defaultClient.httpClientSetupFuncs {
-			setupFunc(defaultClient.providerConfig.gofish.httpClient)
-		}
+	for _, setupFunc := range defaultClient.httpClientSetupFuncs {
+		setupFunc(defaultClient.httpClient)
 	}
 
 	defaultClient.Registry.Logger = defaultClient.Logger
@@ -175,19 +162,36 @@ func (c *Client) defaultTimeout(ctx context.Context) time.Duration {
 
 func (c *Client) registerProviders() {
 	// register ipmitool provider
-	driverIpmitool := &ipmitool.Conn{Host: c.Auth.Host, Port: c.providerConfig.ipmitool.port, User: c.Auth.User, Pass: c.Auth.Pass, Log: c.Logger}
+	ipmiOpts := []ipmitool.Option{
+		ipmitool.WithLogger(c.Logger),
+		ipmitool.WithPort(c.providerConfig.ipmitool.Port),
+		ipmitool.WithCipherSuite(c.providerConfig.ipmitool.CipherSuite),
+	}
+	driverIpmitool, _ := ipmitool.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, ipmiOpts...)
 	c.Registry.Register(ipmitool.ProviderName, ipmitool.ProviderProtocol, ipmitool.Features, nil, driverIpmitool)
 
 	// register ASRR vendorapi provider
-	driverAsrockrack, _ := asrockrack.NewWithOptions(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger, asrockrack.WithHTTPClient(c.providerConfig.asrock.httpClient))
+	asrHttpClient := *c.httpClient
+	driverAsrockrack, _ := asrockrack.NewWithOptions(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger, asrockrack.WithHTTPClient(&asrHttpClient))
 	c.Registry.Register(asrockrack.ProviderName, asrockrack.ProviderProtocol, asrockrack.Features, nil, driverAsrockrack)
 
 	// register gofish provider
-	driverGoFish := redfish.New(c.Auth.Host, c.providerConfig.gofish.port, c.Auth.User, c.Auth.Pass, c.Logger, redfishwrapper.WithHTTPClient(c.providerConfig.gofish.httpClient), redfishwrapper.WithVersionsNotCompatible(c.providerConfig.gofish.versionsNotCompatible))
+	gfHttpClient := *c.httpClient
+	gofishOpts := []redfish.Option{
+		redfish.WithHttpClient(&gfHttpClient),
+		redfish.WithVersionsNotCompatible(c.providerConfig.gofish.VersionsNotCompatible),
+		redfish.WithUseBasicAuth(c.providerConfig.gofish.UseBasicAuth),
+	}
+	driverGoFish := redfish.New(c.Auth.Host, c.providerConfig.gofish.Port, c.Auth.User, c.Auth.Pass, c.Logger, gofishOpts...)
 	c.Registry.Register(redfish.ProviderName, redfish.ProviderProtocol, redfish.Features, nil, driverGoFish)
 
 	// register Intel AMT provider
-	driverAMT := intelamt.New(c.Logger, c.Auth.Host, c.providerConfig.intelamt.port, c.Auth.User, c.Auth.Pass)
+	iamtOpts := []intelamt.Option{
+		intelamt.WithLogger(c.Logger),
+		intelamt.WithHostScheme(c.providerConfig.intelamt.HostScheme),
+		intelamt.WithPort(c.providerConfig.intelamt.Port),
+	}
+	driverAMT := intelamt.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, iamtOpts...)
 	c.Registry.Register(intelamt.ProviderName, intelamt.ProviderProtocol, intelamt.Features, nil, driverAMT)
 }
 

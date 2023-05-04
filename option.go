@@ -4,37 +4,37 @@ import "net/http"
 
 func WithIpmitoolCipherSuite(cipherSuite int) Option {
 	return func(args *Client) {
-		args.providerConfig.ipmitool.cipherSuite = cipherSuite
+		args.providerConfig.ipmitool.CipherSuite = cipherSuite
 	}
 }
 
 func WithIpmitoolPort(port string) Option {
 	return func(args *Client) {
-		args.providerConfig.ipmitool.port = port
+		args.providerConfig.ipmitool.Port = port
 	}
 }
 
 func WithAsrockrackHTTPClient(httpClient *http.Client) Option {
 	return func(args *Client) {
-		args.providerConfig.asrock.httpClient = httpClient
+		args.providerConfig.asrock.HttpClient = httpClient
 	}
 }
 
 func WithAsrockrackPort(port string) Option {
 	return func(args *Client) {
-		args.providerConfig.asrock.port = port
+		args.providerConfig.asrock.Port = port
 	}
 }
 
 func WithGofishHTTPClient(httpClient *http.Client) Option {
 	return func(args *Client) {
-		args.providerConfig.gofish.httpClient = httpClient
+		args.providerConfig.gofish.HttpClient = httpClient
 	}
 }
 
 func WithGofishPort(port string) Option {
 	return func(args *Client) {
-		args.providerConfig.gofish.port = port
+		args.providerConfig.gofish.Port = port
 	}
 }
 
@@ -44,18 +44,24 @@ func WithGofishPort(port string) Option {
 // devices with the given redfish version(s).
 func WithGofishVersionsNotCompatible(versions []string) Option {
 	return func(args *Client) {
-		args.providerConfig.gofish.versionsNotCompatible = append(args.providerConfig.gofish.versionsNotCompatible, versions...)
+		args.providerConfig.gofish.VersionsNotCompatible = append(args.providerConfig.gofish.VersionsNotCompatible, versions...)
+	}
+}
+
+func WithGofishUseBasicAuth(useBasicAuth bool) Option {
+	return func(args *Client) {
+		args.providerConfig.gofish.UseBasicAuth = useBasicAuth
 	}
 }
 
 func WithIntelAMTHostScheme(hostScheme string) Option {
 	return func(args *Client) {
-		args.providerConfig.intelamt.hostScheme = hostScheme
+		args.providerConfig.intelamt.HostScheme = hostScheme
 	}
 }
 
-func WithIntelAMTPort(port string) Option {
+func WithIntelAMTPort(port uint32) Option {
 	return func(args *Client) {
-		args.providerConfig.intelamt.port = port
+		args.providerConfig.intelamt.Port = port
 	}
 }

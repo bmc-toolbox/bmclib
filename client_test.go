@@ -79,7 +79,7 @@ func TestWithRedfishVersionsNotCompatible(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cl := NewClient(host, port, user, pass, WithGofishVersionsNotCompatible(tt.versions))
-			assert.Equal(t, tt.versions, cl.providerConfig.gofish.versionsNotCompatible)
+			assert.Equal(t, tt.versions, cl.providerConfig.gofish.VersionsNotCompatible)
 		})
 	}
 }

@@ -46,6 +46,11 @@ type ASRockRack struct {
 	httpClientSetupFuncs []func(*http.Client)
 }
 
+type Config struct {
+	Port       string
+	HttpClient *http.Client
+}
+
 // ASRockOption is a type that can configure an *ASRockRack
 type ASRockOption func(*ASRockRack)
 

@@ -3,7 +3,6 @@ package intelamt
 import (
 	"context"
 	"errors"
-	"strconv"
 	"strings"
 
 	"github.com/bmc-toolbox/bmclib/v2/providers"
@@ -28,7 +27,7 @@ var (
 	}
 )
 
-// iamtClient is
+// iamtClient interface allows us to mock the client for testing
 type iamtClient interface {
 	Close(context.Context) error
 	IsPoweredOn(context.Context) (bool, error)
@@ -44,20 +43,49 @@ type Conn struct {
 	client iamtClient
 }
 
+// Option for setting optional Client values
+type Option func(*Config)
+
+func WithPort(port uint32) Option {
+	return func(c *Config) {
+		c.Port = port
+	}
+}
+
+func WithHostScheme(hostScheme string) Option {
+	return func(c *Config) {
+		c.HostScheme = hostScheme
+	}
+}
+
+func WithLogger(logger logr.Logger) Option {
+	return func(c *Config) {
+		c.Logger = logger
+	}
+}
+
+type Config struct {
+	// HostScheme should be either "http" or "https".
+	HostScheme string
+	// Port is the port number to connect to.
+	Port   uint32
+	Logger logr.Logger
+}
+
 // New creates a new AMT connection
-func New(log logr.Logger, host string, port string, user string, pass string) *Conn {
-	p, err := strconv.Atoi(port)
-	if err != nil || p == 623 {
-		p = 16992
+func New(host string, user string, pass string, opts ...Option) *Conn {
+	defaultClient := &Config{
+		HostScheme: "http",
+		Port:       16992,
+		Logger:     logr.Discard(),
+	}
+	for _, opt := range opts {
+		opt(defaultClient)
 	}
 
-	cli := iamt.NewClient(log, host, "", user, pass)
-	cli.Port = uint32(p)
-	c := &Conn{
-		client: cli,
+	return &Conn{
+		client: iamt.NewClient(host, user, pass, iamt.WithLogger(defaultClient.Logger), iamt.WithPort(defaultClient.Port), iamt.WithScheme(defaultClient.HostScheme)),
 	}
-
-	return c
 }
 
 // Name of the provider
