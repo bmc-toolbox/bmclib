@@ -22,6 +22,7 @@ type Client struct {
 	port                  string
 	user                  string
 	pass                  string
+	basicAuth             bool
 	versionsNotCompatible []string // a slice of redfish versions to ignore as incompatible
 	client                *gofish.APIClient
 	httpClient            *http.Client
@@ -55,6 +56,13 @@ func WithVersionsNotCompatible(versions []string) Option {
 	}
 }
 
+// WithBasicAuthEnabled sets Basic Auth on the Gofish driver.
+func WithBasicAuthEnabled(e bool) Option {
+	return func(c *Client) {
+		c.basicAuth = e
+	}
+}
+
 // NewClient returns a redfishwrapper client
 func NewClient(host, port, user, pass string, opts ...Option) *Client {
 	if !strings.HasPrefix(host, "https://") && !strings.HasPrefix(host, "http://") {
@@ -84,6 +92,7 @@ func (c *Client) Open(ctx context.Context) error {
 		Password:   c.pass,
 		Insecure:   true,
 		HTTPClient: c.httpClient,
+		BasicAuth:  c.basicAuth,
 	}
 
 	if config.HTTPClient == nil {
@@ -136,6 +145,11 @@ func (c *Client) Close(ctx context.Context) error {
 func (c *Client) SessionActive() error {
 	if c.client == nil || c.client.Service == nil {
 		return bmclibErrs.ErrNotAuthenticated
+	}
+
+	// With basic auth enabled theres no session to be checked.
+	if c.basicAuth {
+		return nil
 	}
 
 	_, err := c.client.GetSession()
