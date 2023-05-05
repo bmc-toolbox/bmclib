@@ -68,7 +68,9 @@ func NewClient(host, user, pass string, opts ...Option) *Client {
 			ipmitool: ipmitool.Config{
 				Port: "623",
 			},
-			asrock: asrockrack.Config{},
+			asrock: asrockrack.Config{
+				Port: "443",
+			},
 			gofish: redfish.Config{
 				Port:                  "443",
 				VersionsNotCompatible: []string{},
@@ -132,7 +134,7 @@ func (c *Client) registerProviders() {
 
 	// register ASRR vendorapi provider
 	asrHttpClient := *c.httpClient
-	driverAsrockrack := asrockrack.NewWithOptions(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger, asrockrack.WithHTTPClient(&asrHttpClient))
+	driverAsrockrack := asrockrack.NewWithOptions(c.Auth.Host+":"+c.providerConfig.asrock.Port, c.Auth.User, c.Auth.Pass, c.Logger, asrockrack.WithHTTPClient(&asrHttpClient))
 	c.Registry.Register(asrockrack.ProviderName, asrockrack.ProviderProtocol, asrockrack.Features, nil, driverAsrockrack)
 
 	// register gofish provider
