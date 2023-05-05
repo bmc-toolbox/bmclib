@@ -17,7 +17,6 @@ func main() {
 
 	// set BMC parameters here
 	host := "10.211.132.157"
-	port := ""
 	user := "root"
 	pass := "yxvZdxAQ38ZWlZ"
 
@@ -32,7 +31,7 @@ func main() {
 	os.Setenv("DEBUG_BMCLIB", "true")
 	defer os.Unsetenv("DEBUG_BMCLIB")
 
-	cl := bmclib.NewClient(host, port, user, pass, bmclib.WithLogger(logger))
+	cl := bmclib.NewClient(host, user, pass, bmclib.WithLogger(logger))
 
 	err := cl.Open(ctx)
 	if err != nil {

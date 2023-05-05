@@ -14,18 +14,18 @@ import (
 func TestBMC(t *testing.T) {
 	t.Skip("needs ipmitool and real ipmi server")
 	host := "127.0.0.1"
-	port := "623"
 	user := "admin"
 	pass := "admin"
 
 	log := logging.DefaultLogger()
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
-	cl := NewClient(host, port, user, pass, WithLogger(log), WithPerProviderTimeout(5*time.Second))
+	cl := NewClient(host, user, pass, WithLogger(log), WithPerProviderTimeout(5*time.Second))
 	cl.FilterForCompatible(ctx)
 	var err error
 	err = cl.Open(ctx)
 	if err != nil {
+		t.Logf("%+v", cl.GetMetadata())
 		t.Fatal(err)
 	}
 	defer cl.Close(ctx)
@@ -59,7 +59,6 @@ func TestBMC(t *testing.T) {
 
 func TestWithRedfishVersionsNotCompatible(t *testing.T) {
 	host := "127.0.0.1"
-	port := "623"
 	user := "ADMIN"
 	pass := "ADMIN"
 
@@ -78,7 +77,7 @@ func TestWithRedfishVersionsNotCompatible(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cl := NewClient(host, port, user, pass, WithGofishVersionsNotCompatible(tt.versions))
+			cl := NewClient(host, user, pass, WithGofishVersionsNotCompatible(tt.versions))
 			assert.Equal(t, tt.versions, cl.providerConfig.gofish.VersionsNotCompatible)
 		})
 	}
@@ -118,7 +117,6 @@ func TestWithRedfishBasicAuth(t *testing.T) {
 
 func TestWithConnectionTimeout(t *testing.T) {
 	host := "127.0.0.1"
-	port := "623"
 	user := "ADMIN"
 	pass := "ADMIN"
 
@@ -137,7 +135,7 @@ func TestWithConnectionTimeout(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cl := NewClient(host, port, user, pass, WithPerProviderTimeout(tt.timeout))
+			cl := NewClient(host, user, pass, WithPerProviderTimeout(tt.timeout))
 			assert.Equal(t, tt.timeout, cl.perProviderTimeout(nil))
 		})
 	}
@@ -163,7 +161,7 @@ func TestDefaultTimeout(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			c := NewClient("", "", "", "")
+			c := NewClient("", "", "")
 			got := c.defaultTimeout(tt.ctx)
 			if diff := cmp.Diff(got.Round(time.Millisecond), tt.want); diff != "" {
 				t.Errorf("unexpected timeout (-want +got):\n%s", diff)

@@ -83,8 +83,13 @@ func New(host string, user string, pass string, opts ...Option) *Conn {
 		opt(defaultClient)
 	}
 
+	iopts := []iamt.Option{
+		iamt.WithLogger(defaultClient.Logger),
+		iamt.WithPort(defaultClient.Port),
+		iamt.WithScheme(defaultClient.HostScheme),
+	}
 	return &Conn{
-		client: iamt.NewClient(host, user, pass, iamt.WithLogger(defaultClient.Logger), iamt.WithPort(defaultClient.Port), iamt.WithScheme(defaultClient.HostScheme)),
+		client: iamt.NewClient(host, user, pass, iopts...),
 	}
 }
 

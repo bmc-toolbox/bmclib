@@ -52,7 +52,7 @@ func WithPerProviderTimeout(timeout time.Duration) Option {
 	}
 }
 
-func WithIpmitoolCipherSuite(cipherSuite int) Option {
+func WithIpmitoolCipherSuite(cipherSuite string) Option {
 	return func(args *Client) {
 		args.providerConfig.ipmitool.CipherSuite = cipherSuite
 	}
@@ -61,6 +61,12 @@ func WithIpmitoolCipherSuite(cipherSuite int) Option {
 func WithIpmitoolPort(port string) Option {
 	return func(args *Client) {
 		args.providerConfig.ipmitool.Port = port
+	}
+}
+
+func WithIpmitoolPath(path string) Option {
+	return func(args *Client) {
+		args.providerConfig.ipmitool.IpmitoolPath = path
 	}
 }
 

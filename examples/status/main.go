@@ -5,7 +5,6 @@ import (
 	"crypto/x509"
 	"flag"
 	"io/ioutil"
-	"strconv"
 	"time"
 
 	"github.com/bmc-toolbox/bmclib/v2"
@@ -17,7 +16,6 @@ func main() {
 	user := flag.String("user", "", "Username to login with")
 	pass := flag.String("password", "", "Username to login with")
 	host := flag.String("host", "", "BMC hostname to connect to")
-	port := flag.Int("port", 443, "BMC port to connect to")
 	withSecureTLS := flag.Bool("secure-tls", false, "Enable secure TLS")
 	certPoolFile := flag.String("cert-pool", "", "Path to an file containing x509 CAs. An empty string uses the system CAs. Only takes effect when --secure-tls=true")
 	flag.Parse()
@@ -49,7 +47,7 @@ func main() {
 		clientOpts = append(clientOpts, bmclib.WithSecureTLS(pool))
 	}
 
-	cl := bmclib.NewClient(*host, strconv.Itoa(*port), *user, *pass, clientOpts...)
+	cl := bmclib.NewClient(*host, *user, *pass, clientOpts...)
 	cl.Registry.Drivers = cl.Registry.Using("redfish")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)

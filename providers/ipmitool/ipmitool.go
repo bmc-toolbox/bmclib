@@ -37,9 +37,10 @@ type Conn struct {
 }
 
 type Config struct {
-	CipherSuite int
-	Port        string
-	Log         logr.Logger
+	CipherSuite  string
+	IpmitoolPath string
+	Log          logr.Logger
+	Port         string
 }
 
 // Option for setting optional Client values
@@ -57,24 +58,34 @@ func WithPort(port string) Option {
 	}
 }
 
-func WithCipherSuite(cipherSuite int) Option {
+func WithCipherSuite(cipherSuite string) Option {
 	return func(c *Config) {
 		c.CipherSuite = cipherSuite
 	}
 }
 
+func WithIpmitoolPath(ipmitoolPath string) Option {
+	return func(c *Config) {
+		c.IpmitoolPath = ipmitoolPath
+	}
+}
+
 func New(host, user, pass string, opts ...Option) (*Conn, error) {
 	defaultConfig := &Config{
-		CipherSuite: 3,
-		Port:        "623",
-		Log:         logr.Discard(),
+		Port: "623",
+		Log:  logr.Discard(),
 	}
 
 	for _, opt := range opts {
 		opt(defaultConfig)
 	}
 
-	ipt, err := ipmi.New(user, pass, host+":"+defaultConfig.Port)
+	iopts := []ipmi.Option{
+		ipmi.WithIpmitoolPath(defaultConfig.IpmitoolPath),
+		ipmi.WithCipherSuite(defaultConfig.CipherSuite),
+		ipmi.WithLogger(defaultConfig.Log),
+	}
+	ipt, err := ipmi.New(user, pass, host+":"+defaultConfig.Port, iopts...)
 	if err != nil {
 		return nil, err
 	}

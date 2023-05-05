@@ -57,18 +57,16 @@ type providerConfig struct {
 }
 
 // NewClient returns a new Client struct
-func NewClient(host, port, user, pass string, opts ...Option) *Client {
-	hc, _ := httpclient.Build()
-	var defaultClient = &Client{
+func NewClient(host, user, pass string, opts ...Option) *Client {
+	defaultClient := &Client{
 		Logger:                 logr.Discard(),
 		Registry:               registrar.NewRegistry(),
 		oneTimeRegistryEnabled: false,
 		oneTimeRegistry:        registrar.NewRegistry(),
-		httpClient:             hc,
+		httpClient:             httpclient.Build(),
 		providerConfig: providerConfig{
 			ipmitool: ipmitool.Config{
-				CipherSuite: 3,
-				Port:        "623",
+				Port: "623",
 			},
 			asrock: asrockrack.Config{},
 			gofish: redfish.Config{
@@ -93,7 +91,7 @@ func NewClient(host, port, user, pass string, opts ...Option) *Client {
 	defaultClient.Auth.Host = host
 	defaultClient.Auth.User = user
 	defaultClient.Auth.Pass = pass
-	// len of 0 means that no Registry, with any registered providers was passed in.
+	// len of 0 means that no Registry, with any registered providers, was passed in.
 	if len(defaultClient.Registry.Drivers) == 0 {
 		defaultClient.registerProviders()
 	}
@@ -124,13 +122,17 @@ func (c *Client) registerProviders() {
 		ipmitool.WithLogger(c.Logger),
 		ipmitool.WithPort(c.providerConfig.ipmitool.Port),
 		ipmitool.WithCipherSuite(c.providerConfig.ipmitool.CipherSuite),
+		ipmitool.WithIpmitoolPath(c.providerConfig.ipmitool.IpmitoolPath),
 	}
-	driverIpmitool, _ := ipmitool.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, ipmiOpts...)
-	c.Registry.Register(ipmitool.ProviderName, ipmitool.ProviderProtocol, ipmitool.Features, nil, driverIpmitool)
+	if driverIpmitool, err := ipmitool.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, ipmiOpts...); err == nil {
+		c.Registry.Register(ipmitool.ProviderName, ipmitool.ProviderProtocol, ipmitool.Features, nil, driverIpmitool)
+	} else {
+		c.Logger.Info("ipmitool provider not available", "error", err.Error())
+	}
 
 	// register ASRR vendorapi provider
 	asrHttpClient := *c.httpClient
-	driverAsrockrack, _ := asrockrack.NewWithOptions(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger, asrockrack.WithHTTPClient(&asrHttpClient))
+	driverAsrockrack := asrockrack.NewWithOptions(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger, asrockrack.WithHTTPClient(&asrHttpClient))
 	c.Registry.Register(asrockrack.ProviderName, asrockrack.ProviderProtocol, asrockrack.Features, nil, driverAsrockrack)
 
 	// register gofish provider
@@ -190,6 +192,7 @@ func (c *Client) registry() *registrar.Registry {
 // being empty then we error.
 func (c *Client) Open(ctx context.Context) error {
 	ifs, metadata, err := bmc.OpenConnectionFromInterfaces(ctx, c.perProviderTimeout(ctx), c.registry().GetDriverInterfaces())
+	defer c.setMetadata(metadata)
 	if err != nil {
 		return err
 	}
@@ -203,7 +206,7 @@ func (c *Client) Open(ctx context.Context) error {
 		}
 	}
 	c.Registry.Drivers = reg
-	c.setMetadata(metadata)
+
 	return nil
 }
 

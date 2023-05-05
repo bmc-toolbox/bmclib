@@ -22,7 +22,7 @@ func main() {
 	bmcPass := os.Getenv("BMC_PASSWORD")
 	bmcUser := os.Getenv("BMC_USERNAME")
 	// init client
-	client := bmclib.NewClient(host, "", bmcUser, bmcPass, clientOpts...)
+	client := bmclib.NewClient(host, bmcUser, bmcPass, clientOpts...)
 
 	ctx := context.TODO()
 	// open BMC session
