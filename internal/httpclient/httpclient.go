@@ -53,13 +53,11 @@ func SecureTLSOption(rootCAs *x509.CertPool) func(*http.Client) {
 }
 
 // Build builds a client session with our default parameters
-func Build(opts ...func(*http.Client)) (client *http.Client, err error) {
-	jar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
-	if err != nil {
-		return client, err
-	}
+func Build(opts ...func(*http.Client)) *http.Client {
+	// we ignore the error here because cookiejar.New always returns nil
+	jar, _ := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
 
-	client = &http.Client{
+	client := &http.Client{
 		Timeout:   time.Second * 120,
 		Transport: DefaultTransport(),
 		Jar:       jar,
@@ -71,7 +69,7 @@ func Build(opts ...func(*http.Client)) (client *http.Client, err error) {
 		}
 	}
 
-	return client, err
+	return client
 }
 
 // StandardizeProcessorName makes the processor name standard across vendors
