@@ -19,7 +19,6 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/providers/redfish"
 	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
-	"github.com/google/go-cmp/cmp"
 	"github.com/jacobweinstock/registrar"
 )
 
@@ -257,20 +256,6 @@ func (c *Client) Close(ctx context.Context) (err error) {
 	return err
 }
 
-// union is a helper to preserve the order of the current registry while filtering against a one time registry.
-func union(cur, oneTime []*registrar.Driver) []*registrar.Driver {
-	result := []*registrar.Driver{}
-	for _, elem := range cur {
-		for _, em := range oneTime {
-			if cmp.Diff(*em, *elem) == "" {
-				result = append(result, elem)
-			}
-		}
-	}
-
-	return result
-}
-
 // FilterForCompatible removes any drivers/providers that are not compatible. It wraps the
 // Client.Registry.FilterForCompatible func in order to provide a per provider timeout.
 func (c *Client) FilterForCompatible(ctx context.Context) {
@@ -278,9 +263,7 @@ func (c *Client) FilterForCompatible(ctx context.Context) {
 	defer cancel()
 
 	reg := c.registry().FilterForCompatible(perProviderTimeout)
-	// if the registry used a one time filter, the order could be different than the current registry.
-	// Because of this we need to get the union of the two keeping the current order.
-	c.Registry.Drivers = union(c.Registry.Drivers, reg)
+	c.Registry.Drivers = reg
 }
 
 // GetPowerState pass through to library function
