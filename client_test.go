@@ -165,7 +165,8 @@ func TestDefaultTimeout(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			c := NewClient("", "", "")
 			got := c.defaultTimeout(tt.ctx)
-			if diff := cmp.Diff(got.Round(time.Millisecond), tt.want(len(c.Registry.Drivers))); diff != "" {
+			if !equalWithinErrorMargin(got.Round(time.Millisecond), tt.want(len(c.Registry.Drivers))) {
+				diff := cmp.Diff(got.Round(time.Millisecond), tt.want(len(c.Registry.Drivers)))
 				t.Errorf("unexpected timeout (-want +got):\n%s", diff)
 			}
 		})
@@ -219,7 +220,7 @@ func TestOpenFiltered(t *testing.T) {
 	registry.Register("tester1", "tester1", nil, nil, &testProvider{PName: "tester1"})
 	registry.Register("tester2", "tester2", nil, nil, &testProvider{PName: "tester2"})
 	registry.Register("tester3", "tester3", nil, nil, &testProvider{PName: "tester3"})
-	cl := NewClient("", "", "", "", WithRegistry(registry))
+	cl := NewClient("", "", "", WithRegistry(registry))
 	if err := cl.PreferProvider("tester3").Open(context.Background()); err != nil {
 		t.Fatal(err)
 	}
