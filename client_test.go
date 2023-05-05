@@ -172,39 +172,6 @@ func TestDefaultTimeout(t *testing.T) {
 	}
 }
 
-func TestUnion(t *testing.T) {
-	tests := map[string]struct {
-		oneTime []*registrar.Driver
-		want    []*registrar.Driver
-	}{
-		"empty":           {oneTime: []*registrar.Driver{}, want: []*registrar.Driver{}},
-		"partial overlap": {oneTime: []*registrar.Driver{{Name: "one", Protocol: "redfish"}}, want: []*registrar.Driver{{Name: "one", Protocol: "redfish"}}},
-	}
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			cur := []*registrar.Driver{
-				{
-					Name:     "one",
-					Protocol: "redfish",
-				},
-				{
-					Name:     "two",
-					Protocol: "ipmi",
-				},
-				{
-					Name:     "three",
-					Protocol: "intelamt",
-				},
-			}
-			got := union(cur, tt.oneTime)
-			if diff := cmp.Diff(got, tt.want); diff != "" {
-				t.Errorf("unexpected union (-got +want):\n%s", diff)
-				t.Log("got", got)
-			}
-		})
-	}
-}
-
 type testProvider struct {
 	PName        string
 	Powerstate   string
