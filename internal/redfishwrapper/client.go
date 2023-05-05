@@ -86,8 +86,12 @@ func NewClient(host, port, user, pass string, opts ...Option) *Client {
 
 // Open sets up a new redfish session.
 func (c *Client) Open(ctx context.Context) error {
+	endpoint := c.host
+	if c.port != "" {
+		endpoint = c.host + ":" + c.port
+	}
 	config := gofish.ClientConfig{
-		Endpoint:   c.host,
+		Endpoint:   endpoint,
 		Username:   c.user,
 		Password:   c.pass,
 		Insecure:   true,

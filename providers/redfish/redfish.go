@@ -93,10 +93,9 @@ func WithUseBasicAuth(useBasicAuth bool) Option {
 }
 
 // New returns connection with a redfish client initialized
-func New(host, port, user, pass string, log logr.Logger, opts ...Option) *Conn {
-	httpClient  := httpclient.Build()
+func New(host, _, user, pass string, log logr.Logger, opts ...Option) *Conn {
 	defaultConfig := &Config{
-		HttpClient:            httpClient,
+		HttpClient:            httpclient.Build(),
 		Port:                  "443",
 		VersionsNotCompatible: []string{},
 	}
