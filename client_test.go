@@ -173,6 +173,10 @@ func TestDefaultTimeout(t *testing.T) {
 	}
 }
 
+func equalWithinErrorMargin(a, b time.Duration) bool {
+	return (a - b) < 10*time.Millisecond
+}
+
 type testProvider struct {
 	PName        string
 	Powerstate   string
