@@ -85,7 +85,6 @@ func TestWithRedfishVersionsNotCompatible(t *testing.T) {
 
 func TestWithRedfishBasicAuth(t *testing.T) {
 	host := "127.0.0.1"
-	port := "623"
 	user := "ADMIN"
 	pass := "ADMIN"
 
@@ -106,11 +105,11 @@ func TestWithRedfishBasicAuth(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var opts []Option
 			if tt.enabled {
-				opts = append(opts, WithRedfishBasicAuth())
+				opts = append(opts, WithGofishUseBasicAuth(true))
 			}
 
-			cl := NewClient(host, port, user, pass, opts...)
-			assert.Equal(t, tt.enabled, cl.redfishBasicAuthEnabled)
+			cl := NewClient(host, user, pass, opts...)
+			assert.Equal(t, tt.enabled, cl.providerConfig.gofish.UseBasicAuth)
 		})
 	}
 }
