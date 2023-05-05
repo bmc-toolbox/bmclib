@@ -143,11 +143,11 @@ func TestWithConnectionTimeout(t *testing.T) {
 func TestDefaultTimeout(t *testing.T) {
 	tests := map[string]struct {
 		ctx  context.Context
-		want time.Duration
+		want func(n int) time.Duration
 	}{
 		"no per provider timeout": {
 			ctx:  context.Background(),
-			want: 30 * time.Second,
+			want: func(n int) time.Duration { return 30 * time.Second },
 		},
 		"with per provider timeout": {
 			ctx: func() context.Context {
@@ -155,14 +155,17 @@ func TestDefaultTimeout(t *testing.T) {
 				defer d()
 				return c
 			}(),
-			want: (5 * time.Second / time.Duration(4)),
+			want: func(n int) time.Duration {
+				v := (4999 * time.Millisecond / time.Duration(n))
+				return v.Round(time.Millisecond)
+			},
 		},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			c := NewClient("", "", "")
 			got := c.defaultTimeout(tt.ctx)
-			if diff := cmp.Diff(got.Round(time.Millisecond), tt.want); diff != "" {
+			if diff := cmp.Diff(got.Round(time.Millisecond), tt.want(len(c.Registry.Drivers))); diff != "" {
 				t.Errorf("unexpected timeout (-want +got):\n%s", diff)
 			}
 		})
