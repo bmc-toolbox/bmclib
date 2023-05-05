@@ -7,6 +7,7 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/v2/logging"
 	"github.com/google/go-cmp/cmp"
+	"github.com/jacobweinstock/registrar"
 	"gopkg.in/go-playground/assert.v1"
 )
 
@@ -39,7 +40,7 @@ func TestBMC(t *testing.T) {
 	t.Logf("metadata %+v", cl.GetMetadata())
 
 	cl.Registry.Drivers = cl.Registry.PreferDriver("ipmitool")
-	state, err = cl.GetPowerState(ctx)
+	state, err = cl.PreferProvider("gofish").GetPowerState(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -168,5 +169,100 @@ func TestDefaultTimeout(t *testing.T) {
 				t.Errorf("unexpected timeout (-want +got):\n%s", diff)
 			}
 		})
+	}
+}
+
+func TestUnion(t *testing.T) {
+	tests := map[string]struct {
+		oneTime []*registrar.Driver
+		want    []*registrar.Driver
+	}{
+		"empty":           {oneTime: []*registrar.Driver{}, want: []*registrar.Driver{}},
+		"partial overlap": {oneTime: []*registrar.Driver{{Name: "one", Protocol: "redfish"}}, want: []*registrar.Driver{{Name: "one", Protocol: "redfish"}}},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			cur := []*registrar.Driver{
+				{
+					Name:     "one",
+					Protocol: "redfish",
+				},
+				{
+					Name:     "two",
+					Protocol: "ipmi",
+				},
+				{
+					Name:     "three",
+					Protocol: "intelamt",
+				},
+			}
+			got := union(cur, tt.oneTime)
+			if diff := cmp.Diff(got, tt.want); diff != "" {
+				t.Errorf("unexpected union (-got +want):\n%s", diff)
+				t.Log("got", got)
+			}
+		})
+	}
+}
+
+type testProvider struct {
+	PName        string
+	Powerstate   string
+	BootdeviceOK bool
+	Err          error
+}
+
+func (t *testProvider) Name() string {
+	if t.PName != "" {
+		return t.PName
+	}
+	return "tester"
+}
+
+func (t *testProvider) Open(ctx context.Context) error {
+	return t.Err
+}
+
+func (t *testProvider) Close(ctx context.Context) error {
+	return t.Err
+}
+
+func (t *testProvider) PowerStateGet(ctx context.Context) (string, error) {
+	return t.Powerstate, t.Err
+}
+
+func (t *testProvider) PowerSet(ctx context.Context, state string) error {
+	return t.Err
+}
+
+func (t *testProvider) BootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
+	return t.BootdeviceOK, t.Err
+}
+
+func registryNames(r []*registrar.Driver) []string {
+	var names []string
+	for _, d := range r {
+		names = append(names, d.Name)
+	}
+	return names
+}
+
+func TestOpenFiltered(t *testing.T) {
+	registry := registrar.NewRegistry()
+	registry.Register("tester1", "tester1", nil, nil, &testProvider{PName: "tester1"})
+	registry.Register("tester2", "tester2", nil, nil, &testProvider{PName: "tester2"})
+	registry.Register("tester3", "tester3", nil, nil, &testProvider{PName: "tester3"})
+	cl := NewClient("", "", "", "", WithRegistry(registry))
+	if err := cl.PreferProvider("tester3").Open(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	defer cl.Close(context.Background())
+	want := []string{"tester3", "tester1", "tester2"}
+	if diff := cmp.Diff(cl.GetMetadata().ProvidersAttempted, want); diff != "" {
+		t.Errorf(diff)
+	}
+	want = []string{"tester1", "tester2", "tester3"}
+	if diff := cmp.Diff(registryNames(cl.Registry.Drivers), want); diff != "" {
+		t.Errorf(diff)
 	}
 }

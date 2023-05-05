@@ -19,6 +19,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/providers/redfish"
 	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
+	"github.com/google/go-cmp/cmp"
 	"github.com/jacobweinstock/registrar"
 )
 
@@ -35,6 +36,8 @@ type Client struct {
 	perProviderTimeout           func(context.Context) time.Duration
 	redfishVersionsNotCompatible []string
 	redfishBasicAuthEnabled      bool
+	oneTimeRegistry              *registrar.Registry
+	oneTimeRegistryEnabled       bool
 }
 
 const (
@@ -114,6 +117,8 @@ func NewClient(host, port, user, pass string, opts ...Option) *Client {
 		Logger:                       logr.Discard(),
 		Registry:                     registrar.NewRegistry(),
 		redfishVersionsNotCompatible: []string{},
+		oneTimeRegistryEnabled:       false,
+		oneTimeRegistry:              registrar.NewRegistry(),
 	}
 
 	for _, opt := range opts {
@@ -150,7 +155,7 @@ func (c *Client) defaultTimeout(ctx context.Context) time.Duration {
 		return defaultConnectTimeout
 	}
 
-	l := len(c.Registry.Drivers)
+	l := len(c.registry().Drivers)
 	if l == 0 {
 		return time.Until(deadline)
 	}
@@ -167,8 +172,9 @@ func (c *Client) registerProviders() {
 	c.Registry.Register(asrockrack.ProviderName, asrockrack.ProviderProtocol, asrockrack.Features, nil, driverAsrockrack)
 
 	// register gofish provider
+	httpClient := *c.httpClient
 	redfishOpts := []redfishwrapper.Option{
-		redfishwrapper.WithHTTPClient(c.httpClient),
+		redfishwrapper.WithHTTPClient(&httpClient),
 		redfishwrapper.WithVersionsNotCompatible(c.redfishVersionsNotCompatible),
 		redfishwrapper.WithBasicAuthEnabled(c.redfishBasicAuthEnabled),
 	}
@@ -201,12 +207,22 @@ func (c *Client) setMetadata(metadata bmc.Metadata) {
 	c.metadata = &metadata
 }
 
+// registry will return the oneTimeRegistry if the oneTimeRegistryEnabled is true.
+func (c *Client) registry() *registrar.Registry {
+	if c.oneTimeRegistryEnabled {
+		c.oneTimeRegistryEnabled = false
+		return c.oneTimeRegistry
+	}
+
+	return c.Registry
+}
+
 // Open calls the OpenConnectionFromInterfaces library function
 // Any providers/drivers that do not successfully connect are removed
 // from the client.Registry.Drivers. If client.Registry.Drivers ends up
 // being empty then we error.
 func (c *Client) Open(ctx context.Context) error {
-	ifs, metadata, err := bmc.OpenConnectionFromInterfaces(ctx, c.perProviderTimeout(ctx), c.Registry.GetDriverInterfaces())
+	ifs, metadata, err := bmc.OpenConnectionFromInterfaces(ctx, c.perProviderTimeout(ctx), c.registry().GetDriverInterfaces())
 	if err != nil {
 		return err
 	}
@@ -236,9 +252,23 @@ func (c *Client) Close(ctx context.Context) (err error) {
 		ctx, done = context.WithTimeout(context.Background(), defaultConnectTimeout)
 		defer done()
 	}
-	metadata, err := bmc.CloseConnectionFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+	metadata, err := bmc.CloseConnectionFromInterfaces(ctx, c.registry().GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return err
+}
+
+// union is a helper to preserve the order of the current registry while filtering against a one time registry.
+func union(cur, oneTime []*registrar.Driver) []*registrar.Driver {
+	result := []*registrar.Driver{}
+	for _, elem := range cur {
+		for _, em := range oneTime {
+			if cmp.Diff(*em, *elem) == "" {
+				result = append(result, elem)
+			}
+		}
+	}
+
+	return result
 }
 
 // FilterForCompatible removes any drivers/providers that are not compatible. It wraps the
@@ -246,54 +276,58 @@ func (c *Client) Close(ctx context.Context) (err error) {
 func (c *Client) FilterForCompatible(ctx context.Context) {
 	perProviderTimeout, cancel := context.WithTimeout(ctx, c.perProviderTimeout(ctx))
 	defer cancel()
-	c.Registry.Drivers = c.Registry.FilterForCompatible(perProviderTimeout)
+
+	reg := c.registry().FilterForCompatible(perProviderTimeout)
+	// if the registry used a one time filter, the order could be different than the current registry.
+	// Because of this we need to get the union of the two keeping the current order.
+	c.Registry.Drivers = union(c.Registry.Drivers, reg)
 }
 
 // GetPowerState pass through to library function
 func (c *Client) GetPowerState(ctx context.Context) (state string, err error) {
-	state, metadata, err := bmc.GetPowerStateFromInterfaces(ctx, c.perProviderTimeout(ctx), c.Registry.GetDriverInterfaces())
+	state, metadata, err := bmc.GetPowerStateFromInterfaces(ctx, c.perProviderTimeout(ctx), c.registry().GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return state, err
 }
 
 // SetPowerState pass through to library function
 func (c *Client) SetPowerState(ctx context.Context, state string) (ok bool, err error) {
-	ok, metadata, err := bmc.SetPowerStateFromInterfaces(ctx, c.perProviderTimeout(ctx), state, c.Registry.GetDriverInterfaces())
+	ok, metadata, err := bmc.SetPowerStateFromInterfaces(ctx, c.perProviderTimeout(ctx), state, c.registry().GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return ok, err
 }
 
 // CreateUser pass through to library function
 func (c *Client) CreateUser(ctx context.Context, user, pass, role string) (ok bool, err error) {
-	ok, metadata, err := bmc.CreateUserFromInterfaces(ctx, c.perProviderTimeout(ctx), user, pass, role, c.Registry.GetDriverInterfaces())
+	ok, metadata, err := bmc.CreateUserFromInterfaces(ctx, c.perProviderTimeout(ctx), user, pass, role, c.registry().GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return ok, err
 }
 
 // UpdateUser pass through to library function
 func (c *Client) UpdateUser(ctx context.Context, user, pass, role string) (ok bool, err error) {
-	ok, metadata, err := bmc.UpdateUserFromInterfaces(ctx, c.perProviderTimeout(ctx), user, pass, role, c.Registry.GetDriverInterfaces())
+	ok, metadata, err := bmc.UpdateUserFromInterfaces(ctx, c.perProviderTimeout(ctx), user, pass, role, c.registry().GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return ok, err
 }
 
 // DeleteUser pass through to library function
 func (c *Client) DeleteUser(ctx context.Context, user string) (ok bool, err error) {
-	ok, metadata, err := bmc.DeleteUserFromInterfaces(ctx, c.perProviderTimeout(ctx), user, c.Registry.GetDriverInterfaces())
+	ok, metadata, err := bmc.DeleteUserFromInterfaces(ctx, c.perProviderTimeout(ctx), user, c.registry().GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return ok, err
 }
 
 // ReadUsers pass through to library function
 func (c *Client) ReadUsers(ctx context.Context) (users []map[string]string, err error) {
-	users, metadata, err := bmc.ReadUsersFromInterfaces(ctx, c.perProviderTimeout(ctx), c.Registry.GetDriverInterfaces())
+	users, metadata, err := bmc.ReadUsersFromInterfaces(ctx, c.perProviderTimeout(ctx), c.registry().GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return users, err
 }
 
 // SetBootDevice pass through to library function
 func (c *Client) SetBootDevice(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
-	ok, metadata, err := bmc.SetBootDeviceFromInterfaces(ctx, c.perProviderTimeout(ctx), bootDevice, setPersistent, efiBoot, c.Registry.GetDriverInterfaces())
+	ok, metadata, err := bmc.SetBootDeviceFromInterfaces(ctx, c.perProviderTimeout(ctx), bootDevice, setPersistent, efiBoot, c.registry().GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return ok, err
 }
@@ -303,41 +337,41 @@ func (c *Client) SetBootDevice(ctx context.Context, bootDevice string, setPersis
 // mediaURL isn't empty, attaches a virtual media device of type kind whose contents are
 // streamed from the indicated URL.
 func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL string) (ok bool, err error) {
-	ok, metadata, err := bmc.SetVirtualMediaFromInterfaces(ctx, kind, mediaURL, c.Registry.GetDriverInterfaces())
+	ok, metadata, err := bmc.SetVirtualMediaFromInterfaces(ctx, kind, mediaURL, c.registry().GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return ok, err
 }
 
 // ResetBMC pass through to library function
 func (c *Client) ResetBMC(ctx context.Context, resetType string) (ok bool, err error) {
-	ok, metadata, err := bmc.ResetBMCFromInterfaces(ctx, c.perProviderTimeout(ctx), resetType, c.Registry.GetDriverInterfaces())
+	ok, metadata, err := bmc.ResetBMCFromInterfaces(ctx, c.perProviderTimeout(ctx), resetType, c.registry().GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return ok, err
 }
 
 // Inventory pass through library function to collect hardware and firmware inventory
 func (c *Client) Inventory(ctx context.Context) (device *common.Device, err error) {
-	device, metadata, err := bmc.GetInventoryFromInterfaces(ctx, c.Registry.GetDriverInterfaces())
+	device, metadata, err := bmc.GetInventoryFromInterfaces(ctx, c.registry().GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return device, err
 }
 
 func (c *Client) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]string, err error) {
-	biosConfig, metadata, err := bmc.GetBiosConfigurationInterfaces(ctx, c.Registry.GetDriverInterfaces())
+	biosConfig, metadata, err := bmc.GetBiosConfigurationInterfaces(ctx, c.registry().GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return biosConfig, err
 }
 
 // FirmwareInstall pass through library function to upload firmware and install firmware
 func (c *Client) FirmwareInstall(ctx context.Context, component, applyAt string, forceInstall bool, reader io.Reader) (taskID string, err error) {
-	taskID, metadata, err := bmc.FirmwareInstallFromInterfaces(ctx, component, applyAt, forceInstall, reader, c.Registry.GetDriverInterfaces())
+	taskID, metadata, err := bmc.FirmwareInstallFromInterfaces(ctx, component, applyAt, forceInstall, reader, c.registry().GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return taskID, err
 }
 
 // FirmwareInstallStatus pass through library function to check firmware install status
 func (c *Client) FirmwareInstallStatus(ctx context.Context, installVersion, component, taskID string) (status string, err error) {
-	status, metadata, err := bmc.FirmwareInstallStatusFromInterfaces(ctx, installVersion, component, taskID, c.Registry.GetDriverInterfaces())
+	status, metadata, err := bmc.FirmwareInstallStatusFromInterfaces(ctx, installVersion, component, taskID, c.registry().GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return status, err
 
@@ -345,7 +379,7 @@ func (c *Client) FirmwareInstallStatus(ctx context.Context, installVersion, comp
 
 // PostCodeGetter pass through library function to return the BIOS/UEFI POST code
 func (c *Client) PostCode(ctx context.Context) (status string, code int, err error) {
-	status, code, metadata, err := bmc.GetPostCodeInterfaces(ctx, c.Registry.GetDriverInterfaces())
+	status, code, metadata, err := bmc.GetPostCodeInterfaces(ctx, c.registry().GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return status, code, err
 }
