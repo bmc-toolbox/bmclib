@@ -64,8 +64,7 @@ func TestMain(m *testing.M) {
 	}()
 
 	mockBMCHost, _ = url.Parse(mockServer.URL)
-
-	mockClient = New(mockBMCHost.String(), "", "foo", "bar", logr.Discard())
+	mockClient = New(mockBMCHost.Hostname(), "foo", "bar", logr.Discard(), WithPort(mockBMCHost.Port()))
 	err := mockClient.Open(context.TODO())
 	if err != nil {
 		log.Fatal(err)

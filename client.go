@@ -143,7 +143,7 @@ func (c *Client) registerProviders() {
 		redfish.WithUseBasicAuth(c.providerConfig.gofish.UseBasicAuth),
 		redfish.WithPort(c.providerConfig.gofish.Port),
 	}
-	driverGoFish := redfish.New(c.Auth.Host, "", c.Auth.User, c.Auth.Pass, c.Logger, gofishOpts...)
+	driverGoFish := redfish.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger, gofishOpts...)
 	c.Registry.Register(redfish.ProviderName, redfish.ProviderProtocol, redfish.Features, nil, driverGoFish)
 
 	// register Intel AMT provider
