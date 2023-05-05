@@ -96,11 +96,7 @@ func (c *Client) Open(ctx context.Context) error {
 	}
 
 	if config.HTTPClient == nil {
-		var err error
-		config.HTTPClient, err = httpclient.Build(c.httpClientSetupFuncs...)
-		if err != nil {
-			return err
-		}
+		config.HTTPClient = httpclient.Build(c.httpClientSetupFuncs...)
 	} else {
 		for _, setupFunc := range c.httpClientSetupFuncs {
 			setupFunc(config.HTTPClient)

@@ -52,7 +52,6 @@ type testFwUpgradeState struct {
 var aClient *ASRockRack
 
 func TestMain(m *testing.M) {
-	var err error
 	// setup mock server
 	server = mockASRockBMC()
 	bmcURL, _ = url.Parse(server.URL)
@@ -61,10 +60,7 @@ func TestMain(m *testing.M) {
 	l.Level = logrus.DebugLevel
 	// setup bmc client
 	tLog := logrusr.New(l)
-	aClient, err = New(bmcURL.Host, "foo", "bar", tLog)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+	aClient = New(bmcURL.Host, "foo", "bar", tLog)
 
 	// firmware update test state
 	fwUpgradeState = &testFwUpgradeState{}
