@@ -83,6 +83,38 @@ func TestWithRedfishVersionsNotCompatible(t *testing.T) {
 	}
 }
 
+func TestWithRedfishBasicAuth(t *testing.T) {
+	host := "127.0.0.1"
+	port := "623"
+	user := "ADMIN"
+	pass := "ADMIN"
+
+	tests := []struct {
+		name    string
+		enabled bool
+	}{
+		{
+			"disabled",
+			false,
+		},
+		{
+			"enabled",
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var opts []Option
+			if tt.enabled {
+				opts = append(opts, WithRedfishBasicAuth())
+			}
+
+			cl := NewClient(host, port, user, pass, opts...)
+			assert.Equal(t, tt.enabled, cl.redfishBasicAuthEnabled)
+		})
+	}
+}
+
 func TestWithConnectionTimeout(t *testing.T) {
 	host := "127.0.0.1"
 	port := "623"

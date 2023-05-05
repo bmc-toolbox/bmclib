@@ -34,6 +34,7 @@ type Client struct {
 	metadata                     *bmc.Metadata
 	perProviderTimeout           func(context.Context) time.Duration
 	redfishVersionsNotCompatible []string
+	redfishBasicAuthEnabled      bool
 }
 
 const (
@@ -100,6 +101,13 @@ func WithRedfishVersionsNotCompatible(versions []string) Option {
 	}
 }
 
+// WithRedfishBasicAuth enables Basic Authentication on the Redfish driver.
+func WithRedfishBasicAuth() Option {
+	return func(args *Client) {
+		args.redfishBasicAuthEnabled = true
+	}
+}
+
 // NewClient returns a new Client struct
 func NewClient(host, port, user, pass string, opts ...Option) *Client {
 	var defaultClient = &Client{
@@ -159,7 +167,12 @@ func (c *Client) registerProviders() {
 	c.Registry.Register(asrockrack.ProviderName, asrockrack.ProviderProtocol, asrockrack.Features, nil, driverAsrockrack)
 
 	// register gofish provider
-	driverGoFish := redfish.New(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger, redfishwrapper.WithHTTPClient(c.httpClient), redfishwrapper.WithVersionsNotCompatible(c.redfishVersionsNotCompatible))
+	redfishOpts := []redfishwrapper.Option{
+		redfishwrapper.WithHTTPClient(c.httpClient),
+		redfishwrapper.WithVersionsNotCompatible(c.redfishVersionsNotCompatible),
+		redfishwrapper.WithBasicAuthEnabled(c.redfishBasicAuthEnabled),
+	}
+	driverGoFish := redfish.New(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger, redfishOpts...)
 	c.Registry.Register(redfish.ProviderName, redfish.ProviderProtocol, redfish.Features, nil, driverGoFish)
 
 	// register AMT provider

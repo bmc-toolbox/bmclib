@@ -31,3 +31,29 @@ func TestWithVersionsNotCompatible(t *testing.T) {
 		})
 	}
 }
+
+func TestWithBasicAuthEnabled(t *testing.T) {
+	host := "127.0.0.1"
+	user := "ADMIN"
+	pass := "ADMIN"
+
+	tests := []struct {
+		name    string
+		enabled bool
+	}{
+		{
+			"disabled",
+			false,
+		},
+		{
+			"enabled",
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			client := NewClient(host, "", user, pass, WithBasicAuthEnabled(tt.enabled))
+			assert.Equal(t, tt.enabled, client.basicAuth)
+		})
+	}
+}
