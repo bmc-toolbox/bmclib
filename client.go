@@ -12,6 +12,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/bmc"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/providers/asrockrack"
+	"github.com/bmc-toolbox/bmclib/v2/providers/dell"
 	"github.com/bmc-toolbox/bmclib/v2/providers/intelamt"
 	"github.com/bmc-toolbox/bmclib/v2/providers/ipmitool"
 	"github.com/bmc-toolbox/bmclib/v2/providers/redfish"
@@ -158,6 +159,10 @@ func (c *Client) registerProviders() {
 	}
 	driverAMT := intelamt.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, iamtOpts...)
 	c.Registry.Register(intelamt.ProviderName, intelamt.ProviderProtocol, intelamt.Features, nil, driverAMT)
+
+	// register Gofish Dell Redfish provider
+	driverGoFishDell := dell.New(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger, redfishOpts...)
+	c.Registry.Register(dell.ProviderName, redfish.ProviderProtocol, dell.Features, nil, driverGoFishDell)
 }
 
 // GetMetadata returns the metadata that is populated after each BMC function/method call
@@ -341,4 +346,11 @@ func (c *Client) PostCode(ctx context.Context) (status string, code int, err err
 	status, code, metadata, err := bmc.GetPostCodeInterfaces(ctx, c.registry().GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return status, code, err
+}
+
+func (c *Client) Screenshot(ctx context.Context) (image []byte, fileType string, err error) {
+	image, fileType, metadata, err := bmc.ScreenshotFromInterfaces(ctx, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+
+	return image, fileType, err
 }
