@@ -3,7 +3,7 @@ help:
 
 .PHONY: test
 test: ## Run unit tests
-	go test -v -covermode=count ./...
+	go test -v -covermode=atomic -race ./...
 
 .PHONY: cover
 cover: ## Run unit tests with coverage report

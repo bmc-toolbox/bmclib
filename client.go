@@ -134,11 +134,13 @@ func (c *Client) registerProviders() {
 
 	// register ASRR vendorapi provider
 	asrHttpClient := *c.httpClient
+	asrHttpClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
 	driverAsrockrack := asrockrack.NewWithOptions(c.Auth.Host+":"+c.providerConfig.asrock.Port, c.Auth.User, c.Auth.Pass, c.Logger, asrockrack.WithHTTPClient(&asrHttpClient))
 	c.Registry.Register(asrockrack.ProviderName, asrockrack.ProviderProtocol, asrockrack.Features, nil, driverAsrockrack)
 
 	// register gofish provider
 	gfHttpClient := *c.httpClient
+	gfHttpClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
 	gofishOpts := []redfish.Option{
 		redfish.WithHttpClient(&gfHttpClient),
 		redfish.WithVersionsNotCompatible(c.providerConfig.gofish.VersionsNotCompatible),
