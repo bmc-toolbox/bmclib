@@ -77,7 +77,7 @@ func TestWithRedfishVersionsNotCompatible(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cl := NewClient(host, user, pass, WithGofishVersionsNotCompatible(tt.versions))
+			cl := NewClient(host, user, pass, WithRedfishVersionsNotCompatible(tt.versions))
 			assert.Equal(t, tt.versions, cl.providerConfig.gofish.VersionsNotCompatible)
 		})
 	}
@@ -105,7 +105,7 @@ func TestWithRedfishBasicAuth(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var opts []Option
 			if tt.enabled {
-				opts = append(opts, WithGofishUseBasicAuth(true))
+				opts = append(opts, WithRedfishUseBasicAuth(true))
 			}
 
 			cl := NewClient(host, user, pass, opts...)

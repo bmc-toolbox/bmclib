@@ -52,7 +52,7 @@ func main() {
 		// blacklist a redfish version
 		clientOpts = append(
 			clientOpts,
-			bmclib.WithGofishVersionsNotCompatible(strings.Split(*incompatibleRedfishVersions, ",")))
+			bmclib.WithRedfishVersionsNotCompatible(strings.Split(*incompatibleRedfishVersions, ",")))
 	}
 
 	cl := bmclib.NewClient(*host, *user, *pass, clientOpts...)

@@ -30,7 +30,7 @@ func main() {
 
 	clientOpts := []bmclib.Option{
 		bmclib.WithLogger(logger),
-		bmclib.WithGofishUseBasicAuth(true),
+		bmclib.WithRedfishUseBasicAuth(true),
 	}
 
 	if *withSecureTLS {

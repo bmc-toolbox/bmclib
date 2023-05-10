@@ -82,29 +82,29 @@ func WithAsrockrackPort(port string) Option {
 	}
 }
 
-func WithGofishHTTPClient(httpClient *http.Client) Option {
+func WithRedfishHTTPClient(httpClient *http.Client) Option {
 	return func(args *Client) {
 		args.providerConfig.gofish.HttpClient = httpClient
 	}
 }
 
-func WithGofishPort(port string) Option {
+func WithRedfishPort(port string) Option {
 	return func(args *Client) {
 		args.providerConfig.gofish.Port = port
 	}
 }
 
-// WithGofishVersionsNotCompatible sets the list of incompatible redfish versions.
+// WithRedfishVersionsNotCompatible sets the list of incompatible redfish versions.
 //
 // With this option set, The bmclib.Registry.FilterForCompatible(ctx) method will not proceed on
 // devices with the given redfish version(s).
-func WithGofishVersionsNotCompatible(versions []string) Option {
+func WithRedfishVersionsNotCompatible(versions []string) Option {
 	return func(args *Client) {
 		args.providerConfig.gofish.VersionsNotCompatible = append(args.providerConfig.gofish.VersionsNotCompatible, versions...)
 	}
 }
 
-func WithGofishUseBasicAuth(useBasicAuth bool) Option {
+func WithRedfishUseBasicAuth(useBasicAuth bool) Option {
 	return func(args *Client) {
 		args.providerConfig.gofish.UseBasicAuth = useBasicAuth
 	}
