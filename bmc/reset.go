@@ -33,7 +33,7 @@ func resetBMC(ctx context.Context, timeout time.Duration, resetType string, b []
 		select {
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
-			
+
 			return false, metadata, err
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)

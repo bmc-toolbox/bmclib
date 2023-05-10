@@ -63,7 +63,6 @@ func New(username string, password string, host string, opts ...Option) (ipmi *I
 			return nil, err
 		}
 	} else {
-		fmt.Println("Using ipmitool path: ", ipmi.ipmitool)
 		if _, err = os.Stat(ipmi.ipmitool); err != nil {
 			return nil, err
 		}
@@ -145,7 +144,8 @@ func (i *Ipmi) PowerCycle(ctx context.Context) (status bool, err error) {
 
 // ForceRestart does the chassis power cycle even if the chassis is turned off.
 // From the RedFish spec (https://www.dmtf.org/sites/default/files/standards/documents/DSP2046_2018.1.pdf):
-//   Perform an immediate (non-graceful) shutdown, followed by a restart.
+//
+//	Perform an immediate (non-graceful) shutdown, followed by a restart.
 func (i *Ipmi) ForceRestart(ctx context.Context) (status bool, err error) {
 	output, err := i.run(ctx, []string{"chassis", "power", "status"})
 	if err != nil {
