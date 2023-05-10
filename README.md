@@ -44,7 +44,7 @@ import (
     clientOpts := []bmclib.Option{bmclib.WithLogger(logger)}
 
     // init client
-    client := bmclib.NewClient(*host, "", "admin", "hunter2", clientOpts...)
+    client := bmclib.NewClient(*host, "admin", "hunter2", clientOpts...)
 
     // open BMC session
     err := client.Open(ctx)
@@ -85,14 +85,14 @@ out BMCs are described below,
 Query just using the `redfish` endpoint.
 
 ```go
-cl := bmclib.NewClient("192.168.1.1", "", "admin", "hunter2")
+cl := bmclib.NewClient("192.168.1.1", "admin", "hunter2")
 cl.Registry.Drivers = cl.Registry.Using("redfish")
 ```
 
 Query using the `redfish` endpoint and fall back to `IPMI`
 
 ```go
-client := bmclib.NewClient("192.168.1.1", "", "admin", "hunter2")
+client := bmclib.NewClient("192.168.1.1", "admin", "hunter2")
 
 // overwrite registered drivers by appending Redfish, IPMI drivers in order
 drivers := append(registrar.Drivers{}, bmcClient.Registry.Using("redfish")...)
@@ -105,7 +105,7 @@ Filter drivers to query based on compatibility, this will attempt to check if th
 ideally, this method should be invoked when the client is ready to perform a BMC action.
 
 ```go
-client := bmclib.NewClient("192.168.1.1", "", "admin", "hunter2")
+client := bmclib.NewClient("192.168.1.1", "admin", "hunter2")
 client.Registry.Drivers = cl.Registry.FilterForCompatible(ctx)
 ```
 
@@ -116,7 +116,7 @@ Note: this version should match the one returned through `curl -k  "https://<BMC
 ```go
 opt := bmclib.WithRedfishVersionsNotCompatible([]string{"1.5.0"})
 
-client := bmclib.NewClient("192.168.1.1", "", "admin", "hunter2", opt...)
+client := bmclib.NewClient("192.168.1.1", "admin", "hunter2", opt...)
 cl.Registry.Drivers = cl.Registry.FilterForCompatible(ctx)
 ```
 
@@ -127,7 +127,7 @@ bmclib can be configured to apply timeouts to BMC interactions. The following op
 **Total max timeout only** - The total time bmclib will wait for all BMC interactions to complete. This is specified using a single `context.WithTimeout` or `context.WithDeadline` that is passed to all method call. With this option, the per provider; per interaction timeout is calculated by the total max timeout divided by the number of providers (currently there are 4 providers).
 
 ```go
-cl := bmclib.NewClient(host, port, user, pass, bmclib.WithLogger(log))
+cl := bmclib.NewClient(host, user, pass, bmclib.WithLogger(log))
 
 ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 defer cancel()
@@ -143,7 +143,7 @@ state, err := cl.GetPowerState(ctx)
 **Total max timeout and a per provider; per interaction timeout** - The total time bmclib will wait for all BMC interactions to complete. This is specified using a single `context.WithTimeout` or `context.WithDeadline` that is passed to all method call. This is honored above all timeouts. The per provider; per interaction timeout is specified using `bmclib.WithPerProviderTimeout` in the Client constructor.
 
 ```go
-cl := bmclib.NewClient(host, port, user, pass, bmclib.WithLogger(log), bmclib.WithPerProviderTimeout(15*time.Second))
+cl := bmclib.NewClient(host, user, pass, bmclib.WithLogger(log), bmclib.WithPerProviderTimeout(15*time.Second))
 
 ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 defer cancel()
@@ -159,7 +159,7 @@ state, err := cl.GetPowerState(ctx)
 **Per provider; per interaction timeout. No total max timeout** - The time bmclib will wait for a specific provider to complete. This is specified using `bmclib.WithPerProviderTimeout` in the Client constructor.
 
 ```go
-cl := bmclib.NewClient(host, port, user, pass, bmclib.WithLogger(log), bmclib.WithPerProviderTimeout(15*time.Second))
+cl := bmclib.NewClient(host, user, pass, bmclib.WithLogger(log), bmclib.WithPerProviderTimeout(15*time.Second))
 
 ctx := context.Background()
 
@@ -174,7 +174,7 @@ state, err := cl.GetPowerState(ctx)
 **Default timeout** - If no timeout is specified with a context or with `bmclib.WithPerProviderTimeout` the default is used. 30 seconds per provider; per interaction.
 
 ```go
-cl := bmclib.NewClient(host, port, user, pass, bmclib.WithLogger(log))
+cl := bmclib.NewClient(host, user, pass, bmclib.WithLogger(log))
 
 ctx := context.Background()
 
@@ -197,7 +197,7 @@ All providers are stored in a registry (see [`Client.Registry`](https://github.c
 Permanent filtering modifies the order and/or the number of providers for BMC calls for all client methods (for example: `Open`, `SetPowerState`, etc) calls.
 
 ```go
-cl := bmclib.NewClient(host, port, user, pass)
+cl := bmclib.NewClient(host, user, pass)
 // This will modify the order for all subsequent BMC calls
 cl.Registry.Drivers = cl.Registry.PreferDriver("gofish")
 if err := cl.Open(ctx); err != nil {
@@ -218,7 +218,7 @@ The following permanent filters are available:
 One-time filtering modifies the order and/or the number of providers for BMC calls only for a single method call.
 
 ```Go
-cl := bmclib.NewClient(host, port, user, pass)
+cl := bmclib.NewClient(host, user, pass)
 // This will modify the order for only this BMC call
 if err := cl.PreferProvider("gofish").Open(ctx); err != nil {
   return(err)
