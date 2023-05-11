@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/bmc-toolbox/bmclib/v2/internal/ipmi"
 	"github.com/bmc-toolbox/bmclib/v2/logging"
 )
 
@@ -42,14 +41,9 @@ func TestPowerState(t *testing.T) {
 	pass := "ADMIN"
 	host := "127.0.0.1"
 	port := "623"
-	i, _ := ipmi.New(user, pass, host+":"+port)
-	c := Conn{
-		Host: host,
-		Port: port,
-		User: user,
-		Pass: pass,
-		Log:  logging.DefaultLogger(),
-		con:  i,
+	c, err := New(host, user, pass, WithPort(port), WithLogger(logging.DefaultLogger()))
+	if err != nil {
+		t.Fatal(err)
 	}
 	state, err := c.PowerStateGet(context.Background())
 	if err != nil {
@@ -65,14 +59,9 @@ func TestPowerSet1(t *testing.T) {
 	pass := "ADMIN"
 	host := "127.0.0.1"
 	port := "623"
-	i, _ := ipmi.New(user, pass, host+":"+port)
-	c := Conn{
-		Host: host,
-		Port: port,
-		User: user,
-		Pass: pass,
-		Log:  logging.DefaultLogger(),
-		con:  i,
+	c, err := New(host, user, pass, WithPort(port), WithLogger(logging.DefaultLogger()))
+	if err != nil {
+		t.Fatal(err)
 	}
 	state, err := c.PowerSet(context.Background(), "soft")
 	if err != nil {
@@ -84,12 +73,13 @@ func TestPowerSet1(t *testing.T) {
 
 func TestBootDeviceSet2(t *testing.T) {
 	t.Skip("need real ipmi server")
-	i := Conn{
-		Host: "127.0.0.1",
-		Port: "623",
-		User: "ADMIN",
-		Pass: "ADMIN",
-		Log:  logging.DefaultLogger(),
+	host := "127.0.0.1"
+	port := "623"
+	user := "ADMIN"
+	pass := "ADMIN"
+	i, err := New(host, user, pass, WithPort(port), WithLogger(logging.DefaultLogger()))
+	if err != nil {
+		t.Fatal(err)
 	}
 	state, err := i.BootDeviceSet(context.Background(), "disk", false, false)
 	if err != nil {
@@ -101,12 +91,13 @@ func TestBootDeviceSet2(t *testing.T) {
 
 func TestBMCReset(t *testing.T) {
 	t.Skip("need real ipmi server")
-	i := Conn{
-		Host: "127.0.0.1",
-		Port: "623",
-		User: "ADMIN",
-		Pass: "ADMIN",
-		Log:  logging.DefaultLogger(),
+	host := "127.0.0.1"
+	port := "623"
+	user := "ADMIN"
+	pass := "ADMIN"
+	i, err := New(host, user, pass, WithPort(port), WithLogger(logging.DefaultLogger()))
+	if err != nil {
+		t.Fatal(err)
 	}
 	state, err := i.BmcReset(context.Background(), "warm")
 	if err != nil {

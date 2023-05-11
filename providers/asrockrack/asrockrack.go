@@ -46,6 +46,11 @@ type ASRockRack struct {
 	httpClientSetupFuncs []func(*http.Client)
 }
 
+type Config struct {
+	Port       string
+	HttpClient *http.Client
+}
+
 // ASRockOption is a type that can configure an *ASRockRack
 type ASRockOption func(*ASRockRack)
 
@@ -65,13 +70,13 @@ func WithHTTPClient(c *http.Client) ASRockOption {
 }
 
 // New returns a new ASRockRack instance ready to be used
-func New(ip string, username string, password string, log logr.Logger) (*ASRockRack, error) {
+func New(ip string, username string, password string, log logr.Logger) *ASRockRack {
 	return NewWithOptions(ip, username, password, log)
 }
 
 // NewWithOptions returns a new ASRockRack instance with options ready to be used
-func NewWithOptions(ip string, username string, password string, log logr.Logger, opts ...ASRockOption) (r *ASRockRack, err error) {
-	r = &ASRockRack{
+func NewWithOptions(ip string, username string, password string, log logr.Logger, opts ...ASRockOption) *ASRockRack {
+	r := &ASRockRack{
 		ip:           ip,
 		username:     username,
 		password:     password,
@@ -82,16 +87,17 @@ func NewWithOptions(ip string, username string, password string, log logr.Logger
 		opt(r)
 	}
 	if r.httpClient == nil {
-		r.httpClient, err = httpclient.Build(r.httpClientSetupFuncs...)
-		if err != nil {
-			return nil, err
-		}
+		r.httpClient = httpclient.Build(r.httpClientSetupFuncs...)
 	} else {
 		for _, setupFunc := range r.httpClientSetupFuncs {
 			setupFunc(r.httpClient)
 		}
 	}
-	return r, nil
+	return r
+}
+
+func (a *ASRockRack) Name() string {
+	return ProviderName
 }
 
 // Compatible implements the registrar.Verifier interface

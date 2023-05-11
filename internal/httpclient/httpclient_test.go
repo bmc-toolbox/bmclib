@@ -51,13 +51,10 @@ func TestBuildWithOptions(t *testing.T) {
 			if tc.secureClient {
 				opts = append(opts, SecureTLSOption(tc.withCertPool(server.Certificate())))
 			}
-			client, err := Build(opts...)
-			if err != nil {
-				t.Fatal(client)
-			}
+			client := Build(opts...)
 			req, _ := http.NewRequest(http.MethodGet, server.URL, nil)
 
-			_, err = client.Do(req)
+			_, err := client.Do(req)
 			if tc.wantErr {
 				if err == nil {
 					t.Fatal("Missing expected error")

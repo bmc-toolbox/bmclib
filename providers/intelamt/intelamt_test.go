@@ -225,7 +225,7 @@ func TestCompatible(t *testing.T) {
 func TestNew(t *testing.T) {
 	wantClient := &mock{}
 	want := &Conn{client: wantClient}
-	got := New(logr.Discard(), "localhost", "", "admin", "pass")
+	got := New("localhost", "admin", "pass")
 	t.Log(got == nil)
 	c := Conn{}
 	l := logr.Logger{}

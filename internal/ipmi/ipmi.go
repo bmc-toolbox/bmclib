@@ -5,42 +5,78 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"os"
 	"os/exec"
 	"strings"
 
+	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 )
 
 // Ipmi holds the date for an ipmi connection
 type Ipmi struct {
-	Username string
-	Password string
-	Host     string
-	ipmitool string
+	Username    string
+	Password    string
+	Host        string
+	ipmitool    string
+	cipherSuite string
+	log         logr.Logger
+}
+
+// Option for setting optional Ipmi values
+type Option func(*Ipmi)
+
+func WithIpmitoolPath(path string) Option {
+	return func(i *Ipmi) {
+		i.ipmitool = path
+	}
+}
+
+func WithCipherSuite(cipherSuite string) Option {
+	return func(i *Ipmi) {
+		i.cipherSuite = cipherSuite
+	}
+}
+
+func WithLogger(log logr.Logger) Option {
+	return func(i *Ipmi) {
+		i.log = log
+	}
 }
 
 // New returns a new ipmi instance
-func New(username string, password string, host string) (ipmi *Ipmi, err error) {
+func New(username string, password string, host string, opts ...Option) (ipmi *Ipmi, err error) {
 	ipmi = &Ipmi{
 		Username: username,
 		Password: password,
 		Host:     host,
+		log:      logr.Discard(),
 	}
 
-	ipmi.ipmitool, err = exec.LookPath("ipmitool")
-	if err != nil {
-		return nil, err
+	for _, opt := range opts {
+		opt(ipmi)
+	}
+
+	if ipmi.ipmitool == "" {
+		ipmi.ipmitool, err = exec.LookPath("ipmitool")
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		if _, err = os.Stat(ipmi.ipmitool); err != nil {
+			return nil, err
+		}
 	}
 
 	return ipmi, err
 }
 
 func (i *Ipmi) run(ctx context.Context, command []string) (output string, err error) {
-    var out []byte
-    var ipmiCiphers = []string{"-C 17", "-C 3"}
-    ipmiArgs := []string{"-I", "lanplus", "-U", i.Username, "-E", "-N", "5"}
-    
-    if strings.Contains(i.Host, ":") {
+	var out []byte
+	var ipmiCiphers = []string{"3", "17"}
+	ipmiArgs := []string{"-I", "lanplus", "-U", i.Username, "-E", "-N", "5"}
+
+	if strings.Contains(i.Host, ":") {
 		host, port, err := net.SplitHostPort(i.Host)
 		if err == nil {
 			ipmiArgs = append(ipmiArgs, "-H", host, "-p", port)
@@ -49,22 +85,48 @@ func (i *Ipmi) run(ctx context.Context, command []string) (output string, err er
 		ipmiArgs = append(ipmiArgs, "-H", i.Host)
 	}
 
-    for _, cipherString := range ipmiCiphers {
-        ipmiCmd := append(ipmiArgs, cipherString)
-        ipmiCmd = append(ipmiCmd, command...)
-        cmd := exec.CommandContext(ctx, i.ipmitool, ipmiCmd...)
-        cmd.Env = []string{fmt.Sprintf("IPMITOOL_PASSWORD=%s", i.Password)}
-        out, err = cmd.CombinedOutput()
-        if err == nil || ctx.Err() != nil {
-            break
-        }
-    }
+	if i.cipherSuite != "" {
+		ipmiCiphers = []string{i.cipherSuite}
+	}
+	for _, cipherString := range ipmiCiphers {
+		ipmiCmd := append(ipmiArgs, "-C", cipherString)
+		i.log.V(1).Info("ipmitool options", "opts", formatOptions(ipmiCmd))
+		ipmiCmd = append(ipmiCmd, command...)
+		cmd := exec.CommandContext(ctx, i.ipmitool, ipmiCmd...)
+		cmd.Env = []string{fmt.Sprintf("IPMITOOL_PASSWORD=%s", i.Password)}
+		out, err = cmd.CombinedOutput()
+		if err == nil || ctx.Err() != nil {
+			break
+		}
+	}
 
-    if ctx.Err() == context.DeadlineExceeded {
-        return string(out), ctx.Err()
-    }
+	if ctx.Err() == context.DeadlineExceeded {
+		return string(out), ctx.Err()
+	}
 
-    return string(out), errors.Wrap(err, strings.TrimSpace(string(out)))
+	return string(out), errors.Wrap(err, strings.TrimSpace(string(out)))
+}
+
+type cmdOpt struct {
+	Opt string `json:"opt"`
+	Val string `json:"val"`
+}
+
+func formatOptions(opts []string) []cmdOpt {
+	result := []cmdOpt{}
+	for _, opt := range opts {
+		if strings.HasPrefix(opt, "-") {
+			o := cmdOpt{Opt: opt}
+			if opt == "-E" {
+				o.Val = "-E"
+			}
+			result = append(result, o)
+		} else {
+			result[len(result)-1].Val = opt
+		}
+	}
+
+	return result
 }
 
 // PowerCycle reboots the machine via bmc
@@ -82,7 +144,8 @@ func (i *Ipmi) PowerCycle(ctx context.Context) (status bool, err error) {
 
 // ForceRestart does the chassis power cycle even if the chassis is turned off.
 // From the RedFish spec (https://www.dmtf.org/sites/default/files/standards/documents/DSP2046_2018.1.pdf):
-//   Perform an immediate (non-graceful) shutdown, followed by a restart.
+//
+//	Perform an immediate (non-graceful) shutdown, followed by a restart.
 func (i *Ipmi) ForceRestart(ctx context.Context) (status bool, err error) {
 	output, err := i.run(ctx, []string{"chassis", "power", "status"})
 	if err != nil {

@@ -14,18 +14,18 @@ import (
 func TestBMC(t *testing.T) {
 	t.Skip("needs ipmitool and real ipmi server")
 	host := "127.0.0.1"
-	port := "623"
 	user := "admin"
 	pass := "admin"
 
 	log := logging.DefaultLogger()
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
-	cl := NewClient(host, port, user, pass, WithLogger(log), WithPerProviderTimeout(5*time.Second))
+	cl := NewClient(host, user, pass, WithLogger(log), WithPerProviderTimeout(5*time.Second))
 	cl.FilterForCompatible(ctx)
 	var err error
 	err = cl.Open(ctx)
 	if err != nil {
+		t.Logf("%+v", cl.GetMetadata())
 		t.Fatal(err)
 	}
 	defer cl.Close(ctx)
@@ -59,7 +59,6 @@ func TestBMC(t *testing.T) {
 
 func TestWithRedfishVersionsNotCompatible(t *testing.T) {
 	host := "127.0.0.1"
-	port := "623"
 	user := "ADMIN"
 	pass := "ADMIN"
 
@@ -78,15 +77,14 @@ func TestWithRedfishVersionsNotCompatible(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cl := NewClient(host, port, user, pass, WithRedfishVersionsNotCompatible(tt.versions))
-			assert.Equal(t, tt.versions, cl.redfishVersionsNotCompatible)
+			cl := NewClient(host, user, pass, WithRedfishVersionsNotCompatible(tt.versions))
+			assert.Equal(t, tt.versions, cl.providerConfig.gofish.VersionsNotCompatible)
 		})
 	}
 }
 
 func TestWithRedfishBasicAuth(t *testing.T) {
 	host := "127.0.0.1"
-	port := "623"
 	user := "ADMIN"
 	pass := "ADMIN"
 
@@ -107,18 +105,17 @@ func TestWithRedfishBasicAuth(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var opts []Option
 			if tt.enabled {
-				opts = append(opts, WithRedfishBasicAuth())
+				opts = append(opts, WithRedfishUseBasicAuth(true))
 			}
 
-			cl := NewClient(host, port, user, pass, opts...)
-			assert.Equal(t, tt.enabled, cl.redfishBasicAuthEnabled)
+			cl := NewClient(host, user, pass, opts...)
+			assert.Equal(t, tt.enabled, cl.providerConfig.gofish.UseBasicAuth)
 		})
 	}
 }
 
 func TestWithConnectionTimeout(t *testing.T) {
 	host := "127.0.0.1"
-	port := "623"
 	user := "ADMIN"
 	pass := "ADMIN"
 
@@ -137,7 +134,7 @@ func TestWithConnectionTimeout(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cl := NewClient(host, port, user, pass, WithPerProviderTimeout(tt.timeout))
+			cl := NewClient(host, user, pass, WithPerProviderTimeout(tt.timeout))
 			assert.Equal(t, tt.timeout, cl.perProviderTimeout(nil))
 		})
 	}
@@ -146,11 +143,11 @@ func TestWithConnectionTimeout(t *testing.T) {
 func TestDefaultTimeout(t *testing.T) {
 	tests := map[string]struct {
 		ctx  context.Context
-		want time.Duration
+		want func(n int) time.Duration
 	}{
 		"no per provider timeout": {
 			ctx:  context.Background(),
-			want: 30 * time.Second,
+			want: func(n int) time.Duration { return 30 * time.Second },
 		},
 		"with per provider timeout": {
 			ctx: func() context.Context {
@@ -158,18 +155,26 @@ func TestDefaultTimeout(t *testing.T) {
 				defer d()
 				return c
 			}(),
-			want: (5 * time.Second / time.Duration(4)),
+			want: func(n int) time.Duration {
+				v := (4999 * time.Millisecond / time.Duration(n))
+				return v.Round(time.Millisecond)
+			},
 		},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			c := NewClient("", "", "", "")
+			c := NewClient("", "", "")
 			got := c.defaultTimeout(tt.ctx)
-			if diff := cmp.Diff(got.Round(time.Millisecond), tt.want); diff != "" {
+			if !equalWithinErrorMargin(got.Round(time.Millisecond), tt.want(len(c.Registry.Drivers))) {
+				diff := cmp.Diff(got.Round(time.Millisecond), tt.want(len(c.Registry.Drivers)))
 				t.Errorf("unexpected timeout (-want +got):\n%s", diff)
 			}
 		})
 	}
+}
+
+func equalWithinErrorMargin(a, b time.Duration) bool {
+	return (a - b) < 10*time.Millisecond
 }
 
 type testProvider struct {
@@ -219,7 +224,7 @@ func TestOpenFiltered(t *testing.T) {
 	registry.Register("tester1", "tester1", nil, nil, &testProvider{PName: "tester1"})
 	registry.Register("tester2", "tester2", nil, nil, &testProvider{PName: "tester2"})
 	registry.Register("tester3", "tester3", nil, nil, &testProvider{PName: "tester3"})
-	cl := NewClient("", "", "", "", WithRegistry(registry))
+	cl := NewClient("", "", "", WithRegistry(registry))
 	if err := cl.PreferProvider("tester3").Open(context.Background()); err != nil {
 		t.Fatal(err)
 	}

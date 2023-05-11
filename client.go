@@ -4,7 +4,6 @@ package bmclib
 
 import (
 	"context"
-	"crypto/x509"
 	"io"
 	"net/http"
 	"sync"
@@ -12,7 +11,6 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/v2/bmc"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/bmc-toolbox/bmclib/v2/providers/asrockrack"
 	"github.com/bmc-toolbox/bmclib/v2/providers/intelamt"
 	"github.com/bmc-toolbox/bmclib/v2/providers/ipmitool"
@@ -22,121 +20,80 @@ import (
 	"github.com/jacobweinstock/registrar"
 )
 
+const (
+	// default connection timeout
+	defaultConnectTimeout = 30 * time.Second
+)
+
 // Client for BMC interactions
 type Client struct {
 	Auth     Auth
 	Logger   logr.Logger
 	Registry *registrar.Registry
 
-	httpClient                   *http.Client
-	httpClientSetupFuncs         []func(*http.Client)
-	mdLock                       *sync.Mutex
-	metadata                     *bmc.Metadata
-	perProviderTimeout           func(context.Context) time.Duration
-	redfishVersionsNotCompatible []string
-	redfishBasicAuthEnabled      bool
-	oneTimeRegistry              *registrar.Registry
-	oneTimeRegistryEnabled       bool
+	httpClient             *http.Client
+	httpClientSetupFuncs   []func(*http.Client)
+	mdLock                 *sync.Mutex
+	metadata               *bmc.Metadata
+	perProviderTimeout     func(context.Context) time.Duration
+	oneTimeRegistry        *registrar.Registry
+	oneTimeRegistryEnabled bool
+	providerConfig         providerConfig
 }
-
-const (
-	// default connection timeout
-	defaultConnectTimeout = 30 * time.Second
-)
 
 // Auth details for connecting to a BMC
 type Auth struct {
 	Host string
-	Port string
 	User string
 	Pass string
 }
 
-// Option for setting optional Client values
-type Option func(*Client)
-
-// WithLogger sets the logger
-func WithLogger(logger logr.Logger) Option {
-	return func(args *Client) { args.Logger = logger }
-}
-
-// WithRegistry sets the Registry
-func WithRegistry(registry *registrar.Registry) Option {
-	return func(args *Client) { args.Registry = registry }
-}
-
-// WithSecureTLS enforces trusted TLS connections, with an optional CA certificate pool.
-// Using this option with an nil pool uses the system CAs.
-func WithSecureTLS(rootCAs *x509.CertPool) Option {
-	return func(args *Client) {
-		args.httpClientSetupFuncs = append(args.httpClientSetupFuncs, httpclient.SecureTLSOption(rootCAs))
-	}
-}
-
-// WithHTTPClient sets an http client
-func WithHTTPClient(c *http.Client) Option {
-	return func(args *Client) {
-		args.httpClient = c
-	}
-}
-
-// WithPerProviderTimeout sets the timeout when interacting with a BMC.
-// This timeout value is applied per provider.
-// When not defined and a context with a timeout is passed to a method, the default timeout
-// will be the context timeout duration divided by the number of providers in the registry,
-// meaning, the len(Client.Registry.Drivers).
-// If this per provider timeout is not defined and no context timeout is defined,
-// the defaultConnectTimeout is used.
-func WithPerProviderTimeout(timeout time.Duration) Option {
-	return func(args *Client) {
-		args.perProviderTimeout = func(context.Context) time.Duration { return timeout }
-	}
-}
-
-// WithRedfishVersionsNotCompatible sets the list of incompatible redfish versions.
-//
-// With this option set, The bmclib.Registry.FilterForCompatible(ctx) method will not proceed on
-// devices with the given redfish version(s).
-func WithRedfishVersionsNotCompatible(versions []string) Option {
-	return func(args *Client) {
-		args.redfishVersionsNotCompatible = append(args.redfishVersionsNotCompatible, versions...)
-	}
-}
-
-// WithRedfishBasicAuth enables Basic Authentication on the Redfish driver.
-func WithRedfishBasicAuth() Option {
-	return func(args *Client) {
-		args.redfishBasicAuthEnabled = true
-	}
+// providerConfig contains per provider specific configuration.
+type providerConfig struct {
+	ipmitool ipmitool.Config
+	asrock   asrockrack.Config
+	gofish   redfish.Config
+	intelamt intelamt.Config
 }
 
 // NewClient returns a new Client struct
-func NewClient(host, port, user, pass string, opts ...Option) *Client {
-	var defaultClient = &Client{
-		Logger:                       logr.Discard(),
-		Registry:                     registrar.NewRegistry(),
-		redfishVersionsNotCompatible: []string{},
-		oneTimeRegistryEnabled:       false,
-		oneTimeRegistry:              registrar.NewRegistry(),
+func NewClient(host, user, pass string, opts ...Option) *Client {
+	defaultClient := &Client{
+		Logger:                 logr.Discard(),
+		Registry:               registrar.NewRegistry(),
+		oneTimeRegistryEnabled: false,
+		oneTimeRegistry:        registrar.NewRegistry(),
+		httpClient:             httpclient.Build(),
+		providerConfig: providerConfig{
+			ipmitool: ipmitool.Config{
+				Port: "623",
+			},
+			asrock: asrockrack.Config{
+				Port: "443",
+			},
+			gofish: redfish.Config{
+				Port:                  "443",
+				VersionsNotCompatible: []string{},
+			},
+			intelamt: intelamt.Config{
+				HostScheme: "http",
+				Port:       16992,
+			},
+		},
 	}
 
 	for _, opt := range opts {
 		opt(defaultClient)
 	}
-	if defaultClient.httpClient == nil {
-		defaultClient.httpClient, _ = httpclient.Build(defaultClient.httpClientSetupFuncs...)
-	} else {
-		for _, setupFunc := range defaultClient.httpClientSetupFuncs {
-			setupFunc(defaultClient.httpClient)
-		}
+	for _, setupFunc := range defaultClient.httpClientSetupFuncs {
+		setupFunc(defaultClient.httpClient)
 	}
 
 	defaultClient.Registry.Logger = defaultClient.Logger
 	defaultClient.Auth.Host = host
-	defaultClient.Auth.Port = port
 	defaultClient.Auth.User = user
 	defaultClient.Auth.Pass = pass
-	// len of 0 means that no Registry, with any registered providers was passed in.
+	// len of 0 means that no Registry, with any registered providers, was passed in.
 	if len(defaultClient.Registry.Drivers) == 0 {
 		defaultClient.registerProviders()
 	}
@@ -163,25 +120,43 @@ func (c *Client) defaultTimeout(ctx context.Context) time.Duration {
 
 func (c *Client) registerProviders() {
 	// register ipmitool provider
-	driverIpmitool := &ipmitool.Conn{Host: c.Auth.Host, Port: c.Auth.Port, User: c.Auth.User, Pass: c.Auth.Pass, Log: c.Logger}
-	c.Registry.Register(ipmitool.ProviderName, ipmitool.ProviderProtocol, ipmitool.Features, nil, driverIpmitool)
+	ipmiOpts := []ipmitool.Option{
+		ipmitool.WithLogger(c.Logger),
+		ipmitool.WithPort(c.providerConfig.ipmitool.Port),
+		ipmitool.WithCipherSuite(c.providerConfig.ipmitool.CipherSuite),
+		ipmitool.WithIpmitoolPath(c.providerConfig.ipmitool.IpmitoolPath),
+	}
+	if driverIpmitool, err := ipmitool.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, ipmiOpts...); err == nil {
+		c.Registry.Register(ipmitool.ProviderName, ipmitool.ProviderProtocol, ipmitool.Features, nil, driverIpmitool)
+	} else {
+		c.Logger.Info("ipmitool provider not available", "error", err.Error())
+	}
 
 	// register ASRR vendorapi provider
-	driverAsrockrack, _ := asrockrack.NewWithOptions(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger, asrockrack.WithHTTPClient(c.httpClient))
+	asrHttpClient := *c.httpClient
+	asrHttpClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
+	driverAsrockrack := asrockrack.NewWithOptions(c.Auth.Host+":"+c.providerConfig.asrock.Port, c.Auth.User, c.Auth.Pass, c.Logger, asrockrack.WithHTTPClient(&asrHttpClient))
 	c.Registry.Register(asrockrack.ProviderName, asrockrack.ProviderProtocol, asrockrack.Features, nil, driverAsrockrack)
 
 	// register gofish provider
-	httpClient := *c.httpClient
-	redfishOpts := []redfishwrapper.Option{
-		redfishwrapper.WithHTTPClient(&httpClient),
-		redfishwrapper.WithVersionsNotCompatible(c.redfishVersionsNotCompatible),
-		redfishwrapper.WithBasicAuthEnabled(c.redfishBasicAuthEnabled),
+	gfHttpClient := *c.httpClient
+	gfHttpClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
+	gofishOpts := []redfish.Option{
+		redfish.WithHttpClient(&gfHttpClient),
+		redfish.WithVersionsNotCompatible(c.providerConfig.gofish.VersionsNotCompatible),
+		redfish.WithUseBasicAuth(c.providerConfig.gofish.UseBasicAuth),
+		redfish.WithPort(c.providerConfig.gofish.Port),
 	}
-	driverGoFish := redfish.New(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger, redfishOpts...)
+	driverGoFish := redfish.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger, gofishOpts...)
 	c.Registry.Register(redfish.ProviderName, redfish.ProviderProtocol, redfish.Features, nil, driverGoFish)
 
-	// register AMT provider
-	driverAMT := intelamt.New(c.Logger, c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass)
+	// register Intel AMT provider
+	iamtOpts := []intelamt.Option{
+		intelamt.WithLogger(c.Logger),
+		intelamt.WithHostScheme(c.providerConfig.intelamt.HostScheme),
+		intelamt.WithPort(c.providerConfig.intelamt.Port),
+	}
+	driverAMT := intelamt.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, iamtOpts...)
 	c.Registry.Register(intelamt.ProviderName, intelamt.ProviderProtocol, intelamt.Features, nil, driverAMT)
 }
 
@@ -222,6 +197,7 @@ func (c *Client) registry() *registrar.Registry {
 // being empty then we error.
 func (c *Client) Open(ctx context.Context) error {
 	ifs, metadata, err := bmc.OpenConnectionFromInterfaces(ctx, c.perProviderTimeout(ctx), c.registry().GetDriverInterfaces())
+	defer c.setMetadata(metadata)
 	if err != nil {
 		return err
 	}
@@ -235,7 +211,7 @@ func (c *Client) Open(ctx context.Context) error {
 		}
 	}
 	c.Registry.Drivers = reg
-	c.setMetadata(metadata)
+
 	return nil
 }
 

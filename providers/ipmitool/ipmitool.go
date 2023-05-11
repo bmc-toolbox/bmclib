@@ -32,22 +32,70 @@ var (
 
 // Conn for Ipmitool connection details
 type Conn struct {
-	Host string
-	Port string
-	User string
-	Pass string
-	Log  logr.Logger
-	con  *ipmi.Ipmi
+	ipmitool *ipmi.Ipmi
+	log      logr.Logger
+}
+
+type Config struct {
+	CipherSuite  string
+	IpmitoolPath string
+	Log          logr.Logger
+	Port         string
+}
+
+// Option for setting optional Client values
+type Option func(*Config)
+
+func WithLogger(log logr.Logger) Option {
+	return func(c *Config) {
+		c.Log = log
+	}
+}
+
+func WithPort(port string) Option {
+	return func(c *Config) {
+		c.Port = port
+	}
+}
+
+func WithCipherSuite(cipherSuite string) Option {
+	return func(c *Config) {
+		c.CipherSuite = cipherSuite
+	}
+}
+
+func WithIpmitoolPath(ipmitoolPath string) Option {
+	return func(c *Config) {
+		c.IpmitoolPath = ipmitoolPath
+	}
+}
+
+func New(host, user, pass string, opts ...Option) (*Conn, error) {
+	defaultConfig := &Config{
+		Port: "623",
+		Log:  logr.Discard(),
+	}
+
+	for _, opt := range opts {
+		opt(defaultConfig)
+	}
+
+	iopts := []ipmi.Option{
+		ipmi.WithIpmitoolPath(defaultConfig.IpmitoolPath),
+		ipmi.WithCipherSuite(defaultConfig.CipherSuite),
+		ipmi.WithLogger(defaultConfig.Log),
+	}
+	ipt, err := ipmi.New(user, pass, host+":"+defaultConfig.Port, iopts...)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Conn{ipmitool: ipt, log: defaultConfig.Log}, nil
 }
 
 // Open a connection to a BMC
 func (c *Conn) Open(ctx context.Context) (err error) {
-	c.con, err = ipmi.New(c.User, c.Pass, c.Host+":"+c.Port)
-	if err != nil {
-		return err
-	}
-
-	_, err = c.con.PowerState(ctx)
+	_, err = c.ipmitool.PowerState(ctx)
 	if err != nil {
 		return err
 	}
@@ -64,7 +112,7 @@ func (c *Conn) Close(ctx context.Context) (err error) {
 func (c *Conn) Compatible(ctx context.Context) bool {
 	err := c.Open(ctx)
 	if err != nil {
-		c.Log.V(2).WithValues(
+		c.log.V(2).WithValues(
 			"provider",
 			c.Name(),
 		).Info("warn", bmclibErrs.ErrCompatibilityCheck.Error(), err.Error())
@@ -73,9 +121,9 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 	}
 	defer c.Close(ctx)
 
-	_, err = c.con.PowerState(ctx)
+	_, err = c.ipmitool.PowerState(ctx)
 	if err != nil {
-		c.Log.V(2).WithValues(
+		c.log.V(2).WithValues(
 			"provider",
 			c.Name(),
 		).Info("warn", bmclibErrs.ErrCompatibilityCheck.Error(), err.Error())
@@ -90,42 +138,42 @@ func (c *Conn) Name() string {
 
 // BootDeviceSet sets the next boot device with options
 func (c *Conn) BootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
-	return c.con.BootDeviceSet(ctx, bootDevice, setPersistent, efiBoot)
+	return c.ipmitool.BootDeviceSet(ctx, bootDevice, setPersistent, efiBoot)
 }
 
 // BmcReset will reset a BMC
 func (c *Conn) BmcReset(ctx context.Context, resetType string) (ok bool, err error) {
-	return c.con.PowerResetBmc(ctx, resetType)
+	return c.ipmitool.PowerResetBmc(ctx, resetType)
 }
 
 // UserRead list all users
 func (c *Conn) UserRead(ctx context.Context) (users []map[string]string, err error) {
-	return c.con.ReadUsers(ctx)
+	return c.ipmitool.ReadUsers(ctx)
 }
 
 // PowerStateGet gets the power state of a BMC machine
 func (c *Conn) PowerStateGet(ctx context.Context) (state string, err error) {
-	return c.con.PowerState(ctx)
+	return c.ipmitool.PowerState(ctx)
 }
 
 // PowerSet sets the power state of a BMC machine
 func (c *Conn) PowerSet(ctx context.Context, state string) (ok bool, err error) {
 	switch strings.ToLower(state) {
 	case "on":
-		on, errOn := c.con.IsOn(ctx)
+		on, errOn := c.ipmitool.IsOn(ctx)
 		if errOn != nil || !on {
-			ok, err = c.con.PowerOn(ctx)
+			ok, err = c.ipmitool.PowerOn(ctx)
 		} else {
 			ok = true
 		}
 	case "off":
-		ok, err = c.con.PowerOff(ctx)
+		ok, err = c.ipmitool.PowerOff(ctx)
 	case "soft":
-		ok, err = c.con.PowerSoft(ctx)
+		ok, err = c.ipmitool.PowerSoft(ctx)
 	case "reset":
-		ok, err = c.con.PowerReset(ctx)
+		ok, err = c.ipmitool.PowerReset(ctx)
 	case "cycle":
-		ok, err = c.con.PowerCycle(ctx)
+		ok, err = c.ipmitool.PowerCycle(ctx)
 	default:
 		err = errors.New("requested state type unknown")
 	}
