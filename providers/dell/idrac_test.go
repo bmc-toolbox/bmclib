@@ -62,7 +62,7 @@ func Test_Screenshot(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				assert.Equal(t, []byte(`{"FileType":"ServerScreenshot"}`), b)
+				assert.Equal(t, []byte(`{"FileType":"ServerScreenShot"}`), b)
 
 				encoded := base64.RawStdEncoding.EncodeToString(img)
 				respFmtStr := `{"@Message.ExtendedInfo":[{"Message":"Successfully Completed Request","MessageArgs":[],"MessageArgs@odata.count":0,"MessageId":"Base.1.8.Success","RelatedProperties":[],"RelatedProperties@odata.count":0,"Resolution":"None","Severity":"OK"},{"Message":"The Export Server Screen Shot operation successfully exported the server screen shot file.","MessageArgs":[],"MessageArgs@odata.count":0,"MessageId":"IDRAC.2.5.LC080","RelatedProperties":[],"RelatedProperties@odata.count":0,"Resolution":"Download the encoded Base64 format server screen shot file, decode the Base64 file and then save it as a *.png file.","Severity":"Informational"}],"ServerScreenshotFile":"%s"}`

@@ -25,7 +25,7 @@ const (
 	ProviderProtocol = "redfish"
 
 	redfishV1Prefix           = "/redfish/v1"
-	screenshotEndpoint        = "/Dell/Managers/iDRAC.Embedded.1/DellLCService/Actions/DellLCService.ExportServerScreenshot"
+	screenshotEndpoint        = "/Dell/Managers/iDRAC.Embedded.1/DellLCService/Actions/DellLCService.ExportServerScreenShot"
 	managerAttributesEndpoint = "/Managers/iDRAC.Embedded.1/Attributes"
 )
 
@@ -174,7 +174,7 @@ func (c *Conn) Screenshot(ctx context.Context) (image []byte, fileType string, e
 		ctx,
 		redfishV1Prefix+screenshotEndpoint,
 		// other FileType parameters are LastCrashScreenshot, Preview
-		json.RawMessage(`{"FileType":"ServerScreenshot"}`),
+		json.RawMessage(`{"FileType":"ServerScreenShot"}`),
 		map[string]string{"Content-Type": "application/json"},
 	)
 	if err != nil {
