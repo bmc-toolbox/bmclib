@@ -121,3 +121,19 @@ func WithIntelAMTPort(port uint32) Option {
 		args.providerConfig.intelamt.Port = port
 	}
 }
+
+// WithDellRedfishVersionsNotCompatible sets the list of incompatible redfish versions.
+//
+// With this option set, The bmclib.Registry.FilterForCompatible(ctx) method will not proceed on
+// devices with the given redfish version(s).
+func WithDellRedfishVersionsNotCompatible(versions []string) Option {
+	return func(args *Client) {
+		args.providerConfig.dell.VersionsNotCompatible = append(args.providerConfig.dell.VersionsNotCompatible, versions...)
+	}
+}
+
+func WithDellRedfishUseBasicAuth(useBasicAuth bool) Option {
+	return func(args *Client) {
+		args.providerConfig.dell.UseBasicAuth = useBasicAuth
+	}
+}

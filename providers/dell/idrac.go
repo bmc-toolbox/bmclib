@@ -2,10 +2,13 @@ package dell
 
 import (
 	"context"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
 	"io"
+	"net/http"
 
+	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/go-logr/logr"
@@ -33,6 +36,51 @@ var (
 	}
 )
 
+type Config struct {
+	HttpClient *http.Client
+	Port       string
+	// VersionsNotCompatible	is the list of incompatible redfish versions.
+	//
+	// With this option set, The bmclib.Registry.FilterForCompatible(ctx) method will not proceed on
+	// devices with the given redfish version(s).
+	VersionsNotCompatible []string
+	RootCAs               *x509.CertPool
+	UseBasicAuth          bool
+}
+
+// Option for setting optional Client values
+type Option func(*Config)
+
+func WithHttpClient(httpClient *http.Client) Option {
+	return func(c *Config) {
+		c.HttpClient = httpClient
+	}
+}
+
+func WithPort(port string) Option {
+	return func(c *Config) {
+		c.Port = port
+	}
+}
+
+func WithVersionsNotCompatible(versionsNotCompatible []string) Option {
+	return func(c *Config) {
+		c.VersionsNotCompatible = versionsNotCompatible
+	}
+}
+
+func WithRootCAs(rootCAs *x509.CertPool) Option {
+	return func(c *Config) {
+		c.RootCAs = rootCAs
+	}
+}
+
+func WithUseBasicAuth(useBasicAuth bool) Option {
+	return func(c *Config) {
+		c.UseBasicAuth = useBasicAuth
+	}
+}
+
 // Conn details for redfish client
 type Conn struct {
 	redfishwrapper *redfishwrapper.Client
@@ -40,10 +88,29 @@ type Conn struct {
 }
 
 // New returns connection with a redfish client initialized
-func New(host, port, user, pass string, log logr.Logger, opts ...redfishwrapper.Option) *Conn {
+func New(host, user, pass string, log logr.Logger, opts ...Option) *Conn {
+	defaultConfig := &Config{
+		HttpClient:            httpclient.Build(),
+		Port:                  "443",
+		VersionsNotCompatible: []string{},
+	}
+
+	for _, opt := range opts {
+		opt(defaultConfig)
+	}
+
+	rfOpts := []redfishwrapper.Option{
+		redfishwrapper.WithHTTPClient(defaultConfig.HttpClient),
+		redfishwrapper.WithVersionsNotCompatible(defaultConfig.VersionsNotCompatible),
+	}
+
+	if defaultConfig.RootCAs != nil {
+		rfOpts = append(rfOpts, redfishwrapper.WithSecureTLS(defaultConfig.RootCAs))
+	}
+
 	return &Conn{
 		Log:            log,
-		redfishwrapper: redfishwrapper.NewClient(host, port, user, pass, opts...),
+		redfishwrapper: redfishwrapper.NewClient(host, defaultConfig.Port, user, pass, rfOpts...),
 	}
 }
 

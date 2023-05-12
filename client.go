@@ -55,6 +55,7 @@ type providerConfig struct {
 	asrock   asrockrack.Config
 	gofish   redfish.Config
 	intelamt intelamt.Config
+	dell     dell.Config
 }
 
 // NewClient returns a new Client struct
@@ -79,6 +80,10 @@ func NewClient(host, user, pass string, opts ...Option) *Client {
 			intelamt: intelamt.Config{
 				HostScheme: "http",
 				Port:       16992,
+			},
+			dell: dell.Config{
+				Port:                  "443",
+				VersionsNotCompatible: []string{},
 			},
 		},
 	}
@@ -160,8 +165,16 @@ func (c *Client) registerProviders() {
 	driverAMT := intelamt.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, iamtOpts...)
 	c.Registry.Register(intelamt.ProviderName, intelamt.ProviderProtocol, intelamt.Features, nil, driverAMT)
 
-	// register Gofish Dell Redfish provider
-	driverGoFishDell := dell.New(c.Auth.Host, c.Auth.Port, c.Auth.User, c.Auth.Pass, c.Logger, redfishOpts...)
+	// register Dell gofish provider
+	dellGofishHttpClient := *c.httpClient
+	//dellGofishHttpClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
+	dellGofishOpts := []dell.Option{
+		dell.WithHttpClient(&dellGofishHttpClient),
+		dell.WithVersionsNotCompatible(c.providerConfig.dell.VersionsNotCompatible),
+		dell.WithUseBasicAuth(c.providerConfig.dell.UseBasicAuth),
+		dell.WithPort(c.providerConfig.dell.Port),
+	}
+	driverGoFishDell := dell.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger, dellGofishOpts...)
 	c.Registry.Register(dell.ProviderName, redfish.ProviderProtocol, dell.Features, nil, driverGoFishDell)
 }
 

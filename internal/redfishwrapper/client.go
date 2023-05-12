@@ -90,6 +90,7 @@ func (c *Client) Open(ctx context.Context) error {
 	if c.port != "" {
 		endpoint = c.host + ":" + c.port
 	}
+
 	config := gofish.ClientConfig{
 		Endpoint:   endpoint,
 		Username:   c.user,

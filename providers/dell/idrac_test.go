@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"testing"
 
@@ -81,13 +82,18 @@ func Test_Screenshot(t *testing.T) {
 			// screenshot handler
 			mux.HandleFunc(redfishV1Prefix+screenshotEndpoint, tc.handler)
 
-			server := httptest.NewServer(mux)
+			server := httptest.NewTLSServer(mux)
 			defer server.Close()
 
-			// os.Setenv("DEBUG_BMCLIB", "true")
-			client := New(server.URL, "", "", "", logr.Discard())
+			parsedURL, err := url.Parse(server.URL)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-			err := client.Open(context.TODO())
+			// os.Setenv("DEBUG_BMCLIB", "true")
+			client := New(parsedURL.Hostname(), "", "", logr.Discard(), WithPort(parsedURL.Port()))
+
+			err = client.Open(context.TODO())
 			if err != nil {
 				t.Fatal(err)
 			}
