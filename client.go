@@ -12,6 +12,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/bmc"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/providers/asrockrack"
+	"github.com/bmc-toolbox/bmclib/v2/providers/dell"
 	"github.com/bmc-toolbox/bmclib/v2/providers/intelamt"
 	"github.com/bmc-toolbox/bmclib/v2/providers/ipmitool"
 	"github.com/bmc-toolbox/bmclib/v2/providers/redfish"
@@ -54,6 +55,7 @@ type providerConfig struct {
 	asrock   asrockrack.Config
 	gofish   redfish.Config
 	intelamt intelamt.Config
+	dell     dell.Config
 }
 
 // NewClient returns a new Client struct
@@ -78,6 +80,10 @@ func NewClient(host, user, pass string, opts ...Option) *Client {
 			intelamt: intelamt.Config{
 				HostScheme: "http",
 				Port:       16992,
+			},
+			dell: dell.Config{
+				Port:                  "443",
+				VersionsNotCompatible: []string{},
 			},
 		},
 	}
@@ -158,6 +164,18 @@ func (c *Client) registerProviders() {
 	}
 	driverAMT := intelamt.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, iamtOpts...)
 	c.Registry.Register(intelamt.ProviderName, intelamt.ProviderProtocol, intelamt.Features, nil, driverAMT)
+
+	// register Dell gofish provider
+	dellGofishHttpClient := *c.httpClient
+	//dellGofishHttpClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
+	dellGofishOpts := []dell.Option{
+		dell.WithHttpClient(&dellGofishHttpClient),
+		dell.WithVersionsNotCompatible(c.providerConfig.dell.VersionsNotCompatible),
+		dell.WithUseBasicAuth(c.providerConfig.dell.UseBasicAuth),
+		dell.WithPort(c.providerConfig.dell.Port),
+	}
+	driverGoFishDell := dell.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger, dellGofishOpts...)
+	c.Registry.Register(dell.ProviderName, redfish.ProviderProtocol, dell.Features, nil, driverGoFishDell)
 }
 
 // GetMetadata returns the metadata that is populated after each BMC function/method call
@@ -341,4 +359,11 @@ func (c *Client) PostCode(ctx context.Context) (status string, code int, err err
 	status, code, metadata, err := bmc.GetPostCodeInterfaces(ctx, c.registry().GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return status, code, err
+}
+
+func (c *Client) Screenshot(ctx context.Context) (image []byte, fileType string, err error) {
+	image, fileType, metadata, err := bmc.ScreenshotFromInterfaces(ctx, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+
+	return image, fileType, err
 }

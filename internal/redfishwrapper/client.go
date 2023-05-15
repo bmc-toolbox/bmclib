@@ -90,6 +90,7 @@ func (c *Client) Open(ctx context.Context) error {
 	if c.port != "" {
 		endpoint = c.host + ":" + c.port
 	}
+
 	config := gofish.ClientConfig{
 		Endpoint:   endpoint,
 		Username:   c.user,
@@ -188,4 +189,12 @@ func (c *Client) VersionCompatible() bool {
 	}
 
 	return !slices.Contains(c.versionsNotCompatible, c.client.Service.RedfishVersion)
+}
+
+func (c *Client) PostWithHeaders(ctx context.Context, url string, payload interface{}, headers map[string]string) (*http.Response, error) {
+	return c.client.PostWithHeaders(url, payload, headers)
+}
+
+func (c *Client) PatchWithHeaders(ctx context.Context, url string, payload interface{}, headers map[string]string) (*http.Response, error) {
+	return c.client.PatchWithHeaders(url, payload, headers)
 }

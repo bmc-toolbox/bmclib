@@ -29,6 +29,8 @@ const (
 	FeatureFirmwareInstallStatus registrar.Feature = "firmwareinstallstatus"
 	// FeatureInventoryRead means an implementation that returns the hardware and firmware inventory
 	FeatureInventoryRead registrar.Feature = "inventoryread"
-	// FeaturePostCodeRead means an implmentation that returns the boot BIOS/UEFI post code status and value
+	// FeaturePostCodeRead means an implementation that returns the boot BIOS/UEFI post code status and value
 	FeaturePostCodeRead registrar.Feature = "postcoderead"
+	// FeatureScreenshot means an implementation that returns a screenshot of the video.
+	FeatureScreenshot registrar.Feature = "screenshot"
 )

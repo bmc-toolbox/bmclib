@@ -89,6 +89,9 @@ var (
 
 	// ErrNoBiosAttributes is returned when no bios attributes are available from the BMC.
 	ErrNoBiosAttributes = errors.New("no BIOS attributes available")
+
+	// ErrScreenshot is returned when screen capture fails.
+	ErrScreenshot = errors.New("error in capturing screen")
 )
 
 type ErrUnsupportedHardware struct {
