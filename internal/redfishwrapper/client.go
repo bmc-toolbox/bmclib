@@ -3,6 +3,7 @@ package redfishwrapper
 import (
 	"context"
 	"crypto/x509"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -155,7 +156,8 @@ func (c *Client) SessionActive() error {
 
 	_, err := c.client.GetSession()
 	if err != nil {
-		return errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
+		fmt.Println("here")
+		return err
 	}
 
 	return nil

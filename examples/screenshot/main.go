@@ -19,7 +19,6 @@ func main() {
 	user := flag.String("user", "", "Username to login with")
 	pass := flag.String("password", "", "Username to login with")
 	host := flag.String("host", "", "BMC hostname to connect to")
-	port := flag.String("port", "443", "BMC port to connect to")
 	withSecureTLS := flag.Bool("secure-tls", false, "Enable secure TLS")
 	certPoolFile := flag.String("cert-pool", "", "Path to an file containing x509 CAs. An empty string uses the system CAs. Only takes effect when --secure-tls=true")
 	flag.Parse()
@@ -34,7 +33,7 @@ func main() {
 
 	clientOpts := []bmclib.Option{
 		bmclib.WithLogger(logger),
-		bmclib.WithRedfishPort(*port),
+		bmclib.WithExcludeIncompatibleProviderErrors(true),
 	}
 
 	if *withSecureTLS {

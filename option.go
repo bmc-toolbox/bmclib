@@ -52,6 +52,14 @@ func WithPerProviderTimeout(timeout time.Duration) Option {
 	}
 }
 
+// WithIncompatibleProviderErrors will include any incompatible provider related errors
+// in the error returned to the caller when calling Open().
+func WithIncompatibleProviderErrors() Option {
+	return func(args *Client) {
+		args.noIncompatibleProviderErrors = true
+	}
+}
+
 func WithIpmitoolCipherSuite(cipherSuite string) Option {
 	return func(args *Client) {
 		args.providerConfig.ipmitool.CipherSuite = cipherSuite
