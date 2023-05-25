@@ -155,7 +155,7 @@ func (c *Client) SessionActive() error {
 
 	_, err := c.client.GetSession()
 	if err != nil {
-		return errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
+		return err
 	}
 
 	return nil

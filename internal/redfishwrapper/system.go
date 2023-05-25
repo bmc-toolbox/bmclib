@@ -32,7 +32,7 @@ func (c *Client) UpdateService() (*gofishrf.UpdateService, error) {
 // Systems get the system instances from the service.
 func (c *Client) Systems() ([]*gofishrf.ComputerSystem, error) {
 	if err := c.SessionActive(); err != nil {
-		return nil, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
+		return nil, err
 	}
 
 	return c.client.Service.Systems()
