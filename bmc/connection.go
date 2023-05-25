@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 )
@@ -29,7 +30,7 @@ type connectionProviders struct {
 // OpenConnectionFromInterfaces will try all opener interfaces and remove failed ones.
 // The reason failed ones need to be removed is so that when other methods are called (like powerstate)
 // implementations that have connections wont nil pointer error when their connection fails.
-func OpenConnectionFromInterfaces(ctx context.Context, timeout time.Duration, providers []interface{}) (opened []interface{}, _ Metadata, err error) {
+func OpenConnectionFromInterfaces(ctx context.Context, timeout time.Duration, providers []interface{}, returnIncompatibleProviderErrors bool) (opened []interface{}, _ Metadata, err error) {
 	var metadata Metadata
 
 	// Return immediately if the context is done.
@@ -73,7 +74,9 @@ func OpenConnectionFromInterfaces(ctx context.Context, timeout time.Duration, pr
 				res := result{ProviderName: providerName, Opener: provider}
 
 				if err := provider.Open(ctx); err != nil {
-					res.Err = errors.WithMessagef(err, "provider: %v", providerName)
+					if returnIncompatibleProviderErrors && errors.Is(bmclibErrs.ErrIncompatibleProvider, err) {
+						res.Err = errors.WithMessagef(err, "provider: %v", providerName)
+					}
 				}
 
 				results <- res

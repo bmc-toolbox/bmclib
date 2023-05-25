@@ -6,24 +6,31 @@ import (
 	"testing"
 	"time"
 
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/go-multierror"
 	"go.uber.org/goleak"
 )
 
 type connTester1 struct {
-	MakeErrorOut bool
+	MakeErrorOutConn                 bool
+	MakeErrorOutIncompatibleProvider bool
 }
 
 func (r *connTester1) Open(ctx context.Context) (err error) {
-	if r.MakeErrorOut {
+	if r.MakeErrorOutConn {
 		return errors.New("open connection failed")
 	}
+
+	if r.MakeErrorOutIncompatibleProvider {
+		return bmclibErrs.ErrIncompatibleProvider
+	}
+
 	return nil
 }
 
 func (r *connTester1) Close(ctx context.Context) (err error) {
-	if r.MakeErrorOut {
+	if r.MakeErrorOutConn {
 		return errors.New("close connection failed")
 	}
 	return nil
@@ -50,19 +57,21 @@ func (p *connTester2) Name() string {
 
 func TestOpenConnectionFromInterfaces(t *testing.T) {
 	testCases := map[string]struct {
-		err                   error
-		makeErrorOut          bool
-		badImplementation     bool
-		withMetadata          bool
-		withMultipleProviders bool
-		ctxTimeout            time.Duration
+		err                              error
+		makeErrorOutConn                 bool
+		makeErrorOutIncompatibleProvider bool
+		badImplementation                bool
+		withMetadata                     bool
+		withMultipleProviders            bool
+		ctxTimeout                       time.Duration
 	}{
-		"success":                      {},
-		"success with metadata":        {withMetadata: true},
-		"error context deadline":       {err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("no Opener implementations found")}}, ctxTimeout: time.Nanosecond * 1},
-		"error failed open":            {makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider: open connection failed"), errors.New("no Opener implementations found")}}},
-		"no implementations found":     {badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a Opener implementation: *struct {}"), errors.New("no Opener implementations found")}}},
-		"multiple providers attempted": {withMultipleProviders: true},
+		"success":                                   {},
+		"success with metadata":                     {withMetadata: true},
+		"error context deadline":                    {err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded"), errors.New("no Opener implementations found")}}, ctxTimeout: time.Nanosecond * 1},
+		"error failed open conn":                    {makeErrorOutConn: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider: open connection failed"), errors.New("no Opener implementations found")}}},
+		"error failed open - incompatible provider": {makeErrorOutIncompatibleProvider: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider: provider not compatible with device"), errors.New("no Opener implementations found")}}},
+		"no implementations found":                  {badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a Opener implementation: *struct {}"), errors.New("no Opener implementations found")}}},
+		"multiple providers attempted":              {withMultipleProviders: true},
 	}
 
 	for name, tc := range testCases {
@@ -74,7 +83,10 @@ func TestOpenConnectionFromInterfaces(t *testing.T) {
 				badImplementation := struct{}{}
 				generic = append(generic, &badImplementation)
 			} else {
-				testImplementation := &connTester1{MakeErrorOut: tc.makeErrorOut}
+				testImplementation := &connTester1{
+					MakeErrorOutConn:                 tc.makeErrorOutConn,
+					MakeErrorOutIncompatibleProvider: tc.makeErrorOutIncompatibleProvider,
+				}
 				generic = append(generic, testImplementation)
 			}
 
@@ -86,7 +98,7 @@ func TestOpenConnectionFromInterfaces(t *testing.T) {
 				tc.ctxTimeout = time.Second * 3
 			}
 			ctx := context.Background()
-			opened, metadata, err := OpenConnectionFromInterfaces(ctx, tc.ctxTimeout, generic)
+			opened, metadata, err := OpenConnectionFromInterfaces(ctx, tc.ctxTimeout, generic, tc.makeErrorOutIncompatibleProvider)
 			if err != nil {
 				if tc.err != nil {
 					if diff := cmp.Diff(err.Error(), tc.err.Error()); diff != "" {
@@ -96,7 +108,7 @@ func TestOpenConnectionFromInterfaces(t *testing.T) {
 					t.Fatal(err)
 				}
 			} else {
-				expected := []interface{}{&connTester1{}}
+				expected := []interface{}{&connTester1{MakeErrorOutConn: tc.makeErrorOutConn, MakeErrorOutIncompatibleProvider: tc.makeErrorOutIncompatibleProvider}}
 				if tc.withMultipleProviders {
 					expected = append(expected, &connTester2{})
 				}
@@ -116,18 +128,18 @@ func TestOpenConnectionFromInterfaces(t *testing.T) {
 
 func TestCloseConnection(t *testing.T) {
 	testCases := map[string]struct {
-		makeErrorOut bool
-		err          error
-		ctxTimeout   time.Duration
+		makeErrorOutConn bool
+		err              error
+		ctxTimeout       time.Duration
 	}{
 		"success":                {},
 		"error context deadline": {err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded")}}, ctxTimeout: time.Nanosecond * 1},
-		"error":                  {makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider: close connection failed"), errors.New("failed to close connection")}}},
+		"error":                  {makeErrorOutConn: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider: close connection failed"), errors.New("failed to close connection")}}},
 	}
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			testImplementation := connTester1{MakeErrorOut: tc.makeErrorOut}
+			testImplementation := connTester1{MakeErrorOutConn: tc.makeErrorOutConn}
 			if tc.ctxTimeout == 0 {
 				tc.ctxTimeout = time.Second * 3
 			}

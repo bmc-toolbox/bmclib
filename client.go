@@ -33,14 +33,15 @@ type Client struct {
 	Logger   logr.Logger
 	Registry *registrar.Registry
 
-	httpClient             *http.Client
-	httpClientSetupFuncs   []func(*http.Client)
-	mdLock                 *sync.Mutex
-	metadata               *bmc.Metadata
-	perProviderTimeout     func(context.Context) time.Duration
-	oneTimeRegistry        *registrar.Registry
-	oneTimeRegistryEnabled bool
-	providerConfig         providerConfig
+	httpClient                       *http.Client
+	httpClientSetupFuncs             []func(*http.Client)
+	mdLock                           *sync.Mutex
+	metadata                         *bmc.Metadata
+	perProviderTimeout               func(context.Context) time.Duration
+	oneTimeRegistry                  *registrar.Registry
+	oneTimeRegistryEnabled           bool
+	returnIncompatibleProviderErrors bool
+	providerConfig                   providerConfig
 }
 
 // Auth details for connecting to a BMC
@@ -52,21 +53,23 @@ type Auth struct {
 
 // providerConfig contains per provider specific configuration.
 type providerConfig struct {
-	ipmitool ipmitool.Config
-	asrock   asrockrack.Config
-	gofish   redfish.Config
-	intelamt intelamt.Config
-	dell     dell.Config
+	ipmitool   ipmitool.Config
+	asrock     asrockrack.Config
+	gofish     redfish.Config
+	intelamt   intelamt.Config
+	dell       dell.Config
+	supermicro supermicro.Config
 }
 
 // NewClient returns a new Client struct
 func NewClient(host, user, pass string, opts ...Option) *Client {
 	defaultClient := &Client{
-		Logger:                 logr.Discard(),
-		Registry:               registrar.NewRegistry(),
-		oneTimeRegistryEnabled: false,
-		oneTimeRegistry:        registrar.NewRegistry(),
-		httpClient:             httpclient.Build(),
+		Logger:                           logr.Discard(),
+		Registry:                         registrar.NewRegistry(),
+		oneTimeRegistryEnabled:           false,
+		returnIncompatibleProviderErrors: false,
+		oneTimeRegistry:                  registrar.NewRegistry(),
+		httpClient:                       httpclient.Build(),
 		providerConfig: providerConfig{
 			ipmitool: ipmitool.Config{
 				Port: "623",
@@ -221,7 +224,7 @@ func (c *Client) registry() *registrar.Registry {
 // from the client.Registry.Drivers. If client.Registry.Drivers ends up
 // being empty then we error.
 func (c *Client) Open(ctx context.Context) error {
-	ifs, metadata, err := bmc.OpenConnectionFromInterfaces(ctx, c.perProviderTimeout(ctx), c.registry().GetDriverInterfaces())
+	ifs, metadata, err := bmc.OpenConnectionFromInterfaces(ctx, c.perProviderTimeout(ctx), c.registry().GetDriverInterfaces(), c.returnIncompatibleProviderErrors)
 	defer c.setMetadata(metadata)
 	if err != nil {
 		return err
