@@ -25,7 +25,9 @@ type bootDeviceProviders struct {
 // setPersistent persists the next boot device.
 // efiBoot sets up the device to boot off UEFI instead of legacy.
 func setBootDevice(ctx context.Context, timeout time.Duration, bootDevice string, setPersistent, efiBoot bool, b []bootDeviceProviders) (ok bool, metadata Metadata, err error) {
-	var metadataLocal Metadata
+	metadataLocal := Metadata{
+		FailedConnDetail: make(map[string]string),
+	}
 
 	for _, elem := range b {
 		if elem.bootDeviceSetter == nil {
@@ -43,6 +45,7 @@ func setBootDevice(ctx context.Context, timeout time.Duration, bootDevice string
 			ok, setErr := elem.bootDeviceSetter.BootDeviceSet(ctx, bootDevice, setPersistent, efiBoot)
 			if setErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(setErr, "provider: %v", elem.name))
+				metadataLocal.FailedConnDetail[elem.name] = setErr.Error()
 				continue
 			}
 			if !ok {

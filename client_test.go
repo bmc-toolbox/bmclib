@@ -21,15 +21,13 @@ func TestBMC(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 	cl := NewClient(host, user, pass, WithLogger(log), WithPerProviderTimeout(5*time.Second))
-	cl.FilterForCompatible(ctx)
-	var err error
-	err = cl.Open(ctx)
+	err := cl.Open(ctx)
 	if err != nil {
 		t.Logf("%+v", cl.GetMetadata())
 		t.Fatal(err)
 	}
 	defer cl.Close(ctx)
-	t.Logf("metadata: %+v", cl.GetMetadata())
+	t.Logf("metadata for Open: %+v", cl.GetMetadata())
 
 	cl.Registry.Drivers = cl.Registry.PreferDriver("non-existent")
 	state, err := cl.GetPowerState(ctx)
@@ -37,7 +35,7 @@ func TestBMC(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(state)
-	t.Logf("metadata %+v", cl.GetMetadata())
+	t.Logf("metadata for GetPowerState: %+v", cl.GetMetadata())
 
 	cl.Registry.Drivers = cl.Registry.PreferDriver("ipmitool")
 	state, err = cl.PreferProvider("gofish").GetPowerState(ctx)
@@ -45,14 +43,14 @@ func TestBMC(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(state)
-	t.Logf("metadata: %+v", cl.GetMetadata())
+	t.Logf("metadata for GetPowerState: %+v", cl.GetMetadata())
 
 	users, err := cl.ReadUsers(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log(users)
-	t.Logf("metadata: %+v", cl.GetMetadata())
+	t.Logf("metadata for ReadUsers: %+v", cl.GetMetadata())
 
 	t.Fatal()
 }
