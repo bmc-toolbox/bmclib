@@ -52,11 +52,12 @@ type Auth struct {
 
 // providerConfig contains per provider specific configuration.
 type providerConfig struct {
-	ipmitool ipmitool.Config
-	asrock   asrockrack.Config
-	gofish   redfish.Config
-	intelamt intelamt.Config
-	dell     dell.Config
+	ipmitool   ipmitool.Config
+	asrock     asrockrack.Config
+	gofish     redfish.Config
+	intelamt   intelamt.Config
+	dell       dell.Config
+	supermicro supermicro.Config
 }
 
 // NewClient returns a new Client struct
@@ -85,6 +86,9 @@ func NewClient(host, user, pass string, opts ...Option) *Client {
 			dell: dell.Config{
 				Port:                  "443",
 				VersionsNotCompatible: []string{},
+			},
+			supermicro: supermicro.Config{
+				Port: "443",
 			},
 		},
 	}
