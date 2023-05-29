@@ -84,7 +84,7 @@ type Client struct {
 	log       logr.Logger
 }
 
-// New returns connection with a redfish client initialized
+// New returns connection with a Supermicro client initialized
 func NewClient(host, user, pass string, log logr.Logger, opts ...Option) *Client {
 	if !strings.HasPrefix(host, "https://") && !strings.HasPrefix(host, "http://") {
 		host = "https://" + host
@@ -108,7 +108,7 @@ func NewClient(host, user, pass string, log logr.Logger, opts ...Option) *Client
 	}
 }
 
-// Open a connection to a BMC via redfish
+// Open a connection to a Supermicro BMC using the vendor API.
 func (c *Client) Open(ctx context.Context) (err error) {
 	data := fmt.Sprintf(
 		"name=%s&pwd=%s&check=00",
@@ -129,7 +129,7 @@ func (c *Client) Open(ctx context.Context) (err error) {
 
 	if !bytes.Contains(body, []byte(`url_redirect.cgi?url_name=mainmenu`)) &&
 		!bytes.Contains(body, []byte(`url_redirect.cgi?url_name=topmenu`)) {
-		return errors.Wrap(bmclibErrs.ErrLoginFailed, "")
+		return errors.Wrap(bmclibErrs.ErrLoginFailed, "unexpected response contents")
 	}
 
 	contentsTopMenu, status, err := c.query(ctx, "cgi/url_redirect.cgi?url_name=topmenu", http.MethodGet, nil, nil, 0)
@@ -178,7 +178,7 @@ func parseToken(body []byte) string {
 	return string(found[1])
 }
 
-// Close a connection to a BMC via redfish
+// Close a connection to a Supermicro BMC using the vendor API.
 func (c *Client) Close(ctx context.Context) error {
 	if c.client == nil {
 		return nil
