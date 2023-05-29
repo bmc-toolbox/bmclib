@@ -52,14 +52,6 @@ func WithPerProviderTimeout(timeout time.Duration) Option {
 	}
 }
 
-// WithIncompatibleProviderErrors will return any incompatible provider related errors
-// which are generally ignored when calling Open(), this is mainly for debugging purposes.
-func WithIncompatibleProviderErrors() Option {
-	return func(args *Client) {
-		args.returnIncompatibleProviderErrors = true
-	}
-}
-
 func WithIpmitoolCipherSuite(cipherSuite string) Option {
 	return func(args *Client) {
 		args.providerConfig.ipmitool.CipherSuite = cipherSuite
