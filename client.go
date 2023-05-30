@@ -16,6 +16,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/providers/intelamt"
 	"github.com/bmc-toolbox/bmclib/v2/providers/ipmitool"
 	"github.com/bmc-toolbox/bmclib/v2/providers/redfish"
+	"github.com/bmc-toolbox/bmclib/v2/providers/supermicro"
 	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
@@ -51,11 +52,12 @@ type Auth struct {
 
 // providerConfig contains per provider specific configuration.
 type providerConfig struct {
-	ipmitool ipmitool.Config
-	asrock   asrockrack.Config
-	gofish   redfish.Config
-	intelamt intelamt.Config
-	dell     dell.Config
+	ipmitool   ipmitool.Config
+	asrock     asrockrack.Config
+	gofish     redfish.Config
+	intelamt   intelamt.Config
+	dell       dell.Config
+	supermicro supermicro.Config
 }
 
 // NewClient returns a new Client struct
@@ -84,6 +86,9 @@ func NewClient(host, user, pass string, opts ...Option) *Client {
 			dell: dell.Config{
 				Port:                  "443",
 				VersionsNotCompatible: []string{},
+			},
+			supermicro: supermicro.Config{
+				Port: "443",
 			},
 		},
 	}
@@ -176,6 +181,12 @@ func (c *Client) registerProviders() {
 	}
 	driverGoFishDell := dell.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger, dellGofishOpts...)
 	c.Registry.Register(dell.ProviderName, redfish.ProviderProtocol, dell.Features, nil, driverGoFishDell)
+
+	// register supermicro vendorapi provider
+	smcHttpClient := *c.httpClient
+	smcHttpClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
+	driverSupermicro := supermicro.NewClient(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger, supermicro.WithHttpClient(&smcHttpClient), supermicro.WithPort(c.providerConfig.supermicro.Port))
+	c.Registry.Register(supermicro.ProviderName, supermicro.ProviderProtocol, supermicro.Features, nil, driverSupermicro)
 }
 
 // GetMetadata returns the metadata that is populated after each BMC function/method call

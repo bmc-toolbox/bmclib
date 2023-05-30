@@ -92,6 +92,9 @@ var (
 
 	// ErrScreenshot is returned when screen capture fails.
 	ErrScreenshot = errors.New("error in capturing screen")
+
+	// ErrIncompatibleProvider is returned by Open() when the device is not compatible with the provider
+	ErrIncompatibleProvider = errors.New("provider not compatible with device")
 )
 
 type ErrUnsupportedHardware struct {

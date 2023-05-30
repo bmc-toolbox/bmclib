@@ -5,12 +5,15 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
+	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 	"github.com/pkg/errors"
@@ -102,6 +105,7 @@ func New(host, user, pass string, log logr.Logger, opts ...Option) *Conn {
 	rfOpts := []redfishwrapper.Option{
 		redfishwrapper.WithHTTPClient(defaultConfig.HttpClient),
 		redfishwrapper.WithVersionsNotCompatible(defaultConfig.VersionsNotCompatible),
+		redfishwrapper.WithBasicAuthEnabled(defaultConfig.UseBasicAuth),
 	}
 
 	if defaultConfig.RootCAs != nil {
@@ -116,7 +120,22 @@ func New(host, user, pass string, log logr.Logger, opts ...Option) *Conn {
 
 // Open a connection to a BMC via redfish
 func (c *Conn) Open(ctx context.Context) (err error) {
-	return c.redfishwrapper.Open(ctx)
+	if err := c.redfishwrapper.Open(ctx); err != nil {
+		return err
+	}
+
+	// because this uses the redfish interface and the redfish interface
+	// is available across various BMC vendors, we verify the device we're connected to is dell.
+	manufacturer, err := c.deviceManufacturer(ctx)
+	if err != nil {
+		return err
+	}
+
+	if !strings.Contains(strings.ToLower(manufacturer), common.VendorDell) {
+		return bmclibErrs.ErrIncompatibleProvider
+	}
+
+	return nil
 }
 
 // Close a connection to a BMC via redfish
@@ -165,6 +184,25 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 // PowerStateGet gets the power state of a BMC machine
 func (c *Conn) PowerStateGet(ctx context.Context) (state string, err error) {
 	return c.redfishwrapper.SystemPowerStatus(ctx)
+}
+
+// deviceManufacturer returns the device manufacturer and model attributes
+func (c *Conn) deviceManufacturer(ctx context.Context) (vendor string, err error) {
+	errManufacturerUnknown := errors.New("error identifying device manufacturer")
+
+	systems, err := c.redfishwrapper.Systems()
+	if err != nil {
+		fmt.Println(err.Error())
+		return "", errors.Wrap(errManufacturerUnknown, err.Error())
+	}
+
+	for _, sys := range systems {
+		if sys.Manufacturer != "" {
+			return sys.Manufacturer, nil
+		}
+	}
+
+	return "", errManufacturerUnknown
 }
 
 func (c *Conn) Screenshot(ctx context.Context) (image []byte, fileType string, err error) {
