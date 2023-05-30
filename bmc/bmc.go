@@ -10,6 +10,6 @@ type Metadata struct {
 	SuccessfulOpenConns []string
 	// SuccessfulCloseConns is a slice of provider names that were closed successfully
 	SuccessfulCloseConns []string
-	// FailedConnDetail holds the failed providers error messages for called methods
-	FailedConnDetail map[string]string
+	// FailedProviderDetail holds the failed providers error messages for called methods
+	FailedProviderDetail map[string]string
 }

@@ -40,7 +40,7 @@ type powerProviders struct {
 // setPowerState sets the power state for a BMC, trying all interface implementations passed in
 func setPowerState(ctx context.Context, timeout time.Duration, state string, p []powerProviders) (ok bool, m Metadata, err error) {
 	metadataLocal := Metadata{
-		FailedConnDetail: make(map[string]string),
+		FailedProviderDetail: make(map[string]string),
 	}
 
 	for _, elem := range p {
@@ -59,7 +59,7 @@ func setPowerState(ctx context.Context, timeout time.Duration, state string, p [
 			ok, setErr := elem.powerSetter.PowerSet(ctx, state)
 			if setErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(setErr, "provider: %v", elem.name))
-				metadataLocal.FailedConnDetail[elem.name] = setErr.Error()
+				metadataLocal.FailedProviderDetail[elem.name] = setErr.Error()
 				continue
 			}
 			if !ok {
@@ -96,7 +96,7 @@ func SetPowerStateFromInterfaces(ctx context.Context, timeout time.Duration, sta
 // getPowerState gets the power state for a BMC, trying all interface implementations passed in
 func getPowerState(ctx context.Context, timeout time.Duration, p []powerProviders) (state string, m Metadata, err error) {
 	metadataLocal := Metadata{
-		FailedConnDetail: make(map[string]string),
+		FailedProviderDetail: make(map[string]string),
 	}
 	for _, elem := range p {
 		if elem.powerStateGetter == nil {
@@ -114,7 +114,7 @@ func getPowerState(ctx context.Context, timeout time.Duration, p []powerProvider
 			state, stateErr := elem.powerStateGetter.PowerStateGet(ctx)
 			if stateErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(stateErr, "provider: %v", elem.name))
-				metadataLocal.FailedConnDetail[elem.name] = stateErr.Error()
+				metadataLocal.FailedProviderDetail[elem.name] = stateErr.Error()
 				continue
 			}
 			metadataLocal.SuccessfulProvider = elem.name

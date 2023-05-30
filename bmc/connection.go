@@ -31,7 +31,7 @@ type connectionProviders struct {
 // implementations that have connections wont nil pointer error when their connection fails.
 func OpenConnectionFromInterfaces(ctx context.Context, timeout time.Duration, providers []interface{}) (opened []interface{}, metadata Metadata, err error) {
 	metadata = Metadata{
-		FailedConnDetail: make(map[string]string),
+		FailedProviderDetail: make(map[string]string),
 	}
 
 	// Return immediately if the context is done.
@@ -94,7 +94,7 @@ func OpenConnectionFromInterfaces(ctx context.Context, timeout time.Duration, pr
 	for res := range results {
 		if res.Err != nil {
 			err = multierror.Append(err, res.Err)
-			metadata.FailedConnDetail[res.ProviderName] = res.Err.Error()
+			metadata.FailedProviderDetail[res.ProviderName] = res.Err.Error()
 			continue
 		}
 
@@ -112,7 +112,7 @@ func OpenConnectionFromInterfaces(ctx context.Context, timeout time.Duration, pr
 // closeConnection closes a connection to a BMC, trying all interface implementations passed in
 func closeConnection(ctx context.Context, c []connectionProviders) (_ Metadata, err error) {
 	var metadata = Metadata{
-		FailedConnDetail: make(map[string]string),
+		FailedProviderDetail: make(map[string]string),
 	}
 	var connClosed bool
 
@@ -124,7 +124,7 @@ func closeConnection(ctx context.Context, c []connectionProviders) (_ Metadata, 
 		closeErr := elem.closer.Close(ctx)
 		if closeErr != nil {
 			err = multierror.Append(err, errors.WithMessagef(closeErr, "provider: %v", elem.name))
-			metadata.FailedConnDetail[elem.name] = closeErr.Error()
+			metadata.FailedProviderDetail[elem.name] = closeErr.Error()
 			continue
 		}
 		connClosed = true
