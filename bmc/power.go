@@ -38,8 +38,10 @@ type powerProviders struct {
 }
 
 // setPowerState sets the power state for a BMC, trying all interface implementations passed in
-func setPowerState(ctx context.Context, timeout time.Duration, state string, p []powerProviders) (ok bool, metadata Metadata, err error) {
-	var metadataLocal Metadata
+func setPowerState(ctx context.Context, timeout time.Duration, state string, p []powerProviders) (ok bool, m Metadata, err error) {
+	metadataLocal := Metadata{
+		FailedProviderDetail: make(map[string]string),
+	}
 
 	for _, elem := range p {
 		if elem.powerSetter == nil {
@@ -49,7 +51,7 @@ func setPowerState(ctx context.Context, timeout time.Duration, state string, p [
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
 
-			return false, metadata, err
+			return false, metadataLocal, err
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
 			ctx, cancel := context.WithTimeout(ctx, timeout)
@@ -57,6 +59,7 @@ func setPowerState(ctx context.Context, timeout time.Duration, state string, p [
 			ok, setErr := elem.powerSetter.PowerSet(ctx, state)
 			if setErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(setErr, "provider: %v", elem.name))
+				metadataLocal.FailedProviderDetail[elem.name] = setErr.Error()
 				continue
 			}
 			if !ok {
@@ -91,7 +94,10 @@ func SetPowerStateFromInterfaces(ctx context.Context, timeout time.Duration, sta
 }
 
 // getPowerState gets the power state for a BMC, trying all interface implementations passed in
-func getPowerState(ctx context.Context, timeout time.Duration, p []powerProviders) (state string, metadata Metadata, err error) {
+func getPowerState(ctx context.Context, timeout time.Duration, p []powerProviders) (state string, m Metadata, err error) {
+	metadataLocal := Metadata{
+		FailedProviderDetail: make(map[string]string),
+	}
 	for _, elem := range p {
 		if elem.powerStateGetter == nil {
 			continue
@@ -100,21 +106,22 @@ func getPowerState(ctx context.Context, timeout time.Duration, p []powerProvider
 		case <-ctx.Done():
 			err = multierror.Append(err, ctx.Err())
 
-			return state, metadata, err
+			return state, metadataLocal, err
 		default:
-			metadata.ProvidersAttempted = append(metadata.ProvidersAttempted, elem.name)
+			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
 			ctx, cancel := context.WithTimeout(ctx, timeout)
 			defer cancel()
 			state, stateErr := elem.powerStateGetter.PowerStateGet(ctx)
 			if stateErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(stateErr, "provider: %v", elem.name))
+				metadataLocal.FailedProviderDetail[elem.name] = stateErr.Error()
 				continue
 			}
-			metadata.SuccessfulProvider = elem.name
-			return state, metadata, nil
+			metadataLocal.SuccessfulProvider = elem.name
+			return state, metadataLocal, nil
 		}
 	}
-	return state, metadata, multierror.Append(err, errors.New("failed to get power state"))
+	return state, metadataLocal, multierror.Append(err, errors.New("failed to get power state"))
 }
 
 // GetPowerStateFromInterfaces identifies implementations of the PostStateGetter interface and passes the found implementations to the getPowerState() wrapper.
