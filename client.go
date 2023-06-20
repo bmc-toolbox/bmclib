@@ -225,7 +225,17 @@ func (c *Client) registry() *registrar.Registry {
 // from the client.Registry.Drivers. If client.Registry.Drivers ends up
 // being empty then we error.
 func (c *Client) Open(ctx context.Context) error {
-	ifs, metadata, err := bmc.OpenConnectionFromInterfaces(ctx, c.perProviderTimeout(ctx), c.registry().GetDriverInterfaces())
+	//
+	// TODO: check with Jacob if the comment below still applies,
+	//
+	// Create a context with the specified timeout. This is done for backward compatibility but
+	// we should consider removing the timeout parameter alltogether given the context will
+	// container the timeout.
+	//
+	ctx, cancel := context.WithTimeout(ctx, c.perProviderTimeout(ctx))
+	defer cancel()
+
+	ifs, metadata, err := bmc.OpenConnectionFromInterfaces(ctx, c.registry().GetDriverInterfaces())
 	defer c.setMetadata(metadata)
 	if err != nil {
 		return err

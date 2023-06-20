@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
@@ -29,7 +28,7 @@ type connectionProviders struct {
 // OpenConnectionFromInterfaces will try all opener interfaces and remove failed ones.
 // The reason failed ones need to be removed is so that when other methods are called (like powerstate)
 // implementations that have connections wont nil pointer error when their connection fails.
-func OpenConnectionFromInterfaces(ctx context.Context, timeout time.Duration, providers []interface{}) (opened []interface{}, metadata Metadata, err error) {
+func OpenConnectionFromInterfaces(ctx context.Context, providers []interface{}) (opened []interface{}, metadata Metadata, err error) {
 	metadata = Metadata{
 		FailedProviderDetail: make(map[string]string),
 	}
@@ -40,12 +39,6 @@ func OpenConnectionFromInterfaces(ctx context.Context, timeout time.Duration, pr
 		return nil, metadata, multierror.Append(err, ctx.Err())
 	default:
 	}
-
-	// Create a context with the specified timeout. This is done for backward compatibility but
-	// we should consider removing the timeout parameter alltogether given the context will
-	// container the timeout.
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	// result facilitates communication of data between the concurrent opener goroutines and
 	// the the parent goroutine.

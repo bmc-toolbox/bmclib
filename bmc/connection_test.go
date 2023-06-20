@@ -86,7 +86,7 @@ func TestOpenConnectionFromInterfaces(t *testing.T) {
 				tc.ctxTimeout = time.Second * 3
 			}
 			ctx := context.Background()
-			opened, metadata, err := OpenConnectionFromInterfaces(ctx, tc.ctxTimeout, generic)
+			opened, metadata, err := OpenConnectionFromInterfaces(ctx, generic)
 			if err != nil {
 				if tc.err != nil {
 					if diff := cmp.Diff(err.Error(), tc.err.Error()); diff != "" {
