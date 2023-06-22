@@ -95,6 +95,16 @@ var (
 
 	// ErrIncompatibleProvider is returned by Open() when the device is not compatible with the provider
 	ErrIncompatibleProvider = errors.New("provider not compatible with device")
+
+	// ErrBMCColdResetRequired is returned when a BMC cold reset is required.
+	ErrBMCColdResetRequired = errors.New("BMC cold reset required")
+
+	// ErrHostPowercycleRequired is returned when a host powercycle is required.
+	ErrHostPowercycleRequired = errors.New("Host power cycle required")
+
+	// ErrSessionExpired is returned when the BMC session is not valid
+	// the receiver can then choose to request a new session.
+	ErrSessionExpired = errors.New("session expired")
 )
 
 type ErrUnsupportedHardware struct {
