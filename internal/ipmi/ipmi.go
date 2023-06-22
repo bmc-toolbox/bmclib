@@ -90,7 +90,7 @@ func (i *Ipmi) run(ctx context.Context, command []string) (output string, err er
 	}
 	for _, cipherString := range ipmiCiphers {
 		ipmiCmd := append(ipmiArgs, "-C", cipherString)
-		i.log.V(1).Info("ipmitool options", "opts", formatOptions(ipmiCmd))
+		i.log.V(3).Info("ipmitool options", "opts", formatOptions(ipmiCmd))
 		ipmiCmd = append(ipmiCmd, command...)
 		cmd := exec.CommandContext(ctx, i.ipmitool, ipmiCmd...)
 		cmd.Env = []string{fmt.Sprintf("IPMITOOL_PASSWORD=%s", i.Password)}
