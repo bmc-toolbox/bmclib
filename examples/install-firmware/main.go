@@ -26,7 +26,7 @@ func main() {
 	withSecureTLS := flag.Bool("secure-tls", false, "Enable secure TLS")
 	certPoolPath := flag.String("cert-pool", "", "Path to an file containing x509 CAs. An empty string uses the system CAs. Only takes effect when --secure-tls=true")
 	firmwarePath := flag.String("firmware", "", "The local path of the firmware to install")
-	//firmwareVersion := flag.String("version", "", "The firmware version being installed")
+	firmwareVersion := flag.String("version", "", "The firmware version being installed")
 
 	flag.Parse()
 
@@ -64,7 +64,7 @@ func main() {
 		clientOpts = append(clientOpts, bmclib.WithSecureTLS(pool))
 	}
 
-	cl := bmclib.NewClient(*host, *user, *pass, clientOpts...).PreferProvider("supermicro")
+	cl := bmclib.NewClient(*host, *user, *pass, clientOpts...)
 	err := cl.Open(ctx)
 	if err != nil {
 		l.Fatal(err, "bmc login failed")
@@ -79,7 +79,7 @@ func main() {
 	}
 	defer fh.Close()
 
-	_, err = cl.FirmwareInstall(ctx, *component, constants.FirmwareApplyOnReset, true, fh)
+	taskID, err := cl.FirmwareInstall(ctx, *component, constants.FirmwareApplyOnReset, true, fh)
 	if err != nil {
 		l.Fatal(err)
 	}
@@ -89,11 +89,11 @@ func main() {
 			l.Fatal(ctx.Err())
 		}
 
-		state, err := cl.FirmwareInstallStatus(ctx, "", *component, "")
+		state, err := cl.FirmwareInstallStatus(ctx, *firmwareVersion, *component, taskID)
 		if err != nil {
 			// when its under update a connection refused is returned
 			if strings.Contains(err.Error(), "connection refused") || strings.Contains(err.Error(), "operation timed out") {
-				l.Info("BMC refused connection, BMC most likely resetting..")
+				l.Info("BMC refused connection, BMC most likely resetting...")
 				time.Sleep(2 * time.Second)
 
 				continue
@@ -105,7 +105,7 @@ func main() {
 					l.Fatal(err, "bmc re-login failed")
 				}
 
-				l.WithFields(logrus.Fields{"state": state, "component": *component}).Info("BMC session expired, logging in..")
+				l.WithFields(logrus.Fields{"state": state, "component": *component}).Info("BMC session expired, logging in...")
 
 				continue
 			}
