@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/xml"
 	"fmt"
 	"io"
 	"net/http"
@@ -37,13 +38,23 @@ var (
 	// Features implemented
 	Features = registrar.Features{
 		providers.FeatureScreenshot,
+		providers.FeatureFirmwareInstall,
+		providers.FeatureFirmwareInstallStatus,
 	}
 )
 
 // supports
-// SYS-5019C-MR
-// SYS-510T-MR
-// 6029P-E1CR12L
+//
+// product: SYS-5019C-MR, baseboard part number: X11SCM-F
+//   - screen capture
+//   - bios firmware install
+//   - bmc firmware install
+// product: SYS-510T-MR, baseboard part number: X12STH-SYS
+//   - screen capture
+// product: 6029P-E1CR12L, baseboard part number: X11DPH-T
+// . - screen capture
+//   - bios firmware install
+//   - bmc firmware install
 
 type Config struct {
 	HttpClient           *http.Client
@@ -81,6 +92,7 @@ type Client struct {
 	pass      string
 	port      string
 	csrfToken string
+	model     string
 	log       logr.Logger
 }
 
@@ -256,6 +268,64 @@ func (c *Client) initScreenPreview(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// PowerSet sets the power state of a server
+func (c *Client) PowerSet(ctx context.Context, state string) (ok bool, err error) {
+	switch strings.ToLower(state) {
+	case "cycle":
+		return c.powerCycle(ctx)
+	default:
+		return false, errors.New("action not implemented for provider")
+	}
+}
+
+func (c *Client) fruInfo(ctx context.Context) (*FruInfo, error) {
+	headers := map[string]string{"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+
+	payload := "op=FRU_INFO.XML&r=(0,0)&_="
+
+	body, status, err := c.query(ctx, "cgi/ipmi.cgi", http.MethodPost, bytes.NewBufferString(payload), headers, 0)
+	if err != nil {
+		return nil, errors.Wrap(ErrQueryFRUInfo, err.Error())
+	}
+
+	if status != 200 {
+		return nil, unexpectedResponseErr([]byte(payload), body, status)
+	}
+
+	if !bytes.Contains(body, []byte(`<IPMI>`)) {
+		return nil, unexpectedResponseErr([]byte(payload), body, status)
+	}
+
+	data := &IPMI{}
+	if err := xml.Unmarshal(body, data); err != nil {
+		return nil, errors.Wrap(ErrQueryFRUInfo, err.Error())
+	}
+
+	return data.FruInfo, nil
+}
+
+// powerCycle using SMC XML API
+//
+// This method is only here for the case when firmware updates are being applied using this provider.
+func (c *Client) powerCycle(ctx context.Context) (bool, error) {
+	payload := []byte(`op=SET_POWER_INFO.XML&r=(1,3)&_=`)
+
+	headers := map[string]string{
+		"Content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+	}
+
+	body, status, err := c.query(ctx, "cgi/ipmi.cgi", http.MethodPost, bytes.NewBuffer(payload), headers, 0)
+	if err != nil {
+		return false, err
+	}
+
+	if status != http.StatusOK {
+		return false, unexpectedResponseErr(payload, body, status)
+	}
+
+	return true, nil
 }
 
 func (c *Client) query(ctx context.Context, endpoint, method string, payload io.Reader, headers map[string]string, contentLength int64) ([]byte, int, error) {
