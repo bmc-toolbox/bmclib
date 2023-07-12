@@ -137,3 +137,9 @@ func WithDellRedfishUseBasicAuth(useBasicAuth bool) Option {
 		args.providerConfig.dell.UseBasicAuth = useBasicAuth
 	}
 }
+
+func WithGoipmiCipherSuite(cipherSuite int) Option {
+	return func(args *Client) {
+		args.providerConfig.goipmi.CipherSuite = cipherSuite
+	}
+}
