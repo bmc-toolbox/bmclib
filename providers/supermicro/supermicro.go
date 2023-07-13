@@ -348,7 +348,19 @@ func (c *Client) query(ctx context.Context, endpoint, method string, payload io.
 
 	if c.csrfToken != "" {
 		req.Header.Add("Csrf-Token", c.csrfToken)
+		// because old firmware
+		req.Header.Add("CSRF_TOKEN", c.csrfToken)
 	}
+
+	// required on  X11SCM-F with 1.23.06 and older BMC firmware
+	// https://go.googlesource.com/go/+/go1.20/src/net/http/request.go#124
+	req.Host, err = hostIP(c.host)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// required on  X11SCM-F with 1.23.06 and older BMC firmware
+	req.Header.Add("Referer", c.host)
 
 	for k, v := range headers {
 		req.Header.Add(k, v)
@@ -410,4 +422,18 @@ func (c *Client) query(ctx context.Context, endpoint, method string, payload io.
 	defer resp.Body.Close()
 
 	return body, resp.StatusCode, nil
+}
+
+func hostIP(hostURL string) (string, error) {
+	hostURLParsed, err := url.Parse(hostURL)
+	if err != nil {
+		return "", err
+	}
+
+	if strings.Contains(hostURLParsed.Host, ":") {
+		return strings.Split(hostURLParsed.Host, ":")[0], nil
+
+	}
+
+	return hostURLParsed.Host, nil
 }
