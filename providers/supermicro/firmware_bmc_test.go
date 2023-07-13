@@ -145,7 +145,7 @@ func Test_uploadBMCFirmware(t *testing.T) {
 				part, err = reader.NextPart()
 				assert.Nil(t, err)
 
-				assert.Equal(t, `form-data; name="CSRF-TOKEN"`, part.Header.Get("Content-Disposition"))
+				assert.Equal(t, `form-data; name="CSRF_TOKEN"`, part.Header.Get("Content-Disposition"))
 			},
 		},
 	}

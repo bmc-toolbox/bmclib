@@ -234,7 +234,12 @@ func (c *Client) uploadBIOSFirmware(ctx context.Context, fwReader io.Reader) err
 		case "csrf-token":
 			// Add csrf token field
 			h := make(textproto.MIMEHeader)
-			h.Set("Content-Disposition", `form-data; name="CSRF-TOKEN"`)
+			// BMCs with newer firmware (>=1.74.09) accept the form with this name value
+			// h.Set("Content-Disposition", `form-data; name="CSRF-TOKEN"`)
+			//
+			// the BMCs running older firmware (<=1.23.06) versions expects the name value in this format
+			// and the newer firmware (>=1.74.09) seem to be backwards compatible with this name value format.
+			h.Set("Content-Disposition", `form-data; name="CSRF_TOKEN"`)
 
 			if partWriter, err = payloadWriter.CreatePart(h); err != nil {
 				return errors.Wrap(ErrMultipartForm, err.Error())

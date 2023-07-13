@@ -155,7 +155,12 @@ func (c *Client) uploadBMCFirmware(ctx context.Context, fwReader io.Reader) erro
 		case "csrf-token":
 			// Add csrf token field
 			h := make(textproto.MIMEHeader)
-			h.Set("Content-Disposition", `form-data; name="CSRF-TOKEN"`)
+			// BMCs with newer firmware (>=1.74.09) accept the form with this name value
+			// h.Set("Content-Disposition", `form-data; name="CSRF-TOKEN"`)
+			//
+			// the BMCs running older firmware (<=1.23.06) versions expects the name value in this format
+			// this seems to be backwards compatible with the newer firmware.
+			h.Set("Content-Disposition", `form-data; name="CSRF_TOKEN"`)
 
 			if partWriter, err = payloadWriter.CreatePart(h); err != nil {
 				return errors.Wrap(ErrMultipartForm, err.Error())
