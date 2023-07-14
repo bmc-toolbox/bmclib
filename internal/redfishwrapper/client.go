@@ -161,6 +161,16 @@ func (c *Client) SessionActive() error {
 	return nil
 }
 
+// Overrides the HTTP client timeout
+func (c *Client) SetHttpClientTimeout(t time.Duration) {
+	c.client.HTTPClient.Timeout = t
+}
+
+// retrieve the current HTTP client timeout
+func (c *Client) HttpClientTimeout() time.Duration {
+	return c.client.HTTPClient.Timeout
+}
+
 // RunRawRequestWithHeaders wraps the gofish client method RunRawRequestWithHeaders
 func (c *Client) RunRawRequestWithHeaders(method, url string, payloadBuffer io.ReadSeeker, contentType string, customHeaders map[string]string) (*http.Response, error) {
 	if err := c.SessionActive(); err != nil {

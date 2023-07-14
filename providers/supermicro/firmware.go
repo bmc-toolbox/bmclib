@@ -28,9 +28,9 @@ func (c *Client) FirmwareInstall(ctx context.Context, component, applyAt string,
 		size = finfo.Size()
 	}
 
-	// expect atleast 30 minutes left in the deadline to proceed with the update
+	// expect atleast 10 minutes left in the deadline to proceed with the update
 	d, _ := ctx.Deadline()
-	if time.Until(d) < 30*time.Minute {
+	if time.Until(d) < 10*time.Minute {
 		return "", errors.New("remaining context deadline insufficient to perform update: " + time.Until(d).String())
 	}
 

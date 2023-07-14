@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	gofishrf "github.com/stmcginnis/gofish/redfish"
@@ -20,6 +21,10 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/bmc-toolbox/bmclib/v2/internal"
+)
+
+var (
+	errInsufficientCtxTimeout = errors.New("remaining context timeout insufficient to install firmware")
 )
 
 // SupportedFirmwareApplyAtValues returns the supported redfish firmware applyAt values
@@ -41,6 +46,14 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 	// validate applyAt parameter
 	if !internal.StringInSlice(applyAt, SupportedFirmwareApplyAtValues()) {
 		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, "invalid applyAt parameter: "+applyAt)
+	}
+
+	// expect atleast 10 minutes left in the deadline to proceed with the update
+	//
+	// this gives the BMC enough time to have the firmware uploaded and return a response to the client.
+	ctxDeadline, _ := ctx.Deadline()
+	if time.Until(ctxDeadline) < 10*time.Minute {
+		return "", errors.Wrap(errInsufficientCtxTimeout, " "+time.Until(ctxDeadline).String())
 	}
 
 	// list redfish firmware install task if theres one present
@@ -76,6 +89,17 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 	if err != nil {
 		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, err.Error())
 	}
+
+	// override the gofish HTTP client timeout,
+	// since the context timeout is set at Open() and is at a lower value than required for this operation.
+	//
+	// record the http client time to be restored
+	httpClientTimeout := c.redfishwrapper.HttpClientTimeout()
+	defer func() {
+		c.redfishwrapper.SetHttpClientTimeout(httpClientTimeout)
+	}()
+
+	c.redfishwrapper.SetHttpClientTimeout(time.Until(ctxDeadline))
 
 	payload := map[string]io.Reader{
 		"UpdateParameters": bytes.NewReader(updateParameters),

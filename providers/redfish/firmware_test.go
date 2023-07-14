@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -70,19 +71,32 @@ func Test_FirmwareInstall(t *testing.T) {
 	defer os.Remove(binPath)
 
 	tests := []struct {
-		component       string
-		applyAt         string
-		forceInstall    bool
-		reader          io.Reader
-		expectTaskID    string
-		expectErr       error
-		expectErrSubStr string
-		testName        string
+		component          string
+		applyAt            string
+		forceInstall       bool
+		setRequiredTimeout bool
+		reader             io.Reader
+		expectTaskID       string
+		expectErr          error
+		expectErrSubStr    string
+		testName           string
 	}{
+		{
+			common.SlugBIOS,
+			constants.FirmwareApplyOnReset,
+			false,
+			false,
+			nil,
+			"",
+			errInsufficientCtxTimeout,
+			"",
+			"remaining context deadline",
+		},
 		{
 			common.SlugBIOS,
 			"invalidApplyAt",
 			false,
+			true,
 			nil,
 			"",
 			bmclibErrs.ErrFirmwareInstall,
@@ -93,6 +107,7 @@ func Test_FirmwareInstall(t *testing.T) {
 			common.SlugBIOS,
 			constants.FirmwareApplyOnReset,
 			false,
+			true,
 			fh,
 			"467696020275",
 			bmclibErrs.ErrFirmwareInstall,
@@ -102,6 +117,7 @@ func Test_FirmwareInstall(t *testing.T) {
 		{
 			common.SlugBIOS,
 			constants.FirmwareApplyOnReset,
+			true,
 			true,
 			fh,
 			"467696020275",
@@ -113,7 +129,12 @@ func Test_FirmwareInstall(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.testName, func(t *testing.T) {
-			taskID, err := mockClient.FirmwareInstall(context.TODO(), tc.component, tc.applyAt, tc.forceInstall, tc.reader)
+			ctx, cancel := context.WithTimeout(context.TODO(), 1*time.Second)
+			if tc.setRequiredTimeout {
+				ctx, cancel = context.WithTimeout(context.TODO(), 20*time.Minute)
+			}
+
+			taskID, err := mockClient.FirmwareInstall(ctx, tc.component, tc.applyAt, tc.forceInstall, tc.reader)
 			if tc.expectErr != nil {
 				assert.ErrorIs(t, err, tc.expectErr)
 				if tc.expectErrSubStr != "" {
@@ -123,6 +144,8 @@ func Test_FirmwareInstall(t *testing.T) {
 				assert.Nil(t, err)
 				assert.Equal(t, tc.expectTaskID, taskID)
 			}
+
+			defer cancel()
 		})
 	}
 
