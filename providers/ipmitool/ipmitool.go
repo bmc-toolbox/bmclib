@@ -180,3 +180,29 @@ func (c *Conn) PowerSet(ctx context.Context, state string) (ok bool, err error) 
 
 	return ok, err
 }
+
+// SolInfo gets the status of the serial-over-lan interface
+func (c *Conn) SolInfo(ctx context.Context) (info string, err error) {
+	return c.ipmitool.SolInfo(ctx)
+}
+
+// SolActivate activates and connects to the serial-over-lan interface.
+// It needs stdin, or the connection will be immediately dropped.
+func (c *Conn) SolActivate(ctx context.Context, stdin ...byte) (output string, err error) {
+	return c.ipmitool.SolActivate(ctx, stdin...)
+}
+
+// SolDeactivate disconnects the serial-over-lan interface.
+func (c *Conn) SolDeactivate(ctx context.Context) (output string, err error) {
+	return c.ipmitool.SolDeactivate(ctx)
+}
+
+// GetIPMICiphers gets a list of ciphers supported for IPMI.
+func (c *Conn) GetIPMICiphers(ctx context.Context) (output string, err error) {
+	return c.ipmitool.GetIPMICiphers(ctx)
+}
+
+// GetSOLCiphers gets a list of ciphers supported for SOL.
+func (c *Conn) GetSOLCiphers(ctx context.Context) (output string, err error) {
+	return c.ipmitool.GetSOLCiphers(ctx)
+}

@@ -384,3 +384,70 @@ func (i *Ipmi) ReadUsers(ctx context.Context) (users []map[string]string, err er
 
 	return users, err
 }
+
+// SolInfo gets the status of the serial-over-lan interface
+func (i *Ipmi) SolInfo(ctx context.Context) (info string, err error) {
+	output, err := i.run(ctx, []string{"sol", "info"})
+	if err != nil {
+		return "", fmt.Errorf("%v: %v", err, output)
+	}
+
+	fmt.Println(output)
+	fmt.Println(err)
+
+	return output, nil
+}
+
+// SolActivate activates and connects to the serial-over-lan interface.
+// It needs stdin, or the connection will be immediately dropped.
+func (i *Ipmi) SolActivate(ctx context.Context, stdin ...byte) (output string, err error) {
+	output, err = i.run(ctx, []string{"sol", "activate"}, stdin...)
+	if err != nil {
+		return output, fmt.Errorf("%v: %v", err, output)
+	}
+
+	if strings.HasPrefix(output, "[SOL Session operational.") {
+		return output, nil
+	}
+	return "", fmt.Errorf("%v: %v", err, output)
+}
+
+// SolDeactivate disconnects the serial-over-lan interface.
+func (i *Ipmi) SolDeactivate(ctx context.Context) (output string, err error) {
+	output, err = i.run(ctx, []string{"sol", "deactivate"})
+	if err != nil {
+		return output, fmt.Errorf("%v: %v", err, output)
+	}
+
+	// If we see this, it was already deactivated, return as error.
+	if strings.HasPrefix(output, "Info: SOL payload already de-activated") {
+		return output, fmt.Errorf("%v: %v", err, output)
+	}
+	return output, nil
+}
+
+// GetIPMICiphers gets a list of ciphers supported for IPMI.
+func (i *Ipmi) GetIPMICiphers(ctx context.Context) (output string, err error) {
+	output, err = i.run(ctx, []string{"channel", "getciphers", "ipmi"})
+	if err != nil {
+		return output, fmt.Errorf("%v: %v", err, output)
+	}
+
+	if strings.HasPrefix(output, "ID   IANA") {
+		return output, nil
+	}
+	return output, fmt.Errorf("%v: %v", err, output)
+}
+
+// GetSOLCiphers gets a list of ciphers supported for SOL.
+func (i *Ipmi) GetSOLCiphers(ctx context.Context) (output string, err error) {
+	output, err = i.run(ctx, []string{"channel", "getciphers", "sol"})
+	if err != nil {
+		return output, fmt.Errorf("%v: %v", err, output)
+	}
+
+	if strings.HasPrefix(output, "ID   IANA") {
+		return output, nil
+	}
+	return output, fmt.Errorf("%v: %v", err, output)
+}
