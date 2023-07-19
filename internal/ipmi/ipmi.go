@@ -71,7 +71,7 @@ func New(username string, password string, host string, opts ...Option) (ipmi *I
 	return ipmi, err
 }
 
-func (i *Ipmi) run(ctx context.Context, command []string) (output string, err error) {
+func (i *Ipmi) run(ctx context.Context, command []string, stdin ...byte) (output string, err error) {
 	var out []byte
 	var ipmiCiphers = []string{"3", "17"}
 	ipmiArgs := []string{"-I", "lanplus", "-U", i.Username, "-E", "-N", "5"}
@@ -93,6 +93,13 @@ func (i *Ipmi) run(ctx context.Context, command []string) (output string, err er
 		i.log.V(3).Info("ipmitool options", "opts", formatOptions(ipmiCmd))
 		ipmiCmd = append(ipmiCmd, command...)
 		cmd := exec.CommandContext(ctx, i.ipmitool, ipmiCmd...)
+		if stdin != nil {
+			stdinPipe, err := cmd.StdinPipe()
+			if err != nil {
+				return "", err
+			}
+			stdinPipe.Write(stdin)
+		}
 		cmd.Env = []string{fmt.Sprintf("IPMITOOL_PASSWORD=%s", i.Password)}
 		out, err = cmd.CombinedOutput()
 		if err == nil || ctx.Err() != nil {
