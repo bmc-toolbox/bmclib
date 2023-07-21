@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"log"
 	"time"
 
@@ -14,20 +15,20 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 
-	// set BMC parameters here
-	host := "10.211.132.157"
-	user := "root"
-	pass := "yxvZdxAQ38ZWlZ"
+	user := flag.String("user", "", "Username to login with")
+	pass := flag.String("password", "", "Username to login with")
+	host := flag.String("host", "", "BMC hostname to connect to")
+	flag.Parse()
 
 	l := logrus.New()
 	l.Level = logrus.DebugLevel
 	logger := logrusr.New(l)
 
-	if host == "" || user == "" || pass == "" {
+	if *host == "" || *user == "" || *pass == "" {
 		log.Fatal("required host/user/pass parameters not defined")
 	}
 
-	i, err := ipmitool.New(host, user, pass, ipmitool.WithLogger(logger))
+	i, err := ipmitool.New(*host, *user, *pass, ipmitool.WithLogger(logger))
 	if err != nil {
 		log.Fatal("ipmi connection failed")
 	}
@@ -39,7 +40,7 @@ func main() {
 
 	defer i.Close(ctx)
 
-	output, err := i.GetIPMICiphers(ctx)
+	output, err := i.GetCiphers(ctx)
 	if err != nil {
 		l.Error(err)
 	}

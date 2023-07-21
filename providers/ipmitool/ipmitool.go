@@ -197,9 +197,9 @@ func (c *Conn) SolDeactivate(ctx context.Context) (output string, err error) {
 	return c.ipmitool.SolDeactivate(ctx)
 }
 
-// GetIPMICiphers gets a list of ciphers supported for IPMI.
-func (c *Conn) GetIPMICiphers(ctx context.Context) (output string, err error) {
-	return c.ipmitool.GetIPMICiphers(ctx)
+// GetCiphers gets a list of ciphers supported for IPMI.
+func (c *Conn) GetCiphers(ctx context.Context) (output string, err error) {
+	return c.ipmitool.GetCiphers(ctx)
 }
 
 // GetSOLCiphers gets a list of ciphers supported for SOL.

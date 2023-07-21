@@ -98,7 +98,10 @@ func (i *Ipmi) run(ctx context.Context, command []string, stdin ...byte) (output
 			if err != nil {
 				return "", err
 			}
-			stdinPipe.Write(stdin)
+			_, err = stdinPipe.Write(stdin)
+			if err != nil {
+				return "", err
+			}
 		}
 		cmd.Env = []string{fmt.Sprintf("IPMITOOL_PASSWORD=%s", i.Password)}
 		out, err = cmd.CombinedOutput()
@@ -392,9 +395,6 @@ func (i *Ipmi) SolInfo(ctx context.Context) (info string, err error) {
 		return "", fmt.Errorf("%v: %v", err, output)
 	}
 
-	fmt.Println(output)
-	fmt.Println(err)
-
 	return output, nil
 }
 
@@ -419,15 +419,11 @@ func (i *Ipmi) SolDeactivate(ctx context.Context) (output string, err error) {
 		return output, fmt.Errorf("%v: %v", err, output)
 	}
 
-	// If we see this, it was already deactivated, return as error.
-	if strings.HasPrefix(output, "Info: SOL payload already de-activated") {
-		return output, fmt.Errorf("%v: %v", err, output)
-	}
 	return output, nil
 }
 
-// GetIPMICiphers gets a list of ciphers supported for IPMI.
-func (i *Ipmi) GetIPMICiphers(ctx context.Context) (output string, err error) {
+// GetCiphers gets a list of ciphers supported for IPMI.
+func (i *Ipmi) GetCiphers(ctx context.Context) (output string, err error) {
 	output, err = i.run(ctx, []string{"channel", "getciphers", "ipmi"})
 	if err != nil {
 		return output, fmt.Errorf("%v: %v", err, output)
