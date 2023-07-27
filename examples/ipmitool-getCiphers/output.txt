@@ -1,0 +1,6 @@
+2023/07/27 14:35:43 GetIPMICiphers returned ID   IANA    Auth Alg        Integrity Alg   Confidentiality Alg
+17   N/A     hmac_sha256     sha256_128      aes_cbc_128    
+3    N/A     hmac_sha1       hmac_sha1_96    aes_cbc_128    
+2023/07/27 14:35:45 GetSOLCiphers returned ID   IANA    Auth Alg        Integrity Alg   Confidentiality Alg
+17   N/A     hmac_sha256     sha256_128      aes_cbc_128    
+3    N/A     hmac_sha1       hmac_sha1_96    aes_cbc_128    

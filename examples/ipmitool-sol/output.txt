@@ -1,0 +1,20 @@
+2023/07/21 14:55:20 SolInfo returned Info: SOL parameter 'Nonvolatile Bitrate (5)' not supported
+Info: SOL parameter 'Volatile Bitrate (6)' not supported
+Set in progress                 : set-complete
+Enabled                         : true
+Force Encryption                : true
+Force Authentication            : true
+Privilege Level                 : ADMINISTRATOR
+Character Accumulate Level (ms) : 0
+Character Send Threshold        : 1
+Retry Count                     : 7
+Retry Interval (ms)             : 1000
+Volatile Bit Rate (kbps)        : IPMI-Over-Serial-Setting
+Non-Volatile Bit Rate (kbps)    : IPMI-Over-Serial-Setting
+Payload Channel                 : 1 (0x01)
+Payload Port                    : 623
+2023/07/21 14:55:40 SolActivate returned tcgetattr: Inappropriate ioctl for device
+[SOL Session operational.  Use ~? for help]
+
+max-ipmi-c3 login: 
+max-ipmi-c3 login: 
