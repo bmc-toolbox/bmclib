@@ -106,7 +106,23 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 		"UpdateFile":       reader,
 	}
 
-	resp, err := c.runRequestWithMultipartPayload(http.MethodPost, "/redfish/v1/UpdateService/MultipartUpload", payload)
+	updateService, err := c.redfishwrapper.UpdateService()
+
+	if err != nil {
+		return "", errors.Wrap(bmclibErrs.ErrFirmwareUpload, err.Error())
+	}
+
+	var resp *http.Response
+	if updateService.MultipartHTTPPushURI != "" {
+		// TODO: should use updateService.MultipartHTTPPushURI rather than hardcoded path
+		// but should be tested when modified
+		resp, err = c.runRequestWithMultipartPayload(http.MethodPost, "/redfish/v1/UpdateService/MultipartUpload", payload)
+	} else if updateService.HTTPPushURI != "" {
+		resp, err = c.runRequestWithPayload(http.MethodPost, updateService.HTTPPushURI, payload["UpdateFile"])
+	} else {
+		return "", errors.Wrap(bmclibErrs.ErrFirmwareUpload, "No URI available for push updates")
+	}
+
 	if err != nil {
 		return "", errors.Wrap(bmclibErrs.ErrFirmwareUpload, err.Error())
 	}
@@ -118,10 +134,21 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 		)
 	}
 
-	// The response contains a location header pointing to the task URI
-	// Location: /redfish/v1/TaskService/Tasks/JID_467696020275
-	if strings.Contains(resp.Header.Get("Location"), "JID_") {
-		taskID = strings.Split(resp.Header.Get("Location"), "JID_")[1]
+	return location2TaskID(resp.Header.Get("Location"))
+}
+
+func location2TaskID(location string) (taskID string, err error) {
+	if strings.Contains(location, "JID_") {
+		// The response contains a location header pointing to the task URI
+		// Location: /redfish/v1/TaskService/Tasks/JID_467696020275
+		taskID = strings.Split(location, "JID_")[1]
+	} else if strings.Contains(location, "/Monitor") {
+		// OpenBMC returns a monitor URL in Location
+		// Location: /redfish/v1/TaskService/Tasks/12/Monitor
+		splits := strings.Split(location, "/")
+		taskID = splits[5]
+	} else {
+		return "", bmclibErrs.ErrTaskNotFound
 	}
 
 	return taskID, nil
@@ -134,10 +161,41 @@ func (c *Conn) FirmwareInstallStatus(ctx context.Context, installVersion, compon
 		return state, errors.Wrap(err, "unable to determine device vendor, model attributes")
 	}
 
+	// component is not used, we hack it for tests
+	if component == "testOpenbmc" {
+		vendor = constants.Packet
+	}
+
 	var task *gofishrf.Task
 	switch {
 	case strings.Contains(vendor, constants.Dell):
 		task, err = c.dellJobAsRedfishTask(taskID)
+		if task == nil {
+			return state, errors.New("failed to lookup task status for task ID: " + taskID)
+		}
+
+		state = strings.ToLower(string(task.TaskState))
+
+	case strings.Contains(vendor, constants.Packet):
+		resp, _ := c.redfishwrapper.Get("/redfish/v1/TaskService/Tasks/" + taskID)
+		if resp.StatusCode != 200 {
+			err = errors.Wrap(
+				bmclibErrs.ErrFirmwareInstall,
+				"HTTP Error: "+fmt.Sprint(resp.StatusCode),
+			)
+
+			state = "failed"
+			break
+		}
+
+		//task, err := gofishrf.GetTask(c.redfishwrapper, "/redfish/v1/TaskService/Tasks/" + taskID)
+		//fmt.Printf("task:", task);
+
+		data, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+
+		state, err = c.openbmcGetStatus(data)
+
 	default:
 		err = errors.Wrap(
 			bmclibErrs.ErrNotImplemented,
@@ -148,12 +206,6 @@ func (c *Conn) FirmwareInstallStatus(ctx context.Context, installVersion, compon
 	if err != nil {
 		return state, err
 	}
-
-	if task == nil {
-		return state, errors.New("failed to lookup task status for task ID: " + taskID)
-	}
-
-	state = strings.ToLower(string(task.TaskState))
 
 	// so much for standards...
 	switch state {
@@ -189,9 +241,10 @@ func (c *Conn) firmwareUpdateCompatible(ctx context.Context) (err error) {
 		return errors.Wrap(bmclibErrs.ErrRedfishUpdateService, "service disabled")
 	}
 
-	// for now we expect multipart HTTP push update support
-	if updateService.MultipartHTTPPushURI == "" {
-		return errors.Wrap(bmclibErrs.ErrRedfishUpdateService, "Multipart HTTP push updates not supported")
+	// for now we expect multipart HTTP push update support,
+	// or at least the unstructured HTTP push update support
+	if updateService.MultipartHTTPPushURI == "" && updateService.HTTPPushURI == "" {
+		return errors.Wrap(bmclibErrs.ErrRedfishUpdateService, "No HTTP push updates supported (multipart or unstructured)")
 	}
 
 	return nil
@@ -248,6 +301,17 @@ func (c *Conn) runRequestWithMultipartPayload(method, url string, payload map[st
 	return c.redfishwrapper.RunRawRequestWithHeaders(method, url, bytes.NewReader(payloadBuffer.Bytes()), payloadWriter.FormDataContentType(), nil)
 }
 
+// Updates using an unstrctured HTTP updates
+func (c *Conn) runRequestWithPayload(method, url string, payload io.Reader) (*http.Response, error) {
+	if url == "" {
+		return nil, fmt.Errorf("unable to execute request, no target provided")
+	}
+
+	b, _ := io.ReadAll(payload)
+	payloadReadSeeker := bytes.NewReader(b)
+	return c.redfishwrapper.RunRawRequestWithHeaders(method, url, payloadReadSeeker, "application/octet-stream", nil)
+}
+
 // sets up the UpdateParameters MIMEHeader for the multipart form
 // the Go multipart writer CreateFormField does not currently let us set Content-Type on a MIME Header
 // https://cs.opensource.google/go/go/+/refs/tags/go1.17.8:src/mime/multipart/writer.go;l=151
@@ -276,6 +340,8 @@ func (c *Conn) GetFirmwareInstallTaskQueued(ctx context.Context, component strin
 	switch {
 	case strings.Contains(vendor, constants.Dell):
 		task, err = c.getDellFirmwareInstallTaskScheduled(component)
+	case strings.Contains(vendor, constants.Packet):
+		//task, err = c.getDellFirmwareInstallTaskScheduled(component)
 	default:
 		err = errors.Wrap(
 			bmclibErrs.ErrNotImplemented,

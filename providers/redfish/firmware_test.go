@@ -19,7 +19,7 @@ import (
 	"github.com/bmc-toolbox/common"
 )
 
-// handler registered in mock_test.go
+// handler registered in main_test.go
 func multipartUpload(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		w.WriteHeader(http.StatusNotFound)
@@ -155,5 +155,49 @@ func Test_firmwareUpdateCompatible(t *testing.T) {
 	err := mockClient.firmwareUpdateCompatible(context.TODO())
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+func Test_runRequestWithPayload(t *testing.T) {
+	var reader io.Reader
+	resp, err := mockClient.runRequestWithPayload(http.MethodPost, "", reader)
+	if resp != nil {
+		t.Fatal(err)
+	}
+}
+
+// referenced in main_test.go
+func openbmcStatus(w http.ResponseWriter, r *http.Request) {
+	mytask := `{
+  "@odata.id": "/redfish/v1/TaskService/Tasks/15",
+  "@odata.type": "#Task.v1_4_3.Task",
+  "Id": "15",
+  "Messages": [
+    {
+      "@odata.type": "#Message.v1_1_1.Message",
+      "Message": "The task with Id '15' has started.",
+      "MessageArgs": [
+        "15"
+      ],
+      "MessageId": "TaskEvent.1.0.3.TaskStarted",
+      "MessageSeverity": "OK",
+      "Resolution": "None."
+    }
+  ],
+  "Name": "Task 15",
+  "TaskState": "TestState",
+  "TaskStatus": "TestStatus"
+}
+`
+	_, _ = w.Write([]byte(mytask))
+}
+
+func Test_FirmwareInstall2(t *testing.T) {
+	state, err := mockClient.FirmwareInstallStatus(context.TODO(), "", "testOpenbmc", "15")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if state != "unknown: teststate" {
+		t.Fatal("Wrong test state:", state)
 	}
 }

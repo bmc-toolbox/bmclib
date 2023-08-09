@@ -38,3 +38,31 @@ func Test_dellPurgeScheduledFirmwareInstallJob(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func Test_openbmcGetStatus(t *testing.T) {
+	var err error
+	var state string
+
+	// empty (invalid json)
+	_, err = mockClient.openbmcGetStatus([]byte(""))
+	if err == nil {
+		t.Fatal("no error with empty invalid json")
+	}
+
+	// empty valid json
+	_, err = mockClient.openbmcGetStatus([]byte("{}"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// empty valid json
+	state, err = mockClient.openbmcGetStatus([]byte(
+		"{\"Id\":\"15\", \"TaskState\": \"TestState\", \"TaskStatus\": \"TestStatus\"}",
+	))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if state != "teststate" {
+		t.Fatal("Wrong test state:", state)
+	}
+}

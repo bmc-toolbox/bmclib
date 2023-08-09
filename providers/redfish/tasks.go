@@ -2,6 +2,7 @@ package redfish
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"strconv"
 	"strings"
@@ -170,4 +171,33 @@ func (c *Conn) dellJobs(state string) ([]*gofishrf.Task, error) {
 	}
 
 	return tasks, nil
+}
+
+func (c *Conn) openbmcGetStatus(jsonstr []byte) (state string, err error) {
+	type TaskMsg struct {
+		Message string
+	}
+
+	type TaskStatus struct {
+		TaskState  string
+		TaskStatus string
+		Messages   []TaskMsg
+	}
+
+	var status TaskStatus
+
+	err = json.Unmarshal(jsonstr, &status)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		state = strings.ToLower(status.TaskState)
+		if state != "running" {
+			// Display all messages when not running (failed or completed)
+			fmt.Println(status.TaskState, status.TaskStatus)
+			for _, m := range status.Messages {
+				fmt.Println(m.Message)
+			}
+		}
+	}
+	return state, err
 }
