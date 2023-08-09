@@ -22,8 +22,11 @@ const (
 	Cloudline = "Cloudline"
 	// Quanta is the contant to identify Quanta hardware
 	Quanta = "Quanta"
-	// Quanta is the contant to identify Intel hardware
+	// Intel is the contant to identify Intel hardware
 	Intel = "Intel"
+	// Equinix, formerly Packet
+	Equinix = "Equinix"
+	Packet = "Packet"
 
 	// Redfish firmware apply at constants
 	// FirmwareApplyImmediate sets the firmware to be installed immediately after upload
