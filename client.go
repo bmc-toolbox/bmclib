@@ -16,6 +16,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/providers/intelamt"
 	"github.com/bmc-toolbox/bmclib/v2/providers/ipmitool"
 	"github.com/bmc-toolbox/bmclib/v2/providers/redfish"
+	"github.com/bmc-toolbox/bmclib/v2/providers/rpc"
 	"github.com/bmc-toolbox/bmclib/v2/providers/supermicro"
 	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
@@ -58,6 +59,7 @@ type providerConfig struct {
 	intelamt   intelamt.Config
 	dell       dell.Config
 	supermicro supermicro.Config
+	rpc        rpcOpts
 }
 
 // NewClient returns a new Client struct
@@ -89,6 +91,11 @@ func NewClient(host, user, pass string, opts ...Option) *Client {
 			},
 			supermicro: supermicro.Config{
 				Port: "443",
+			},
+			rpc: rpcOpts{
+				LogNotifications:  true,
+				IncludeAlgoHeader: true,
+				IncludeAlgoPrefix: true,
 			},
 		},
 	}
@@ -187,6 +194,15 @@ func (c *Client) registerProviders() {
 	smcHttpClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
 	driverSupermicro := supermicro.NewClient(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger, supermicro.WithHttpClient(&smcHttpClient), supermicro.WithPort(c.providerConfig.supermicro.Port))
 	c.Registry.Register(supermicro.ProviderName, supermicro.ProviderProtocol, supermicro.Features, nil, driverSupermicro)
+
+	// register the rpc provider
+	// only register if a rpc consumer URL is provided
+	//if c.providerOpts.rpc.ConsumerURL != "" {
+	driverRPC := rpc.New(c.providerConfig.rpc.ConsumerURL, c.Auth.Host, c.providerConfig.rpc.Secrets)
+	c.providerConfig.rpc.Logger = c.Logger
+	c.providerConfig.rpc.SetNonDefaults(driverRPC)
+	c.Registry.Register(rpc.ProviderName, rpc.ProviderProtocol, rpc.Features, nil, driverRPC)
+	//}
 }
 
 // GetMetadata returns the metadata that is populated after each BMC function/method call

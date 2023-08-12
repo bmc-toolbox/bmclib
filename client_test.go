@@ -20,16 +20,19 @@ func TestBMC(t *testing.T) {
 	log := logging.DefaultLogger()
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
-	cl := NewClient(host, user, pass, WithLogger(log), WithPerProviderTimeout(5*time.Second))
-	err := cl.Open(ctx)
-	if err != nil {
+	opts := []Option{
+		WithLogger(log),
+		WithPerProviderTimeout(5 * time.Second),
+	}
+	cl := NewClient(host, user, pass, opts...)
+	if err := cl.Open(ctx); err != nil {
 		t.Logf("%+v", cl.GetMetadata())
 		t.Fatal(err)
 	}
 	defer cl.Close(ctx)
 	t.Logf("metadata for Open: %+v", cl.GetMetadata())
 
-	cl.Registry.Drivers = cl.Registry.PreferDriver("non-existent")
+	cl = cl.PreferProvider("non-existent")
 	state, err := cl.GetPowerState(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -37,7 +40,7 @@ func TestBMC(t *testing.T) {
 	t.Log(state)
 	t.Logf("metadata for GetPowerState: %+v", cl.GetMetadata())
 
-	cl.Registry.Drivers = cl.Registry.PreferDriver("ipmitool")
+	cl = cl.PreferProvider("ipmitool")
 	state, err = cl.PreferProvider("gofish").GetPowerState(ctx)
 	if err != nil {
 		t.Fatal(err)
