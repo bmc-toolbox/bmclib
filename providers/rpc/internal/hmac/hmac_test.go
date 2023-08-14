@@ -1,9 +1,9 @@
-package rpc
+package hmac
 
 import "testing"
 
 func TestNewHMAC(t *testing.T) {
-	h := newHMAC()
+	h := NewHMAC()
 	if h.Hashes == nil {
 		t.Fatal("expected Hashes to be initialized")
 	}

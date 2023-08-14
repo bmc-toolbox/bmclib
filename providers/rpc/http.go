@@ -2,81 +2,119 @@ package rpc
 
 import (
 	"bytes"
+	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
+	"time"
 )
 
-// signature contains the configuration for signing HTTP requests.
-type signature struct {
-	// HeaderName is the header name that should contain the signature(s). Example: X-BMCLIB-Signature
-	HeaderName string
-	// AppendAlgoToHeader decides whether to append the algorithm to the signature header or not.
-	// Example: X-BMCLIB-Signature becomes X-BMCLIB-Signature-256
-	// When set to true, a header will be added for each algorithm. Example: X-BMCLIB-Signature-256 and X-BMCLIB-Signature-512
-	AppendAlgoToHeader bool
-	// IncludedPayloadHeaders are headers whose values will be included in the signature payload. Example: X-BMCLIB-Timestamp
-	IncludedPayloadHeaders []string
-	// HMAC holds and handles signing.
-	HMAC hmacConf
-}
-
-func newSignature() signature {
-	return signature{
-		HeaderName:         signatureHeader,
-		AppendAlgoToHeader: true,
-		HMAC:               newHMAC(),
-	}
-}
-
-// deduplicate returns a new slice with duplicates values removed.
-func deduplicate(s []string) []string {
-	if len(s) <= 1 {
-		return s
-	}
-	result := []string{}
-	seen := make(map[string]struct{})
-	for _, val := range s {
-		val := strings.ToLower(val)
-		if _, ok := seen[val]; !ok {
-			result = append(result, val)
-			seen[val] = struct{}{}
-		}
-	}
-	return result
-}
-
-func (s signature) AddSignature(req *http.Request) error {
-	// get the body and reset it as readers can only be read once.
-	body, err := io.ReadAll(req.Body)
+func requestKVS(req *http.Request) []interface{} {
+	reqBody, err := io.ReadAll(req.Body)
 	if err != nil {
-		return err
+		// TODO(jacobweinstock): either log the error or change the func signature to return it
+		return nil
 	}
-	req.Body = io.NopCloser(bytes.NewBuffer(body))
-	// add headers to signature payload, no space between values.
-	for _, h := range deduplicate(s.IncludedPayloadHeaders) {
-		if val := req.Header.Get(h); val != "" {
-			body = append(body, []byte(val)...)
-		}
+	req.Body = io.NopCloser(bytes.NewBuffer(reqBody))
+	var p RequestPayload
+	if err := json.Unmarshal(reqBody, &p); err != nil {
+		// TODO(jacobweinstock): either log the error or change the func signature to return it
+		return nil
 	}
-	signed, err := s.HMAC.Sign(body)
+
+	s := struct {
+		Body    RequestPayload `json:"body"`
+		Headers http.Header    `json:"headers"`
+		URL     string         `json:"url"`
+		Method  string         `json:"method"`
+	}{
+		Body:    p,
+		Headers: req.Header,
+		URL:     req.URL.String(),
+		Method:  req.Method,
+	}
+
+	return []interface{}{"request", s}
+}
+
+func responseKVS(resp *http.Response) []interface{} {
+	reqBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return nil
+	}
+	var p map[string]interface{}
+	if err := json.Unmarshal(reqBody, &p); err != nil {
+		return nil
 	}
 
-	if s.AppendAlgoToHeader {
-		if len(signed[SHA256]) > 0 {
-			req.Header.Add(fmt.Sprintf("%s-%s", s.HeaderName, SHA256Short), strings.Join(signed[SHA256], ","))
-		}
-		if len(signed[SHA512]) > 0 {
-			req.Header.Add(fmt.Sprintf("%s-%s", s.HeaderName, SHA512Short), strings.Join(signed[SHA512], ","))
-		}
-	} else {
-		all := signed[SHA256]
-		all = append(all, signed[SHA512]...)
-		req.Header.Add(s.HeaderName, strings.Join(all, ","))
+	r := struct {
+		StatusCode int                    `json:"statusCode"`
+		Body       map[string]interface{} `json:"body"`
+		Headers    http.Header            `json:"headers"`
+	}{
+		StatusCode: resp.StatusCode,
+		Body:       p,
+		Headers:    resp.Header,
 	}
 
-	return nil
+	return []interface{}{"response", r}
+}
+
+func (c *Config) createRequest(ctx context.Context, p RequestPayload) (*http.Request, error) {
+	data, err := json.Marshal(p)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, c.HTTPMethod, c.listenerURL.String(), bytes.NewReader(data))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", c.HTTPContentType)
+	req.Header.Add(c.timestampHeader, time.Now().Format(c.timestampFormat))
+
+	return req, nil
+}
+
+func (c *Config) signAndSend(p RequestPayload, req *http.Request) (*ResponsePayload, error) {
+	if err := c.sig.AddSignature(req); err != nil {
+		return nil, err
+	}
+	// have to copy the body out before sending the request.
+	kvs := requestKVS(req)
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		c.Logger.Error(err, "failed to send rpc notification", kvs...)
+		return nil, err
+	}
+	defer func() {
+		if c.LogNotifications {
+			if p.Params != nil {
+				kvs = append(kvs, []interface{}{"params", p.Params}...)
+			}
+			kvs = append(kvs, responseKVS(resp)...)
+			kvs = append(kvs, []interface{}{"host", c.host, "method", p.Method, "consumerURL", c.consumerURL}...)
+			c.Logger.Info("rpc notification details", kvs...)
+		}
+	}()
+	defer resp.Body.Close()
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %v", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	res := &ResponsePayload{}
+	if err := json.Unmarshal(bodyBytes, res); err != nil {
+		example, _ := json.Marshal(ResponsePayload{ID: 123, Host: c.host, Error: &ResponseError{Code: 1, Message: "error message"}})
+		return nil, fmt.Errorf("failed to parse response: got: %q, error: %w, response json spec: %v", string(bodyBytes), err, string(example))
+	}
+	// reset the body so it can be read again by deferred functions.
+	resp.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
+	return res, nil
 }

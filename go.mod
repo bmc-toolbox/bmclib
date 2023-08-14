@@ -3,6 +3,7 @@ module github.com/bmc-toolbox/bmclib/v2
 go 1.18
 
 require (
+	dario.cat/mergo v1.0.0
 	github.com/bmc-toolbox/common v0.0.0-20230220061748-93ff001f4a1d
 	github.com/bombsimon/logrusr/v2 v2.0.1
 	github.com/go-logr/logr v1.2.4

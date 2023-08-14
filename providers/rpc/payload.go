@@ -15,7 +15,7 @@ type RequestPayload struct {
 	ID     int64       `json:"id"`
 	Host   string      `json:"host"`
 	Method Method      `json:"method"`
-	Params interface{} `json:"params"`
+	Params interface{} `json:"params,omitempty"`
 }
 
 type BootDeviceParams struct {
@@ -26,10 +26,6 @@ type BootDeviceParams struct {
 
 type PowerSetParams struct {
 	State string `json:"state"`
-}
-
-type PowerGetParams struct {
-	GetState bool `json:"getState"`
 }
 
 type VirtualMediaParams struct {

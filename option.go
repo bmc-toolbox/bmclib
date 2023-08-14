@@ -7,128 +7,12 @@ import (
 	"time"
 
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/v2/providers/rpc"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 )
 
 // Option for setting optional Client values
 type Option func(*Client)
-
-type rpcOpts struct {
-	Secrets rpc.Secrets
-	// ConsumerURL is the URL where a rpc consumer/listener is running and to which we will send notifications.
-	ConsumerURL string
-	// BaseSignatureHeader is the header name that should contain the signature(s). Example: X-BMCLIB-Signature
-	BaseSignatureHeader string
-	// IncludeAlgoHeader determines whether to append the algorithm to the signature header or not.
-	// Example: X-BMCLIB-Signature becomes X-BMCLIB-Signature-256
-	// When set to false, a header will be added for each algorithm. Example: X-BMCLIB-Signature-256 and X-BMCLIB-Signature-512
-	IncludeAlgoHeader bool
-	// IncludedPayloadHeaders are headers whose values will be included in the signature payload. Example: X-BMCLIB-Timestamp
-	IncludedPayloadHeaders []string
-	// IncludeAlgoPrefix will prepend the algorithm and an equal sign to the signature. Example: sha256=abc123
-	IncludeAlgoPrefix bool
-	// Logger is the logger to use for logging.
-	Logger logr.Logger
-	// LogNotifications determines whether responses from rpc consumer/listeners will be logged or not.
-	LogNotifications bool
-	// HTTPContentType is the content type to use for the rpc request notification.
-	HTTPContentType string
-	// HTTPMethod is the HTTP method to use for the rpc request notification.
-	HTTPMethod string
-	// TimestampHeader is the header name that should contain the timestamp. Example: X-BMCLIB-Timestamp
-	TimestampHeader string
-}
-
-func (w *rpcOpts) SetNonDefaults(wc *rpc.Config) {
-	if w.BaseSignatureHeader != "" {
-		wc.SetBaseSignatureHeader(w.BaseSignatureHeader)
-	}
-	if len(w.IncludedPayloadHeaders) > 0 {
-		wc.SetIncludedPayloadHeaders(w.IncludedPayloadHeaders)
-	}
-	// by default, the algorithm is appended to the signature header.
-	if !w.IncludeAlgoHeader {
-		wc.SetIncludeAlgoHeader(w.IncludeAlgoHeader)
-	}
-	if !w.Logger.IsZero() {
-		wc.Logger = w.Logger
-	}
-	// by default, the rpc notifications are logged.
-	if !w.LogNotifications {
-		wc.LogNotifications = w.LogNotifications
-	}
-	if w.HTTPContentType != "" {
-		wc.HTTPContentType = w.HTTPContentType
-	}
-	if w.HTTPMethod != "" {
-		wc.HTTPMethod = w.HTTPMethod
-	}
-	if w.TimestampHeader != "" {
-		wc.SetTimestampHeader(w.TimestampHeader)
-	}
-}
-
-func WithRPCConsumerURL(url string) Option {
-	return func(args *Client) {
-		args.providerConfig.rpc.ConsumerURL = url
-	}
-}
-
-func WithRPCBaseSignatureHeader(header string) Option {
-	return func(args *Client) {
-		args.providerConfig.rpc.BaseSignatureHeader = header
-	}
-}
-
-func WithRPCIncludeAlgoHeader(include bool) Option {
-	return func(args *Client) {
-		args.providerConfig.rpc.IncludeAlgoHeader = include
-	}
-}
-
-func WithRPCIncludedPayloadHeaders(headers []string) Option {
-	return func(args *Client) {
-		args.providerConfig.rpc.IncludedPayloadHeaders = headers
-	}
-}
-
-func WithRPCIncludeAlgoPrefix(include bool) Option {
-	return func(args *Client) {
-		args.providerConfig.rpc.IncludeAlgoPrefix = include
-	}
-}
-
-func WithRPCLogNotifications(log bool) Option {
-	return func(args *Client) {
-		args.providerConfig.rpc.LogNotifications = log
-	}
-}
-
-func WithRPCHTTPContentType(contentType string) Option {
-	return func(args *Client) {
-		args.providerConfig.rpc.HTTPContentType = contentType
-	}
-}
-
-func WithRPCHTTPMethod(method string) Option {
-	return func(args *Client) {
-		args.providerConfig.rpc.HTTPMethod = method
-	}
-}
-
-func WithRPCSecrets(secrets rpc.Secrets) Option {
-	return func(args *Client) {
-		args.providerConfig.rpc.Secrets = secrets
-	}
-}
-
-func WithRPCTimestampHeader(header string) Option {
-	return func(args *Client) {
-		args.providerConfig.rpc.TimestampHeader = header
-	}
-}
 
 // WithLogger sets the logger
 func WithLogger(logger logr.Logger) Option {

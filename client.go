@@ -16,7 +16,6 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/providers/intelamt"
 	"github.com/bmc-toolbox/bmclib/v2/providers/ipmitool"
 	"github.com/bmc-toolbox/bmclib/v2/providers/redfish"
-	"github.com/bmc-toolbox/bmclib/v2/providers/rpc"
 	"github.com/bmc-toolbox/bmclib/v2/providers/supermicro"
 	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
@@ -59,7 +58,7 @@ type providerConfig struct {
 	intelamt   intelamt.Config
 	dell       dell.Config
 	supermicro supermicro.Config
-	rpc        rpcOpts
+	rpc        RPCOpts
 }
 
 // NewClient returns a new Client struct
@@ -92,10 +91,12 @@ func NewClient(host, user, pass string, opts ...Option) *Client {
 			supermicro: supermicro.Config{
 				Port: "443",
 			},
-			rpc: rpcOpts{
-				LogNotifications:  true,
-				IncludeAlgoHeader: true,
-				IncludeAlgoPrefix: true,
+			rpc: RPCOpts{
+				logNotifications:  true,
+				includeAlgoHeader: true,
+				includeAlgoPrefix: true,
+				HTTPContentType:   "application/json",
+				HTTPMethod:        "POST",
 			},
 		},
 	}
@@ -196,13 +197,16 @@ func (c *Client) registerProviders() {
 	c.Registry.Register(supermicro.ProviderName, supermicro.ProviderProtocol, supermicro.Features, nil, driverSupermicro)
 
 	// register the rpc provider
-	// only register if a rpc consumer URL is provided
-	//if c.providerOpts.rpc.ConsumerURL != "" {
-	driverRPC := rpc.New(c.providerConfig.rpc.ConsumerURL, c.Auth.Host, c.providerConfig.rpc.Secrets)
-	c.providerConfig.rpc.Logger = c.Logger
-	c.providerConfig.rpc.SetNonDefaults(driverRPC)
-	c.Registry.Register(rpc.ProviderName, rpc.ProviderProtocol, rpc.Features, nil, driverRPC)
-	//}
+	// without the consumer URL there is no way to send RPC requests.
+	if c.providerConfig.rpc.ConsumerURL != "" {
+		/*
+			driverRPC := rpc.New(c.providerConfig.rpc.ConsumerURL, c.Auth.Host, c.providerConfig.rpc.Secrets)
+			c.providerConfig.rpc.logger = c.Logger
+			c.providerConfig.rpc.translate(driverRPC)
+			c.Registry.Register(rpc.ProviderName, rpc.ProviderProtocol, rpc.Features, nil, driverRPC)
+		*/
+		registerRPC(c)
+	}
 }
 
 // GetMetadata returns the metadata that is populated after each BMC function/method call
