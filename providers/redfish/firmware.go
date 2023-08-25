@@ -208,10 +208,13 @@ type pipeReaderFakeSeeker struct {
 
 // Seek impelements the io.Seeker interface only to panic if called
 func (p pipeReaderFakeSeeker) Seek(offset int64, whence int) (int64, error) {
-	panic("Seek() not implemented for fake pipe reader seeker.")
+	return 0, errors.New("Seek() not implemented for fake pipe reader seeker.")
 }
 
 // multipartPayloadSize prepares a temporary multipart form to determine the form size
+//
+// It creates a temporary form without reading in the update file payload and returns
+// sizeOf(form) + sizeOf(update file)
 func multipartPayloadSize(payload []map[string]io.Reader) (int64, *bytes.Buffer, error) {
 	body := &bytes.Buffer{}
 	form := multipart.NewWriter(body)
@@ -290,7 +293,11 @@ func (c *Conn) runRequestWithMultipartPayload(method, url string, payload []map[
 
 	// A content-length header is passed in to indicate the payload size
 	//
-	// The content-length is required since the
+	// The Content-length is set explicitly since the payload is an io.Reader,
+	// https://github.com/golang/go/blob/ddad9b618cce0ed91d66f0470ddb3e12cfd7eeac/src/net/http/request.go#L861
+	//
+	// Without the content-length header the http client will set the Transfer-Encoding to 'chunked'
+	// and that does not work for some BMCs (iDracs).
 	contentLength, _, err := multipartPayloadSize(payload)
 	if err != nil {
 		return nil, errors.Wrap(err, "error determining multipart payload size")
