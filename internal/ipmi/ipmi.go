@@ -377,3 +377,9 @@ func (i *Ipmi) ReadUsers(ctx context.Context) (users []map[string]string, err er
 
 	return users, err
 }
+
+// Clear SEL clears the SEL
+func (i *Ipmi) ClearSEL(ctx context.Context) (err error) {
+	_, err = i.run(ctx, []string{"sel", "clear"})
+	return err
+}
