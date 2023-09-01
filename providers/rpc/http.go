@@ -13,9 +13,19 @@ import (
 
 // createRequest
 func (c *Config) createRequest(ctx context.Context, p RequestPayload) (*http.Request, error) {
-	data, err := json.Marshal(p)
-	if err != nil {
-		return nil, err
+	var data []byte
+	if rj := c.Opts.Experimental.CustomRequestPayload; rj != nil && c.Opts.Experimental.DotPath != "" {
+		d, err := p.embedPayload(rj, c.Opts.Experimental.DotPath)
+		if err != nil {
+			return nil, err
+		}
+		data = d
+	} else {
+		d, err := json.Marshal(p)
+		if err != nil {
+			return nil, err
+		}
+		data = d
 	}
 
 	req, err := http.NewRequestWithContext(ctx, c.Opts.Request.HTTPMethod, c.listenerURL.String(), bytes.NewReader(data))
