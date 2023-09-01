@@ -140,10 +140,13 @@ func (c *Client) registerProviders() {
 		// when the rpc provider is to be used, we won't register any other providers.
 		driverRPC := rpc.New(c.providerConfig.rpc.ConsumerURL, c.Auth.Host, c.providerConfig.rpc.Opts.HMAC.Secrets)
 		c.providerConfig.rpc.Logger = c.Logger
-		mergo.Merge(driverRPC, c.providerConfig.rpc, mergo.WithOverride, mergo.WithTransformers(&rpc.Config{}))
+		err := mergo.Merge(driverRPC, c.providerConfig.rpc, mergo.WithOverride, mergo.WithTransformers(&rpc.Config{}))
+		if err == nil {
+			c.Registry.Register(rpc.ProviderName, rpc.ProviderProtocol, rpc.Features, nil, driverRPC)
+			return
+		}
 
-		c.Registry.Register(rpc.ProviderName, rpc.ProviderProtocol, rpc.Features, nil, driverRPC)
-		return
+		c.Logger.Info("failed to merge user specified rpc config with the config defaults, rpc provider not available", "error", err.Error())
 	}
 	// register ipmitool provider
 	ipmiOpts := []ipmitool.Option{
