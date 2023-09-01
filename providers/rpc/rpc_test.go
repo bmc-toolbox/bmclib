@@ -10,6 +10,56 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+/*
+func TestMerge(t *testing.T) {
+	c := New("http://example.com", "127.0.0.1", Secrets{SHA256: {"superSecret1"}})
+	// control := New("http://example.com", "127.0.0.1", Secrets{SHA256: {"superSecret1"}})
+	customized := &Config{LogNotifications: boolPTR(false), Opts: Opts{Signature: SignatureOpts{IncludeAlgoPrefix: false}}}
+	want := &Config{
+		Host:             "127.0.0.1",
+		ConsumerURL:      "http://example.com",
+		Logger:           logr.Discard(),
+		LogNotifications: boolPTR(true),
+		Opts: Opts{
+			Request: RequestOpts{
+				HTTPContentType: "application/json",
+				HTTPMethod:      http.MethodPost,
+				TimestampHeader: timestampHeader,
+				TimestampFormat: time.RFC3339,
+				Client:          http.DefaultClient,
+			},
+			Signature: SignatureOpts{
+				IncludeAlgoPrefix: true,
+			},
+		},
+		/*
+			Sig: hmac.Signature{
+				HeaderName:             "X-Bmclib-Signature",
+				AppendAlgoToHeader:     true,
+				IncludedPayloadHeaders: []string{timestampHeader},
+				HMAC: &hmac.Conf{
+					Hashes:    hmac.NewSHA256("superSecret1"),
+					PrefixSig: true,
+				},
+			},
+
+	}
+	t.Log(want)
+
+	t.Logf("before: %+v", c)
+	mergo.Merge(c, customized, mergo.WithOverride, mergo.WithTransformers(&Config{}))
+	t.Logf("after:  %+v", c)
+
+	h := map[Algorithm][]hash.Hash{}
+
+	if diff := cmp.Diff(c, want, cmpopts.IgnoreUnexported(Config{}, Signature{}), cmpopts.IgnoreTypes(logr.Logger{}, h)); diff != "" {
+		t.Fatalf("mismatch (+want -got):\n%s", diff)
+	}
+
+	t.Fatal()
+}
+*/
+
 func TestOpen(t *testing.T) {
 	tests := map[string]struct {
 		url       string
@@ -22,14 +72,14 @@ func TestOpen(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			svr := ResponsePayload{}.testConsumer()
+			svr := testConsumer{rp: ResponsePayload{}}.testServer()
 			defer svr.Close()
 
 			u := svr.URL
 			if tc.url != "" {
 				u = tc.url
 			}
-			c := New(u, "127.0.1.1", map[Algorithm][]string{SHA256: []string{"superSecret1"}})
+			c := New(u, "127.0.1.1", Secrets{SHA256: []string{"superSecret1"}})
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			if err := c.Open(ctx); err != nil && !tc.shouldErr {
@@ -52,18 +102,20 @@ func TestBootDeviceSet(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			rsp := ResponsePayload{}
-			if tc.shouldErr {
-				rsp.Error = &ResponseError{Code: 500, Message: "failed"}
+			rsp := testConsumer{
+				rp: ResponsePayload{},
 			}
-			svr := rsp.testConsumer()
+			if tc.shouldErr {
+				rsp.rp.Error = &ResponseError{Code: 500, Message: "failed"}
+			}
+			svr := rsp.testServer()
 			defer svr.Close()
 
 			u := svr.URL
 			if tc.url != "" {
 				u = tc.url
 			}
-			c := New(u, "127.0.1.1", map[Algorithm][]string{SHA256: {"superSecret1"}})
+			c := New(u, "127.0.1.1", Secrets{SHA256: {"superSecret1"}})
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			_ = c.Open(ctx)
@@ -90,18 +142,20 @@ func TestPowerSet(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			rsp := ResponsePayload{Result: tc.powerState}
-			if tc.shouldErr {
-				rsp.Error = &ResponseError{Code: 500, Message: "failed"}
+			rsp := testConsumer{
+				rp: ResponsePayload{Result: tc.powerState},
 			}
-			svr := rsp.testConsumer()
+			if tc.shouldErr {
+				rsp.rp.Error = &ResponseError{Code: 500, Message: "failed"}
+			}
+			svr := rsp.testServer()
 			defer svr.Close()
 
 			u := svr.URL
 			if tc.url != "" {
 				u = tc.url
 			}
-			c := New(u, "127.0.1.1", map[Algorithm][]string{SHA256: {"superSecret1"}})
+			c := New(u, "127.0.1.1", Secrets{SHA256: {"superSecret1"}})
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			_ = c.Open(ctx)
@@ -127,11 +181,13 @@ func TestPowerStateGet(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			rsp := ResponsePayload{Result: tc.powerState}
-			if tc.shouldErr {
-				rsp.Error = &ResponseError{Code: 500, Message: "failed"}
+			rsp := testConsumer{
+				rp: ResponsePayload{Result: tc.powerState},
 			}
-			svr := rsp.testConsumer()
+			if tc.shouldErr {
+				rsp.rp.Error = &ResponseError{Code: 500, Message: "failed"}
+			}
+			svr := rsp.testServer()
 			defer svr.Close()
 
 			u := svr.URL
@@ -140,7 +196,7 @@ func TestPowerStateGet(t *testing.T) {
 			}
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			c := New(u, "127.0.1.1", map[Algorithm][]string{SHA256: {"superSecret1"}})
+			c := New(u, "127.0.1.1", Secrets{SHA256: {"superSecret1"}})
 			_ = c.Open(ctx)
 			gotState, err := c.PowerStateGet(ctx)
 			if err != nil && !tc.shouldErr {
@@ -153,9 +209,51 @@ func TestPowerStateGet(t *testing.T) {
 	}
 }
 
-func (rs ResponsePayload) testConsumer() *httptest.Server {
+func TestServerErrors(t *testing.T) {
+	tests := map[string]struct {
+		statusCode int
+		shouldErr  bool
+	}{
+		"bad request": {statusCode: http.StatusBadRequest, shouldErr: true},
+		"not found":   {statusCode: http.StatusNotFound, shouldErr: true},
+		"internal":    {statusCode: http.StatusInternalServerError, shouldErr: true},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			rsp := testConsumer{
+				rp:         ResponsePayload{Result: "on"},
+				statusCode: tc.statusCode,
+			}
+			svr := rsp.testServer()
+			defer svr.Close()
+
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			c := New(svr.URL, "127.0.0.1", Secrets{SHA256: {"superSecret1"}})
+			if err := c.Open(ctx); err != nil {
+				t.Fatal(err)
+			}
+			_, err := c.PowerStateGet(ctx)
+			if err == nil {
+				t.Fatal("expected error, got none")
+			}
+		})
+	}
+}
+
+type testConsumer struct {
+	rp         ResponsePayload
+	statusCode int
+}
+
+func (t testConsumer) testServer() *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		b, _ := json.Marshal(rs)
+		if t.statusCode != 0 {
+			w.WriteHeader(t.statusCode)
+			return
+		}
+		b, _ := json.Marshal(t.rp)
 		_, _ = w.Write(b)
 	}))
 }

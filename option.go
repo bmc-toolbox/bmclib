@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
+	"github.com/bmc-toolbox/bmclib/v2/providers/rpc"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 )
@@ -135,5 +136,11 @@ func WithDellRedfishVersionsNotCompatible(versions []string) Option {
 func WithDellRedfishUseBasicAuth(useBasicAuth bool) Option {
 	return func(args *Client) {
 		args.providerConfig.dell.UseBasicAuth = useBasicAuth
+	}
+}
+
+func WithRPCOpt(opt rpc.Config) Option {
+	return func(args *Client) {
+		args.providerConfig.rpc = opt
 	}
 }

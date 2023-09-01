@@ -1,53 +1,22 @@
 package rpc
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"hash"
+	"io"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strings"
 	"time"
 
 	"github.com/bmc-toolbox/bmclib/v2/providers"
-	hmac "github.com/bmc-toolbox/bmclib/v2/providers/rpc/internal/http"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 )
-
-// Config defines the configuration for sending rpc notifications.
-type Config struct {
-	// IncludeAlgoPrefix will prepend the algorithm and an equal sign to the signature. Example: sha256=abc123
-	IncludeAlgoPrefix bool
-	// Logger is the logger to use for logging.
-	Logger logr.Logger
-	// LogNotifications determines whether responses from rpc consumer/listeners will be logged or not.
-	LogNotifications bool
-	// HTTPContentType is the content type to use for the rpc request notification.
-	HTTPContentType string
-	// HTTPMethod is the HTTP method to use for the rpc request notification.
-	HTTPMethod string
-
-	// consumerURL is the URL where a rpc consumer/listener is running and to which we will send notifications.
-	consumerURL string
-	// host is the BMC ip address or hostname or identifier.
-	host string
-	// httpClient is the http client used for all methods.
-	httpClient *http.Client
-	// listenerURL is the URL of the rpc consumer/listener.
-	listenerURL *url.URL
-	// sig is for adding the signature to the request header.
-	sig hmac.Signature
-	// timestampHeader is the header name that should contain the timestamp. Example: X-BMCLIB-Timestamp
-	timestampHeader string
-	// timestampFormat is the time format for the timestamp header.
-	timestampFormat string
-}
-
-type Secrets map[Algorithm][]string
-
-// Algorithm is the type for HMAC algorithms.
-type Algorithm string
 
 const (
 	// ProviderName for the Webook implementation.
@@ -57,6 +26,17 @@ const (
 
 	// defaults
 	timestampHeader = "X-BMCLIB-Timestamp"
+	signatureHeader = "X-BMCLIB-Signature"
+	contentType     = "application/json"
+
+	// SHA256 is the SHA256 algorithm.
+	SHA256 Algorithm = "sha256"
+	// SHA256Short is the short version of the SHA256 algorithm.
+	SHA256Short Algorithm = "256"
+	// SHA512 is the SHA512 algorithm.
+	SHA512 Algorithm = "sha512"
+	// SHA512Short is the short version of the SHA512 algorithm.
+	SHA512Short Algorithm = "512"
 )
 
 // Features implemented by the AMT provider.
@@ -66,41 +46,117 @@ var Features = registrar.Features{
 	providers.FeatureBootDeviceSet,
 }
 
-// New returns a new Config for this rpc provider.
-//
-// Defaults:
-//
-//	BaseSignatureHeader: X-BMCLIB-Signature
-//	IncludeAlgoHeader: true
-//	IncludedPayloadHeaders: []string{"X-BMCLIB-Timestamp"}
-//	IncludeAlgoPrefix: true
-//	Logger: logr.Discard()
-//	LogNotifications: true
-//	httpClient: http.DefaultClient
+type Secrets map[Algorithm][]string
+
+// Algorithm is the type for HMAC algorithms.
+type Algorithm string
+
+// Config defines the configuration for sending rpc notifications.
+type Config struct {
+	// ConsumerURL is the URL where a rpc consumer/listener is running and to which we will send notifications.
+	ConsumerURL string
+	// Host is the BMC ip address or hostname or identifier.
+	Host string
+	// Logger is the logger to use for logging.
+	Logger logr.Logger
+	// LogNotificationsDisabled determines whether responses from rpc consumer/listeners will be logged or not.
+	LogNotificationsDisabled bool
+	// Opts are the options for the rpc provider.
+	Opts Opts
+
+	// listenerURL is the URL of the rpc consumer/listener.
+	listenerURL *url.URL
+}
+
+type Opts struct {
+	// Request is the options used to create the rpc HTTP request.
+	Request RequestOpts
+	// Signature is the options used for adding an HMAC signature to an HTTP request.
+	Signature SignatureOpts
+	// HMAC is the options used to create a HMAC signature.
+	HMAC HMACOpts
+	// Experimental options.
+	Experimental Experimental
+}
+
+type RequestOpts struct {
+	// Client is the http client used for all HTTP calls.
+	Client *http.Client
+	// HTTPContentType is the content type to use for the rpc request notification.
+	HTTPContentType string
+	// HTTPMethod is the HTTP method to use for the rpc request notification.
+	HTTPMethod string
+	// StaticHeaders are predefined headers that will be added to every request.
+	StaticHeaders http.Header
+	// TimestampFormat is the time format for the timestamp header.
+	TimestampFormat string
+	// TimestampHeader is the header name that should contain the timestamp. Example: X-BMCLIB-Timestamp
+	TimestampHeader string
+}
+
+type SignatureOpts struct {
+	// HeaderName is the header name that should contain the signature(s). Example: X-BMCLIB-Signature
+	HeaderName string
+	// AppendAlgoToHeaderDisabled decides whether to append the algorithm to the signature header or not.
+	// Example: X-BMCLIB-Signature becomes X-BMCLIB-Signature-256
+	// When set to true, a header will be added for each algorithm. Example: X-BMCLIB-Signature-256 and X-BMCLIB-Signature-512
+	AppendAlgoToHeaderDisabled bool
+	// IncludedPayloadHeaders are headers whose values will be included in the signature payload. Example: X-BMCLIB-My-Custom-Header
+	// All headers will be deduplicated.
+	IncludedPayloadHeaders []string
+}
+
+type HMACOpts struct {
+	// Hashes is a map of algorithms to a slice of hash.Hash (these are the hashed secrets). The slice is used to support multiple secrets.
+	Hashes map[Algorithm][]hash.Hash
+	// PrefixSigDisabled determines whether the algorithm will be prefixed to the signature. Example: sha256=abc123
+	PrefixSigDisabled bool
+	// Secrets are a map of algorithms to secrets used for signing.
+	Secrets Secrets
+}
+
+type Experimental struct {
+	// CustomRequestPayload must be in json.
+	CustomRequestPayload []byte
+	// DotPath is the path to where the bmclib RequestPayload{} will be embedded. For example: object.data.body
+	DotPath string
+}
+
+// New returns a new Config for the rpc provider.
 func New(consumerURL string, host string, secrets Secrets) *Config {
-	cfg := &Config{
-		host:              host,
-		consumerURL:       consumerURL,
-		IncludeAlgoPrefix: true,
-		Logger:            logr.Discard(),
-		LogNotifications:  true,
-		HTTPContentType:   "application/json",
-		HTTPMethod:        http.MethodPost,
-		timestampHeader:   timestampHeader,
-		timestampFormat:   time.RFC3339,
-		httpClient:        http.DefaultClient,
+	// defaults
+	c := &Config{
+		Host:        host,
+		ConsumerURL: consumerURL,
+		Logger:      logr.Discard(),
+		Opts: Opts{
+			Request: RequestOpts{
+				Client:          http.DefaultClient,
+				HTTPContentType: contentType,
+				HTTPMethod:      http.MethodPost,
+				TimestampFormat: time.RFC3339,
+				TimestampHeader: timestampHeader,
+			},
+			Signature: SignatureOpts{
+				HeaderName:             signatureHeader,
+				IncludedPayloadHeaders: []string{},
+			},
+			HMAC: HMACOpts{
+				Hashes:  map[Algorithm][]hash.Hash{},
+				Secrets: secrets,
+			},
+			Experimental: Experimental{},
+		},
+		// Sig: hmac.NewSignature(timestampHeader),
 	}
 
-	// create the signature object
 	// maybe validate BaseSignatureHeader and that there are secrets?
-	cfg.sig = hmac.NewSignature()
-	cfg.sig.AppendAlgoToHeader = true
-	cfg.sig.IncludedPayloadHeaders = []string{timestampHeader}
+
 	if len(secrets) > 0 {
-		cfg.addSecrets(secrets)
+		c.Opts.HMAC.Hashes = addSecrets(secrets)
 	}
 
-	return cfg
+	return c
 }
 
 // Name returns the name of this rpc provider.
@@ -115,18 +171,18 @@ func (c *Config) Name() string {
 func (c *Config) Open(ctx context.Context) error {
 	// 1. validate consumerURL is a properly formatted URL.
 	// 2. validate that we can communicate with the rpc consumer.
-	u, err := url.Parse(c.consumerURL)
+	u, err := url.Parse(c.ConsumerURL)
 	if err != nil {
 		return err
 	}
 	c.listenerURL = u
-	testReq, err := http.NewRequestWithContext(ctx, c.HTTPMethod, c.listenerURL.String(), nil)
+	testReq, err := http.NewRequestWithContext(ctx, c.Opts.Request.HTTPMethod, c.listenerURL.String(), nil)
 	if err != nil {
 		return err
 	}
 	// test that we can communicate with the rpc consumer.
 	// and that it responses with the spec contract (Response{}).
-	if _, err := c.httpClient.Do(testReq); err != nil { //nolint:bodyclose // not reading the body
+	if _, err := c.Opts.Request.Client.Do(testReq); err != nil { //nolint:bodyclose // not reading the body
 		return err
 	}
 
@@ -142,7 +198,7 @@ func (c *Config) Close(_ context.Context) (err error) {
 func (c *Config) BootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
 	p := RequestPayload{
 		ID:     int64(time.Now().UnixNano()),
-		Host:   c.host,
+		Host:   c.Host,
 		Method: BootDeviceMethod,
 		Params: BootDeviceParams{
 			Device:     bootDevice,
@@ -150,17 +206,12 @@ func (c *Config) BootDeviceSet(ctx context.Context, bootDevice string, setPersis
 			EFIBoot:    efiBoot,
 		},
 	}
-	req, err := c.createRequest(ctx, p)
+	rp, err := c.process(ctx, p)
 	if err != nil {
 		return false, err
 	}
-
-	resp, err := c.signAndSend(p, req)
-	if err != nil {
-		return ok, err
-	}
-	if resp.Error != nil {
-		return ok, fmt.Errorf("error from rpc consumer: %v", resp.Error)
+	if rp.Error != nil {
+		return false, fmt.Errorf("error from rpc consumer: %v", rp.Error)
 	}
 
 	return true, nil
@@ -172,17 +223,13 @@ func (c *Config) PowerSet(ctx context.Context, state string) (ok bool, err error
 	case "on", "off", "cycle":
 		p := RequestPayload{
 			ID:     int64(time.Now().UnixNano()),
-			Host:   c.host,
+			Host:   c.Host,
 			Method: PowerSetMethod,
 			Params: PowerSetParams{
 				State: strings.ToLower(state),
 			},
 		}
-		req, err := c.createRequest(ctx, p)
-		if err != nil {
-			return false, err
-		}
-		resp, err := c.signAndSend(p, req)
+		resp, err := c.process(ctx, p)
 		if err != nil {
 			return ok, err
 		}
@@ -200,21 +247,102 @@ func (c *Config) PowerSet(ctx context.Context, state string) (ok bool, err error
 func (c *Config) PowerStateGet(ctx context.Context) (state string, err error) {
 	p := RequestPayload{
 		ID:     int64(time.Now().UnixNano()),
-		Host:   c.host,
+		Host:   c.Host,
 		Method: PowerGetMethod,
 	}
-	req, err := c.createRequest(ctx, p)
+	resp, err := c.process(ctx, p)
 	if err != nil {
 		return "", err
 	}
-	resp, err := c.signAndSend(p, req)
-	if err != nil {
-		return "", err
-	}
-
 	if resp.Error != nil {
 		return "", fmt.Errorf("error from rpc consumer: %v", resp.Error)
 	}
 
 	return resp.Result.(string), nil
+}
+
+// process is the main function for sending rpc notifications.
+func (c *Config) process(ctx context.Context, p RequestPayload) (ResponsePayload, error) {
+	// 1. create the HTTP request.
+	// 2. create the signature payload.
+	// 3. sign the signature payload.
+	// 4. add signatures to the request as headers.
+	// 5. request/response round trip.
+	// 6. handle the response.
+	req, err := c.createRequest(ctx, p)
+	if err != nil {
+		return ResponsePayload{}, err
+	}
+
+	// create the signature payload
+	// get the body and reset it as readers can only be read once.
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		return ResponsePayload{}, err
+	}
+	req.Body = io.NopCloser(bytes.NewBuffer(body))
+	headersForSig := http.Header{}
+	for _, h := range c.Opts.Signature.IncludedPayloadHeaders {
+		if val := req.Header.Get(h); val != "" {
+			headersForSig.Add(h, val)
+		}
+	}
+	sigPay := createSignaturePayload(body, headersForSig)
+
+	// sign the signature payload
+	sigs, err := Sign(sigPay, c.Opts.HMAC.Hashes, c.Opts.HMAC.PrefixSigDisabled)
+	if err != nil {
+		return ResponsePayload{}, err
+	}
+
+	// add signatures to the request as headers.
+	for algo, keys := range sigs {
+		if len(sigs) > 0 {
+			h := c.Opts.Signature.HeaderName
+			if !c.Opts.Signature.AppendAlgoToHeaderDisabled {
+				h = fmt.Sprintf("%s-%s", h, algo.ToShort())
+			}
+			req.Header.Add(h, strings.Join(keys, ","))
+		}
+	}
+
+	// request/response round trip.
+	kvs := requestKVS(req)
+	kvs = append(kvs, []interface{}{"host", c.Host, "method", p.Method, "consumerURL", c.ConsumerURL}...)
+	if p.Params != nil {
+		kvs = append(kvs, []interface{}{"params", p.Params}...)
+	}
+
+	resp, err := c.Opts.Request.Client.Do(req)
+	if err != nil {
+		c.Logger.Error(err, "failed to send rpc notification", kvs...)
+		return ResponsePayload{}, err
+	}
+	defer resp.Body.Close()
+
+	// handle the response
+	rp, err := c.handleResponse(resp, kvs)
+	if err != nil {
+		return ResponsePayload{}, err
+	}
+
+	return rp, nil
+}
+
+// Transformer for merging the *bool and logr.Logger structs.
+func (c *Config) Transformer(typ reflect.Type) func(dst, src reflect.Value) error {
+	switch typ {
+	case reflect.TypeOf(logr.Logger{}):
+		return func(dst, src reflect.Value) error {
+			if dst.CanSet() {
+				isZero := dst.MethodByName("GetSink")
+				result := isZero.Call(nil)
+				if result[0].IsNil() {
+					dst.Set(src)
+				}
+			}
+			return nil
+		}
+	}
+	return nil
 }

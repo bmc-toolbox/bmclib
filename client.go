@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"dario.cat/mergo"
 	"github.com/bmc-toolbox/bmclib/v2/bmc"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/providers/asrockrack"
@@ -16,6 +17,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/providers/intelamt"
 	"github.com/bmc-toolbox/bmclib/v2/providers/ipmitool"
 	"github.com/bmc-toolbox/bmclib/v2/providers/redfish"
+	"github.com/bmc-toolbox/bmclib/v2/providers/rpc"
 	"github.com/bmc-toolbox/bmclib/v2/providers/supermicro"
 	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
@@ -58,7 +60,7 @@ type providerConfig struct {
 	intelamt   intelamt.Config
 	dell       dell.Config
 	supermicro supermicro.Config
-	rpc        RPCOpts
+	rpc        rpc.Config
 }
 
 // NewClient returns a new Client struct
@@ -91,13 +93,7 @@ func NewClient(host, user, pass string, opts ...Option) *Client {
 			supermicro: supermicro.Config{
 				Port: "443",
 			},
-			rpc: RPCOpts{
-				logNotifications:  true,
-				includeAlgoHeader: true,
-				includeAlgoPrefix: true,
-				HTTPContentType:   "application/json",
-				HTTPMethod:        "POST",
-			},
+			rpc: rpc.Config{},
 		},
 	}
 
@@ -138,6 +134,17 @@ func (c *Client) defaultTimeout(ctx context.Context) time.Duration {
 }
 
 func (c *Client) registerProviders() {
+	// register the rpc provider
+	// without the consumer URL there is no way to send RPC requests.
+	if c.providerConfig.rpc.ConsumerURL != "" {
+		// when the rpc provider is to be used, we won't register any other providers.
+		driverRPC := rpc.New(c.providerConfig.rpc.ConsumerURL, c.Auth.Host, c.providerConfig.rpc.Opts.HMAC.Secrets)
+		c.providerConfig.rpc.Logger = c.Logger
+		mergo.Merge(driverRPC, c.providerConfig.rpc, mergo.WithOverride, mergo.WithTransformers(&rpc.Config{}))
+
+		c.Registry.Register(rpc.ProviderName, rpc.ProviderProtocol, rpc.Features, nil, driverRPC)
+		return
+	}
 	// register ipmitool provider
 	ipmiOpts := []ipmitool.Option{
 		ipmitool.WithLogger(c.Logger),
@@ -195,18 +202,6 @@ func (c *Client) registerProviders() {
 	smcHttpClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
 	driverSupermicro := supermicro.NewClient(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger, supermicro.WithHttpClient(&smcHttpClient), supermicro.WithPort(c.providerConfig.supermicro.Port))
 	c.Registry.Register(supermicro.ProviderName, supermicro.ProviderProtocol, supermicro.Features, nil, driverSupermicro)
-
-	// register the rpc provider
-	// without the consumer URL there is no way to send RPC requests.
-	if c.providerConfig.rpc.ConsumerURL != "" {
-		/*
-			driverRPC := rpc.New(c.providerConfig.rpc.ConsumerURL, c.Auth.Host, c.providerConfig.rpc.Secrets)
-			c.providerConfig.rpc.logger = c.Logger
-			c.providerConfig.rpc.translate(driverRPC)
-			c.Registry.Register(rpc.ProviderName, rpc.ProviderProtocol, rpc.Features, nil, driverRPC)
-		*/
-		registerRPC(c)
-	}
 }
 
 // GetMetadata returns the metadata that is populated after each BMC function/method call
