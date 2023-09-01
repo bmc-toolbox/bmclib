@@ -142,6 +142,7 @@ func (c *Client) registerProviders() {
 		c.providerConfig.rpc.Logger = c.Logger
 		err := mergo.Merge(driverRPC, c.providerConfig.rpc, mergo.WithOverride, mergo.WithTransformers(&rpc.Config{}))
 		if err == nil {
+			c.Logger.Info("note: with the rpc provider registered, no other providers will be registered and available")
 			c.Registry.Register(rpc.ProviderName, rpc.ProviderProtocol, rpc.Features, nil, driverRPC)
 			return
 		}

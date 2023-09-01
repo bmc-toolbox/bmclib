@@ -25,7 +25,8 @@ func createSignaturePayload(body []byte, h http.Header) []byte {
 	return body
 }
 
-func Sign(data []byte, h Hashes, prefixSigDisabled bool) (map[Algorithm][]string, error) {
+// sign signs the data with all the given hashes and returns the signatures.
+func sign(data []byte, h Hashes, prefixSigDisabled bool) (Signatures, error) {
 	sigs := map[Algorithm][]string{}
 	for algo, hshs := range h {
 		for _, hsh := range hshs {
@@ -45,6 +46,7 @@ func Sign(data []byte, h Hashes, prefixSigDisabled bool) (map[Algorithm][]string
 	return sigs, nil
 }
 
+// ToShort returns the short version of an algorithm.
 func (a Algorithm) ToShort() Algorithm {
 	switch a {
 	case SHA256:
@@ -84,8 +86,8 @@ func mergeHashes(hs ...Hashes) Hashes {
 	return m
 }
 
-// addSecrets adds secrets to the Config.
-func addSecrets(s Secrets) map[Algorithm][]hash.Hash {
+// CreateHashes creates a new hash for all secrets provided.
+func CreateHashes(s Secrets) map[Algorithm][]hash.Hash {
 	h := map[Algorithm][]hash.Hash{}
 	for algo, secrets := range s {
 		switch algo {

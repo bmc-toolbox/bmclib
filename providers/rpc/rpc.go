@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	// ProviderName for the Webook implementation.
+	// ProviderName for the RPC implementation.
 	ProviderName = "rpc"
 	// ProviderProtocol for the rpc implementation.
 	ProviderProtocol = "http"
@@ -46,14 +46,20 @@ var Features = registrar.Features{
 	providers.FeatureBootDeviceSet,
 }
 
-type Secrets map[Algorithm][]string
-
 // Algorithm is the type for HMAC algorithms.
 type Algorithm string
 
+// Secrets hold per algorithm slice secrets.
+// These secrets will be used to create HMAC signatures.
+type Secrets map[Algorithm][]string
+
+// Signatures hold per algorithm slice of signatures.
+type Signatures map[Algorithm][]string
+
 // Config defines the configuration for sending rpc notifications.
 type Config struct {
-	// ConsumerURL is the URL where a rpc consumer/listener is running and to which we will send notifications.
+	// ConsumerURL is the URL where an rpc consumer/listener is running
+	// and to which we will send and receive all notifications.
 	ConsumerURL string
 	// Host is the BMC ip address or hostname or identifier.
 	Host string
@@ -122,7 +128,7 @@ type Experimental struct {
 	DotPath string
 }
 
-// New returns a new Config for the rpc provider.
+// New returns a new Config containing all the defaults for the rpc provider.
 func New(consumerURL string, host string, secrets Secrets) *Config {
 	// defaults
 	c := &Config{
@@ -147,13 +153,10 @@ func New(consumerURL string, host string, secrets Secrets) *Config {
 			},
 			Experimental: Experimental{},
 		},
-		// Sig: hmac.NewSignature(timestampHeader),
 	}
 
-	// maybe validate BaseSignatureHeader and that there are secrets?
-
 	if len(secrets) > 0 {
-		c.Opts.HMAC.Hashes = addSecrets(secrets)
+		c.Opts.HMAC.Hashes = CreateHashes(secrets)
 	}
 
 	return c
@@ -261,7 +264,7 @@ func (c *Config) PowerStateGet(ctx context.Context) (state string, err error) {
 	return resp.Result.(string), nil
 }
 
-// process is the main function for sending rpc notifications.
+// process is the main function for the roundtrip of rpc calls to the ConsumerURL.
 func (c *Config) process(ctx context.Context, p RequestPayload) (ResponsePayload, error) {
 	// 1. create the HTTP request.
 	// 2. create the signature payload.
@@ -290,7 +293,7 @@ func (c *Config) process(ctx context.Context, p RequestPayload) (ResponsePayload
 	sigPay := createSignaturePayload(body, headersForSig)
 
 	// sign the signature payload
-	sigs, err := Sign(sigPay, c.Opts.HMAC.Hashes, c.Opts.HMAC.PrefixSigDisabled)
+	sigs, err := sign(sigPay, c.Opts.HMAC.Hashes, c.Opts.HMAC.PrefixSigDisabled)
 	if err != nil {
 		return ResponsePayload{}, err
 	}

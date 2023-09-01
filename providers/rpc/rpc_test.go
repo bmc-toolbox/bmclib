@@ -10,56 +10,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-/*
-func TestMerge(t *testing.T) {
-	c := New("http://example.com", "127.0.0.1", Secrets{SHA256: {"superSecret1"}})
-	// control := New("http://example.com", "127.0.0.1", Secrets{SHA256: {"superSecret1"}})
-	customized := &Config{LogNotifications: boolPTR(false), Opts: Opts{Signature: SignatureOpts{IncludeAlgoPrefix: false}}}
-	want := &Config{
-		Host:             "127.0.0.1",
-		ConsumerURL:      "http://example.com",
-		Logger:           logr.Discard(),
-		LogNotifications: boolPTR(true),
-		Opts: Opts{
-			Request: RequestOpts{
-				HTTPContentType: "application/json",
-				HTTPMethod:      http.MethodPost,
-				TimestampHeader: timestampHeader,
-				TimestampFormat: time.RFC3339,
-				Client:          http.DefaultClient,
-			},
-			Signature: SignatureOpts{
-				IncludeAlgoPrefix: true,
-			},
-		},
-		/*
-			Sig: hmac.Signature{
-				HeaderName:             "X-Bmclib-Signature",
-				AppendAlgoToHeader:     true,
-				IncludedPayloadHeaders: []string{timestampHeader},
-				HMAC: &hmac.Conf{
-					Hashes:    hmac.NewSHA256("superSecret1"),
-					PrefixSig: true,
-				},
-			},
-
-	}
-	t.Log(want)
-
-	t.Logf("before: %+v", c)
-	mergo.Merge(c, customized, mergo.WithOverride, mergo.WithTransformers(&Config{}))
-	t.Logf("after:  %+v", c)
-
-	h := map[Algorithm][]hash.Hash{}
-
-	if diff := cmp.Diff(c, want, cmpopts.IgnoreUnexported(Config{}, Signature{}), cmpopts.IgnoreTypes(logr.Logger{}, h)); diff != "" {
-		t.Fatalf("mismatch (+want -got):\n%s", diff)
-	}
-
-	t.Fatal()
-}
-*/
-
 func TestOpen(t *testing.T) {
 	tests := map[string]struct {
 		url       string
