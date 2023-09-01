@@ -332,7 +332,7 @@ func (c *Config) process(ctx context.Context, p RequestPayload) (ResponsePayload
 	return rp, nil
 }
 
-// Transformer for merging the *bool and logr.Logger structs.
+// Transformer implements the mergo interfaces for merging custom types.
 func (c *Config) Transformer(typ reflect.Type) func(dst, src reflect.Value) error {
 	switch typ {
 	case reflect.TypeOf(logr.Logger{}):
