@@ -28,6 +28,13 @@ var (
 	errMultiPartPayload       = errors.New("error preparing multipart payload")
 )
 
+type installMethod string
+
+const (
+	unstructuredHttpPush installMethod = "unstructuredHttpPush"
+	multipartHttpUpload  installMethod = "multipartUpload"
+)
+
 // SupportedFirmwareApplyAtValues returns the supported redfish firmware applyAt values
 func SupportedFirmwareApplyAtValues() []string {
 	return []string{
@@ -44,8 +51,7 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, "method expects an *os.File object")
 	}
 
-	// validate firmware update mechanism is supported
-	err = c.firmwareUpdateCompatible(ctx)
+	installMethod, installURI, err := c.firmwareInstallMethodURI(ctx)
 	if err != nil {
 		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, err.Error())
 	}
@@ -63,44 +69,31 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 		return "", errors.Wrap(errInsufficientCtxTimeout, " "+time.Until(ctxDeadline).String())
 	}
 
+	// TODO; uncomment once obmc support is implemented for tasks
 	// list redfish firmware install task if theres one present
-	task, err := c.GetFirmwareInstallTaskQueued(ctx, component)
-	if err != nil {
-		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, err.Error())
-	}
-
-	if task != nil {
-		msg := fmt.Sprintf("task for %s firmware install present: %s", component, task.ID)
-		c.Log.V(2).Info("warn", msg)
-
-		if forceInstall {
-			err = c.purgeQueuedFirmwareInstallTask(ctx, component)
-			if err != nil {
-				return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, err.Error())
-			}
-		} else {
-			return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, msg)
-		}
-	}
-
-	updateParameters, err := json.Marshal(struct {
-		Targets            []string `json:"Targets"`
-		RedfishOpApplyTime string   `json:"@Redfish.OperationApplyTime"`
-		Oem                struct{} `json:"Oem"`
-	}{
-		[]string{},
-		applyAt,
-		struct{}{},
-	})
-
-	if err != nil {
-		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, err.Error())
-	}
+	//	task, err := c.GetFirmwareInstallTaskQueued(ctx, component)
+	//	if err != nil {
+	//		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, err.Error())
+	//	}
+	//
+	//	if task != nil {
+	//		msg := fmt.Sprintf("task for %s firmware install present: %s", component, task.ID)
+	//		c.Log.V(2).Info("warn", msg)
+	//	
+	//		if forceInstall {
+	//			err = c.purgeQueuedFirmwareInstallTask(ctx, component)
+	//			if err != nil {
+	//				return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, err.Error())
+	//			}
+	//		} else {
+	//			return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, msg)
+	//		}
+	//	}
 
 	// override the gofish HTTP client timeout,
 	// since the context timeout is set at Open() and is at a lower value than required for this operation.
 	//
-	// record the http client timeout to be restored
+	// record the http client timeout to be restored when this method returns
 	httpClientTimeout := c.redfishwrapper.HttpClientTimeout()
 	defer func() {
 		c.redfishwrapper.SetHttpClientTimeout(httpClientTimeout)
@@ -108,14 +101,25 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 
 	c.redfishwrapper.SetHttpClientTimeout(time.Until(ctxDeadline))
 
-	payload := &multipartPayload{
-		updateParameters: updateParameters,
-		updateFile:       updateFile,
-	}
+	var resp *http.Response
 
-	resp, err := c.runRequestWithMultipartPayload(http.MethodPost, "/redfish/v1/UpdateService/MultipartUpload", payload)
-	if err != nil {
-		return "", errors.Wrap(bmclibErrs.ErrFirmwareUpload, err.Error())
+	switch installMethod {
+	case multipartHttpUpload:
+		var uploadErr error
+		resp, uploadErr = c.multipartHTTPUpload(ctx, installURI, applyAt, reader)
+		if uploadErr != nil {
+			return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, uploadErr.Error())
+		}
+
+	case unstructuredHttpPush:
+		var uploadErr error
+		resp, uploadErr = c.unstructuredHttpUpload(ctx, installURI, applyAt, reader)
+		if uploadErr != nil {
+			return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, uploadErr.Error())
+		}
+
+	default:
+		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, "unsupported install method: "+string(installMethod))
 	}
 
 	if resp.StatusCode != http.StatusAccepted {
@@ -139,52 +143,58 @@ type multipartPayload struct {
 	updateFile       *os.File
 }
 
-// FirmwareInstallStatus returns the status of the firmware install task queued
-func (c *Conn) FirmwareInstallStatus(ctx context.Context, installVersion, component, taskID string) (state string, err error) {
-	vendor, _, err := c.DeviceVendorModel(ctx)
-	if err != nil {
-		return state, errors.Wrap(err, "unable to determine device vendor, model attributes")
+func (c *Conn) multipartHTTPUpload(ctx context.Context, url, applyAt string, update io.Reader) (*http.Response, error) {
+	if url == "" {
+		return nil, fmt.Errorf("unable to execute request, no target provided")
 	}
 
-	var task *gofishrf.Task
+	parameters, err := json.Marshal(struct {
+		Targets            []string `json:"Targets"`
+		RedfishOpApplyTime string   `json:"@Redfish.OperationApplyTime"`
+		Oem                struct{} `json:"Oem"`
+	}{
+		[]string{},
+		applyAt,
+		struct{}{},
+	})
+
+	if err != nil {
+		return nil, errors.Wrap(err, "error preparing multipart UpdateParameters payload")
+	}
+
+	// payload ordered in the format it ends up in the multipart form
+	payload := []map[string]io.Reader{
+		{"UpdateParameters": bytes.NewReader(parameters)},
+		{"UpdateFile": update},
+	}
+
+	return c.runRequestWithMultipartPayload(url, payload)
+}
+
+func (c *Conn) unstructuredHttpUpload(ctx context.Context, url string, update io.Reader) (*http.Response, error) {
+
+}
+
+// firmwareUpdateMethodURI returns the updateMethod and URI
+func (c *Conn) firmwareInstallMethodURI(ctx context.Context) (method installMethod, updateURI string, err error) {
+	updateService, err := c.redfishwrapper.UpdateService()
+	if err != nil {
+		return "", "", errors.Wrap(bmclibErrs.ErrRedfishUpdateService, err.Error())
+	}
+
+	// update service disabled
+	if !updateService.ServiceEnabled {
+		return "", "", errors.Wrap(bmclibErrs.ErrRedfishUpdateService, "service disabled")
+	}
+
 	switch {
-	case strings.Contains(vendor, constants.Dell):
-		task, err = c.dellJobAsRedfishTask(taskID)
-	default:
-		err = errors.Wrap(
-			bmclibErrs.ErrNotImplemented,
-			"FirmwareInstallStatus() for vendor: "+vendor,
-		)
+	case updateService.MultipartHTTPPushURI != "":
+		return multipartHttpUpload, updateService.MultipartHTTPPushURI, nil
+	case updateService.HTTPPushURI != "":
+		return unstructuredHttpPush, updateService.HTTPPushURI, nil
 	}
 
-	if err != nil {
-		return state, err
-	}
-
-	if task == nil {
-		return state, errors.New("failed to lookup task status for task ID: " + taskID)
-	}
-
-	state = strings.ToLower(string(task.TaskState))
-
-	// so much for standards...
-	switch state {
-	case "starting", "downloading", "downloaded":
-		return constants.FirmwareInstallInitializing, nil
-	case "running", "stopping", "cancelling", "scheduling":
-		return constants.FirmwareInstallRunning, nil
-	case "pending", "new":
-		return constants.FirmwareInstallQueued, nil
-	case "scheduled":
-		return constants.FirmwareInstallPowerCyleHost, nil
-	case "interrupted", "killed", "exception", "cancelled", "suspended", "failed":
-		return constants.FirmwareInstallFailed, nil
-	case "completed":
-		return constants.FirmwareInstallComplete, nil
-	default:
-		return constants.FirmwareInstallUnknown + ": " + state, nil
-	}
-
+	return "", "", errors.Wrap(bmclibErrs.ErrRedfishUpdateService, "unsupported update method")
 }
 
 // firmwareUpdateCompatible retuns an error if the firmware update process for the BMC is not supported
@@ -283,7 +293,7 @@ func multipartPayloadSize(payload *multipartPayload) (int64, *bytes.Buffer, erro
 
 // hey.
 // --------------------------1771f60800cb2801--
-func (c *Conn) runRequestWithMultipartPayload(method, url string, payload *multipartPayload) (*http.Response, error) {
+func (c *Conn) runRequestWithMultipartPayload(url string, payload *multipartPayload) (*http.Response, error) {
 	if url == "" {
 		return nil, fmt.Errorf("unable to execute request, no target provided")
 	}
@@ -357,7 +367,7 @@ func (c *Conn) runRequestWithMultipartPayload(method, url string, payload *multi
 	// pipeReader wrapped as a io.ReadSeeker to satisfy the gofish method signature
 	reader := pipeReaderFakeSeeker{pipeReader}
 
-	return c.redfishwrapper.RunRawRequestWithHeaders(method, url, reader, form.FormDataContentType(), headers)
+	return c.redfishwrapper.RunRawRequestWithHeaders(http.MethodPost, url, reader, form.FormDataContentType(), headers)
 }
 
 // sets up the UpdateParameters MIMEHeader for the multipart form
@@ -375,50 +385,50 @@ func updateParametersFormField(fieldName string, writer *multipart.Writer) (io.W
 	return writer.CreatePart(h)
 }
 
-// GetFirmwareInstallTaskQueued returns the redfish task object for a queued update task
-func (c *Conn) GetFirmwareInstallTaskQueued(ctx context.Context, component string) (*gofishrf.Task, error) {
+// FirmwareInstallStatus returns the status of the firmware install task queued
+func (c *Conn) FirmwareInstallStatus(ctx context.Context, installVersion, component, taskID string) (state string, err error) {
 	vendor, _, err := c.DeviceVendorModel(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to determine device vendor, model attributes")
+		return state, errors.Wrap(err, "unable to determine device vendor, model attributes")
 	}
 
 	var task *gofishrf.Task
-
-	// check an update task for the component is currently scheduled
 	switch {
 	case strings.Contains(vendor, constants.Dell):
-		task, err = c.getDellFirmwareInstallTaskScheduled(component)
+		task, err = c.dellJobAsRedfishTask(taskID)
 	default:
 		err = errors.Wrap(
 			bmclibErrs.ErrNotImplemented,
-			"GetFirmwareInstallTask() for vendor: "+vendor,
+			"FirmwareInstallStatus() for vendor: "+vendor,
 		)
 	}
 
 	if err != nil {
-		return nil, err
+		return state, err
 	}
 
-	return task, nil
-}
-
-// purgeQueuedFirmwareInstallTask removes any existing queued firmware install task for the given component slug
-func (c *Conn) purgeQueuedFirmwareInstallTask(ctx context.Context, component string) error {
-	vendor, _, err := c.DeviceVendorModel(ctx)
-	if err != nil {
-		return errors.Wrap(err, "unable to determine device vendor, model attributes")
+	if task == nil {
+		return state, errors.New("failed to lookup task status for task ID: " + taskID)
 	}
 
-	// check an update task for the component is currently scheduled
-	switch {
-	case strings.Contains(vendor, constants.Dell):
-		err = c.dellPurgeScheduledFirmwareInstallJob(component)
+	state = strings.ToLower(string(task.TaskState))
+
+	// so much for standards...
+	switch state {
+	case "starting", "downloading", "downloaded":
+		return constants.FirmwareInstallInitializing, nil
+	case "running", "stopping", "cancelling", "scheduling":
+		return constants.FirmwareInstallRunning, nil
+	case "pending", "new":
+		return constants.FirmwareInstallQueued, nil
+	case "scheduled":
+		return constants.FirmwareInstallPowerCyleHost, nil
+	case "interrupted", "killed", "exception", "cancelled", "suspended", "failed":
+		return constants.FirmwareInstallFailed, nil
+	case "completed":
+		return constants.FirmwareInstallComplete, nil
 	default:
-		err = errors.Wrap(
-			bmclibErrs.ErrNotImplemented,
-			"purgeFirmwareInstallTask() for vendor: "+vendor,
-		)
+		return constants.FirmwareInstallUnknown + ": " + state, nil
 	}
 
-	return err
 }
