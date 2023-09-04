@@ -2,12 +2,14 @@ package redfish
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/pkg/errors"
+	gofishcommon "github.com/stmcginnis/gofish/common"
 	gofishrf "github.com/stmcginnis/gofish/redfish"
 )
 
@@ -69,4 +71,26 @@ func (c *Conn) purgeQueuedFirmwareInstallTask(ctx context.Context, component str
 	}
 
 	return err
+}
+
+func (c *Conn) openbmcGetTask(jsonstr []byte) (task *gofishrf.Task, err error) {
+
+	type TaskStatus struct {
+		TaskState  string
+		TaskStatus string
+	}
+
+	var status TaskStatus
+
+	err = json.Unmarshal(jsonstr, &status)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		task = &gofishrf.Task{
+			TaskState:  gofishrf.TaskState(status.TaskState),
+			TaskStatus: gofishcommon.Health(status.TaskStatus),
+		}
+	}
+
+	return task, err
 }
