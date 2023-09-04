@@ -173,6 +173,15 @@ func (c *Conn) multipartHTTPUpload(ctx context.Context, url, applyAt string, upd
 
 func (c *Conn) unstructuredHttpUpload(ctx context.Context, url, applyAt string, update io.Reader) (*http.Response, error) {
 
+	if url == "" {
+		return nil, fmt.Errorf("unable to execute request, no target provided")
+	}
+
+	b, _ := io.ReadAll(update)
+
+	payloadReadSeeker := bytes.NewReader(b)
+	return c.redfishwrapper.RunRawRequestWithHeaders(http.MethodPost, url, payloadReadSeeker, "application/octet-stream", nil)
+
 }
 
 // firmwareUpdateMethodURI returns the updateMethod and URI
