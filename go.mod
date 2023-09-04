@@ -22,7 +22,7 @@ require (
 	go.uber.org/goleak v1.2.1
 	golang.org/x/crypto v0.1.0
 	golang.org/x/exp v0.0.0-20230127130021-4ca2cb1a16b7
-	golang.org/x/net v0.1.0
+	golang.org/x/net v0.7.0
 	gopkg.in/go-playground/assert.v1 v1.2.1
 )
 
