@@ -20,6 +20,7 @@ func (c *Conn) activeTask(ctx context.Context) (*gofishrf.Task, error) {
 		return nil, err
 	}
 
+	// TODO: correctly get an update task if there is one, using redfish API
 	for _, t := range tasks {
 		fmt.Println(t.TaskState)
 		fmt.Println(t.TaskStatus)
@@ -43,7 +44,7 @@ func (c *Conn) GetFirmwareInstallTaskQueued(ctx context.Context, component strin
 	case strings.Contains(vendor, constants.Dell):
 		task, err = c.getDellFirmwareInstallTaskScheduled(component)
 	default:
-		//task, err = c.redfishwrapper.Tasks(ctx)
+		task, err = c.activeTask(ctx)
 	}
 
 	if err != nil {

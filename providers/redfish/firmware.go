@@ -69,26 +69,25 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 		return "", errors.Wrap(errInsufficientCtxTimeout, " "+time.Until(ctxDeadline).String())
 	}
 
-	// TODO; uncomment once obmc support is implemented for tasks
 	// list redfish firmware install task if theres one present
-	//	task, err := c.GetFirmwareInstallTaskQueued(ctx, component)
-	//	if err != nil {
-	//		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, err.Error())
-	//	}
-	//
-	//	if task != nil {
-	//		msg := fmt.Sprintf("task for %s firmware install present: %s", component, task.ID)
-	//		c.Log.V(2).Info("warn", msg)
-	//	
-	//		if forceInstall {
-	//			err = c.purgeQueuedFirmwareInstallTask(ctx, component)
-	//			if err != nil {
-	//				return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, err.Error())
-	//			}
-	//		} else {
-	//			return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, msg)
-	//		}
-	//	}
+	task, err := c.GetFirmwareInstallTaskQueued(ctx, component)
+	if err != nil {
+		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, err.Error())
+	}
+
+	if task != nil {
+		msg := fmt.Sprintf("task for %s firmware install present: %s", component, task.ID)
+		c.Log.V(2).Info("warn", msg)
+
+		if forceInstall {
+			err = c.purgeQueuedFirmwareInstallTask(ctx, component)
+			if err != nil {
+				return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, err.Error())
+			}
+		} else {
+			return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, msg)
+		}
+	}
 
 	// override the gofish HTTP client timeout,
 	// since the context timeout is set at Open() and is at a lower value than required for this operation.
