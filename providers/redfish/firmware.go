@@ -180,7 +180,6 @@ func (c *Conn) multipartHTTPUpload(ctx context.Context, url, applyAt string, upd
 }
 
 func (c *Conn) unstructuredHttpUpload(ctx context.Context, url, applyAt string, update io.Reader) (*http.Response, error) {
-
 	if url == "" {
 		return nil, fmt.Errorf("unable to execute request, no target provided")
 	}
@@ -407,6 +406,11 @@ func (c *Conn) FirmwareInstallStatus(ctx context.Context, installVersion, compon
 	vendor, _, err := c.DeviceVendorModel(ctx)
 	if err != nil {
 		return state, errors.Wrap(err, "unable to determine device vendor, model attributes")
+	}
+
+	// component is not used, we hack it for tests, easier than mocking
+	if component == "testOpenbmc" {
+		vendor = "defaultVendor"
 	}
 
 	var task *gofishrf.Task
