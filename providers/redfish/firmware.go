@@ -131,8 +131,16 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 
 	// The response contains a location header pointing to the task URI
 	// Location: /redfish/v1/TaskService/Tasks/JID_467696020275
-	if strings.Contains(resp.Header.Get("Location"), "JID_") {
+	var location = resp.Header.Get("Location")
+	if strings.Contains(location, "JID_") {
 		taskID = strings.Split(resp.Header.Get("Location"), "JID_")[1]
+	} else if strings.Contains(location, "/Monitor") {
+		// OpenBMC returns a monitor URL in Location
+		// Location: /redfish/v1/TaskService/Tasks/12/Monitor
+		splits := strings.Split(location, "/")
+		taskID = splits[5]
+	} else {
+		return "", bmclibErrs.ErrTaskNotFound
 	}
 
 	return taskID, nil
@@ -405,6 +413,24 @@ func (c *Conn) FirmwareInstallStatus(ctx context.Context, installVersion, compon
 	switch {
 	case strings.Contains(vendor, constants.Dell):
 		task, err = c.dellJobAsRedfishTask(taskID)
+	case strings.Contains(vendor, constants.Packet) || strings.Contains(vendor, constants.Equinix):
+
+		resp, _ := c.redfishwrapper.Get("/redfish/v1/TaskService/Tasks/" + taskID)
+		if resp.StatusCode != 200 {
+			err = errors.Wrap(
+				bmclibErrs.ErrFirmwareInstall,
+				"HTTP Error: "+fmt.Sprint(resp.StatusCode),
+			)
+
+			state = "failed"
+			break
+		}
+
+		data, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+
+		task, err = c.openbmcGetTask(data)
+
 	default:
 		err = errors.Wrap(
 			bmclibErrs.ErrNotImplemented,
