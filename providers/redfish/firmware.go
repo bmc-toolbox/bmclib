@@ -171,7 +171,7 @@ func (c *Conn) multipartHTTPUpload(ctx context.Context, url, applyAt string, upd
 	return c.runRequestWithMultipartPayload(url, payload)
 }
 
-func (c *Conn) unstructuredHttpUpload(ctx context.Context, url string, update io.Reader) (*http.Response, error) {
+func (c *Conn) unstructuredHttpUpload(ctx context.Context, url, applyAt string, update io.Reader) (*http.Response, error) {
 
 }
 
