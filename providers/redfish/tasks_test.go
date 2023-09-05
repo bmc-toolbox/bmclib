@@ -4,10 +4,10 @@ import (
 	"testing"
 )
 
-func Test_openbmcGetTask(t *testing.T) {
+func Test_GetTask(t *testing.T) {
 	var err error
 
-	task, err := mockClient.openbmcGetTask("15")
+	task, err := mockClient.GetTask("15")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -16,7 +16,7 @@ func Test_openbmcGetTask(t *testing.T) {
 	}
 
 	// inexistent
-	task, err = mockClient.openbmcGetTask("151515")
+	task, err = mockClient.GetTask("151515")
 	if task != nil {
 		t.Fatal("Task should be nil, but got:", task)
 	}

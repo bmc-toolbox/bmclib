@@ -184,9 +184,10 @@ func (c *Conn) unstructuredHttpUpload(ctx context.Context, url, applyAt string, 
 		return nil, fmt.Errorf("unable to execute request, no target provided")
 	}
 
+	// TODO: transform this to read the update so that we don't hold the data in memory
 	b, _ := io.ReadAll(update)
-
 	payloadReadSeeker := bytes.NewReader(b)
+
 	return c.redfishwrapper.RunRawRequestWithHeaders(http.MethodPost, url, payloadReadSeeker, "application/octet-stream", nil)
 
 }
@@ -417,29 +418,8 @@ func (c *Conn) FirmwareInstallStatus(ctx context.Context, installVersion, compon
 	switch {
 	case strings.Contains(vendor, constants.Dell):
 		task, err = c.dellJobAsRedfishTask(taskID)
-	case strings.Contains(vendor, constants.Packet) || strings.Contains(vendor, constants.Equinix):
-
-		resp, _ := c.redfishwrapper.Get("/redfish/v1/TaskService/Tasks/" + taskID)
-		if resp.StatusCode != 200 {
-			err = errors.Wrap(
-				bmclibErrs.ErrFirmwareInstall,
-				"HTTP Error: "+fmt.Sprint(resp.StatusCode),
-			)
-
-			state = "failed"
-			break
-		}
-
-		data, _ := io.ReadAll(resp.Body)
-		resp.Body.Close()
-
-		task, err = c.openbmcGetTask(data)
-
 	default:
-		err = errors.Wrap(
-			bmclibErrs.ErrNotImplemented,
-			"FirmwareInstallStatus() for vendor: "+vendor,
-		)
+		task, err = c.GetTask(taskID)
 	}
 
 	if err != nil {

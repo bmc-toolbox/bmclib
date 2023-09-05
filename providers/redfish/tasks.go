@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/bmc-toolbox/bmclib/v2/constants"
@@ -73,7 +74,24 @@ func (c *Conn) purgeQueuedFirmwareInstallTask(ctx context.Context, component str
 	return err
 }
 
-func (c *Conn) openbmcGetTask(jsonstr []byte) (task *gofishrf.Task, err error) {
+// GetTask returns the current Task fir the given TaskID
+func (c *Conn) GetTask(taskID string) (task *gofishrf.Task, err error) {
+
+	resp, err := c.redfishwrapper.Get("/redfish/v1/TaskService/Tasks/" + taskID)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != 200 {
+		err = errors.Wrap(
+			bmclibErrs.ErrFirmwareInstallStatus,
+			"HTTP Error: "+fmt.Sprint(resp.StatusCode),
+		)
+
+		return nil, err
+	}
+
+	data, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
 
 	type TaskStatus struct {
 		TaskState  string
@@ -82,7 +100,7 @@ func (c *Conn) openbmcGetTask(jsonstr []byte) (task *gofishrf.Task, err error) {
 
 	var status TaskStatus
 
-	err = json.Unmarshal(jsonstr, &status)
+	err = json.Unmarshal(data, &status)
 	if err != nil {
 		fmt.Println(err)
 	} else {

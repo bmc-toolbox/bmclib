@@ -234,7 +234,6 @@ func TestFirmwareUpdateCompatible(t *testing.T) {
 	}
 }
 
-
 // referenced in main_test.go
 func openbmcStatus(w http.ResponseWriter, r *http.Request) {
 
