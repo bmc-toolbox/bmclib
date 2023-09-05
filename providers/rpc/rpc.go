@@ -39,7 +39,7 @@ const (
 	SHA512Short Algorithm = "512"
 )
 
-// Features implemented by the AMT provider.
+// Features implemented by the RPC provider.
 var Features = registrar.Features{
 	providers.FeaturePowerSet,
 	providers.FeaturePowerState,
