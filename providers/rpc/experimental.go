@@ -7,21 +7,20 @@ import (
 
 // embedPayload will embed the RequestPayload into the given JSON object at the dot path notation location ("object.data").
 func (p *RequestPayload) embedPayload(rawJSON []byte, dotPath string) ([]byte, error) {
-	if rawJSON != nil {
-		jdata2, err := yaml.YAMLToJSON(rawJSON)
-		if err != nil {
-			return nil, err
-		}
-		g, err := gabs.ParseJSON(jdata2)
-		if err != nil {
-			return nil, err
-		}
-		if _, err := g.SetP(p, dotPath); err != nil {
-			return nil, err
-		}
-
-		return g.Bytes(), nil
+	if rawJSON == nil {
+		return rawJSON, nil
+	}
+	jdata2, err := yaml.YAMLToJSON(rawJSON)
+	if err != nil {
+		return nil, err
+	}
+	g, err := gabs.ParseJSON(jdata2)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := g.SetP(p, dotPath); err != nil {
+		return nil, err
 	}
 
-	return rawJSON, nil
+	return g.Bytes(), nil
 }

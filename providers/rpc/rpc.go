@@ -185,9 +185,11 @@ func (c *Config) Open(ctx context.Context) error {
 	}
 	// test that we can communicate with the rpc consumer.
 	// and that it responses with the spec contract (Response{}).
-	if _, err := c.Opts.Request.Client.Do(testReq); err != nil { //nolint:bodyclose // not reading the body
+	resp, err := c.Opts.Request.Client.Do(testReq)
+	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	return nil
 }
