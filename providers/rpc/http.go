@@ -12,7 +12,7 @@ import (
 )
 
 // createRequest
-func (c *Config) createRequest(ctx context.Context, p RequestPayload) (*http.Request, error) {
+func (c *Provider) createRequest(ctx context.Context, p RequestPayload) (*http.Request, error) {
 	var data []byte
 	if rj := c.Opts.Experimental.CustomRequestPayload; rj != nil && c.Opts.Experimental.DotPath != "" {
 		d, err := p.embedPayload(rj, c.Opts.Experimental.DotPath)
@@ -45,7 +45,7 @@ func (c *Config) createRequest(ctx context.Context, p RequestPayload) (*http.Req
 	return req, nil
 }
 
-func (c *Config) handleResponse(resp *http.Response, reqKeysAndValues []interface{}) (ResponsePayload, error) {
+func (c *Provider) handleResponse(resp *http.Response, reqKeysAndValues []interface{}) (ResponsePayload, error) {
 	kvs := reqKeysAndValues
 	defer func() {
 		if !c.LogNotificationsDisabled {

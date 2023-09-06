@@ -13,10 +13,10 @@ const (
 
 // RequestPayload is the payload sent to the ConsumerURL.
 type RequestPayload struct {
-	ID     int64       `json:"id"`
-	Host   string      `json:"host"`
-	Method Method      `json:"method"`
-	Params interface{} `json:"params,omitempty"`
+	ID     int64  `json:"id"`
+	Host   string `json:"host"`
+	Method Method `json:"method"`
+	Params any    `json:"params,omitempty"`
 }
 
 // BootDeviceParams are the parameters options used when setting a boot device.
@@ -44,7 +44,7 @@ type ResponsePayload struct {
 	// ID is the ID of the response. It should match the ID of the request but is not enforced.
 	ID     int64          `json:"id"`
 	Host   string         `json:"host"`
-	Result interface{}    `json:"result,omitempty"`
+	Result any            `json:"result,omitempty"`
 	Error  *ResponseError `json:"error,omitempty"`
 }
 

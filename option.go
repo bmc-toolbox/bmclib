@@ -139,7 +139,7 @@ func WithDellRedfishUseBasicAuth(useBasicAuth bool) Option {
 	}
 }
 
-func WithRPCOpt(opt rpc.Config) Option {
+func WithRPCOpt(opt rpc.Provider) Option {
 	return func(args *Client) {
 		args.providerConfig.rpc = opt
 	}

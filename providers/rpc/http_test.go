@@ -107,12 +107,12 @@ func TestResponseKVS(t *testing.T) {
 
 func TestCreateRequest(t *testing.T) {
 	tests := map[string]struct {
-		cfg      Config
+		cfg      Provider
 		body     RequestPayload
 		expected *http.Request
 	}{
 		"success": {
-			cfg: Config{
+			cfg: Provider{
 				Opts: Opts{
 					Request: RequestOpts{
 						HTTPMethod:      http.MethodPost,

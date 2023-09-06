@@ -61,7 +61,7 @@ type providerConfig struct {
 	intelamt   intelamt.Config
 	dell       dell.Config
 	supermicro supermicro.Config
-	rpc        rpc.Config
+	rpc        rpc.Provider
 }
 
 // NewClient returns a new Client struct
@@ -94,7 +94,7 @@ func NewClient(host, user, pass string, opts ...Option) *Client {
 			supermicro: supermicro.Config{
 				Port: "443",
 			},
-			rpc: rpc.Config{},
+			rpc: rpc.Provider{},
 		},
 	}
 
@@ -137,7 +137,7 @@ func (c *Client) defaultTimeout(ctx context.Context) time.Duration {
 func (c *Client) registerRPCProvider() error {
 	driverRPC := rpc.New(c.providerConfig.rpc.ConsumerURL, c.Auth.Host, c.providerConfig.rpc.Opts.HMAC.Secrets)
 	c.providerConfig.rpc.Logger = c.Logger
-	if err := mergo.Merge(driverRPC, c.providerConfig.rpc, mergo.WithOverride, mergo.WithTransformers(&rpc.Config{})); err != nil {
+	if err := mergo.Merge(driverRPC, c.providerConfig.rpc, mergo.WithOverride, mergo.WithTransformers(&rpc.Provider{})); err != nil {
 		return fmt.Errorf("failed to merge user specified rpc config with the config defaults, rpc provider not available: %w", err)
 	}
 	c.Registry.Register(rpc.ProviderName, rpc.ProviderProtocol, rpc.Features, nil, driverRPC)

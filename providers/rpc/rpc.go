@@ -56,8 +56,8 @@ type Secrets map[Algorithm][]string
 // Signatures hold per algorithm slice of signatures.
 type Signatures map[Algorithm][]string
 
-// Config defines the configuration for sending rpc notifications.
-type Config struct {
+// Provider defines the configuration for sending rpc notifications.
+type Provider struct {
 	// ConsumerURL is the URL where an rpc consumer/listener is running
 	// and to which we will send and receive all notifications.
 	ConsumerURL string
@@ -129,9 +129,9 @@ type Experimental struct {
 }
 
 // New returns a new Config containing all the defaults for the rpc provider.
-func New(consumerURL string, host string, secrets Secrets) *Config {
+func New(consumerURL string, host string, secrets Secrets) *Provider {
 	// defaults
-	c := &Config{
+	c := &Provider{
 		Host:        host,
 		ConsumerURL: consumerURL,
 		Client:      http.DefaultClient,
@@ -164,14 +164,14 @@ func New(consumerURL string, host string, secrets Secrets) *Config {
 
 // Name returns the name of this rpc provider.
 // Implements bmc.Provider interface
-func (c *Config) Name() string {
+func (c *Provider) Name() string {
 	return ProviderName
 }
 
 // Open a connection to the rpc consumer.
 // For the rpc provider, Open means validating the Config and
 // that communication with the rpc consumer can be established.
-func (c *Config) Open(ctx context.Context) error {
+func (c *Provider) Open(ctx context.Context) error {
 	// 1. validate consumerURL is a properly formatted URL.
 	// 2. validate that we can communicate with the rpc consumer.
 	u, err := url.Parse(c.ConsumerURL)
@@ -195,12 +195,12 @@ func (c *Config) Open(ctx context.Context) error {
 }
 
 // Close a connection to the rpc consumer.
-func (c *Config) Close(_ context.Context) (err error) {
+func (c *Provider) Close(_ context.Context) (err error) {
 	return nil
 }
 
 // BootDeviceSet sends a next boot device rpc notification.
-func (c *Config) BootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
+func (c *Provider) BootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
 	p := RequestPayload{
 		ID:     int64(time.Now().UnixNano()),
 		Host:   c.Host,
@@ -223,7 +223,7 @@ func (c *Config) BootDeviceSet(ctx context.Context, bootDevice string, setPersis
 }
 
 // PowerSet sets the power state of a BMC machine.
-func (c *Config) PowerSet(ctx context.Context, state string) (ok bool, err error) {
+func (c *Provider) PowerSet(ctx context.Context, state string) (ok bool, err error) {
 	switch strings.ToLower(state) {
 	case "on", "off", "cycle":
 		p := RequestPayload{
@@ -249,7 +249,7 @@ func (c *Config) PowerSet(ctx context.Context, state string) (ok bool, err error
 }
 
 // PowerStateGet gets the power state of a BMC machine.
-func (c *Config) PowerStateGet(ctx context.Context) (state string, err error) {
+func (c *Provider) PowerStateGet(ctx context.Context) (state string, err error) {
 	p := RequestPayload{
 		ID:     int64(time.Now().UnixNano()),
 		Host:   c.Host,
@@ -267,7 +267,7 @@ func (c *Config) PowerStateGet(ctx context.Context) (state string, err error) {
 }
 
 // process is the main function for the roundtrip of rpc calls to the ConsumerURL.
-func (c *Config) process(ctx context.Context, p RequestPayload) (ResponsePayload, error) {
+func (c *Provider) process(ctx context.Context, p RequestPayload) (ResponsePayload, error) {
 	// 1. create the HTTP request.
 	// 2. create the signature payload.
 	// 3. sign the signature payload.
@@ -335,7 +335,7 @@ func (c *Config) process(ctx context.Context, p RequestPayload) (ResponsePayload
 }
 
 // Transformer implements the mergo interfaces for merging custom types.
-func (c *Config) Transformer(typ reflect.Type) func(dst, src reflect.Value) error {
+func (c *Provider) Transformer(typ reflect.Type) func(dst, src reflect.Value) error {
 	switch typ {
 	case reflect.TypeOf(logr.Logger{}):
 		return func(dst, src reflect.Value) error {
