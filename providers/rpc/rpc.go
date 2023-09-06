@@ -63,6 +63,8 @@ type Config struct {
 	ConsumerURL string
 	// Host is the BMC ip address or hostname or identifier.
 	Host string
+	// Client is the http client used for all HTTP calls.
+	Client *http.Client
 	// Logger is the logger to use for logging.
 	Logger logr.Logger
 	// LogNotificationsDisabled determines whether responses from rpc consumer/listeners will be logged or not.
@@ -86,8 +88,6 @@ type Opts struct {
 }
 
 type RequestOpts struct {
-	// Client is the http client used for all HTTP calls.
-	Client *http.Client
 	// HTTPContentType is the content type to use for the rpc request notification.
 	HTTPContentType string
 	// HTTPMethod is the HTTP method to use for the rpc request notification.
@@ -134,10 +134,10 @@ func New(consumerURL string, host string, secrets Secrets) *Config {
 	c := &Config{
 		Host:        host,
 		ConsumerURL: consumerURL,
+		Client:      http.DefaultClient,
 		Logger:      logr.Discard(),
 		Opts: Opts{
 			Request: RequestOpts{
-				Client:          http.DefaultClient,
 				HTTPContentType: contentType,
 				HTTPMethod:      http.MethodPost,
 				TimestampFormat: time.RFC3339,
@@ -185,7 +185,7 @@ func (c *Config) Open(ctx context.Context) error {
 	}
 	// test that we can communicate with the rpc consumer.
 	// and that it responses with the spec contract (Response{}).
-	resp, err := c.Opts.Request.Client.Do(testReq)
+	resp, err := c.Client.Do(testReq)
 	if err != nil {
 		return err
 	}
@@ -318,7 +318,7 @@ func (c *Config) process(ctx context.Context, p RequestPayload) (ResponsePayload
 		kvs = append(kvs, []interface{}{"params", p.Params}...)
 	}
 
-	resp, err := c.Opts.Request.Client.Do(req)
+	resp, err := c.Client.Do(req)
 	if err != nil {
 		c.Logger.Error(err, "failed to send rpc notification", kvs...)
 		return ResponsePayload{}, err
