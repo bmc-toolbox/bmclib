@@ -97,6 +97,17 @@ func TestFirmwareInstall(t *testing.T) {
 			false,
 			nil,
 			"",
+			bmclibErrs.ErrFirmwareInstall,
+			"method expects an *os.File object",
+			"expect *os.File object",
+		},
+		{
+			common.SlugBIOS,
+			constants.FirmwareApplyOnReset,
+			false,
+			false,
+			&os.File{},
+			"",
 			errInsufficientCtxTimeout,
 			"",
 			"remaining context deadline",
@@ -106,7 +117,7 @@ func TestFirmwareInstall(t *testing.T) {
 			"invalidApplyAt",
 			false,
 			true,
-			nil,
+			&os.File{},
 			"",
 			bmclibErrs.ErrFirmwareInstall,
 			"invalid applyAt parameter",
@@ -189,15 +200,15 @@ func TestMultipartPayloadSize(t *testing.T) {
 
 	testCases := []struct {
 		testName     string
-		payload      []map[string]io.Reader
+		payload      *multipartPayload
 		expectedSize int64
 		errorMsg     string
 	}{
 		{
 			"content length as expected",
-			[]map[string]io.Reader{
-				{"UpdateParameters": bytes.NewReader(updateParameters)},
-				{"UpdateFile": testfileFH},
+			&multipartPayload{
+				updateParameters: bytes.NewReader(updateParameters),
+				updateFile:       testfileFH,
 			},
 			475,
 			"",

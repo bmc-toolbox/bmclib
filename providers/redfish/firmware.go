@@ -25,6 +25,7 @@ import (
 
 var (
 	errInsufficientCtxTimeout = errors.New("remaining context timeout insufficient to install firmware")
+	errMultiPartPayload       = errors.New("error preparing multipart payload")
 )
 
 // SupportedFirmwareApplyAtValues returns the supported redfish firmware applyAt values
@@ -37,10 +38,16 @@ func SupportedFirmwareApplyAtValues() []string {
 
 // FirmwareInstall uploads and initiates the firmware install process
 func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, forceInstall bool, reader io.Reader) (taskID string, err error) {
+	// limit to *os.File until theres a need for other types of readers
+	updateFile, ok := reader.(*os.File)
+	if !ok {
+		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, "method expects an *os.File object")
+	}
+
 	// validate firmware update mechanism is supported
 	err = c.firmwareUpdateCompatible(ctx)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, err.Error())
 	}
 
 	// validate applyAt parameter
@@ -59,7 +66,7 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 	// list redfish firmware install task if theres one present
 	task, err := c.GetFirmwareInstallTaskQueued(ctx, component)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, err.Error())
 	}
 
 	if task != nil {
@@ -101,9 +108,9 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 
 	c.redfishwrapper.SetHttpClientTimeout(time.Until(ctxDeadline))
 
-	payload := []map[string]io.Reader{
-		{"UpdateParameters": bytes.NewReader(updateParameters)},
-		{"UpdateFile": reader},
+	payload := &multipartPayload{
+		updateParameters: bytes.NewReader(updateParameters),
+		updateFile:       updateFile,
 	}
 
 	resp, err := c.runRequestWithMultipartPayload(http.MethodPost, "/redfish/v1/UpdateService/MultipartUpload", payload)
@@ -125,6 +132,11 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 	}
 
 	return taskID, nil
+}
+
+type multipartPayload struct {
+	updateParameters io.Reader
+	updateFile       *os.File
 }
 
 // FirmwareInstallStatus returns the status of the firmware install task queued
@@ -215,54 +227,46 @@ func (p pipeReaderFakeSeeker) Seek(offset int64, whence int) (int64, error) {
 //
 // It creates a temporary form without reading in the update file payload and returns
 // sizeOf(form) + sizeOf(update file)
-func multipartPayloadSize(payload []map[string]io.Reader) (int64, *bytes.Buffer, error) {
+func multipartPayloadSize(payload *multipartPayload) (int64, *bytes.Buffer, error) {
 	body := &bytes.Buffer{}
 	form := multipart.NewWriter(body)
 
-	var size int64
-	var err error
-	for idx, elem := range payload {
-		for key, reader := range elem {
-			var part io.Writer
-			if file, ok := reader.(*os.File); ok {
-				// Add update file fields
-				if _, err = form.CreateFormFile(key, filepath.Base(file.Name())); err != nil {
-					return 0, body, err
-				}
-
-				// determine file size
-				finfo, err := file.Stat()
-				if err != nil {
-					return 0, body, err
-				}
-
-				size = finfo.Size()
-
-			} else {
-				// Add other fields
-				if part, err = updateParametersFormField(key, form); err != nil {
-					return 0, body, err
-				}
-
-				buf := bytes.Buffer{}
-				teeReader := io.TeeReader(reader, &buf)
-
-				if _, err = io.Copy(part, teeReader); err != nil {
-					return 0, body, err
-				}
-
-				// place it back so its available to be read again
-				payload[idx][key] = bytes.NewReader(buf.Bytes())
-			}
-		}
+	// Add UpdateParameters field part
+	part, err := updateParametersFormField("UpdateParameters", form)
+	if err != nil {
+		return 0, body, err
 	}
 
+	// a buffer to save the contents of the updateParameters reader
+	buf := bytes.Buffer{}
+	teeReader := io.TeeReader(payload.updateParameters, &buf)
+
+	if _, err = io.Copy(part, teeReader); err != nil {
+		return 0, body, err
+	}
+
+	// restore the reader
+	payload.updateParameters = bytes.NewReader(buf.Bytes())
+
+	// Add updateFile form
+	_, err = form.CreateFormFile("UpdateFile", filepath.Base(payload.updateFile.Name()))
+	if err != nil {
+		return 0, body, err
+	}
+
+	// determine update file size
+	finfo, err := payload.updateFile.Stat()
+	if err != nil {
+		return 0, body, err
+	}
+
+	// add terminating boundary to multipart form
 	err = form.Close()
 	if err != nil {
 		return 0, body, err
 	}
 
-	return int64(body.Len()) + size, body, nil
+	return int64(body.Len()) + finfo.Size(), body, nil
 }
 
 // runRequestWithMultipartPayload is a copy of https://github.com/stmcginnis/gofish/blob/main/client.go#L349
@@ -286,7 +290,7 @@ func multipartPayloadSize(payload []map[string]io.Reader) (int64, *bytes.Buffer,
 
 // hey.
 // --------------------------1771f60800cb2801--
-func (c *Conn) runRequestWithMultipartPayload(method, url string, payload []map[string]io.Reader) (*http.Response, error) {
+func (c *Conn) runRequestWithMultipartPayload(method, url string, payload *multipartPayload) (*http.Response, error) {
 	if url == "" {
 		return nil, fmt.Errorf("unable to execute request, no target provided")
 	}
@@ -314,6 +318,7 @@ func (c *Conn) runRequestWithMultipartPayload(method, url string, payload []map[
 	// initiate a mulitpart writer
 	form := multipart.NewWriter(pipeWriter)
 
+	// go routine blocks on the io.Copy until the http request is made
 	go func() {
 		var err error
 		defer func() {
@@ -324,34 +329,32 @@ func (c *Conn) runRequestWithMultipartPayload(method, url string, payload []map[
 
 		defer pipeWriter.Close()
 
-		for _, elem := range payload {
-			for key, reader := range elem {
-				var part io.Writer
-				// add update file multipart form header
-				//
-				//  Content-Disposition: form-data; name="UpdateFile"; filename="dum
-				//  myfile"
-				//  Content-Type: application/octet-stream
-				if file, ok := reader.(*os.File); ok {
-					// Add a file stream
-					if part, err = form.CreateFormFile(key, filepath.Base(file.Name())); err != nil {
-						return
-					}
-				} else {
-					// add update parameters multipart form header
-					//
-					//  Content-Disposition: form-data; name="UpdateParameters"
-					//  Content-Type: application/json
-					if part, err = updateParametersFormField(key, form); err != nil {
-						return
-					}
-				}
+		// Add UpdateParameters part
+		parametersPart, err := updateParametersFormField("UpdateParameters", form)
+		if err != nil {
+			c.Log.Error(errMultiPartPayload, err.Error()+": UpdateParameters part copy error")
 
-				// copy from source into form part writer
-				if _, err = io.Copy(part, reader); err != nil {
-					return
-				}
-			}
+			return
+		}
+
+		if _, err = io.Copy(parametersPart, payload.updateParameters); err != nil {
+			c.Log.Error(errMultiPartPayload, err.Error()+": UpdateParameters part copy error")
+
+			return
+		}
+
+		// Add UpdateFile part
+		updateFilePart, err := form.CreateFormFile("UpdateFile", filepath.Base(payload.updateFile.Name()))
+		if err != nil {
+			c.Log.Error(errMultiPartPayload, err.Error()+": UpdateFile part create error")
+
+			return
+		}
+
+		if _, err = io.Copy(updateFilePart, payload.updateFile); err != nil {
+			c.Log.Error(errMultiPartPayload, err.Error()+": UpdateFile part copy error")
+
+			return
 		}
 
 		// add terminating boundary to multipart form
