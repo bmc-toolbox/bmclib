@@ -276,3 +276,23 @@ func Test_FirmwareInstall2(t *testing.T) {
 		t.Fatal("Wrong test state:", state)
 	}
 }
+
+func Test_TaskIDFromLocationURI(t *testing.T) {
+	var task string
+	var err error
+
+	task, err = TaskIDFromLocationURI("/redfish/v1/TaskService/Tasks/JID_467696020275")
+	if err != nil || task != "467696020275" {
+		t.Fatal("Wrong task ID 467696020275. task,err=", task, err)
+	}
+
+	task, err = TaskIDFromLocationURI("/redfish/v1/TaskService/Tasks/12/Monitor")
+	if err != nil || task != "12" {
+		t.Fatal("Wrong task ID 12. task,err=", task, err)
+	}
+
+	task, err = TaskIDFromLocationURI("/redfish/v1/TaskService/Tasks/NO-TASK-ID")
+	if err == nil {
+		t.Fatal("Should return an error. task,err=", task, err)
+	}
+}

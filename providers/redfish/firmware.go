@@ -131,14 +131,28 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 	// The response contains a location header pointing to the task URI
 	// Location: /redfish/v1/TaskService/Tasks/JID_467696020275
 	var location = resp.Header.Get("Location")
-	if strings.Contains(location, "JID_") {
-		taskID = strings.Split(resp.Header.Get("Location"), "JID_")[1]
-	} else if strings.Contains(location, "/Monitor") {
+
+	taskID, err = TaskIDFromLocationURI(location)
+
+	return taskID, err
+}
+
+func TaskIDFromLocationURI(uri string) (taskID string, err error) {
+
+	if strings.Contains(uri, "JID_") {
+		taskID = strings.Split(uri, "JID_")[1]
+	} else if strings.Contains(uri, "/Monitor") {
 		// OpenBMC returns a monitor URL in Location
 		// Location: /redfish/v1/TaskService/Tasks/12/Monitor
-		splits := strings.Split(location, "/")
-		taskID = splits[5]
-	} else {
+		splits := strings.Split(uri, "/")
+		if len(splits) >= 6 {
+			taskID = splits[5]
+		} else {
+			taskID = ""
+		}
+	}
+
+	if taskID == "" {
 		return "", bmclibErrs.ErrTaskNotFound
 	}
 
