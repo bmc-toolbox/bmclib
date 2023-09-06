@@ -164,28 +164,28 @@ func New(consumerURL string, host string, secrets Secrets) *Provider {
 
 // Name returns the name of this rpc provider.
 // Implements bmc.Provider interface
-func (c *Provider) Name() string {
+func (p *Provider) Name() string {
 	return ProviderName
 }
 
 // Open a connection to the rpc consumer.
 // For the rpc provider, Open means validating the Config and
 // that communication with the rpc consumer can be established.
-func (c *Provider) Open(ctx context.Context) error {
+func (p *Provider) Open(ctx context.Context) error {
 	// 1. validate consumerURL is a properly formatted URL.
 	// 2. validate that we can communicate with the rpc consumer.
-	u, err := url.Parse(c.ConsumerURL)
+	u, err := url.Parse(p.ConsumerURL)
 	if err != nil {
 		return err
 	}
-	c.listenerURL = u
-	testReq, err := http.NewRequestWithContext(ctx, c.Opts.Request.HTTPMethod, c.listenerURL.String(), nil)
+	p.listenerURL = u
+	testReq, err := http.NewRequestWithContext(ctx, p.Opts.Request.HTTPMethod, p.listenerURL.String(), nil)
 	if err != nil {
 		return err
 	}
 	// test that we can communicate with the rpc consumer.
 	// and that it responses with the spec contract (Response{}).
-	resp, err := c.Client.Do(testReq)
+	resp, err := p.Client.Do(testReq)
 	if err != nil {
 		return err
 	}
@@ -195,15 +195,15 @@ func (c *Provider) Open(ctx context.Context) error {
 }
 
 // Close a connection to the rpc consumer.
-func (c *Provider) Close(_ context.Context) (err error) {
+func (p *Provider) Close(_ context.Context) (err error) {
 	return nil
 }
 
 // BootDeviceSet sends a next boot device rpc notification.
-func (c *Provider) BootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
-	p := RequestPayload{
+func (p *Provider) BootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
+	rp := RequestPayload{
 		ID:     int64(time.Now().UnixNano()),
-		Host:   c.Host,
+		Host:   p.Host,
 		Method: BootDeviceMethod,
 		Params: BootDeviceParams{
 			Device:     bootDevice,
@@ -211,30 +211,30 @@ func (c *Provider) BootDeviceSet(ctx context.Context, bootDevice string, setPers
 			EFIBoot:    efiBoot,
 		},
 	}
-	rp, err := c.process(ctx, p)
+	resp, err := p.process(ctx, rp)
 	if err != nil {
 		return false, err
 	}
-	if rp.Error != nil {
-		return false, fmt.Errorf("error from rpc consumer: %v", rp.Error)
+	if resp.Error != nil {
+		return false, fmt.Errorf("error from rpc consumer: %v", resp.Error)
 	}
 
 	return true, nil
 }
 
 // PowerSet sets the power state of a BMC machine.
-func (c *Provider) PowerSet(ctx context.Context, state string) (ok bool, err error) {
+func (p *Provider) PowerSet(ctx context.Context, state string) (ok bool, err error) {
 	switch strings.ToLower(state) {
 	case "on", "off", "cycle":
-		p := RequestPayload{
+		rp := RequestPayload{
 			ID:     int64(time.Now().UnixNano()),
-			Host:   c.Host,
+			Host:   p.Host,
 			Method: PowerSetMethod,
 			Params: PowerSetParams{
 				State: strings.ToLower(state),
 			},
 		}
-		resp, err := c.process(ctx, p)
+		resp, err := p.process(ctx, rp)
 		if err != nil {
 			return ok, err
 		}
@@ -249,13 +249,13 @@ func (c *Provider) PowerSet(ctx context.Context, state string) (ok bool, err err
 }
 
 // PowerStateGet gets the power state of a BMC machine.
-func (c *Provider) PowerStateGet(ctx context.Context) (state string, err error) {
-	p := RequestPayload{
+func (p *Provider) PowerStateGet(ctx context.Context) (state string, err error) {
+	rp := RequestPayload{
 		ID:     int64(time.Now().UnixNano()),
-		Host:   c.Host,
+		Host:   p.Host,
 		Method: PowerGetMethod,
 	}
-	resp, err := c.process(ctx, p)
+	resp, err := p.process(ctx, rp)
 	if err != nil {
 		return "", err
 	}
@@ -267,14 +267,14 @@ func (c *Provider) PowerStateGet(ctx context.Context) (state string, err error) 
 }
 
 // process is the main function for the roundtrip of rpc calls to the ConsumerURL.
-func (c *Provider) process(ctx context.Context, p RequestPayload) (ResponsePayload, error) {
+func (p *Provider) process(ctx context.Context, rp RequestPayload) (ResponsePayload, error) {
 	// 1. create the HTTP request.
 	// 2. create the signature payload.
 	// 3. sign the signature payload.
 	// 4. add signatures to the request as headers.
 	// 5. request/response round trip.
 	// 6. handle the response.
-	req, err := c.createRequest(ctx, p)
+	req, err := p.createRequest(ctx, rp)
 	if err != nil {
 		return ResponsePayload{}, err
 	}
@@ -287,7 +287,7 @@ func (c *Provider) process(ctx context.Context, p RequestPayload) (ResponsePaylo
 	}
 	req.Body = io.NopCloser(bytes.NewBuffer(body))
 	headersForSig := http.Header{}
-	for _, h := range c.Opts.Signature.IncludedPayloadHeaders {
+	for _, h := range p.Opts.Signature.IncludedPayloadHeaders {
 		if val := req.Header.Get(h); val != "" {
 			headersForSig.Add(h, val)
 		}
@@ -295,7 +295,7 @@ func (c *Provider) process(ctx context.Context, p RequestPayload) (ResponsePaylo
 	sigPay := createSignaturePayload(body, headersForSig)
 
 	// sign the signature payload
-	sigs, err := sign(sigPay, c.Opts.HMAC.Hashes, c.Opts.HMAC.PrefixSigDisabled)
+	sigs, err := sign(sigPay, p.Opts.HMAC.Hashes, p.Opts.HMAC.PrefixSigDisabled)
 	if err != nil {
 		return ResponsePayload{}, err
 	}
@@ -303,8 +303,8 @@ func (c *Provider) process(ctx context.Context, p RequestPayload) (ResponsePaylo
 	// add signatures to the request as headers.
 	for algo, keys := range sigs {
 		if len(sigs) > 0 {
-			h := c.Opts.Signature.HeaderName
-			if !c.Opts.Signature.AppendAlgoToHeaderDisabled {
+			h := p.Opts.Signature.HeaderName
+			if !p.Opts.Signature.AppendAlgoToHeaderDisabled {
 				h = fmt.Sprintf("%s-%s", h, algo.ToShort())
 			}
 			req.Header.Add(h, strings.Join(keys, ","))
@@ -313,29 +313,29 @@ func (c *Provider) process(ctx context.Context, p RequestPayload) (ResponsePaylo
 
 	// request/response round trip.
 	kvs := requestKVS(req)
-	kvs = append(kvs, []interface{}{"host", c.Host, "method", p.Method, "consumerURL", c.ConsumerURL}...)
-	if p.Params != nil {
-		kvs = append(kvs, []interface{}{"params", p.Params}...)
+	kvs = append(kvs, []interface{}{"host", p.Host, "method", rp.Method, "consumerURL", p.ConsumerURL}...)
+	if rp.Params != nil {
+		kvs = append(kvs, []interface{}{"params", rp.Params}...)
 	}
 
-	resp, err := c.Client.Do(req)
+	resp, err := p.Client.Do(req)
 	if err != nil {
-		c.Logger.Error(err, "failed to send rpc notification", kvs...)
+		p.Logger.Error(err, "failed to send rpc notification", kvs...)
 		return ResponsePayload{}, err
 	}
 	defer resp.Body.Close()
 
 	// handle the response
-	rp, err := c.handleResponse(resp, kvs)
+	respPayload, err := p.handleResponse(resp, kvs)
 	if err != nil {
 		return ResponsePayload{}, err
 	}
 
-	return rp, nil
+	return respPayload, nil
 }
 
 // Transformer implements the mergo interfaces for merging custom types.
-func (c *Provider) Transformer(typ reflect.Type) func(dst, src reflect.Value) error {
+func (p *Provider) Transformer(typ reflect.Type) func(dst, src reflect.Value) error {
 	switch typ {
 	case reflect.TypeOf(logr.Logger{}):
 		return func(dst, src reflect.Value) error {

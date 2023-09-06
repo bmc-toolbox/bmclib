@@ -12,45 +12,45 @@ import (
 )
 
 // createRequest
-func (c *Provider) createRequest(ctx context.Context, p RequestPayload) (*http.Request, error) {
+func (p *Provider) createRequest(ctx context.Context, rp RequestPayload) (*http.Request, error) {
 	var data []byte
-	if rj := c.Opts.Experimental.CustomRequestPayload; rj != nil && c.Opts.Experimental.DotPath != "" {
-		d, err := p.embedPayload(rj, c.Opts.Experimental.DotPath)
+	if rj := p.Opts.Experimental.CustomRequestPayload; rj != nil && p.Opts.Experimental.DotPath != "" {
+		d, err := rp.embedPayload(rj, p.Opts.Experimental.DotPath)
 		if err != nil {
 			return nil, err
 		}
 		data = d
 	} else {
-		d, err := json.Marshal(p)
+		d, err := json.Marshal(rp)
 		if err != nil {
 			return nil, err
 		}
 		data = d
 	}
 
-	req, err := http.NewRequestWithContext(ctx, c.Opts.Request.HTTPMethod, c.listenerURL.String(), bytes.NewReader(data))
+	req, err := http.NewRequestWithContext(ctx, p.Opts.Request.HTTPMethod, p.listenerURL.String(), bytes.NewReader(data))
 	if err != nil {
 		return nil, err
 	}
-	for k, v := range c.Opts.Request.StaticHeaders {
+	for k, v := range p.Opts.Request.StaticHeaders {
 		req.Header.Add(k, strings.Join(v, ","))
 	}
-	if c.Opts.Request.HTTPContentType != "" {
-		req.Header.Set("Content-Type", c.Opts.Request.HTTPContentType)
+	if p.Opts.Request.HTTPContentType != "" {
+		req.Header.Set("Content-Type", p.Opts.Request.HTTPContentType)
 	}
-	if c.Opts.Request.TimestampHeader != "" {
-		req.Header.Add(c.Opts.Request.TimestampHeader, time.Now().Format(c.Opts.Request.TimestampFormat))
+	if p.Opts.Request.TimestampHeader != "" {
+		req.Header.Add(p.Opts.Request.TimestampHeader, time.Now().Format(p.Opts.Request.TimestampFormat))
 	}
 
 	return req, nil
 }
 
-func (c *Provider) handleResponse(resp *http.Response, reqKeysAndValues []interface{}) (ResponsePayload, error) {
+func (p *Provider) handleResponse(resp *http.Response, reqKeysAndValues []interface{}) (ResponsePayload, error) {
 	kvs := reqKeysAndValues
 	defer func() {
-		if !c.LogNotificationsDisabled {
+		if !p.LogNotificationsDisabled {
 			kvs = append(kvs, responseKVS(resp)...)
-			c.Logger.Info("rpc notification details", kvs...)
+			p.Logger.Info("rpc notification details", kvs...)
 		}
 	}()
 	defer resp.Body.Close()
@@ -64,7 +64,7 @@ func (c *Provider) handleResponse(resp *http.Response, reqKeysAndValues []interf
 		if resp.StatusCode != http.StatusOK {
 			return ResponsePayload{}, fmt.Errorf("unexpected status code: %d, response error(optional): %v", resp.StatusCode, res.Error)
 		}
-		example, _ := json.Marshal(ResponsePayload{ID: 123, Host: c.Host, Error: &ResponseError{Code: 1, Message: "error message"}})
+		example, _ := json.Marshal(ResponsePayload{ID: 123, Host: p.Host, Error: &ResponseError{Code: 1, Message: "error message"}})
 		return ResponsePayload{}, fmt.Errorf("failed to parse response: got: %q, error: %w, expected response json spec: %v", string(bodyBytes), err, string(example))
 	}
 	if resp.StatusCode != http.StatusOK {
