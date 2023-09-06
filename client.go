@@ -4,6 +4,7 @@ package bmclib
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"sync"
@@ -133,21 +134,28 @@ func (c *Client) defaultTimeout(ctx context.Context) time.Duration {
 	return time.Until(deadline) / time.Duration(l)
 }
 
+func (c *Client) registerRPCProvider() error {
+	driverRPC := rpc.New(c.providerConfig.rpc.ConsumerURL, c.Auth.Host, c.providerConfig.rpc.Opts.HMAC.Secrets)
+	c.providerConfig.rpc.Logger = c.Logger
+	if err := mergo.Merge(driverRPC, c.providerConfig.rpc, mergo.WithOverride, mergo.WithTransformers(&rpc.Config{})); err != nil {
+		return fmt.Errorf("failed to merge user specified rpc config with the config defaults, rpc provider not available: %w", err)
+	}
+	c.Registry.Register(rpc.ProviderName, rpc.ProviderProtocol, rpc.Features, nil, driverRPC)
+
+	return nil
+}
+
 func (c *Client) registerProviders() {
 	// register the rpc provider
 	// without the consumer URL there is no way to send RPC requests.
 	if c.providerConfig.rpc.ConsumerURL != "" {
 		// when the rpc provider is to be used, we won't register any other providers.
-		driverRPC := rpc.New(c.providerConfig.rpc.ConsumerURL, c.Auth.Host, c.providerConfig.rpc.Opts.HMAC.Secrets)
-		c.providerConfig.rpc.Logger = c.Logger
-		err := mergo.Merge(driverRPC, c.providerConfig.rpc, mergo.WithOverride, mergo.WithTransformers(&rpc.Config{}))
+		err := c.registerRPCProvider()
 		if err == nil {
 			c.Logger.Info("note: with the rpc provider registered, no other providers will be registered and available")
-			c.Registry.Register(rpc.ProviderName, rpc.ProviderProtocol, rpc.Features, nil, driverRPC)
 			return
 		}
-
-		c.Logger.Info("failed to merge user specified rpc config with the config defaults, rpc provider not available", "error", err.Error())
+		c.Logger.Info("failed to register rpc provider, falling back to registering all other providers", "error", err.Error())
 	}
 	// register ipmitool provider
 	ipmiOpts := []ipmitool.Option{
