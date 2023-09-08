@@ -107,7 +107,8 @@ type SignatureOpts struct {
 	// Example: X-BMCLIB-Signature becomes X-BMCLIB-Signature-256
 	// When set to true, a header will be added for each algorithm. Example: X-BMCLIB-Signature-256 and X-BMCLIB-Signature-512
 	AppendAlgoToHeaderDisabled bool
-	// IncludedPayloadHeaders are headers whose values will be included in the signature payload. Example: X-BMCLIB-My-Custom-Header
+	// IncludedPayloadHeaders are headers whose values will be included in the signature payload. Example: given these headers in a request:
+	// X-My-Header=123,X-Another=456, and IncludedPayloadHeaders := []string{"X-Another"}, the value of "X-Another" will be included in the signature payload.
 	// All headers will be deduplicated.
 	IncludedPayloadHeaders []string
 }
