@@ -53,7 +53,6 @@ func (p *Provider) handleResponse(resp *http.Response, reqKeysAndValues []interf
 			p.Logger.Info("rpc notification details", kvs...)
 		}
 	}()
-	defer resp.Body.Close()
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return ResponsePayload{}, fmt.Errorf("failed to read response body: %v", err)
