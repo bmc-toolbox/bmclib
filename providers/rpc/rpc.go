@@ -327,7 +327,7 @@ func (p *Provider) process(ctx context.Context, rp RequestPayload) (ResponsePayl
 	defer resp.Body.Close()
 
 	// handle the response
-	if resp.ContentLength > maxContentLenAllowed {
+	if resp.ContentLength > maxContentLenAllowed || resp.ContentLength < 0 {
 		return ResponsePayload{}, fmt.Errorf("response body is too large: %d bytes, max allowed: %d bytes", resp.ContentLength, maxContentLenAllowed)
 	}
 	respPayload, err := p.handleResponse(resp, kvs)
