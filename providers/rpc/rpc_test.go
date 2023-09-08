@@ -114,7 +114,6 @@ func TestPowerSet(t *testing.T) {
 			if err != nil && !tc.shouldErr {
 				t.Fatal(err)
 			}
-
 		})
 	}
 }

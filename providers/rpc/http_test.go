@@ -14,10 +14,10 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
-func testRequest(method, url string, body RequestPayload, headers http.Header) *http.Request {
+func testRequest(method, reqURL string, body RequestPayload, headers http.Header) *http.Request {
 	var buf bytes.Buffer
 	_ = json.NewEncoder(&buf).Encode(body)
-	req, _ := http.NewRequest(method, url, &buf)
+	req, _ := http.NewRequestWithContext(context.Background(), method, reqURL, &buf)
 	req.Header = headers
 	return req
 }
@@ -58,7 +58,7 @@ func TestRequestKVS(t *testing.T) {
 
 func TestRequestKVSOneOffs(t *testing.T) {
 	t.Run("nil body", func(t *testing.T) {
-		req, _ := http.NewRequest(http.MethodPost, "http://example.com", nil)
+		req, _ := http.NewRequestWithContext(context.Background(), http.MethodPost, "http://example.com", nil)
 		got := requestKVS(req)
 		if diff := cmp.Diff(got, []interface{}{"request", requestDetails{}}); diff != "" {
 			t.Logf("got: %+v", got)
@@ -72,7 +72,7 @@ func TestRequestKVSOneOffs(t *testing.T) {
 	})
 
 	t.Run("failed to unmarshal body", func(t *testing.T) {
-		req, _ := http.NewRequest(http.MethodPost, "http://example.com", bytes.NewBufferString("invalid"))
+		req, _ := http.NewRequestWithContext(context.Background(), http.MethodPost, "http://example.com", bytes.NewBufferString("invalid"))
 		got := requestKVS(req)
 		if diff := cmp.Diff(got, []interface{}{"request", requestDetails{URL: "http://example.com", Method: http.MethodPost, Headers: http.Header{}}}); diff != "" {
 			t.Logf("got: %+v", got)

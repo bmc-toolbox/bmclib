@@ -190,9 +190,8 @@ func (p *Provider) Open(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
 
-	return nil
+	return resp.Body.Close()
 }
 
 // Close a connection to the rpc consumer.
@@ -203,7 +202,7 @@ func (p *Provider) Close(_ context.Context) (err error) {
 // BootDeviceSet sends a next boot device rpc notification.
 func (p *Provider) BootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
 	rp := RequestPayload{
-		ID:     int64(time.Now().UnixNano()),
+		ID:     time.Now().UnixNano(),
 		Host:   p.Host,
 		Method: BootDeviceMethod,
 		Params: BootDeviceParams{
@@ -228,7 +227,7 @@ func (p *Provider) PowerSet(ctx context.Context, state string) (ok bool, err err
 	switch strings.ToLower(state) {
 	case "on", "off", "cycle":
 		rp := RequestPayload{
-			ID:     int64(time.Now().UnixNano()),
+			ID:     time.Now().UnixNano(),
 			Host:   p.Host,
 			Method: PowerSetMethod,
 			Params: PowerSetParams{
@@ -252,7 +251,7 @@ func (p *Provider) PowerSet(ctx context.Context, state string) (ok bool, err err
 // PowerStateGet gets the power state of a BMC machine.
 func (p *Provider) PowerStateGet(ctx context.Context) (state string, err error) {
 	rp := RequestPayload{
-		ID:     int64(time.Now().UnixNano()),
+		ID:     time.Now().UnixNano(),
 		Host:   p.Host,
 		Method: PowerGetMethod,
 	}
