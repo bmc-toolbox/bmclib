@@ -25,9 +25,10 @@ const (
 	ProviderProtocol = "http"
 
 	// defaults
-	timestampHeader = "X-BMCLIB-Timestamp"
-	signatureHeader = "X-BMCLIB-Signature"
-	contentType     = "application/json"
+	timestampHeader      = "X-BMCLIB-Timestamp"
+	signatureHeader      = "X-BMCLIB-Signature"
+	contentType          = "application/json"
+	maxContentLenAllowed = 512 << (10 * 1) // 512KB
 
 	// SHA256 is the SHA256 algorithm.
 	SHA256 Algorithm = "sha256"
@@ -326,6 +327,9 @@ func (p *Provider) process(ctx context.Context, rp RequestPayload) (ResponsePayl
 	defer resp.Body.Close()
 
 	// handle the response
+	if resp.ContentLength > maxContentLenAllowed {
+		return ResponsePayload{}, fmt.Errorf("response body is too large: %d bytes, max allowed: %d bytes", resp.ContentLength, maxContentLenAllowed)
+	}
 	respPayload, err := p.handleResponse(resp, kvs)
 	if err != nil {
 		return ResponsePayload{}, err

@@ -151,3 +151,16 @@ func TestCreateRequest(t *testing.T) {
 		})
 	}
 }
+
+func TestContentSize(t *testing.T) {
+	prov := New("http://127.0.0.1/rpc", "127.0.2.1", Secrets{SHA256: {"superSecret1"}})
+	_ = prov.Open(context.Background())
+	reqPayload := RequestPayload{ID: 1, Host: "127.0.0.1", Method: PowerGetMethod}
+	req, err := prov.createRequest(context.Background(), reqPayload)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if req.ContentLength > maxContentLenAllowed {
+		t.Fatalf("unexpected content length: got: %d, want: %v", req.ContentLength, maxContentLenAllowed)
+	}
+}
