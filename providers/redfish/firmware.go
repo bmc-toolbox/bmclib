@@ -109,7 +109,7 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 	c.redfishwrapper.SetHttpClientTimeout(time.Until(ctxDeadline))
 
 	payload := &multipartPayload{
-		updateParameters: bytes.NewReader(updateParameters),
+		updateParameters: updateParameters,
 		updateFile:       updateFile,
 	}
 
@@ -135,7 +135,7 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 }
 
 type multipartPayload struct {
-	updateParameters io.Reader
+	updateParameters []byte
 	updateFile       *os.File
 }
 
@@ -237,16 +237,9 @@ func multipartPayloadSize(payload *multipartPayload) (int64, *bytes.Buffer, erro
 		return 0, body, err
 	}
 
-	// a buffer to save the contents of the updateParameters reader
-	buf := bytes.Buffer{}
-	teeReader := io.TeeReader(payload.updateParameters, &buf)
-
-	if _, err = io.Copy(part, teeReader); err != nil {
+	if _, err = io.Copy(part, bytes.NewReader(payload.updateParameters)); err != nil {
 		return 0, body, err
 	}
-
-	// restore the reader
-	payload.updateParameters = bytes.NewReader(buf.Bytes())
 
 	// Add updateFile form
 	_, err = form.CreateFormFile("UpdateFile", filepath.Base(payload.updateFile.Name()))
@@ -337,7 +330,7 @@ func (c *Conn) runRequestWithMultipartPayload(method, url string, payload *multi
 			return
 		}
 
-		if _, err = io.Copy(parametersPart, payload.updateParameters); err != nil {
+		if _, err = io.Copy(parametersPart, bytes.NewReader(payload.updateParameters)); err != nil {
 			c.Log.Error(errMultiPartPayload, err.Error()+": UpdateParameters part copy error")
 
 			return

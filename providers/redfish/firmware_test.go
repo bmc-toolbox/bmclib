@@ -1,7 +1,6 @@
 package redfish
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -207,7 +206,7 @@ func TestMultipartPayloadSize(t *testing.T) {
 		{
 			"content length as expected",
 			&multipartPayload{
-				updateParameters: bytes.NewReader(updateParameters),
+				updateParameters: updateParameters,
 				updateFile:       testfileFH,
 			},
 			475,
