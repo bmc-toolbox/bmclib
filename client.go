@@ -450,5 +450,20 @@ func (c *Client) Screenshot(ctx context.Context) (image []byte, fileType string,
 func (c *Client) ClearSystemEventLog(ctx context.Context) (err error) {
 	metadata, err := bmc.ClearSystemEventLogFromInterfaces(ctx, c.perProviderTimeout(ctx), c.registry().GetDriverInterfaces())
 	c.setMetadata(metadata)
+
+	return err
+}
+
+func (c *Client) UploadFloppyImage(ctx context.Context, image io.Reader) (err error) {
+	metadata, err := bmc.UploadFloppyImageFromInterfaces(ctx, image, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+
+	return err
+}
+
+func (c *Client) UnmountFloppyImage(ctx context.Context) (err error) {
+	metadata, err := bmc.UnmountFloppyImageFromInterfaces(ctx, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+
 	return err
 }
