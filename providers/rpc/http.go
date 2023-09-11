@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -45,32 +44,26 @@ func (p *Provider) createRequest(ctx context.Context, rp RequestPayload) (*http.
 	return req, nil
 }
 
-func (p *Provider) handleResponse(resp *http.Response, reqKeysAndValues []any) (ResponsePayload, error) {
+func (p *Provider) handleResponse(statusCode int, headers http.Header, body *bytes.Buffer, reqKeysAndValues []any) (ResponsePayload, error) {
 	kvs := reqKeysAndValues
 	defer func() {
 		if !p.LogNotificationsDisabled {
-			kvs = append(kvs, responseKVS(resp)...)
+			kvs = append(kvs, responseKVS(statusCode, headers, body)...)
 			p.Logger.Info("rpc notification details", kvs...)
 		}
 	}()
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return ResponsePayload{}, fmt.Errorf("failed to read response body: %v", err)
-	}
 
 	res := ResponsePayload{}
-	if err := json.Unmarshal(bodyBytes, &res); err != nil {
-		if resp.StatusCode != http.StatusOK {
-			return ResponsePayload{}, fmt.Errorf("unexpected status code: %d, response error(optional): %v", resp.StatusCode, res.Error)
+	if err := json.Unmarshal(body.Bytes(), &res); err != nil {
+		if statusCode != http.StatusOK {
+			return ResponsePayload{}, fmt.Errorf("unexpected status code: %d, response error(optional): %v", statusCode, res.Error)
 		}
 		example, _ := json.Marshal(ResponsePayload{ID: 123, Host: p.Host, Error: &ResponseError{Code: 1, Message: "error message"}})
-		return ResponsePayload{}, fmt.Errorf("failed to parse response: got: %q, error: %w, expected response json spec: %v", string(bodyBytes), err, string(example))
+		return ResponsePayload{}, fmt.Errorf("failed to parse response: got: %q, error: %w, expected response json spec: %v", body.String(), err, string(example))
 	}
-	if resp.StatusCode != http.StatusOK {
-		return ResponsePayload{}, fmt.Errorf("unexpected status code: %d, response error(optional): %v", resp.StatusCode, res.Error)
+	if statusCode != http.StatusOK {
+		return ResponsePayload{}, fmt.Errorf("unexpected status code: %d, response error(optional): %v", statusCode, res.Error)
 	}
-	// reset the body so it can be read again by deferred functions.
-	resp.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
 	return res, nil
 }

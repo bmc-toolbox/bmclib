@@ -15,9 +15,9 @@ import (
 )
 
 func testRequest(method, reqURL string, body RequestPayload, headers http.Header) *http.Request {
-	var buf bytes.Buffer
-	_ = json.NewEncoder(&buf).Encode(body)
-	req, _ := http.NewRequestWithContext(context.Background(), method, reqURL, &buf)
+	buf := new(bytes.Buffer)
+	_ = json.NewEncoder(buf).Encode(body)
+	req, _ := http.NewRequestWithContext(context.Background(), method, reqURL, buf)
 	req.Header = headers
 	return req
 }
@@ -97,7 +97,9 @@ func TestResponseKVS(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			kvs := responseKVS(tc.resp)
+			buf := new(bytes.Buffer)
+			_, _ = io.Copy(buf, tc.resp.Body)
+			kvs := responseKVS(tc.resp.StatusCode, tc.resp.Header, buf)
 			if diff := cmp.Diff(kvs, tc.expected); diff != "" {
 				t.Fatalf("requestKVS() mismatch (-want +got):\n%s", diff)
 			}

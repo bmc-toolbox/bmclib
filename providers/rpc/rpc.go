@@ -182,9 +182,9 @@ func (p *Provider) Open(ctx context.Context) error {
 		return err
 	}
 	p.listenerURL = u
-	var buf bytes.Buffer
-	_ = json.NewEncoder(&buf).Encode(RequestPayload{})
-	testReq, err := http.NewRequestWithContext(ctx, p.Opts.Request.HTTPMethod, p.listenerURL.String(), bytes.NewReader(buf.Bytes()))
+	buf := new(bytes.Buffer)
+	_ = json.NewEncoder(buf).Encode(RequestPayload{})
+	testReq, err := http.NewRequestWithContext(ctx, p.Opts.Request.HTTPMethod, p.listenerURL.String(), buf)
 	if err != nil {
 		return err
 	}
@@ -198,8 +198,7 @@ func (p *Provider) Open(ctx context.Context) error {
 	}
 
 	// test that the consumer responses with the expected contract (ResponsePayload{}).
-	var res ResponsePayload
-	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&ResponsePayload{}); err != nil {
 		return fmt.Errorf("issue with the rpc consumer response: %v", err)
 	}
 
@@ -292,19 +291,17 @@ func (p *Provider) process(ctx context.Context, rp RequestPayload) (ResponsePayl
 	}
 
 	// create the signature payload
-	// get the body and reset it as readers can only be read once.
-	body, err := io.ReadAll(req.Body)
-	if err != nil {
-		return ResponsePayload{}, err
+	reqBuf := new(bytes.Buffer)
+	if _, err := io.Copy(reqBuf, req.Body); err != nil {
+		return ResponsePayload{}, fmt.Errorf("failed to read request body: %w", err)
 	}
-	req.Body = io.NopCloser(bytes.NewBuffer(body))
 	headersForSig := http.Header{}
 	for _, h := range p.Opts.Signature.IncludedPayloadHeaders {
 		if val := req.Header.Get(h); val != "" {
 			headersForSig.Add(h, val)
 		}
 	}
-	sigPay := createSignaturePayload(body, headersForSig)
+	sigPay := createSignaturePayload(reqBuf.Bytes(), headersForSig)
 
 	// sign the signature payload
 	sigs, err := sign(sigPay, p.Opts.HMAC.Hashes, p.Opts.HMAC.PrefixSigDisabled)
@@ -336,12 +333,16 @@ func (p *Provider) process(ctx context.Context, rp RequestPayload) (ResponsePayl
 		return ResponsePayload{}, err
 	}
 	defer resp.Body.Close()
+	respBuf := new(bytes.Buffer)
+	if _, err := io.Copy(respBuf, resp.Body); err != nil {
+		return ResponsePayload{}, fmt.Errorf("failed to read response body: %w", err)
+	}
 
 	// handle the response
 	if resp.ContentLength > maxContentLenAllowed || resp.ContentLength < 0 {
 		return ResponsePayload{}, fmt.Errorf("response body is too large: %d bytes, max allowed: %d bytes", resp.ContentLength, maxContentLenAllowed)
 	}
-	respPayload, err := p.handleResponse(resp, kvs)
+	respPayload, err := p.handleResponse(resp.StatusCode, resp.Header, respBuf, kvs)
 	if err != nil {
 		return ResponsePayload{}, err
 	}

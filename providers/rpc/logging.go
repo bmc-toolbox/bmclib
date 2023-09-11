@@ -42,18 +42,15 @@ func requestKVS(req *http.Request) []interface{} {
 }
 
 // responseKVS returns a slice of key, value sets. Used for logging.
-func responseKVS(resp *http.Response) []interface{} {
+func responseKVS(statusCode int, headers http.Header, body *bytes.Buffer) []interface{} {
 	var r responseDetails
-	if resp != nil && resp.Body != nil {
+	if body.Len() > 0 {
 		var p ResponsePayload
-		reqBody, err := io.ReadAll(resp.Body)
-		if err == nil {
-			_ = json.Unmarshal(reqBody, &p)
-		}
+		_ = json.Unmarshal(body.Bytes(), &p)
 		r = responseDetails{
-			StatusCode: resp.StatusCode,
+			StatusCode: statusCode,
 			Body:       p,
-			Headers:    resp.Header,
+			Headers:    headers,
 		}
 	}
 
