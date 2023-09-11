@@ -2,6 +2,7 @@ package redfish
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -30,6 +31,9 @@ func multipartUpload(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
+	// payload size
+	expectedContentLength := "476"
+
 	expected := []string{
 		`Content-Disposition: form-data; name="UpdateParameters"`,
 		`Content-Type: application/json`,
@@ -46,11 +50,15 @@ func multipartUpload(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if r.Header.Get("Content-Length") != expectedContentLength {
+		log.Fatal("Header Content-Length does not match expected")
+	}
+
 	w.Header().Add("Location", "/redfish/v1/TaskService/Tasks/JID_467696020275")
 	w.WriteHeader(http.StatusAccepted)
 }
 
-func Test_FirmwareInstall(t *testing.T) {
+func TestFirmwareInstall(t *testing.T) {
 	// curl -Lv -s -k -u root:calvin \
 	// -F 'UpdateParameters={"Targets": [], "@Redfish.OperationApplyTime": "OnReset", "Oem": {}};type=application/json' \
 	// -F'foo.bin=@/tmp/dummyfile;application/octet-stream'
@@ -88,6 +96,17 @@ func Test_FirmwareInstall(t *testing.T) {
 			false,
 			nil,
 			"",
+			bmclibErrs.ErrFirmwareInstall,
+			"method expects an *os.File object",
+			"expect *os.File object",
+		},
+		{
+			common.SlugBIOS,
+			constants.FirmwareApplyOnReset,
+			false,
+			false,
+			&os.File{},
+			"",
 			errInsufficientCtxTimeout,
 			"",
 			"remaining context deadline",
@@ -97,7 +116,7 @@ func Test_FirmwareInstall(t *testing.T) {
 			"invalidApplyAt",
 			false,
 			true,
-			nil,
+			&os.File{},
 			"",
 			bmclibErrs.ErrFirmwareInstall,
 			"invalid applyAt parameter",
@@ -151,7 +170,64 @@ func Test_FirmwareInstall(t *testing.T) {
 
 }
 
-func Test_firmwareUpdateCompatible(t *testing.T) {
+func TestMultipartPayloadSize(t *testing.T) {
+	updateParameters, err := json.Marshal(struct {
+		Targets            []string `json:"Targets"`
+		RedfishOpApplyTime string   `json:"@Redfish.OperationApplyTime"`
+		Oem                struct{} `json:"Oem"`
+	}{
+		[]string{},
+		"foobar",
+		struct{}{},
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tmpdir := t.TempDir()
+	binPath := filepath.Join(tmpdir, "test.bin")
+	err = os.WriteFile(binPath, []byte(`HELLOWORLD`), 0600)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	testfileFH, err := os.Open(binPath)
+	if err != nil {
+		t.Fatalf("%s -> %s", err.Error(), binPath)
+	}
+
+	testCases := []struct {
+		testName     string
+		payload      *multipartPayload
+		expectedSize int64
+		errorMsg     string
+	}{
+		{
+			"content length as expected",
+			&multipartPayload{
+				updateParameters: updateParameters,
+				updateFile:       testfileFH,
+			},
+			475,
+			"",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.testName, func(t *testing.T) {
+			gotSize, _, err := multipartPayloadSize(tc.payload)
+			if tc.errorMsg != "" {
+				assert.Contains(t, err.Error(), tc.errorMsg)
+			}
+
+			assert.Nil(t, err)
+			assert.Equal(t, tc.expectedSize, gotSize)
+		})
+	}
+}
+
+func TestFirmwareUpdateCompatible(t *testing.T) {
 	err := mockClient.firmwareUpdateCompatible(context.TODO())
 	if err != nil {
 		t.Fatal(err)
