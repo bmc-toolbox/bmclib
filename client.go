@@ -13,6 +13,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/providers/asrockrack"
 	"github.com/bmc-toolbox/bmclib/v2/providers/dell"
+	"github.com/bmc-toolbox/bmclib/v2/providers/goipmi"
 	"github.com/bmc-toolbox/bmclib/v2/providers/intelamt"
 	"github.com/bmc-toolbox/bmclib/v2/providers/ipmitool"
 	"github.com/bmc-toolbox/bmclib/v2/providers/redfish"
@@ -58,6 +59,7 @@ type providerConfig struct {
 	intelamt   intelamt.Config
 	dell       dell.Config
 	supermicro supermicro.Config
+	goipmi     goipmi.Config
 }
 
 // NewClient returns a new Client struct
@@ -89,6 +91,10 @@ func NewClient(host, user, pass string, opts ...Option) *Client {
 			},
 			supermicro: supermicro.Config{
 				Port: "443",
+			},
+			goipmi: goipmi.Config{
+				CipherSuite: 3,
+				Port:        623,
 			},
 		},
 	}
@@ -187,6 +193,16 @@ func (c *Client) registerProviders() {
 	smcHttpClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
 	driverSupermicro := supermicro.NewClient(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger, supermicro.WithHttpClient(&smcHttpClient), supermicro.WithPort(c.providerConfig.supermicro.Port))
 	c.Registry.Register(supermicro.ProviderName, supermicro.ProviderProtocol, supermicro.Features, nil, driverSupermicro)
+
+	// register goipmi provider
+	goipmiOpts := []goipmi.Option{goipmi.WithCipherSuite(c.providerConfig.goipmi.CipherSuite)}
+	driverGoipmi, err := goipmi.New(c.Auth.Host, c.providerConfig.goipmi.Port, c.Auth.User, c.Auth.Pass, goipmiOpts...)
+	if err != nil {
+		c.Logger.Info("goipmi provider not available", "error", err.Error())
+	} else {
+		driverGoipmi.Log = c.Logger
+		c.Registry.Register(goipmi.ProviderName, goipmi.ProviderProtocol, goipmi.Features, nil, driverGoipmi)
+	}
 }
 
 // GetMetadata returns the metadata that is populated after each BMC function/method call
