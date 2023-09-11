@@ -45,7 +45,7 @@ func (p *Provider) createRequest(ctx context.Context, rp RequestPayload) (*http.
 	return req, nil
 }
 
-func (p *Provider) handleResponse(resp *http.Response, reqKeysAndValues []interface{}) (ResponsePayload, error) {
+func (p *Provider) handleResponse(resp *http.Response, reqKeysAndValues []any) (ResponsePayload, error) {
 	kvs := reqKeysAndValues
 	defer func() {
 		if !p.LogNotificationsDisabled {

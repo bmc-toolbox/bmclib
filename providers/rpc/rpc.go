@@ -3,6 +3,7 @@ package rpc
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"hash"
@@ -181,15 +182,25 @@ func (p *Provider) Open(ctx context.Context) error {
 		return err
 	}
 	p.listenerURL = u
-	testReq, err := http.NewRequestWithContext(ctx, p.Opts.Request.HTTPMethod, p.listenerURL.String(), nil)
+	var buf bytes.Buffer
+	_ = json.NewEncoder(&buf).Encode(RequestPayload{})
+	testReq, err := http.NewRequestWithContext(ctx, p.Opts.Request.HTTPMethod, p.listenerURL.String(), bytes.NewReader(buf.Bytes()))
 	if err != nil {
 		return err
 	}
 	// test that we can communicate with the rpc consumer.
-	// and that it responses with the spec contract (Response{}).
 	resp, err := p.Client.Do(testReq)
 	if err != nil {
 		return err
+	}
+	if resp.StatusCode >= http.StatusInternalServerError {
+		return fmt.Errorf("issue on the rpc consumer side, status code: %d", resp.StatusCode)
+	}
+
+	// test that the consumer responses with the expected contract (ResponsePayload{}).
+	var res ResponsePayload
+	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+		return fmt.Errorf("issue with the rpc consumer response: %v", err)
 	}
 
 	return resp.Body.Close()
@@ -216,7 +227,7 @@ func (p *Provider) BootDeviceSet(ctx context.Context, bootDevice string, setPers
 	if err != nil {
 		return false, err
 	}
-	if resp.Error != nil {
+	if resp.Error != nil && resp.Error.Code != 0 {
 		return false, fmt.Errorf("error from rpc consumer: %v", resp.Error)
 	}
 
@@ -239,7 +250,7 @@ func (p *Provider) PowerSet(ctx context.Context, state string) (ok bool, err err
 		if err != nil {
 			return ok, err
 		}
-		if resp.Error != nil {
+		if resp.Error != nil && resp.Error.Code != 0 {
 			return ok, fmt.Errorf("error from rpc consumer: %v", resp.Error)
 		}
 
@@ -260,7 +271,7 @@ func (p *Provider) PowerStateGet(ctx context.Context) (state string, err error) 
 	if err != nil {
 		return "", err
 	}
-	if resp.Error != nil {
+	if resp.Error != nil && resp.Error.Code != 0 {
 		return "", fmt.Errorf("error from rpc consumer: %v", resp.Error)
 	}
 

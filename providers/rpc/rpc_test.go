@@ -180,11 +180,7 @@ func TestServerErrors(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			c := New(svr.URL, "127.0.0.1", Secrets{SHA256: {"superSecret1"}})
-			if err := c.Open(ctx); err != nil {
-				t.Fatal(err)
-			}
-			_, err := c.PowerStateGet(ctx)
-			if err == nil {
+			if err := c.Open(ctx); err == nil {
 				t.Fatal("expected error, got none")
 			}
 		})
