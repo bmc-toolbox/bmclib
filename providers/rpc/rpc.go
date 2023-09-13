@@ -333,14 +333,14 @@ func (p *Provider) process(ctx context.Context, rp RequestPayload) (ResponsePayl
 		return ResponsePayload{}, err
 	}
 	defer resp.Body.Close()
-	respBuf := new(bytes.Buffer)
-	if _, err := io.Copy(respBuf, resp.Body); err != nil {
-		return ResponsePayload{}, fmt.Errorf("failed to read response body: %w", err)
-	}
 
 	// handle the response
 	if resp.ContentLength > maxContentLenAllowed || resp.ContentLength < 0 {
 		return ResponsePayload{}, fmt.Errorf("response body is too large: %d bytes, max allowed: %d bytes", resp.ContentLength, maxContentLenAllowed)
+	}
+	respBuf := new(bytes.Buffer)
+	if _, err := io.CopyN(respBuf, resp.Body, resp.ContentLength); err != nil {
+		return ResponsePayload{}, fmt.Errorf("failed to read response body: %w", err)
 	}
 	respPayload, err := p.handleResponse(resp.StatusCode, resp.Header, respBuf, kvs)
 	if err != nil {
