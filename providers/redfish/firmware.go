@@ -106,7 +106,7 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 	switch installMethod {
 	case multipartHttpUpload:
 		var uploadErr error
-		resp, uploadErr = c.multipartHTTPUpload(ctx, installURI, applyAt, reader)
+		resp, uploadErr = c.multipartHTTPUpload(ctx, installURI, applyAt, updateFile)
 		if uploadErr != nil {
 			return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, uploadErr.Error())
 		}
@@ -143,7 +143,7 @@ type multipartPayload struct {
 	updateFile       *os.File
 }
 
-func (c *Conn) multipartHTTPUpload(ctx context.Context, url, applyAt string, update io.Reader) (*http.Response, error) {
+func (c *Conn) multipartHTTPUpload(ctx context.Context, url, applyAt string, update *os.File) (*http.Response, error) {
 	if url == "" {
 		return nil, fmt.Errorf("unable to execute request, no target provided")
 	}
@@ -163,9 +163,9 @@ func (c *Conn) multipartHTTPUpload(ctx context.Context, url, applyAt string, upd
 	}
 
 	// payload ordered in the format it ends up in the multipart form
-	payload := []map[string]io.Reader{
-		{"UpdateParameters": bytes.NewReader(parameters)},
-		{"UpdateFile": update},
+	payload := &multipartPayload{
+		updateParameters: []byte(parameters),
+		updateFile: update,
 	}
 
 	return c.runRequestWithMultipartPayload(url, payload)
