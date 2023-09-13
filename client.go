@@ -4,11 +4,13 @@ package bmclib
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"sync"
 	"time"
 
+	"dario.cat/mergo"
 	"github.com/bmc-toolbox/bmclib/v2/bmc"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/providers/asrockrack"
@@ -16,6 +18,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/providers/intelamt"
 	"github.com/bmc-toolbox/bmclib/v2/providers/ipmitool"
 	"github.com/bmc-toolbox/bmclib/v2/providers/redfish"
+	"github.com/bmc-toolbox/bmclib/v2/providers/rpc"
 	"github.com/bmc-toolbox/bmclib/v2/providers/supermicro"
 	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
@@ -58,6 +61,7 @@ type providerConfig struct {
 	intelamt   intelamt.Config
 	dell       dell.Config
 	supermicro supermicro.Config
+	rpc        rpc.Provider
 }
 
 // NewClient returns a new Client struct
@@ -90,6 +94,7 @@ func NewClient(host, user, pass string, opts ...Option) *Client {
 			supermicro: supermicro.Config{
 				Port: "443",
 			},
+			rpc: rpc.Provider{},
 		},
 	}
 
@@ -129,7 +134,29 @@ func (c *Client) defaultTimeout(ctx context.Context) time.Duration {
 	return time.Until(deadline) / time.Duration(l)
 }
 
+func (c *Client) registerRPCProvider() error {
+	driverRPC := rpc.New(c.providerConfig.rpc.ConsumerURL, c.Auth.Host, c.providerConfig.rpc.Opts.HMAC.Secrets)
+	c.providerConfig.rpc.Logger = c.Logger
+	if err := mergo.Merge(driverRPC, c.providerConfig.rpc, mergo.WithOverride, mergo.WithTransformers(&rpc.Provider{})); err != nil {
+		return fmt.Errorf("failed to merge user specified rpc config with the config defaults, rpc provider not available: %w", err)
+	}
+	c.Registry.Register(rpc.ProviderName, rpc.ProviderProtocol, rpc.Features, nil, driverRPC)
+
+	return nil
+}
+
 func (c *Client) registerProviders() {
+	// register the rpc provider
+	// without the consumer URL there is no way to send RPC requests.
+	if c.providerConfig.rpc.ConsumerURL != "" {
+		// when the rpc provider is to be used, we won't register any other providers.
+		err := c.registerRPCProvider()
+		if err == nil {
+			c.Logger.Info("note: with the rpc provider registered, no other providers will be registered and available")
+			return
+		}
+		c.Logger.Info("failed to register rpc provider, falling back to registering all other providers", "error", err.Error())
+	}
 	// register ipmitool provider
 	ipmiOpts := []ipmitool.Option{
 		ipmitool.WithLogger(c.Logger),

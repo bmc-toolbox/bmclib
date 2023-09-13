@@ -5,6 +5,8 @@ import (
 
 	"github.com/bombsimon/logrusr/v2"
 	"github.com/go-logr/logr"
+	"github.com/go-logr/zerologr"
+	"github.com/rs/zerolog"
 	"github.com/sirupsen/logrus"
 )
 
@@ -25,4 +27,21 @@ func DefaultLogger() logr.Logger {
 	}
 
 	return logrusr.New(logrusLog)
+}
+
+// ZeroLogger is a logr.Logger implementation that uses zerolog.
+// This logger handles nested structs better than the logrus implementation.
+func ZeroLogger(level string) logr.Logger {
+	zl := zerolog.New(os.Stdout)
+	zl = zl.With().Caller().Timestamp().Logger()
+	var l zerolog.Level
+	switch level {
+	case "debug":
+		l = zerolog.DebugLevel
+	default:
+		l = zerolog.InfoLevel
+	}
+	zl = zl.Level(l)
+
+	return zerologr.New(&zl)
 }
