@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"regexp"
 	"strings"
 
 	"github.com/bmc-toolbox/bmclib/v2/constants"
@@ -15,16 +16,61 @@ import (
 )
 
 func (c *Conn) activeTask(ctx context.Context) (*gofishrf.Task, error) {
-	tasks, err := c.redfishwrapper.Tasks(ctx)
+	resp, err := c.redfishwrapper.Get("/redfish/v1/TaskService/Tasks")
 	if err != nil {
+		fmt.Println("err1", err)
+		return nil, err
+	}
+	if resp.StatusCode != 200 {
+		err = errors.Wrap(
+			bmclibErrs.ErrFirmwareInstallStatus,
+			"HTTP Error: "+fmt.Sprint(resp.StatusCode),
+		)
+
 		return nil, err
 	}
 
-	// TODO: correctly get an update task if there is one, using redfish API
-	for _, t := range tasks {
-		fmt.Println(t.TaskState)
-		fmt.Println(t.TaskStatus)
-		fmt.Println("xxx")
+	data, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
+
+	type TaskId struct {
+		OdataID    string `json:"@odata.id"`
+		TaskState  string
+		TaskStatus string
+	}
+
+	type Tasks struct {
+		Members []TaskId
+	}
+
+	var status Tasks
+
+	err = json.Unmarshal(data, &status)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// For each task, check if it's running
+	// It's usually the latest that is running, so it would be faster to
+	// start by the end, but an easy way to do this is only available in go 1.21
+	// for _, t := range slices.Reverse(status.Members) { // when go 1.21
+	for _, t := range status.Members {
+		re := regexp.MustCompile("/redfish/v1/TaskService/Tasks/([0-9]+)")
+		taskmatch := re.FindSubmatch([]byte(t.OdataID))
+		if len(taskmatch) < 1 {
+			continue
+		}
+
+		tasknum := string(taskmatch[1])
+
+		task, err := c.GetTask(tasknum)
+		if err != nil {
+			continue
+		}
+
+		if task.TaskState == "Running" {
+			return task, nil
+		}
 	}
 
 	return nil, nil
@@ -67,8 +113,8 @@ func (c *Conn) purgeQueuedFirmwareInstallTask(ctx context.Context, component str
 		err = c.dellPurgeScheduledFirmwareInstallJob(component)
 	default:
 		err = errors.Wrap(
-			bmclibErrs.ErrNotImplemented,
-			"purgeFirmwareInstallTask() for vendor: "+vendor,
+			bmclibErrs.ErrFirmwareInstall,
+			"Update is already running",
 		)
 	}
 
