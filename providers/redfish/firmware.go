@@ -186,7 +186,7 @@ func (c *Conn) multipartHTTPUpload(ctx context.Context, url, applyAt string, upd
 	// payload ordered in the format it ends up in the multipart form
 	payload := &multipartPayload{
 		updateParameters: []byte(parameters),
-		updateFile: update,
+		updateFile:       update,
 	}
 
 	return c.runRequestWithMultipartPayload(url, payload)
@@ -225,28 +225,6 @@ func (c *Conn) firmwareInstallMethodURI(ctx context.Context) (method installMeth
 	}
 
 	return "", "", errors.Wrap(bmclibErrs.ErrRedfishUpdateService, "unsupported update method")
-}
-
-// firmwareUpdateCompatible retuns an error if the firmware update process for the BMC is not supported
-func (c *Conn) firmwareUpdateCompatible(ctx context.Context) (err error) {
-	updateService, err := c.redfishwrapper.UpdateService()
-	if err != nil {
-		return err
-	}
-
-	// TODO: check for redfish version
-
-	// update service disabled
-	if !updateService.ServiceEnabled {
-		return errors.Wrap(bmclibErrs.ErrRedfishUpdateService, "service disabled")
-	}
-
-	// for now we expect multipart HTTP push update support
-	if updateService.MultipartHTTPPushURI == "" {
-		return errors.Wrap(bmclibErrs.ErrRedfishUpdateService, "Multipart HTTP push updates not supported")
-	}
-
-	return nil
 }
 
 // pipeReaderFakeSeeker wraps the io.PipeReader and implements the io.Seeker interface

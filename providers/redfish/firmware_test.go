@@ -227,13 +227,6 @@ func TestMultipartPayloadSize(t *testing.T) {
 	}
 }
 
-func TestFirmwareUpdateCompatible(t *testing.T) {
-	err := mockClient.firmwareUpdateCompatible(context.TODO())
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
 // referenced in main_test.go
 func openbmcStatus(w http.ResponseWriter, r *http.Request) {
 
