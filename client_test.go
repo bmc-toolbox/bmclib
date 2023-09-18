@@ -21,8 +21,7 @@ func TestBMC(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 	cl := NewClient(host, user, pass, WithLogger(log), WithPerProviderTimeout(5*time.Second))
-	err := cl.Open(ctx)
-	if err != nil {
+	if err := cl.Open(ctx); err != nil {
 		t.Logf("%+v", cl.GetMetadata())
 		t.Fatal(err)
 	}

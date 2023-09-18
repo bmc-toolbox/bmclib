@@ -25,6 +25,7 @@ import (
 
 var (
 	errInsufficientCtxTimeout = errors.New("remaining context timeout insufficient to install firmware")
+	errMultiPartPayload       = errors.New("error preparing multipart payload")
 )
 
 // SupportedFirmwareApplyAtValues returns the supported redfish firmware applyAt values
@@ -37,10 +38,16 @@ func SupportedFirmwareApplyAtValues() []string {
 
 // FirmwareInstall uploads and initiates the firmware install process
 func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, forceInstall bool, reader io.Reader) (taskID string, err error) {
+	// limit to *os.File until theres a need for other types of readers
+	updateFile, ok := reader.(*os.File)
+	if !ok {
+		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, "method expects an *os.File object")
+	}
+
 	// validate firmware update mechanism is supported
 	err = c.firmwareUpdateCompatible(ctx)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, err.Error())
 	}
 
 	// validate applyAt parameter
@@ -59,7 +66,7 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 	// list redfish firmware install task if theres one present
 	task, err := c.GetFirmwareInstallTaskQueued(ctx, component)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, err.Error())
 	}
 
 	if task != nil {
@@ -93,7 +100,7 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 	// override the gofish HTTP client timeout,
 	// since the context timeout is set at Open() and is at a lower value than required for this operation.
 	//
-	// record the http client time to be restored
+	// record the http client timeout to be restored
 	httpClientTimeout := c.redfishwrapper.HttpClientTimeout()
 	defer func() {
 		c.redfishwrapper.SetHttpClientTimeout(httpClientTimeout)
@@ -101,9 +108,9 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 
 	c.redfishwrapper.SetHttpClientTimeout(time.Until(ctxDeadline))
 
-	payload := map[string]io.Reader{
-		"UpdateParameters": bytes.NewReader(updateParameters),
-		"UpdateFile":       reader,
+	payload := &multipartPayload{
+		updateParameters: updateParameters,
+		updateFile:       updateFile,
 	}
 
 	resp, err := c.runRequestWithMultipartPayload(http.MethodPost, "/redfish/v1/UpdateService/MultipartUpload", payload)
@@ -125,6 +132,11 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 	}
 
 	return taskID, nil
+}
+
+type multipartPayload struct {
+	updateParameters []byte
+	updateFile       *os.File
 }
 
 // FirmwareInstallStatus returns the status of the firmware install task queued
@@ -197,6 +209,59 @@ func (c *Conn) firmwareUpdateCompatible(ctx context.Context) (err error) {
 	return nil
 }
 
+// pipeReaderFakeSeeker wraps the io.PipeReader and implements the io.Seeker interface
+// to meet the API requirements for the Gofish client https://github.com/stmcginnis/gofish/blob/46b1b33645ed1802727dc4df28f5d3c3da722b15/client.go#L434
+//
+// The Gofish method linked does not currently perform seeks and so a PR will be suggested
+// to change the method signature to accept an io.Reader instead.
+type pipeReaderFakeSeeker struct {
+	*io.PipeReader
+}
+
+// Seek impelements the io.Seeker interface only to panic if called
+func (p pipeReaderFakeSeeker) Seek(offset int64, whence int) (int64, error) {
+	return 0, errors.New("Seek() not implemented for fake pipe reader seeker.")
+}
+
+// multipartPayloadSize prepares a temporary multipart form to determine the form size
+//
+// It creates a temporary form without reading in the update file payload and returns
+// sizeOf(form) + sizeOf(update file)
+func multipartPayloadSize(payload *multipartPayload) (int64, *bytes.Buffer, error) {
+	body := &bytes.Buffer{}
+	form := multipart.NewWriter(body)
+
+	// Add UpdateParameters field part
+	part, err := updateParametersFormField("UpdateParameters", form)
+	if err != nil {
+		return 0, body, err
+	}
+
+	if _, err = io.Copy(part, bytes.NewReader(payload.updateParameters)); err != nil {
+		return 0, body, err
+	}
+
+	// Add updateFile form
+	_, err = form.CreateFormFile("UpdateFile", filepath.Base(payload.updateFile.Name()))
+	if err != nil {
+		return 0, body, err
+	}
+
+	// determine update file size
+	finfo, err := payload.updateFile.Stat()
+	if err != nil {
+		return 0, body, err
+	}
+
+	// add terminating boundary to multipart form
+	err = form.Close()
+	if err != nil {
+		return 0, body, err
+	}
+
+	return int64(body.Len()) + finfo.Size(), body, nil
+}
+
 // runRequestWithMultipartPayload is a copy of https://github.com/stmcginnis/gofish/blob/main/client.go#L349
 // with a change to add the UpdateParameters multipart form field with a json content type header
 // the resulting form ends up in this format
@@ -218,34 +283,81 @@ func (c *Conn) firmwareUpdateCompatible(ctx context.Context) (err error) {
 
 // hey.
 // --------------------------1771f60800cb2801--
-func (c *Conn) runRequestWithMultipartPayload(method, url string, payload map[string]io.Reader) (*http.Response, error) {
+func (c *Conn) runRequestWithMultipartPayload(method, url string, payload *multipartPayload) (*http.Response, error) {
 	if url == "" {
 		return nil, fmt.Errorf("unable to execute request, no target provided")
 	}
 
-	var payloadBuffer bytes.Buffer
-	var err error
-	payloadWriter := multipart.NewWriter(&payloadBuffer)
-	for key, reader := range payload {
-		var partWriter io.Writer
-		if file, ok := reader.(*os.File); ok {
-			// Add a file stream
-			if partWriter, err = payloadWriter.CreateFormFile(key, filepath.Base(file.Name())); err != nil {
-				return nil, err
-			}
-		} else {
-			// Add other fields
-			if partWriter, err = updateParametersFormField(key, payloadWriter); err != nil {
-				return nil, err
-			}
-		}
-		if _, err = io.Copy(partWriter, reader); err != nil {
-			return nil, err
-		}
+	// A content-length header is passed in to indicate the payload size
+	//
+	// The Content-length is set explicitly since the payload is an io.Reader,
+	// https://github.com/golang/go/blob/ddad9b618cce0ed91d66f0470ddb3e12cfd7eeac/src/net/http/request.go#L861
+	//
+	// Without the content-length header the http client will set the Transfer-Encoding to 'chunked'
+	// and that does not work for some BMCs (iDracs).
+	contentLength, _, err := multipartPayloadSize(payload)
+	if err != nil {
+		return nil, errors.Wrap(err, "error determining multipart payload size")
 	}
-	payloadWriter.Close()
 
-	return c.redfishwrapper.RunRawRequestWithHeaders(method, url, bytes.NewReader(payloadBuffer.Bytes()), payloadWriter.FormDataContentType(), nil)
+	headers := map[string]string{
+		"Content-Length": strconv.FormatInt(contentLength, 10),
+	}
+
+	// setup pipe
+	pipeReader, pipeWriter := io.Pipe()
+	defer pipeReader.Close()
+
+	// initiate a mulitpart writer
+	form := multipart.NewWriter(pipeWriter)
+
+	// go routine blocks on the io.Copy until the http request is made
+	go func() {
+		var err error
+		defer func() {
+			if err != nil {
+				c.Log.Error(err, "multipart upload error occurred")
+			}
+		}()
+
+		defer pipeWriter.Close()
+
+		// Add UpdateParameters part
+		parametersPart, err := updateParametersFormField("UpdateParameters", form)
+		if err != nil {
+			c.Log.Error(errMultiPartPayload, err.Error()+": UpdateParameters part copy error")
+
+			return
+		}
+
+		if _, err = io.Copy(parametersPart, bytes.NewReader(payload.updateParameters)); err != nil {
+			c.Log.Error(errMultiPartPayload, err.Error()+": UpdateParameters part copy error")
+
+			return
+		}
+
+		// Add UpdateFile part
+		updateFilePart, err := form.CreateFormFile("UpdateFile", filepath.Base(payload.updateFile.Name()))
+		if err != nil {
+			c.Log.Error(errMultiPartPayload, err.Error()+": UpdateFile part create error")
+
+			return
+		}
+
+		if _, err = io.Copy(updateFilePart, payload.updateFile); err != nil {
+			c.Log.Error(errMultiPartPayload, err.Error()+": UpdateFile part copy error")
+
+			return
+		}
+
+		// add terminating boundary to multipart form
+		form.Close()
+	}()
+
+	// pipeReader wrapped as a io.ReadSeeker to satisfy the gofish method signature
+	reader := pipeReaderFakeSeeker{pipeReader}
+
+	return c.redfishwrapper.RunRawRequestWithHeaders(method, url, reader, form.FormDataContentType(), headers)
 }
 
 // sets up the UpdateParameters MIMEHeader for the multipart form

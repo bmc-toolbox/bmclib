@@ -114,7 +114,7 @@ func main() {
 		}
 
 		switch state {
-		case constants.FirmwareInstallRunning:
+		case constants.FirmwareInstallRunning, constants.FirmwareInstallInitializing:
 			l.WithFields(logrus.Fields{"state": state, "component": *component}).Info("firmware install running")
 
 		case constants.FirmwareInstallFailed:
