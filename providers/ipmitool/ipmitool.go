@@ -27,6 +27,7 @@ var (
 		providers.FeatureUserRead,
 		providers.FeatureBmcReset,
 		providers.FeatureBootDeviceSet,
+		providers.FeatureSELClear,
 	}
 )
 
