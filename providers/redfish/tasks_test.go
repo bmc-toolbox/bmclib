@@ -1,40 +1,27 @@
 package redfish
 
 import (
-	"net/http"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
-// handler registered in redfish_test.go
-func dellJobs(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		w.WriteHeader(http.StatusNotFound)
-	}
+func Test_GetTask(t *testing.T) {
+	var err error
 
-	_, _ = w.Write(jsonResponse(r.RequestURI))
-}
-
-func Test_dellFirmwareUpdateTask(t *testing.T) {
-	// see fixtures/v1/dell/jobs.json for the job IDs
-	// completed job
-	status, err := mockClient.dellJobAsRedfishTask("467767920358")
+	task, err := mockClient.GetTask("15")
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	assert.NotNil(t, status)
-	assert.Equal(t, "2022-03-08T16:02:33", status.EndTime)
-	assert.Equal(t, "2022-03-08T15:59:52", status.StartTime)
-	assert.Equal(t, 100, status.PercentComplete)
-	assert.Equal(t, "Completed", string(status.TaskState))
-	assert.Equal(t, "Job completed successfully.", string(status.TaskStatus))
-}
-
-func Test_dellPurgeScheduledFirmwareInstallJob(t *testing.T) {
-	err := mockClient.dellPurgeScheduledFirmwareInstallJob("bios")
-	if err != nil {
-		t.Fatal(err)
+	if task.TaskState != "TestState" {
+		t.Fatal("Wrong test state:", task.TaskState)
 	}
+
+	// inexistent
+	task, err = mockClient.GetTask("151515")
+	if task != nil {
+		t.Fatal("Task should be nil, but got:", task)
+	}
+	if err == nil {
+		t.Fatal("err shouldn't be nil:", err)
+	}
+
 }

@@ -3,7 +3,6 @@ package rpc
 import (
 	"bytes"
 	"encoding/json"
-	"io"
 	"net/http"
 )
 
@@ -21,20 +20,17 @@ type responseDetails struct {
 }
 
 // requestKVS returns a slice of key, value sets. Used for logging.
-func requestKVS(req *http.Request) []interface{} {
+func requestKVS(method, url string, headers http.Header, body *bytes.Buffer) []interface{} {
 	var r requestDetails
-	if req != nil && req.Body != nil {
+	if body.Len() > 0 {
 		var p RequestPayload
-		reqBody, err := io.ReadAll(req.Body)
-		if err == nil {
-			req.Body = io.NopCloser(bytes.NewBuffer(reqBody))
-			_ = json.Unmarshal(reqBody, &p)
-		}
+		_ = json.Unmarshal(body.Bytes(), &p)
+
 		r = requestDetails{
 			Body:    p,
-			Headers: req.Header,
-			URL:     req.URL.String(),
-			Method:  req.Method,
+			Headers: headers,
+			URL:     url,
+			Method:  method,
 		}
 	}
 

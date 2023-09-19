@@ -59,6 +59,7 @@ func TestMain(m *testing.M) {
 		handler.HandleFunc("/redfish/v1/SessionService/Sessions", sessionService)
 		handler.HandleFunc("/redfish/v1/UpdateService/MultipartUpload", multipartUpload)
 		handler.HandleFunc("/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/Jobs?$expand=*($levels=1)", dellJobs)
+		handler.HandleFunc("/redfish/v1/TaskService/Tasks/", openbmcStatus)
 
 		return httptest.NewTLSServer(handler)
 	}()
