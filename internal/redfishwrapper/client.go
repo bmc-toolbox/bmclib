@@ -13,6 +13,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish"
+	"github.com/stmcginnis/gofish/redfish"
 	"golang.org/x/exp/slices"
 )
 
@@ -207,4 +208,8 @@ func (c *Client) PostWithHeaders(ctx context.Context, url string, payload interf
 
 func (c *Client) PatchWithHeaders(ctx context.Context, url string, payload interface{}, headers map[string]string) (*http.Response, error) {
 	return c.client.PatchWithHeaders(url, payload, headers)
+}
+
+func (c *Client) Tasks(ctx context.Context) ([]*redfish.Task, error) {
+	return c.client.Service.Tasks()
 }

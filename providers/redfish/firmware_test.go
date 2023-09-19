@@ -227,9 +227,65 @@ func TestMultipartPayloadSize(t *testing.T) {
 	}
 }
 
-func TestFirmwareUpdateCompatible(t *testing.T) {
-	err := mockClient.firmwareUpdateCompatible(context.TODO())
+// referenced in main_test.go
+func openbmcStatus(w http.ResponseWriter, r *http.Request) {
+
+	if r.URL.Path != "/redfish/v1/TaskService/Tasks/15" {
+		// return an HTTP error, don't care to return correct data after
+		http.Error(w, "404 page not found:"+r.URL.Path, http.StatusNotFound)
+	}
+
+	mytask := `{
+  "@odata.id": "/redfish/v1/TaskService/Tasks/15",
+  "@odata.type": "#Task.v1_4_3.Task",
+  "Id": "15",
+  "Messages": [
+    {
+      "@odata.type": "#Message.v1_1_1.Message",
+      "Message": "The task with Id '15' has started.",
+      "MessageArgs": [
+        "15"
+      ],
+      "MessageId": "TaskEvent.1.0.3.TaskStarted",
+      "MessageSeverity": "OK",
+      "Resolution": "None."
+    }
+  ],
+  "Name": "Task 15",
+  "TaskState": "TestState",
+  "TaskStatus": "TestStatus"
+}
+`
+	_, _ = w.Write([]byte(mytask))
+
+}
+
+func Test_FirmwareInstall2(t *testing.T) {
+	state, err := mockClient.FirmwareInstallStatus(context.TODO(), "", "testOpenbmc", "15")
 	if err != nil {
 		t.Fatal(err)
+	}
+	if state != "unknown: teststate" {
+		t.Fatal("Wrong test state:", state)
+	}
+}
+
+func Test_TaskIDFromLocationURI(t *testing.T) {
+	var task string
+	var err error
+
+	task, err = TaskIDFromLocationURI("/redfish/v1/TaskService/Tasks/JID_467696020275")
+	if err != nil || task != "467696020275" {
+		t.Fatal("Wrong task ID 467696020275. task,err=", task, err)
+	}
+
+	task, err = TaskIDFromLocationURI("/redfish/v1/TaskService/Tasks/12/Monitor")
+	if err != nil || task != "12" {
+		t.Fatal("Wrong task ID 12. task,err=", task, err)
+	}
+
+	task, err = TaskIDFromLocationURI("/redfish/v1/TaskService/Tasks/NO-TASK-ID")
+	if err == nil {
+		t.Fatal("Should return an error. task,err=", task, err)
 	}
 }
