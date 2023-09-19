@@ -83,6 +83,8 @@ func testConsumer(ctx context.Context) error {
 
 		case rpc.BootDeviceMethod:
 
+		case rpc.PingMethod:
+			rp.Result = "pong"
 		default:
 			w.WriteHeader(http.StatusNotFound)
 		}

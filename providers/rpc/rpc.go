@@ -3,7 +3,6 @@ package rpc
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"hash"
@@ -182,27 +181,16 @@ func (p *Provider) Open(ctx context.Context) error {
 		return err
 	}
 	p.listenerURL = u
-	buf := new(bytes.Buffer)
-	_ = json.NewEncoder(buf).Encode(RequestPayload{})
-	testReq, err := http.NewRequestWithContext(ctx, p.Opts.Request.HTTPMethod, p.listenerURL.String(), buf)
-	if err != nil {
+
+	if _, err = p.process(ctx, RequestPayload{
+		ID:     time.Now().UnixNano(),
+		Host:   p.Host,
+		Method: PingMethod,
+	}); err != nil {
 		return err
 	}
-	// test that we can communicate with the rpc consumer.
-	resp, err := p.Client.Do(testReq)
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode >= http.StatusInternalServerError {
-		return fmt.Errorf("issue on the rpc consumer side, status code: %d", resp.StatusCode)
-	}
 
-	// test that the consumer responses with the expected contract (ResponsePayload{}).
-	if err := json.NewDecoder(resp.Body).Decode(&ResponsePayload{}); err != nil {
-		return fmt.Errorf("issue with the rpc consumer response: %v", err)
-	}
-
-	return resp.Body.Close()
+	return nil
 }
 
 // Close a connection to the rpc consumer.
@@ -274,7 +262,12 @@ func (p *Provider) PowerStateGet(ctx context.Context) (state string, err error) 
 		return "", fmt.Errorf("error from rpc consumer: %v", resp.Error)
 	}
 
-	return resp.Result.(string), nil
+	s, ok := resp.Result.(string)
+	if !ok {
+		return "", fmt.Errorf("expected result equal to type string, got: %T", resp.Result)
+	}
+
+	return s, nil
 }
 
 // process is the main function for the roundtrip of rpc calls to the ConsumerURL.
@@ -292,9 +285,14 @@ func (p *Provider) process(ctx context.Context, rp RequestPayload) (ResponsePayl
 
 	// create the signature payload
 	reqBuf := new(bytes.Buffer)
-	if _, err := io.Copy(reqBuf, req.Body); err != nil {
+	reqBody, err := req.GetBody()
+	if err != nil {
+		return ResponsePayload{}, fmt.Errorf("failed to get request body: %w", err)
+	}
+	if _, err := io.Copy(reqBuf, reqBody); err != nil {
 		return ResponsePayload{}, fmt.Errorf("failed to read request body: %w", err)
 	}
+
 	headersForSig := http.Header{}
 	for _, h := range p.Opts.Signature.IncludedPayloadHeaders {
 		if val := req.Header.Get(h); val != "" {
@@ -321,7 +319,7 @@ func (p *Provider) process(ctx context.Context, rp RequestPayload) (ResponsePayl
 	}
 
 	// request/response round trip.
-	kvs := requestKVS(req)
+	kvs := requestKVS(req.Method, req.URL.String(), req.Header, reqBuf)
 	kvs = append(kvs, []interface{}{"host", p.Host, "method", rp.Method, "consumerURL", p.ConsumerURL}...)
 	if rp.Params != nil {
 		kvs = append(kvs, []interface{}{"params", rp.Params}...)
