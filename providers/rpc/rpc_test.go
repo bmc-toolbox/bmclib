@@ -124,7 +124,7 @@ func TestPowerStateGet(t *testing.T) {
 		shouldErr  bool
 		url        string
 	}{
-		"success":       {},
+		"success":       {powerState: "on"},
 		"unknown state": {shouldErr: true},
 	}
 
