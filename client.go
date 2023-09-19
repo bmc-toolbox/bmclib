@@ -406,8 +406,8 @@ func (c *Client) Screenshot(ctx context.Context) (image []byte, fileType string,
 	return image, fileType, err
 }
 
-func (c *Client) ClearSEL(ctx context.Context) (err error) {
-	metadata, err := bmc.ClearSELFromInterfaces(ctx, c.perProviderTimeout(ctx), c.registry().GetDriverInterfaces())
+func (c *Client) ClearSystemEventLog(ctx context.Context) (err error) {
+	metadata, err := bmc.ClearSystemEventLogFromInterfaces(ctx, c.perProviderTimeout(ctx), c.registry().GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return err
 }

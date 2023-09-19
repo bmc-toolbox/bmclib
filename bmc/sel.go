@@ -9,21 +9,21 @@ import (
 	"github.com/pkg/errors"
 )
 
-// SELServices for various SEL related services
-type SELService interface {
-	ClearSEL(ctx context.Context) (err error)
+// System Event Log Services for related services
+type SystemEventLog interface {
+	ClearSystemEventLog(ctx context.Context) (err error)
 }
 
-type selProviders struct {
-	name        string
-	selProvider SELService
+type systemEventLogProviders struct {
+	name                   string
+	systemEventLogProvider SystemEventLog
 }
 
-func clearSEL(ctx context.Context, timeout time.Duration, s []selProviders) (metadata Metadata, err error) {
+func clearSystemEventLog(ctx context.Context, timeout time.Duration, s []systemEventLogProviders) (metadata Metadata, err error) {
 	var metadataLocal Metadata
 
 	for _, elem := range s {
-		if elem.selProvider == nil {
+		if elem.systemEventLogProvider == nil {
 			continue
 		}
 		select {
@@ -35,7 +35,7 @@ func clearSEL(ctx context.Context, timeout time.Duration, s []selProviders) (met
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
 			ctx, cancel := context.WithTimeout(ctx, timeout)
 			defer cancel()
-			selErr := elem.selProvider.ClearSEL(ctx)
+			selErr := elem.systemEventLogProvider.ClearSystemEventLog(ctx)
 			if selErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(selErr, "provider: %v", elem.name))
 				continue
@@ -46,24 +46,24 @@ func clearSEL(ctx context.Context, timeout time.Duration, s []selProviders) (met
 
 	}
 
-	return metadataLocal, multierror.Append(err, errors.New("failed to reset SEL"))
+	return metadataLocal, multierror.Append(err, errors.New("failed to reset System Event Log"))
 }
 
-func ClearSELFromInterfaces(ctx context.Context, timeout time.Duration, generic []interface{}) (metadata Metadata, err error) {
-	selServices := make([]selProviders, 0)
+func ClearSystemEventLogFromInterfaces(ctx context.Context, timeout time.Duration, generic []interface{}) (metadata Metadata, err error) {
+	selServices := make([]systemEventLogProviders, 0)
 	for _, elem := range generic {
-		temp := selProviders{name: getProviderName(elem)}
+		temp := systemEventLogProviders{name: getProviderName(elem)}
 		switch p := elem.(type) {
-		case SELService:
-			temp.selProvider = p
+		case SystemEventLog:
+			temp.systemEventLogProvider = p
 			selServices = append(selServices, temp)
 		default:
-			e := fmt.Sprintf("not a SELService implementation: %T", p)
+			e := fmt.Sprintf("not a SystemEventLog service implementation: %T", p)
 			err = multierror.Append(err, errors.New(e))
 		}
 	}
 	if len(selServices) == 0 {
-		return metadata, multierror.Append(err, errors.New("no SelService implementations found"))
+		return metadata, multierror.Append(err, errors.New("no SystemEventLog implementations found"))
 	}
-	return clearSEL(ctx, timeout, selServices)
+	return clearSystemEventLog(ctx, timeout, selServices)
 }

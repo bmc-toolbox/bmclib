@@ -107,7 +107,7 @@ func TestBMCReset(t *testing.T) {
 	t.Fatal()
 }
 
-func TestSELClear(t *testing.T) {
+func TestSystemEventLogClear(t *testing.T) {
 	t.Skip("need real ipmi server")
 	host := "127.0.0.1"
 	port := "623"
@@ -117,10 +117,10 @@ func TestSELClear(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = i.ClearSEL(context.Background())
+	err = i.ClearSystemEventLog(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log("SEL cleared")
+	t.Log("System Event Log cleared")
 	t.Fatal()
 }

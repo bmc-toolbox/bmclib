@@ -33,6 +33,6 @@ const (
 	FeaturePostCodeRead registrar.Feature = "postcoderead"
 	// FeatureScreenshot means an implementation that returns a screenshot of the video.
 	FeatureScreenshot registrar.Feature = "screenshot"
-	// FeatureSELClear means an implementation that clears the BMC SEL
-	FeatureSELClear registrar.Feature = "selclear"
+	// FeatureClearSystemEventLog means an implementation that clears the BMC System Event Log (SEL)
+	FeatureClearSystemEventLog registrar.Feature = "clearsystemeventlog"
 )

@@ -49,7 +49,7 @@ func main() {
 	}
 
 	cl := bmclib.NewClient(*host, *user, *pass, clientOpts...)
-	cl.Registry.Drivers = cl.Registry.Supports(providers.FeatureSELClear)
+	cl.Registry.Drivers = cl.Registry.Supports(providers.FeatureClearSystemEventLog)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
@@ -60,9 +60,9 @@ func main() {
 	}
 	defer cl.Close(ctx)
 
-	err = cl.ClearSEL(ctx)
+	err = cl.ClearSystemEventLog(ctx)
 	if err != nil {
-		l.WithError(err).Error()
+		l.WithError(err).Fatal(err, "failed to clear System Event Log")
 	}
-	l.Info("SEL cleared")
+	l.Info("System Event Log cleared")
 }

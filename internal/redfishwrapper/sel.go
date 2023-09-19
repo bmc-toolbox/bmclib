@@ -7,8 +7,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Clear SEL clears all of the LogServices logs
-func (c *Client) ClearSEL(ctx context.Context) (err error) {
+// ClearSystemEventLog clears all of the LogServices logs
+func (c *Client) ClearSystemEventLog(ctx context.Context) (err error) {
 	if err := c.SessionActive(); err != nil {
 		return errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
