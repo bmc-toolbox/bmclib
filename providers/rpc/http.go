@@ -58,8 +58,7 @@ func (p *Provider) handleResponse(statusCode int, headers http.Header, body *byt
 		if statusCode != http.StatusOK {
 			return ResponsePayload{}, fmt.Errorf("unexpected status code: %d, response error(optional): %v", statusCode, res.Error)
 		}
-		example, _ := json.Marshal(ResponsePayload{ID: 123, Host: p.Host, Error: &ResponseError{Code: 1, Message: "error message"}})
-		return ResponsePayload{}, fmt.Errorf("failed to parse response: got: %q, error: %w, expected response json spec: %v", body.String(), err, string(example))
+		return ResponsePayload{}, fmt.Errorf("failed to parse response: %w", err)
 	}
 	if statusCode != http.StatusOK {
 		return ResponsePayload{}, fmt.Errorf("unexpected status code: %d, response error(optional): %v", statusCode, res.Error)
