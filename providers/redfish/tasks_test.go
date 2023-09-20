@@ -1,8 +1,17 @@
 package redfish
 
 import (
+	"context"
 	"testing"
 )
+
+func Test_activeTask(t *testing.T) {
+	_, err := mockClient.activeTask(context.TODO())
+	// Current mocking should fail
+	if err == nil {
+		t.Fatal(err)
+	}
+}
 
 func Test_GetTask(t *testing.T) {
 	var err error
