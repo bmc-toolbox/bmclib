@@ -48,6 +48,9 @@ func (c *Client) SystemPowerOn(ctx context.Context) (ok bool, err error) {
 		if system.PowerState == rf.OnPowerState {
 			break
 		}
+
+		system.DisableEtagMatch(c.disableEtagMatch)
+
 		err = system.Reset(rf.OnResetType)
 		if err != nil {
 			return false, err
@@ -72,6 +75,9 @@ func (c *Client) SystemPowerOff(ctx context.Context) (ok bool, err error) {
 		if system.PowerState == rf.OffPowerState {
 			break
 		}
+
+		system.DisableEtagMatch(c.disableEtagMatch)
+
 		err = system.Reset(rf.GracefulShutdownResetType)
 		if err != nil {
 			return false, err
@@ -94,6 +100,7 @@ func (c *Client) SystemReset(ctx context.Context) (ok bool, err error) {
 	}
 
 	for _, system := range ss {
+		system.DisableEtagMatch(c.disableEtagMatch)
 		err = system.Reset(rf.PowerCycleResetType)
 		if err != nil {
 
@@ -137,6 +144,8 @@ func (c *Client) SystemPowerCycle(ctx context.Context) (ok bool, err error) {
 	}
 
 	for _, system := range ss {
+		system.DisableEtagMatch(c.disableEtagMatch)
+
 		err = system.Reset(rf.ForceRestartResetType)
 		if err != nil {
 			return false, errors.WithMessage(err, "power cycle failed")
@@ -181,6 +190,9 @@ func (c *Client) SystemForceOff(ctx context.Context) (ok bool, err error) {
 		if system.PowerState == rf.OffPowerState {
 			break
 		}
+
+		system.DisableEtagMatch(c.disableEtagMatch)
+
 		err = system.Reset(rf.ForceOffResetType)
 		if err != nil {
 			return false, err
