@@ -24,6 +24,7 @@ type Client struct {
 	user                  string
 	pass                  string
 	basicAuth             bool
+	disableEtagMatch      bool
 	versionsNotCompatible []string // a slice of redfish versions to ignore as incompatible
 	client                *gofish.APIClient
 	httpClient            *http.Client
@@ -61,6 +62,15 @@ func WithVersionsNotCompatible(versions []string) Option {
 func WithBasicAuthEnabled(e bool) Option {
 	return func(c *Client) {
 		c.basicAuth = e
+	}
+}
+
+// WithEtagMatchDisabled disables the If-Match Etag header from being included by the Gofish driver.
+//
+// As of the current implementation this disables the header for POST/PATCH requests to the System entity endpoints.
+func WithEtagMatchDisabled(d bool) Option {
+	return func(c *Client) {
+		c.disableEtagMatch = d
 	}
 }
 
