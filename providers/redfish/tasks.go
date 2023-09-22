@@ -46,7 +46,7 @@ func (c *Conn) activeTask(ctx context.Context) (*gofishrf.Task, error) {
 
 	err = json.Unmarshal(data, &status)
 	if err != nil {
-		fmt.Println(err)
+		return nil, err
 	}
 
 	// For each task, check if it's running
@@ -122,7 +122,6 @@ func (c *Conn) purgeQueuedFirmwareInstallTask(ctx context.Context, component str
 
 // GetTask returns the current Task fir the given TaskID
 func (c *Conn) GetTask(taskID string) (task *gofishrf.Task, err error) {
-
 	resp, err := c.redfishwrapper.Get("/redfish/v1/TaskService/Tasks/" + taskID)
 	if err != nil {
 		if strings.HasPrefix(err.Error(), "404") {
@@ -151,12 +150,12 @@ func (c *Conn) GetTask(taskID string) (task *gofishrf.Task, err error) {
 
 	err = json.Unmarshal(data, &status)
 	if err != nil {
-		fmt.Println(err)
-	} else {
-		task = &gofishrf.Task{
-			TaskState:  gofishrf.TaskState(status.TaskState),
-			TaskStatus: gofishcommon.Health(status.TaskStatus),
-		}
+		return nil, err
+	}
+
+	task = &gofishrf.Task{
+		TaskState:  gofishrf.TaskState(status.TaskState),
+		TaskStatus: gofishcommon.Health(status.TaskStatus),
 	}
 
 	return task, err
