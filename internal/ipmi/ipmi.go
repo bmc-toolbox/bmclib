@@ -377,3 +377,9 @@ func (i *Ipmi) ReadUsers(ctx context.Context) (users []map[string]string, err er
 
 	return users, err
 }
+
+// ClearSystemEventLog clears the system event log
+func (i *Ipmi) ClearSystemEventLog(ctx context.Context) (err error) {
+	_, err = i.run(ctx, []string{"sel", "clear"})
+	return err
+}

@@ -27,6 +27,7 @@ var (
 		providers.FeatureUserRead,
 		providers.FeatureBmcReset,
 		providers.FeatureBootDeviceSet,
+		providers.FeatureClearSystemEventLog,
 	}
 )
 
@@ -179,4 +180,8 @@ func (c *Conn) PowerSet(ctx context.Context, state string) (ok bool, err error) 
 	}
 
 	return ok, err
+}
+
+func (c *Conn) ClearSystemEventLog(ctx context.Context) (err error) {
+	return c.ipmitool.ClearSystemEventLog(ctx)
 }

@@ -37,6 +37,7 @@ var (
 		providers.FeatureFirmwareInstall,
 		providers.FeatureFirmwareInstallStatus,
 		providers.FeatureBmcReset,
+		providers.FeatureClearSystemEventLog,
 	}
 )
 
