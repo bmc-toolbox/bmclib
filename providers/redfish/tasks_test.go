@@ -1,8 +1,20 @@
 package redfish
 
 import (
+	"context"
+	"errors"
 	"testing"
+
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
+
+func Test_activeTask(t *testing.T) {
+	_, err := mockClient.activeTask(context.TODO())
+	// Current mocking should fail
+	if err == nil {
+		t.Fatal(err)
+	}
+}
 
 func Test_GetTask(t *testing.T) {
 	var err error
@@ -20,8 +32,8 @@ func Test_GetTask(t *testing.T) {
 	if task != nil {
 		t.Fatal("Task should be nil, but got:", task)
 	}
-	if err == nil {
-		t.Fatal("err shouldn't be nil:", err)
+	if !errors.Is(err, bmclibErrs.ErrTaskNotFound) {
+		t.Fatal("err should be TaskNotFound:", err)
 	}
 
 }
