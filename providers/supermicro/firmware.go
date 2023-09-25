@@ -78,6 +78,11 @@ func (c *Client) deviceSupported(ctx context.Context) error {
 	supported := []string{
 		"X11SCM-F",
 		"X11DPH-T",
+		"X11SCH-F",
+		"X11DGQ",
+		"X11DPG-SN",
+		"X11DPT-B",
+		"X11SSE-F",
 	}
 
 	data, err := c.fruInfo(ctx)
