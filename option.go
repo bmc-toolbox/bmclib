@@ -111,6 +111,12 @@ func WithRedfishUseBasicAuth(useBasicAuth bool) Option {
 	}
 }
 
+func WithRedfishEtagMatchDisabled(d bool) Option {
+	return func(args *Client) {
+		args.providerConfig.gofish.DisableEtagMatch = d
+	}
+}
+
 func WithIntelAMTHostScheme(hostScheme string) Option {
 	return func(args *Client) {
 		args.providerConfig.intelamt.HostScheme = hostScheme
