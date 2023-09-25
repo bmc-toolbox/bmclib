@@ -165,17 +165,15 @@ func (c *Client) registerIPMIProvider() error {
 }
 
 // register ASRR vendorapi provider
-func (c *Client) registerASRRProvider() error {
+func (c *Client) registerASRRProvider() {
 	asrHttpClient := *c.httpClient
 	asrHttpClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
 	driverAsrockrack := asrockrack.NewWithOptions(c.Auth.Host+":"+c.providerConfig.asrock.Port, c.Auth.User, c.Auth.Pass, c.Logger, asrockrack.WithHTTPClient(&asrHttpClient))
 	c.Registry.Register(asrockrack.ProviderName, asrockrack.ProviderProtocol, asrockrack.Features, nil, driverAsrockrack)
-
-	return nil
 }
 
 // register gofish provider
-func (c *Client) registerGofishProvider() error {
+func (c *Client) registerGofishProvider() {
 	gfHttpClient := *c.httpClient
 	gfHttpClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
 	gofishOpts := []redfish.Option{
@@ -188,12 +186,10 @@ func (c *Client) registerGofishProvider() error {
 
 	driverGoFish := redfish.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger, gofishOpts...)
 	c.Registry.Register(redfish.ProviderName, redfish.ProviderProtocol, redfish.Features, nil, driverGoFish)
-
-	return nil
 }
 
 // register Intel AMT provider
-func (c *Client) registerIntelAMTProvider() error {
+func (c *Client) registerIntelAMTProvider() {
 
 	iamtOpts := []intelamt.Option{
 		intelamt.WithLogger(c.Logger),
@@ -202,12 +198,10 @@ func (c *Client) registerIntelAMTProvider() error {
 	}
 	driverAMT := intelamt.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, iamtOpts...)
 	c.Registry.Register(intelamt.ProviderName, intelamt.ProviderProtocol, intelamt.Features, nil, driverAMT)
-
-	return nil
 }
 
 // register Dell gofish provider
-func (c *Client) registerDellProvider() error {
+func (c *Client) registerDellProvider() {
 	dellGofishHttpClient := *c.httpClient
 	//dellGofishHttpClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
 	dellGofishOpts := []dell.Option{
@@ -218,12 +212,10 @@ func (c *Client) registerDellProvider() error {
 	}
 	driverGoFishDell := dell.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger, dellGofishOpts...)
 	c.Registry.Register(dell.ProviderName, redfish.ProviderProtocol, dell.Features, nil, driverGoFishDell)
-
-	return nil
 }
 
 // register supermicro vendorapi provider
-func (c *Client) registerSupermicroProvider() error {
+func (c *Client) registerSupermicroProvider() {
 	smcHttpClient := *c.httpClient
 	smcHttpClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
 	driverSupermicro := supermicro.NewClient(
@@ -236,8 +228,6 @@ func (c *Client) registerSupermicroProvider() error {
 	)
 
 	c.Registry.Register(supermicro.ProviderName, supermicro.ProviderProtocol, supermicro.Features, nil, driverSupermicro)
-
-	return nil
 }
 
 func (c *Client) registerProviders() {
@@ -257,26 +247,11 @@ func (c *Client) registerProviders() {
 		c.Logger.Info("ipmitool provider not available", "error", err.Error())
 	}
 
-	if err := c.registerASRRProvider(); err != nil {
-		c.Logger.Info("ASRR provider not available", "error", err.Error())
-	}
-
-	if err := c.registerGofishProvider(); err != nil {
-		c.Logger.Info("Gofish provider not available", "error", err.Error())
-	}
-
-	if err := c.registerIntelAMTProvider(); err != nil {
-		c.Logger.Info("Intel AMT provider not available", "error", err.Error())
-	}
-
-	if err := c.registerDellProvider(); err != nil {
-		c.Logger.Info("Dell provider not available", "error", err.Error())
-	}
-
-	if err := c.registerSupermicroProvider(); err != nil {
-		c.Logger.Info("Supermicro provider not available", "error", err.Error())
-	}
-
+	c.registerASRRProvider()
+	c.registerGofishProvider()
+	c.registerIntelAMTProvider()
+	c.registerDellProvider()
+	c.registerSupermicroProvider()
 }
 
 // GetMetadata returns the metadata that is populated after each BMC function/method call
