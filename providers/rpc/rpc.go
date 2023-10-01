@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
@@ -64,8 +65,8 @@ type Provider struct {
 	ConsumerURL string
 	// Host is the BMC ip address or hostname or identifier.
 	Host string
-	// Client is the http client used for all HTTP calls.
-	Client *http.Client
+	// HTTPClient is the http client used for all HTTP calls.
+	HTTPClient *http.Client
 	// Logger is the logger to use for logging.
 	Logger logr.Logger
 	// LogNotificationsDisabled determines whether responses from rpc consumer/listeners will be logged or not.
@@ -136,7 +137,7 @@ func New(consumerURL string, host string, secrets Secrets) *Provider {
 	c := &Provider{
 		Host:        host,
 		ConsumerURL: consumerURL,
-		Client:      http.DefaultClient,
+		HTTPClient:  httpclient.Build(),
 		Logger:      logr.Discard(),
 		Opts: Opts{
 			Request: RequestOpts{
@@ -325,7 +326,7 @@ func (p *Provider) process(ctx context.Context, rp RequestPayload) (ResponsePayl
 		kvs = append(kvs, []interface{}{"params", rp.Params}...)
 	}
 
-	resp, err := p.Client.Do(req)
+	resp, err := p.HTTPClient.Do(req)
 	if err != nil {
 		p.Logger.Error(err, "failed to send rpc notification", kvs...)
 		return ResponsePayload{}, err
