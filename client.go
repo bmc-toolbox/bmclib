@@ -137,6 +137,9 @@ func (c *Client) defaultTimeout(ctx context.Context) time.Duration {
 func (c *Client) registerRPCProvider() error {
 	driverRPC := rpc.New(c.providerConfig.rpc.ConsumerURL, c.Auth.Host, c.providerConfig.rpc.Opts.HMAC.Secrets)
 	c.providerConfig.rpc.Logger = c.Logger
+	httpClient := *c.httpClient
+	httpClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
+	c.providerConfig.rpc.HTTPClient = &httpClient
 	if err := mergo.Merge(driverRPC, c.providerConfig.rpc, mergo.WithOverride, mergo.WithTransformers(&rpc.Provider{})); err != nil {
 		return fmt.Errorf("failed to merge user specified rpc config with the config defaults, rpc provider not available: %w", err)
 	}
