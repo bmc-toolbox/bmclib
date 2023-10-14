@@ -19,7 +19,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (c *Client) firmwareInstallBIOS(ctx context.Context, reader io.Reader, fileSize int64) error {
+
+func (c *x11) firmwareInstallBIOS(ctx context.Context, reader io.Reader, fileSize int64) error {
 	var err error
 
 	c.log.V(2).Info("set firmware install mode", "ip", c.host, "component", "BIOS", "model", c.model)
@@ -74,7 +75,7 @@ func (c *Client) firmwareInstallBIOS(ctx context.Context, reader io.Reader, file
 }
 
 // checks component update status
-func (c *Client) checkComponentUpdateMisc(ctx context.Context, stage string) error {
+func (c *x11) checkComponentUpdateMisc(ctx context.Context, stage string) error {
 	var payload, expectResponse []byte
 
 	switch stage {
@@ -124,7 +125,7 @@ func (c *Client) checkComponentUpdateMisc(ctx context.Context, stage string) err
 	return nil
 }
 
-func (c *Client) setBIOSFirmwareInstallMode(ctx context.Context) error {
+func (c *x11) setBIOSFirmwareInstallMode(ctx context.Context) error {
 
 	payload := []byte(`op=BIOS_UPLOAD.XML&r=(0,0)&_=`)
 
@@ -168,7 +169,7 @@ func (c *Client) setBIOSFirmwareInstallMode(ctx context.Context) error {
 
 }
 
-func (c *Client) setBiosUpdateStart(ctx context.Context) error {
+func (c *x11) setBiosUpdateStart(ctx context.Context) error {
 	payload := []byte(`op=BIOS_UPDATE_START.XML&r=(1,0)&_=`)
 
 	headers := map[string]string{
@@ -197,7 +198,7 @@ func (c *Client) setBiosUpdateStart(ctx context.Context) error {
 //
 // OO8+cjamaZZOMf6ZiGDY3Lw+7O20r5lR8aI8ByuTo3E
 // ------WebKitFormBoundaryXIAavwG4xzohdB6k--
-func (c *Client) uploadBIOSFirmware(ctx context.Context, fwReader io.Reader) error {
+func (c *x11) uploadBIOSFirmware(ctx context.Context, fwReader io.Reader) error {
 	var payloadBuffer bytes.Buffer
 	var err error
 
@@ -274,7 +275,7 @@ func (c *Client) uploadBIOSFirmware(ctx context.Context, fwReader io.Reader) err
 	return nil
 }
 
-func (c *Client) verifyBIOSFirmwareVersion(ctx context.Context) error {
+func (c *x11) verifyBIOSFirmwareVersion(ctx context.Context) error {
 	payload := []byte(`op=BIOS_UPDATE_CHECK.XML&r=(0,0)&_=`)
 	expectResponse := []byte(`<BIOS_UPDATE_CHECK RES="00"/>`)
 
@@ -306,7 +307,7 @@ func (c *Client) verifyBIOSFirmwareVersion(ctx context.Context) error {
 	return nil
 }
 
-func (c *Client) setBIOSOp(ctx context.Context) error {
+func (c *x11) setBIOSOp(ctx context.Context) error {
 	payload := []byte(`op=BIOS_OPTION.XML&_=`)
 	expectResponse := []byte(`<BIOS_OP Res="0"/>`)
 
@@ -326,7 +327,7 @@ func (c *Client) setBIOSOp(ctx context.Context) error {
 	return nil
 }
 
-func (c *Client) initiateBIOSFirmwareInstall(ctx context.Context) error {
+func (c *x11) initiateBIOSFirmwareInstall(ctx context.Context) error {
 	// save all current SMBIOS, NVRAM, ME configuration
 	payload := []byte(`op=main_biosupdate&_=`)
 	expectResponse := []byte(`ok`)
@@ -356,7 +357,7 @@ func (c *Client) initiateBIOSFirmwareInstall(ctx context.Context) error {
 	return nil
 }
 
-func (c *Client) setBIOSUpdateDone(ctx context.Context) error {
+func (c *x11) setBIOSUpdateDone(ctx context.Context) error {
 	payload := []byte(`op=BIOS_UPDATE_DONE.XML&r=(1,0)&_=`)
 
 	headers := map[string]string{
@@ -377,7 +378,7 @@ func (c *Client) setBIOSUpdateDone(ctx context.Context) error {
 }
 
 // statusBIOSFirmwareInstall returns the status of the firmware install process
-func (c *Client) statusBIOSFirmwareInstall(ctx context.Context) (string, error) {
+func (c *x11) statusBIOSFirmwareInstall(ctx context.Context) (string, error) {
 	payload := []byte(`fwtype=1&_`)
 
 	headers := map[string]string{"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}

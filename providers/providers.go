@@ -41,4 +41,16 @@ const (
 	FeatureScreenshot registrar.Feature = "screenshot"
 	// FeatureClearSystemEventLog means an implementation that clears the BMC System Event Log (SEL)
 	FeatureClearSystemEventLog registrar.Feature = "clearsystemeventlog"
+
+	// FeatureFirmwareActions means an implementation returns the steps part of the firmware update process.
+	FeatureFirmwareActions registrar.Feature = "firmwareinstallactions"
+
+	// FeatureFirmwareUpload means an implementation that uploads firmware for installing.
+	FeatureFirmwareUpload registrar.Feature = "firmwareupload"
+
+	// 	FeatureFirmwareUploadVerify means an implementation that verifies the uploaded firmware.
+	FeatureFirmwareUploadVerify registrar.Feature = "firmwareuploadverify"
+
+	// FeatureFirmwareInstallUpload means an implementation that both uploads and initiates the firmware install process.
+	FeatureFirmwareInstallUpload registrar.Feature = "firmwareinstallupload"
 )

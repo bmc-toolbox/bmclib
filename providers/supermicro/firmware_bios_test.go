@@ -80,7 +80,7 @@ func Test_setComponentUpdateMisc(t *testing.T) {
 			}
 
 			client := NewClient(parsedURL.Hostname(), "foo", "bar", logr.Discard(), WithPort(parsedURL.Port()))
-			if err := client.checkComponentUpdateMisc(context.Background(), tc.stage); err != nil {
+			if err := client.x11().checkComponentUpdateMisc(context.Background(), tc.stage); err != nil {
 				if tc.errorContains != "" {
 					assert.ErrorContains(t, err, tc.errorContains)
 
@@ -166,7 +166,7 @@ func Test_setBIOSFirmwareInstallMode(t *testing.T) {
 			}
 
 			client := NewClient(parsedURL.Hostname(), "foo", "bar", logr.Discard(), WithPort(parsedURL.Port()))
-			if err := client.setBMCFirmwareInstallMode(context.Background()); err != nil {
+			if err := client.x11().setBMCFirmwareInstallMode(context.Background()); err != nil {
 				if tc.errorContains != "" {
 					assert.ErrorContains(t, err, tc.errorContains)
 

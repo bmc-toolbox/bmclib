@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -65,11 +66,13 @@ func main() {
 	}
 
 	cl := bmclib.NewClient(*host, *user, *pass, clientOpts...)
+	fmt.Println(len(cl.Registry.Drivers))
 	err := cl.Open(ctx)
 	if err != nil {
 		l.Fatal(err, "bmc login failed")
 	}
 
+	fmt.Println(len(cl.Registry.Drivers))
 	defer cl.Close(ctx)
 
 	// open file handle
@@ -79,7 +82,7 @@ func main() {
 	}
 	defer fh.Close()
 
-	taskID, err := cl.FirmwareInstall(ctx, *component, constants.FirmwareApplyOnReset, true, fh)
+	taskID, err := cl.FirmwareInstall(ctx, *component, constants.OnReset, true, fh)
 	if err != nil {
 		l.Fatal(err)
 	}

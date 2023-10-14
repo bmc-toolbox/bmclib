@@ -80,7 +80,7 @@ func TestFirmwareInstall(t *testing.T) {
 
 	tests := []struct {
 		component          string
-		applyAt            string
+		applyAt            constants.OperationApplyTime
 		forceInstall       bool
 		setRequiredTimeout bool
 		reader             io.Reader
@@ -91,7 +91,7 @@ func TestFirmwareInstall(t *testing.T) {
 	}{
 		{
 			common.SlugBIOS,
-			constants.FirmwareApplyOnReset,
+			constants.OnReset,
 			false,
 			false,
 			nil,
@@ -102,7 +102,7 @@ func TestFirmwareInstall(t *testing.T) {
 		},
 		{
 			common.SlugBIOS,
-			constants.FirmwareApplyOnReset,
+			constants.OnReset,
 			false,
 			false,
 			&os.File{},
@@ -124,7 +124,7 @@ func TestFirmwareInstall(t *testing.T) {
 		},
 		{
 			common.SlugBIOS,
-			constants.FirmwareApplyOnReset,
+			constants.OnReset,
 			false,
 			true,
 			fh,
@@ -135,7 +135,7 @@ func TestFirmwareInstall(t *testing.T) {
 		},
 		{
 			common.SlugBIOS,
-			constants.FirmwareApplyOnReset,
+			constants.OnReset,
 			true,
 			true,
 			fh,

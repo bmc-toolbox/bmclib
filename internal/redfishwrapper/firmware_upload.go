@@ -1,4 +1,4 @@
-package redfish
+package redfishwrapper
 
 import (
 	"bytes"
@@ -16,15 +16,9 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	gofishrf "github.com/stmcginnis/gofish/redfish"
 
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
-)
-
-var (
-	errInsufficientCtxTimeout = errors.New("remaining context timeout insufficient to install firmware")
-	errMultiPartPayload       = errors.New("error preparing multipart payload")
 )
 
 type installMethod string
@@ -34,115 +28,177 @@ const (
 	multipartHttpUpload  installMethod = "multipartUpload"
 )
 
-// FirmwareInstall uploads and initiates the firmware install process
-func (c *Conn) FirmwareInstall(ctx context.Context, component string, operationApplyTime constants.OperationApplyTime, forceInstall bool, reader io.Reader) (taskID string, err error) {
+var (
+	errMultiPartPayload = errors.New("error preparing multipart payload")
+)
+
+type RedfishUpdateServiceParameters struct {
+	Targets            []string                     `json:"Targets"`
+	OperationApplyTime constants.OperationApplyTime `json:"@Redfish.OperationApplyTime"`
+	Oem                json.RawMessage              `json:"Oem"`
+}
+
+// FirmwareUpload uploads and initiates the firmware install process
+func (c *Client) FirmwareUpload(ctx context.Context, reader io.Reader, params *RedfishUpdateServiceParameters) (taskID string, err error) {
 	// limit to *os.File until theres a need for other types of readers
 	updateFile, ok := reader.(*os.File)
 	if !ok {
-		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, "method expects an *os.File object")
+		return "", errors.Wrap(bmclibErrs.ErrFirmwareUpload, "method expects an *os.File object")
 	}
+
+	parameters, err := json.Marshal(params)
+	if err != nil {
+		return "", errors.Wrap(err, "error redfish UpdateParameters payload")
+	}
+
+	fmt.Println(string(parameters))
 
 	installMethod, installURI, err := c.firmwareInstallMethodURI(ctx)
 	if err != nil {
-		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, err.Error())
-	}
-
-	// expect atleast 10 minutes left in the deadline to proceed with the update
-	//
-	// this gives the BMC enough time to have the firmware uploaded and return a response to the client.
-	ctxDeadline, _ := ctx.Deadline()
-	if time.Until(ctxDeadline) < 10*time.Minute {
-		return "", errors.Wrap(errInsufficientCtxTimeout, " "+time.Until(ctxDeadline).String())
-	}
-
-	// list redfish firmware install task if theres one present
-	task, err := c.GetFirmwareInstallTaskQueued(ctx, component)
-	if err != nil {
-		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, err.Error())
-	}
-
-	if task != nil {
-		msg := fmt.Sprintf("task for %s firmware install present: %s", component, task.ID)
-		c.Log.V(2).Info("warn", msg)
-
-		if forceInstall {
-			err = c.purgeQueuedFirmwareInstallTask(ctx, component)
-			if err != nil {
-				return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, err.Error())
-			}
-		} else {
-			return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, msg)
-		}
+		return "", errors.Wrap(bmclibErrs.ErrFirmwareUpload, err.Error())
 	}
 
 	// override the gofish HTTP client timeout,
 	// since the context timeout is set at Open() and is at a lower value than required for this operation.
 	//
 	// record the http client timeout to be restored when this method returns
-	httpClientTimeout := c.redfishwrapper.HttpClientTimeout()
+	httpClientTimeout := c.HttpClientTimeout()
 	defer func() {
-		c.redfishwrapper.SetHttpClientTimeout(httpClientTimeout)
+		c.SetHttpClientTimeout(httpClientTimeout)
 	}()
 
-	c.redfishwrapper.SetHttpClientTimeout(time.Until(ctxDeadline))
+	ctxDeadline, _ := ctx.Deadline()
+	c.SetHttpClientTimeout(time.Until(ctxDeadline))
 
 	var resp *http.Response
 
 	switch installMethod {
 	case multipartHttpUpload:
 		var uploadErr error
-		resp, uploadErr = c.multipartHTTPUpload(ctx, installURI, operationApplyTime, updateFile)
+		resp, uploadErr = c.multipartHTTPUpload(ctx, installURI, updateFile, parameters)
 		if uploadErr != nil {
-			return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, uploadErr.Error())
+			return "", errors.Wrap(bmclibErrs.ErrFirmwareUpload, uploadErr.Error())
 		}
 
 	case unstructuredHttpPush:
 		var uploadErr error
-		resp, uploadErr = c.unstructuredHttpUpload(ctx, installURI, operationApplyTime, reader)
+		resp, uploadErr = c.unstructuredHttpUpload(ctx, installURI, updateFile, parameters)
 		if uploadErr != nil {
-			return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, uploadErr.Error())
+			return "", errors.Wrap(bmclibErrs.ErrFirmwareUpload, uploadErr.Error())
 		}
 
 	default:
-		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, "unsupported install method: "+string(installMethod))
+		return "", errors.Wrap(bmclibErrs.ErrFirmwareUpload, "unsupported install method: "+string(installMethod))
 	}
+
+	response, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", errors.Wrap(bmclibErrs.ErrFirmwareUpload, err.Error())
+	}
+
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusAccepted {
 		return "", errors.Wrap(
 			bmclibErrs.ErrFirmwareUpload,
-			"non 202 status code returned: "+strconv.Itoa(resp.StatusCode),
+			"unexpected status code returned: "+resp.Status,
 		)
 	}
 
 	// The response contains a location header pointing to the task URI
 	// Location: /redfish/v1/TaskService/Tasks/JID_467696020275
 	var location = resp.Header.Get("Location")
+	if strings.Contains(location, "/TaskService/Tasks/") {
+		return taskIDFromLocationHeader(location)
+	}
 
-	taskID, err = TaskIDFromLocationURI(location)
-
-	return taskID, err
+	return taskIDFromResponseBody(response)
 }
 
-func TaskIDFromLocationURI(uri string) (taskID string, err error) {
+// StartUpdateForUploadedFirmware starts an update for a firmware file previously uploaded and returns the taskID
+func (c *Client) StartUpdateForUploadedFirmware(ctx context.Context) (taskID string, err error) {
+	errStartUpdate := errors.New("error in starting update for uploaded firmware")
+	updateService, err := c.client.Service.UpdateService()
+	if err != nil {
+		return "", errors.Wrap(err, "error querying redfish update service")
+	}
 
-	if strings.Contains(uri, "JID_") {
-		taskID = strings.Split(uri, "JID_")[1]
-	} else if strings.Contains(uri, "/Monitor") {
-		// OpenBMC returns a monitor URL in Location
-		// Location: /redfish/v1/TaskService/Tasks/12/Monitor
-		splits := strings.Split(uri, "/")
-		if len(splits) >= 6 {
-			taskID = splits[5]
-		} else {
-			taskID = ""
+	// start update
+	resp, err := updateService.GetClient().PostWithHeaders(updateService.StartUpdateTarget, nil, nil)
+	if err != nil {
+		return "", errors.Wrap(err, "error querying redfish start update endpoint")
+	}
+
+	response, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", errors.Wrap(err, "error reading redfish start update response body")
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusAccepted {
+		return "", errors.Wrap(errStartUpdate, "unexpected status code returned: "+resp.Status)
+	}
+
+	var location = resp.Header.Get("Location")
+	if strings.Contains(location, "/TaskService/Tasks/") {
+		return taskIDFromLocationHeader(location)
+	}
+
+	return taskIDFromResponseBody(response)
+}
+
+type TaskAccepted struct {
+	Accepted struct {
+		Code                string `json:"code"`
+		Message             string `json:"Message"`
+		MessageExtendedInfo []struct {
+			MessageID         string   `json:"MessageId"`
+			Severity          string   `json:"Severity"`
+			Resolution        string   `json:"Resolution"`
+			Message           string   `json:"Message"`
+			MessageArgs       []string `json:"MessageArgs"`
+			RelatedProperties []string `json:"RelatedProperties"`
+		} `json:"@Message.ExtendedInfo"`
+	} `json:"Accepted"`
+}
+
+func taskIDFromResponseBody(resp []byte) (taskID string, err error) {
+	errTaskIdFromResponse := errors.New("failed to identify firmware install taskID from response body")
+
+	a := &TaskAccepted{}
+	if err = json.Unmarshal(resp, a); err != nil {
+		return "", errors.Wrap(errTaskIdFromResponse, err.Error())
+	}
+
+	for _, info := range a.Accepted.MessageExtendedInfo {
+		for _, msg := range info.MessageArgs {
+			if strings.Contains(msg, "/TaskService/Tasks/") {
+				return msg, nil
+			}
 		}
 	}
 
-	if taskID == "" {
-		return "", bmclibErrs.ErrTaskNotFound
-	}
+	return
+}
 
-	return taskID, nil
+func taskIDFromLocationHeader(uri string) (taskID string, err error) {
+	switch {
+	case strings.Contains(uri, "JID_"):
+		taskID = strings.Split(uri, "JID_")[1]
+		return taskID, nil
+
+	case strings.Contains("Monitor", uri):
+		splits := strings.Split(uri, "/")
+		if len(splits) < 6 {
+			return "", errors.Wrap(bmclibErrs.ErrTaskNotFound, "failed to parse taskID from uri: "+uri)
+		}
+
+		return splits[5], nil
+
+	default:
+		return "", errors.Wrap(bmclibErrs.ErrTaskNotFound, "failed to parse taskID from uri: "+uri)
+	}
 }
 
 type multipartPayload struct {
@@ -150,35 +206,21 @@ type multipartPayload struct {
 	updateFile       *os.File
 }
 
-func (c *Conn) multipartHTTPUpload(ctx context.Context, url string, operationApplyTime constants.OperationApplyTime, update *os.File) (*http.Response, error) {
+func (c *Client) multipartHTTPUpload(ctx context.Context, url string, update *os.File, params []byte) (*http.Response, error) {
 	if url == "" {
 		return nil, fmt.Errorf("unable to execute request, no target provided")
 	}
 
-	parameters, err := json.Marshal(struct {
-		Targets            []string `json:"Targets"`
-		RedfishOpApplyTime string   `json:"@Redfish.OperationApplyTime"`
-		Oem                struct{} `json:"Oem"`
-	}{
-		[]string{},
-		string(operationApplyTime),
-		struct{}{},
-	})
-
-	if err != nil {
-		return nil, errors.Wrap(err, "error preparing multipart UpdateParameters payload")
-	}
-
 	// payload ordered in the format it ends up in the multipart form
 	payload := &multipartPayload{
-		updateParameters: []byte(parameters),
+		updateParameters: params,
 		updateFile:       update,
 	}
 
 	return c.runRequestWithMultipartPayload(url, payload)
 }
 
-func (c *Conn) unstructuredHttpUpload(ctx context.Context, url string, operationApplyTime constants.OperationApplyTime, update io.Reader) (*http.Response, error) {
+func (c *Client) unstructuredHttpUpload(ctx context.Context, url string, update io.Reader, params []byte) (*http.Response, error) {
 	if url == "" {
 		return nil, fmt.Errorf("unable to execute request, no target provided")
 	}
@@ -187,13 +229,13 @@ func (c *Conn) unstructuredHttpUpload(ctx context.Context, url string, operation
 	b, _ := io.ReadAll(update)
 	payloadReadSeeker := bytes.NewReader(b)
 
-	return c.redfishwrapper.RunRawRequestWithHeaders(http.MethodPost, url, payloadReadSeeker, "application/octet-stream", nil)
+	return c.RunRawRequestWithHeaders(http.MethodPost, url, payloadReadSeeker, "application/octet-stream", nil)
 
 }
 
 // firmwareUpdateMethodURI returns the updateMethod and URI
-func (c *Conn) firmwareInstallMethodURI(ctx context.Context) (method installMethod, updateURI string, err error) {
-	updateService, err := c.redfishwrapper.UpdateService()
+func (c *Client) firmwareInstallMethodURI(ctx context.Context) (method installMethod, updateURI string, err error) {
+	updateService, err := c.UpdateService()
 	if err != nil {
 		return "", "", errors.Wrap(bmclibErrs.ErrRedfishUpdateService, err.Error())
 	}
@@ -211,6 +253,21 @@ func (c *Conn) firmwareInstallMethodURI(ctx context.Context) (method installMeth
 	}
 
 	return "", "", errors.Wrap(bmclibErrs.ErrRedfishUpdateService, "unsupported update method")
+}
+
+// sets up the UpdateParameters MIMEHeader for the multipart form
+// the Go multipart writer CreateFormField does not currently let us set Content-Type on a MIME Header
+// https://cs.opensource.google/go/go/+/refs/tags/go1.17.8:src/mime/multipart/writer.go;l=151
+func updateParametersFormField(fieldName string, writer *multipart.Writer) (io.Writer, error) {
+	if fieldName != "UpdateParameters" {
+		return nil, errors.New("")
+	}
+
+	h := make(textproto.MIMEHeader)
+	h.Set("Content-Disposition", `form-data; name="UpdateParameters"`)
+	h.Set("Content-Type", "application/json")
+
+	return writer.CreatePart(h)
 }
 
 // pipeReaderFakeSeeker wraps the io.PipeReader and implements the io.Seeker interface
@@ -287,7 +344,7 @@ func multipartPayloadSize(payload *multipartPayload) (int64, *bytes.Buffer, erro
 
 // hey.
 // --------------------------1771f60800cb2801--
-func (c *Conn) runRequestWithMultipartPayload(url string, payload *multipartPayload) (*http.Response, error) {
+func (c *Client) runRequestWithMultipartPayload(url string, payload *multipartPayload) (*http.Response, error) {
 	if url == "" {
 		return nil, fmt.Errorf("unable to execute request, no target provided")
 	}
@@ -320,7 +377,7 @@ func (c *Conn) runRequestWithMultipartPayload(url string, payload *multipartPayl
 		var err error
 		defer func() {
 			if err != nil {
-				c.Log.Error(err, "multipart upload error occurred")
+				c.logger.Error(err, "multipart upload error occurred")
 			}
 		}()
 
@@ -329,13 +386,13 @@ func (c *Conn) runRequestWithMultipartPayload(url string, payload *multipartPayl
 		// Add UpdateParameters part
 		parametersPart, err := updateParametersFormField("UpdateParameters", form)
 		if err != nil {
-			c.Log.Error(errMultiPartPayload, err.Error()+": UpdateParameters part copy error")
+			c.logger.Error(errMultiPartPayload, err.Error()+": UpdateParameters part copy error")
 
 			return
 		}
 
 		if _, err = io.Copy(parametersPart, bytes.NewReader(payload.updateParameters)); err != nil {
-			c.Log.Error(errMultiPartPayload, err.Error()+": UpdateParameters part copy error")
+			c.logger.Error(errMultiPartPayload, err.Error()+": UpdateParameters part copy error")
 
 			return
 		}
@@ -343,13 +400,13 @@ func (c *Conn) runRequestWithMultipartPayload(url string, payload *multipartPayl
 		// Add UpdateFile part
 		updateFilePart, err := form.CreateFormFile("UpdateFile", filepath.Base(payload.updateFile.Name()))
 		if err != nil {
-			c.Log.Error(errMultiPartPayload, err.Error()+": UpdateFile part create error")
+			c.logger.Error(errMultiPartPayload, err.Error()+": UpdateFile part create error")
 
 			return
 		}
 
 		if _, err = io.Copy(updateFilePart, payload.updateFile); err != nil {
-			c.Log.Error(errMultiPartPayload, err.Error()+": UpdateFile part copy error")
+			c.logger.Error(errMultiPartPayload, err.Error()+": UpdateFile part copy error")
 
 			return
 		}
@@ -361,70 +418,5 @@ func (c *Conn) runRequestWithMultipartPayload(url string, payload *multipartPayl
 	// pipeReader wrapped as a io.ReadSeeker to satisfy the gofish method signature
 	reader := pipeReaderFakeSeeker{pipeReader}
 
-	return c.redfishwrapper.RunRawRequestWithHeaders(http.MethodPost, url, reader, form.FormDataContentType(), headers)
-}
-
-// sets up the UpdateParameters MIMEHeader for the multipart form
-// the Go multipart writer CreateFormField does not currently let us set Content-Type on a MIME Header
-// https://cs.opensource.google/go/go/+/refs/tags/go1.17.8:src/mime/multipart/writer.go;l=151
-func updateParametersFormField(fieldName string, writer *multipart.Writer) (io.Writer, error) {
-	if fieldName != "UpdateParameters" {
-		return nil, errors.New("")
-	}
-
-	h := make(textproto.MIMEHeader)
-	h.Set("Content-Disposition", `form-data; name="UpdateParameters"`)
-	h.Set("Content-Type", "application/json")
-
-	return writer.CreatePart(h)
-}
-
-// FirmwareInstallStatus returns the status of the firmware install task queued
-func (c *Conn) FirmwareInstallStatus(ctx context.Context, installVersion, component, taskID string) (state string, err error) {
-	vendor, _, err := c.redfishwrapper.DeviceVendorModel(ctx)
-	if err != nil {
-		return state, errors.Wrap(err, "unable to determine device vendor, model attributes")
-	}
-
-	// component is not used, we hack it for tests, easier than mocking
-	if component == "testOpenbmc" {
-		vendor = "defaultVendor"
-	}
-
-	var task *gofishrf.Task
-	switch {
-	case strings.Contains(vendor, constants.Dell):
-		task, err = c.dellJobAsRedfishTask(taskID)
-	default:
-		task, err = c.GetTask(taskID)
-	}
-
-	if err != nil {
-		return state, err
-	}
-
-	if task == nil {
-		return state, errors.New("failed to lookup task status for task ID: " + taskID)
-	}
-
-	state = strings.ToLower(string(task.TaskState))
-
-	// so much for standards...
-	switch state {
-	case "starting", "downloading", "downloaded":
-		return constants.FirmwareInstallInitializing, nil
-	case "running", "stopping", "cancelling", "scheduling":
-		return constants.FirmwareInstallRunning, nil
-	case "pending", "new":
-		return constants.FirmwareInstallQueued, nil
-	case "scheduled":
-		return constants.FirmwareInstallPowerCyleHost, nil
-	case "interrupted", "killed", "exception", "cancelled", "suspended", "failed":
-		return constants.FirmwareInstallFailed, nil
-	case "completed":
-		return constants.FirmwareInstallComplete, nil
-	default:
-		return constants.FirmwareInstallUnknown + ": " + state, nil
-	}
-
+	return c.RunRawRequestWithHeaders(http.MethodPost, url, reader, form.FormDataContentType(), headers)
 }

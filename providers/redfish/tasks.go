@@ -77,7 +77,7 @@ func (c *Conn) activeTask(ctx context.Context) (*gofishrf.Task, error) {
 
 // GetFirmwareInstallTaskQueued returns the redfish task object for a queued update task
 func (c *Conn) GetFirmwareInstallTaskQueued(ctx context.Context, component string) (*gofishrf.Task, error) {
-	vendor, _, err := c.DeviceVendorModel(ctx)
+	vendor, _, err := c.redfishwrapper.DeviceVendorModel(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to determine device vendor, model attributes")
 	}
@@ -101,7 +101,7 @@ func (c *Conn) GetFirmwareInstallTaskQueued(ctx context.Context, component strin
 
 // purgeQueuedFirmwareInstallTask removes any existing queued firmware install task for the given component slug
 func (c *Conn) purgeQueuedFirmwareInstallTask(ctx context.Context, component string) error {
-	vendor, _, err := c.DeviceVendorModel(ctx)
+	vendor, _, err := c.redfishwrapper.DeviceVendorModel(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to determine device vendor, model attributes")
 	}

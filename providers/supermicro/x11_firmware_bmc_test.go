@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_setBMCFirmwareInstallMode(t *testing.T) {
+func TestX11SetBMCFirmwareInstallMode(t *testing.T) {
 	testcases := []struct {
 		name          string
 		errorContains string
@@ -91,7 +91,7 @@ func Test_setBMCFirmwareInstallMode(t *testing.T) {
 			}
 
 			client := NewClient(parsedURL.Hostname(), "foo", "bar", logr.Discard(), WithPort(parsedURL.Port()))
-			if err := client.setBMCFirmwareInstallMode(context.Background()); err != nil {
+			if err := client.x11().setBMCFirmwareInstallMode(context.Background()); err != nil {
 				if tc.errorContains != "" {
 					assert.ErrorContains(t, err, tc.errorContains)
 
@@ -104,7 +104,7 @@ func Test_setBMCFirmwareInstallMode(t *testing.T) {
 	}
 }
 
-func Test_uploadBMCFirmware(t *testing.T) {
+func TestX11UploadBMCFirmware(t *testing.T) {
 	testcases := []struct {
 		name           string
 		errorContains  string
@@ -183,7 +183,7 @@ func Test_uploadBMCFirmware(t *testing.T) {
 
 			client := NewClient(parsedURL.Hostname(), "foo", "bar", logr.Discard(), WithPort(parsedURL.Port()))
 			client.csrfToken = "foobar"
-			if err := client.uploadBMCFirmware(context.Background(), fwReader); err != nil {
+			if err := client.x11().uploadBMCFirmware(context.Background(), fwReader); err != nil {
 				if tc.errorContains != "" {
 					assert.ErrorContains(t, err, tc.errorContains)
 
@@ -196,7 +196,7 @@ func Test_uploadBMCFirmware(t *testing.T) {
 	}
 }
 
-func Test_verifyBMCFirmwareVersion(t *testing.T) {
+func TestX11VerifyBMCFirmwareVersion(t *testing.T) {
 	testcases := []struct {
 		name          string
 		errorContains string
@@ -262,7 +262,7 @@ func Test_verifyBMCFirmwareVersion(t *testing.T) {
 
 			client := NewClient(parsedURL.Hostname(), "foo", "bar", logr.Discard(), WithPort(parsedURL.Port()))
 			client.csrfToken = "foobar"
-			if err := client.verifyBMCFirmwareVersion(context.Background()); err != nil {
+			if err := client.x11().verifyBMCFirmwareVersion(context.Background()); err != nil {
 				if tc.errorContains != "" {
 					assert.ErrorContains(t, err, tc.errorContains)
 
@@ -275,7 +275,7 @@ func Test_verifyBMCFirmwareVersion(t *testing.T) {
 	}
 }
 
-func Test_initiateBMCFirmwareInstall(t *testing.T) {
+func TestX11InitiateBMCFirmwareInstall(t *testing.T) {
 	testcases := []struct {
 		name          string
 		errorContains string
@@ -341,7 +341,7 @@ func Test_initiateBMCFirmwareInstall(t *testing.T) {
 
 			client := NewClient(parsedURL.Hostname(), "foo", "bar", logr.Discard(), WithPort(parsedURL.Port()))
 			client.csrfToken = "foobar"
-			if err := client.initiateBMCFirmwareInstall(context.Background()); err != nil {
+			if err := client.x11().initiateBMCFirmwareInstall(context.Background()); err != nil {
 				if tc.errorContains != "" {
 					assert.ErrorContains(t, err, tc.errorContains)
 
@@ -354,7 +354,7 @@ func Test_initiateBMCFirmwareInstall(t *testing.T) {
 	}
 }
 
-func Test_statusBMCFirmwareInstall(t *testing.T) {
+func TestX11StatusBMCFirmwareInstall(t *testing.T) {
 	testcases := []struct {
 		name          string
 		expectStatus  string
@@ -496,7 +496,7 @@ func Test_statusBMCFirmwareInstall(t *testing.T) {
 
 			client := NewClient(parsedURL.Hostname(), "foo", "bar", logr.Discard(), WithPort(parsedURL.Port()))
 			client.csrfToken = "foobar"
-			if gotStatus, err := client.statusBMCFirmwareInstall(context.Background()); err != nil {
+			if gotStatus, err := client.x11().statusBMCFirmwareInstall(context.Background()); err != nil {
 				if tc.errorContains != "" {
 					assert.ErrorContains(t, err, tc.errorContains)
 

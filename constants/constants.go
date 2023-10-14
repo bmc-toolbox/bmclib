@@ -2,6 +2,13 @@ package constants
 
 import "strings"
 
+type (
+	OperationApplyTime string
+
+	// The FirmwareAction identifies each phase of a firmware install process.
+	FirmwareAction string
+)
+
 const (
 	// Unknown is the constant that defines unknown things
 	Unknown = "Unknown"
@@ -27,9 +34,11 @@ const (
 
 	// Redfish firmware apply at constants
 	// FirmwareApplyImmediate sets the firmware to be installed immediately after upload
-	FirmwareApplyImmediate = "Immediate"
+	Immediate OperationApplyTime = "Immediate"
 	//FirmwareApplyOnReset sets the firmware to be install on device power cycle/reset
-	FirmwareApplyOnReset = "OnReset"
+	OnReset OperationApplyTime = "OnReset"
+	// FirmwareOnStartUpdateRequest sets the firmware install to begin after the start request has been sent.
+	OnStartUpdateRequest OperationApplyTime = "OnStartUpdateRequest"
 
 	// Firmware install states returned by bmclib provider FirmwareInstallStatus implementations
 	//
@@ -66,6 +75,14 @@ const (
 	FirmwareInstallPowerCycleBMC = "powercycle-bmc"
 
 	FirmwareInstallUnknown = "unknown"
+
+	// FirmwareActionUpload is an identifier for the firmware upload step in the firmware install process.
+	FirmwareActionUpload       = "upload"
+	FirmwareActionVerifyUpload = "verify-upload"
+
+	// FirmwareActionInstall is an identifier for the firmware install step after a firmware has been uploaded.
+	FirmwareActionInstall       = "install"
+	FirmwareActionVerifyInstall = "verify-install"
 
 	// device BIOS/UEFI POST code bmclib identifiers
 	POSTStateBootINIT = "boot-init/pxe"

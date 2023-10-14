@@ -12,6 +12,7 @@ import (
 
 	"dario.cat/mergo"
 	"github.com/bmc-toolbox/bmclib/v2/bmc"
+	"github.com/bmc-toolbox/bmclib/v2/constants"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/providers/asrockrack"
 	"github.com/bmc-toolbox/bmclib/v2/providers/dell"
@@ -419,8 +420,8 @@ func (c *Client) GetBiosConfiguration(ctx context.Context) (biosConfig map[strin
 }
 
 // FirmwareInstall pass through library function to upload firmware and install firmware
-func (c *Client) FirmwareInstall(ctx context.Context, component, applyAt string, forceInstall bool, reader io.Reader) (taskID string, err error) {
-	taskID, metadata, err := bmc.FirmwareInstallFromInterfaces(ctx, component, applyAt, forceInstall, reader, c.registry().GetDriverInterfaces())
+func (c *Client) FirmwareInstall(ctx context.Context, component string, operationApplyTime constants.OperationApplyTime, forceInstall bool, reader io.Reader) (taskID string, err error) {
+	taskID, metadata, err := bmc.FirmwareInstallFromInterfaces(ctx, component, operationApplyTime, forceInstall, reader, c.registry().GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return taskID, err
 }

@@ -25,14 +25,11 @@ var (
 	ErrMultipartForm       = errors.New("multipart form error")
 )
 
-// firmwareInstallBMC uploads and installs firmware for the BMC component
-func (c *Client) firmwareInstallBMC(ctx context.Context, reader io.Reader, fileSize int64) error {
-	var err error
-
+func (c *x11) firmwareInstallBMC(ctx context.Context, reader io.Reader, fileSize int64) error {
 	c.log.V(2).Info("setting device to firmware install mode", "ip", c.host, "component", "BMC", "model", c.model)
 
 	// 1. set the device to flash mode - prepares the flash
-	err = c.setBMCFirmwareInstallMode(ctx)
+	err := c.setBMCFirmwareInstallMode(ctx)
 	if err != nil {
 		return err
 	}
@@ -62,9 +59,10 @@ func (c *Client) firmwareInstallBMC(ctx context.Context, reader io.Reader, fileS
 	}
 
 	return nil
+
 }
 
-func (c *Client) setBMCFirmwareInstallMode(ctx context.Context) error {
+func (c *x11) setBMCFirmwareInstallMode(ctx context.Context) error {
 	payload := []byte(`op=LOCK_UPLOAD_FW.XML&r=(0,0)&_=`)
 
 	headers := map[string]string{
@@ -118,7 +116,7 @@ func (c *Client) setBMCFirmwareInstallMode(ctx context.Context) error {
 //
 // JhVe1BUiWzOVQdvXUKn7ClsQ5xffq8StMOxG7ZNlpKs
 // -----------------------------348113760313214626342869148824--
-func (c *Client) uploadBMCFirmware(ctx context.Context, fwReader io.Reader) error {
+func (c *x11) uploadBMCFirmware(ctx context.Context, fwReader io.Reader) error {
 	var payloadBuffer bytes.Buffer
 	var err error
 
@@ -195,7 +193,7 @@ func (c *Client) uploadBMCFirmware(ctx context.Context, fwReader io.Reader) erro
 	return nil
 }
 
-func (c *Client) verifyBMCFirmwareVersion(ctx context.Context) error {
+func (c *x11) verifyBMCFirmwareVersion(ctx context.Context) error {
 	errUnexpectedResponse := errors.New("unexpected response")
 
 	payload := []byte(`op=UPLOAD_FW_VERSION.XML&r=(0,0)&_=`)
@@ -221,7 +219,7 @@ func (c *Client) verifyBMCFirmwareVersion(ctx context.Context) error {
 }
 
 // initiate BMC firmware install process
-func (c *Client) initiateBMCFirmwareInstall(ctx context.Context) error {
+func (c *x11) initiateBMCFirmwareInstall(ctx context.Context) error {
 	// preserve all configuration, sensor data and SSL certs(?) during upgrade
 	payload := "op=main_fwupdate&preserve_config=1&preserve_sdr=1&preserve_ssl=1"
 
@@ -254,7 +252,7 @@ func (c *Client) initiateBMCFirmwareInstall(ctx context.Context) error {
 }
 
 // statusBMCFirmwareInstall returns the status of the firmware install process
-func (c *Client) statusBMCFirmwareInstall(ctx context.Context) (string, error) {
+func (c *x11) statusBMCFirmwareInstall(ctx context.Context) (string, error) {
 	payload := []byte(`fwtype=0&_`)
 
 	headers := map[string]string{"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}

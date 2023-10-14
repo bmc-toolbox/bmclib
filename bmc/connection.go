@@ -64,7 +64,9 @@ func OpenConnectionFromInterfaces(ctx context.Context, timeout time.Duration, pr
 	// For every provider, launch a goroutine that attempts to open a connection and report
 	// back via the results channel what happened.
 	for _, elem := range providers {
+
 		switch p := elem.(type) {
+
 		case Opener:
 			providerName := getProviderName(elem)
 			metadata.ProvidersAttempted = append(metadata.ProvidersAttempted, providerName)
