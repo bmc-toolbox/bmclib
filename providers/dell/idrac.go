@@ -128,10 +128,16 @@ func (c *Conn) Open(ctx context.Context) (err error) {
 	// is available across various BMC vendors, we verify the device we're connected to is dell.
 	manufacturer, err := c.deviceManufacturer(ctx)
 	if err != nil {
+		if er := c.redfishwrapper.Close(ctx); er != nil {
+			return fmt.Errorf("%v: %w", err, er)
+		}
 		return err
 	}
 
 	if !strings.Contains(strings.ToLower(manufacturer), common.VendorDell) {
+		if er := c.redfishwrapper.Close(ctx); er != nil {
+			return fmt.Errorf("%v: %w", err, er)
+		}
 		return bmclibErrs.ErrIncompatibleProvider
 	}
 
