@@ -13,7 +13,7 @@ import (
 	"os"
 	"testing"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	berrors "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/assert"
 )
@@ -134,7 +134,7 @@ func TestOpenErrors(t *testing.T) {
 				"/redfish/v1/Systems":                   endpointFunc("/systems.json"),
 				"/redfish/v1/Systems/System.Embedded.1": endpointFunc("/systems_embedded_not_dell.1.json"),
 			},
-			err: bmclibErrs.ErrIncompatibleProvider,
+			err: berrors.ErrIncompatibleProvider,
 		},
 		"manufacturer failure": {
 			fns: map[string]func(http.ResponseWriter, *http.Request){

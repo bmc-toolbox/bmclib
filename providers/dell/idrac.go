@@ -196,8 +196,6 @@ var errManufacturerUnknown = errors.New("error identifying device manufacturer")
 
 // deviceManufacturer returns the device manufacturer and model attributes
 func (c *Conn) deviceManufacturer(ctx context.Context) (vendor string, err error) {
-	//errManufacturerUnknown := errors.New("error identifying device manufacturer")
-
 	systems, err := c.redfishwrapper.Systems()
 	if err != nil {
 		fmt.Println(err.Error())
