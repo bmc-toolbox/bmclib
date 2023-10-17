@@ -128,10 +128,16 @@ func (c *Conn) Open(ctx context.Context) (err error) {
 	// is available across various BMC vendors, we verify the device we're connected to is dell.
 	manufacturer, err := c.deviceManufacturer(ctx)
 	if err != nil {
+		if er := c.redfishwrapper.Close(ctx); er != nil {
+			return fmt.Errorf("%v: %w", err, er)
+		}
 		return err
 	}
 
 	if !strings.Contains(strings.ToLower(manufacturer), common.VendorDell) {
+		if er := c.redfishwrapper.Close(ctx); er != nil {
+			return fmt.Errorf("%v: %w", err, er)
+		}
 		return bmclibErrs.ErrIncompatibleProvider
 	}
 
@@ -186,13 +192,12 @@ func (c *Conn) PowerStateGet(ctx context.Context) (state string, err error) {
 	return c.redfishwrapper.SystemPowerStatus(ctx)
 }
 
+var errManufacturerUnknown = errors.New("error identifying device manufacturer")
+
 // deviceManufacturer returns the device manufacturer and model attributes
 func (c *Conn) deviceManufacturer(ctx context.Context) (vendor string, err error) {
-	errManufacturerUnknown := errors.New("error identifying device manufacturer")
-
 	systems, err := c.redfishwrapper.Systems()
 	if err != nil {
-		fmt.Println(err.Error())
 		return "", errors.Wrap(errManufacturerUnknown, err.Error())
 	}
 
