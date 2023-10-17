@@ -3,6 +3,7 @@ package dell
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -12,6 +13,7 @@ import (
 	"os"
 	"testing"
 
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/assert"
 )
@@ -19,6 +21,30 @@ import (
 const (
 	fixturesDir = "./fixtures"
 )
+
+var endpointFunc = func(file string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// expect either GET or Delete methods
+		if r.Method != http.MethodGet && r.Method != http.MethodDelete {
+			w.WriteHeader(http.StatusNotFound)
+		}
+
+		fixture := fixturesDir + file
+		fh, err := os.Open(fixture)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		defer fh.Close()
+
+		b, err := io.ReadAll(fh)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		_, _ = w.Write(b)
+	}
+}
 
 func Test_Screenshot(t *testing.T) {
 	// byte slice instead of a real image
@@ -37,72 +63,9 @@ func Test_Screenshot(t *testing.T) {
 			[]byte(`foobar`),
 			handlerFuncMap{
 				// service root
-				"/redfish/v1/": func(w http.ResponseWriter, r *http.Request) {
-					// expect either GET or Delete methods
-					if r.Method != http.MethodGet && r.Method != http.MethodDelete {
-						w.WriteHeader(http.StatusNotFound)
-					}
-
-					fixture := fixturesDir + "/serviceroot.json"
-					fh, err := os.Open(fixture)
-					if err != nil {
-						log.Fatal(err)
-					}
-
-					defer fh.Close()
-
-					b, err := io.ReadAll(fh)
-					if err != nil {
-						log.Fatal(err)
-					}
-
-					_, _ = w.Write(b)
-				},
-
-				"/redfish/v1/Systems": func(w http.ResponseWriter, r *http.Request) {
-					// expect either GET or Delete methods
-					if r.Method != http.MethodGet && r.Method != http.MethodDelete {
-						w.WriteHeader(http.StatusNotFound)
-					}
-
-					fixture := fixturesDir + "/systems.json"
-					fh, err := os.Open(fixture)
-					if err != nil {
-						log.Fatal(err)
-					}
-
-					defer fh.Close()
-
-					b, err := io.ReadAll(fh)
-					if err != nil {
-						log.Fatal(err)
-					}
-
-					_, _ = w.Write(b)
-				},
-
-				"/redfish/v1/Systems/System.Embedded.1": func(w http.ResponseWriter, r *http.Request) {
-					// expect either GET or Delete methods
-					if r.Method != http.MethodGet && r.Method != http.MethodDelete {
-						w.WriteHeader(http.StatusNotFound)
-					}
-
-					fixture := fixturesDir + "/systems_embedded.1.json"
-					fh, err := os.Open(fixture)
-					if err != nil {
-						log.Fatal(err)
-					}
-
-					defer fh.Close()
-
-					b, err := io.ReadAll(fh)
-					if err != nil {
-						log.Fatal(err)
-					}
-
-					_, _ = w.Write(b)
-				},
-
+				"/redfish/v1/":                          endpointFunc("/serviceroot.json"),
+				"/redfish/v1/Systems":                   endpointFunc("/systems.json"),
+				"/redfish/v1/Systems/System.Embedded.1": endpointFunc("/systems_embedded.1.json"),
 				// screenshot endpoint
 				redfishV1Prefix + screenshotEndpoint: func(w http.ResponseWriter, r *http.Request) {
 					assert.Equal(t, r.Method, http.MethodPost)
@@ -155,6 +118,57 @@ func Test_Screenshot(t *testing.T) {
 
 			assert.Equal(t, tc.imgbytes, img)
 			assert.Equal(t, "png", fileType)
+		})
+	}
+}
+
+func TestOpenErrors(t *testing.T) {
+	tests := map[string]struct {
+		fns map[string]func(http.ResponseWriter, *http.Request)
+		err error
+	}{
+		"not dell manufacturer": {
+			fns: map[string]func(http.ResponseWriter, *http.Request){
+				// service root
+				"/redfish/v1/":                          endpointFunc("/serviceroot.json"),
+				"/redfish/v1/Systems":                   endpointFunc("/systems.json"),
+				"/redfish/v1/Systems/System.Embedded.1": endpointFunc("/systems_embedded_not_dell.1.json"),
+			},
+			err: bmclibErrs.ErrIncompatibleProvider,
+		},
+		"manufacturer failure": {
+			fns: map[string]func(http.ResponseWriter, *http.Request){
+				// service root
+				"/redfish/v1/":                          endpointFunc("/serviceroot.json"),
+				"/redfish/v1/Systems":                   endpointFunc("/systems.json"),
+				"/redfish/v1/Systems/System.Embedded.1": endpointFunc("/systems_embedded_no_manufacturer.1.json"),
+			},
+			err: errManufacturerUnknown,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			mux := http.NewServeMux()
+			handleFunc := tc.fns
+			for endpoint, handler := range handleFunc {
+				mux.HandleFunc(endpoint, handler)
+			}
+			server := httptest.NewTLSServer(mux)
+			defer server.Close()
+
+			parsedURL, err := url.Parse(server.URL)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			client := New(parsedURL.Hostname(), "", "", logr.Discard(), WithPort(parsedURL.Port()), WithUseBasicAuth(true))
+
+			err = client.Open(context.TODO())
+			if !errors.Is(err, tc.err) {
+				t.Fatalf("expected %v, got %v", tc.err, err)
+			}
+			client.Close(context.Background())
 		})
 	}
 }
