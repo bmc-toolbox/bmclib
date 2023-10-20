@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 )
@@ -66,7 +67,14 @@ func UploadFloppyImageFromInterfaces(ctx context.Context, image io.Reader, p []i
 	}
 
 	if len(providers) == 0 {
-		return metadata, multierror.Append(err, errors.New("no FloppyImageUploader implementations found"))
+		return metadata, multierror.Append(
+			err,
+			errors.Wrap(
+				bmclibErrs.ErrProviderImplementation,
+				"no FloppyImageUploader implementations found",
+			),
+		)
+
 	}
 
 	return uploadFloppyImage(ctx, image, providers)
@@ -129,7 +137,13 @@ func UnmountFloppyImageFromInterfaces(ctx context.Context, p []interface{}) (met
 	}
 
 	if len(providers) == 0 {
-		return metadata, multierror.Append(err, errors.New("no FloppyImageUnmounter implementations found"))
+		return metadata, multierror.Append(
+			err,
+			errors.Wrap(
+				bmclibErrs.ErrProviderImplementation,
+				"no FloppyImageUnmounter implementations found",
+			),
+		)
 	}
 
 	return unmountFloppyImage(ctx, providers)
