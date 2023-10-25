@@ -10,9 +10,11 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"os"
+	"strings"
 
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	"github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/bmc-toolbox/common"
 )
 
 // API session setup response payload
@@ -181,7 +183,23 @@ func (a *ASRockRack) createUpdateUser(ctx context.Context, account *UserAccount)
 // at this point all logged in sessions are terminated
 // and no logins are permitted
 func (a *ASRockRack) setFlashMode(ctx context.Context) error {
-	_, statusCode, err := a.queryHTTPS(ctx, "api/maintenance/flash", "PUT", nil, nil, 0)
+	device := common.NewDevice()
+	device.Metadata = map[string]string{}
+	_ = a.fruAttributes(ctx, &device)
+
+	pConfig := &preserveConfig{}
+	// preserve config is needed by e3c256d4i
+	if strings.EqualFold(device.Model, "E3C256D4ID-NL") {
+		pConfig = &preserveConfig{PreserveConfig: 1}
+	}
+
+	payload, err := json.Marshal(pConfig)
+	if err != nil {
+		return err
+	}
+
+	headers := map[string]string{"Content-Type": "application/json"}
+	_, statusCode, err := a.queryHTTPS(ctx, "api/maintenance/flash", "PUT", bytes.NewReader(payload), headers, 0)
 	if err != nil {
 		return err
 	}
