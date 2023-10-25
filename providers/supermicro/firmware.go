@@ -48,14 +48,14 @@ func (c *Client) FirmwareInstallActions(ctx context.Context, component string) (
 	return nil, errors.Wrap(errUnexpectedModel, c.model)
 }
 
-func (c *Client) FirmwareUpload(ctx context.Context, component string, operationApplyTime constants.OperationApplyTime, reader io.Reader) (taskID string, err error) {
+func (c *Client) FirmwareUpload(ctx context.Context, component string, reader io.Reader) (taskID string, err error) {
 	if err := c.firmwareInstallSupported(ctx); err != nil {
 		return "", err
 	}
 
 	switch {
 	case strings.HasPrefix(strings.ToLower(c.model), "x12"):
-		return c.x12().firmwareUpload(ctx, component, operationApplyTime, reader)
+		return c.x12().firmwareUpload(ctx, component, reader)
 	case strings.HasPrefix(strings.ToLower(c.model), "x11"):
 		//return c.x11().statusBMCFirmwareInstall(ctx)
 	}

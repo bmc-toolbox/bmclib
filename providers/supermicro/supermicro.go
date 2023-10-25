@@ -267,6 +267,11 @@ func (c *Client) Close(ctx context.Context) error {
 	return nil
 }
 
+func (c *Client) ResetBMC(ctx context.Context) error {
+	_, err := c.redfish.BMCReset(ctx, "GracefulRestart")
+	return err
+}
+
 // Name returns the client provider name.
 func (c *Client) Name() string {
 	return ProviderName
