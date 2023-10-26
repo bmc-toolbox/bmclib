@@ -256,6 +256,29 @@ func (c *Client) ManagerOdataID(ctx context.Context) (string, error) {
 	return "", errManagerID
 }
 
+func (c *Client) SystemsBIOSOdataID(ctx context.Context) (string, error) {
+	errBIOSID := errors.New("error identifying System BIOS Odata ID")
+
+	systems, err := c.client.Service.Systems()
+	if err != nil {
+		return "", errors.Wrap(errBIOSID, err.Error())
+	}
+
+	for _, s := range systems {
+
+		bios, err := s.Bios()
+		if err != nil {
+			return "", errors.Wrap(errBIOSID, err.Error())
+		}
+
+		if bios.ID != "" {
+			return bios.ODataID, nil
+		}
+	}
+
+	return "", errBIOSID
+}
+
 // DeviceVendorModel returns the device manufacturer and model attributes
 func (c *Client) DeviceVendorModel(ctx context.Context) (vendor, model string, err error) {
 	systems, err := c.client.Service.Systems()

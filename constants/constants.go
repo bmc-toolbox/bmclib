@@ -1,7 +1,5 @@
 package constants
 
-import "strings"
-
 type (
 	OperationApplyTime string
 
@@ -94,23 +92,4 @@ const (
 // ListSupportedVendors  returns a list of supported vendors
 func ListSupportedVendors() []string {
 	return []string{HP, Dell, Supermicro}
-}
-
-// VendorFromProductName attempts to identify the vendor from the given productname
-func VendorFromProductName(productName string) string {
-	n := strings.ToLower(productName)
-	switch {
-	case strings.Contains(n, "intel"):
-		return Intel
-	case strings.Contains(n, "dell"):
-		return Dell
-	case strings.Contains(n, "supermicro"):
-		return Supermicro
-	case strings.Contains(n, "cloudline"):
-		return Cloudline
-	case strings.Contains(n, "quanta"):
-		return Quanta
-	default:
-		return productName
-	}
 }

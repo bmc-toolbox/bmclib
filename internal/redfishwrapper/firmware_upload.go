@@ -164,6 +164,7 @@ type TaskAccepted struct {
 }
 
 func taskIDFromResponseBody(resp []byte) (taskID string, err error) {
+	fmt.Println(string(resp))
 	errTaskIdFromResponse := errors.New("failed to identify firmware install taskID from response body")
 
 	a := &TaskAccepted{}
@@ -171,15 +172,29 @@ func taskIDFromResponseBody(resp []byte) (taskID string, err error) {
 		return "", errors.Wrap(errTaskIdFromResponse, err.Error())
 	}
 
+	var taskURI string
+
 	for _, info := range a.Accepted.MessageExtendedInfo {
 		for _, msg := range info.MessageArgs {
-			if strings.Contains(msg, "/TaskService/Tasks/") {
-				return msg, nil
+			if !strings.Contains(msg, "/TaskService/Tasks/") {
+				continue
 			}
+
+			taskURI = msg
+			break
 		}
 	}
 
-	return
+	if taskURI == "" {
+		return "", errors.Wrap(errTaskIdFromResponse, "TaskService/Tasks/<id> URI not identified")
+	}
+
+	tokens := strings.Split(taskURI, "/")
+	if len(tokens) == 0 {
+		return "", errors.Wrap(errTaskIdFromResponse, "invalid/unsupported task URI: "+taskURI)
+	}
+
+	return tokens[len(tokens)-1], nil
 }
 
 func taskIDFromLocationHeader(uri string) (taskID string, err error) {

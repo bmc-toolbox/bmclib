@@ -317,7 +317,7 @@ func firmwareInstallActions(ctx context.Context, component string, generic []fir
 }
 
 type FirmwareUploader interface {
-	FirmwareUpload(ctx context.Context, component string, operationApplyTime constants.OperationApplyTime, reader io.Reader) (uploadVerifyTaskID string, err error)
+	FirmwareUpload(ctx context.Context, component string, reader io.Reader) (uploadVerifyTaskID string, err error)
 }
 
 // firmwareUploaderProvider is an internal struct to correlate an implementation/provider and its name
@@ -327,7 +327,7 @@ type firmwareUploaderProvider struct {
 }
 
 // FirmwareUploaderFromInterfaces identifies implementations of the FirmwareUploader interface and passes the found implementations to the firmwareUpload() wrapper.
-func FirmwareUploaderFromInterfaces(ctx context.Context, component string, operationApplyTime constants.OperationApplyTime, reader io.Reader, generic []interface{}) (taskID string, metadata Metadata, err error) {
+func FirmwareUploaderFromInterfaces(ctx context.Context, component string, reader io.Reader, generic []interface{}) (taskID string, metadata Metadata, err error) {
 	implementations := make([]firmwareUploaderProvider, 0)
 	for _, elem := range generic {
 		temp := firmwareUploaderProvider{name: getProviderName(elem)}
@@ -350,10 +350,10 @@ func FirmwareUploaderFromInterfaces(ctx context.Context, component string, opera
 		)
 	}
 
-	return firmwareUpload(ctx, component, operationApplyTime, reader, implementations)
+	return firmwareUpload(ctx, component, reader, implementations)
 }
 
-func firmwareUpload(ctx context.Context, component string, operationApplyTime constants.OperationApplyTime, reader io.Reader, generic []firmwareUploaderProvider) (taskID string, metadata Metadata, err error) {
+func firmwareUpload(ctx context.Context, component string, reader io.Reader, generic []firmwareUploaderProvider) (taskID string, metadata Metadata, err error) {
 	var metadataLocal Metadata
 
 	for _, elem := range generic {
@@ -367,7 +367,7 @@ func firmwareUpload(ctx context.Context, component string, operationApplyTime co
 			return taskID, metadata, err
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
-			taskID, vErr := elem.FirmwareUpload(ctx, component, operationApplyTime, reader)
+			taskID, vErr := elem.FirmwareUpload(ctx, component, reader)
 			if vErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				err = multierror.Append(err, vErr)
