@@ -63,7 +63,16 @@ func (a *ASRockRack) FirmwareInstallStatus(ctx context.Context, installVersion, 
 func (a *ASRockRack) firmwareInstallBMC(ctx context.Context, reader io.Reader, fileSize int64) error {
 	var err error
 
+	// 0. take the model so that we use a different endpoint on E3C256D4ID-NL
+	device := common.NewDevice()
+	device.Metadata = map[string]string{}
+	err = a.fruAttributes(ctx, &device)
+	if err != nil {
+		return errors.Wrap(err, "failed to get model in step 0/4")
+	}
+
 	// 1. set the device to flash mode - prepares the flash
+	// Beware: this locks some capabilities, e.g. the access to fruAttributes
 	a.log.V(2).WithValues("step", "1/4").Info("set device to flash mode, takes a minute...")
 	err = a.setFlashMode(ctx)
 	if err != nil {
@@ -71,8 +80,13 @@ func (a *ASRockRack) firmwareInstallBMC(ctx context.Context, reader io.Reader, f
 	}
 
 	// 2. upload firmware image file
-	a.log.V(2).WithValues("step", "2/4").Info("upload BMC firmware image")
-	err = a.uploadFirmware(ctx, "api/maintenance/firmware", reader, fileSize)
+	fwEndpoint := "api/maintenance/firmware"
+	// E3C256D4ID-NL calls a different endpoint for firmware upload
+	if strings.EqualFold(device.Model, "E3C256D4ID-NL") {
+		fwEndpoint = "api/maintenance/firmware/firmware"
+	}
+	a.log.V(2).WithValues("step", "2/4").Info("upload BMC firmware image to " + fwEndpoint)
+	err = a.uploadFirmware(ctx, fwEndpoint, reader, fileSize)
 	if err != nil {
 		return errors.Wrap(err, "failed in step 2/4 - upload BMC firmware image")
 	}
@@ -146,6 +160,8 @@ func (a *ASRockRack) firmwareUpdateStatus(ctx context.Context, component string,
 		switch progress.State {
 		case 0:
 			return constants.FirmwareInstallRunning, nil
+		case 1: // "Flashing To be done"
+			return constants.FirmwareInstallQueued, nil
 		case 2:
 			return constants.FirmwareInstallComplete, nil
 		default:
