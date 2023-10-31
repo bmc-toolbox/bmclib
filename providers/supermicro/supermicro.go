@@ -41,7 +41,7 @@ var (
 		providers.FeatureScreenshot,
 		providers.FeatureFirmwareInstall,
 		providers.FeatureFirmwareInstallStatus,
-		providers.FeatureUploadFloppyImage,
+		providers.FeatureMountFloppyImage,
 		providers.FeatureUnmountFloppyImage,
 	}
 )

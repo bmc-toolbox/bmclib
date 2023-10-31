@@ -70,7 +70,7 @@ func main() {
 	}
 	defer fh.Close()
 
-	err = cl.UploadFloppyImage(ctx, fh)
+	err = cl.MountFloppyImage(ctx, fh)
 	if err != nil {
 		l.Fatal(err)
 	}

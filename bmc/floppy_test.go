@@ -10,19 +10,19 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type uploadFloppyImageTester struct {
+type mountFloppyImageTester struct {
 	returnError error
 }
 
-func (p *uploadFloppyImageTester) UploadFloppyImage(ctx context.Context, reader io.Reader) (err error) {
+func (p *mountFloppyImageTester) MountFloppyImage(ctx context.Context, reader io.Reader) (err error) {
 	return p.returnError
 }
 
-func (p *uploadFloppyImageTester) Name() string {
+func (p *mountFloppyImageTester) Name() string {
 	return "foo"
 }
 
-func TestUploadFloppyFromInterfaces(t *testing.T) {
+func TestMountFloppyFromInterfaces(t *testing.T) {
 	testCases := []struct {
 		testName           string
 		image              io.Reader
@@ -43,10 +43,10 @@ func TestUploadFloppyFromInterfaces(t *testing.T) {
 				badImplementation := struct{}{}
 				generic = []interface{}{&badImplementation}
 			} else {
-				testImplementation := &uploadFloppyImageTester{returnError: tc.returnError}
+				testImplementation := &mountFloppyImageTester{returnError: tc.returnError}
 				generic = []interface{}{testImplementation}
 			}
-			metadata, err := UploadFloppyImageFromInterfaces(context.Background(), tc.image, generic)
+			metadata, err := MountFloppyImageFromInterfaces(context.Background(), tc.image, generic)
 			if tc.returnError != nil {
 				assert.ErrorContains(t, err, tc.returnError.Error())
 				return

@@ -454,8 +454,8 @@ func (c *Client) ClearSystemEventLog(ctx context.Context) (err error) {
 	return err
 }
 
-func (c *Client) UploadFloppyImage(ctx context.Context, image io.Reader) (err error) {
-	metadata, err := bmc.UploadFloppyImageFromInterfaces(ctx, image, c.registry().GetDriverInterfaces())
+func (c *Client) MountFloppyImage(ctx context.Context, image io.Reader) (err error) {
+	metadata, err := bmc.MountFloppyImageFromInterfaces(ctx, image, c.registry().GetDriverInterfaces())
 	c.setMetadata(metadata)
 
 	return err

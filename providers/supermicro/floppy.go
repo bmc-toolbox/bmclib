@@ -38,7 +38,7 @@ func (c *Client) floppyImageMounted(ctx context.Context) (bool, error) {
 	return false, nil
 }
 
-func (c *Client) UploadFloppyImage(ctx context.Context, image io.Reader) error {
+func (c *Client) MountFloppyImage(ctx context.Context, image io.Reader) error {
 	mounted, err := c.floppyImageMounted(ctx)
 	if err != nil {
 		return err
