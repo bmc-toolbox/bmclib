@@ -74,3 +74,27 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL stri
 
 	return true, nil
 }
+
+func (c *Client) InsertedVirtualMedia(ctx context.Context) ([]string, error) {
+	managers, err := c.Managers(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var inserted []string
+
+	for _, manager := range managers {
+		virtualMedia, err := manager.VirtualMedia()
+		if err != nil {
+			return nil, err
+		}
+
+		for _, media := range virtualMedia {
+			if media.Inserted {
+				inserted = append(inserted, media.ID)
+			}
+		}
+	}
+
+	return inserted, nil
+}

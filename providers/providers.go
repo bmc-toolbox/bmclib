@@ -23,6 +23,12 @@ const (
 	FeatureBootDeviceSet registrar.Feature = "bootdeviceset"
 	// FeaturesVirtualMedia means an implementation can manage virtual media devices
 	FeatureVirtualMedia registrar.Feature = "virtualmedia"
+	// FeatureMountFloppyImage means an implementation uploads a floppy image for mounting as virtual media.
+	//
+	// note: This is differs from FeatureVirtualMedia which is limited to accepting a URL to download the image from.
+	FeatureMountFloppyImage registrar.Feature = "mountFloppyImage"
+	// FeatureUnmountFloppyImage means an implementation removes a floppy image that was previously uploaded.
+	FeatureUnmountFloppyImage registrar.Feature = "unmountFloppyImage"
 	// FeatureFirmwareInstall means an implementation that initiates the firmware install process
 	FeatureFirmwareInstall registrar.Feature = "firmwareinstall"
 	// FeatureFirmwareInstallSatus means an implementation that returns the firmware install status

@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
+	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
@@ -40,6 +41,8 @@ var (
 		providers.FeatureScreenshot,
 		providers.FeatureFirmwareInstall,
 		providers.FeatureFirmwareInstallStatus,
+		providers.FeatureMountFloppyImage,
+		providers.FeatureUnmountFloppyImage,
 	}
 )
 
@@ -49,12 +52,15 @@ var (
 //   - screen capture
 //   - bios firmware install
 //   - bmc firmware install
-// product: SYS-510T-MR, baseboard part number: X12STH-SYS
+//
+// product: SYS-510T-MR, baseboard part number: X12STH-SYS, X12SPO-NTF
 //   - screen capture
+//   - floppy image mount
 // product: 6029P-E1CR12L, baseboard part number: X11DPH-T
 // . - screen capture
 //   - bios firmware install
 //   - bmc firmware install
+//   - floppy image mount
 
 type Config struct {
 	HttpClient           *http.Client
@@ -93,7 +99,9 @@ type Client struct {
 	port      string
 	csrfToken string
 	model     string
+	redfish   *redfishwrapper.Client
 	log       logr.Logger
+	_         [32]byte
 }
 
 // New returns connection with a Supermicro client initialized
@@ -163,6 +171,30 @@ func (c *Client) Open(ctx context.Context) (err error) {
 	return nil
 }
 
+func (c *Client) openRedfish(ctx context.Context) error {
+	if c.redfish != nil && c.redfish.SessionActive() == nil {
+		return nil
+	}
+
+	rfclient := redfishwrapper.NewClient(c.host, "", c.user, c.pass)
+	if err := rfclient.Open(ctx); err != nil {
+		return err
+	}
+
+	c.redfish = rfclient
+
+	return nil
+}
+
+func (c *Client) closeRedfish(ctx context.Context) {
+	if c.redfish != nil {
+		// error not checked on purpose
+		_ = c.redfish.Close(ctx)
+
+		c.redfish = nil
+	}
+}
+
 func parseToken(body []byte) string {
 	var key string
 	if bytes.Contains(body, []byte(`CSRF-TOKEN`)) {
@@ -204,6 +236,8 @@ func (c *Client) Close(ctx context.Context) error {
 	if status != 200 {
 		return errors.Wrap(bmclibErrs.ErrLogoutFailed, strconv.Itoa(status))
 	}
+
+	c.closeRedfish(ctx)
 
 	return nil
 }
@@ -383,6 +417,7 @@ func (c *Client) query(ctx context.Context, endpoint, method string, payload io.
 		if cookie.Name == "SID" && cookie.Value != "" {
 			req.AddCookie(cookie)
 		}
+
 	}
 
 	var reqDump []byte
