@@ -3,8 +3,8 @@ package constants
 type (
 	OperationApplyTime string
 
-	// The FirmwareAction identifies each phase of a firmware install process.
-	FirmwareAction string
+	// The FirmwareInstallStep identifies each phase of a firmware install process.
+	FirmwareInstallStep string
 )
 
 const (
@@ -74,13 +74,13 @@ const (
 
 	FirmwareInstallUnknown = "unknown"
 
-	// FirmwareActionUpload is an identifier for the firmware upload step in the firmware install process.
-	FirmwareActionUpload       = "upload"
-	FirmwareActionVerifyUpload = "verify-upload"
+	// FirmwareInstallStepUpload is an identifier for the firmware upload step in the firmware install process.
+	FirmwareInstallStepUpload       FirmwareInstallStep = "upload"
+	FirmwareInstallStepUploadStatus FirmwareInstallStep = "upload-status"
 
-	// FirmwareActionInstall is an identifier for the firmware install step after a firmware has been uploaded.
-	FirmwareActionInstall       = "install"
-	FirmwareActionVerifyInstall = "verify-install"
+	// FirmwareInstallStepInstall is an identifier for the firmware install step after a firmware has been uploaded.
+	FirmwareInstallStepInstall       FirmwareInstallStep = "install"
+	FirmwareInstallStepInstallStatus FirmwareInstallStep = "install-status"
 
 	// device BIOS/UEFI POST code bmclib identifiers
 	POSTStateBootINIT = "boot-init/pxe"

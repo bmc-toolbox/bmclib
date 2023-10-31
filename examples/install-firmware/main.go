@@ -82,7 +82,7 @@ func main() {
 	}
 	defer fh.Close()
 
-	taskID, err := cl.FirmwareInstall(ctx, *component, constants.OnReset, true, fh)
+	taskID, err := cl.FirmwareInstall(ctx, *component, string(constants.OnReset), true, fh)
 	if err != nil {
 		l.Fatal(err)
 	}

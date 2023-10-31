@@ -38,34 +38,34 @@ func (c *x12) componentSupported(component string) error {
 
 	return nil
 }
-func (c *x12) firmwareInstallActions(component string) ([]constants.FirmwareAction, error) {
+func (c *x12) firmwareInstallSteps(component string) ([]constants.FirmwareInstallStep, error) {
 	errComponentNotSupported := errors.New("firmware install for component on x12 hardware not supported")
 
 	switch component {
 	case common.SlugBMC:
-		return c.firmwareInstallActionsBMC()
+		return c.firmwareInstallStepsBMC()
 	case common.SlugBIOS:
-		return c.firmwareInstallActionsBIOS()
+		return c.firmwareInstallStepsBIOS()
 	default:
 		return nil, errors.Wrap(errComponentNotSupported, component)
 	}
 }
 
-func (c *x12) firmwareInstallActionsBIOS() ([]constants.FirmwareAction, error) {
-	return []constants.FirmwareAction{
-		constants.FirmwareActionUpload,
-		constants.FirmwareActionVerifyUpload,
-		constants.FirmwareActionInstall,
-		constants.FirmwareActionVerifyInstall,
+func (c *x12) firmwareInstallStepsBIOS() ([]constants.FirmwareInstallStep, error) {
+	return []constants.FirmwareInstallStep{
+		constants.FirmwareInstallStepUpload,
+		constants.FirmwareInstallStepUploadStatus,
+		constants.FirmwareInstallStepInstall,
+		constants.FirmwareInstallStepInstallStatus,
 	}, nil
 }
 
-func (c *x12) firmwareInstallActionsBMC() ([]constants.FirmwareAction, error) {
-	return []constants.FirmwareAction{
-		constants.FirmwareActionUpload,
-		constants.FirmwareActionVerifyUpload,
-		constants.FirmwareActionInstall,
-		constants.FirmwareActionVerifyInstall,
+func (c *x12) firmwareInstallStepsBMC() ([]constants.FirmwareInstallStep, error) {
+	return []constants.FirmwareInstallStep{
+		constants.FirmwareInstallStepUpload,
+		constants.FirmwareInstallStepUploadStatus,
+		constants.FirmwareInstallStepInstall,
+		constants.FirmwareInstallStepInstallStatus,
 	}, nil
 }
 
@@ -198,8 +198,8 @@ type BMC struct {
 }
 
 type Supermicro struct {
-	BIOS `json:"BIOS,omitempty"`
-	BMC  `json:"BMC,omitempty"`
+	*BIOS `json:"BIOS,omitempty"`
+	*BMC  `json:"BMC,omitempty"`
 }
 
 type OEM struct {
@@ -213,7 +213,7 @@ func (c *x12) redfishParameters(component, targetODataID string) (*rfw.RedfishUp
 
 	switch strings.ToUpper(component) {
 	case common.SlugBIOS:
-		oem.Supermicro.BIOS = BIOS{
+		oem.Supermicro.BIOS = &BIOS{
 			PreserveME:         false,
 			PreserveNVRAM:      false,
 			PreserveSMBIOS:     true,
@@ -224,7 +224,7 @@ func (c *x12) redfishParameters(component, targetODataID string) (*rfw.RedfishUp
 			PreserveBOOTCONF:   true,
 		}
 	case common.SlugBMC:
-		oem.Supermicro.BMC = BMC{
+		oem.Supermicro.BMC = &BMC{
 			PreserveCfg: true,
 			PreserveSdr: true,
 			PreserveSsl: true,
@@ -252,7 +252,9 @@ func (c *x12) redfishOdataID(ctx context.Context, component string) (string, err
 	case common.SlugBMC:
 		return c.redfish.ManagerOdataID(ctx)
 	case common.SlugBIOS:
-		return c.redfish.SystemsBIOSOdataID(ctx)
+		// hardcoded since SMCs without the DCMS license will throw license errors
+		return "/redfish/v1/Systems/1/Bios", nil
+		//return c.redfish.SystemsBIOSOdataID(ctx)
 	}
 
 	return "", errUnsupported

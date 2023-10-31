@@ -420,7 +420,7 @@ func (c *Client) GetBiosConfiguration(ctx context.Context) (biosConfig map[strin
 }
 
 // FirmwareInstall pass through library function to upload firmware and install firmware
-func (c *Client) FirmwareInstall(ctx context.Context, component string, operationApplyTime constants.OperationApplyTime, forceInstall bool, reader io.Reader) (taskID string, err error) {
+func (c *Client) FirmwareInstall(ctx context.Context, component string, operationApplyTime string, forceInstall bool, reader io.Reader) (taskID string, err error) {
 	taskID, metadata, err := bmc.FirmwareInstallFromInterfaces(ctx, component, operationApplyTime, forceInstall, reader, c.registry().GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return taskID, err
@@ -467,4 +467,25 @@ func (c *Client) UnmountFloppyImage(ctx context.Context) (err error) {
 	c.setMetadata(metadata)
 
 	return err
+}
+
+// FirmwareInstallSteps return the order of actions required install firmware for a component.
+func (c *Client) FirmwareInstallSteps(ctx context.Context, component string) (actions []constants.FirmwareInstallStep, err error) {
+	status, metadata, err := bmc.FirmwareInstallStepsFromInterfaces(ctx, component, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	return status, err
+}
+
+// FirmwareInstallWithOptions kicks off firmware install, it is to deprecate the existing FirmwareInstall interface method.
+func (c *Client) FirmwareInstallWithOptions(ctx context.Context, component string, reader io.Reader, opts *bmc.FirmwareInstallOptions) (installTaskID string, err error) {
+	installTaskID, metadata, err := bmc.FirmwareInstallWithOptionsFromInterfaces(ctx, component, reader, opts, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	return installTaskID, err
+}
+
+// FirmwareUpload just uploads the firmware for install, it returns a task ID to verify the upload status.
+func (c *Client) FirmwareUpload(ctx context.Context, component string, reader io.Reader) (uploadVerifyTaskID string, err error) {
+	uploadVerifyTaskID, metadata, err := bmc.FirmwareUploadFromInterfaces(ctx, component, reader, c.Registry.GetDriverInterfaces())
+	c.setMetadata(metadata)
+	return uploadVerifyTaskID, err
 }

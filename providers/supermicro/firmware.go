@@ -33,14 +33,14 @@ var (
 	errUploadTaskIDExpected = errors.New("expected an firmware upload taskID")
 )
 
-func (c *Client) FirmwareInstallActions(ctx context.Context, component string) ([]constants.FirmwareAction, error) {
+func (c *Client) FirmwareInstallSteps(ctx context.Context, component string) ([]constants.FirmwareInstallStep, error) {
 	if err := c.firmwareInstallSupported(ctx); err != nil {
 		return nil, err
 	}
 
 	switch {
 	case strings.HasPrefix(strings.ToLower(c.model), "x12"):
-		return c.x12().firmwareInstallActions(component)
+		return c.x12().firmwareInstallSteps(component)
 	case strings.HasPrefix(strings.ToLower(c.model), "x11"):
 		//return c.x11().statusBMCFirmwareInstall(ctx)
 	}

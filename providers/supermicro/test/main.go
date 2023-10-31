@@ -33,13 +33,16 @@ func main() {
 	defer c.Close(ctx)
 
 	// open file handle
-	fh, err := os.Open("BMC_X12AST2600-F201MS_20220627_1.13.04_STDsp.bin")
+	//f := "BMC_X12AST2600-F201MS_20220627_1.13.04_STDsp.bin"
+	f := "BIOS_X12STH-1C3A_20230607_1.6_STDsp.bin"
+	fh, err := os.Open(f)
 	if err != nil {
 		l.Fatal(err)
 	}
 	defer fh.Close()
 
-	component := common.SlugBMC
+	//	component := common.SlugBMC
+	component := common.SlugBIOS
 
 	uploadTaskID, err := c.FirmwareUpload(ctx, component, fh)
 	if err != nil {

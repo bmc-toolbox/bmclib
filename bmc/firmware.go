@@ -24,7 +24,7 @@ type FirmwareInstaller interface {
 	//
 	// return values:
 	// taskID - A taskID is returned if the update process on the BMC returns an identifier for the update process.
-	FirmwareInstall(ctx context.Context, component string, operationApplyTime constants.OperationApplyTime, forceInstall bool, reader io.Reader) (taskID string, err error)
+	FirmwareInstall(ctx context.Context, component string, operationApplyTime string, forceInstall bool, reader io.Reader) (taskID string, err error)
 }
 
 // firmwareInstallerProvider is an internal struct to correlate an implementation/provider and its name
@@ -34,7 +34,7 @@ type firmwareInstallerProvider struct {
 }
 
 // firmwareInstall uploads and initiates firmware update for the component
-func firmwareInstall(ctx context.Context, component string, operationApplyTime constants.OperationApplyTime, forceInstall bool, reader io.Reader, generic []firmwareInstallerProvider) (taskID string, metadata Metadata, err error) {
+func firmwareInstall(ctx context.Context, component, operationApplyTime string, forceInstall bool, reader io.Reader, generic []firmwareInstallerProvider) (taskID string, metadata Metadata, err error) {
 	var metadataLocal Metadata
 
 	for _, elem := range generic {
@@ -64,7 +64,7 @@ func firmwareInstall(ctx context.Context, component string, operationApplyTime c
 }
 
 // FirmwareInstallFromInterfaces identifies implementations of the FirmwareInstaller interface and passes the found implementations to the firmwareInstall() wrapper
-func FirmwareInstallFromInterfaces(ctx context.Context, component string, operationApplyTime constants.OperationApplyTime, forceInstall bool, reader io.Reader, generic []interface{}) (taskID string, metadata Metadata, err error) {
+func FirmwareInstallFromInterfaces(ctx context.Context, component, operationApplyTime string, forceInstall bool, reader io.Reader, generic []interface{}) (taskID string, metadata Metadata, err error) {
 	implementations := make([]firmwareInstallerProvider, 0)
 	for _, elem := range generic {
 		temp := firmwareInstallerProvider{name: getProviderName(elem)}
@@ -250,27 +250,27 @@ func FirmwareInstallWithOptionsFromInterfaces(ctx context.Context, component str
 	return firmwareInstallWithOptions(ctx, component, reader, opts, implementations)
 }
 
-type FirmwareActionsGetter interface {
-	FirmwareInstallActions(ctx context.Context, component string) ([]constants.FirmwareAction, error)
+type FirmwareInstallStepsGetter interface {
+	FirmwareInstallSteps(ctx context.Context, component string) ([]constants.FirmwareInstallStep, error)
 }
 
-// firmwareInstallActionsGetterProvider is an internal struct to correlate an implementation/provider and its name
-type firmwareInstallActionsGetterProvider struct {
+// firmwareInstallStepsGetterProvider is an internal struct to correlate an implementation/provider and its name
+type firmwareInstallStepsGetterProvider struct {
 	name string
-	FirmwareActionsGetter
+	FirmwareInstallStepsGetter
 }
 
-// FirmwareActionsFromInterfaces identifies implementations of the FirmwareActionsGetter interface and passes the found implementations to the firmwareInstallActions() wrapper.
-func FirmwareActionsFromInterfaces(ctx context.Context, component string, generic []interface{}) (steps []constants.FirmwareAction, metadata Metadata, err error) {
-	implementations := make([]firmwareInstallActionsGetterProvider, 0)
+// FirmwareInstallStepsFromInterfaces identifies implementations of the FirmwareInstallStepsGetter interface and passes the found implementations to the firmwareInstallSteps() wrapper.
+func FirmwareInstallStepsFromInterfaces(ctx context.Context, component string, generic []interface{}) (steps []constants.FirmwareInstallStep, metadata Metadata, err error) {
+	implementations := make([]firmwareInstallStepsGetterProvider, 0)
 	for _, elem := range generic {
-		temp := firmwareInstallActionsGetterProvider{name: getProviderName(elem)}
+		temp := firmwareInstallStepsGetterProvider{name: getProviderName(elem)}
 		switch p := elem.(type) {
-		case FirmwareActionsGetter:
-			temp.FirmwareActionsGetter = p
+		case FirmwareInstallStepsGetter:
+			temp.FirmwareInstallStepsGetter = p
 			implementations = append(implementations, temp)
 		default:
-			e := fmt.Sprintf("not a FirmwareActionsGetter implementation: %T", p)
+			e := fmt.Sprintf("not a FirmwareInstallStepsGetter implementation: %T", p)
 			err = multierror.Append(err, errors.New(e))
 		}
 	}
@@ -279,19 +279,19 @@ func FirmwareActionsFromInterfaces(ctx context.Context, component string, generi
 			err,
 			errors.Wrap(
 				bmclibErrs.ErrProviderImplementation,
-				("no FirmwareActionsGetter implementations found"),
+				("no FirmwareInstallStepsGetter implementations found"),
 			),
 		)
 	}
 
-	return firmwareInstallActions(ctx, component, implementations)
+	return firmwareInstallSteps(ctx, component, implementations)
 }
 
-func firmwareInstallActions(ctx context.Context, component string, generic []firmwareInstallActionsGetterProvider) (steps []constants.FirmwareAction, metadata Metadata, err error) {
+func firmwareInstallSteps(ctx context.Context, component string, generic []firmwareInstallStepsGetterProvider) (steps []constants.FirmwareInstallStep, metadata Metadata, err error) {
 	var metadataLocal Metadata
 
 	for _, elem := range generic {
-		if elem.FirmwareActionsGetter == nil {
+		if elem.FirmwareInstallStepsGetter == nil {
 			continue
 		}
 		select {
@@ -301,7 +301,7 @@ func firmwareInstallActions(ctx context.Context, component string, generic []fir
 			return steps, metadata, err
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
-			steps, vErr := elem.FirmwareInstallActions(ctx, component)
+			steps, vErr := elem.FirmwareInstallSteps(ctx, component)
 			if vErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				err = multierror.Append(err, vErr)
@@ -313,7 +313,7 @@ func firmwareInstallActions(ctx context.Context, component string, generic []fir
 		}
 	}
 
-	return steps, metadataLocal, multierror.Append(err, errors.New("failure in FirmwareActions"))
+	return steps, metadataLocal, multierror.Append(err, errors.New("failure in FirmwareInstallSteps"))
 }
 
 type FirmwareUploader interface {
@@ -327,7 +327,7 @@ type firmwareUploaderProvider struct {
 }
 
 // FirmwareUploaderFromInterfaces identifies implementations of the FirmwareUploader interface and passes the found implementations to the firmwareUpload() wrapper.
-func FirmwareUploaderFromInterfaces(ctx context.Context, component string, reader io.Reader, generic []interface{}) (taskID string, metadata Metadata, err error) {
+func FirmwareUploadFromInterfaces(ctx context.Context, component string, reader io.Reader, generic []interface{}) (taskID string, metadata Metadata, err error) {
 	implementations := make([]firmwareUploaderProvider, 0)
 	for _, elem := range generic {
 		temp := firmwareUploaderProvider{name: getProviderName(elem)}
