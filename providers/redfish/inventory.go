@@ -21,7 +21,7 @@ var (
 		"/redfish/v1/Chassis/Enclosure.Internal.0-1:NonRAID.Integrated.1-1",
 		// Supermicro
 		"/redfish/v1/Chassis/1",
-		// MegaRAC
+		// MegaRAC/ARockRack
 		"/redfish/v1/Chassis/Self",
 		// OpenBMC on ASRock
 		"/redfish/v1/Chassis/ASRock_ROMED8HM3",
@@ -34,15 +34,20 @@ var (
 		"/redfish/v1/Systems/System.Embedded.1/Bios",
 		// Supermicros
 		"/redfish/v1/Systems/1",
+		// MegaRAC/ARockRack
+		"/redfish/v1/Systems/Self",
 		// OpenBMC on ASRock
 		"/redfish/v1/Systems/system",
 	}
 
 	// Supported Manager Odata IDs (BMCs)
 	managerOdataIDs = []string{
+		// Dells
 		"/redfish/v1/Managers/iDRAC.Embedded.1",
 		// Supermicros
 		"/redfish/v1/Managers/1",
+		// MegaRAC/ARockRack
+		"/redfish/v1/Managers/Self",
 		// OpenBMC on ASRock
 		"/redfish/v1/Managers/bmc",
 	}
