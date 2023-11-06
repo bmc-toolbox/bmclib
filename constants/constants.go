@@ -38,6 +38,8 @@ const (
 	// FirmwareOnStartUpdateRequest sets the firmware install to begin after the start request has been sent.
 	OnStartUpdateRequest OperationApplyTime = "OnStartUpdateRequest"
 
+	// TODO: rename FirmwareInstall* task status names to FirmwareTaskState and declare a type.
+
 	// Firmware install states returned by bmclib provider FirmwareInstallStatus implementations
 	//
 	// The redfish from the redfish spec are exposed as a smaller set of bmclib states for callers
@@ -67,20 +69,24 @@ const (
 	FirmwareInstallFailed = "failed"
 
 	// FirmwareInstallPowerCycleHost indicates the firmware install requires a host power cycle
-	FirmwareInstallPowerCyleHost = "powercycle-host"
+	FirmwareInstallPowerCycleHost = "powercycle-host"
 
 	// FirmwareInstallPowerCycleBMC indicates the firmware install requires a BMC power cycle
 	FirmwareInstallPowerCycleBMC = "powercycle-bmc"
 
 	FirmwareInstallUnknown = "unknown"
 
+	// FirmwareInstallStepUploadInitiateInstall identifies the firmware
+	FirmwareInstallStepUploadInitiateInstall FirmwareInstallStep = "upload-initiate-install"
+	FirmwareInstallStepInstallStatus         FirmwareInstallStep = "install-status"
+
 	// FirmwareInstallStepUpload is an identifier for the firmware upload step in the firmware install process.
 	FirmwareInstallStepUpload       FirmwareInstallStep = "upload"
 	FirmwareInstallStepUploadStatus FirmwareInstallStep = "upload-status"
 
-	// FirmwareInstallStepInstall is an identifier for the firmware install step after a firmware has been uploaded.
-	FirmwareInstallStepInstall       FirmwareInstallStep = "install"
-	FirmwareInstallStepInstallStatus FirmwareInstallStep = "install-status"
+	FirmwareInstallStepInstallUploaded FirmwareInstallStep = "install-uploaded"
+
+	FirmwareInstallStepPowerOffHost FirmwareInstallStep = "power-off-host"
 
 	// device BIOS/UEFI POST code bmclib identifiers
 	POSTStateBootINIT = "boot-init/pxe"

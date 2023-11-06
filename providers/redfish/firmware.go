@@ -418,7 +418,7 @@ func (c *Conn) FirmwareInstallStatus(ctx context.Context, installVersion, compon
 	case "pending", "new":
 		return constants.FirmwareInstallQueued, nil
 	case "scheduled":
-		return constants.FirmwareInstallPowerCyleHost, nil
+		return constants.FirmwareInstallPowerCycleHost, nil
 	case "interrupted", "killed", "exception", "cancelled", "suspended", "failed":
 		return constants.FirmwareInstallFailed, nil
 	case "completed":

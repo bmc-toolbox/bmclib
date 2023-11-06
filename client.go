@@ -426,6 +426,8 @@ func (c *Client) FirmwareInstall(ctx context.Context, component string, operatio
 	return taskID, err
 }
 
+// Note: this interface is to be deprecated in favour of a more generic FirmwareTaskStatus.
+//
 // FirmwareInstallStatus pass through library function to check firmware install status
 func (c *Client) FirmwareInstallStatus(ctx context.Context, installVersion, component, taskID string) (status string, err error) {
 	status, metadata, err := bmc.FirmwareInstallStatusFromInterfaces(ctx, installVersion, component, taskID, c.registry().GetDriverInterfaces())
@@ -476,16 +478,23 @@ func (c *Client) FirmwareInstallSteps(ctx context.Context, component string) (ac
 	return status, err
 }
 
-// FirmwareInstallWithOptions kicks off firmware install, it is to deprecate the existing FirmwareInstall interface method.
-func (c *Client) FirmwareInstallWithOptions(ctx context.Context, component string, reader io.Reader, opts *bmc.FirmwareInstallOptions) (installTaskID string, err error) {
-	installTaskID, metadata, err := bmc.FirmwareInstallWithOptionsFromInterfaces(ctx, component, reader, opts, c.registry().GetDriverInterfaces())
-	c.setMetadata(metadata)
-	return installTaskID, err
-}
-
 // FirmwareUpload just uploads the firmware for install, it returns a task ID to verify the upload status.
 func (c *Client) FirmwareUpload(ctx context.Context, component string, reader io.Reader) (uploadVerifyTaskID string, err error) {
 	uploadVerifyTaskID, metadata, err := bmc.FirmwareUploadFromInterfaces(ctx, component, reader, c.Registry.GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return uploadVerifyTaskID, err
+}
+
+// FirmwareTaskStatus pass through library function to check firmware task statuses
+func (c *Client) FirmwareTaskStatus(ctx context.Context, kind constants.FirmwareInstallStep, component, taskID, installVersion string) (state, status string, err error) {
+	state, status, metadata, err := bmc.FirmwareTaskStatusFromInterfaces(ctx, kind, component, taskID, installVersion, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	return state, status, err
+}
+
+// FirmwareInstallUploaded kicks off firmware install for a firmware uploaded with FirmwareUpload.
+func (c *Client) FirmwareInstallUploaded(ctx context.Context, component, uploadVerifyTaskID string) (installTaskID string, err error) {
+	installTaskID, metadata, err := bmc.FirmwareInstallerUploadedFromInterfaces(ctx, component, uploadVerifyTaskID, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	return installTaskID, err
 }

@@ -40,10 +40,11 @@ var (
 	// Features implemented
 	Features = registrar.Features{
 		providers.FeatureScreenshot,
-		providers.FeatureFirmwareInstall,
-		providers.FeatureFirmwareInstallStatus,
 		providers.FeatureMountFloppyImage,
 		providers.FeatureUnmountFloppyImage,
+		providers.FeatureFirmwareUpload,
+		providers.FeatureFirmwareInstallUploaded,
+		providers.FeatureFirmwareTaskStatus,
 	}
 )
 
@@ -264,12 +265,8 @@ func (c *Client) Close(ctx context.Context) error {
 		}
 	}
 
-	return nil
-}
 
-func (c *Client) ResetBMC(ctx context.Context) error {
-	_, err := c.redfish.BMCReset(ctx, "GracefulRestart")
-	return err
+	return nil
 }
 
 // Name returns the client provider name.

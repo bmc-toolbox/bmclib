@@ -19,6 +19,7 @@ import (
 
 var (
 	errInstallTaskIDEmpty = errors.New("firmware install request returned empty firmware install TaskID")
+	errUploadTaskIDEmpty  = errors.New("firmware upload request returned empty firmware upload verify TaskID")
 )
 
 type installMethod string
@@ -29,7 +30,7 @@ const (
 )
 
 func (c *x12) componentSupported(component string) error {
-	errComponentNotSupported := errors.New("firmware install on x12 hardware not supported for component: " + component)
+	errComponentNotSupported := fmt.Errorf("component %s on device %s not supported", component, c.model)
 
 	supported := []string{common.SlugBIOS, common.SlugBMC}
 	if !slices.Contains(supported, strings.ToUpper(component)) {
@@ -39,32 +40,14 @@ func (c *x12) componentSupported(component string) error {
 	return nil
 }
 func (c *x12) firmwareInstallSteps(component string) ([]constants.FirmwareInstallStep, error) {
-	errComponentNotSupported := errors.New("firmware install for component on x12 hardware not supported")
-
-	switch component {
-	case common.SlugBMC:
-		return c.firmwareInstallStepsBMC()
-	case common.SlugBIOS:
-		return c.firmwareInstallStepsBIOS()
-	default:
-		return nil, errors.Wrap(errComponentNotSupported, component)
+	if err := c.componentSupported(component); err != nil {
+		return nil, err
 	}
-}
 
-func (c *x12) firmwareInstallStepsBIOS() ([]constants.FirmwareInstallStep, error) {
 	return []constants.FirmwareInstallStep{
 		constants.FirmwareInstallStepUpload,
 		constants.FirmwareInstallStepUploadStatus,
-		constants.FirmwareInstallStepInstall,
-		constants.FirmwareInstallStepInstallStatus,
-	}, nil
-}
-
-func (c *x12) firmwareInstallStepsBMC() ([]constants.FirmwareInstallStep, error) {
-	return []constants.FirmwareInstallStep{
-		constants.FirmwareInstallStepUpload,
-		constants.FirmwareInstallStepUploadStatus,
-		constants.FirmwareInstallStepInstall,
+		constants.FirmwareInstallStepInstallUploaded,
 		constants.FirmwareInstallStepInstallStatus,
 	}, nil
 }
@@ -95,14 +78,14 @@ func (c *x12) firmwareUpload(ctx context.Context, component string, reader io.Re
 	taskID, err = c.redfish.FirmwareUpload(ctx, reader, params)
 	if err != nil {
 		if strings.Contains(err.Error(), "OemFirmwareAlreadyInUpdateMode") {
-			return "", errors.Wrap(brrs.ErrBMCColdResetRequired, "BMC currently in update mode, either continue the update OR reset the BMC - if not update is currently running")
+			return "", errors.Wrap(brrs.ErrBMCColdResetRequired, "BMC currently in update mode, either continue the update OR if no update is currently running - reset the BMC")
 		}
 
 		return "", errors.Wrap(err, "error in firmware upload")
 	}
 
 	if taskID == "" {
-		return "", errInstallTaskIDEmpty
+		return "", errUploadTaskIDEmpty
 	}
 
 	return taskID, nil
@@ -248,7 +231,7 @@ func (c *x12) redfishParameters(component, targetODataID string) (*rfw.RedfishUp
 func (c *x12) redfishOdataID(ctx context.Context, component string) (string, error) {
 	errUnsupported := errors.New("unable to return redfish OData ID for unsupported component: " + component)
 
-	switch component {
+	switch strings.ToUpper(component) {
 	case common.SlugBMC:
 		return c.redfish.ManagerOdataID(ctx)
 	case common.SlugBIOS:
@@ -260,58 +243,34 @@ func (c *x12) redfishOdataID(ctx context.Context, component string) (string, err
 	return "", errUnsupported
 }
 
-// When a ErrFirmwareVerifyTaskRunning is returned, the caller must retry this action
-func (c *x12) firmwareInstall(ctx context.Context, component, uploadTaskID string) (installTaskID string, err error) {
+func (c *x12) firmwareInstallUploaded(ctx context.Context, component, uploadTaskID string) (installTaskID string, err error) {
 	if err = c.componentSupported(component); err != nil {
 		return "", err
 	}
 
 	task, err := c.redfish.Task(ctx, uploadTaskID)
 	if err != nil {
-		return "", errors.Wrap(err, "error querying redfish tasks for firmware upload taskID: "+uploadTaskID)
+		e := fmt.Sprintf("error querying redfish tasks for firmware upload taskID: %s, err: %s", uploadTaskID, err.Error())
+		return "", errors.Wrap(brrs.ErrFirmwareVerifyTask, e)
 	}
 
 	taskInfo := fmt.Sprintf("id: %s, state: %s, status: %s", task.ID, task.TaskState, task.TaskStatus)
 
 	if task.TaskState != redfish.CompletedTaskState {
-		return "", errors.Wrap(brrs.ErrFirmwareVerifyTaskRunning, taskInfo)
+		return "", errors.Wrap(brrs.ErrFirmwareVerifyTask, taskInfo)
 	}
 
 	if task.TaskStatus != "OK" {
-		return "", errors.Wrap(brrs.ErrFirmwareVerifyTaskFailed, taskInfo)
+		return "", errors.Wrap(brrs.ErrFirmwareVerifyTask, taskInfo)
 	}
 
 	return c.redfish.StartUpdateForUploadedFirmware(ctx)
 }
 
-func (c *x12) firmwareInstallStatus(ctx context.Context, component, installVersion, installTaskID string) (state string, err error) {
+func (c *x12) firmwareTaskStatus(ctx context.Context, component, taskID string) (state, status string, err error) {
 	if err = c.componentSupported(component); err != nil {
-		return "", err
+		return "", "", errors.Wrap(brrs.ErrFirmwareTaskStatus, err.Error())
 	}
 
-	task, err := c.redfish.Task(ctx, installTaskID)
-	if err != nil {
-		return "", errors.Wrap(err, "error querying redfish tasks for firmware install taskID: "+installTaskID)
-	}
-
-	// taskInfo := fmt.Sprintf("id: %s, state: %s, status: %s", task.ID, task.TaskState, task.TaskStatus)
-
-	state = strings.ToLower(string(task.TaskState))
-
-	switch state {
-	case "starting", "downloading", "downloaded":
-		return constants.FirmwareInstallInitializing, nil
-	case "running", "stopping", "cancelling", "scheduling":
-		return constants.FirmwareInstallRunning, nil
-	case "pending", "new":
-		return constants.FirmwareInstallQueued, nil
-	case "scheduled":
-		return constants.FirmwareInstallPowerCyleHost, nil
-	case "interrupted", "killed", "exception", "cancelled", "suspended", "failed":
-		return constants.FirmwareInstallFailed, nil
-	case "completed":
-		return constants.FirmwareInstallComplete, nil
-	default:
-		return constants.FirmwareInstallUnknown + ": " + state, nil
-	}
+	return c.redfish.TaskStatus(ctx, taskID)
 }

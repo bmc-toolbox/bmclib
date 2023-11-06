@@ -19,7 +19,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-
 func (c *x11) firmwareInstallBIOS(ctx context.Context, reader io.Reader, fileSize int64) error {
 	var err error
 
@@ -400,7 +399,7 @@ func (c *x11) statusBIOSFirmwareInstall(ctx context.Context) (string, error) {
 	case (bytes.Contains(resp, []byte("<status>0</status>")) && bytes.Contains(resp, []byte("<percent>0</percent>"))):
 		if err := c.checkComponentUpdateMisc(ctx, "postUpdate"); err != nil {
 			if errors.Is(err, bmclibErrs.ErrHostPowercycleRequired) {
-				return constants.FirmwareInstallPowerCyleHost, nil
+				return constants.FirmwareInstallPowerCycleHost, nil
 			}
 		}
 
@@ -416,13 +415,13 @@ func (c *x11) statusBIOSFirmwareInstall(ctx context.Context) (string, error) {
 		// tells the BMC it can get out of the BIOS update mode
 		if err := c.checkComponentUpdateMisc(ctx, "postUpdate"); err != nil {
 			if errors.Is(err, bmclibErrs.ErrHostPowercycleRequired) {
-				return constants.FirmwareInstallPowerCyleHost, nil
+				return constants.FirmwareInstallPowerCycleHost, nil
 			}
 
-			return constants.FirmwareInstallPowerCyleHost, err
+			return constants.FirmwareInstallPowerCycleHost, err
 		}
 
-		return constants.FirmwareInstallPowerCyleHost, nil
+		return constants.FirmwareInstallPowerCycleHost, nil
 
 	// status 8 and percent 0 indicates its initializing the update
 	case bytes.Contains(resp, []byte("<status>8</status>")) && bytes.Contains(resp, []byte("<percent>0</percent>")):

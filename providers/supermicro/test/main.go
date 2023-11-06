@@ -61,13 +61,10 @@ func main() {
 
 	log.Println("upload taskID: " + uploadTaskID)
 
-	opts := &bmc.FirmwareInstallOptions{
-		UploadTaskID: uploadTaskID,
-	}
 
 	var installTaskID string
 	for {
-		installTaskID, err = c.FirmwareInstallWithOptions(ctx, component, nil, opts)
+		installTaskID, err = c.FirmwareInstallUploaded(ctx, component, nil, opts)
 		if err != nil {
 			if errors.Is(err, brrs.ErrFirmwareVerifyTaskRunning) {
 				log.Println("retrying in 5 secs..: ", err.Error())

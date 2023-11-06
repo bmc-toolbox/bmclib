@@ -51,8 +51,6 @@ func (c *Client) FirmwareUpload(ctx context.Context, reader io.Reader, params *R
 		return "", errors.Wrap(err, "error redfish UpdateParameters payload")
 	}
 
-	fmt.Println(string(parameters))
-
 	installMethod, installURI, err := c.firmwareInstallMethodURI(ctx)
 	if err != nil {
 		return "", errors.Wrap(bmclibErrs.ErrFirmwareUpload, err.Error())

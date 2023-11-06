@@ -66,11 +66,11 @@ var (
 	// ErrFirmwareInstallStatus is returned for firmware install status read
 	ErrFirmwareInstallStatus = errors.New("error querying firmware install status")
 
-	// ErrFirmwareVerifyTaskRunning indicates a firmware verify task is in progress
-	// the caller is expected to check the verify task is completed successfully before proceeding.
-	ErrFirmwareVerifyTaskRunning = errors.New("firmware uploaded and is currently being verified")
+	// ErrFirmwareTaskStatus is returned when a query for the firmware upload status fails
+	ErrFirmwareTaskStatus = errors.New("error querying firmware upload status")
 
-	ErrFirmwareVerifyTaskFailed = errors.New("firmware verify task failed")
+	// ErrFirmwareVerifyTask indicates a firmware verify task is in progress or did not complete successfully,
+	ErrFirmwareVerifyTask = errors.New("error firmware upload verify task")
 
 	// ErrRedfishUpdateService is returned on redfish update service errors
 	ErrRedfishUpdateService = errors.New("redfish update service error")

@@ -30,6 +30,7 @@ const (
 	// FeatureUnmountFloppyImage means an implementation removes a floppy image that was previously uploaded.
 	FeatureUnmountFloppyImage registrar.Feature = "unmountFloppyImage"
 	// FeatureFirmwareInstall means an implementation that initiates the firmware install process
+	// FeatureFirmwareInstall means an implementation that uploads _and_ initiates the firmware install process
 	FeatureFirmwareInstall registrar.Feature = "firmwareinstall"
 	// FeatureFirmwareInstallSatus means an implementation that returns the firmware install status
 	FeatureFirmwareInstallStatus registrar.Feature = "firmwareinstallstatus"
@@ -48,9 +49,9 @@ const (
 	// FeatureFirmwareUpload means an implementation that uploads firmware for installing.
 	FeatureFirmwareUpload registrar.Feature = "firmwareupload"
 
-	// 	FeatureFirmwareUploadVerify means an implementation that verifies the uploaded firmware.
-	FeatureFirmwareUploadVerify registrar.Feature = "firmwareuploadverify"
+	// 	FeatureFirmwareInstallUploaded means an implementation that installs firmware uploaded using the firmwareupload feature.
+	FeatureFirmwareInstallUploaded registrar.Feature = "firmwareinstalluploaded"
 
-	// FeatureFirmwareInstallUpload means an implementation that both uploads and initiates the firmware install process.
-	FeatureFirmwareInstallUpload registrar.Feature = "firmwareinstallupload"
+	// FeatureFirmwareTaskStatus identifies an implementaton that can return the status of a firmware upload/install task.
+	FeatureFirmwareTaskStatus registrar.Feature = "firmwaretaskstatus"
 )
