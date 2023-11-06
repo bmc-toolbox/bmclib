@@ -102,7 +102,6 @@ type Client struct {
 	port      string
 	csrfToken string
 	model     string
-	redfish   *redfishwrapper.Client
 	log       logr.Logger
 	_         [32]byte
 }
@@ -264,7 +263,6 @@ func (c *Client) Close(ctx context.Context) error {
 			return errors.Wrap(bmclibErrs.ErrLogoutFailed, err.Error())
 		}
 	}
-
 
 	return nil
 }
