@@ -1,0 +1,20 @@
+{
+    "Accepted": {
+        "code": "Base.v1_10_3.Accepted",
+        "Message": "Successfully Accepted Request. Please see the location header and ExtendedInfo for more information.",
+        "@Message.ExtendedInfo": [
+            {
+                "MessageId": "SMC.1.0.OemSimpleupdateAcceptedMessage",
+                "Severity": "Ok",
+                "Resolution": "No resolution was required.",
+                "Message": "Please also check Task Resource /redfish/v1/TaskService/Tasks/1 to see more information.",
+                "MessageArgs": [
+                    "/redfish/v1/TaskService/Tasks/1234"
+                ],
+                "RelatedProperties": [
+                    "BiosVerifyAccepted"
+                ]
+            }
+        ]
+    }
+}
