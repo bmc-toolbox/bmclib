@@ -1,6 +1,12 @@
 package constants
 
-import "strings"
+type (
+	// Redfish operation apply time parameter
+	OperationApplyTime string
+
+	// The FirmwareInstallStep identifies each phase of a firmware install process.
+	FirmwareInstallStep string
+)
 
 const (
 	// Unknown is the constant that defines unknown things
@@ -27,9 +33,13 @@ const (
 
 	// Redfish firmware apply at constants
 	// FirmwareApplyImmediate sets the firmware to be installed immediately after upload
-	FirmwareApplyImmediate = "Immediate"
+	Immediate OperationApplyTime = "Immediate"
 	//FirmwareApplyOnReset sets the firmware to be install on device power cycle/reset
-	FirmwareApplyOnReset = "OnReset"
+	OnReset OperationApplyTime = "OnReset"
+	// FirmwareOnStartUpdateRequest sets the firmware install to begin after the start request has been sent.
+	OnStartUpdateRequest OperationApplyTime = "OnStartUpdateRequest"
+
+	// TODO: rename FirmwareInstall* task status names to FirmwareTaskState and declare a type.
 
 	// Firmware install states returned by bmclib provider FirmwareInstallStatus implementations
 	//
@@ -60,12 +70,31 @@ const (
 	FirmwareInstallFailed = "failed"
 
 	// FirmwareInstallPowerCycleHost indicates the firmware install requires a host power cycle
-	FirmwareInstallPowerCyleHost = "powercycle-host"
+	FirmwareInstallPowerCycleHost = "powercycle-host"
 
 	// FirmwareInstallPowerCycleBMC indicates the firmware install requires a BMC power cycle
 	FirmwareInstallPowerCycleBMC = "powercycle-bmc"
 
 	FirmwareInstallUnknown = "unknown"
+
+	// FirmwareInstallStepUploadInitiateInstall identifies the step to upload _and_ initialize the firmware install.
+	// as part of the same call.
+	FirmwareInstallStepUploadInitiateInstall FirmwareInstallStep = "upload-initiate-install"
+
+	// FirmwareInstallStepInstallStatus identifies the step to verify the status of the firmware install.
+	FirmwareInstallStepInstallStatus FirmwareInstallStep = "install-status"
+
+	// FirmwareInstallStepUpload identifies the upload step in the firmware install process.
+	FirmwareInstallStepUpload FirmwareInstallStep = "upload"
+
+	// FirmwareInstallStepUploadStatus identifies the step to verify the upload status as part of the firmware install status.
+	FirmwareInstallStepUploadStatus FirmwareInstallStep = "upload-status"
+
+	// FirmwareInstallStepInstallUploaded identifies the step to install firmware uploaded in FirmwareInstallStepUpload.
+	FirmwareInstallStepInstallUploaded FirmwareInstallStep = "install-uploaded"
+
+	// FirmwareInstallStepPowerOffHost indicates the host requires to be powered off.
+	FirmwareInstallStepPowerOffHost FirmwareInstallStep = "power-off-host"
 
 	// device BIOS/UEFI POST code bmclib identifiers
 	POSTStateBootINIT = "boot-init/pxe"
@@ -77,23 +106,4 @@ const (
 // ListSupportedVendors  returns a list of supported vendors
 func ListSupportedVendors() []string {
 	return []string{HP, Dell, Supermicro}
-}
-
-// VendorFromProductName attempts to identify the vendor from the given productname
-func VendorFromProductName(productName string) string {
-	n := strings.ToLower(productName)
-	switch {
-	case strings.Contains(n, "intel"):
-		return Intel
-	case strings.Contains(n, "dell"):
-		return Dell
-	case strings.Contains(n, "supermicro"):
-		return Supermicro
-	case strings.Contains(n, "cloudline"):
-		return Cloudline
-	case strings.Contains(n, "quanta"):
-		return Quanta
-	default:
-		return productName
-	}
 }
