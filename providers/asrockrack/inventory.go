@@ -3,7 +3,6 @@ package asrockrack
 import (
 	"context"
 
-	"github.com/bmc-toolbox/bmclib/v2/constants"
 	"github.com/bmc-toolbox/common"
 )
 
@@ -181,7 +180,7 @@ func (a *ASRockRack) systemAttributes(ctx context.Context, device *common.Device
 
 			if component.ProductManufacturerName == "N/A" &&
 				component.ProductPartNumber != "N/A" {
-				vendor = constants.VendorFromProductName(component.ProductPartNumber)
+				vendor = common.FormatVendorName(component.ProductPartNumber)
 			}
 
 			device.Drives = append(device.Drives,
