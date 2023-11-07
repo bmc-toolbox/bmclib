@@ -35,16 +35,8 @@ const (
 	multipartHttpUpload  installMethod = "multipartUpload"
 )
 
-// SupportedFirmwareApplyAtValues returns the supported redfish firmware applyAt values
-func SupportedFirmwareApplyAtValues() []string {
-	return []string{
-		constants.FirmwareApplyImmediate,
-		constants.FirmwareApplyOnReset,
-	}
-}
-
 // FirmwareInstall uploads and initiates the firmware install process
-func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, forceInstall bool, reader io.Reader) (taskID string, err error) {
+func (c *Conn) FirmwareInstall(ctx context.Context, component string, operationApplyTime string, forceInstall bool, reader io.Reader) (taskID string, err error) {
 	// limit to *os.File until theres a need for other types of readers
 	updateFile, ok := reader.(*os.File)
 	if !ok {
@@ -54,11 +46,6 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 	installMethod, installURI, err := c.firmwareInstallMethodURI(ctx)
 	if err != nil {
 		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, err.Error())
-	}
-
-	// validate applyAt parameter
-	if !internal.StringInSlice(applyAt, SupportedFirmwareApplyAtValues()) {
-		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, "invalid applyAt parameter: "+applyAt)
 	}
 
 	// expect atleast 10 minutes left in the deadline to proceed with the update
@@ -105,14 +92,14 @@ func (c *Conn) FirmwareInstall(ctx context.Context, component, applyAt string, f
 	switch installMethod {
 	case multipartHttpUpload:
 		var uploadErr error
-		resp, uploadErr = c.multipartHTTPUpload(ctx, installURI, applyAt, updateFile)
+		resp, uploadErr = c.multipartHTTPUpload(ctx, installURI, operationApplyTime, updateFile)
 		if uploadErr != nil {
 			return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, uploadErr.Error())
 		}
 
 	case unstructuredHttpPush:
 		var uploadErr error
-		resp, uploadErr = c.unstructuredHttpUpload(ctx, installURI, applyAt, reader)
+		resp, uploadErr = c.unstructuredHttpUpload(ctx, installURI, operationApplyTime, reader)
 		if uploadErr != nil {
 			return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, uploadErr.Error())
 		}
@@ -164,7 +151,7 @@ type multipartPayload struct {
 	updateFile       *os.File
 }
 
-func (c *Conn) multipartHTTPUpload(ctx context.Context, url, applyAt string, update *os.File) (*http.Response, error) {
+func (c *Conn) multipartHTTPUpload(ctx context.Context, url string, operationApplyTime string, update *os.File) (*http.Response, error) {
 	if url == "" {
 		return nil, fmt.Errorf("unable to execute request, no target provided")
 	}
@@ -175,7 +162,7 @@ func (c *Conn) multipartHTTPUpload(ctx context.Context, url, applyAt string, upd
 		Oem                struct{} `json:"Oem"`
 	}{
 		[]string{},
-		applyAt,
+		operationApplyTime,
 		struct{}{},
 	})
 
@@ -192,7 +179,7 @@ func (c *Conn) multipartHTTPUpload(ctx context.Context, url, applyAt string, upd
 	return c.runRequestWithMultipartPayload(url, payload)
 }
 
-func (c *Conn) unstructuredHttpUpload(ctx context.Context, url, applyAt string, update io.Reader) (*http.Response, error) {
+func (c *Conn) unstructuredHttpUpload(ctx context.Context, url string, operationApplyTime string, update io.Reader) (*http.Response, error) {
 	if url == "" {
 		return nil, fmt.Errorf("unable to execute request, no target provided")
 	}
@@ -432,7 +419,7 @@ func (c *Conn) FirmwareInstallStatus(ctx context.Context, installVersion, compon
 	case "pending", "new":
 		return constants.FirmwareInstallQueued, nil
 	case "scheduled":
-		return constants.FirmwareInstallPowerCyleHost, nil
+		return constants.FirmwareInstallPowerCycleHost, nil
 	case "interrupted", "killed", "exception", "cancelled", "suspended", "failed":
 		return constants.FirmwareInstallFailed, nil
 	case "completed":

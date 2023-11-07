@@ -80,7 +80,7 @@ func TestFirmwareInstall(t *testing.T) {
 
 	tests := []struct {
 		component          string
-		applyAt            string
+		applyAt            constants.OperationApplyTime
 		forceInstall       bool
 		setRequiredTimeout bool
 		reader             io.Reader
@@ -91,7 +91,7 @@ func TestFirmwareInstall(t *testing.T) {
 	}{
 		{
 			common.SlugBIOS,
-			constants.FirmwareApplyOnReset,
+			constants.OnReset,
 			false,
 			false,
 			nil,
@@ -102,7 +102,7 @@ func TestFirmwareInstall(t *testing.T) {
 		},
 		{
 			common.SlugBIOS,
-			constants.FirmwareApplyOnReset,
+			constants.OnReset,
 			false,
 			false,
 			&os.File{},
@@ -113,18 +113,7 @@ func TestFirmwareInstall(t *testing.T) {
 		},
 		{
 			common.SlugBIOS,
-			"invalidApplyAt",
-			false,
-			true,
-			&os.File{},
-			"",
-			bmclibErrs.ErrFirmwareInstall,
-			"invalid applyAt parameter",
-			"applyAt parameter invalid",
-		},
-		{
-			common.SlugBIOS,
-			constants.FirmwareApplyOnReset,
+			constants.OnReset,
 			false,
 			true,
 			fh,
@@ -135,7 +124,7 @@ func TestFirmwareInstall(t *testing.T) {
 		},
 		{
 			common.SlugBIOS,
-			constants.FirmwareApplyOnReset,
+			constants.OnReset,
 			true,
 			true,
 			fh,
@@ -153,11 +142,11 @@ func TestFirmwareInstall(t *testing.T) {
 				ctx, cancel = context.WithTimeout(context.TODO(), 20*time.Minute)
 			}
 
-			taskID, err := mockClient.FirmwareInstall(ctx, tc.component, tc.applyAt, tc.forceInstall, tc.reader)
+			taskID, err := mockClient.FirmwareInstall(ctx, tc.component, string(tc.applyAt), tc.forceInstall, tc.reader)
 			if tc.expectErr != nil {
 				assert.ErrorIs(t, err, tc.expectErr)
 				if tc.expectErrSubStr != "" {
-					assert.True(t, strings.Contains(err.Error(), tc.expectErrSubStr))
+					assert.ErrorContains(t, err, tc.expectErrSubStr)
 				}
 			} else {
 				assert.Nil(t, err)
