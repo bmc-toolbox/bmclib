@@ -395,7 +395,7 @@ func updateParametersFormField(fieldName string, writer *multipart.Writer) (io.W
 
 // FirmwareInstallStatus returns the status of the firmware install task queued
 func (c *Conn) FirmwareInstallStatus(ctx context.Context, installVersion, component, taskID string) (state string, err error) {
-	vendor, _, err := c.DeviceVendorModel(ctx)
+	vendor, _, err := c.redfishwrapper.DeviceVendorModel(ctx)
 	if err != nil {
 		return state, errors.Wrap(err, "unable to determine device vendor, model attributes")
 	}
