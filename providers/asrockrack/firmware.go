@@ -33,6 +33,7 @@ func (a *ASRockRack) FirmwareInstall(ctx context.Context, component, applyAt str
 		size = finfo.Size()
 	}
 
+	component = strings.ToUpper(component)
 	switch component {
 	case common.SlugBIOS:
 		err = a.firmwareInstallBIOS(ctx, reader, size)
@@ -51,6 +52,7 @@ func (a *ASRockRack) FirmwareInstall(ctx context.Context, component, applyAt str
 
 // FirmwareInstallStatus returns the status of the firmware install process, a bool value indicating if the component requires a reset
 func (a *ASRockRack) FirmwareInstallStatus(ctx context.Context, installVersion, component, taskID string) (status string, err error) {
+	component = strings.ToUpper(component)
 	switch component {
 	case common.SlugBIOS, common.SlugBMC:
 		return a.firmwareUpdateStatus(ctx, component, installVersion)
@@ -139,6 +141,7 @@ func (a *ASRockRack) firmwareInstallBIOS(ctx context.Context, reader io.Reader, 
 // firmwareUpdateBIOSStatus returns the BIOS firmware install status
 func (a *ASRockRack) firmwareUpdateStatus(ctx context.Context, component string, installVersion string) (status string, err error) {
 	var endpoint string
+	component = strings.ToUpper(component)
 	switch component {
 	case common.SlugBIOS:
 		endpoint = "api/asrr/maintenance/BIOS/flash-progress"
@@ -197,6 +200,7 @@ func (a *ASRockRack) firmwareUpdateStatus(ctx context.Context, component string,
 // - 1 indicates the given version parameter does not match the version installed
 // - 2 the version parameter returned from the BMC is empty (which means the BMC needs a reset)
 func (a *ASRockRack) versionInstalled(ctx context.Context, component, version string) (status int, err error) {
+	component = strings.ToUpper(component)
 	if !internal.StringInSlice(component, []string{common.SlugBIOS, common.SlugBMC}) {
 		return versionStrError, errors.Wrap(bmclibErrs.ErrFirmwareInstall, "component unsupported: "+component)
 	}
