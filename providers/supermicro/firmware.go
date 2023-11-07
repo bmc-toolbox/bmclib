@@ -3,79 +3,21 @@ package supermicro
 import (
 	"context"
 	"io"
-	"os"
 	"strings"
 	"time"
 
+	"github.com/bmc-toolbox/bmclib/v2/constants"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
-	"github.com/bmc-toolbox/common"
 	"github.com/pkg/errors"
 )
 
-// FirmwareInstall uploads and initiates firmware update for the component
-func (c *Client) FirmwareInstall(ctx context.Context, component, applyAt string, forceInstall bool, reader io.Reader) (jobID string, err error) {
-	if err := c.deviceSupported(ctx); err != nil {
-		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, err.Error())
-	}
-
-	var size int64
-	if file, ok := reader.(*os.File); ok {
-		finfo, err := file.Stat()
-		if err != nil {
-			c.log.V(2).Error(err, "unable to determine file size")
-		}
-
-		size = finfo.Size()
-	}
-
-	// expect atleast 10 minutes left in the deadline to proceed with the update
-	d, _ := ctx.Deadline()
-	if time.Until(d) < 10*time.Minute {
-		return "", errors.New("remaining context deadline insufficient to perform update: " + time.Until(d).String())
-	}
-
-	component = strings.ToUpper(component)
-
-	switch component {
-	case common.SlugBIOS:
-		err = c.firmwareInstallBIOS(ctx, reader, size)
-	case common.SlugBMC:
-		err = c.firmwareInstallBMC(ctx, reader, size)
-	default:
-		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, "component unsupported: "+component)
-	}
-
-	if err != nil {
-		err = errors.Wrap(bmclibErrs.ErrFirmwareInstall, err.Error())
-	}
-
-	return jobID, err
-}
-
-// FirmwareInstallStatus returns the status of the firmware install process
-func (c *Client) FirmwareInstallStatus(ctx context.Context, installVersion, component, taskID string) (string, error) {
-	component = strings.ToUpper(component)
-
-	switch component {
-	case common.SlugBMC:
-		return c.statusBMCFirmwareInstall(ctx)
-	case common.SlugBIOS:
-		return c.statusBIOSFirmwareInstall(ctx)
-	default:
-		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, "component unsupported: "+component)
-	}
-}
-
-func (c *Client) deviceSupported(ctx context.Context) error {
-	errBoardPartNumUnknown := errors.New("baseboard part number unknown")
-	errBoardUnsupported := errors.New("feature not supported/implemented for device")
-
-	// Its likely this works on all X11's
+var (
+	// Its likely the X11 code works on all X11's
 	// for now, we list only the ones its been tested on.
 	//
 	// board part numbers
 	//
-	supported := []string{
+	supportedModels = []string{
 		"X11SCM-F",
 		"X11DPH-T",
 		"X11SCH-F",
@@ -83,24 +25,97 @@ func (c *Client) deviceSupported(ctx context.Context) error {
 		"X11DPG-SN",
 		"X11DPT-B",
 		"X11SSE-F",
+		"X12STH-SYS",
 	}
 
-	data, err := c.fruInfo(ctx)
-	if err != nil {
-		return err
+	errUnexpectedModel      = errors.New("unexpected device model")
+	errUploadTaskIDExpected = errors.New("expected an firmware upload taskID")
+)
+
+// bmc client interface implementations methods
+
+func (c *Client) FirmwareInstallSteps(ctx context.Context, component string) ([]constants.FirmwareInstallStep, error) {
+	if err := c.firmwareInstallSupported(ctx); err != nil {
+		return nil, err
 	}
 
-	if data.Board == nil || strings.TrimSpace(data.Board.PartNum) == "" {
-		return errors.Wrap(errBoardPartNumUnknown, "baseboard part number empty")
+	switch {
+	case strings.HasPrefix(strings.ToLower(c.model), "x12"):
+		return c.x12().firmwareInstallSteps(component)
+	case strings.HasPrefix(strings.ToLower(c.model), "x11"):
+		return c.x11().firmwareInstallSteps(component)
 	}
 
-	c.model = strings.TrimSpace(data.Board.PartNum)
+	return nil, errors.Wrap(errUnexpectedModel, c.model)
+}
 
-	for _, b := range supported {
-		if strings.EqualFold(b, strings.TrimSpace(data.Board.PartNum)) {
+func (c *Client) FirmwareUpload(ctx context.Context, component string, reader io.Reader) (taskID string, err error) {
+	if err := c.firmwareInstallSupported(ctx); err != nil {
+		return "", err
+	}
+
+	//	// expect atleast 5 minutes left in the deadline to proceed with the upload
+	d, _ := ctx.Deadline()
+	if time.Until(d) < 5*time.Minute {
+		return "", errors.New("remaining context deadline insufficient to perform update: " + time.Until(d).String())
+	}
+
+	switch {
+	case strings.HasPrefix(strings.ToLower(c.model), "x12"):
+		return c.x12().firmwareUpload(ctx, component, reader)
+	case strings.HasPrefix(strings.ToLower(c.model), "x11"):
+		return c.x11().firmwareUpload(ctx, component, reader)
+	}
+
+	return "", errors.Wrap(errUnexpectedModel, c.model)
+}
+
+func (c *Client) FirmwareInstallUploaded(ctx context.Context, component, uploadTaskID string) (installTaskID string, err error) {
+	if err := c.firmwareInstallSupported(ctx); err != nil {
+		return "", err
+	}
+
+	if uploadTaskID == "" {
+		return "", errUploadTaskIDExpected
+	}
+
+	switch {
+	case strings.HasPrefix(strings.ToLower(c.model), "x12"):
+		return c.x12().firmwareInstallUploaded(ctx, component, uploadTaskID)
+	case strings.HasPrefix(strings.ToLower(c.model), "x11"):
+		return "", c.x11().firmwareInstallUploaded(ctx, component)
+	}
+
+	return "", errors.Wrap(errUnexpectedModel, c.model)
+
+}
+
+// FirmwareTaskStatus returns the status of a firmware related task queued on the BMC.
+func (c *Client) FirmwareTaskStatus(ctx context.Context, kind constants.FirmwareInstallStep, component, taskID, installVersion string) (state, status string, err error) {
+	if err := c.firmwareInstallSupported(ctx); err != nil {
+		return "", "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, err.Error())
+	}
+
+	component = strings.ToUpper(component)
+
+	if strings.HasPrefix(strings.ToLower(c.model), "x12") {
+		return c.x12().firmwareTaskStatus(ctx, component, taskID)
+	} else if strings.HasPrefix(strings.ToLower(c.model), "x11") {
+		return c.x11().firmwareTaskStatus(ctx, component)
+
+	}
+
+	return "", "", errors.Wrap(errUnexpectedModel, c.model)
+}
+
+func (c *Client) firmwareInstallSupported(ctx context.Context) error {
+	errBoardUnsupported := errors.New("firmware install not supported/implemented for device model")
+
+	for _, s := range supportedModels {
+		if strings.EqualFold(s, c.model) {
 			return nil
 		}
 	}
 
-	return errors.Wrap(errBoardUnsupported, data.Board.PartNum)
+	return errBoardUnsupported
 }
