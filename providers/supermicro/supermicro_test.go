@@ -3,6 +3,7 @@ package supermicro
 import (
 	"context"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -12,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_parseToken(t *testing.T) {
+func TestParseToken(t *testing.T) {
 	testcases := []struct {
 		name        string
 		body        []byte
@@ -60,7 +61,7 @@ func Test_parseToken(t *testing.T) {
 	}
 }
 
-func Test_Open(t *testing.T) {
+func TestOpen(t *testing.T) {
 	type handlerFuncMap map[string]func(http.ResponseWriter, *http.Request)
 	testcases := []struct {
 		name           string
@@ -75,6 +76,9 @@ func Test_Open(t *testing.T) {
 			"foo",
 			"bar",
 			handlerFuncMap{
+				"/": func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusOK)
+				},
 				// first request to login
 				"/cgi/login.cgi": func(w http.ResponseWriter, r *http.Request) {
 					assert.Equal(t, r.Method, http.MethodPost)
@@ -155,6 +159,7 @@ func Test_Open(t *testing.T) {
 			server := httptest.NewTLSServer(mux)
 			defer server.Close()
 
+			server.Config.ErrorLog = log.Default()
 			parsedURL, err := url.Parse(server.URL)
 			if err != nil {
 				t.Fatal(err)

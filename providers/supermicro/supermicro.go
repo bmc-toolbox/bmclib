@@ -20,6 +20,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
+
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 	"github.com/pkg/errors"
@@ -39,10 +40,11 @@ var (
 	// Features implemented
 	Features = registrar.Features{
 		providers.FeatureScreenshot,
-		providers.FeatureFirmwareInstall,
-		providers.FeatureFirmwareInstallStatus,
 		providers.FeatureMountFloppyImage,
 		providers.FeatureUnmountFloppyImage,
+		providers.FeatureFirmwareUpload,
+		providers.FeatureFirmwareInstallUploaded,
+		providers.FeatureFirmwareTaskStatus,
 	}
 )
 
@@ -93,15 +95,14 @@ func WithPort(port string) Option {
 // Connection details
 type Client struct {
 	client    *http.Client
+	redfish   *redfishwrapper.Client
 	host      string
 	user      string
 	pass      string
 	port      string
 	csrfToken string
 	model     string
-	redfish   *redfishwrapper.Client
 	log       logr.Logger
-	_         [32]byte
 }
 
 // New returns connection with a Supermicro client initialized
@@ -126,6 +127,19 @@ func NewClient(host, user, pass string, log logr.Logger, opts ...Option) *Client
 		client: httpclient.Build(defaultConfig.httpClientSetupFuncs...),
 		log:    log,
 	}
+}
+
+func (c *Client) x12() *x12 { return &x12{c} }
+
+func (c *Client) x11() *x11 { return &x11{c} }
+
+func (c *Client) redfishSession(ctx context.Context) (err error) {
+	c.redfish = redfishwrapper.NewClient(c.host, "", c.user, c.pass, redfishwrapper.WithHTTPClient(c.client))
+	if err := c.redfish.Open(ctx); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Open a connection to a Supermicro BMC using the vendor API.
@@ -168,6 +182,11 @@ func (c *Client) Open(ctx context.Context) (err error) {
 
 	c.csrfToken = token
 
+	c.model, err = c.deviceModel(ctx)
+	if err != nil {
+		return errors.Wrap(bmclibErrs.ErrLoginFailed, err.Error())
+	}
+
 	return nil
 }
 
@@ -184,15 +203,6 @@ func (c *Client) openRedfish(ctx context.Context) error {
 	c.redfish = rfclient
 
 	return nil
-}
-
-func (c *Client) closeRedfish(ctx context.Context) {
-	if c.redfish != nil {
-		// error not checked on purpose
-		_ = c.redfish.Close(ctx)
-
-		c.redfish = nil
-	}
 }
 
 func parseToken(body []byte) string {
@@ -237,7 +247,12 @@ func (c *Client) Close(ctx context.Context) error {
 		return errors.Wrap(bmclibErrs.ErrLogoutFailed, strconv.Itoa(status))
 	}
 
-	c.closeRedfish(ctx)
+	if c.redfish != nil {
+		err = c.redfish.Close(ctx)
+		if err != nil {
+			return errors.Wrap(bmclibErrs.ErrLogoutFailed, err.Error())
+		}
+	}
 
 	return nil
 }
@@ -360,6 +375,24 @@ func (c *Client) powerCycle(ctx context.Context) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func (c *Client) deviceModel(ctx context.Context) (string, error) {
+	deviceModel, err := c.x11().deviceModel(ctx)
+	if err != nil {
+		if errors.Is(err, ErrXMLAPIUnsupported) {
+			var errRF error
+
+			deviceModel, errRF = c.x12().deviceModel(ctx)
+			if errRF != nil {
+				return "", errors.Wrap(errRF, "XML API not supported and failed to identify model over Redfish")
+			}
+		}
+	}
+
+	c.model = deviceModel
+
+	return deviceModel, nil
 }
 
 func (c *Client) query(ctx context.Context, endpoint, method string, payload io.Reader, headers map[string]string, contentLength int64) ([]byte, int, error) {
