@@ -63,8 +63,17 @@ var (
 	// ErrFirmwareInstall is returned for firmware install failures
 	ErrFirmwareInstall = errors.New("error updating firmware")
 
+	// ErrFirmwareInstallUploaded is returned for a firmware install call on a firmware previously uploaded.
+	ErrFirmwareInstallUploaded = errors.New("error installing uploaded firmware")
+
 	// ErrFirmwareInstallStatus is returned for firmware install status read
 	ErrFirmwareInstallStatus = errors.New("error querying firmware install status")
+
+	// ErrFirmwareTaskStatus is returned when a query for the firmware upload status fails
+	ErrFirmwareTaskStatus = errors.New("error querying firmware upload status")
+
+	// ErrFirmwareVerifyTask indicates a firmware verify task is in progress or did not complete successfully,
+	ErrFirmwareVerifyTask = errors.New("error firmware upload verify task")
 
 	// ErrRedfishUpdateService is returned on redfish update service errors
 	ErrRedfishUpdateService = errors.New("redfish update service error")
@@ -105,6 +114,9 @@ var (
 	// ErrSessionExpired is returned when the BMC session is not valid
 	// the receiver can then choose to request a new session.
 	ErrSessionExpired = errors.New("session expired")
+
+	// ErrSystemVendorModel is returned when the system vendor, model attributes could not be identified.
+	ErrSystemVendorModel = errors.New("error identifying system vendor, model attributes")
 )
 
 type ErrUnsupportedHardware struct {
