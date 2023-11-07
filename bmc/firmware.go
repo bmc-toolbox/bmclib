@@ -5,25 +5,27 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/bmc-toolbox/bmclib/v2/constants"
+	bconsts "github.com/bmc-toolbox/bmclib/v2/constants"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 )
 
-// FirmwareInstaller defines an interface to install firmware updates
+// FirmwareInstaller defines an interface to upload and initiate a firmware install
 type FirmwareInstaller interface {
 	// FirmwareInstall uploads firmware update payload to the BMC returning the task ID
 	//
 	// parameters:
 	// component - the component slug for the component update being installed.
-	// applyAt - one of "Immediate", "OnReset".
+	// operationsApplyTime - one of the OperationApplyTime constants
 	// forceInstall - purge the install task queued/scheduled firmware install BMC task (if any).
 	// reader - the io.reader to the firmware update file.
 	//
 	// return values:
 	// taskID - A taskID is returned if the update process on the BMC returns an identifier for the update process.
-	FirmwareInstall(ctx context.Context, component, applyAt string, forceInstall bool, reader io.Reader) (taskID string, err error)
+	FirmwareInstall(ctx context.Context, component string, operationApplyTime string, forceInstall bool, reader io.Reader) (taskID string, err error)
 }
 
 // firmwareInstallerProvider is an internal struct to correlate an implementation/provider and its name
@@ -33,7 +35,7 @@ type firmwareInstallerProvider struct {
 }
 
 // firmwareInstall uploads and initiates firmware update for the component
-func firmwareInstall(ctx context.Context, component, applyAt string, forceInstall bool, reader io.Reader, generic []firmwareInstallerProvider) (taskID string, metadata Metadata, err error) {
+func firmwareInstall(ctx context.Context, component, operationApplyTime string, forceInstall bool, reader io.Reader, generic []firmwareInstallerProvider) (taskID string, metadata Metadata, err error) {
 	var metadataLocal Metadata
 
 	for _, elem := range generic {
@@ -47,7 +49,7 @@ func firmwareInstall(ctx context.Context, component, applyAt string, forceInstal
 			return taskID, metadata, err
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
-			taskID, vErr := elem.FirmwareInstall(ctx, component, applyAt, forceInstall, reader)
+			taskID, vErr := elem.FirmwareInstall(ctx, component, operationApplyTime, forceInstall, reader)
 			if vErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				err = multierror.Append(err, vErr)
@@ -63,7 +65,7 @@ func firmwareInstall(ctx context.Context, component, applyAt string, forceInstal
 }
 
 // FirmwareInstallFromInterfaces identifies implementations of the FirmwareInstaller interface and passes the found implementations to the firmwareInstall() wrapper
-func FirmwareInstallFromInterfaces(ctx context.Context, component, applyAt string, forceInstall bool, reader io.Reader, generic []interface{}) (taskID string, metadata Metadata, err error) {
+func FirmwareInstallFromInterfaces(ctx context.Context, component, operationApplyTime string, forceInstall bool, reader io.Reader, generic []interface{}) (taskID string, metadata Metadata, err error) {
 	implementations := make([]firmwareInstallerProvider, 0)
 	for _, elem := range generic {
 		temp := firmwareInstallerProvider{name: getProviderName(elem)}
@@ -86,9 +88,11 @@ func FirmwareInstallFromInterfaces(ctx context.Context, component, applyAt strin
 		)
 	}
 
-	return firmwareInstall(ctx, component, applyAt, forceInstall, reader, implementations)
+	return firmwareInstall(ctx, component, operationApplyTime, forceInstall, reader, implementations)
 }
 
+// Note: this interface is to be deprecated in favour of a more generic FirmwareTaskVerifier.
+//
 // FirmwareInstallVerifier defines an interface to check firmware install status
 type FirmwareInstallVerifier interface {
 	// FirmwareInstallStatus returns the status of the firmware install process.
