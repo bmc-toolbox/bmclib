@@ -1,0 +1,19 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Bios.Bios",
+    "@odata.id": "/redfish/v1/Systems/1/Bios",
+    "@odata.type": "#Bios.v1_1_1.Bios",
+    "Id": "Bios",
+    "Name": "BIOS Configuration Current Settings",
+    "Description": "BIOS Configuration Current Settings",
+    "AttributeRegistry": "BiosAttributeRegistry.v1_0_3",
+    "Attributes": {
+        "SmuVersion": "0.36.113.0",
+        "DxioVersion": "36.637",
+        "ProcCoreSpeed": "2.80 GHz",
+        "Proc1Id": "17-31-0",
+        "Proc1Brand": "AMD EPYC 7402P 24-Core Processor               ",
+        "Proc1L2Cache": "24x512 KB",
+        "Proc1L3Cache": "128 MB",
+        "Proc1Microcode": "0x8301052"
+    }
+}

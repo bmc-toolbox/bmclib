@@ -1,0 +1,116 @@
+{
+    "@odata.type": "#ComputerSystem.v1_8_0.ComputerSystem",
+    "@odata.id": "/redfish/v1/Systems/1",
+    "Id": "1",
+    "Name": "System",
+    "Description": "Description of server",
+    "Status": {
+        "State": "Enabled",
+        "Health": "Critical"
+    },
+    "SerialNumber": "FOOBAR",
+    "PartNumber": "SYS-510T-MR1-EI018",
+    "SystemType": "Physical",
+    "BiosVersion": "1.6",
+    "Manufacturer": "Supermicro",
+    "Model": "SYS-510T-MR1-EI018",
+    "SKU": "To be filled by O.E.M.",
+    "UUID": "0032331A-24D7-EC11-8000-3CECEFCEFEDA",
+    "ProcessorSummary": {
+        "Count": 1,
+        "Model": "Intel(R) Xeon(R) processor",
+        "Status": {
+            "State": "Enabled",
+            "Health": "OK",
+            "HealthRollup": "OK"
+        },
+        "Metrics": {
+            "@odata.id": "/redfish/v1/Systems/1/ProcessorSummary/ProcessorMetrics"
+        }
+    },
+    "MemorySummary": {
+        "TotalSystemMemoryGiB": 64,
+        "MemoryMirroring": "System",
+        "Status": {
+            "State": "Enabled",
+            "Health": "OK",
+            "HealthRollup": "OK"
+        },
+        "Metrics": {
+            "@odata.id": "/redfish/v1/Systems/1/MemorySummary/MemoryMetrics"
+        }
+    },
+    "IndicatorLED": "Off",
+    "PowerState": "On",
+    "Boot": {
+        "BootSourceOverrideEnabled": "Once",
+        "BootSourceOverrideMode": "UEFI",
+        "BootSourceOverrideTarget": "Hdd",
+        "BootSourceOverrideTarget@Redfish.AllowableValues": [
+            "None",
+            "Pxe",
+            "Floppy",
+            "Cd",
+            "Usb",
+            "Hdd",
+            "BiosSetup",
+            "UsbCd",
+            "UefiBootNext",
+            "UefiHttp"
+        ],
+        "BootOptions": {
+            "@odata.id": "/redfish/v1/Systems/1/BootOptions"
+        },
+        "BootNext": "",
+        "BootOrder": [
+            "Boot0003",
+            "Boot0006",
+            "Boot0005"
+        ]
+    },
+    "Processors": {
+        "@odata.id": "/redfish/v1/Systems/1/Processors"
+    },
+    "Memory": {
+        "@odata.id": "/redfish/v1/Systems/1/Memory"
+    },
+    "EthernetInterfaces": {
+        "@odata.id": "/redfish/v1/Systems/1/EthernetInterfaces"
+    },
+    "NetworkInterfaces": {
+        "@odata.id": "/redfish/v1/Systems/1/NetworkInterfaces"
+    },
+    "SimpleStorage": {
+        "@odata.id": "/redfish/v1/Systems/1/SimpleStorage"
+    },
+    "Storage": {
+        "@odata.id": "/redfish/v1/Systems/1/Storage"
+    },
+    "LogServices": {
+        "@odata.id": "/redfish/v1/Systems/1/LogServices"
+    },
+    "SecureBoot": {
+        "@odata.id": "/redfish/v1/Systems/1/SecureBoot"
+    },
+    "Bios": {
+        "@odata.id": "/redfish/v1/Systems/1/Bios"
+    },
+    "Links": {
+        "Chassis": [
+            {
+                "@odata.id": "/redfish/v1/Chassis/1"
+            }
+        ],
+        "ManagedBy": [
+            {
+                "@odata.id": "/redfish/v1/Managers/1"
+            }
+        ]
+    },
+    "Actions": {
+        "#ComputerSystem.Reset": {
+            "target": "/redfish/v1/Systems/1/Actions/ComputerSystem.Reset",
+            "@Redfish.ActionInfo": "/redfish/v1/Systems/1/ResetActionInfo"
+        }
+    }
+}

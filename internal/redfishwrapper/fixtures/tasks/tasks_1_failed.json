@@ -1,0 +1,27 @@
+{
+    "@odata.type": "#Task.v1_4_3.Task",
+    "@odata.id": "/redfish/v1/TaskService/Tasks/1",
+    "Id": "1",
+    "Name": "BIOS Verify",
+    "TaskState": "Failed",
+    "StartTime": "2023-11-06T12:04:16+00:00",
+    "EndTime": "2023-11-06T12:05:31+00:00",
+    "PercentComplete": 100,
+    "HidePayload": true,
+    "TaskMonitor": "/redfish/v1/TaskMonitor/fa37JncCHryDsbzayy4cBWDxS22Jjzh",
+    "TaskStatus": "OK",
+    "Messages": [
+        {
+            "MessageId": "",
+            "RelatedProperties": [
+                ""
+            ],
+            "Message": "",
+            "MessageArgs": [
+                ""
+            ],
+            "Severity": ""
+        }
+    ],
+    "Oem": {}
+}
