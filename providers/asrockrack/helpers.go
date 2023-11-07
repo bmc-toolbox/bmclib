@@ -602,7 +602,7 @@ func (a *ASRockRack) queryHTTPS(ctx context.Context, endpoint, method string, pa
 	}
 
 	// debug dump request
-	if os.Getenv("BMCLIB_LOG_LEVEL") == "trace" {
+	if os.Getenv(constants.EnvEnableDebug) == "true" {
 		reqDump, _ := httputil.DumpRequestOut(req, true)
 		a.log.V(3).Info("trace", "url", URL, "requestDump", string(reqDump))
 	}
@@ -613,7 +613,7 @@ func (a *ASRockRack) queryHTTPS(ctx context.Context, endpoint, method string, pa
 	}
 
 	// debug dump response
-	if os.Getenv("BMCLIB_LOG_LEVEL") == "trace" {
+	if os.Getenv(constants.EnvEnableDebug) == "true" {
 		respDump, _ := httputil.DumpResponse(resp, true)
 		a.log.V(3).Info("trace", "responseDump", string(respDump))
 	}
