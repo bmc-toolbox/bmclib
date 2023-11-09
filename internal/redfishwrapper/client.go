@@ -84,12 +84,6 @@ func WithEtagMatchDisabled(d bool) Option {
 // WithLogger sets the logger on the redfish wrapper client
 func WithLogger(l *logr.Logger) Option {
 	return func(c *Client) {
-		if l == nil {
-			c.logger = logr.Discard()
-
-			return
-		}
-
 		c.logger = *l
 	}
 }
@@ -105,6 +99,7 @@ func NewClient(host, port, user, pass string, opts ...Option) *Client {
 		port:                  port,
 		user:                  user,
 		pass:                  pass,
+		logger:                logr.Discard(),
 		versionsNotCompatible: []string{},
 	}
 
