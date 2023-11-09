@@ -57,6 +57,8 @@ func resetBMC(ctx context.Context, timeout time.Duration, resetType string, b []
 
 // ResetBMCFromInterfaces identifies implementations of the BMCResetter interface and passes them to the resetBMC() wrapper method.
 func ResetBMCFromInterfaces(ctx context.Context, timeout time.Duration, resetType string, generic []interface{}) (ok bool, metadata Metadata, err error) {
+	metadata = newMetadata()
+
 	bmcSetters := make([]bmcProviders, 0)
 	for _, elem := range generic {
 		temp := bmcProviders{name: getProviderName(elem)}

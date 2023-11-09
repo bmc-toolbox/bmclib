@@ -30,9 +30,7 @@ type connectionProviders struct {
 // The reason failed ones need to be removed is so that when other methods are called (like powerstate)
 // implementations that have connections wont nil pointer error when their connection fails.
 func OpenConnectionFromInterfaces(ctx context.Context, timeout time.Duration, providers []interface{}) (opened []interface{}, metadata Metadata, err error) {
-	metadata = Metadata{
-		FailedProviderDetail: make(map[string]string),
-	}
+	metadata = newMetadata()
 
 	// Return immediately if the context is done.
 	select {
@@ -110,10 +108,8 @@ func OpenConnectionFromInterfaces(ctx context.Context, timeout time.Duration, pr
 }
 
 // closeConnection closes a connection to a BMC, trying all interface implementations passed in
-func closeConnection(ctx context.Context, c []connectionProviders) (_ Metadata, err error) {
-	var metadata = Metadata{
-		FailedProviderDetail: make(map[string]string),
-	}
+func closeConnection(ctx context.Context, c []connectionProviders) (metadata Metadata, err error) {
+	metadata = newMetadata()
 	var connClosed bool
 
 	for _, elem := range c {
@@ -138,6 +134,8 @@ func closeConnection(ctx context.Context, c []connectionProviders) (_ Metadata, 
 
 // CloseConnectionFromInterfaces identifies implementations of the Closer() interface and and passes the found implementations to the closeConnection() wrapper
 func CloseConnectionFromInterfaces(ctx context.Context, generic []interface{}) (metadata Metadata, err error) {
+	metadata = newMetadata()
+
 	closers := make([]connectionProviders, 0)
 	for _, elem := range generic {
 		temp := connectionProviders{name: getProviderName(elem)}
