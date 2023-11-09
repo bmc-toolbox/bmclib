@@ -200,7 +200,6 @@ func TestSystemsBIOSOdataID(t *testing.T) {
 
 			ctx := context.Background()
 
-			//os.Setenv("DEBUG_BMCLIB", "true")
 			client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "")
 
 			err = client.Open(ctx)

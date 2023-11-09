@@ -108,7 +108,6 @@ func TestRunRequestWithMultipartPayload(t *testing.T) {
 
 			ctx := context.Background()
 
-			//os.Setenv("DEBUG_BMCLIB", "true")
 			client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "", WithBasicAuthEnabled(true))
 
 			err = client.Open(ctx)
@@ -191,7 +190,6 @@ func TestFirmwareInstallMethodURI(t *testing.T) {
 
 			ctx := context.Background()
 
-			//os.Setenv("DEBUG_BMCLIB", "true")
 			client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "", WithBasicAuthEnabled(true))
 
 			err = client.Open(ctx)
