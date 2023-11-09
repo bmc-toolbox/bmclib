@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
+	"os"
 	"strings"
 
 	"github.com/bmc-toolbox/bmclib/v2/constants"
@@ -45,7 +45,7 @@ func (c *x12) firmwareInstallSteps(component string) ([]constants.FirmwareInstal
 }
 
 // upload firmware
-func (c *x12) firmwareUpload(ctx context.Context, component string, reader io.Reader) (taskID string, err error) {
+func (c *x12) firmwareUpload(ctx context.Context, component string, file *os.File) (taskID string, err error) {
 	if err = c.componentSupported(component); err != nil {
 		return "", err
 	}
@@ -65,7 +65,7 @@ func (c *x12) firmwareUpload(ctx context.Context, component string, reader io.Re
 		return "", err
 	}
 
-	taskID, err = c.redfish.FirmwareUpload(ctx, reader, params)
+	taskID, err = c.redfish.FirmwareUpload(ctx, file, params)
 	if err != nil {
 		if strings.Contains(err.Error(), "OemFirmwareAlreadyInUpdateMode") {
 			return "", errors.Wrap(brrs.ErrBMCColdResetRequired, "BMC currently in update mode, either continue the update OR if no update is currently running - reset the BMC")

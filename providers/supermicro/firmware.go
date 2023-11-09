@@ -2,7 +2,7 @@ package supermicro
 
 import (
 	"context"
-	"io"
+	"os"
 	"strings"
 	"time"
 
@@ -49,7 +49,7 @@ func (c *Client) FirmwareInstallSteps(ctx context.Context, component string) ([]
 	return nil, errors.Wrap(errUnexpectedModel, c.model)
 }
 
-func (c *Client) FirmwareUpload(ctx context.Context, component string, reader io.Reader) (taskID string, err error) {
+func (c *Client) FirmwareUpload(ctx context.Context, component string, file *os.File) (taskID string, err error) {
 	if err := c.firmwareInstallSupported(ctx); err != nil {
 		return "", err
 	}
@@ -62,9 +62,9 @@ func (c *Client) FirmwareUpload(ctx context.Context, component string, reader io
 
 	switch {
 	case strings.HasPrefix(strings.ToLower(c.model), "x12"):
-		return c.x12().firmwareUpload(ctx, component, reader)
+		return c.x12().firmwareUpload(ctx, component, file)
 	case strings.HasPrefix(strings.ToLower(c.model), "x11"):
-		return c.x11().firmwareUpload(ctx, component, reader)
+		return c.x11().firmwareUpload(ctx, component, file)
 	}
 
 	return "", errors.Wrap(errUnexpectedModel, c.model)
