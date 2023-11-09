@@ -33,7 +33,6 @@ var (
 )
 
 // bmc client interface implementations methods
-
 func (c *Client) FirmwareInstallSteps(ctx context.Context, component string) ([]constants.FirmwareInstallStep, error) {
 	if err := c.firmwareInstallSupported(ctx); err != nil {
 		return nil, err

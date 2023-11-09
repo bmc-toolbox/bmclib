@@ -50,18 +50,23 @@ func (c *Client) MountFloppyImage(ctx context.Context, image io.Reader) error {
 
 	var payloadBuffer bytes.Buffer
 
-	formParts := []struct {
+	type form struct {
 		name string
 		data io.Reader
-	}{
+	}
+
+	formParts := []form{
 		{
 			name: "img_file",
 			data: image,
 		},
-		{
+	}
+
+	if c.csrfToken != "" {
+		formParts = append(formParts, form{
 			name: "csrf-token",
 			data: bytes.NewBufferString(c.csrfToken),
-		},
+		})
 	}
 
 	payloadWriter := multipart.NewWriter(&payloadBuffer)
