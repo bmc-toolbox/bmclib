@@ -106,18 +106,23 @@ func (c *x11) uploadBMCFirmware(ctx context.Context, fwReader io.Reader) error {
 	var payloadBuffer bytes.Buffer
 	var err error
 
-	formParts := []struct {
+	type form struct {
 		name string
 		data io.Reader
-	}{
+	}
+
+	formParts := []form{
 		{
 			name: "fw_image",
 			data: fwReader,
 		},
-		{
+	}
+
+	if c.csrfToken != "" {
+		formParts = append(formParts, form{
 			name: "csrf-token",
 			data: bytes.NewBufferString(c.csrfToken),
-		},
+		})
 	}
 
 	payloadWriter := multipart.NewWriter(&payloadBuffer)

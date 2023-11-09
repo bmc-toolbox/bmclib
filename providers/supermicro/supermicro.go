@@ -45,6 +45,7 @@ var (
 		providers.FeatureFirmwareUpload,
 		providers.FeatureFirmwareInstallUploaded,
 		providers.FeatureFirmwareTaskStatus,
+		providers.FeatureFirmwareInstallSteps,
 	}
 )
 
@@ -168,12 +169,12 @@ func (c *Client) Open(ctx context.Context) (err error) {
 		return errors.Wrap(bmclibErrs.ErrLoginFailed, strconv.Itoa(status))
 	}
 
-	token := parseToken(contentsTopMenu)
-	if token == "" {
-		return errors.Wrap(bmclibErrs.ErrLoginFailed, "could not parse CSRF-TOKEN from page")
-	}
-
-	c.serviceClient.setCsrfToken(token)
+	// Note: older firmware version on the X11s don't use a CSRF token
+	// so here theres no explicit requirement for it to be found.
+	//
+	// X11DPH-T 01.71.11 10/25/2019
+	csrfToken := parseToken(contentsTopMenu)
+	c.serviceClient.setCsrfToken(csrfToken)
 
 	c.bmc, err = c.bmcQueryor(ctx)
 	if err != nil {
@@ -246,7 +247,7 @@ func parseToken(body []byte) string {
 		return ""
 	}
 
-	re, err := regexp.Compile(`"CSRF_TOKEN", "(?P<token>.*)"`)
+	re, err := regexp.Compile(fmt.Sprintf(`"%s", "(?P<token>.*)"`, key))
 	if err != nil {
 		return ""
 	}

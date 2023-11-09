@@ -50,6 +50,11 @@ func TestParseToken(t *testing.T) {
 			[]byte(`<script>SmcCsrfInsert ("CSRF_TOKEN", "RYjdEjWIhU+PCRFMBP2ZRPPePcQ4n3dM3s+rCgTnBBU");</script></body>`),
 			"RYjdEjWIhU+PCRFMBP2ZRPPePcQ4n3dM3s+rCgTnBBU",
 		},
+		{
+			"token with key type 5 found",
+			[]byte(`<script>SmcCsrfInsert ("CSRF-TOKEN", "RYjdEjWIhU+PCRFMBP2ZRPPePcQ4n3dM3s+rCgTnBBU");</script></body>`),
+			"RYjdEjWIhU+PCRFMBP2ZRPPePcQ4n3dM3s+rCgTnBBU",
+		},
 	}
 
 	for _, tc := range testcases {
