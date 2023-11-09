@@ -53,6 +53,8 @@ func inventory(ctx context.Context, generic []inventoryGetterProvider) (device *
 
 // GetInventoryFromInterfaces identifies implementations of the InventoryGetter interface and passes the found implementations to the inventory() wrapper method
 func GetInventoryFromInterfaces(ctx context.Context, generic []interface{}) (device *common.Device, metadata Metadata, err error) {
+	metadata = newMetadata()
+
 	implementations := make([]inventoryGetterProvider, 0)
 	for _, elem := range generic {
 		temp := inventoryGetterProvider{name: getProviderName(elem)}
