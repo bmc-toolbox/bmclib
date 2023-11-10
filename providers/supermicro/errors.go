@@ -11,6 +11,7 @@ var (
 	ErrQueryFRUInfo      = errors.New("FRU information query returned error")
 	ErrXMLAPIUnsupported = errors.New("XML API is unsupported")
 	ErrModelUnknown      = errors.New("Model number unknown")
+	ErrModelUnsupported  = errors.New("Model not supported")
 )
 
 type UnexpectedResponseError struct {

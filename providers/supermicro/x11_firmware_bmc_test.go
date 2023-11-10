@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/bmc-toolbox/bmclib/v2/constants"
+	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/assert"
 )
@@ -90,8 +91,10 @@ func TestX11SetBMCFirmwareInstallMode(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			client := NewClient(parsedURL.Hostname(), "foo", "bar", logr.Discard(), WithPort(parsedURL.Port()))
-			if err := client.x11().setBMCFirmwareInstallMode(context.Background()); err != nil {
+			serviceClient := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
+			client := &x11{serviceClient: serviceClient, log: logr.Discard()}
+
+			if err := client.setBMCFirmwareInstallMode(context.Background()); err != nil {
 				if tc.errorContains != "" {
 					assert.ErrorContains(t, err, tc.errorContains)
 
@@ -181,9 +184,11 @@ func TestX11UploadBMCFirmware(t *testing.T) {
 				defer os.Remove(binPath)
 			}
 
-			client := NewClient(parsedURL.Hostname(), "foo", "bar", logr.Discard(), WithPort(parsedURL.Port()))
-			client.csrfToken = "foobar"
-			if err := client.x11().uploadBMCFirmware(context.Background(), fwReader); err != nil {
+			serviceClient := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
+			serviceClient.csrfToken = "foobar"
+			client := &x11{serviceClient: serviceClient, log: logr.Discard()}
+
+			if err := client.uploadBMCFirmware(context.Background(), fwReader); err != nil {
 				if tc.errorContains != "" {
 					assert.ErrorContains(t, err, tc.errorContains)
 
@@ -260,9 +265,11 @@ func TestX11VerifyBMCFirmwareVersion(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			client := NewClient(parsedURL.Hostname(), "foo", "bar", logr.Discard(), WithPort(parsedURL.Port()))
-			client.csrfToken = "foobar"
-			if err := client.x11().verifyBMCFirmwareVersion(context.Background()); err != nil {
+			serviceClient := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
+			serviceClient.csrfToken = "foobar"
+			client := &x11{serviceClient: serviceClient, log: logr.Discard()}
+
+			if err := client.verifyBMCFirmwareVersion(context.Background()); err != nil {
 				if tc.errorContains != "" {
 					assert.ErrorContains(t, err, tc.errorContains)
 
@@ -339,9 +346,11 @@ func TestX11InitiateBMCFirmwareInstall(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			client := NewClient(parsedURL.Hostname(), "foo", "bar", logr.Discard(), WithPort(parsedURL.Port()))
-			client.csrfToken = "foobar"
-			if err := client.x11().initiateBMCFirmwareInstall(context.Background()); err != nil {
+			serviceClient := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
+			serviceClient.csrfToken = "foobar"
+			client := &x11{serviceClient: serviceClient, log: logr.Discard()}
+
+			if err := client.initiateBMCFirmwareInstall(context.Background()); err != nil {
 				if tc.errorContains != "" {
 					assert.ErrorContains(t, err, tc.errorContains)
 
@@ -500,9 +509,11 @@ func TestX11StatusBMCFirmwareInstall(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			client := NewClient(parsedURL.Hostname(), "foo", "bar", logr.Discard(), WithPort(parsedURL.Port()))
-			client.csrfToken = "foobar"
-			gotState, gotStatus, err := client.x11().statusBMCFirmwareInstall(context.Background())
+			serviceClient := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
+			serviceClient.csrfToken = "foobar"
+			client := &x11{serviceClient: serviceClient, log: logr.Discard()}
+
+			gotState, gotStatus, err := client.statusBMCFirmwareInstall(context.Background())
 			if err != nil {
 				if tc.errorContains != "" {
 					assert.ErrorContains(t, err, tc.errorContains)

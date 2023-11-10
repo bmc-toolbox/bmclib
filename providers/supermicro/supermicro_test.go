@@ -82,7 +82,7 @@ func TestOpen(t *testing.T) {
 				// first request to login
 				"/cgi/login.cgi": func(w http.ResponseWriter, r *http.Request) {
 					assert.Equal(t, r.Method, http.MethodPost)
-					assert.Equal(t, r.Header.Get("Content-Type"), "application/x-www-form-urlencoded")
+					assert.Equal(t, "application/x-www-form-urlencoded", r.Header.Get("Content-Type"))
 
 					b, err := io.ReadAll(r.Body)
 					if err != nil {
@@ -121,6 +121,24 @@ func TestOpen(t *testing.T) {
 
 					response := []byte(`<script>SmcCsrfInsert ("CSRF-TOKEN", "A0v9gild518yF36XZ6jqNZNsOUrHiEpkvM+QHKKVTFw");/*SmcCsrfInsert ("CSRF_TOKEN", "A0v9gild518yF36XZ6jqNZNsOUrHiEpkvM+QHKKVTFw");*/</script></body>`)
 					_, _ = w.Write(response)
+				},
+				// request for model
+				"/cgi/ipmi.cgi": func(w http.ResponseWriter, r *http.Request) {
+					assert.Equal(t, r.Method, http.MethodPost)
+					assert.Equal(t, "application/x-www-form-urlencoded; charset=UTF-8", r.Header.Get("Content-Type"))
+
+					b, err := io.ReadAll(r.Body)
+					if err != nil {
+						t.Fatal(err)
+					}
+
+					assert.Equal(t, `op=FRU_INFO.XML&r=(0,0)&_=`, string(b))
+
+					_, _ = w.Write([]byte(`<IPMI>
+					<FRU_INFO>
+					  <BOARD MFC_NAME="SMC" PART_NUM="X11SCM-F" PROD_NAME="TestProduct" SERIAL_NUM="789012345" />
+					</FRU_INFO>
+				  </IPMI>`))
 				},
 			},
 		},
@@ -166,21 +184,20 @@ func TestOpen(t *testing.T) {
 			}
 
 			client := NewClient(parsedURL.Hostname(), tc.user, tc.pass, logr.Discard(), WithPort(parsedURL.Port()))
-			if err := client.Open(context.Background()); err != nil {
-				if tc.errorContains != "" {
-					assert.ErrorContains(t, err, tc.errorContains)
+			err = client.Open(context.Background())
+			if tc.errorContains != "" {
+				assert.ErrorContains(t, err, tc.errorContains)
 
-					return
-				}
-
-				assert.Nil(t, err)
+				return
 			}
+
+			assert.Nil(t, err)
 		})
 	}
 
 }
 
-func Test_Close(t *testing.T) {
+func TestClose(t *testing.T) {
 	testcases := []struct {
 		name          string
 		errorContains string
@@ -222,21 +239,21 @@ func Test_Close(t *testing.T) {
 			}
 
 			client := NewClient(parsedURL.Hostname(), tc.user, tc.pass, logr.Discard(), WithPort(parsedURL.Port()))
-			if err := client.Close(context.Background()); err != nil {
-				if tc.errorContains != "" {
-					assert.ErrorContains(t, err, tc.errorContains)
+			err = client.Close(context.Background())
+			if tc.errorContains != "" {
+				assert.ErrorContains(t, err, tc.errorContains)
 
-					return
-				}
-
-				assert.Nil(t, err)
+				return
 			}
+
+			assert.Nil(t, err)
+			assert.Nil(t, client.serviceClient.redfish)
 		})
 	}
 
 }
 
-func Test_initScreenPreview(t *testing.T) {
+func TestInitScreenPreview(t *testing.T) {
 	testcases := []struct {
 		name          string
 		errorContains string
@@ -287,20 +304,19 @@ func Test_initScreenPreview(t *testing.T) {
 			}
 
 			client := NewClient(parsedURL.Hostname(), "foo", "bar", logr.Discard(), WithPort(parsedURL.Port()))
-			if err := client.initScreenPreview(context.Background()); err != nil {
-				if tc.errorContains != "" {
-					assert.ErrorContains(t, err, tc.errorContains)
-
-					return
-				}
-
-				assert.Nil(t, err)
+			err = client.initScreenPreview(context.Background())
+			if tc.errorContains != "" {
+				assert.ErrorContains(t, err, tc.errorContains)
+				return
 			}
+
+			assert.Nil(t, err)
+
 		})
 	}
 }
 
-func Test_fetchScreenPreview(t *testing.T) {
+func TestFetchScreenPreview(t *testing.T) {
 	testcases := []struct {
 		name          string
 		expectImage   []byte
@@ -348,11 +364,9 @@ func Test_fetchScreenPreview(t *testing.T) {
 			client := NewClient(parsedURL.Hostname(), "foo", "bar", logr.Discard(), WithPort(parsedURL.Port()))
 
 			image, err := client.fetchScreenPreview(context.Background())
-			if err != nil {
-				if tc.errorContains != "" {
-					assert.ErrorContains(t, err, tc.errorContains)
-					return
-				}
+			if tc.errorContains != "" {
+				assert.ErrorContains(t, err, tc.errorContains)
+				return
 			}
 
 			assert.Nil(t, err)
