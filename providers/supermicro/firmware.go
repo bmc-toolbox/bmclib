@@ -33,24 +33,16 @@ var (
 )
 
 // bmc client interface implementations methods
-
 func (c *Client) FirmwareInstallSteps(ctx context.Context, component string) ([]constants.FirmwareInstallStep, error) {
-	if err := c.firmwareInstallSupported(ctx); err != nil {
+	if err := c.serviceClient.supportsFirmwareInstall(ctx, c.bmc.deviceModel()); err != nil {
 		return nil, err
 	}
 
-	switch {
-	case strings.HasPrefix(strings.ToLower(c.model), "x12"):
-		return c.x12().firmwareInstallSteps(component)
-	case strings.HasPrefix(strings.ToLower(c.model), "x11"):
-		return c.x11().firmwareInstallSteps(component)
-	}
-
-	return nil, errors.Wrap(errUnexpectedModel, c.model)
+	return c.bmc.firmwareInstallSteps(component)
 }
 
 func (c *Client) FirmwareUpload(ctx context.Context, component string, file *os.File) (taskID string, err error) {
-	if err := c.firmwareInstallSupported(ctx); err != nil {
+	if err := c.serviceClient.supportsFirmwareInstall(ctx, c.bmc.deviceModel()); err != nil {
 		return "", err
 	}
 
@@ -60,62 +52,28 @@ func (c *Client) FirmwareUpload(ctx context.Context, component string, file *os.
 		return "", errors.New("remaining context deadline insufficient to perform update: " + time.Until(d).String())
 	}
 
-	switch {
-	case strings.HasPrefix(strings.ToLower(c.model), "x12"):
-		return c.x12().firmwareUpload(ctx, component, file)
-	case strings.HasPrefix(strings.ToLower(c.model), "x11"):
-		return c.x11().firmwareUpload(ctx, component, file)
-	}
-
-	return "", errors.Wrap(errUnexpectedModel, c.model)
+	return c.bmc.firmwareUpload(ctx, component, file)
 }
 
 func (c *Client) FirmwareInstallUploaded(ctx context.Context, component, uploadTaskID string) (installTaskID string, err error) {
-	if err := c.firmwareInstallSupported(ctx); err != nil {
+	if err := c.serviceClient.supportsFirmwareInstall(ctx, c.bmc.deviceModel()); err != nil {
 		return "", err
 	}
 
-	if uploadTaskID == "" {
+	// x11's don't return a upload Task ID, since the upload mechanism is not redfish
+	if !strings.HasPrefix(c.bmc.deviceModel(), "x11") && uploadTaskID == "" {
 		return "", errUploadTaskIDExpected
 	}
 
-	switch {
-	case strings.HasPrefix(strings.ToLower(c.model), "x12"):
-		return c.x12().firmwareInstallUploaded(ctx, component, uploadTaskID)
-	case strings.HasPrefix(strings.ToLower(c.model), "x11"):
-		return "", c.x11().firmwareInstallUploaded(ctx, component)
-	}
-
-	return "", errors.Wrap(errUnexpectedModel, c.model)
-
+	return c.bmc.firmwareInstallUploaded(ctx, component, uploadTaskID)
 }
 
 // FirmwareTaskStatus returns the status of a firmware related task queued on the BMC.
 func (c *Client) FirmwareTaskStatus(ctx context.Context, kind constants.FirmwareInstallStep, component, taskID, installVersion string) (state, status string, err error) {
-	if err := c.firmwareInstallSupported(ctx); err != nil {
+	if err := c.serviceClient.supportsFirmwareInstall(ctx, c.bmc.deviceModel()); err != nil {
 		return "", "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, err.Error())
 	}
 
 	component = strings.ToUpper(component)
-
-	if strings.HasPrefix(strings.ToLower(c.model), "x12") {
-		return c.x12().firmwareTaskStatus(ctx, component, taskID)
-	} else if strings.HasPrefix(strings.ToLower(c.model), "x11") {
-		return c.x11().firmwareTaskStatus(ctx, component)
-
-	}
-
-	return "", "", errors.Wrap(errUnexpectedModel, c.model)
-}
-
-func (c *Client) firmwareInstallSupported(ctx context.Context) error {
-	errBoardUnsupported := errors.New("firmware install not supported/implemented for device model")
-
-	for _, s := range supportedModels {
-		if strings.EqualFold(s, c.model) {
-			return nil
-		}
-	}
-
-	return errBoardUnsupported
+	return c.bmc.firmwareTaskStatus(ctx, component, taskID)
 }
