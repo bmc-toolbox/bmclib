@@ -14,11 +14,12 @@ import (
 	"testing"
 
 	"github.com/bmc-toolbox/bmclib/v2/constants"
+	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_setBMCFirmwareInstallMode(t *testing.T) {
+func TestX11SetBMCFirmwareInstallMode(t *testing.T) {
 	testcases := []struct {
 		name          string
 		errorContains string
@@ -90,7 +91,9 @@ func Test_setBMCFirmwareInstallMode(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			client := NewClient(parsedURL.Hostname(), "foo", "bar", logr.Discard(), WithPort(parsedURL.Port()))
+			serviceClient := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
+			client := &x11{serviceClient: serviceClient, log: logr.Discard()}
+
 			if err := client.setBMCFirmwareInstallMode(context.Background()); err != nil {
 				if tc.errorContains != "" {
 					assert.ErrorContains(t, err, tc.errorContains)
@@ -104,7 +107,7 @@ func Test_setBMCFirmwareInstallMode(t *testing.T) {
 	}
 }
 
-func Test_uploadBMCFirmware(t *testing.T) {
+func TestX11UploadBMCFirmware(t *testing.T) {
 	testcases := []struct {
 		name           string
 		errorContains  string
@@ -181,8 +184,10 @@ func Test_uploadBMCFirmware(t *testing.T) {
 				defer os.Remove(binPath)
 			}
 
-			client := NewClient(parsedURL.Hostname(), "foo", "bar", logr.Discard(), WithPort(parsedURL.Port()))
-			client.csrfToken = "foobar"
+			serviceClient := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
+			serviceClient.csrfToken = "foobar"
+			client := &x11{serviceClient: serviceClient, log: logr.Discard()}
+
 			if err := client.uploadBMCFirmware(context.Background(), fwReader); err != nil {
 				if tc.errorContains != "" {
 					assert.ErrorContains(t, err, tc.errorContains)
@@ -196,7 +201,7 @@ func Test_uploadBMCFirmware(t *testing.T) {
 	}
 }
 
-func Test_verifyBMCFirmwareVersion(t *testing.T) {
+func TestX11VerifyBMCFirmwareVersion(t *testing.T) {
 	testcases := []struct {
 		name          string
 		errorContains string
@@ -260,8 +265,10 @@ func Test_verifyBMCFirmwareVersion(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			client := NewClient(parsedURL.Hostname(), "foo", "bar", logr.Discard(), WithPort(parsedURL.Port()))
-			client.csrfToken = "foobar"
+			serviceClient := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
+			serviceClient.csrfToken = "foobar"
+			client := &x11{serviceClient: serviceClient, log: logr.Discard()}
+
 			if err := client.verifyBMCFirmwareVersion(context.Background()); err != nil {
 				if tc.errorContains != "" {
 					assert.ErrorContains(t, err, tc.errorContains)
@@ -275,7 +282,7 @@ func Test_verifyBMCFirmwareVersion(t *testing.T) {
 	}
 }
 
-func Test_initiateBMCFirmwareInstall(t *testing.T) {
+func TestX11InitiateBMCFirmwareInstall(t *testing.T) {
 	testcases := []struct {
 		name          string
 		errorContains string
@@ -339,8 +346,10 @@ func Test_initiateBMCFirmwareInstall(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			client := NewClient(parsedURL.Hostname(), "foo", "bar", logr.Discard(), WithPort(parsedURL.Port()))
-			client.csrfToken = "foobar"
+			serviceClient := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
+			serviceClient.csrfToken = "foobar"
+			client := &x11{serviceClient: serviceClient, log: logr.Discard()}
+
 			if err := client.initiateBMCFirmwareInstall(context.Background()); err != nil {
 				if tc.errorContains != "" {
 					assert.ErrorContains(t, err, tc.errorContains)
@@ -354,9 +363,10 @@ func Test_initiateBMCFirmwareInstall(t *testing.T) {
 	}
 }
 
-func Test_statusBMCFirmwareInstall(t *testing.T) {
+func TestX11StatusBMCFirmwareInstall(t *testing.T) {
 	testcases := []struct {
 		name          string
+		expectState   string
 		expectStatus  string
 		errorContains string
 		endpoint      string
@@ -365,6 +375,7 @@ func Test_statusBMCFirmwareInstall(t *testing.T) {
 		{
 			"state complete 0",
 			constants.FirmwareInstallComplete,
+			"0%",
 			"",
 			"/cgi/upgrade_process.cgi",
 			func(w http.ResponseWriter, r *http.Request) {
@@ -389,6 +400,7 @@ func Test_statusBMCFirmwareInstall(t *testing.T) {
 		{
 			"state complete 100",
 			constants.FirmwareInstallComplete,
+			"100%",
 			"",
 			"/cgi/upgrade_process.cgi",
 			func(w http.ResponseWriter, r *http.Request) {
@@ -413,6 +425,7 @@ func Test_statusBMCFirmwareInstall(t *testing.T) {
 		{
 			"state initializing",
 			constants.FirmwareInstallInitializing,
+			"1%",
 			"",
 			"/cgi/upgrade_process.cgi",
 			func(w http.ResponseWriter, r *http.Request) {
@@ -437,6 +450,7 @@ func Test_statusBMCFirmwareInstall(t *testing.T) {
 		{
 			"status running",
 			constants.FirmwareInstallRunning,
+			"95%",
 			"",
 			"/cgi/upgrade_process.cgi",
 			func(w http.ResponseWriter, r *http.Request) {
@@ -461,6 +475,7 @@ func Test_statusBMCFirmwareInstall(t *testing.T) {
 		{
 			"status unknown",
 			constants.FirmwareInstallUnknown,
+			"",
 			"session expired",
 			"/cgi/upgrade_process.cgi",
 			func(w http.ResponseWriter, r *http.Request) {
@@ -494,18 +509,22 @@ func Test_statusBMCFirmwareInstall(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			client := NewClient(parsedURL.Hostname(), "foo", "bar", logr.Discard(), WithPort(parsedURL.Port()))
-			client.csrfToken = "foobar"
-			if gotStatus, err := client.statusBMCFirmwareInstall(context.Background()); err != nil {
+			serviceClient := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
+			serviceClient.csrfToken = "foobar"
+			client := &x11{serviceClient: serviceClient, log: logr.Discard()}
+
+			gotState, gotStatus, err := client.statusBMCFirmwareInstall(context.Background())
+			if err != nil {
 				if tc.errorContains != "" {
 					assert.ErrorContains(t, err, tc.errorContains)
 
 					return
 				}
-
-				assert.Nil(t, err)
-				assert.Equal(t, tc.expectStatus, gotStatus)
 			}
+
+			assert.Nil(t, err)
+			assert.Equal(t, tc.expectState, gotState)
+			assert.Equal(t, tc.expectStatus, gotStatus)
 		})
 	}
 }
