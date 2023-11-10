@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -479,8 +480,8 @@ func (c *Client) FirmwareInstallSteps(ctx context.Context, component string) (ac
 }
 
 // FirmwareUpload just uploads the firmware for install, it returns a task ID to verify the upload status.
-func (c *Client) FirmwareUpload(ctx context.Context, component string, reader io.Reader) (uploadVerifyTaskID string, err error) {
-	uploadVerifyTaskID, metadata, err := bmc.FirmwareUploadFromInterfaces(ctx, component, reader, c.Registry.GetDriverInterfaces())
+func (c *Client) FirmwareUpload(ctx context.Context, component string, file *os.File) (uploadVerifyTaskID string, err error) {
+	uploadVerifyTaskID, metadata, err := bmc.FirmwareUploadFromInterfaces(ctx, component, file, c.Registry.GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return uploadVerifyTaskID, err
 }

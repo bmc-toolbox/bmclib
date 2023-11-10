@@ -3,6 +3,7 @@ package bmc
 import (
 	"context"
 	"io"
+	"os"
 	"testing"
 	"time"
 
@@ -304,7 +305,7 @@ type firmwareUploadTester struct {
 	returnError  error
 }
 
-func (f *firmwareUploadTester) FirmwareUpload(ctx context.Context, component string, reader io.Reader) (uploadVerifyTaskID string, err error) {
+func (f *firmwareUploadTester) FirmwareUpload(ctx context.Context, component string, file *os.File) (uploadVerifyTaskID string, err error) {
 	return f.returnTaskID, f.returnError
 }
 
@@ -316,7 +317,7 @@ func TestFirmwareUpload(t *testing.T) {
 	testCases := []struct {
 		testName           string
 		component          string
-		reader             io.Reader
+		file               *os.File
 		returnTaskID       string
 		returnError        error
 		ctxTimeout         time.Duration
@@ -336,7 +337,7 @@ func TestFirmwareUpload(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
 			defer cancel()
-			taskID, metadata, err := firmwareUpload(ctx, tc.component, tc.reader, []firmwareUploaderProvider{{tc.providerName, &testImplementation}})
+			taskID, metadata, err := firmwareUpload(ctx, tc.component, tc.file, []firmwareUploaderProvider{{tc.providerName, &testImplementation}})
 			if tc.returnError != nil {
 				assert.ErrorIs(t, err, tc.returnError)
 				return

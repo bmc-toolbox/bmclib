@@ -41,13 +41,7 @@ type RedfishUpdateServiceParameters struct {
 }
 
 // FirmwareUpload uploads and initiates the firmware install process
-func (c *Client) FirmwareUpload(ctx context.Context, reader io.Reader, params *RedfishUpdateServiceParameters) (taskID string, err error) {
-	// limit to *os.File until theres a need for other types of readers
-	updateFile, ok := reader.(*os.File)
-	if !ok {
-		return "", errors.Wrap(bmclibErrs.ErrFirmwareUpload, "method expects an *os.File object")
-	}
-
+func (c *Client) FirmwareUpload(ctx context.Context, updateFile *os.File, params *RedfishUpdateServiceParameters) (taskID string, err error) {
 	parameters, err := json.Marshal(params)
 	if err != nil {
 		return "", errors.Wrap(errUpdateParams, err.Error())
