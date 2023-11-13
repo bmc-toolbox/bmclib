@@ -19,7 +19,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (c *Client) firmwareInstallBIOS(ctx context.Context, reader io.Reader, fileSize int64) error {
+func (c *x11) firmwareUploadBIOS(ctx context.Context, reader io.Reader) error {
 	var err error
 
 	c.log.V(2).Info("set firmware install mode", "ip", c.host, "component", "BIOS", "model", c.model)
@@ -51,30 +51,24 @@ func (c *Client) firmwareInstallBIOS(ctx context.Context, reader io.Reader, file
 	c.log.V(2).Info("verifying uploaded firmware", "ip", c.host, "component", "BIOS", "model", c.model)
 
 	// 3. BMC verifies the uploaded firmware version
-	err = c.verifyBIOSFirmwareVersion(ctx)
-	if err != nil {
-		return err
-	}
+	return c.verifyBIOSFirmwareVersion(ctx)
+}
 
+func (c *x11) firmwareInstallUploadedBIOS(ctx context.Context) error {
 	c.log.V(2).Info("initiating firmware install", "ip", c.host, "component", "BIOS", "model", c.model)
 
 	// pre install requisite
-	err = c.setBIOSOp(ctx)
+	err := c.setBIOSOp(ctx)
 	if err != nil {
 		return err
 	}
 
 	// 4. Run the firmware install process
-	err = c.initiateBIOSFirmwareInstall(ctx)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return c.initiateBIOSFirmwareInstall(ctx)
 }
 
 // checks component update status
-func (c *Client) checkComponentUpdateMisc(ctx context.Context, stage string) error {
+func (c *x11) checkComponentUpdateMisc(ctx context.Context, stage string) error {
 	var payload, expectResponse []byte
 
 	switch stage {
@@ -124,7 +118,7 @@ func (c *Client) checkComponentUpdateMisc(ctx context.Context, stage string) err
 	return nil
 }
 
-func (c *Client) setBIOSFirmwareInstallMode(ctx context.Context) error {
+func (c *x11) setBIOSFirmwareInstallMode(ctx context.Context) error {
 
 	payload := []byte(`op=BIOS_UPLOAD.XML&r=(0,0)&_=`)
 
@@ -168,7 +162,7 @@ func (c *Client) setBIOSFirmwareInstallMode(ctx context.Context) error {
 
 }
 
-func (c *Client) setBiosUpdateStart(ctx context.Context) error {
+func (c *x11) setBiosUpdateStart(ctx context.Context) error {
 	payload := []byte(`op=BIOS_UPDATE_START.XML&r=(1,0)&_=`)
 
 	headers := map[string]string{
@@ -197,22 +191,27 @@ func (c *Client) setBiosUpdateStart(ctx context.Context) error {
 //
 // OO8+cjamaZZOMf6ZiGDY3Lw+7O20r5lR8aI8ByuTo3E
 // ------WebKitFormBoundaryXIAavwG4xzohdB6k--
-func (c *Client) uploadBIOSFirmware(ctx context.Context, fwReader io.Reader) error {
+func (c *x11) uploadBIOSFirmware(ctx context.Context, fwReader io.Reader) error {
 	var payloadBuffer bytes.Buffer
 	var err error
 
-	formParts := []struct {
+	type form struct {
 		name string
 		data io.Reader
-	}{
+	}
+
+	formParts := []form{
 		{
 			name: "bios_rom",
 			data: fwReader,
 		},
-		{
+	}
+
+	if c.csrfToken != "" {
+		formParts = append(formParts, form{
 			name: "csrf-token",
 			data: bytes.NewBufferString(c.csrfToken),
-		},
+		})
 	}
 
 	payloadWriter := multipart.NewWriter(&payloadBuffer)
@@ -274,7 +273,7 @@ func (c *Client) uploadBIOSFirmware(ctx context.Context, fwReader io.Reader) err
 	return nil
 }
 
-func (c *Client) verifyBIOSFirmwareVersion(ctx context.Context) error {
+func (c *x11) verifyBIOSFirmwareVersion(ctx context.Context) error {
 	payload := []byte(`op=BIOS_UPDATE_CHECK.XML&r=(0,0)&_=`)
 	expectResponse := []byte(`<BIOS_UPDATE_CHECK RES="00"/>`)
 
@@ -306,7 +305,7 @@ func (c *Client) verifyBIOSFirmwareVersion(ctx context.Context) error {
 	return nil
 }
 
-func (c *Client) setBIOSOp(ctx context.Context) error {
+func (c *x11) setBIOSOp(ctx context.Context) error {
 	payload := []byte(`op=BIOS_OPTION.XML&_=`)
 	expectResponse := []byte(`<BIOS_OP Res="0"/>`)
 
@@ -326,7 +325,7 @@ func (c *Client) setBIOSOp(ctx context.Context) error {
 	return nil
 }
 
-func (c *Client) initiateBIOSFirmwareInstall(ctx context.Context) error {
+func (c *x11) initiateBIOSFirmwareInstall(ctx context.Context) error {
 	// save all current SMBIOS, NVRAM, ME configuration
 	payload := []byte(`op=main_biosupdate&_=`)
 	expectResponse := []byte(`ok`)
@@ -356,7 +355,7 @@ func (c *Client) initiateBIOSFirmwareInstall(ctx context.Context) error {
 	return nil
 }
 
-func (c *Client) setBIOSUpdateDone(ctx context.Context) error {
+func (c *x11) setBIOSUpdateDone(ctx context.Context) error {
 	payload := []byte(`op=BIOS_UPDATE_DONE.XML&r=(1,0)&_=`)
 
 	headers := map[string]string{
@@ -377,64 +376,73 @@ func (c *Client) setBIOSUpdateDone(ctx context.Context) error {
 }
 
 // statusBIOSFirmwareInstall returns the status of the firmware install process
-func (c *Client) statusBIOSFirmwareInstall(ctx context.Context) (string, error) {
+func (c *x11) statusBIOSFirmwareInstall(ctx context.Context) (state, status string, err error) {
 	payload := []byte(`fwtype=1&_`)
 
 	headers := map[string]string{"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
-	resp, status, err := c.query(ctx, "cgi/upgrade_process.cgi", http.MethodPost, bytes.NewReader(payload), headers, 0)
+	resp, httpStatus, err := c.query(ctx, "cgi/upgrade_process.cgi", http.MethodPost, bytes.NewReader(payload), headers, 0)
 	if err != nil {
-		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, err.Error())
+		return "", "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, err.Error())
 	}
 
-	if status != http.StatusOK {
-		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, "Unexpected status code: "+strconv.Itoa(status))
+	if httpStatus != http.StatusOK {
+		return "", "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, "Unexpected http status code: "+strconv.Itoa(httpStatus))
 	}
+
+	// if theres html or no <percent> xml in the response, the session expired
+	// at the end of the install the BMC resets itself and the response is in HTML.
+	if bytes.Contains(resp, []byte(`<html>`)) || !bytes.Contains(resp, []byte(`<percent>`)) {
+		// reopen session here, check firmware install status
+		return constants.FirmwareInstallUnknown, "session expired/unexpected response", bmclibErrs.ErrSessionExpired
+	}
+
+	// as long as the response is xml, the firmware install is running
+	part := strings.Split(string(resp), "<percent>")[1]
+	percent := strings.Split(part, "</percent>")[0]
+	percent += "%"
 
 	switch {
 	// 1% indicates the file has been uploaded and the firmware install is not yet initiated
 	case bytes.Contains(resp, []byte("<status>0</status>")) && bytes.Contains(resp, []byte("<percent>1</percent>")):
-		return constants.FirmwareInstallFailed, bmclibErrs.ErrBMCColdResetRequired
+		return constants.FirmwareInstallFailed, percent, bmclibErrs.ErrBMCColdResetRequired
 
 	// 0% along with the check on the component endpoint indicates theres no update in progress
 	case (bytes.Contains(resp, []byte("<status>0</status>")) && bytes.Contains(resp, []byte("<percent>0</percent>"))):
 		if err := c.checkComponentUpdateMisc(ctx, "postUpdate"); err != nil {
 			if errors.Is(err, bmclibErrs.ErrHostPowercycleRequired) {
-				return constants.FirmwareInstallPowerCyleHost, nil
+				return constants.FirmwareInstallPowerCycleHost, percent, nil
 			}
 		}
 
-		return constants.FirmwareInstallComplete, nil
+		return constants.FirmwareInstallComplete, "all done!", nil
 
 	// status 0 and 100% indicates the update is complete and requires a few post update calls
 	case bytes.Contains(resp, []byte("<status>0</status>")) && bytes.Contains(resp, []byte("<percent>100</percent>")):
+		// TODO: create a new bmc method FirmwarePostInstall()
 		// notifies the BMC the BIOS update is done
 		if err := c.setBIOSUpdateDone(ctx); err != nil {
-			return "", err
+			return "", "", err
 		}
 
 		// tells the BMC it can get out of the BIOS update mode
 		if err := c.checkComponentUpdateMisc(ctx, "postUpdate"); err != nil {
 			if errors.Is(err, bmclibErrs.ErrHostPowercycleRequired) {
-				return constants.FirmwareInstallPowerCyleHost, nil
+				return constants.FirmwareInstallPowerCycleHost, percent, nil
 			}
 
-			return constants.FirmwareInstallPowerCyleHost, err
+			return constants.FirmwareInstallPowerCycleHost, percent, err
 		}
 
-		return constants.FirmwareInstallPowerCyleHost, nil
+		return constants.FirmwareInstallPowerCycleHost, percent, nil
 
 	// status 8 and percent 0 indicates its initializing the update
 	case bytes.Contains(resp, []byte("<status>8</status>")) && bytes.Contains(resp, []byte("<percent>0</percent>")):
-		return constants.FirmwareInstallRunning, nil
+		return constants.FirmwareInstallRunning, percent, nil
 
 	// status 8 and any other percent value indicates its running
 	case bytes.Contains(resp, []byte("<status>8</status>")) && bytes.Contains(resp, []byte("<percent>")):
-		return constants.FirmwareInstallRunning, nil
-
-	case bytes.Contains(resp, []byte(`<html>`)):
-		return constants.FirmwareInstallUnknown, bmclibErrs.ErrSessionExpired
-
-	default:
-		return constants.FirmwareInstallUnknown, nil
+		return constants.FirmwareInstallRunning, percent, nil
 	}
+
+	return constants.FirmwareInstallUnknown, "", nil
 }

@@ -180,23 +180,7 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 	return err == nil
 }
 
-// DeviceVendorModel returns the device manufacturer and model attributes
-func (c *Conn) DeviceVendorModel(ctx context.Context) (vendor, model string, err error) {
-	systems, err := c.redfishwrapper.Systems()
-	if err != nil {
-		return "", "", err
-	}
 
-	for _, sys := range systems {
-		if !compatibleOdataID(sys.ODataID, systemsOdataIDs) {
-			continue
-		}
-
-		return sys.Manufacturer, sys.Model, nil
-	}
-
-	return vendor, model, bmclibErrs.ErrRedfishSystemOdataID
-}
 
 // BmcReset power cycles the BMC
 func (c *Conn) BmcReset(ctx context.Context, resetType string) (ok bool, err error) {

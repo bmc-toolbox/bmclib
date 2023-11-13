@@ -11,10 +11,16 @@ import (
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
+	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish"
 	"github.com/stmcginnis/gofish/redfish"
 	"golang.org/x/exp/slices"
+)
+
+var (
+	ErrManagerID = errors.New("error identifying Manager Odata ID")
+	ErrBIOSID    = errors.New("error identifying System BIOS Odata ID")
 )
 
 // Client is a redfishwrapper client which wraps the gofish client.
@@ -29,6 +35,7 @@ type Client struct {
 	client                *gofish.APIClient
 	httpClient            *http.Client
 	httpClientSetupFuncs  []func(*http.Client)
+	logger                logr.Logger
 }
 
 // Option is a function applied to a *Conn
@@ -74,6 +81,13 @@ func WithEtagMatchDisabled(d bool) Option {
 	}
 }
 
+// WithLogger sets the logger on the redfish wrapper client
+func WithLogger(l *logr.Logger) Option {
+	return func(c *Client) {
+		c.logger = *l
+	}
+}
+
 // NewClient returns a redfishwrapper client
 func NewClient(host, port, user, pass string, opts ...Option) *Client {
 	if !strings.HasPrefix(host, "https://") && !strings.HasPrefix(host, "http://") {
@@ -85,6 +99,7 @@ func NewClient(host, port, user, pass string, opts ...Option) *Client {
 		port:                  port,
 		user:                  user,
 		pass:                  pass,
+		logger:                logr.Discard(),
 		versionsNotCompatible: []string{},
 	}
 
@@ -222,4 +237,57 @@ func (c *Client) PatchWithHeaders(ctx context.Context, url string, payload inter
 
 func (c *Client) Tasks(ctx context.Context) ([]*redfish.Task, error) {
 	return c.client.Service.Tasks()
+}
+
+func (c *Client) ManagerOdataID(ctx context.Context) (string, error) {
+	managers, err := c.client.Service.Managers()
+	if err != nil {
+		return "", errors.Wrap(ErrManagerID, err.Error())
+	}
+
+	for _, m := range managers {
+		if m.ID != "" {
+			return m.ODataID, nil
+		}
+	}
+
+	return "", ErrManagerID
+}
+
+func (c *Client) SystemsBIOSOdataID(ctx context.Context) (string, error) {
+	systems, err := c.client.Service.Systems()
+	if err != nil {
+		return "", errors.Wrap(ErrBIOSID, err.Error())
+	}
+
+	for _, s := range systems {
+		bios, err := s.Bios()
+		if err != nil {
+			return "", errors.Wrap(ErrBIOSID, err.Error())
+		}
+
+		if bios == nil {
+			return "", ErrBIOSID
+		}
+
+		if bios.ID != "" {
+			return bios.ODataID, nil
+		}
+	}
+
+	return "", ErrBIOSID
+}
+
+// DeviceVendorModel returns the device manufacturer and model attributes
+func (c *Client) DeviceVendorModel(ctx context.Context) (vendor, model string, err error) {
+	systems, err := c.client.Service.Systems()
+	if err != nil {
+		return "", "", err
+	}
+
+	for _, sys := range systems {
+		return sys.Manufacturer, sys.Model, nil
+	}
+
+	return vendor, model, bmclibErrs.ErrSystemVendorModel
 }

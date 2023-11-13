@@ -1,0 +1,18 @@
+{
+    "@odata.id": "/redfish/v1/UpdateService",
+    "@odata.type": "#UpdateService.v1_5_0.UpdateService",
+    "Description": "Service for Software Update",
+    "FirmwareInventory": {
+        "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory"
+    },
+    "HttpPushUri": "/redfish/v1/UpdateService/update",
+    "HttpPushUriOptions": {
+        "HttpPushUriApplyTime": {
+            "ApplyTime": "OnReset"
+        }
+    },
+    "Id": "UpdateService",
+    "MaxImageSizeBytes": 35651584,
+    "Name": "Update Service",
+    "ServiceEnabled": true
+}

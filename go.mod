@@ -17,7 +17,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.31.0
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stmcginnis/gofish v0.14.1-0.20230920133920-77490fd98fa2
+	github.com/stmcginnis/gofish v0.14.1-0.20231018151402-dddaff9168fb
 	github.com/stretchr/testify v1.8.0
 	go.uber.org/goleak v1.2.1
 	golang.org/x/crypto v0.14.0

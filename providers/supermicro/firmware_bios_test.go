@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/assert"
 )
@@ -79,7 +80,10 @@ func Test_setComponentUpdateMisc(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			client := NewClient(parsedURL.Hostname(), "foo", "bar", logr.Discard(), WithPort(parsedURL.Port()))
+			serviceClient := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
+			serviceClient.csrfToken = "foobar"
+			client := &x11{serviceClient: serviceClient, log: logr.Discard()}
+
 			if err := client.checkComponentUpdateMisc(context.Background(), tc.stage); err != nil {
 				if tc.errorContains != "" {
 					assert.ErrorContains(t, err, tc.errorContains)
@@ -165,7 +169,10 @@ func Test_setBIOSFirmwareInstallMode(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			client := NewClient(parsedURL.Hostname(), "foo", "bar", logr.Discard(), WithPort(parsedURL.Port()))
+			serviceClient := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
+			serviceClient.csrfToken = "foobar"
+			client := &x11{serviceClient: serviceClient, log: logr.Discard()}
+
 			if err := client.setBMCFirmwareInstallMode(context.Background()); err != nil {
 				if tc.errorContains != "" {
 					assert.ErrorContains(t, err, tc.errorContains)

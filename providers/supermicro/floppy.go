@@ -24,7 +24,7 @@ func (c *Client) floppyImageMounted(ctx context.Context) (bool, error) {
 		return false, err
 	}
 
-	inserted, err := c.redfish.InsertedVirtualMedia(ctx)
+	inserted, err := c.serviceClient.redfish.InsertedVirtualMedia(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -50,18 +50,23 @@ func (c *Client) MountFloppyImage(ctx context.Context, image io.Reader) error {
 
 	var payloadBuffer bytes.Buffer
 
-	formParts := []struct {
+	type form struct {
 		name string
 		data io.Reader
-	}{
+	}
+
+	formParts := []form{
 		{
 			name: "img_file",
 			data: image,
 		},
-		{
+	}
+
+	if c.serviceClient.csrfToken != "" {
+		formParts = append(formParts, form{
 			name: "csrf-token",
-			data: bytes.NewBufferString(c.csrfToken),
-		},
+			data: bytes.NewBufferString(c.serviceClient.csrfToken),
+		})
 	}
 
 	payloadWriter := multipart.NewWriter(&payloadBuffer)
@@ -103,7 +108,7 @@ func (c *Client) MountFloppyImage(ctx context.Context, image io.Reader) error {
 	}
 	payloadWriter.Close()
 
-	resp, statusCode, err := c.query(
+	resp, statusCode, err := c.serviceClient.query(
 		ctx,
 		"cgi/uimapin.cgi",
 		http.MethodPost,
@@ -133,7 +138,7 @@ func (c *Client) UnmountFloppyImage(ctx context.Context) error {
 		return nil
 	}
 
-	resp, statusCode, err := c.query(
+	resp, statusCode, err := c.serviceClient.query(
 		ctx,
 		"cgi/uimapout.cgi",
 		http.MethodPost,

@@ -30,6 +30,7 @@ const (
 	// FeatureUnmountFloppyImage means an implementation removes a floppy image that was previously uploaded.
 	FeatureUnmountFloppyImage registrar.Feature = "unmountFloppyImage"
 	// FeatureFirmwareInstall means an implementation that initiates the firmware install process
+	// FeatureFirmwareInstall means an implementation that uploads _and_ initiates the firmware install process
 	FeatureFirmwareInstall registrar.Feature = "firmwareinstall"
 	// FeatureFirmwareInstallSatus means an implementation that returns the firmware install status
 	FeatureFirmwareInstallStatus registrar.Feature = "firmwareinstallstatus"
@@ -41,4 +42,16 @@ const (
 	FeatureScreenshot registrar.Feature = "screenshot"
 	// FeatureClearSystemEventLog means an implementation that clears the BMC System Event Log (SEL)
 	FeatureClearSystemEventLog registrar.Feature = "clearsystemeventlog"
+
+	// FeatureFirmwareInstallSteps means an implementation returns the steps part of the firmware update process.
+	FeatureFirmwareInstallSteps registrar.Feature = "firmwareinstallactions"
+
+	// FeatureFirmwareUpload means an implementation that uploads firmware for installing.
+	FeatureFirmwareUpload registrar.Feature = "firmwareupload"
+
+	// 	FeatureFirmwareInstallUploaded means an implementation that installs firmware uploaded using the firmwareupload feature.
+	FeatureFirmwareInstallUploaded registrar.Feature = "firmwareinstalluploaded"
+
+	// FeatureFirmwareTaskStatus identifies an implementaton that can return the status of a firmware upload/install task.
+	FeatureFirmwareTaskStatus registrar.Feature = "firmwaretaskstatus"
 )

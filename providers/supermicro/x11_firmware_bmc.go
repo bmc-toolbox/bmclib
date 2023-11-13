@@ -25,14 +25,11 @@ var (
 	ErrMultipartForm       = errors.New("multipart form error")
 )
 
-// firmwareInstallBMC uploads and installs firmware for the BMC component
-func (c *Client) firmwareInstallBMC(ctx context.Context, reader io.Reader, fileSize int64) error {
-	var err error
-
+func (c *x11) firmwareUploadBMC(ctx context.Context, reader io.Reader) error {
 	c.log.V(2).Info("setting device to firmware install mode", "ip", c.host, "component", "BMC", "model", c.model)
 
 	// 1. set the device to flash mode - prepares the flash
-	err = c.setBMCFirmwareInstallMode(ctx)
+	err := c.setBMCFirmwareInstallMode(ctx)
 	if err != nil {
 		return err
 	}
@@ -48,23 +45,10 @@ func (c *Client) firmwareInstallBMC(ctx context.Context, reader io.Reader, fileS
 	c.log.V(2).Info("verifying uploaded firmware", "ip", c.host, "component", "BMC", "model", c.model)
 
 	// 3. BMC verifies the uploaded firmware version
-	err = c.verifyBMCFirmwareVersion(ctx)
-	if err != nil {
-		return err
-	}
-
-	c.log.V(2).Info("initiating firmware install", "ip", c.host, "component", "BMC", "model", c.model)
-
-	// 4. Run the firmware install process
-	err = c.initiateBMCFirmwareInstall(ctx)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return c.verifyBMCFirmwareVersion(ctx)
 }
 
-func (c *Client) setBMCFirmwareInstallMode(ctx context.Context) error {
+func (c *x11) setBMCFirmwareInstallMode(ctx context.Context) error {
 	payload := []byte(`op=LOCK_UPLOAD_FW.XML&r=(0,0)&_=`)
 
 	headers := map[string]string{
@@ -118,22 +102,27 @@ func (c *Client) setBMCFirmwareInstallMode(ctx context.Context) error {
 //
 // JhVe1BUiWzOVQdvXUKn7ClsQ5xffq8StMOxG7ZNlpKs
 // -----------------------------348113760313214626342869148824--
-func (c *Client) uploadBMCFirmware(ctx context.Context, fwReader io.Reader) error {
+func (c *x11) uploadBMCFirmware(ctx context.Context, fwReader io.Reader) error {
 	var payloadBuffer bytes.Buffer
 	var err error
 
-	formParts := []struct {
+	type form struct {
 		name string
 		data io.Reader
-	}{
+	}
+
+	formParts := []form{
 		{
 			name: "fw_image",
 			data: fwReader,
 		},
-		{
+	}
+
+	if c.csrfToken != "" {
+		formParts = append(formParts, form{
 			name: "csrf-token",
 			data: bytes.NewBufferString(c.csrfToken),
-		},
+		})
 	}
 
 	payloadWriter := multipart.NewWriter(&payloadBuffer)
@@ -195,7 +184,7 @@ func (c *Client) uploadBMCFirmware(ctx context.Context, fwReader io.Reader) erro
 	return nil
 }
 
-func (c *Client) verifyBMCFirmwareVersion(ctx context.Context) error {
+func (c *x11) verifyBMCFirmwareVersion(ctx context.Context) error {
 	errUnexpectedResponse := errors.New("unexpected response")
 
 	payload := []byte(`op=UPLOAD_FW_VERSION.XML&r=(0,0)&_=`)
@@ -221,7 +210,7 @@ func (c *Client) verifyBMCFirmwareVersion(ctx context.Context) error {
 }
 
 // initiate BMC firmware install process
-func (c *Client) initiateBMCFirmwareInstall(ctx context.Context) error {
+func (c *x11) initiateBMCFirmwareInstall(ctx context.Context) error {
 	// preserve all configuration, sensor data and SSL certs(?) during upgrade
 	payload := "op=main_fwupdate&preserve_config=1&preserve_sdr=1&preserve_ssl=1"
 
@@ -254,42 +243,43 @@ func (c *Client) initiateBMCFirmwareInstall(ctx context.Context) error {
 }
 
 // statusBMCFirmwareInstall returns the status of the firmware install process
-func (c *Client) statusBMCFirmwareInstall(ctx context.Context) (string, error) {
+func (c *x11) statusBMCFirmwareInstall(ctx context.Context) (state, status string, err error) {
 	payload := []byte(`fwtype=0&_`)
 
 	headers := map[string]string{"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
-	resp, status, err := c.query(ctx, "cgi/upgrade_process.cgi", http.MethodPost, bytes.NewReader(payload), headers, 0)
+	resp, httpStatus, err := c.query(ctx, "cgi/upgrade_process.cgi", http.MethodPost, bytes.NewReader(payload), headers, 0)
 	if err != nil {
-		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, err.Error())
+		return constants.FirmwareInstallUnknown, "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, err.Error())
 	}
 
-	if status != http.StatusOK {
-		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, "Unexpected status code: "+strconv.Itoa(status))
+	if httpStatus != http.StatusOK {
+		return constants.FirmwareInstallUnknown, "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, "Unexpected http status code: "+strconv.Itoa(httpStatus))
+	}
+
+	// if theres html or no <percent> xml in the response, the session expired
+	// at the end of the install the BMC resets itself and the response is in HTML.
+	if bytes.Contains(resp, []byte(`<html>`)) || !bytes.Contains(resp, []byte(`<percent>`)) {
+		// reopen session here, check firmware install status
+		return constants.FirmwareInstallUnknown, "session expired/unexpected response", bmclibErrs.ErrSessionExpired
 	}
 
 	// as long as the response is xml, the firmware install is running
-	// at the end of the install the BMC resets itself and the response is in HTML
-	//
-	switch {
+	part := strings.Split(string(resp), "<percent>")[1]
+	percent := strings.Split(part, "</percent>")[0]
+	percent += "%"
 
+	switch percent {
 	// TODO:
-	// - look up model on device and limit the parent methods to tested models.
-	// - fix up percent value checks, html indicates session has been terminated
 	// X11DPH-T - returns percent 0 all the time
 	//
 	// 0% indicates its either not running or complete
-	case bytes.Contains(resp, []byte("<percent>0</percent>")) || bytes.Contains(resp, []byte("<percent>100</percent>")):
-		return constants.FirmwareInstallComplete, nil
+	case "0%", "100%":
+		return constants.FirmwareInstallComplete, percent, nil
 	// until 2% its initializing
-	case bytes.Contains(resp, []byte(`<percent>1</percent>`)) || bytes.Contains(resp, []byte(`<percent>2</percent>`)):
-		return constants.FirmwareInstallInitializing, nil
+	case "1%", "2%":
+		return constants.FirmwareInstallInitializing, percent, nil
 	// any other percent value indicates its active
-	case bytes.Contains(resp, []byte(`<percent>`)):
-		return constants.FirmwareInstallRunning, nil
-	case bytes.Contains(resp, []byte(`<html>`)):
-		// reopen session here, check firmware install status
-		return constants.FirmwareInstallUnknown, bmclibErrs.ErrSessionExpired
 	default:
-		return constants.FirmwareInstallUnknown, nil
+		return constants.FirmwareInstallRunning, percent, nil
 	}
 }
