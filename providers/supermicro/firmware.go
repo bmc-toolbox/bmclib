@@ -28,7 +28,6 @@ var (
 		"X12STH-SYS",
 	}
 
-	errUnexpectedModel      = errors.New("unexpected device model")
 	errUploadTaskIDExpected = errors.New("expected an firmware upload taskID")
 )
 
