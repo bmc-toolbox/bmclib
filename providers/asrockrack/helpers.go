@@ -226,6 +226,11 @@ func (a *ASRockRack) uploadFirmware(ctx context.Context, endpoint string, fwRead
 	fieldName, fileName := "fwimage", "image"
 	contentLength := multipartSize(fieldName, fileName) + fileSize
 
+	// Before reading the file, rewind to the beginning
+	if file, ok := fwReader.(*os.File); ok {
+		_, _ = file.Seek(0, 0)
+	}
+
 	// setup pipe
 	pipeReader, pipeWriter := io.Pipe()
 	defer pipeReader.Close()
