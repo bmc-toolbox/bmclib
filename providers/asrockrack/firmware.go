@@ -184,6 +184,13 @@ func (a *ASRockRack) firmwareUpdateStatus(ctx context.Context, component string,
 
 	switch installStatus {
 	case versionStrMatch:
+		if progress == nil {
+			// TODO: we should pass the force parameter to firmwareUpdateStatus,
+			// so that we can know if we expect a version change or not
+			a.log.V(3).Info("Nil progress + no version change -> unknown")
+			return constants.FirmwareInstallUnknown, nil
+		}
+
 		return constants.FirmwareInstallComplete, nil
 	case versionStrEmpty:
 		return constants.FirmwareInstallUnknown, nil
