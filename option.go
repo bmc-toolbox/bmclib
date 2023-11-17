@@ -10,6 +10,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/providers/rpc"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
+	oteltrace "go.opentelemetry.io/otel/trace"
 )
 
 // Option for setting optional Client values
@@ -148,5 +149,15 @@ func WithDellRedfishUseBasicAuth(useBasicAuth bool) Option {
 func WithRPCOpt(opt rpc.Provider) Option {
 	return func(args *Client) {
 		args.providerConfig.rpc = opt
+	}
+}
+
+// WithTracerProvider specifies a tracer provider to use for creating a tracer.
+// If none is specified a noop tracerprovider is used.
+func WithTracerProvider(provider oteltrace.TracerProvider) Option {
+	return func(args *Client) {
+		if provider != nil {
+			args.traceprovider = provider
+		}
 	}
 }
