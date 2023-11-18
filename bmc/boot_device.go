@@ -14,10 +14,27 @@ type BootDeviceSetter interface {
 	BootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error)
 }
 
+// BootDeviceOverrideGetter gets boot override settings for a machine
+type BootDeviceOverrideGetter interface {
+	BootDeviceOverrideGet(ctx context.Context) (override *BootDeviceOverride, err error)
+}
+
 // bootDeviceProviders is an internal struct to correlate an implementation/provider and its name
 type bootDeviceProviders struct {
 	name             string
 	bootDeviceSetter BootDeviceSetter
+}
+
+// bootOverrideProvider is an internal struct to correlate an implementation/provider and its name
+type bootOverrideProvider struct {
+	name          string
+	bootOverrider BootDeviceOverrideGetter
+}
+
+type BootDeviceOverride struct {
+	IsPersistent bool
+	IsEFIBoot    bool
+	Device       string
 }
 
 // setBootDevice sets the next boot device.
@@ -77,4 +94,68 @@ func SetBootDeviceFromInterfaces(ctx context.Context, timeout time.Duration, boo
 		return ok, metadata, multierror.Append(err, errors.New("no BootDeviceSetter implementations found"))
 	}
 	return setBootDevice(ctx, timeout, bootDevice, setPersistent, efiBoot, bdSetters)
+}
+
+// getBootDeviceOverride gets the boot device override settings for the given provider,
+// and updates the given metadata with provider attempts and errors.
+func getBootDeviceOverride(
+	ctx context.Context,
+	timeout time.Duration,
+	provider *bootOverrideProvider,
+	metadata *Metadata,
+) (override *BootDeviceOverride, err error) {
+	select {
+	case <-ctx.Done():
+		err = multierror.Append(err, ctx.Err())
+		return nil, err
+	default:
+		metadata.ProvidersAttempted = append(metadata.ProvidersAttempted, provider.name)
+		ctx, cancel := context.WithTimeout(ctx, timeout)
+		defer cancel()
+
+		override, err = provider.bootOverrider.BootDeviceOverrideGet(ctx)
+		if err != nil {
+			metadata.FailedProviderDetail[provider.name] = err.Error()
+			return nil, nil
+		}
+
+		metadata.SuccessfulProvider = provider.name
+		return override, nil
+	}
+}
+
+// GetBootDeviceOverrideFromInterface will get boot device override settings from the first successful
+// call to a BootDeviceOverrideGetter in the array of providers.
+func GetBootDeviceOverrideFromInterface(
+	ctx context.Context,
+	timeout time.Duration,
+	providers []interface{},
+) (*BootDeviceOverride, Metadata, error) {
+	var err error
+	metadata := Metadata{
+		FailedProviderDetail: make(map[string]string),
+	}
+
+	for _, elem := range providers {
+		provider := &bootOverrideProvider{name: getProviderName(elem)}
+		switch p := elem.(type) {
+		case BootDeviceOverrideGetter:
+			provider.bootOverrider = p
+			override, getErr := getBootDeviceOverride(ctx, timeout, provider, &metadata)
+			if getErr != nil || override != nil {
+				return override, metadata, getErr
+			}
+		default:
+			e := fmt.Errorf("not a BootDeviceOverrideGetter implementation: %T", p)
+			err = multierror.Append(err, e)
+		}
+	}
+
+	if len(metadata.ProvidersAttempted) == 0 {
+		err = multierror.Append(err, errors.New("no BootDeviceOverrideGetter implementations found"))
+	} else {
+		err = multierror.Append(err, errors.New("failed to get boot device override settings"))
+	}
+
+	return nil, metadata, err
 }

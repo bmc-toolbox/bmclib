@@ -6,8 +6,10 @@ import (
 	"testing"
 	"time"
 
+	"fmt"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/go-multierror"
+	"github.com/stretchr/testify/assert"
 )
 
 type bootDeviceTester struct {
@@ -114,6 +116,115 @@ func TestSetBootDeviceFromInterfaces(t *testing.T) {
 					t.Fatal(diff)
 				}
 			}
+		})
+	}
+}
+
+type mockBootDeviceOverrideGetter struct {
+	overrideReturn *BootDeviceOverride
+	errReturn      error
+}
+
+func (m *mockBootDeviceOverrideGetter) Name() string {
+	return "Mock"
+}
+
+func (m *mockBootDeviceOverrideGetter) BootDeviceOverrideGet(_ context.Context) (override *BootDeviceOverride, err error) {
+	return m.overrideReturn, m.errReturn
+}
+
+func TestBootDeviceOverrideGet(t *testing.T) {
+	successOverride := &BootDeviceOverride{
+		IsPersistent: false,
+		IsEFIBoot:    true,
+		Device:       "disk",
+	}
+
+	successMetadata := &Metadata{
+		SuccessfulProvider:   "Mock",
+		ProvidersAttempted:   []string{"Mock"},
+		SuccessfulOpenConns:  nil,
+		SuccessfulCloseConns: []string(nil),
+		FailedProviderDetail: map[string]string{},
+	}
+
+	mixedMetadata := &Metadata{
+		SuccessfulProvider:   "Mock",
+		ProvidersAttempted:   []string{"Mock", "Mock"},
+		SuccessfulOpenConns:  nil,
+		SuccessfulCloseConns: []string(nil),
+		FailedProviderDetail: map[string]string{"Mock": "foo-failure"},
+	}
+
+	failMetadata := &Metadata{
+		SuccessfulProvider:   "",
+		ProvidersAttempted:   []string{"Mock"},
+		SuccessfulOpenConns:  nil,
+		SuccessfulCloseConns: []string(nil),
+		FailedProviderDetail: map[string]string{"Mock": "foo-failure"},
+	}
+
+	emptyMetadata := &Metadata{
+		FailedProviderDetail: make(map[string]string),
+	}
+
+	testCases := []struct {
+		name             string
+		expectedErrorMsg string
+		expectedMetadata *Metadata
+		expectedOverride *BootDeviceOverride
+		getters          []interface{}
+	}{
+		{
+			name:             "success",
+			expectedMetadata: successMetadata,
+			expectedOverride: successOverride,
+			getters: []interface{}{
+				&mockBootDeviceOverrideGetter{overrideReturn: successOverride},
+			},
+		},
+		{
+			name:             "multiple getters",
+			expectedMetadata: mixedMetadata,
+			expectedOverride: successOverride,
+			getters: []interface{}{
+				"not a getter",
+				&mockBootDeviceOverrideGetter{errReturn: fmt.Errorf("foo-failure")},
+				&mockBootDeviceOverrideGetter{overrideReturn: successOverride},
+			},
+		},
+		{
+			name:             "error",
+			expectedMetadata: failMetadata,
+			expectedErrorMsg: "failed to get boot device override settings",
+			getters: []interface{}{
+				&mockBootDeviceOverrideGetter{errReturn: fmt.Errorf("foo-failure")},
+			},
+		},
+		{
+			name:             "nil BootDeviceOverrideGetters",
+			expectedMetadata: emptyMetadata,
+			expectedErrorMsg: "no BootDeviceOverrideGetter implementations found",
+		},
+		{
+			name:             "nil BootDeviceOverrideGetter",
+			expectedMetadata: emptyMetadata,
+			expectedErrorMsg: "no BootDeviceOverrideGetter implementations found",
+			getters:          []interface{}{nil},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			override, metadata, err := GetBootDeviceOverrideFromInterface(context.Background(), 0, testCase.getters)
+
+			if testCase.expectedErrorMsg != "" {
+				assert.ErrorContains(t, err, testCase.expectedErrorMsg)
+			} else {
+				assert.Nil(t, err)
+			}
+			assert.Equal(t, testCase.expectedOverride, override)
+			assert.Equal(t, testCase.expectedMetadata, &metadata)
 		})
 	}
 }
