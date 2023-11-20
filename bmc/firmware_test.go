@@ -230,7 +230,7 @@ func TestFirmwareInstallUploaded(t *testing.T) {
 		providersAttempted int
 	}{
 		{"success with metadata", common.SlugBIOS, "1234", "5678", nil, 5 * time.Second, "foo", 1},
-		{"failure with metadata", common.SlugBIOS, "1234", "", errors.ErrNon200Response, 5 * time.Second, "foo", 1},
+		{"failure with metadata", common.SlugBIOS, "1234", "", bmclibErrs.ErrNon200Response, 5 * time.Second, "foo", 1},
 		{"failure with context timeout", common.SlugBIOS, "1234", "", context.DeadlineExceeded, 1 * time.Nanosecond, "foo", 1},
 	}
 
@@ -325,7 +325,7 @@ func TestFirmwareUpload(t *testing.T) {
 		providersAttempted int
 	}{
 		{"success with metadata", common.SlugBIOS, nil, "1234", nil, 5 * time.Second, "foo", 1},
-		{"failure with metadata", common.SlugBIOS, nil, "1234", errors.ErrNon200Response, 5 * time.Second, "foo", 1},
+		{"failure with metadata", common.SlugBIOS, nil, "1234", bmclibErrs.ErrNon200Response, 5 * time.Second, "foo", 1},
 		{"failure with context timeout", common.SlugBIOS, nil, "1234", context.DeadlineExceeded, 1 * time.Nanosecond, "foo", 1},
 	}
 
@@ -430,7 +430,7 @@ func TestFirmwareInstallSteps(t *testing.T) {
 		providersAttempted int
 	}{
 		{"success with metadata", common.SlugBIOS, []constants.FirmwareInstallStep{constants.FirmwareInstallStepUpload, constants.FirmwareInstallStepInstallStatus}, nil, 5 * time.Second, "foo", 1},
-		{"failure with metadata", common.SlugBIOS, nil, errors.ErrNon200Response, 5 * time.Second, "foo", 1},
+		{"failure with metadata", common.SlugBIOS, nil, bmclibErrs.ErrNon200Response, 5 * time.Second, "foo", 1},
 		{"failure with context timeout", common.SlugBIOS, nil, context.DeadlineExceeded, 1 * time.Nanosecond, "foo", 1},
 	}
 
