@@ -243,24 +243,24 @@ func (c *x11) initiateBMCFirmwareInstall(ctx context.Context) error {
 }
 
 // statusBMCFirmwareInstall returns the status of the firmware install process
-func (c *x11) statusBMCFirmwareInstall(ctx context.Context) (state, status string, err error) {
+func (c *x11) statusBMCFirmwareInstall(ctx context.Context) (state constants.TaskState, status string, err error) {
 	payload := []byte(`fwtype=0&_`)
 
 	headers := map[string]string{"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
 	resp, httpStatus, err := c.query(ctx, "cgi/upgrade_process.cgi", http.MethodPost, bytes.NewReader(payload), headers, 0)
 	if err != nil {
-		return constants.FirmwareInstallUnknown, "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, err.Error())
+		return constants.Unknown, "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, err.Error())
 	}
 
 	if httpStatus != http.StatusOK {
-		return constants.FirmwareInstallUnknown, "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, "Unexpected http status code: "+strconv.Itoa(httpStatus))
+		return constants.Unknown, "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, "Unexpected http status code: "+strconv.Itoa(httpStatus))
 	}
 
 	// if theres html or no <percent> xml in the response, the session expired
 	// at the end of the install the BMC resets itself and the response is in HTML.
 	if bytes.Contains(resp, []byte(`<html>`)) || !bytes.Contains(resp, []byte(`<percent>`)) {
 		// reopen session here, check firmware install status
-		return constants.FirmwareInstallUnknown, "session expired/unexpected response", bmclibErrs.ErrSessionExpired
+		return constants.Unknown, "session expired/unexpected response", bmclibErrs.ErrSessionExpired
 	}
 
 	// as long as the response is xml, the firmware install is running
@@ -274,12 +274,12 @@ func (c *x11) statusBMCFirmwareInstall(ctx context.Context) (state, status strin
 	//
 	// 0% indicates its either not running or complete
 	case "0%", "100%":
-		return constants.FirmwareInstallComplete, percent, nil
+		return constants.Complete, percent, nil
 	// until 2% its initializing
 	case "1%", "2%":
-		return constants.FirmwareInstallInitializing, percent, nil
+		return constants.Initializing, percent, nil
 	// any other percent value indicates its active
 	default:
-		return constants.FirmwareInstallRunning, percent, nil
+		return constants.Running, percent, nil
 	}
 }

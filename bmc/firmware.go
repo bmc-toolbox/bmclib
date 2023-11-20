@@ -406,7 +406,7 @@ type FirmwareTaskVerifier interface {
 	// return values:
 	// state - returns one of the FirmwareTask statuses (see devices/constants.go).
 	// status - returns firmware task progress or other arbitrary task information.
-	FirmwareTaskStatus(ctx context.Context, kind bconsts.FirmwareInstallStep, component, taskID, installVersion string) (state string, status string, err error)
+	FirmwareTaskStatus(ctx context.Context, kind bconsts.FirmwareInstallStep, component, taskID, installVersion string) (state constants.TaskState, status string, err error)
 }
 
 // firmwareTaskVerifierProvider is an internal struct to correlate an implementation/provider and its name
@@ -416,7 +416,7 @@ type firmwareTaskVerifierProvider struct {
 }
 
 // firmwareTaskStatus returns the status of the firmware upload process.
-func firmwareTaskStatus(ctx context.Context, kind bconsts.FirmwareInstallStep, component, taskID, installVersion string, generic []firmwareTaskVerifierProvider) (state, status string, metadata Metadata, err error) {
+func firmwareTaskStatus(ctx context.Context, kind bconsts.FirmwareInstallStep, component, taskID, installVersion string, generic []firmwareTaskVerifierProvider) (state constants.TaskState, status string, metadata Metadata, err error) {
 	var metadataLocal Metadata
 
 	for _, elem := range generic {
@@ -446,7 +446,7 @@ func firmwareTaskStatus(ctx context.Context, kind bconsts.FirmwareInstallStep, c
 }
 
 // FirmwareTaskStatusFromInterfaces identifies implementations of the FirmwareTaskVerifier interface and passes the found implementations to the firmwareTaskStatus() wrapper.
-func FirmwareTaskStatusFromInterfaces(ctx context.Context, kind bconsts.FirmwareInstallStep, component, taskID, installVersion string, generic []interface{}) (state, status string, metadata Metadata, err error) {
+func FirmwareTaskStatusFromInterfaces(ctx context.Context, kind bconsts.FirmwareInstallStep, component, taskID, installVersion string, generic []interface{}) (state constants.TaskState, status string, metadata Metadata, err error) {
 	metadata = newMetadata()
 
 	implementations := make([]firmwareTaskVerifierProvider, 0)

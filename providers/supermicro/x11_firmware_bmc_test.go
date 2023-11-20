@@ -366,7 +366,7 @@ func TestX11InitiateBMCFirmwareInstall(t *testing.T) {
 func TestX11StatusBMCFirmwareInstall(t *testing.T) {
 	testcases := []struct {
 		name          string
-		expectState   string
+		expectState   constants.TaskState
 		expectStatus  string
 		errorContains string
 		endpoint      string
@@ -374,7 +374,7 @@ func TestX11StatusBMCFirmwareInstall(t *testing.T) {
 	}{
 		{
 			"state complete 0",
-			constants.FirmwareInstallComplete,
+			constants.Complete,
 			"0%",
 			"",
 			"/cgi/upgrade_process.cgi",
@@ -399,7 +399,7 @@ func TestX11StatusBMCFirmwareInstall(t *testing.T) {
 		},
 		{
 			"state complete 100",
-			constants.FirmwareInstallComplete,
+			constants.Complete,
 			"100%",
 			"",
 			"/cgi/upgrade_process.cgi",
@@ -424,7 +424,7 @@ func TestX11StatusBMCFirmwareInstall(t *testing.T) {
 		},
 		{
 			"state initializing",
-			constants.FirmwareInstallInitializing,
+			constants.Initializing,
 			"1%",
 			"",
 			"/cgi/upgrade_process.cgi",
@@ -449,7 +449,7 @@ func TestX11StatusBMCFirmwareInstall(t *testing.T) {
 		},
 		{
 			"status running",
-			constants.FirmwareInstallRunning,
+			constants.Running,
 			"95%",
 			"",
 			"/cgi/upgrade_process.cgi",
@@ -474,7 +474,7 @@ func TestX11StatusBMCFirmwareInstall(t *testing.T) {
 		},
 		{
 			"status unknown",
-			constants.FirmwareInstallUnknown,
+			constants.Unknown,
 			"",
 			"session expired",
 			"/cgi/upgrade_process.cgi",

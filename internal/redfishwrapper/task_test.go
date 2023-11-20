@@ -13,6 +13,76 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestConvertTaskState(t *testing.T) {
+	testCases := []struct {
+		testName string
+		state    string
+		expected constants.TaskState
+	}{
+		{"starting state", "starting", constants.Initializing},
+		{"downloading state", "downloading", constants.Initializing},
+		{"downloaded state", "downloaded", constants.Initializing},
+		{"running state", "running", constants.Running},
+		{"stopping state", "stopping", constants.Running},
+		{"cancelling state", "cancelling", constants.Running},
+		{"scheduling state", "scheduling", constants.Running},
+		{"pending state", "pending", constants.Queued},
+		{"new state", "new", constants.Queued},
+		{"scheduled state", "scheduled", constants.PowerCycleHost},
+		{"interrupted state", "interrupted", constants.Failed},
+		{"killed state", "killed", constants.Failed},
+		{"exception state", "exception", constants.Failed},
+		{"cancelled state", "cancelled", constants.Failed},
+		{"suspended state", "suspended", constants.Failed},
+		{"failed state", "failed", constants.Failed},
+		{"completed state", "completed", constants.Complete},
+		{"unknown state", "unknown_state", constants.Unknown},
+	}
+
+	client := Client{}
+	for _, tc := range testCases {
+		t.Run(tc.testName, func(t *testing.T) {
+			result := client.ConvertTaskState(tc.state)
+			assert.Equal(t, tc.expected, result)
+		})
+	}
+}
+
+func TestTaskStateActive(t *testing.T) {
+	testCases := []struct {
+		testName  string
+		taskState constants.TaskState
+		expected  bool
+		err       error
+	}{
+		{"active initializing", constants.Initializing, true, nil},
+		{"active running", constants.Running, true, nil},
+		{"active queued", constants.Queued, true, nil},
+		{"inactive complete", constants.Complete, false, nil},
+		{"inactive failed", constants.Failed, false, nil},
+		{"unknown state", "foobar", false, errUnexpectedTaskState},
+	}
+
+	client := &Client{}
+
+	for _, tc := range testCases {
+		t.Run(tc.testName, func(t *testing.T) {
+			active, err := client.TaskStateActive(tc.taskState)
+
+			if tc.err != nil {
+				assert.ErrorIs(t, err, tc.err)
+				return
+			}
+
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			assert.Equal(t, tc.expected, active)
+		})
+	}
+}
+
 func TestTaskStatus(t *testing.T) {
 	type hmap map[string]func(http.ResponseWriter, *http.Request)
 	withHandler := func(s string, f func(http.ResponseWriter, *http.Request)) hmap {
@@ -29,7 +99,7 @@ func TestTaskStatus(t *testing.T) {
 
 	tests := map[string]struct {
 		hmap           hmap
-		expectedState  string
+		expectedState  constants.TaskState
 		expectedStatus string
 		expectedErr    error
 	}{
@@ -38,7 +108,7 @@ func TestTaskStatus(t *testing.T) {
 				"/redfish/v1/TaskService/Tasks/1",
 				endpointFunc(t, "tasks/tasks_1_starting.json"),
 			),
-			expectedState:  constants.FirmwareInstallInitializing,
+			expectedState:  constants.Initializing,
 			expectedStatus: "id: 1, state: Starting, status: OK",
 			expectedErr:    nil,
 		},
@@ -47,7 +117,7 @@ func TestTaskStatus(t *testing.T) {
 				"/redfish/v1/TaskService/Tasks/1",
 				endpointFunc(t, "tasks/tasks_1_running.json"),
 			),
-			expectedState:  constants.FirmwareInstallRunning,
+			expectedState:  constants.Running,
 			expectedStatus: "id: 1, state: Running, status: OK",
 			expectedErr:    nil,
 		},
@@ -56,7 +126,7 @@ func TestTaskStatus(t *testing.T) {
 				"/redfish/v1/TaskService/Tasks/1",
 				endpointFunc(t, "tasks/tasks_1_pending.json"),
 			),
-			expectedState:  constants.FirmwareInstallQueued,
+			expectedState:  constants.Queued,
 			expectedStatus: "id: 1, state: Pending, status: OK",
 			expectedErr:    nil,
 		},
@@ -65,7 +135,7 @@ func TestTaskStatus(t *testing.T) {
 				"/redfish/v1/TaskService/Tasks/1",
 				endpointFunc(t, "tasks/tasks_1_scheduled.json"),
 			),
-			expectedState:  constants.FirmwareInstallPowerCycleHost,
+			expectedState:  constants.PowerCycleHost,
 			expectedStatus: "id: 1, state: Scheduled, status: OK",
 			expectedErr:    nil,
 		},
@@ -74,7 +144,7 @@ func TestTaskStatus(t *testing.T) {
 				"/redfish/v1/TaskService/Tasks/1",
 				endpointFunc(t, "tasks/tasks_1_failed.json"),
 			),
-			expectedState:  constants.FirmwareInstallFailed,
+			expectedState:  constants.Failed,
 			expectedStatus: "id: 1, state: Failed, status: OK",
 			expectedErr:    nil,
 		},
@@ -83,7 +153,7 @@ func TestTaskStatus(t *testing.T) {
 				"/redfish/v1/TaskService/Tasks/1",
 				endpointFunc(t, "tasks/tasks_1_completed.json"),
 			),
-			expectedState:  constants.FirmwareInstallComplete,
+			expectedState:  constants.Complete,
 			expectedStatus: "id: 1, state: Completed, status: OK",
 			expectedErr:    nil,
 		},
@@ -92,7 +162,7 @@ func TestTaskStatus(t *testing.T) {
 				"/redfish/v1/TaskService/Tasks/1",
 				endpointFunc(t, "tasks/tasks_1_unknown.json"),
 			),
-			expectedState:  constants.FirmwareInstallUnknown,
+			expectedState:  constants.Unknown,
 			expectedStatus: "id: 1, state: foobared, status: OK",
 			expectedErr:    nil,
 		},

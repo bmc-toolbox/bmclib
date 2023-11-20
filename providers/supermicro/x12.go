@@ -294,7 +294,7 @@ func (c *x12) firmwareInstallUploaded(ctx context.Context, component, uploadTask
 	return c.redfish.StartUpdateForUploadedFirmware(ctx)
 }
 
-func (c *x12) firmwareTaskStatus(ctx context.Context, component, taskID string) (state, status string, err error) {
+func (c *x12) firmwareTaskStatus(ctx context.Context, component, taskID string) (state constants.TaskState, status string, err error) {
 	if err = c.supportsInstall(component); err != nil {
 		return "", "", errors.Wrap(brrs.ErrFirmwareTaskStatus, err.Error())
 	}
