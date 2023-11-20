@@ -623,7 +623,7 @@ func (c *Client) FirmwareUpload(ctx context.Context, component string, file *os.
 }
 
 // FirmwareTaskStatus pass through library function to check firmware task statuses
-func (c *Client) FirmwareTaskStatus(ctx context.Context, kind constants.FirmwareInstallStep, component, taskID, installVersion string) (state, status string, err error) {
+func (c *Client) FirmwareTaskStatus(ctx context.Context, kind constants.FirmwareInstallStep, component, taskID, installVersion string) (state constants.TaskState, status string, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "FirmwareTaskStatus")
 	defer span.End()
 
