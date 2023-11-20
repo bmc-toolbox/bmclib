@@ -67,6 +67,8 @@ func firmwareInstall(ctx context.Context, component, operationApplyTime string, 
 
 // FirmwareInstallFromInterfaces identifies implementations of the FirmwareInstaller interface and passes the found implementations to the firmwareInstall() wrapper
 func FirmwareInstallFromInterfaces(ctx context.Context, component, operationApplyTime string, forceInstall bool, reader io.Reader, generic []interface{}) (taskID string, metadata Metadata, err error) {
+	metadata = newMetadata()
+
 	implementations := make([]firmwareInstallerProvider, 0)
 	for _, elem := range generic {
 		temp := firmwareInstallerProvider{name: getProviderName(elem)}
@@ -146,6 +148,8 @@ func firmwareInstallStatus(ctx context.Context, installVersion, component, taskI
 
 // FirmwareInstallStatusFromInterfaces identifies implementations of the FirmwareInstallVerifier interface and passes the found implementations to the firmwareInstallStatus() wrapper.
 func FirmwareInstallStatusFromInterfaces(ctx context.Context, installVersion, component, taskID string, generic []interface{}) (status string, metadata Metadata, err error) {
+	metadata = newMetadata()
+
 	implementations := make([]firmwareInstallVerifierProvider, 0)
 	for _, elem := range generic {
 		temp := firmwareInstallVerifierProvider{name: getProviderName(elem)}
@@ -223,6 +227,8 @@ func firmwareInstallUploaded(ctx context.Context, component, uploadTaskID string
 
 // FirmwareInstallerUploadedFromInterfaces identifies implementations of the FirmwareInstallUploaded interface and passes the found implementations to the firmwareInstallUploaded() wrapper
 func FirmwareInstallerUploadedFromInterfaces(ctx context.Context, component, uploadTaskID string, generic []interface{}) (installTaskID string, metadata Metadata, err error) {
+	metadata = newMetadata()
+
 	implementations := make([]firmwareInstallerWithOptionsProvider, 0)
 	for _, elem := range generic {
 		temp := firmwareInstallerWithOptionsProvider{name: getProviderName(elem)}
@@ -260,6 +266,8 @@ type firmwareInstallStepsGetterProvider struct {
 
 // FirmwareInstallStepsFromInterfaces identifies implementations of the FirmwareInstallStepsGetter interface and passes the found implementations to the firmwareInstallSteps() wrapper.
 func FirmwareInstallStepsFromInterfaces(ctx context.Context, component string, generic []interface{}) (steps []constants.FirmwareInstallStep, metadata Metadata, err error) {
+	metadata = newMetadata()
+
 	implementations := make([]firmwareInstallStepsGetterProvider, 0)
 	for _, elem := range generic {
 		temp := firmwareInstallStepsGetterProvider{name: getProviderName(elem)}
@@ -326,6 +334,8 @@ type firmwareUploaderProvider struct {
 
 // FirmwareUploaderFromInterfaces identifies implementations of the FirmwareUploader interface and passes the found implementations to the firmwareUpload() wrapper.
 func FirmwareUploadFromInterfaces(ctx context.Context, component string, file *os.File, generic []interface{}) (taskID string, metadata Metadata, err error) {
+	metadata = newMetadata()
+
 	implementations := make([]firmwareUploaderProvider, 0)
 	for _, elem := range generic {
 		temp := firmwareUploaderProvider{name: getProviderName(elem)}
@@ -396,7 +406,7 @@ type FirmwareTaskVerifier interface {
 	// return values:
 	// state - returns one of the FirmwareTask statuses (see devices/constants.go).
 	// status - returns firmware task progress or other arbitrary task information.
-	FirmwareTaskStatus(ctx context.Context, kind bconsts.FirmwareInstallStep, component, taskID, installVersion string) (state string, status string, err error)
+	FirmwareTaskStatus(ctx context.Context, kind bconsts.FirmwareInstallStep, component, taskID, installVersion string) (state constants.TaskState, status string, err error)
 }
 
 // firmwareTaskVerifierProvider is an internal struct to correlate an implementation/provider and its name
@@ -406,7 +416,7 @@ type firmwareTaskVerifierProvider struct {
 }
 
 // firmwareTaskStatus returns the status of the firmware upload process.
-func firmwareTaskStatus(ctx context.Context, kind bconsts.FirmwareInstallStep, component, taskID, installVersion string, generic []firmwareTaskVerifierProvider) (state, status string, metadata Metadata, err error) {
+func firmwareTaskStatus(ctx context.Context, kind bconsts.FirmwareInstallStep, component, taskID, installVersion string, generic []firmwareTaskVerifierProvider) (state constants.TaskState, status string, metadata Metadata, err error) {
 	var metadataLocal Metadata
 
 	for _, elem := range generic {
@@ -436,7 +446,9 @@ func firmwareTaskStatus(ctx context.Context, kind bconsts.FirmwareInstallStep, c
 }
 
 // FirmwareTaskStatusFromInterfaces identifies implementations of the FirmwareTaskVerifier interface and passes the found implementations to the firmwareTaskStatus() wrapper.
-func FirmwareTaskStatusFromInterfaces(ctx context.Context, kind bconsts.FirmwareInstallStep, component, taskID, installVersion string, generic []interface{}) (state, status string, metadata Metadata, err error) {
+func FirmwareTaskStatusFromInterfaces(ctx context.Context, kind bconsts.FirmwareInstallStep, component, taskID, installVersion string, generic []interface{}) (state constants.TaskState, status string, metadata Metadata, err error) {
+	metadata = newMetadata()
+
 	implementations := make([]firmwareTaskVerifierProvider, 0)
 	for _, elem := range generic {
 		temp := firmwareTaskVerifierProvider{name: getProviderName(elem)}

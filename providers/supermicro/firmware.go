@@ -68,7 +68,7 @@ func (c *Client) FirmwareInstallUploaded(ctx context.Context, component, uploadT
 }
 
 // FirmwareTaskStatus returns the status of a firmware related task queued on the BMC.
-func (c *Client) FirmwareTaskStatus(ctx context.Context, kind constants.FirmwareInstallStep, component, taskID, installVersion string) (state, status string, err error) {
+func (c *Client) FirmwareTaskStatus(ctx context.Context, kind constants.FirmwareInstallStep, component, taskID, installVersion string) (state constants.TaskState, status string, err error) {
 	if err := c.serviceClient.supportsFirmwareInstall(ctx, c.bmc.deviceModel()); err != nil {
 		return "", "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, err.Error())
 	}

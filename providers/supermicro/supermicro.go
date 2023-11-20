@@ -104,7 +104,7 @@ type bmcQueryor interface {
 	firmwareInstallSteps(component string) ([]constants.FirmwareInstallStep, error)
 	firmwareUpload(ctx context.Context, component string, file *os.File) (taskID string, err error)
 	firmwareInstallUploaded(ctx context.Context, component, uploadTaskID string) (installTaskID string, err error)
-	firmwareTaskStatus(ctx context.Context, component, taskID string) (state, status string, err error)
+	firmwareTaskStatus(ctx context.Context, component, taskID string) (state constants.TaskState, status string, err error)
 	// query device model from the bmc
 	queryDeviceModel(ctx context.Context) (model string, err error)
 	// returns the device model, that was queried previously with queryDeviceModel

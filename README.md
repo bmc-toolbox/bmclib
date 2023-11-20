@@ -234,6 +234,21 @@ The following one-time filters are available:
 - `cl.For("gofish").GetPowerState(ctx)` - This removes any provider from the registry that is not the `gofish` provider.
 - `cl.PreferProtocol("redfish").GetPowerState(ctx)` - This moves any provider that implements the `redfish` protocol to the beginning of the registry.
 
+### Tracing
+
+To collect trace telemetry, set the `WithTraceProvider()` option on the client
+which results in trace spans being collected for each client method.
+
+```go
+cl := bmclib.NewClient(
+          host,
+          user,
+          pass,
+          bmclib.WithLogger(log),
+          bmclib.WithTracerProvider(otel.GetTracerProvider()),
+      )
+```
+
 ## Versions
 
 The current bmclib version is `v2` and is being developed on the `main` branch.
