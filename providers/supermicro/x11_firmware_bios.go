@@ -376,7 +376,7 @@ func (c *x11) setBIOSUpdateDone(ctx context.Context) error {
 }
 
 // statusBIOSFirmwareInstall returns the status of the firmware install process
-func (c *x11) statusBIOSFirmwareInstall(ctx context.Context) (state, status string, err error) {
+func (c *x11) statusBIOSFirmwareInstall(ctx context.Context) (state constants.TaskState, status string, err error) {
 	payload := []byte(`fwtype=1&_`)
 
 	headers := map[string]string{"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
@@ -393,7 +393,7 @@ func (c *x11) statusBIOSFirmwareInstall(ctx context.Context) (state, status stri
 	// at the end of the install the BMC resets itself and the response is in HTML.
 	if bytes.Contains(resp, []byte(`<html>`)) || !bytes.Contains(resp, []byte(`<percent>`)) {
 		// reopen session here, check firmware install status
-		return constants.FirmwareInstallUnknown, "session expired/unexpected response", bmclibErrs.ErrSessionExpired
+		return constants.Unknown, "session expired/unexpected response", bmclibErrs.ErrSessionExpired
 	}
 
 	// as long as the response is xml, the firmware install is running
@@ -404,17 +404,17 @@ func (c *x11) statusBIOSFirmwareInstall(ctx context.Context) (state, status stri
 	switch {
 	// 1% indicates the file has been uploaded and the firmware install is not yet initiated
 	case bytes.Contains(resp, []byte("<status>0</status>")) && bytes.Contains(resp, []byte("<percent>1</percent>")):
-		return constants.FirmwareInstallFailed, percent, bmclibErrs.ErrBMCColdResetRequired
+		return constants.Failed, percent, bmclibErrs.ErrBMCColdResetRequired
 
 	// 0% along with the check on the component endpoint indicates theres no update in progress
 	case (bytes.Contains(resp, []byte("<status>0</status>")) && bytes.Contains(resp, []byte("<percent>0</percent>"))):
 		if err := c.checkComponentUpdateMisc(ctx, "postUpdate"); err != nil {
 			if errors.Is(err, bmclibErrs.ErrHostPowercycleRequired) {
-				return constants.FirmwareInstallPowerCycleHost, percent, nil
+				return constants.PowerCycleHost, percent, nil
 			}
 		}
 
-		return constants.FirmwareInstallComplete, "all done!", nil
+		return constants.Complete, "all done!", nil
 
 	// status 0 and 100% indicates the update is complete and requires a few post update calls
 	case bytes.Contains(resp, []byte("<status>0</status>")) && bytes.Contains(resp, []byte("<percent>100</percent>")):
@@ -427,22 +427,22 @@ func (c *x11) statusBIOSFirmwareInstall(ctx context.Context) (state, status stri
 		// tells the BMC it can get out of the BIOS update mode
 		if err := c.checkComponentUpdateMisc(ctx, "postUpdate"); err != nil {
 			if errors.Is(err, bmclibErrs.ErrHostPowercycleRequired) {
-				return constants.FirmwareInstallPowerCycleHost, percent, nil
+				return constants.PowerCycleHost, percent, nil
 			}
 
-			return constants.FirmwareInstallPowerCycleHost, percent, err
+			return constants.PowerCycleHost, percent, err
 		}
 
-		return constants.FirmwareInstallPowerCycleHost, percent, nil
+		return constants.PowerCycleHost, percent, nil
 
 	// status 8 and percent 0 indicates its initializing the update
 	case bytes.Contains(resp, []byte("<status>8</status>")) && bytes.Contains(resp, []byte("<percent>0</percent>")):
-		return constants.FirmwareInstallRunning, percent, nil
+		return constants.Running, percent, nil
 
 	// status 8 and any other percent value indicates its running
 	case bytes.Contains(resp, []byte("<status>8</status>")) && bytes.Contains(resp, []byte("<percent>")):
-		return constants.FirmwareInstallRunning, percent, nil
+		return constants.Running, percent, nil
 	}
 
-	return constants.FirmwareInstallUnknown, "", nil
+	return constants.Unknown, "", nil
 }

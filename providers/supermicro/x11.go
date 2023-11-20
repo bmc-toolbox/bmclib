@@ -131,7 +131,7 @@ func (c *x11) firmwareInstallUploaded(ctx context.Context, component, _ string) 
 	return "", errors.Wrap(bmclibErrs.ErrFirmwareInstallUploaded, "component unsupported: "+component)
 }
 
-func (c *x11) firmwareTaskStatus(ctx context.Context, component, _ string) (state, status string, err error) {
+func (c *x11) firmwareTaskStatus(ctx context.Context, component, _ string) (state constants.TaskState, status string, err error) {
 	component = strings.ToUpper(component)
 
 	switch component {
