@@ -9,75 +9,75 @@ import (
 	rf "github.com/stmcginnis/gofish/redfish"
 )
 
-type bootDeviceType struct {
-	Name          string
-	RedFishTarget rf.BootSourceOverrideTarget
+type bootDeviceMapping struct {
+	BootDeviceType bmc.BootDeviceType
+	RedFishTarget  rf.BootSourceOverrideTarget
 }
 
-var bootDeviceTypes = []bootDeviceType{
+var bootDeviceTypeMappings = []bootDeviceMapping{
 	{
-		Name:          "bios",
-		RedFishTarget: rf.BiosSetupBootSourceOverrideTarget,
+		BootDeviceType: bmc.BootDeviceTypeBIOS,
+		RedFishTarget:  rf.BiosSetupBootSourceOverrideTarget,
 	},
 	{
-		Name:          "cdrom",
-		RedFishTarget: rf.CdBootSourceOverrideTarget,
+		BootDeviceType: bmc.BootDeviceTypeCDROM,
+		RedFishTarget:  rf.CdBootSourceOverrideTarget,
 	},
 	{
-		Name:          "diag",
-		RedFishTarget: rf.DiagsBootSourceOverrideTarget,
+		BootDeviceType: bmc.BootDeviceTypeDiag,
+		RedFishTarget:  rf.DiagsBootSourceOverrideTarget,
 	},
 	{
-		Name:          "floppy",
-		RedFishTarget: rf.FloppyBootSourceOverrideTarget,
+		BootDeviceType: bmc.BootDeviceTypeFloppy,
+		RedFishTarget:  rf.FloppyBootSourceOverrideTarget,
 	},
 	{
-		Name:          "disk",
-		RedFishTarget: rf.HddBootSourceOverrideTarget,
+		BootDeviceType: bmc.BootDeviceTypeDisk,
+		RedFishTarget:  rf.HddBootSourceOverrideTarget,
 	},
 	{
-		Name:          "none",
-		RedFishTarget: rf.NoneBootSourceOverrideTarget,
+		BootDeviceType: bmc.BootDeviceTypeNone,
+		RedFishTarget:  rf.NoneBootSourceOverrideTarget,
 	},
 	{
-		Name:          "pxe",
-		RedFishTarget: rf.PxeBootSourceOverrideTarget,
+		BootDeviceType: bmc.BootDeviceTypePXE,
+		RedFishTarget:  rf.PxeBootSourceOverrideTarget,
 	},
 	{
-		Name:          "remote_drive",
-		RedFishTarget: rf.RemoteDriveBootSourceOverrideTarget,
+		BootDeviceType: bmc.BootDeviceTypeRemoteDrive,
+		RedFishTarget:  rf.RemoteDriveBootSourceOverrideTarget,
 	},
 	{
-		Name:          "sd_card",
-		RedFishTarget: rf.SDCardBootSourceOverrideTarget,
+		BootDeviceType: bmc.BootDeviceTypeSDCard,
+		RedFishTarget:  rf.SDCardBootSourceOverrideTarget,
 	},
 	{
-		Name:          "usb",
-		RedFishTarget: rf.UsbBootSourceOverrideTarget,
+		BootDeviceType: bmc.BootDeviceTypeUSB,
+		RedFishTarget:  rf.UsbBootSourceOverrideTarget,
 	},
 	{
-		Name:          "utilities",
-		RedFishTarget: rf.UtilitiesBootSourceOverrideTarget,
+		BootDeviceType: bmc.BootDeviceTypeUtil,
+		RedFishTarget:  rf.UtilitiesBootSourceOverrideTarget,
 	},
 }
 
-// bootDeviceToTarget gets the RedFish BootSourceOverrideTarget that corresponds to the given device,
+// bootDeviceStringToTarget gets the RedFish BootSourceOverrideTarget that corresponds to the given device string,
 // or an error if the device is not a RedFish BootSourceOverrideTarget.
-func bootDeviceToTarget(device string) (rf.BootSourceOverrideTarget, error) {
-	for _, bootDevice := range bootDeviceTypes {
-		if bootDevice.Name == device {
+func bootDeviceStringToTarget(device string) (rf.BootSourceOverrideTarget, error) {
+	for _, bootDevice := range bootDeviceTypeMappings {
+		if string(bootDevice.BootDeviceType) == device {
 			return bootDevice.RedFishTarget, nil
 		}
 	}
 	return "", errors.New("invalid boot device")
 }
 
-// bootTargetToDevice converts the redfish boot target to a bmclib supported device string.
+// bootTargetToBootDeviceType converts the redfish boot target to a bmc.BootDeviceType.
 // if the target is unknown or unsupported, then an error is returned.
-func bootTargetToDevice(target rf.BootSourceOverrideTarget) (string, error) {
-	for _, bootDevice := range bootDeviceTypes {
+func bootTargetToBootDeviceType(target rf.BootSourceOverrideTarget) (bmc.BootDeviceType, error) {
+	for _, bootDevice := range bootDeviceTypeMappings {
 		if bootDevice.RedFishTarget == target {
-			return bootDevice.Name, nil
+			return bootDevice.BootDeviceType, nil
 		}
 	}
 	return "", errors.New("invalid boot device")
@@ -97,7 +97,7 @@ func (c *Client) SystemBootDeviceSet(_ context.Context, bootDevice string, setPe
 	for _, system := range systems {
 		boot := system.Boot
 
-		boot.BootSourceOverrideTarget, err = bootDeviceToTarget(bootDevice)
+		boot.BootSourceOverrideTarget, err = bootDeviceStringToTarget(bootDevice)
 		if err != nil {
 			return false, err
 		}
@@ -147,9 +147,9 @@ func (c *Client) GetBootDeviceOverride(_ context.Context) (override bmc.BootDevi
 		}
 
 		boot := system.Boot
-		bootDevice, err := bootTargetToDevice(boot.BootSourceOverrideTarget)
+		bootDevice, err := bootTargetToBootDeviceType(boot.BootSourceOverrideTarget)
 		if err != nil {
-			bootDevice = string(boot.BootSourceOverrideTarget)
+			return override, err
 		}
 
 		override = bmc.BootDeviceOverride{

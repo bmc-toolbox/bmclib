@@ -9,6 +9,22 @@ import (
 	"github.com/pkg/errors"
 )
 
+type BootDeviceType string
+
+const (
+	BootDeviceTypeBIOS        BootDeviceType = "bios"
+	BootDeviceTypeCDROM       BootDeviceType = "cdrom"
+	BootDeviceTypeDiag        BootDeviceType = "diag"
+	BootDeviceTypeFloppy      BootDeviceType = "floppy"
+	BootDeviceTypeDisk        BootDeviceType = "disk"
+	BootDeviceTypeNone        BootDeviceType = "none"
+	BootDeviceTypePXE         BootDeviceType = "pxe"
+	BootDeviceTypeRemoteDrive BootDeviceType = "remote_drive"
+	BootDeviceTypeSDCard      BootDeviceType = "sd_card"
+	BootDeviceTypeUSB         BootDeviceType = "usb"
+	BootDeviceTypeUtil        BootDeviceType = "utilities"
+)
+
 // BootDeviceSetter sets the next boot device for a machine
 type BootDeviceSetter interface {
 	BootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error)
@@ -34,7 +50,7 @@ type bootOverrideProvider struct {
 type BootDeviceOverride struct {
 	IsPersistent bool
 	IsEFIBoot    bool
-	Device       string
+	Device       BootDeviceType
 }
 
 // setBootDevice sets the next boot device.

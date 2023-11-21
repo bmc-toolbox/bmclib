@@ -137,7 +137,7 @@ func TestBootDeviceOverrideGet(t *testing.T) {
 	successOverride := BootDeviceOverride{
 		IsPersistent: false,
 		IsEFIBoot:    true,
-		Device:       "disk",
+		Device:       BootDeviceTypeDisk,
 	}
 
 	successMetadata := &Metadata{
