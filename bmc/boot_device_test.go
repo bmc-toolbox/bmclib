@@ -169,11 +169,12 @@ func TestBootDeviceOverrideGet(t *testing.T) {
 	}
 
 	testCases := []struct {
-		name             string
-		expectedErrorMsg string
-		expectedMetadata *Metadata
-		expectedOverride BootDeviceOverride
-		getters          []interface{}
+		name               string
+		hasCanceledContext bool
+		expectedErrorMsg   string
+		expectedMetadata   *Metadata
+		expectedOverride   BootDeviceOverride
+		getters            []interface{}
 	}{
 		{
 			name:             "success",
@@ -212,11 +213,27 @@ func TestBootDeviceOverrideGet(t *testing.T) {
 			expectedErrorMsg: "no BootDeviceOverrideGetter implementations found",
 			getters:          []interface{}{nil},
 		},
+		{
+			name:               "with canceled context",
+			hasCanceledContext: true,
+			expectedMetadata:   emptyMetadata,
+			expectedErrorMsg:   "context canceled",
+			getters: []interface{}{
+				&mockBootDeviceOverrideGetter{},
+			},
+		},
 	}
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			override, metadata, err := GetBootDeviceOverrideFromInterface(context.Background(), 0, testCase.getters)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			if testCase.hasCanceledContext {
+				cancel()
+			}
+
+			override, metadata, err := GetBootDeviceOverrideFromInterface(ctx, 0, testCase.getters)
 
 			if testCase.expectedErrorMsg != "" {
 				assert.ErrorContains(t, err, testCase.expectedErrorMsg)
