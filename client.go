@@ -455,7 +455,8 @@ func (c *Client) ReadUsers(ctx context.Context) (users []map[string]string, err 
 	return users, err
 }
 
-func (c *Client) GetBootDeviceOverride(ctx context.Context) (override *bmc.BootDeviceOverride, err error) {
+// GetBootDeviceOverride pass through to library function
+func (c *Client) GetBootDeviceOverride(ctx context.Context) (override bmc.BootDeviceOverride, err error) {
 	override, metadata, err := bmc.GetBootDeviceOverrideFromInterface(ctx, c.perProviderTimeout(ctx), c.registry().GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return override, err

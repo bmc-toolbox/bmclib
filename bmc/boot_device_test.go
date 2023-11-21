@@ -121,7 +121,7 @@ func TestSetBootDeviceFromInterfaces(t *testing.T) {
 }
 
 type mockBootDeviceOverrideGetter struct {
-	overrideReturn *BootDeviceOverride
+	overrideReturn BootDeviceOverride
 	errReturn      error
 }
 
@@ -129,12 +129,12 @@ func (m *mockBootDeviceOverrideGetter) Name() string {
 	return "Mock"
 }
 
-func (m *mockBootDeviceOverrideGetter) BootDeviceOverrideGet(_ context.Context) (override *BootDeviceOverride, err error) {
+func (m *mockBootDeviceOverrideGetter) BootDeviceOverrideGet(_ context.Context) (BootDeviceOverride, error) {
 	return m.overrideReturn, m.errReturn
 }
 
 func TestBootDeviceOverrideGet(t *testing.T) {
-	successOverride := &BootDeviceOverride{
+	successOverride := BootDeviceOverride{
 		IsPersistent: false,
 		IsEFIBoot:    true,
 		Device:       "disk",
@@ -172,7 +172,7 @@ func TestBootDeviceOverrideGet(t *testing.T) {
 		name             string
 		expectedErrorMsg string
 		expectedMetadata *Metadata
-		expectedOverride *BootDeviceOverride
+		expectedOverride BootDeviceOverride
 		getters          []interface{}
 	}{
 		{

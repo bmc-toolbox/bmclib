@@ -214,7 +214,8 @@ func (c *Conn) BootDeviceSet(ctx context.Context, bootDevice string, setPersiste
 	return c.redfishwrapper.SystemBootDeviceSet(ctx, bootDevice, setPersistent, efiBoot)
 }
 
-func (c *Conn) BootDeviceOverrideGet(ctx context.Context) (*bmc.BootDeviceOverride, error) {
+// BootDeviceOverrideGet gets the boot override device information
+func (c *Conn) BootDeviceOverrideGet(ctx context.Context) (bmc.BootDeviceOverride, error) {
 	return c.redfishwrapper.GetBootDeviceOverride(ctx)
 }
 
