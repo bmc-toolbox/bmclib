@@ -13,6 +13,7 @@ import (
 	"github.com/jacobweinstock/registrar"
 	"github.com/pkg/errors"
 
+	"github.com/bmc-toolbox/bmclib/v2/bmc"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
@@ -180,8 +181,6 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 	return err == nil
 }
 
-
-
 // BmcReset power cycles the BMC
 func (c *Conn) BmcReset(ctx context.Context, resetType string) (ok bool, err error) {
 	return c.redfishwrapper.BMCReset(ctx, resetType)
@@ -213,6 +212,11 @@ func (c *Conn) PowerSet(ctx context.Context, state string) (ok bool, err error) 
 // BootDeviceSet sets the boot device
 func (c *Conn) BootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
 	return c.redfishwrapper.SystemBootDeviceSet(ctx, bootDevice, setPersistent, efiBoot)
+}
+
+// BootDeviceOverrideGet gets the boot override device information
+func (c *Conn) BootDeviceOverrideGet(ctx context.Context) (bmc.BootDeviceOverride, error) {
+	return c.redfishwrapper.GetBootDeviceOverride(ctx)
 }
 
 // SetVirtualMedia sets the virtual media

@@ -117,6 +117,9 @@ var (
 
 	// ErrSystemVendorModel is returned when the system vendor, model attributes could not be identified.
 	ErrSystemVendorModel = errors.New("error identifying system vendor, model attributes")
+
+	// ErrRedfishNoSystems is returned when the API of the device provides and empty array of systems.
+	ErrRedfishNoSystems = errors.New("redfish: no Systems were found on the device")
 )
 
 type ErrUnsupportedHardware struct {

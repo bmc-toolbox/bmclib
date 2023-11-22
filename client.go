@@ -455,6 +455,17 @@ func (c *Client) ReadUsers(ctx context.Context) (users []map[string]string, err 
 	return users, err
 }
 
+// GetBootDeviceOverride pass through to library function
+func (c *Client) GetBootDeviceOverride(ctx context.Context) (override bmc.BootDeviceOverride, err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "GetBootDeviceOverride")
+	defer span.End()
+
+	override, metadata, err := bmc.GetBootDeviceOverrideFromInterface(ctx, c.perProviderTimeout(ctx), c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+
+	return override, err
+}
+
 // SetBootDevice pass through to library function
 func (c *Client) SetBootDevice(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetBootDevice")
