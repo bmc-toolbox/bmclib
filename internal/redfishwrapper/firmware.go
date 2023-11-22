@@ -106,6 +106,9 @@ func (c *Client) FirmwareUpload(ctx context.Context, updateFile *os.File, params
 		return taskIDFromLocationHeader(location)
 	}
 
+	fmt.Println(location)
+	fmt.Println(string(response))
+
 	return taskIDFromResponseBody(response)
 }
 
@@ -193,9 +196,9 @@ func taskIDFromLocationHeader(uri string) (taskID string, err error) {
 
 	switch {
 	// idracs return /redfish/v1/TaskService/Tasks/JID_467696020275
-	case strings.Contains(uri, "JID_"):
-		taskID = strings.Split(uri, "JID_")[1]
-		return taskID, nil
+	//case strings.Contains(uri, "JID_"):
+	//	taskID = strings.Split(uri, "JID_")[1]
+	//	return taskID, nil
 
 	// OpenBMC returns /redfish/v1/TaskService/Tasks/12/Monitor
 	case strings.Contains(uri, "/Tasks/") && strings.HasSuffix(uri, "/Monitor"):

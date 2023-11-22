@@ -37,14 +37,15 @@ func (c *Client) TaskStatus(ctx context.Context, taskID string) (constants.TaskS
 	if err != nil {
 		return "", "", errors.Wrap(err, "error querying redfish for taskID: "+taskID)
 	}
+
 	taskInfo := fmt.Sprintf("id: %s, state: %s, status: %s", task.ID, task.TaskState, task.TaskStatus)
 
-	state := strings.ToLower(string(task.TaskState))
-	return c.ConvertTaskState(state), taskInfo, nil
+	s := c.ConvertTaskState(string(task.TaskState))
+	return s, taskInfo, nil
 }
 
 func (c *Client) ConvertTaskState(state string) constants.TaskState {
-	switch state {
+	switch strings.ToLower(state) {
 	case "starting", "downloading", "downloaded":
 		return constants.Initializing
 	case "running", "stopping", "cancelling", "scheduling":

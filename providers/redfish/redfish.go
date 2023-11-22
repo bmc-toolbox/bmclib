@@ -34,8 +34,8 @@ var (
 		providers.FeatureBootDeviceSet,
 		providers.FeatureVirtualMedia,
 		providers.FeatureInventoryRead,
-		providers.FeatureFirmwareInstall,
-		providers.FeatureFirmwareInstallStatus,
+		//providers.FeatureFirmwareInstall,
+		//providers.FeatureFirmwareInstallStatus,
 		providers.FeatureBmcReset,
 		providers.FeatureClearSystemEventLog,
 	}
@@ -179,8 +179,6 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 
 	return err == nil
 }
-
-
 
 // BmcReset power cycles the BMC
 func (c *Conn) BmcReset(ctx context.Context, resetType string) (ok bool, err error) {

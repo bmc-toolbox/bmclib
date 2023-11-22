@@ -645,3 +645,14 @@ func (c *Client) FirmwareInstallUploaded(ctx context.Context, component, uploadV
 
 	return installTaskID, err
 }
+
+func (c *Client) FirmwareInstallUploadAndInitiate(ctx context.Context, component string, file *os.File) (taskID string, err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "FirmwareInstallUploadAndInitiate")
+	defer span.End()
+
+	taskID, metadata, err := bmc.FirmwareInstallUploadAndInitiateFromInterfaces(ctx, component, file, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return taskID, err
+}

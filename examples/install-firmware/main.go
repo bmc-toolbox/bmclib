@@ -70,6 +70,11 @@ func main() {
 		l.Fatal(err, "bmc login failed")
 	}
 
+	steps, err := cl.FirmwareInstallSteps(ctx, *component)
+	if err != nil {
+		l.Fatal(err, "FirmwareInstallSteps returned error")
+	}
+
 	defer cl.Close(ctx)
 
 	// open file handle

@@ -204,6 +204,99 @@ func TestFirmwareInstallStatusFromInterfaces(t *testing.T) {
 	}
 }
 
+type firmwareInstallUploadAndInitiateTester struct {
+	returnTaskID string
+	returnError  error
+}
+
+func (f *firmwareInstallUploadAndInitiateTester) FirmwareInstallUploadAndInitiate(ctx context.Context, component string, file *os.File) (taskID string, err error) {
+	return f.returnTaskID, f.returnError
+}
+
+func (r *firmwareInstallUploadAndInitiateTester) Name() string {
+	return "foo"
+}
+
+func TestFirmwareInstallUploadAndInitiate(t *testing.T) {
+	testCases := []struct {
+		testName           string
+		component          string
+		file               *os.File
+		returnTaskID       string
+		returnError        error
+		ctxTimeout         time.Duration
+		providerName       string
+		providersAttempted int
+	}{
+		{"success with metadata", "componentA", &os.File{}, "1234", nil, 5 * time.Second, "foo", 1},
+		{"failure with metadata", "componentB", &os.File{}, "1234", errors.New("failed to upload and initiate"), 5 * time.Second, "foo", 1},
+		{"failure with context timeout", "componentC", &os.File{}, "", context.DeadlineExceeded, 1 * time.Nanosecond, "foo", 1},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.testName, func(t *testing.T) {
+			testImplementation := &firmwareInstallUploadAndInitiateTester{returnTaskID: tc.returnTaskID, returnError: tc.returnError}
+			if tc.ctxTimeout == 0 {
+				tc.ctxTimeout = time.Second * 3
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
+			defer cancel()
+			taskID, metadata, err := firmwareInstallUploadAndInitiate(ctx, tc.component, tc.file, []firmwareInstallProvider{{tc.providerName, testImplementation}})
+			if tc.returnError != nil {
+				assert.ErrorIs(t, err, tc.returnError)
+				return
+			}
+
+			if err != nil {
+				t.Fatal(err)
+			}
+			assert.Equal(t, tc.returnTaskID, taskID)
+			assert.Equal(t, tc.providerName, metadata.SuccessfulProvider)
+			assert.Equal(t, tc.providersAttempted, len(metadata.ProvidersAttempted))
+		})
+	}
+}
+
+func TestFirmwareInstallUploadAndInitiateFromInterfaces(t *testing.T) {
+	testCases := []struct {
+		testName          string
+		component         string
+		file              *os.File
+		returnTaskID      string
+		returnError       error
+		providerName      string
+		badImplementation bool
+	}{
+		{"success with metadata", "componentA", &os.File{}, "1234", nil, "foo", false},
+		{"failure with bad implementation", "componentB", &os.File{}, "1234", bmclibErrs.ErrProviderImplementation, "foo", true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.testName, func(t *testing.T) {
+			var generic []interface{}
+			if tc.badImplementation {
+				badImplementation := struct{}{}
+				generic = []interface{}{&badImplementation}
+			} else {
+				testImplementation := &firmwareInstallUploadAndInitiateTester{returnTaskID: tc.returnTaskID, returnError: tc.returnError}
+				generic = []interface{}{testImplementation}
+			}
+			taskID, metadata, err := FirmwareInstallUploadAndInitiateFromInterfaces(context.Background(), tc.component, tc.file, generic)
+			if tc.returnError != nil {
+				assert.ErrorIs(t, err, tc.returnError)
+				return
+			}
+
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			assert.Equal(t, tc.returnTaskID, taskID)
+			assert.Equal(t, tc.providerName, metadata.SuccessfulProvider)
+		})
+	}
+}
+
 type firmwareInstallUploadTester struct {
 	TaskID string
 	Err    error

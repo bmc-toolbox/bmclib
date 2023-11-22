@@ -114,3 +114,9 @@ const (
 func ListSupportedVendors() []string {
 	return []string{HP, Dell, Supermicro}
 }
+
+type FirmwareInstallProperties struct {
+	InstallOrder               []FirmwareInstallStep
+	PreInstallHostPowerOff     bool
+	AcceptsOperationApplyTimes []OperationApplyTime
+}

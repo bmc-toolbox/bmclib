@@ -36,6 +36,10 @@ var (
 	// Features implemented by dell redfish
 	Features = registrar.Features{
 		providers.FeatureScreenshot,
+		providers.FeaturePowerState,
+		providers.FeatureFirmwareInstallSteps,
+		providers.FeatureFirmwareUploadInitiateInstall,
+		providers.FeatureFirmwareTaskStatus,
 	}
 )
 
@@ -126,19 +130,26 @@ func (c *Conn) Open(ctx context.Context) (err error) {
 
 	// because this uses the redfish interface and the redfish interface
 	// is available across various BMC vendors, we verify the device we're connected to is dell.
-	manufacturer, err := c.deviceManufacturer(ctx)
-	if err != nil {
+	if err := c.deviceSupported(ctx); err != nil {
 		if er := c.redfishwrapper.Close(ctx); er != nil {
 			return fmt.Errorf("%v: %w", err, er)
 		}
+
 		return err
 	}
 
-	if !strings.Contains(strings.ToLower(manufacturer), common.VendorDell) {
-		if er := c.redfishwrapper.Close(ctx); er != nil {
-			return fmt.Errorf("%v: %w", err, er)
-		}
-		return bmclibErrs.ErrIncompatibleProvider
+	return nil
+}
+
+func (c *Conn) deviceSupported(ctx context.Context) error {
+	manufacturer, err := c.deviceManufacturer(ctx)
+	if err != nil {
+		return err
+	}
+
+	m := strings.ToLower(manufacturer)
+	if !strings.Contains(m, common.VendorDell) {
+		return errors.Wrap(bmclibErrs.ErrIncompatibleProvider, m)
 	}
 
 	return nil
