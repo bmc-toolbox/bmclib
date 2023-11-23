@@ -143,3 +143,39 @@ func (c *x11) firmwareTaskStatus(ctx context.Context, component, _ string) (stat
 
 	return "", "", errors.Wrap(bmclibErrs.ErrFirmwareTaskStatus, "component unsupported: "+component)
 }
+
+func (c *x11) inventory(ctx context.Context) (*common.Device, error) {
+	if err := c.redfishSession(ctx); err != nil {
+		return nil, err
+	}
+
+	return c.serviceClient.redfish.Inventory(ctx, false)
+}
+
+// power-off - immediate - op=POWER_INFO.XML&r=(1,0)&_=
+// power-on - op=POWER_INFO.XML&r=(1,1)&_=
+// power-off - acpi/orderly - op=POWER_INFO.XML&r=(1,5)&_=
+// reset server - cold powercycle - op=POWER_INFO.XML&r=(1,3)&_=
+// power cycle - op=POWER_INFO.XML&r=(1,2)&_=
+
+// powerCycle using SMC XML API
+//
+// This method is only here for the case when firmware updates are being applied using this provider.
+func (c *x11) powerCycle(ctx context.Context) (bool, error) {
+	payload := []byte(`op=POWER_INFO.XML&r=(1,3)&_=`)
+
+	headers := map[string]string{
+		"Content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+	}
+
+	body, status, err := c.serviceClient.query(ctx, "cgi/ipmi.cgi", http.MethodPost, bytes.NewBuffer(payload), headers, 0)
+	if err != nil {
+		return false, err
+	}
+
+	if status != http.StatusOK {
+		return false, unexpectedResponseErr(payload, body, status)
+	}
+
+	return true, nil
+}

@@ -106,9 +106,6 @@ func (c *Client) FirmwareUpload(ctx context.Context, updateFile *os.File, params
 		return taskIDFromLocationHeader(location)
 	}
 
-	fmt.Println(location)
-	fmt.Println(string(response))
-
 	return taskIDFromResponseBody(response)
 }
 

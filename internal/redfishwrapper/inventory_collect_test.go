@@ -1,20 +1,20 @@
-package redfish
+package redfishwrapper
 
 import (
-	"github.com/bmc-toolbox/common"
-	common2 "github.com/stmcginnis/gofish/common"
-	gofishrf "github.com/stmcginnis/gofish/redfish"
 	"reflect"
 	"testing"
+
+	"github.com/bmc-toolbox/common"
+	common2 "github.com/stmcginnis/gofish/common"
+	redfish "github.com/stmcginnis/gofish/redfish"
 )
 
-func Test_inventory_collectNetworkPortInfo(t *testing.T) {
-
-	testAdapter := &gofishrf.NetworkAdapter{
+func TestInventoryCollectNetworkPortInfo(t *testing.T) {
+	testAdapter := &redfish.NetworkAdapter{
 		Manufacturer: "Acme",
 		Model:        "Anvil 3000",
 	}
-	testNetworkPort := &gofishrf.NetworkPort{
+	testNetworkPort := &redfish.NetworkPort{
 		Entity:                     common2.Entity{ID: "NetworkPort-1"},
 		Description:                "NetworkPort One",
 		VendorID:                   "Vendor-ID",
@@ -67,8 +67,8 @@ func Test_inventory_collectNetworkPortInfo(t *testing.T) {
 	tests := []struct {
 		name          string
 		nicPort       *common.NICPort
-		adapter       *gofishrf.NetworkAdapter
-		networkPort   *gofishrf.NetworkPort
+		adapter       *redfish.NetworkAdapter
+		networkPort   *redfish.NetworkPort
 		firmware      string
 		wantedNicPort *common.NICPort
 	}{
@@ -103,8 +103,8 @@ func Test_inventory_collectNetworkPortInfo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			i := &inventory{}
-			i.collectNetworkPortInfo(tt.nicPort, tt.adapter, tt.networkPort, tt.firmware)
+			c := Client{}
+			c.collectNetworkPortInfo(tt.nicPort, tt.adapter, tt.networkPort, tt.firmware, []*redfish.SoftwareInventory{})
 			if !reflect.DeepEqual(tt.nicPort, tt.wantedNicPort) {
 				t.Errorf("collectNetworkPortInfo() gotNicPort = %v, want %v", tt.nicPort, tt.wantedNicPort)
 			}
@@ -113,17 +113,17 @@ func Test_inventory_collectNetworkPortInfo(t *testing.T) {
 
 }
 
-func Test_inventory_collectEthernetInfo(t *testing.T) {
+func TestInventoryCollectEthernetInfo(t *testing.T) {
 	testNicPortID := "test NIC port ID"
 	testEthernetID := "test NIC port ID ethernet"
 	testNicPort := &common.NICPort{
 		ID: testNicPortID,
 	}
-	testUnmatchingEthList := []*gofishrf.EthernetInterface{
+	testUnmatchingEthList := []*redfish.EthernetInterface{
 		{Entity: common2.Entity{ID: "other ID"}},
 		{Entity: common2.Entity{ID: "another one"}},
 	}
-	testMatchingEth := &gofishrf.EthernetInterface{
+	testMatchingEth := &redfish.EthernetInterface{
 		Entity:      common2.Entity{ID: testEthernetID},
 		Description: "Ethernet Interface",
 		Status: common2.Status{
@@ -155,12 +155,12 @@ func Test_inventory_collectEthernetInfo(t *testing.T) {
 	tests := []struct {
 		name               string
 		nicPort            *common.NICPort
-		ethernetInterfaces []*gofishrf.EthernetInterface
+		ethernetInterfaces []*redfish.EthernetInterface
 		wantedNicPort      *common.NICPort
 	}{
 		{name: "nil"},
 		{name: "empty", nicPort: testNicPort, wantedNicPort: testNicPort},
-		{name: "empty ethernet list", nicPort: testNicPort, ethernetInterfaces: []*gofishrf.EthernetInterface{}, wantedNicPort: testNicPort},
+		{name: "empty ethernet list", nicPort: testNicPort, ethernetInterfaces: []*redfish.EthernetInterface{}, wantedNicPort: testNicPort},
 		{name: "unmatching ethernet list", nicPort: testNicPort, ethernetInterfaces: testUnmatchingEthList, wantedNicPort: testNicPort},
 		{
 			name:               "full",
@@ -170,8 +170,8 @@ func Test_inventory_collectEthernetInfo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			i := &inventory{}
-			i.collectEthernetInfo(tt.nicPort, tt.ethernetInterfaces)
+			c := Client{}
+			c.collectEthernetInfo(tt.nicPort, tt.ethernetInterfaces)
 		})
 	}
 }

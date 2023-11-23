@@ -301,3 +301,11 @@ func (c *x12) firmwareTaskStatus(ctx context.Context, component, taskID string) 
 
 	return c.redfish.TaskStatus(ctx, taskID)
 }
+
+func (c *x12) inventory(ctx context.Context) (*common.Device, error) {
+	if err := c.redfishSession(ctx); err != nil {
+		return nil, err
+	}
+
+	return c.serviceClient.redfish.Inventory(ctx, false)
+}

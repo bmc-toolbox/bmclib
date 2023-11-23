@@ -11,6 +11,25 @@ import (
 	rf "github.com/stmcginnis/gofish/redfish"
 )
 
+// PowerSet sets the power state of a server
+func (c *Client) PowerSet(ctx context.Context, state string) (ok bool, err error) {
+	// TODO: create consts for the state values
+	switch strings.ToLower(state) {
+	case "on":
+		return c.SystemPowerOn(ctx)
+	case "off":
+		return c.SystemForceOff(ctx)
+	case "soft":
+		return c.SystemPowerOff(ctx)
+	case "reset":
+		return c.SystemReset(ctx)
+	case "cycle":
+		return c.SystemPowerCycle(ctx)
+	default:
+		return false, errors.New("unknown power action")
+	}
+}
+
 // BMCReset powercycles the BMC.
 func (c *Client) BMCReset(ctx context.Context, resetType string) (ok bool, err error) {
 	if err := c.SessionActive(); err != nil {

@@ -37,9 +37,11 @@ var (
 	Features = registrar.Features{
 		providers.FeatureScreenshot,
 		providers.FeaturePowerState,
+		providers.FeaturePowerSet,
 		providers.FeatureFirmwareInstallSteps,
 		providers.FeatureFirmwareUploadInitiateInstall,
 		providers.FeatureFirmwareTaskStatus,
+		providers.FeatureInventoryRead,
 	}
 )
 
@@ -201,6 +203,16 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 // PowerStateGet gets the power state of a BMC machine
 func (c *Conn) PowerStateGet(ctx context.Context) (state string, err error) {
 	return c.redfishwrapper.SystemPowerStatus(ctx)
+}
+
+// PowerSet sets the power state of a server
+func (c *Conn) PowerSet(ctx context.Context, state string) (ok bool, err error) {
+	return c.redfishwrapper.PowerSet(ctx, state)
+}
+
+// Inventory collects hardware inventory and install firmware information
+func (c *Conn) Inventory(ctx context.Context) (device *common.Device, err error) {
+	return c.redfishwrapper.Inventory(ctx, false)
 }
 
 var errManufacturerUnknown = errors.New("error identifying device manufacturer")

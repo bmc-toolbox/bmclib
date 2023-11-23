@@ -20,6 +20,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
+	"github.com/bmc-toolbox/common"
 
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
@@ -46,6 +47,9 @@ var (
 		providers.FeatureFirmwareInstallUploaded,
 		providers.FeatureFirmwareTaskStatus,
 		providers.FeatureFirmwareInstallSteps,
+		providers.FeatureInventoryRead,
+		providers.FeaturePowerSet,
+		providers.FeaturePowerState,
 	}
 )
 
@@ -110,6 +114,8 @@ type bmcQueryor interface {
 	// returns the device model, that was queried previously with queryDeviceModel
 	deviceModel() (model string)
 	supportsInstall(component string) error
+	inventory(ctx context.Context) (*common.Device, error)
+	powerSet(ctx context.Context, state string) (ok bool, err error)
 }
 
 // New returns connection with a Supermicro client initialized
@@ -184,6 +190,25 @@ func (c *Client) Open(ctx context.Context) (err error) {
 	return nil
 }
 
+// PowerStateGet gets the power state of a BMC machine
+func (c *Client) PowerStateGet(ctx context.Context) (state string, err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return "", errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.SystemPowerStatus(ctx)
+}
+
+// PowerSet sets the power state of a server
+func (c *Client) PowerSet(ctx context.Context, state string) (ok bool, err error) {
+	return c.serviceClient.redfish.PowerSet(ctx, state)
+}
+
+// Inventory collects hardware inventory and install firmware information
+func (c *Client) Inventory(ctx context.Context) (device *common.Device, err error) {
+	return c.bmc.inventory(ctx)
+}
+
 func (c *Client) bmcQueryor(ctx context.Context) (bmcQueryor, error) {
 	x11 := newX11Client(c.serviceClient, c.log)
 	x12 := newX12Client(c.serviceClient, c.log)
@@ -216,21 +241,6 @@ func (c *Client) bmcQueryor(ctx context.Context) (bmcQueryor, error) {
 	}
 
 	return queryor, nil
-}
-
-func (c *Client) openRedfish(ctx context.Context) error {
-	if c.serviceClient.redfish != nil && c.serviceClient.redfish.SessionActive() == nil {
-		return nil
-	}
-
-	rfclient := redfishwrapper.NewClient(c.serviceClient.host, "", c.serviceClient.user, c.serviceClient.pass)
-	if err := rfclient.Open(ctx); err != nil {
-		return err
-	}
-
-	c.serviceClient.redfish = rfclient
-
-	return nil
 }
 
 func parseToken(body []byte) string {
@@ -359,28 +369,6 @@ func (c *Client) PowerSet(ctx context.Context, state string) (ok bool, err error
 	}
 }
 
-// powerCycle using SMC XML API
-//
-// This method is only here for the case when firmware updates are being applied using this provider.
-func (c *Client) powerCycle(ctx context.Context) (bool, error) {
-	payload := []byte(`op=SET_POWER_INFO.XML&r=(1,3)&_=`)
-
-	headers := map[string]string{
-		"Content-type": "application/x-www-form-urlencoded; charset=UTF-8",
-	}
-
-	body, status, err := c.serviceClient.query(ctx, "cgi/ipmi.cgi", http.MethodPost, bytes.NewBuffer(payload), headers, 0)
-	if err != nil {
-		return false, err
-	}
-
-	if status != http.StatusOK {
-		return false, unexpectedResponseErr(payload, body, status)
-	}
-
-	return true, nil
-}
-
 type serviceClient struct {
 	host      string
 	port      string
@@ -404,6 +392,10 @@ func (c *serviceClient) setCsrfToken(t string) {
 }
 
 func (c *serviceClient) redfishSession(ctx context.Context) (err error) {
+	if c.redfish != nil && c.redfish.SessionActive() == nil {
+		return nil
+	}
+
 	c.redfish = redfishwrapper.NewClient(c.host, "", c.user, c.pass, redfishwrapper.WithHTTPClient(c.client))
 	if err := c.redfish.Open(ctx); err != nil {
 		return err
