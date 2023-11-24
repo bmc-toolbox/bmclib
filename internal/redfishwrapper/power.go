@@ -212,6 +212,7 @@ func (c *Client) SystemForceOff(ctx context.Context) (ok bool, err error) {
 
 		system.DisableEtagMatch(c.disableEtagMatch)
 
+
 		err = system.Reset(rf.ForceOffResetType)
 		if err != nil {
 			return false, err

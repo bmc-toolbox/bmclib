@@ -115,7 +115,6 @@ type bmcQueryor interface {
 	deviceModel() (model string)
 	supportsInstall(component string) error
 	inventory(ctx context.Context) (*common.Device, error)
-	powerSet(ctx context.Context, state string) (ok bool, err error)
 }
 
 // New returns connection with a Supermicro client initialized
@@ -201,6 +200,10 @@ func (c *Client) PowerStateGet(ctx context.Context) (state string, err error) {
 
 // PowerSet sets the power state of a server
 func (c *Client) PowerSet(ctx context.Context, state string) (ok bool, err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return false, errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
 	return c.serviceClient.redfish.PowerSet(ctx, state)
 }
 
@@ -357,16 +360,6 @@ func (c *Client) initScreenPreview(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-// PowerSet sets the power state of a server
-func (c *Client) PowerSet(ctx context.Context, state string) (ok bool, err error) {
-	switch strings.ToLower(state) {
-	case "cycle":
-		return c.powerCycle(ctx)
-	default:
-		return false, errors.New("action not implemented for provider")
-	}
 }
 
 type serviceClient struct {
