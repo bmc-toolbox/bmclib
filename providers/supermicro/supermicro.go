@@ -20,6 +20,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
+	"github.com/bmc-toolbox/common"
 
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
@@ -46,6 +47,9 @@ var (
 		providers.FeatureFirmwareInstallUploaded,
 		providers.FeatureFirmwareTaskStatus,
 		providers.FeatureFirmwareInstallSteps,
+		providers.FeatureInventoryRead,
+		providers.FeaturePowerSet,
+		providers.FeaturePowerState,
 	}
 )
 
@@ -182,6 +186,33 @@ func (c *Client) Open(ctx context.Context) (err error) {
 	}
 
 	return nil
+}
+
+// PowerStateGet gets the power state of a BMC machine
+func (c *Client) PowerStateGet(ctx context.Context) (state string, err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return "", errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.SystemPowerStatus(ctx)
+}
+
+// PowerSet sets the power state of a server
+func (c *Client) PowerSet(ctx context.Context, state string) (ok bool, err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return false, errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.PowerSet(ctx, state)
+}
+
+// Inventory collects hardware inventory and install firmware information
+func (c *Client) Inventory(ctx context.Context) (device *common.Device, err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return nil, errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.Inventory(ctx, false)
 }
 
 func (c *Client) bmcQueryor(ctx context.Context) (bmcQueryor, error) {
