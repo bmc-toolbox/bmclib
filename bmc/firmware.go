@@ -37,7 +37,7 @@ type firmwareInstallerProvider struct {
 
 // firmwareInstall uploads and initiates firmware update for the component
 func firmwareInstall(ctx context.Context, component, operationApplyTime string, forceInstall bool, reader io.Reader, generic []firmwareInstallerProvider) (taskID string, metadata Metadata, err error) {
-	var metadataLocal Metadata
+	metadata = newMetadata()
 
 	for _, elem := range generic {
 		if elem.FirmwareInstaller == nil {
@@ -49,7 +49,7 @@ func firmwareInstall(ctx context.Context, component, operationApplyTime string, 
 
 			return taskID, metadata, err
 		default:
-			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			metadata.ProvidersAttempted = append(metadata.ProvidersAttempted, elem.name)
 			taskID, vErr := elem.FirmwareInstall(ctx, component, operationApplyTime, forceInstall, reader)
 			if vErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
@@ -57,12 +57,12 @@ func firmwareInstall(ctx context.Context, component, operationApplyTime string, 
 				continue
 
 			}
-			metadataLocal.SuccessfulProvider = elem.name
-			return taskID, metadataLocal, nil
+			metadata.SuccessfulProvider = elem.name
+			return taskID, metadata, nil
 		}
 	}
 
-	return taskID, metadataLocal, multierror.Append(err, errors.New("failure in FirmwareInstall"))
+	return taskID, metadata, multierror.Append(err, errors.New("failure in FirmwareInstall"))
 }
 
 // FirmwareInstallFromInterfaces identifies implementations of the FirmwareInstaller interface and passes the found implementations to the firmwareInstall() wrapper
@@ -118,7 +118,7 @@ type firmwareInstallVerifierProvider struct {
 
 // firmwareInstallStatus returns the status of the firmware install process
 func firmwareInstallStatus(ctx context.Context, installVersion, component, taskID string, generic []firmwareInstallVerifierProvider) (status string, metadata Metadata, err error) {
-	var metadataLocal Metadata
+	metadata = newMetadata()
 
 	for _, elem := range generic {
 		if elem.FirmwareInstallVerifier == nil {
@@ -130,7 +130,7 @@ func firmwareInstallStatus(ctx context.Context, installVersion, component, taskI
 
 			return status, metadata, err
 		default:
-			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			metadata.ProvidersAttempted = append(metadata.ProvidersAttempted, elem.name)
 			status, vErr := elem.FirmwareInstallStatus(ctx, installVersion, component, taskID)
 			if vErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
@@ -138,12 +138,12 @@ func firmwareInstallStatus(ctx context.Context, installVersion, component, taskI
 				continue
 
 			}
-			metadataLocal.SuccessfulProvider = elem.name
-			return status, metadataLocal, nil
+			metadata.SuccessfulProvider = elem.name
+			return status, metadata, nil
 		}
 	}
 
-	return status, metadataLocal, multierror.Append(err, errors.New("failure in FirmwareInstallStatus"))
+	return status, metadata, multierror.Append(err, errors.New("failure in FirmwareInstallStatus"))
 }
 
 // FirmwareInstallStatusFromInterfaces identifies implementations of the FirmwareInstallVerifier interface and passes the found implementations to the firmwareInstallStatus() wrapper.
@@ -196,7 +196,7 @@ type firmwareInstallerWithOptionsProvider struct {
 
 // firmwareInstallUploaded uploads and initiates firmware update for the component
 func firmwareInstallUploaded(ctx context.Context, component, uploadTaskID string, generic []firmwareInstallerWithOptionsProvider) (installTaskID string, metadata Metadata, err error) {
-	var metadataLocal Metadata
+	metadata = newMetadata()
 
 	for _, elem := range generic {
 		if elem.FirmwareInstallerUploaded == nil {
@@ -208,7 +208,7 @@ func firmwareInstallUploaded(ctx context.Context, component, uploadTaskID string
 
 			return installTaskID, metadata, err
 		default:
-			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			metadata.ProvidersAttempted = append(metadata.ProvidersAttempted, elem.name)
 			var vErr error
 			installTaskID, vErr = elem.FirmwareInstallUploaded(ctx, component, uploadTaskID)
 			if vErr != nil {
@@ -217,12 +217,12 @@ func firmwareInstallUploaded(ctx context.Context, component, uploadTaskID string
 				continue
 
 			}
-			metadataLocal.SuccessfulProvider = elem.name
-			return installTaskID, metadataLocal, nil
+			metadata.SuccessfulProvider = elem.name
+			return installTaskID, metadata, nil
 		}
 	}
 
-	return installTaskID, metadataLocal, multierror.Append(err, errors.New("failure in FirmwareInstallUploaded"))
+	return installTaskID, metadata, multierror.Append(err, errors.New("failure in FirmwareInstallUploaded"))
 }
 
 // FirmwareInstallerUploadedFromInterfaces identifies implementations of the FirmwareInstallUploaded interface and passes the found implementations to the firmwareInstallUploaded() wrapper
@@ -294,7 +294,7 @@ func FirmwareInstallStepsFromInterfaces(ctx context.Context, component string, g
 }
 
 func firmwareInstallSteps(ctx context.Context, component string, generic []firmwareInstallStepsGetterProvider) (steps []constants.FirmwareInstallStep, metadata Metadata, err error) {
-	var metadataLocal Metadata
+	metadata = newMetadata()
 
 	for _, elem := range generic {
 		if elem.FirmwareInstallStepsGetter == nil {
@@ -306,7 +306,7 @@ func firmwareInstallSteps(ctx context.Context, component string, generic []firmw
 
 			return steps, metadata, err
 		default:
-			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			metadata.ProvidersAttempted = append(metadata.ProvidersAttempted, elem.name)
 			steps, vErr := elem.FirmwareInstallSteps(ctx, component)
 			if vErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
@@ -314,12 +314,12 @@ func firmwareInstallSteps(ctx context.Context, component string, generic []firmw
 				continue
 
 			}
-			metadataLocal.SuccessfulProvider = elem.name
-			return steps, metadataLocal, nil
+			metadata.SuccessfulProvider = elem.name
+			return steps, metadata, nil
 		}
 	}
 
-	return steps, metadataLocal, multierror.Append(err, errors.New("failure in FirmwareInstallSteps"))
+	return steps, metadata, multierror.Append(err, errors.New("failure in FirmwareInstallSteps"))
 }
 
 type FirmwareUploader interface {
