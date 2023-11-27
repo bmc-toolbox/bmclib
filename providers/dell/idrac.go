@@ -36,6 +36,12 @@ var (
 	// Features implemented by dell redfish
 	Features = registrar.Features{
 		providers.FeatureScreenshot,
+		providers.FeaturePowerState,
+		providers.FeaturePowerSet,
+		providers.FeatureFirmwareInstallSteps,
+		providers.FeatureFirmwareUploadInitiateInstall,
+		providers.FeatureFirmwareTaskStatus,
+		providers.FeatureInventoryRead,
 	}
 )
 
