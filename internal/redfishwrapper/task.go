@@ -8,14 +8,15 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/pkg/errors"
-	gofishrf "github.com/stmcginnis/gofish/redfish"
+	"github.com/stmcginnis/gofish/common"
+	redfish "github.com/stmcginnis/gofish/redfish"
 )
 
 var (
 	errUnexpectedTaskState = errors.New("unexpected task state")
 )
 
-func (c *Client) Task(ctx context.Context, taskID string) (*gofishrf.Task, error) {
+func (c *Client) Task(ctx context.Context, taskID string) (*redfish.Task, error) {
 	tasks, err := c.Tasks(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "error querying redfish tasks")

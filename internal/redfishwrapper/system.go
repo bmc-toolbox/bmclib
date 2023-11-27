@@ -6,13 +6,13 @@ import (
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 
 	"github.com/pkg/errors"
-	gofishrf "github.com/stmcginnis/gofish/redfish"
+	redfish "github.com/stmcginnis/gofish/redfish"
 )
 
 // The methods here should be a thin wrapper so as to only guard the client from authentication failures.
 
 // AccountService gets the Redfish AccountService.d
-func (c *Client) AccountService() (*gofishrf.AccountService, error) {
+func (c *Client) AccountService() (*redfish.AccountService, error) {
 	if err := c.SessionActive(); err != nil {
 		return nil, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
@@ -21,7 +21,7 @@ func (c *Client) AccountService() (*gofishrf.AccountService, error) {
 }
 
 // UpdateService gets the update service instance.
-func (c *Client) UpdateService() (*gofishrf.UpdateService, error) {
+func (c *Client) UpdateService() (*redfish.UpdateService, error) {
 	if err := c.SessionActive(); err != nil {
 		return nil, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
@@ -30,7 +30,7 @@ func (c *Client) UpdateService() (*gofishrf.UpdateService, error) {
 }
 
 // Systems get the system instances from the service.
-func (c *Client) Systems() ([]*gofishrf.ComputerSystem, error) {
+func (c *Client) Systems() ([]*redfish.ComputerSystem, error) {
 	if err := c.SessionActive(); err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func (c *Client) Systems() ([]*gofishrf.ComputerSystem, error) {
 }
 
 // Managers gets the manager instances of this service.
-func (c *Client) Managers(ctx context.Context) ([]*gofishrf.Manager, error) {
+func (c *Client) Managers(ctx context.Context) ([]*redfish.Manager, error) {
 	if err := c.SessionActive(); err != nil {
 		return nil, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
@@ -48,7 +48,7 @@ func (c *Client) Managers(ctx context.Context) ([]*gofishrf.Manager, error) {
 }
 
 // Chassis gets the chassis instances managed by this service.
-func (c *Client) Chassis(ctx context.Context) ([]*gofishrf.Chassis, error) {
+func (c *Client) Chassis(ctx context.Context) ([]*redfish.Chassis, error) {
 	if err := c.SessionActive(); err != nil {
 		return nil, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
