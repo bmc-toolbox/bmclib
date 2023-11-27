@@ -99,27 +99,6 @@ func (c *Conn) GetFirmwareInstallTaskQueued(ctx context.Context, component strin
 	return task, nil
 }
 
-// purgeQueuedFirmwareInstallTask removes any existing queued firmware install task for the given component slug
-func (c *Conn) purgeQueuedFirmwareInstallTask(ctx context.Context, component string) error {
-	vendor, _, err := c.redfishwrapper.DeviceVendorModel(ctx)
-	if err != nil {
-		return errors.Wrap(err, "unable to determine device vendor, model attributes")
-	}
-
-	// check an update task for the component is currently scheduled
-	switch {
-	case strings.Contains(vendor, constants.Dell):
-		err = c.dellPurgeScheduledFirmwareInstallJob(component)
-	default:
-		err = errors.Wrap(
-			bmclibErrs.ErrFirmwareInstall,
-			"Update is already running",
-		)
-	}
-
-	return err
-}
-
 // GetTask returns the current Task fir the given TaskID
 func (c *Conn) GetTask(taskID string) (task *gofishrf.Task, err error) {
 	resp, err := c.redfishwrapper.Get("/redfish/v1/TaskService/Tasks/" + taskID)
