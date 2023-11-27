@@ -249,21 +249,6 @@ func (c *Client) bmcQueryor(ctx context.Context) (bmcQueryor, error) {
 	return queryor, nil
 }
 
-func (c *Client) openRedfish(ctx context.Context) error {
-	if c.serviceClient.redfish != nil && c.serviceClient.redfish.SessionActive() == nil {
-		return nil
-	}
-
-	rfclient := redfishwrapper.NewClient(c.serviceClient.host, "", c.serviceClient.user, c.serviceClient.pass)
-	if err := rfclient.Open(ctx); err != nil {
-		return err
-	}
-
-	c.serviceClient.redfish = rfclient
-
-	return nil
-}
-
 func parseToken(body []byte) string {
 	var key string
 	if bytes.Contains(body, []byte(`CSRF-TOKEN`)) {
@@ -380,38 +365,6 @@ func (c *Client) initScreenPreview(ctx context.Context) error {
 	return nil
 }
 
-// PowerSet sets the power state of a server
-func (c *Client) PowerSet(ctx context.Context, state string) (ok bool, err error) {
-	switch strings.ToLower(state) {
-	case "cycle":
-		return c.powerCycle(ctx)
-	default:
-		return false, errors.New("action not implemented for provider")
-	}
-}
-
-// powerCycle using SMC XML API
-//
-// This method is only here for the case when firmware updates are being applied using this provider.
-func (c *Client) powerCycle(ctx context.Context) (bool, error) {
-	payload := []byte(`op=SET_POWER_INFO.XML&r=(1,3)&_=`)
-
-	headers := map[string]string{
-		"Content-type": "application/x-www-form-urlencoded; charset=UTF-8",
-	}
-
-	body, status, err := c.serviceClient.query(ctx, "cgi/ipmi.cgi", http.MethodPost, bytes.NewBuffer(payload), headers, 0)
-	if err != nil {
-		return false, err
-	}
-
-	if status != http.StatusOK {
-		return false, unexpectedResponseErr(payload, body, status)
-	}
-
-	return true, nil
-}
-
 type serviceClient struct {
 	host      string
 	port      string
@@ -435,6 +388,10 @@ func (c *serviceClient) setCsrfToken(t string) {
 }
 
 func (c *serviceClient) redfishSession(ctx context.Context) (err error) {
+	if c.redfish != nil && c.redfish.SessionActive() == nil {
+		return nil
+	}
+
 	c.redfish = redfishwrapper.NewClient(c.host, "", c.user, c.pass, redfishwrapper.WithHTTPClient(c.client))
 	if err := c.redfish.Open(ctx); err != nil {
 		return err
