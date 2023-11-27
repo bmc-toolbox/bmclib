@@ -1,17 +1,17 @@
-package redfish
+package redfishwrapper
 
 import (
 	"math"
 	"strings"
 
 	"github.com/bmc-toolbox/common"
-	gofishrf "github.com/stmcginnis/gofish/redfish"
+	"github.com/stmcginnis/gofish/redfish"
 )
 
 // defines various inventory collection helper methods
 
 // collectEnclosure collects Enclosure information
-func (i *inventory) collectEnclosure(ch *gofishrf.Chassis, device *common.Device) (err error) {
+func (c *Client) collectEnclosure(ch *redfish.Chassis, device *common.Device, softwareInventory []*redfish.SoftwareInventory) (err error) {
 	e := &common.Enclosure{
 		Common: common.Common{
 			Description: ch.Description,
@@ -34,7 +34,7 @@ func (i *inventory) collectEnclosure(ch *gofishrf.Chassis, device *common.Device
 	}
 
 	// include additional firmware attributes from redfish firmware inventory
-	i.firmwareAttributes(common.SlugEnclosure, e.ID, e.Firmware)
+	c.firmwareAttributes(common.SlugEnclosure, e.ID, e.Firmware, softwareInventory)
 
 	device.Enclosures = append(device.Enclosures, e)
 
@@ -42,7 +42,7 @@ func (i *inventory) collectEnclosure(ch *gofishrf.Chassis, device *common.Device
 }
 
 // collectPSUs collects Power Supply Unit component information
-func (i *inventory) collectPSUs(ch *gofishrf.Chassis, device *common.Device) (err error) {
+func (c *Client) collectPSUs(ch *redfish.Chassis, device *common.Device, softwareInventory []*redfish.SoftwareInventory) (err error) {
 	power, err := ch.Power()
 	if err != nil {
 		return err
@@ -74,7 +74,7 @@ func (i *inventory) collectPSUs(ch *gofishrf.Chassis, device *common.Device) (er
 		}
 
 		// include additional firmware attributes from redfish firmware inventory
-		i.firmwareAttributes(common.SlugPSU, psu.ID, p.Firmware)
+		c.firmwareAttributes(common.SlugPSU, psu.ID, p.Firmware, softwareInventory)
 
 		device.PSUs = append(device.PSUs, p)
 
@@ -83,7 +83,7 @@ func (i *inventory) collectPSUs(ch *gofishrf.Chassis, device *common.Device) (er
 }
 
 // collectTPMs collects Trusted Platform Module component information
-func (i *inventory) collectTPMs(sys *gofishrf.ComputerSystem, device *common.Device) (err error) {
+func (c *Client) collectTPMs(sys *redfish.ComputerSystem, device *common.Device, softwareInventory []*redfish.SoftwareInventory) (err error) {
 	for _, module := range sys.TrustedModules {
 		tpm := &common.TPM{
 			Common: common.Common{
@@ -100,7 +100,7 @@ func (i *inventory) collectTPMs(sys *gofishrf.ComputerSystem, device *common.Dev
 		}
 
 		// include additional firmware attributes from redfish firmware inventory
-		i.firmwareAttributes(common.SlugTPM, "TPM", tpm.Firmware)
+		c.firmwareAttributes(common.SlugTPM, "TPM", tpm.Firmware, softwareInventory)
 
 		device.TPMs = append(device.TPMs, tpm)
 	}
@@ -109,7 +109,7 @@ func (i *inventory) collectTPMs(sys *gofishrf.ComputerSystem, device *common.Dev
 }
 
 // collectNICs collects network interface component information
-func (i *inventory) collectNICs(sys *gofishrf.ComputerSystem, device *common.Device) (err error) {
+func (c *Client) collectNICs(sys *redfish.ComputerSystem, device *common.Device, softwareInventory []*redfish.SoftwareInventory) (err error) {
 	if sys == nil || device == nil {
 		return nil
 	}
@@ -163,17 +163,17 @@ func (i *inventory) collectNICs(sys *gofishrf.ComputerSystem, device *common.Dev
 
 			// populate network ports general data
 			nicPort := &common.NICPort{}
-			i.collectNetworkPortInfo(nicPort, adapter, networkPort, portFirmwareVersion)
+			c.collectNetworkPortInfo(nicPort, adapter, networkPort, portFirmwareVersion, softwareInventory)
 
-			if networkPort.ActiveLinkTechnology == gofishrf.EthernetLinkNetworkTechnology {
+			if networkPort.ActiveLinkTechnology == redfish.EthernetLinkNetworkTechnology {
 				// ethernet specific data
-				i.collectEthernetInfo(nicPort, ethernetInterfaces)
+				c.collectEthernetInfo(nicPort, ethernetInterfaces)
 			}
 			n.NICPorts = append(n.NICPorts, nicPort)
 		}
 
 		// include additional firmware attributes from redfish firmware inventory
-		i.firmwareAttributes(common.SlugNIC, n.ID, n.Firmware)
+		c.firmwareAttributes(common.SlugNIC, n.ID, n.Firmware, softwareInventory)
 		if len(portFirmwareVersion) > 0 {
 			if n.Firmware == nil {
 				n.Firmware = &common.Firmware{}
@@ -187,8 +187,13 @@ func (i *inventory) collectNICs(sys *gofishrf.ComputerSystem, device *common.Dev
 	return nil
 }
 
-func (i *inventory) collectNetworkPortInfo(
-	nicPort *common.NICPort, adapter *gofishrf.NetworkAdapter, networkPort *gofishrf.NetworkPort, firmware string) {
+func (c *Client) collectNetworkPortInfo(
+	nicPort *common.NICPort,
+	adapter *redfish.NetworkAdapter,
+	networkPort *redfish.NetworkPort,
+	firmware string,
+	softwareInventory []*redfish.SoftwareInventory,
+) {
 
 	if adapter != nil {
 		nicPort.Vendor = adapter.Manufacturer
@@ -221,7 +226,7 @@ func (i *inventory) collectNetworkPortInfo(
 			}
 		}
 
-		i.firmwareAttributes(common.SlugNIC, networkPort.ID, nicPort.Firmware)
+		c.firmwareAttributes(common.SlugNIC, networkPort.ID, nicPort.Firmware, softwareInventory)
 	}
 	if len(firmware) > 0 {
 		if nicPort.Firmware == nil {
@@ -231,7 +236,7 @@ func (i *inventory) collectNetworkPortInfo(
 	}
 }
 
-func (i *inventory) collectEthernetInfo(nicPort *common.NICPort, ethernetInterfaces []*gofishrf.EthernetInterface) {
+func (c *Client) collectEthernetInfo(nicPort *common.NICPort, ethernetInterfaces []*redfish.EthernetInterface) {
 	if nicPort == nil {
 		return
 	}
@@ -273,7 +278,7 @@ func (i *inventory) collectEthernetInfo(nicPort *common.NICPort, ethernetInterfa
 	}
 }
 
-func getFirmwareVersionFromController(controllers []gofishrf.Controllers, portCount int) string {
+func getFirmwareVersionFromController(controllers []redfish.Controllers, portCount int) string {
 	for _, controller := range controllers {
 		if controller.ControllerCapabilities.NetworkPortCount == portCount {
 			return controller.FirmwarePackageVersion
@@ -282,7 +287,7 @@ func getFirmwareVersionFromController(controllers []gofishrf.Controllers, portCo
 	return ""
 }
 
-func (i *inventory) collectBIOS(sys *gofishrf.ComputerSystem, device *common.Device) (err error) {
+func (c *Client) collectBIOS(sys *redfish.ComputerSystem, device *common.Device, softwareInventory []*redfish.SoftwareInventory) (err error) {
 	device.BIOS = &common.BIOS{
 		Common: common.Common{
 			Firmware: &common.Firmware{
@@ -301,13 +306,13 @@ func (i *inventory) collectBIOS(sys *gofishrf.ComputerSystem, device *common.Dev
 	}
 
 	// include additional firmware attributes from redfish firmware inventory
-	i.firmwareAttributes(common.SlugBIOS, "BIOS", device.BIOS.Firmware)
+	c.firmwareAttributes(common.SlugBIOS, "BIOS", device.BIOS.Firmware, softwareInventory)
 
 	return nil
 }
 
 // collectDrives collects drive component information
-func (i *inventory) collectDrives(sys *gofishrf.ComputerSystem, device *common.Device) (err error) {
+func (c *Client) collectDrives(sys *redfish.ComputerSystem, device *common.Device, softwareInventory []*redfish.SoftwareInventory) (err error) {
 	storage, err := sys.Storage()
 	if err != nil {
 		return err
@@ -351,7 +356,7 @@ func (i *inventory) collectDrives(sys *gofishrf.ComputerSystem, device *common.D
 			}
 
 			// include additional firmware attributes from redfish firmware inventory
-			i.firmwareAttributes("Disk", drive.ID, d.Firmware)
+			c.firmwareAttributes("Disk", drive.ID, d.Firmware, softwareInventory)
 
 			device.Drives = append(device.Drives, d)
 
@@ -363,7 +368,7 @@ func (i *inventory) collectDrives(sys *gofishrf.ComputerSystem, device *common.D
 }
 
 // collectStorageControllers populates the device with Storage controller component attributes
-func (i *inventory) collectStorageControllers(sys *gofishrf.ComputerSystem, device *common.Device) (err error) {
+func (c *Client) collectStorageControllers(sys *redfish.ComputerSystem, device *common.Device, softwareInventory []*redfish.SoftwareInventory) (err error) {
 	storage, err := sys.Storage()
 	if err != nil {
 		return err
@@ -372,7 +377,7 @@ func (i *inventory) collectStorageControllers(sys *gofishrf.ComputerSystem, devi
 	for _, member := range storage {
 		for _, controller := range member.StorageControllers {
 
-			c := &common.StorageController{
+			cs := &common.StorageController{
 				Common: common.Common{
 					Description: controller.Name,
 					Vendor:      common.FormatVendorName(controller.Manufacturer),
@@ -392,23 +397,22 @@ func (i *inventory) collectStorageControllers(sys *gofishrf.ComputerSystem, devi
 			}
 
 			// In some cases the storage controller model number is present in the Name field
-			if strings.TrimSpace(c.Model) == "" && strings.TrimSpace(controller.Name) != "" {
-				c.Model = controller.Name
+			if strings.TrimSpace(cs.Model) == "" && strings.TrimSpace(controller.Name) != "" {
+				cs.Model = controller.Name
 			}
 
 			// include additional firmware attributes from redfish firmware inventory
-			i.firmwareAttributes(c.Description, c.ID, c.Firmware)
+			c.firmwareAttributes(cs.Description, cs.ID, cs.Firmware, softwareInventory)
 
-			device.StorageControllers = append(device.StorageControllers, c)
+			device.StorageControllers = append(device.StorageControllers, cs)
 		}
-
 	}
 
 	return nil
 }
 
 // collectCPUs populates the device with CPU component attributes
-func (i *inventory) collectCPUs(sys *gofishrf.ComputerSystem, device *common.Device) (err error) {
+func (c *Client) collectCPUs(sys *redfish.ComputerSystem, device *common.Device, _ []*redfish.SoftwareInventory) (err error) {
 	procs, err := sys.Processors()
 	if err != nil {
 		return err
@@ -447,7 +451,7 @@ func (i *inventory) collectCPUs(sys *gofishrf.ComputerSystem, device *common.Dev
 }
 
 // collectDIMMs populates the device with memory component attributes
-func (i *inventory) collectDIMMs(sys *gofishrf.ComputerSystem, device *common.Device) (err error) {
+func (c *Client) collectDIMMs(sys *redfish.ComputerSystem, device *common.Device, softwareInventory []*redfish.SoftwareInventory) (err error) {
 	dimms, err := sys.Memory()
 	if err != nil {
 		return err
@@ -479,7 +483,7 @@ func (i *inventory) collectDIMMs(sys *gofishrf.ComputerSystem, device *common.De
 }
 
 // collecCPLDs populates the device with CPLD component attributes
-func (i *inventory) collectCPLDs(device *common.Device) (err error) {
+func (c *Client) collectCPLDs(device *common.Device, softwareInventory []*redfish.SoftwareInventory) (err error) {
 
 	cpld := &common.CPLD{
 		Common: common.Common{
@@ -489,7 +493,7 @@ func (i *inventory) collectCPLDs(device *common.Device) (err error) {
 		},
 	}
 
-	i.firmwareAttributes(common.SlugCPLD, "", cpld.Firmware)
+	c.firmwareAttributes(common.SlugCPLD, "", cpld.Firmware, softwareInventory)
 	name, exists := cpld.Firmware.Metadata["name"]
 	if exists {
 		cpld.Description = name
