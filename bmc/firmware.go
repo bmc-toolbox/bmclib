@@ -175,7 +175,82 @@ func FirmwareInstallStatusFromInterfaces(ctx context.Context, installVersion, co
 	return firmwareInstallStatus(ctx, installVersion, component, taskID, implementations)
 }
 
-// FirmwareInstallerWithOpts defines an interface to install firmware that was previously uploaded with FirmwareUpload
+// FirmwareInstallProvider defines an interface to upload and initiate a firmware install in the same implementation method
+//
+// Its intended to deprecate the FirmwareInstall interface
+type FirmwareInstallProvider interface {
+	// FirmwareInstallUploadAndInitiate uploads _and_ initiates the firmware install process.
+	//
+	// return values:
+	// taskID - A taskID is returned if the update process on the BMC returns an identifier for the update process.
+	FirmwareInstallUploadAndInitiate(ctx context.Context, component string, file *os.File) (taskID string, err error)
+}
+
+// firmwareInstallProvider is an internal struct to correlate an implementation/provider and its name
+type firmwareInstallProvider struct {
+	name string
+	FirmwareInstallProvider
+}
+
+// firmwareInstall uploads and initiates firmware update for the component
+func firmwareInstallUploadAndInitiate(ctx context.Context, component string, file *os.File, generic []firmwareInstallProvider) (taskID string, metadata Metadata, err error) {
+	metadata = newMetadata()
+
+	for _, elem := range generic {
+		if elem.FirmwareInstallProvider == nil {
+			continue
+		}
+		select {
+		case <-ctx.Done():
+			err = multierror.Append(err, ctx.Err())
+
+			return taskID, metadata, err
+		default:
+			metadata.ProvidersAttempted = append(metadata.ProvidersAttempted, elem.name)
+			taskID, vErr := elem.FirmwareInstallUploadAndInitiate(ctx, component, file)
+			if vErr != nil {
+				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
+				metadata.FailedProviderDetail[elem.name] = err.Error()
+				continue
+			}
+			metadata.SuccessfulProvider = elem.name
+			return taskID, metadata, nil
+		}
+	}
+
+	return taskID, metadata, multierror.Append(err, errors.New("failure in FirmwareInstallUploadAndInitiate"))
+}
+
+// FirmwareInstallUploadAndInitiateFromInterfaces identifies implementations of the FirmwareInstallProvider interface and passes the found implementations to the firmwareInstallUploadAndInitiate() wrapper
+func FirmwareInstallUploadAndInitiateFromInterfaces(ctx context.Context, component string, file *os.File, generic []interface{}) (taskID string, metadata Metadata, err error) {
+	metadata = newMetadata()
+
+	implementations := make([]firmwareInstallProvider, 0)
+	for _, elem := range generic {
+		temp := firmwareInstallProvider{name: getProviderName(elem)}
+		switch p := elem.(type) {
+		case FirmwareInstallProvider:
+			temp.FirmwareInstallProvider = p
+			implementations = append(implementations, temp)
+		default:
+			e := fmt.Sprintf("not a FirmwareInstallProvider implementation: %T", p)
+			err = multierror.Append(err, errors.New(e))
+		}
+	}
+	if len(implementations) == 0 {
+		return taskID, metadata, multierror.Append(
+			err,
+			errors.Wrap(
+				bmclibErrs.ErrProviderImplementation,
+				("no FirmwareInstallProvider implementations found"),
+			),
+		)
+	}
+
+	return firmwareInstallUploadAndInitiate(ctx, component, file, implementations)
+}
+
+// FirmwareInstallerUploaded defines an interface to install firmware that was previously uploaded with FirmwareUpload
 type FirmwareInstallerUploaded interface {
 	// FirmwareInstallUploaded uploads firmware update payload to the BMC returning the firmware install task ID
 	//
