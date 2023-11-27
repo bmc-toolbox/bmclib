@@ -38,10 +38,38 @@ func (c *Client) TaskStatus(ctx context.Context, taskID string) (constants.TaskS
 	if err != nil {
 		return "", "", errors.Wrap(err, "error querying redfish for taskID: "+taskID)
 	}
-	taskInfo := fmt.Sprintf("id: %s, state: %s, status: %s", task.ID, task.TaskState, task.TaskStatus)
 
-	state := strings.ToLower(string(task.TaskState))
-	return c.ConvertTaskState(state), taskInfo, nil
+	taskInfo := fmt.Sprintf(
+		"id: %s, state: %s, status: %s",
+		task.ID,
+		task.TaskState,
+		task.TaskStatus,
+	)
+
+	// task message include information that help debug a cause of failure
+	if msgs := c.taskMessagesAsString(task.Messages); msgs != "" {
+		taskInfo += ", messages: " + msgs
+	}
+
+	s := c.ConvertTaskState(string(task.TaskState))
+	return s, taskInfo, nil
+}
+
+func (c *Client) taskMessagesAsString(messages []common.Message) string {
+	if len(messages) == 0 {
+		return ""
+	}
+
+	var found []string
+	for _, m := range messages {
+		if m.Message == "" {
+			continue
+		}
+
+		found = append(found, m.Message)
+	}
+
+	return strings.Join(found, ",")
 }
 
 func (c *Client) ConvertTaskState(state string) constants.TaskState {
