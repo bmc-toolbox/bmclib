@@ -185,6 +185,10 @@ func (c *Client) Open(ctx context.Context) (err error) {
 		return errors.Wrap(bmclibErrs.ErrLoginFailed, err.Error())
 	}
 
+	if err := c.serviceClient.redfishSession(ctx); err != nil {
+		return errors.Wrap(bmclibErrs.ErrLoginFailed, err.Error())
+	}
+
 	return nil
 }
 
@@ -392,7 +396,13 @@ func (c *serviceClient) redfishSession(ctx context.Context) (err error) {
 		return nil
 	}
 
-	c.redfish = redfishwrapper.NewClient(c.host, "", c.user, c.pass, redfishwrapper.WithHTTPClient(c.client))
+	c.redfish = redfishwrapper.NewClient(
+		c.host,
+		c.port,
+		c.user,
+		c.pass,
+		redfishwrapper.WithHTTPClient(c.client),
+	)
 	if err := c.redfish.Open(ctx); err != nil {
 		return err
 	}
