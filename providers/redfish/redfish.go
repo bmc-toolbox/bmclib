@@ -4,14 +4,13 @@ import (
 	"context"
 	"crypto/x509"
 	"net/http"
-	"strings"
 
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
+	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
-	"github.com/pkg/errors"
 
 	"github.com/bmc-toolbox/bmclib/v2/bmc"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
@@ -35,8 +34,6 @@ var (
 		providers.FeatureBootDeviceSet,
 		providers.FeatureVirtualMedia,
 		providers.FeatureInventoryRead,
-		providers.FeatureFirmwareInstall,
-		providers.FeatureFirmwareInstallStatus,
 		providers.FeatureBmcReset,
 		providers.FeatureClearSystemEventLog,
 	}
@@ -193,20 +190,7 @@ func (c *Conn) PowerStateGet(ctx context.Context) (state string, err error) {
 
 // PowerSet sets the power state of a server
 func (c *Conn) PowerSet(ctx context.Context, state string) (ok bool, err error) {
-	switch strings.ToLower(state) {
-	case "on":
-		return c.redfishwrapper.SystemPowerOn(ctx)
-	case "off":
-		return c.redfishwrapper.SystemForceOff(ctx)
-	case "soft":
-		return c.redfishwrapper.SystemPowerOff(ctx)
-	case "reset":
-		return c.redfishwrapper.SystemReset(ctx)
-	case "cycle":
-		return c.redfishwrapper.SystemPowerCycle(ctx)
-	default:
-		return false, errors.New("unknown power action")
-	}
+	return c.redfishwrapper.PowerSet(ctx, state)
 }
 
 // BootDeviceSet sets the boot device
@@ -222,4 +206,14 @@ func (c *Conn) BootDeviceOverrideGet(ctx context.Context) (bmc.BootDeviceOverrid
 // SetVirtualMedia sets the virtual media
 func (c *Conn) SetVirtualMedia(ctx context.Context, kind string, mediaURL string) (ok bool, err error) {
 	return c.redfishwrapper.SetVirtualMedia(ctx, kind, mediaURL)
+}
+
+// Inventory collects hardware inventory and install firmware information
+func (c *Conn) Inventory(ctx context.Context) (device *common.Device, err error) {
+	return c.redfishwrapper.Inventory(ctx, c.failInventoryOnError)
+}
+
+// GetBiosConfiguration return bios configuration
+func (c *Conn) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]string, err error) {
+	return c.redfishwrapper.GetBiosConfiguration(ctx)
 }

@@ -17,7 +17,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.31.0
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stmcginnis/gofish v0.14.1-0.20231018151402-dddaff9168fb
+	github.com/stmcginnis/gofish v0.15.1-0.20231121142100-22a60a77be91
 	github.com/stretchr/testify v1.8.4
 	go.opentelemetry.io/otel v1.20.0
 	go.opentelemetry.io/otel/trace v1.20.0

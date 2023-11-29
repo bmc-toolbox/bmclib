@@ -263,7 +263,7 @@ func TestTaskIDFromLocationHeader(t *testing.T) {
 		{
 			name:        "task URI with JID",
 			uri:         "http://foo/redfish/v1/TaskService/Tasks/JID_12345",
-			expectedID:  "12345",
+			expectedID:  "JID_12345",
 			expectedErr: nil,
 		},
 		{
