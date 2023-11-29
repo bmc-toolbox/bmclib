@@ -1,4 +1,4 @@
-package redfish
+package redfishwrapper
 
 import (
 	"context"
@@ -6,15 +6,15 @@ import (
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
-func (c *Conn) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]string, err error) {
-	systems, err := c.redfishwrapper.Systems()
+func (c *Client) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]string, err error) {
+	systems, err := c.Systems()
 	if err != nil {
 		return nil, err
 	}
 
 	biosConfig = make(map[string]string)
 	for _, sys := range systems {
-		if !compatibleOdataID(sys.ODataID, systemsOdataIDs) {
+		if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
 			continue
 		}
 

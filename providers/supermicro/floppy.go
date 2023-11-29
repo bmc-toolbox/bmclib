@@ -20,7 +20,7 @@ var (
 )
 
 func (c *Client) floppyImageMounted(ctx context.Context) (bool, error) {
-	if err := c.openRedfish(ctx); err != nil {
+	if err := c.serviceClient.redfishSession(ctx); err != nil {
 		return false, err
 	}
 
