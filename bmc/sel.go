@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/v2/internal"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 )
@@ -22,13 +21,7 @@ type systemEventLogProviders struct {
 	systemEventLogProvider SystemEventLog
 }
 
-type SystemEventLogEntries []SystemEventLogEntry
-
-type SystemEventLogEntry struct {
-	ID     int32
-	Values []string
-	Raw    string
-}
+type SystemEventLogEntries [][]string
 
 func clearSystemEventLog(ctx context.Context, timeout time.Duration, s []systemEventLogProviders) (metadata Metadata, err error) {
 	var metadataLocal Metadata
@@ -80,7 +73,6 @@ func ClearSystemEventLogFromInterfaces(ctx context.Context, timeout time.Duratio
 }
 
 func getSystemEventLog(ctx context.Context, timeout time.Duration, s []systemEventLogProviders) (sel SystemEventLogEntries, metadata Metadata, err error) {
-	var selLocal SystemEventLogEntries
 	var metadataLocal Metadata
 
 	for _, elem := range s {
@@ -97,33 +89,19 @@ func getSystemEventLog(ctx context.Context, timeout time.Duration, s []systemEve
 			ctx, cancel := context.WithTimeout(ctx, timeout)
 			defer cancel()
 
-			selRawEntries, selErr := elem.systemEventLogProvider.GetSystemEventLog(ctx)
+			sel, selErr := elem.systemEventLogProvider.GetSystemEventLog(ctx)
 			if selErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(selErr, "provider: %v", elem.name))
 				continue
 			}
 
-			for i, v := range selRawEntries {
-
-				// In most cases, the first value is the ID, but not always
-				k, err := internal.ParseInt32(v[0])
-				if err != nil {
-					k = int32(i)
-				}
-
-				selLocal = append(selLocal, SystemEventLogEntry{
-					ID:     k,
-					Values: v,
-				})
-			}
-
 			metadataLocal.SuccessfulProvider = elem.name
-			return selLocal, metadataLocal, nil
+			return sel, metadataLocal, nil
 		}
 
 	}
 
-	return selLocal, metadataLocal, multierror.Append(err, errors.New("failed to get System Event Log"))
+	return nil, metadataLocal, multierror.Append(err, errors.New("failed to get System Event Log"))
 }
 
 func GetSystemEventLogFromInterfaces(ctx context.Context, timeout time.Duration, generic []interface{}) (sel SystemEventLogEntries, metadata Metadata, err error) {

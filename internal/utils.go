@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"fmt"
 	"unicode"
 )
 
@@ -21,13 +20,4 @@ func StringInSlice(str string, sl []string) bool {
 		}
 	}
 	return false
-}
-
-func ParseInt32(i32 string) (int32, error) {
-	var i int32
-	_, err := fmt.Sscanf(i32, "%d", &i)
-	if err != nil {
-		return 0, err
-	}
-	return i, nil
 }
