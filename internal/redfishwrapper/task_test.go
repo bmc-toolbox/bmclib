@@ -2,7 +2,6 @@ package redfishwrapper
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -288,7 +287,6 @@ func TestTask(t *testing.T) {
 
 			got, err := client.Task(ctx, tc.taskID)
 			if tc.err != nil {
-				fmt.Println(err)
 				assert.ErrorContains(t, err, tc.err.Error())
 				return
 			}

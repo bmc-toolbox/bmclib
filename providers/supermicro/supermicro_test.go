@@ -7,10 +7,16 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"testing"
 
+	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/assert"
+)
+
+const (
+	fixturesDir = "./fixtures"
 )
 
 func TestParseToken(t *testing.T) {
@@ -66,6 +72,37 @@ func TestParseToken(t *testing.T) {
 	}
 }
 
+func mustReadFile(t *testing.T, filename string) []byte {
+	t.Helper()
+
+	fixture := fixturesDir + "/" + filename
+	fh, err := os.Open(fixture)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer fh.Close()
+
+	b, err := io.ReadAll(fh)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return b
+}
+
+var endpointFunc = func(t *testing.T, file string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// expect either GET or Delete methods
+		if r.Method != http.MethodGet && r.Method != http.MethodPost && r.Method != http.MethodDelete {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		_, _ = w.Write(mustReadFile(t, file))
+	}
+}
+
 func TestOpen(t *testing.T) {
 	type handlerFuncMap map[string]func(http.ResponseWriter, *http.Request)
 	testcases := []struct {
@@ -84,6 +121,7 @@ func TestOpen(t *testing.T) {
 				"/": func(w http.ResponseWriter, r *http.Request) {
 					w.WriteHeader(http.StatusOK)
 				},
+				"/redfish/v1/": endpointFunc(t, "serviceroot.json"),
 				// first request to login
 				"/cgi/login.cgi": func(w http.ResponseWriter, r *http.Request) {
 					assert.Equal(t, r.Method, http.MethodPost)
@@ -182,13 +220,21 @@ func TestOpen(t *testing.T) {
 			server := httptest.NewTLSServer(mux)
 			defer server.Close()
 
-			server.Config.ErrorLog = log.Default()
+			server.Config.ErrorLog = log.New(os.Stdout, "foo", 3)
 			parsedURL, err := url.Parse(server.URL)
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			client := NewClient(parsedURL.Hostname(), tc.user, tc.pass, logr.Discard(), WithPort(parsedURL.Port()))
+			client.serviceClient.redfish = redfishwrapper.NewClient(
+				parsedURL.Hostname(),
+				parsedURL.Port(),
+				tc.user,
+				tc.pass,
+				redfishwrapper.WithHTTPClient(client.serviceClient.client),
+			)
+
 			err = client.Open(context.Background())
 			if tc.errorContains != "" {
 				assert.ErrorContains(t, err, tc.errorContains)

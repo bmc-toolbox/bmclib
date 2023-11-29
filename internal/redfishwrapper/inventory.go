@@ -1,20 +1,19 @@
-package redfish
+package redfishwrapper
 
 import (
 	"context"
 	"strings"
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
-	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/pkg/errors"
 
 	"github.com/bmc-toolbox/common"
-	gofishrf "github.com/stmcginnis/gofish/redfish"
+	redfish "github.com/stmcginnis/gofish/redfish"
 )
 
 var (
 	// Supported Chassis Odata IDs
-	chassisOdataIDs = []string{
+	KnownChassisOdataIDs = []string{
 		// Dells
 		"/redfish/v1/Chassis/Enclosure.Internal.0-1",
 		"/redfish/v1/Chassis/System.Embedded.1",
@@ -28,7 +27,7 @@ var (
 	}
 
 	// Supported System Odata IDs
-	systemsOdataIDs = []string{
+	knownSystemsOdataIDs = []string{
 		// Dells
 		"/redfish/v1/Systems/System.Embedded.1",
 		"/redfish/v1/Systems/System.Embedded.1/Bios",
@@ -53,26 +52,29 @@ var (
 	}
 )
 
-// inventory struct wraps redfish connection
-type inventory struct {
-	client            *redfishwrapper.Client
-	failOnError       bool
-	softwareInventory []*gofishrf.SoftwareInventory
+// TODO: consider removing this
+func (c *Client) compatibleOdataID(OdataID string, knownOdataIDs []string) bool {
+	for _, url := range knownOdataIDs {
+		if url == OdataID {
+			return true
+		}
+	}
+
+	return false
 }
 
-func (c *Conn) Inventory(ctx context.Context) (device *common.Device, err error) {
-	// initialize inventory object
-	// the redfish client is assigned here to perform redfish Get/Delete requests
-	inv := &inventory{client: c.redfishwrapper, failOnError: c.failInventoryOnError}
-
-	updateService, err := c.redfishwrapper.UpdateService()
-	if err != nil && inv.failOnError {
+func (c *Client) Inventory(ctx context.Context, failOnError bool) (device *common.Device, err error) {
+	updateService, err := c.UpdateService()
+	if err != nil && failOnError {
 		return nil, errors.Wrap(bmclibErrs.ErrRedfishSoftwareInventory, err.Error())
 	}
 
+	softwareInventory := []*redfish.SoftwareInventory{}
+
 	if updateService != nil {
-		inv.softwareInventory, err = updateService.FirmwareInventories()
-		if err != nil && inv.failOnError {
+		// nolint
+		softwareInventory, err = updateService.FirmwareInventories()
+		if err != nil && failOnError {
 			return nil, errors.Wrap(bmclibErrs.ErrRedfishSoftwareInventory, err.Error())
 		}
 	}
@@ -82,20 +84,20 @@ func (c *Conn) Inventory(ctx context.Context) (device *common.Device, err error)
 	device = &newDevice
 
 	// populate device Chassis components attributes
-	err = inv.chassisAttributes(ctx, device)
-	if err != nil && inv.failOnError {
+	err = c.chassisAttributes(ctx, device, failOnError, softwareInventory)
+	if err != nil && failOnError {
 		return nil, err
 	}
 
 	// populate device System components attributes
-	err = inv.systemAttributes(ctx, device)
-	if err != nil && inv.failOnError {
+	err = c.systemAttributes(ctx, device, failOnError, softwareInventory)
+	if err != nil && failOnError {
 		return nil, err
 	}
 
 	// populate device BMC component attributes
-	err = inv.bmcAttributes(ctx, device)
-	if err != nil && inv.failOnError {
+	err = c.bmcAttributes(ctx, device, failOnError, softwareInventory)
+	if err != nil && failOnError {
 		return nil, err
 	}
 
@@ -105,15 +107,15 @@ func (c *Conn) Inventory(ctx context.Context) (device *common.Device, err error)
 // DeviceVendorModel returns the device vendor and model attributes
 
 // bmcAttributes collects BMC component attributes
-func (i *inventory) bmcAttributes(ctx context.Context, device *common.Device) (err error) {
-	managers, err := i.client.Managers(ctx)
+func (c *Client) bmcAttributes(ctx context.Context, device *common.Device, failOnError bool, softwareInventory []*redfish.SoftwareInventory) (err error) {
+	managers, err := c.Managers(ctx)
 	if err != nil {
 		return err
 	}
 
 	var compatible int
 	for _, manager := range managers {
-		if !compatibleOdataID(manager.ODataID, managerOdataIDs) {
+		if !c.compatibleOdataID(manager.ODataID, managerOdataIDs) {
 			continue
 		}
 
@@ -141,7 +143,7 @@ func (i *inventory) bmcAttributes(ctx context.Context, device *common.Device) (e
 		}
 
 		// include additional firmware attributes from redfish firmware inventory
-		i.firmwareAttributes("", device.BMC.ID, device.BMC.Firmware)
+		c.firmwareAttributes("", device.BMC.ID, device.BMC.Firmware, softwareInventory)
 	}
 
 	if compatible == 0 {
@@ -152,34 +154,34 @@ func (i *inventory) bmcAttributes(ctx context.Context, device *common.Device) (e
 }
 
 // chassisAttributes populates the device chassis attributes
-func (i *inventory) chassisAttributes(ctx context.Context, device *common.Device) (err error) {
-	chassis, err := i.client.Chassis(ctx)
+func (c *Client) chassisAttributes(ctx context.Context, device *common.Device, failOnError bool, softwareInventory []*redfish.SoftwareInventory) (err error) {
+	chassis, err := c.Chassis(ctx)
 	if err != nil {
 		return err
 	}
 
 	compatible := 0
 	for _, ch := range chassis {
-		if !compatibleOdataID(ch.ODataID, chassisOdataIDs) {
+		if !c.compatibleOdataID(ch.ODataID, KnownChassisOdataIDs) {
 			continue
 		}
 
 		compatible++
 
-		err = i.collectEnclosure(ch, device)
-		if err != nil && i.failOnError {
+		err = c.collectEnclosure(ch, device, softwareInventory)
+		if err != nil && failOnError {
 			return err
 		}
 
-		err = i.collectPSUs(ch, device)
-		if err != nil && i.failOnError {
+		err = c.collectPSUs(ch, device, softwareInventory)
+		if err != nil && failOnError {
 			return err
 		}
 
 	}
 
-	err = i.collectCPLDs(device)
-	if err != nil && i.failOnError {
+	err = c.collectCPLDs(device, softwareInventory)
+	if err != nil && failOnError {
 		return err
 	}
 
@@ -191,15 +193,15 @@ func (i *inventory) chassisAttributes(ctx context.Context, device *common.Device
 
 }
 
-func (i *inventory) systemAttributes(ctx context.Context, device *common.Device) (err error) {
-	systems, err := i.client.Systems()
+func (c *Client) systemAttributes(ctx context.Context, device *common.Device, failOnError bool, softwareInventory []*redfish.SoftwareInventory) (err error) {
+	systems, err := c.Systems()
 	if err != nil {
 		return err
 	}
 
 	compatible := 0
 	for _, sys := range systems {
-		if !compatibleOdataID(sys.ODataID, systemsOdataIDs) {
+		if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
 			continue
 		}
 
@@ -211,21 +213,27 @@ func (i *inventory) systemAttributes(ctx context.Context, device *common.Device)
 			device.Serial = sys.SerialNumber
 		}
 
+		type collectorFuncs []func(
+			sys *redfish.ComputerSystem,
+			device *common.Device,
+			softwareInventory []*redfish.SoftwareInventory,
+		) error
+
 		// slice of collector methods
-		funcs := []func(sys *gofishrf.ComputerSystem, device *common.Device) error{
-			i.collectCPUs,
-			i.collectDIMMs,
-			i.collectDrives,
-			i.collectBIOS,
-			i.collectNICs,
-			i.collectTPMs,
-			i.collectStorageControllers,
+		funcs := collectorFuncs{
+			c.collectCPUs,
+			c.collectDIMMs,
+			c.collectDrives,
+			c.collectBIOS,
+			c.collectNICs,
+			c.collectTPMs,
+			c.collectStorageControllers,
 		}
 
 		// execute collector methods
 		for _, f := range funcs {
-			err := f(sys, device)
-			if err != nil && i.failOnError {
+			err := f(sys, device, softwareInventory)
+			if err != nil && failOnError {
 				return err
 			}
 		}
@@ -245,8 +253,8 @@ func (i *inventory) systemAttributes(ctx context.Context, device *common.Device)
 // slug - the component slug constant
 // id - the component ID
 // previous - when true returns previously installed firmware, else returns the current
-func (i *inventory) firmwareAttributes(slug, id string, firmwareObj *common.Firmware) {
-	if len(i.softwareInventory) == 0 {
+func (c *Client) firmwareAttributes(slug, id string, firmwareObj *common.Firmware, softwareInventory []*redfish.SoftwareInventory) {
+	if len(softwareInventory) == 0 {
 		return
 	}
 
@@ -254,7 +262,7 @@ func (i *inventory) firmwareAttributes(slug, id string, firmwareObj *common.Firm
 		id = slug
 	}
 
-	for _, inv := range i.softwareInventory {
+	for _, inv := range softwareInventory {
 		// include previously installed firmware attributes
 		if strings.HasPrefix(inv.ID, "Previous") {
 			if strings.Contains(inv.ID, id) || strings.EqualFold(slug, inv.Name) {
@@ -291,14 +299,4 @@ func (i *inventory) firmwareAttributes(slug, id string, firmwareObj *common.Firm
 			}
 		}
 	}
-}
-
-func compatibleOdataID(OdataID string, knownOdataIDs []string) bool {
-	for _, url := range knownOdataIDs {
-		if url == OdataID {
-			return true
-		}
-	}
-
-	return false
 }

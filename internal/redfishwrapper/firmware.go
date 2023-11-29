@@ -192,11 +192,6 @@ func taskIDFromLocationHeader(uri string) (taskID string, err error) {
 	uri = strings.TrimSuffix(uri, "/")
 
 	switch {
-	// idracs return /redfish/v1/TaskService/Tasks/JID_467696020275
-	case strings.Contains(uri, "JID_"):
-		taskID = strings.Split(uri, "JID_")[1]
-		return taskID, nil
-
 	// OpenBMC returns /redfish/v1/TaskService/Tasks/12/Monitor
 	case strings.Contains(uri, "/Tasks/") && strings.HasSuffix(uri, "/Monitor"):
 		taskIDPart := strings.Split(uri, "/Tasks/")[1]

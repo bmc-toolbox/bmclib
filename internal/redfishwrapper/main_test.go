@@ -36,6 +36,7 @@ var endpointFunc = func(t *testing.T, file string) http.HandlerFunc {
 		// expect either GET or Delete methods
 		if r.Method != http.MethodGet && r.Method != http.MethodDelete {
 			w.WriteHeader(http.StatusNotFound)
+			return
 		}
 
 		_, _ = w.Write(mustReadFile(t, file))
