@@ -32,6 +32,7 @@ func jsonResponse(endpoint string) []byte {
 		"/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel":           fixturesDir + "/v1/dell/logservices.sel.json",
 		"/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries":   fixturesDir + "/v1/dell/entries.json",
 		"/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries/1": fixturesDir + "/v1/dell/selentries/1.json",
+		"/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries/2": fixturesDir + "/v1/dell/selentries/2.json",
 
 		"/redfish/v1/":                          fixturesDir + "/v1/serviceroot.json",
 		"/redfish/v1/UpdateService":             fixturesDir + "/v1/updateservice.json",
