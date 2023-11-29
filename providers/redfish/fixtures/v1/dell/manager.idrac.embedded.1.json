@@ -1,0 +1,9 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Manager.Manager",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1",
+    "@odata.type": "#Manager.v1_9_0.Manager",
+    "LogServices": {
+        "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices"
+    },
+    "Comment": "This isn't part of the schema - this file contains only the bare minimum to make the schema validator happy"
+}

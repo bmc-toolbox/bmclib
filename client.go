@@ -656,3 +656,17 @@ func (c *Client) FirmwareInstallUploaded(ctx context.Context, component, uploadV
 
 	return installTaskID, err
 }
+
+// GetSystemEventLog queries for the SEL and returns the entries in an opinionated format.
+func (c *Client) GetSystemEventLog(ctx context.Context) (entries bmc.SystemEventLogEntries, err error) {
+	entries, metadata, err := bmc.GetSystemEventLogFromInterfaces(ctx, c.perProviderTimeout(ctx), c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	return entries, err
+}
+
+// GetSystemEventLogRaw queries for the SEL and returns the raw response.
+func (c *Client) GetSystemEventLogRaw(ctx context.Context) (eventlog string, err error) {
+	eventlog, metadata, err := bmc.GetSystemEventLogRawFromInterfaces(ctx, c.perProviderTimeout(ctx), c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	return eventlog, err
+}

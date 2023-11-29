@@ -19,6 +19,7 @@ func main() {
 	host := flag.String("host", "", "BMC hostname to connect to")
 	withSecureTLS := flag.Bool("secure-tls", false, "Enable secure TLS")
 	certPoolFile := flag.String("cert-pool", "", "Path to an file containing x509 CAs. An empty string uses the system CAs. Only takes effect when --secure-tls=true")
+	action := flag.String("action", "get", "Action to perform on the System Event Log (clear|get)")
 	flag.Parse()
 
 	l := logrus.New()
@@ -60,9 +61,28 @@ func main() {
 	}
 	defer cl.Close(ctx)
 
-	err = cl.ClearSystemEventLog(ctx)
-	if err != nil {
-		l.WithError(err).Fatal(err, "failed to clear System Event Log")
+	if *action == "get" {
+		entries, err := cl.GetSystemEventLog(ctx)
+		if err != nil {
+			l.WithError(err).Fatal(err, "failed to get System Event Log")
+		}
+		l.Info("System Event Log entries", "entries", entries)
+		return
+	} else if *action == "get-raw" {
+		eventlog, err := cl.GetSystemEventLogRaw(ctx)
+		if err != nil {
+			l.WithError(err).Fatal(err, "failed to get System Event Log Raw")
+		}
+		l.Info("System Event Log", "eventlog", eventlog)
+		return
+	} else if *action == "clear" {
+
+		err = cl.ClearSystemEventLog(ctx)
+		if err != nil {
+			l.WithError(err).Fatal(err, "failed to clear System Event Log")
+		}
+		l.Info("System Event Log cleared")
+	} else {
+		l.Fatal("invalid action")
 	}
-	l.Info("System Event Log cleared")
 }

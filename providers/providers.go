@@ -42,7 +42,10 @@ const (
 	FeatureScreenshot registrar.Feature = "screenshot"
 	// FeatureClearSystemEventLog means an implementation that clears the BMC System Event Log (SEL)
 	FeatureClearSystemEventLog registrar.Feature = "clearsystemeventlog"
-
+	// FeatureGetSystemEventLog means an implementation that returns the BMC System Event Log (SEL)
+	FeatureGetSystemEventLog registrar.Feature = "getsystemeventlog"
+	// FeatureGetSystemEventLogRaw means an implementation that returns the BMC System Event Log (SEL) in raw format
+	FeatureGetSystemEventLogRaw registrar.Feature = "getsystemeventlograw"
 	// FeatureFirmwareInstallSteps means an implementation returns the steps part of the firmware update process.
 	FeatureFirmwareInstallSteps registrar.Feature = "firmwareinstallactions"
 

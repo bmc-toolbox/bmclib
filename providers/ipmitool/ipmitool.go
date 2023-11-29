@@ -28,6 +28,8 @@ var (
 		providers.FeatureBmcReset,
 		providers.FeatureBootDeviceSet,
 		providers.FeatureClearSystemEventLog,
+		providers.FeatureGetSystemEventLog,
+		providers.FeatureGetSystemEventLogRaw,
 	}
 )
 
@@ -184,4 +186,12 @@ func (c *Conn) PowerSet(ctx context.Context, state string) (ok bool, err error) 
 
 func (c *Conn) ClearSystemEventLog(ctx context.Context) (err error) {
 	return c.ipmitool.ClearSystemEventLog(ctx)
+}
+
+func (c *Conn) GetSystemEventLog(ctx context.Context) (entries [][]string, err error) {
+	return c.ipmitool.GetSystemEventLog(ctx)
+}
+
+func (c *Conn) GetSystemEventLogRaw(ctx context.Context) (eventlog string, err error) {
+	return c.ipmitool.GetSystemEventLogRaw(ctx)
 }
