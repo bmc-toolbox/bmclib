@@ -36,16 +36,18 @@ var (
 	// Features implemented by dell redfish
 	Features = registrar.Features{
 		providers.FeatureScreenshot,
+		providers.FeaturePowerState,
+		providers.FeaturePowerSet,
+		providers.FeatureFirmwareInstallSteps,
+		providers.FeatureFirmwareUploadInitiateInstall,
+		providers.FeatureFirmwareTaskStatus,
+		providers.FeatureInventoryRead,
 	}
 )
 
 type Config struct {
-	HttpClient *http.Client
-	Port       string
-	// VersionsNotCompatible	is the list of incompatible redfish versions.
-	//
-	// With this option set, The bmclib.Registry.FilterForCompatible(ctx) method will not proceed on
-	// devices with the given redfish version(s).
+	HttpClient            *http.Client
+	Port                  string
 	VersionsNotCompatible []string
 	RootCAs               *x509.CertPool
 	UseBasicAuth          bool
@@ -126,19 +128,26 @@ func (c *Conn) Open(ctx context.Context) (err error) {
 
 	// because this uses the redfish interface and the redfish interface
 	// is available across various BMC vendors, we verify the device we're connected to is dell.
-	manufacturer, err := c.deviceManufacturer(ctx)
-	if err != nil {
+	if err := c.deviceSupported(ctx); err != nil {
 		if er := c.redfishwrapper.Close(ctx); er != nil {
 			return fmt.Errorf("%v: %w", err, er)
 		}
+
 		return err
 	}
 
-	if !strings.Contains(strings.ToLower(manufacturer), common.VendorDell) {
-		if er := c.redfishwrapper.Close(ctx); er != nil {
-			return fmt.Errorf("%v: %w", err, er)
-		}
-		return bmclibErrs.ErrIncompatibleProvider
+	return nil
+}
+
+func (c *Conn) deviceSupported(ctx context.Context) error {
+	manufacturer, err := c.deviceManufacturer(ctx)
+	if err != nil {
+		return err
+	}
+
+	m := strings.ToLower(manufacturer)
+	if !strings.Contains(m, common.VendorDell) {
+		return errors.Wrap(bmclibErrs.ErrIncompatibleProvider, m)
 	}
 
 	return nil
@@ -190,6 +199,16 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 // PowerStateGet gets the power state of a BMC machine
 func (c *Conn) PowerStateGet(ctx context.Context) (state string, err error) {
 	return c.redfishwrapper.SystemPowerStatus(ctx)
+}
+
+// PowerSet sets the power state of a server
+func (c *Conn) PowerSet(ctx context.Context, state string) (ok bool, err error) {
+	return c.redfishwrapper.PowerSet(ctx, state)
+}
+
+// Inventory collects hardware inventory and install firmware information
+func (c *Conn) Inventory(ctx context.Context) (device *common.Device, err error) {
+	return c.redfishwrapper.Inventory(ctx, false)
 }
 
 var errManufacturerUnknown = errors.New("error identifying device manufacturer")
