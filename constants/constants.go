@@ -77,10 +77,6 @@ const (
 	FirmwareInstallPowerCycleHost           = "powercycle-host"
 	PowerCycleHost                TaskState = "powercycle-host"
 
-	// FirmwareInstallPowerCycleBMC indicates the firmware install requires a BMC power cycle
-	FirmwareInstallPowerCycleBMC           = "powercycle-bmc"
-	PowerCycleBMC                TaskState = "powercycle-bmc"
-
 	FirmwareInstallUnknown           = "unknown"
 	Unknown                TaskState = "unknown"
 
@@ -102,6 +98,12 @@ const (
 
 	// FirmwareInstallStepPowerOffHost indicates the host requires to be powered off.
 	FirmwareInstallStepPowerOffHost FirmwareInstallStep = "power-off-host"
+
+	// FirmwareInstallStepResetBMCPostInstall indicates the BMC requires a reset after the install.
+	FirmwareInstallStepResetBMCPostInstall FirmwareInstallStep = "reset-bmc-post-install"
+
+	// FirmwareInstallStepResetBMCOnInstallFailure indicates the BMC requires a reset if an install fails.
+	FirmwareInstallStepResetBMCOnInstallFailure FirmwareInstallStep = "reset-bmc-on-install-failure"
 
 	// device BIOS/UEFI POST code bmclib identifiers
 	POSTStateBootINIT = "boot-init/pxe"
