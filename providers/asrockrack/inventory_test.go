@@ -7,12 +7,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_GetInventory(t *testing.T) {
+func TestGetInventory(t *testing.T) {
 	device, err := aClient.Inventory(context.TODO())
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	aClient.deviceModel = "E3C246D4I-NL"
 	assert.NotNil(t, device)
 	assert.Equal(t, "ASRockRack", device.Vendor)
 	assert.Equal(t, "E3C246D4I-NL", device.Model)

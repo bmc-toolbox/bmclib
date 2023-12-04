@@ -10,11 +10,11 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"os"
-	"strings"
 
 	"github.com/bmc-toolbox/bmclib/v2/constants"
-	"github.com/bmc-toolbox/bmclib/v2/errors"
+	brrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/bmc-toolbox/common"
+	"github.com/pkg/errors"
 )
 
 // API session setup response payload
@@ -377,7 +377,7 @@ func (a *ASRockRack) postCodeInfo(ctx context.Context) (*biosPOSTCode, error) {
 }
 
 // Query the inventory info endpoint
-func (a *ASRockRack) inventoryInfo(ctx context.Context) ([]*component, error) {
+func (a *ASRockRack) inventoryInfoE3C246D41D(ctx context.Context) ([]*component, error) {
 	resp, statusCode, err := a.queryHTTPS(ctx, "api/asrr/inventory_info", "GET", nil, nil, 0)
 	if err != nil {
 		return nil, err
@@ -553,7 +553,7 @@ func (a *ASRockRack) httpsLogin(ctx context.Context) error {
 	}
 
 	if statusCode == 401 {
-		return errors.ErrLoginFailed
+		return brrs.ErrLoginFailed
 	}
 
 	// Unmarshal login session

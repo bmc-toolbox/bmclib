@@ -32,13 +32,13 @@ func Test_FirmwareInfo(t *testing.T) {
 	assert.Equal(t, expected, fwInfo)
 }
 
-func Test_inventoryInfo(t *testing.T) {
+func TestInventoryInfo(t *testing.T) {
 	err := aClient.httpsLogin(context.TODO())
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 
-	inventory, err := aClient.inventoryInfo(context.TODO())
+	inventory, err := aClient.inventoryInfoE3C246D41D(context.TODO())
 	if err != nil {
 		t.Fatal(err.Error())
 	}
