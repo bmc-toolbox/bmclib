@@ -180,8 +180,10 @@ func (a *ASRockRack) createUpdateUser(ctx context.Context, account *UserAccount)
 }
 
 // 1 Set BMC to flash mode and prepare flash area
-// at this point all logged in sessions are terminated
-// and no logins are permitted
+//
+// with the BMC set in flash mode, no new logins are accepted
+// and only a few endpoints can be queried with the existing session
+// one of the few being the install progress/flash status endpoint.
 func (a *ASRockRack) setFlashMode(ctx context.Context) error {
 	device := common.NewDevice()
 	device.Metadata = map[string]string{}
