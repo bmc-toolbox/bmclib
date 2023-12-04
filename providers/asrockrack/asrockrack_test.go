@@ -30,7 +30,7 @@ func TestClose(t *testing.T) {
 	}
 }
 
-func Test_FirwmwareUpdateBMC(t *testing.T) {
+func TestFirwmwareUpdateBMC(t *testing.T) {
 	err := aClient.httpsLogin(context.TODO())
 	if err != nil {
 		t.Errorf(err.Error())
@@ -48,7 +48,10 @@ func Test_FirwmwareUpdateBMC(t *testing.T) {
 	}
 
 	defer fh.Close()
-	err = aClient.firmwareInstallBMC(context.TODO(), fh, 0)
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Minute*15)
+	defer cancel()
+
+	err = aClient.firmwareUploadBMC(ctx, fh)
 	if err != nil {
 		t.Errorf(err.Error())
 	}

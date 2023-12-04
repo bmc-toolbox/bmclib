@@ -189,7 +189,8 @@ func (a *ASRockRack) setFlashMode(ctx context.Context) error {
 
 	pConfig := &preserveConfig{}
 	// preserve config is needed by e3c256d4i
-	if strings.EqualFold(device.Model, "E3C256D4ID-NL") {
+	switch device.Model {
+	case "E3C256D4ID-NL":
 		pConfig = &preserveConfig{PreserveConfig: 1}
 	}
 
@@ -222,14 +223,20 @@ func multipartSize(fieldname, filename string) int64 {
 }
 
 // 2 Upload the firmware file
-func (a *ASRockRack) uploadFirmware(ctx context.Context, endpoint string, fwReader io.Reader, fileSize int64) error {
+func (a *ASRockRack) uploadFirmware(ctx context.Context, endpoint string, file *os.File) error {
+	var size int64
+	finfo, err := file.Stat()
+	if err != nil {
+		return errors.Wrap(err, "unable to determine file size")
+	}
+
+	size = finfo.Size()
+
 	fieldName, fileName := "fwimage", "image"
-	contentLength := multipartSize(fieldName, fileName) + fileSize
+	contentLength := multipartSize(fieldName, fileName) + size
 
 	// Before reading the file, rewind to the beginning
-	if file, ok := fwReader.(*os.File); ok {
-		_, _ = file.Seek(0, 0)
-	}
+	_, _ = file.Seek(0, 0)
 
 	// setup pipe
 	pipeReader, pipeWriter := io.Pipe()
@@ -250,7 +257,7 @@ func (a *ASRockRack) uploadFirmware(ctx context.Context, endpoint string, fwRead
 		}
 
 		// copy from source into form part writer
-		_, err = io.Copy(part, fwReader)
+		_, err = io.Copy(part, file)
 		if err != nil {
 			errCh <- err
 			return
