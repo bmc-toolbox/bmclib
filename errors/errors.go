@@ -120,6 +120,9 @@ var (
 
 	// ErrRedfishNoSystems is returned when the API of the device provides and empty array of systems.
 	ErrRedfishNoSystems = errors.New("redfish: no Systems were found on the device")
+
+	// ErrBMCUpdating is returned when the BMC is going through an update and will not serve other queries.
+	ErrBMCUpdating = errors.New("a BMC firmware update is in progress")
 )
 
 type ErrUnsupportedHardware struct {

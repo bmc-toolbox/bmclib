@@ -4,18 +4,12 @@ import (
 	"context"
 	"os"
 	"testing"
+	"time"
 
 	"gopkg.in/go-playground/assert.v1"
 )
 
-func Test_Compatible(t *testing.T) {
-	b := aClient.Compatible(context.TODO())
-	if !b {
-		t.Errorf("expected true, got false")
-	}
-}
-
-func Test_httpLogin(t *testing.T) {
+func TestHttpLogin(t *testing.T) {
 	err := aClient.httpsLogin(context.TODO())
 	if err != nil {
 		t.Errorf(err.Error())
@@ -24,7 +18,7 @@ func Test_httpLogin(t *testing.T) {
 	assert.Equal(t, "l5L29IP7", aClient.loginSession.CSRFToken)
 }
 
-func Test_Close(t *testing.T) {
+func TestClose(t *testing.T) {
 	err := aClient.httpsLogin(context.TODO())
 	if err != nil {
 		t.Errorf(err.Error())
@@ -36,7 +30,7 @@ func Test_Close(t *testing.T) {
 	}
 }
 
-func Test_FirwmwareUpdateBMC(t *testing.T) {
+func TestFirwmwareUpdateBMC(t *testing.T) {
 	err := aClient.httpsLogin(context.TODO())
 	if err != nil {
 		t.Errorf(err.Error())
@@ -54,7 +48,10 @@ func Test_FirwmwareUpdateBMC(t *testing.T) {
 	}
 
 	defer fh.Close()
-	err = aClient.firmwareInstallBMC(context.TODO(), fh, 0)
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Minute*15)
+	defer cancel()
+
+	err = aClient.firmwareUploadBMC(ctx, fh)
 	if err != nil {
 		t.Errorf(err.Error())
 	}

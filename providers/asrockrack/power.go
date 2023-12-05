@@ -20,6 +20,30 @@ type power struct {
 func (a *ASRockRack) PowerStateGet(ctx context.Context) (state string, err error) {
 	info, err := a.chassisStatusInfo(ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "401") {
+			// during a BMC update, only the flash-progress endpoint can be queried
+			// and so we cannot determine server power status
+			// we don't return an error here because we don't want the bmclib client to retry another provider.
+			progress, err := a.flashProgress(ctx, "/api/maintenance/firmware/flash-progress")
+			if err == nil && progress.Action != "" {
+				a.log.V(2).WithValues(
+					"action", progress.Action,
+					"progress", progress.Progress,
+					"state", progress.State,
+				).Info("bmc in flash mode, power status cannot be determined")
+
+				return "", errors.Wrap(
+					bmclibErrs.ErrBMCUpdating,
+					fmt.Sprintf(
+						"action: %s, progress: %s, state: %d",
+						progress.Action,
+						progress.Progress,
+						progress.State,
+					),
+				)
+			}
+		}
+
 		return "", errors.Wrap(bmclibErrs.ErrPowerStatusRead, err.Error())
 	}
 
@@ -105,7 +129,8 @@ func (a *ASRockRack) resetBMC(ctx context.Context) error {
 		return err
 	}
 
-	if statusCode != http.StatusOK {
+	// The E3C256D4ID BMC returns a 500 status error on the BMC reset request
+	if statusCode != http.StatusOK && statusCode != http.StatusInternalServerError {
 		return fmt.Errorf("non 200 response: %d", statusCode)
 	}
 

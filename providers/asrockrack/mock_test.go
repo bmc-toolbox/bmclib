@@ -307,11 +307,6 @@ func session(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 		}
 	case "DELETE":
-		//1for h, values := range r.Header {
-		//1	for _, v := range values {
-		//1		fmt.Println(h, v)
-		//1	}
-		//1}
 		if r.Header.Get("X-Csrftoken") != "l5L29IP7" {
 			w.WriteHeader(http.StatusBadRequest)
 		}

@@ -28,9 +28,12 @@ func (a *ASRockRack) Inventory(ctx context.Context) (device *common.Device, err 
 	}
 
 	// populate device health based on sensor readings
+	//
+	// sensor data collection can fail for a myriad of reasons
+	// we log the error and keep going
 	err = a.systemHealth(ctx, device)
 	if err != nil {
-		return nil, err
+		a.log.V(2).Error(err, "sensor data collection error", "deviceModel", a.deviceModel)
 	}
 
 	return device, nil
@@ -139,7 +142,17 @@ func (a *ASRockRack) systemAttributes(ctx context.Context, device *common.Device
 
 	device.Metadata["node_id"] = fwInfo.NodeID
 
-	components, err := a.inventoryInfo(ctx)
+	switch device.Model {
+	case E3C246D4ID_NL, E3C246D4I_NL:
+		return a.componentAttributesE3C246(ctx, fwInfo, device)
+	default:
+		return nil
+	}
+}
+
+func (a *ASRockRack) componentAttributesE3C246(ctx context.Context, fwInfo *firmwareInfo, device *common.Device) error {
+	// TODO: implement newer device inventory
+	components, err := a.inventoryInfoE3C246D41D(ctx)
 	if err != nil {
 		return err
 	}
