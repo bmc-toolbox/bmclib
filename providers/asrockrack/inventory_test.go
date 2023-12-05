@@ -13,10 +13,10 @@ func TestGetInventory(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	aClient.deviceModel = "E3C246D4I-NL"
+	aClient.deviceModel = E3C246D4I_NL
 	assert.NotNil(t, device)
 	assert.Equal(t, "ASRockRack", device.Vendor)
-	assert.Equal(t, "E3C246D4I-NL", device.Model)
+	assert.Equal(t, E3C246D4I_NL, device.Model)
 
 	assert.Equal(t, "L2.07B", device.BIOS.Firmware.Installed)
 	assert.Equal(t, "0.01.00", device.BMC.Firmware.Installed)

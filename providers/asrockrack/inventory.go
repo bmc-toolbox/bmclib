@@ -143,7 +143,7 @@ func (a *ASRockRack) systemAttributes(ctx context.Context, device *common.Device
 	device.Metadata["node_id"] = fwInfo.NodeID
 
 	switch device.Model {
-	case "E3C246D4ID-NL", "E3C246D4I-NL":
+	case E3C246D4ID_NL, E3C246D4I_NL:
 		return a.componentAttributesE3C246(ctx, fwInfo, device)
 	default:
 		return nil

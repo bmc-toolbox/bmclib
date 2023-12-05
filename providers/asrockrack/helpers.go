@@ -192,7 +192,7 @@ func (a *ASRockRack) setFlashMode(ctx context.Context) error {
 	pConfig := &preserveConfig{}
 	// preserve config is needed by e3c256d4i
 	switch device.Model {
-	case "E3C256D4ID-NL":
+	case E3C256D4ID_NL:
 		pConfig = &preserveConfig{PreserveConfig: 1}
 	}
 

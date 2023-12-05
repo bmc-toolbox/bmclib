@@ -21,6 +21,10 @@ const (
 	ProviderName = "asrockrack"
 	// ProviderProtocol for the provider implementation
 	ProviderProtocol = "vendorapi"
+
+	E3C256D4ID_NL = "E3C256D4ID-NL"
+	E3C246D4ID_NL = "E3C246D4ID-NL"
+	E3C246D4I_NL  = "E3C246D4I-NL"
 )
 
 var (
@@ -119,9 +123,9 @@ func (a *ASRockRack) Open(ctx context.Context) (err error) {
 
 func (a *ASRockRack) supported(ctx context.Context) error {
 	supported := []string{
-		"E3C256D4ID-NL",
-		"E3C246D4ID-NL",
-		"E3C246D4I-NL",
+		E3C256D4ID_NL,
+		E3C246D4ID_NL,
+		E3C246D4I_NL,
 	}
 
 	if a.deviceModel == "" {
