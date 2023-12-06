@@ -59,8 +59,6 @@ github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdh
 github.com/sirupsen/logrus v1.8.1/go.mod h1:yWOB1SBYBC5VeMP7gHvWumXLIWorT60ONWic61uBYv0=
 github.com/sirupsen/logrus v1.9.3 h1:dueUQJ1C2q9oE3F7wvmSGAaVtTmUizReu6fjN8uqzbQ=
 github.com/sirupsen/logrus v1.9.3/go.mod h1:naHLuLoDiP4jHNo9R0sCBMtWGeIprob74mVsIT4qYEQ=
-github.com/stmcginnis/gofish v0.14.1-0.20231018151402-dddaff9168fb h1:+BpzUuFIEAs71bTshedsUHAAq21VZWvuokbN9ABEQeQ=
-github.com/stmcginnis/gofish v0.14.1-0.20231018151402-dddaff9168fb/go.mod h1:BLDSFTp8pDlf/xDbLZa+F7f7eW0E/CHCboggsu8CznI=
 github.com/stmcginnis/gofish v0.15.1-0.20231121142100-22a60a77be91 h1:WmABtU8y6kTgzoVUn3FWCQGAfyodve3uz3xno28BrRs=
 github.com/stmcginnis/gofish v0.15.1-0.20231121142100-22a60a77be91/go.mod h1:BLDSFTp8pDlf/xDbLZa+F7f7eW0E/CHCboggsu8CznI=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=

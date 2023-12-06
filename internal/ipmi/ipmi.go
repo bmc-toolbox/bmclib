@@ -391,10 +391,18 @@ func (i *Ipmi) GetSystemEventLog(ctx context.Context) (entries [][]string, err e
 		return nil, errors.Wrap(err, "error getting system event log")
 	}
 
-	scanner := bufio.NewScanner(strings.NewReader(output))
+	entries = parseSystemEventLog(output)
+
+	return entries, nil
+}
+
+// parseSystemEventLogRaw parses the raw output of the system event log. Helper
+// function for GetSystemEventLog to make testing the parser easier.
+func parseSystemEventLog(raw string) (entries [][]string) {
+	scanner := bufio.NewScanner(strings.NewReader(raw))
 	for scanner.Scan() {
 		line := strings.Split(scanner.Text(), "|")
-		if len(line) < 3 {
+		if len(line) < 6 {
 			continue
 		}
 		if line[0] == "ID" {
@@ -403,12 +411,11 @@ func (i *Ipmi) GetSystemEventLog(ctx context.Context) (entries [][]string, err e
 		for i := range line {
 			line[i] = strings.TrimSpace(line[i])
 		}
-
 		// ID, Timestamp (date time), Description, Message (message : assertion)
 		entries = append(entries, []string{line[0], fmt.Sprintf("%s %s", line[1], line[2]), line[3], fmt.Sprintf("%s : %s", line[4], line[5])})
 	}
 
-	return entries, nil
+	return entries
 }
 
 // GetSystemEventLogRaw returns the raw SEL output

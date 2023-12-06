@@ -3,7 +3,6 @@ package redfishwrapper
 import (
 	"context"
 	"encoding/json"
-	"log"
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/pkg/errors"
@@ -54,8 +53,6 @@ func (c *Client) GetSystemEventLog(ctx context.Context) (entries [][]string, err
 		if err != nil {
 			return nil, err
 		}
-
-		log.Println(len(logServices))
 
 		for _, logService := range logServices {
 			lentries, err := logService.Entries()

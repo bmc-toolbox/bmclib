@@ -670,6 +670,9 @@ func (c *Client) FirmwareInstallUploadAndInitiate(ctx context.Context, component
 
 // GetSystemEventLog queries for the SEL and returns the entries in an opinionated format.
 func (c *Client) GetSystemEventLog(ctx context.Context) (entries bmc.SystemEventLogEntries, err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "GetSystemEventLog")
+	defer span.End()
+
 	entries, metadata, err := bmc.GetSystemEventLogFromInterfaces(ctx, c.perProviderTimeout(ctx), c.registry().GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return entries, err
@@ -677,6 +680,9 @@ func (c *Client) GetSystemEventLog(ctx context.Context) (entries bmc.SystemEvent
 
 // GetSystemEventLogRaw queries for the SEL and returns the raw response.
 func (c *Client) GetSystemEventLogRaw(ctx context.Context) (eventlog string, err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "GetSystemEventLogRaw")
+	defer span.End()
+
 	eventlog, metadata, err := bmc.GetSystemEventLogRawFromInterfaces(ctx, c.perProviderTimeout(ctx), c.registry().GetDriverInterfaces())
 	c.setMetadata(metadata)
 	return eventlog, err

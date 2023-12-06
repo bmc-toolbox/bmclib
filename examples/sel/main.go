@@ -61,28 +61,29 @@ func main() {
 	}
 	defer cl.Close(ctx)
 
-	if *action == "get" {
+	switch *action {
+	case "get":
 		entries, err := cl.GetSystemEventLog(ctx)
 		if err != nil {
 			l.WithError(err).Fatal(err, "failed to get System Event Log")
 		}
 		l.Info("System Event Log entries", "entries", entries)
 		return
-	} else if *action == "get-raw" {
+	case "get-raw":
 		eventlog, err := cl.GetSystemEventLogRaw(ctx)
 		if err != nil {
 			l.WithError(err).Fatal(err, "failed to get System Event Log Raw")
 		}
 		l.Info("System Event Log", "eventlog", eventlog)
 		return
-	} else if *action == "clear" {
-
+	case "clear":
 		err = cl.ClearSystemEventLog(ctx)
 		if err != nil {
 			l.WithError(err).Fatal(err, "failed to clear System Event Log")
 		}
 		l.Info("System Event Log cleared")
-	} else {
+		return
+	default:
 		l.Fatal("invalid action")
 	}
 }
