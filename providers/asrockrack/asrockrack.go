@@ -1,16 +1,19 @@
 package asrockrack
 
 import (
-	"bytes"
 	"context"
 	"crypto/x509"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
+	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -18,18 +21,26 @@ const (
 	ProviderName = "asrockrack"
 	// ProviderProtocol for the provider implementation
 	ProviderProtocol = "vendorapi"
+
+	E3C256D4ID_NL = "E3C256D4ID-NL"
+	E3C246D4ID_NL = "E3C246D4ID-NL"
+	E3C246D4I_NL  = "E3C246D4I-NL"
 )
 
 var (
 	// Features implemented by asrockrack https
 	Features = registrar.Features{
-		providers.FeatureInventoryRead,
-		providers.FeatureFirmwareInstall,
-		providers.FeatureFirmwareInstallStatus,
 		providers.FeaturePostCodeRead,
 		providers.FeatureBmcReset,
 		providers.FeatureUserCreate,
 		providers.FeatureUserUpdate,
+		providers.FeatureFirmwareUpload,
+		providers.FeatureFirmwareInstallUploaded,
+		providers.FeatureFirmwareTaskStatus,
+		providers.FeatureFirmwareInstallSteps,
+		providers.FeatureInventoryRead,
+		providers.FeaturePowerSet,
+		providers.FeaturePowerState,
 	}
 )
 
@@ -38,6 +49,7 @@ type ASRockRack struct {
 	ip                   string
 	username             string
 	password             string
+	deviceModel          string
 	loginSession         *loginSession
 	httpClient           *http.Client
 	resetRequired        bool // Indicates if the BMC requires a reset
@@ -100,24 +112,45 @@ func (a *ASRockRack) Name() string {
 	return ProviderName
 }
 
-// Compatible implements the registrar.Verifier interface
-// returns true if the BMC is identified to be an asrockrack
-func (a *ASRockRack) Compatible(ctx context.Context) bool {
-	resp, statusCode, err := a.queryHTTPS(ctx, "/", "GET", nil, nil, 0)
-	if err != nil {
-		return false
-	}
-
-	if statusCode != 200 {
-		return false
-	}
-
-	return bytes.Contains(resp, []byte(`ASRockRack`))
-}
-
 // Open a connection to a BMC, implements the Opener interface
 func (a *ASRockRack) Open(ctx context.Context) (err error) {
-	return a.httpsLogin(ctx)
+	if err := a.httpsLogin(ctx); err != nil {
+		return err
+	}
+
+	return a.supported(ctx)
+}
+
+func (a *ASRockRack) supported(ctx context.Context) error {
+	supported := []string{
+		E3C256D4ID_NL,
+		E3C246D4ID_NL,
+		E3C246D4I_NL,
+	}
+
+	if a.deviceModel == "" {
+		device := common.NewDevice()
+		device.Metadata = map[string]string{}
+
+		err := a.fruAttributes(ctx, &device)
+		if err != nil {
+			return errors.Wrap(err, "failed to identify device model")
+		}
+
+		if device.Model == "" {
+			return errors.Wrap(err, "failed to identify device model - empty model attribute")
+		}
+
+		a.deviceModel = device.Model
+	}
+
+	for _, s := range supported {
+		if strings.EqualFold(a.deviceModel, s) {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("device model not supported: %s", a.deviceModel)
 }
 
 // Close a connection to a BMC, implements the Closer interface

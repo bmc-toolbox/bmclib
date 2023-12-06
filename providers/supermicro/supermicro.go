@@ -50,6 +50,7 @@ var (
 		providers.FeatureInventoryRead,
 		providers.FeaturePowerSet,
 		providers.FeaturePowerState,
+		providers.FeatureBmcReset,
 	}
 )
 
@@ -208,6 +209,15 @@ func (c *Client) PowerSet(ctx context.Context, state string) (ok bool, err error
 	}
 
 	return c.serviceClient.redfish.PowerSet(ctx, state)
+}
+
+// BmcReset power cycles the BMC
+func (c *Client) BmcReset(ctx context.Context, resetType string) (ok bool, err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return false, errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.BMCReset(ctx, resetType)
 }
 
 // Inventory collects hardware inventory and install firmware information

@@ -20,6 +20,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/providers/dell"
 	"github.com/bmc-toolbox/bmclib/v2/providers/intelamt"
 	"github.com/bmc-toolbox/bmclib/v2/providers/ipmitool"
+	"github.com/bmc-toolbox/bmclib/v2/providers/openbmc"
 	"github.com/bmc-toolbox/bmclib/v2/providers/redfish"
 	"github.com/bmc-toolbox/bmclib/v2/providers/rpc"
 	"github.com/bmc-toolbox/bmclib/v2/providers/supermicro"
@@ -71,6 +72,7 @@ type providerConfig struct {
 	dell       dell.Config
 	supermicro supermicro.Config
 	rpc        rpc.Provider
+	openbmc    openbmc.Config
 }
 
 // NewClient returns a new Client struct
@@ -105,6 +107,9 @@ func NewClient(host, user, pass string, opts ...Option) *Client {
 				Port: "443",
 			},
 			rpc: rpc.Provider{},
+			openbmc: openbmc.Config{
+				Port: "443",
+			},
 		},
 	}
 
@@ -243,6 +248,21 @@ func (c *Client) registerSupermicroProvider() {
 	c.Registry.Register(supermicro.ProviderName, supermicro.ProviderProtocol, supermicro.Features, nil, driverSupermicro)
 }
 
+func (c *Client) registerOpenBMCProvider() {
+	httpClient := *c.httpClient
+	httpClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
+	driver := openbmc.New(
+		c.Auth.Host,
+		c.Auth.User,
+		c.Auth.Pass,
+		c.Logger,
+		openbmc.WithHttpClient(&httpClient),
+		openbmc.WithPort(c.providerConfig.openbmc.Port),
+	)
+
+	c.Registry.Register(openbmc.ProviderName, openbmc.ProviderProtocol, openbmc.Features, nil, driver)
+}
+
 func (c *Client) registerProviders() {
 	// register the rpc provider
 	// without the consumer URL there is no way to send RPC requests.
@@ -265,6 +285,7 @@ func (c *Client) registerProviders() {
 	c.registerIntelAMTProvider()
 	c.registerDellProvider()
 	c.registerSupermicroProvider()
+	c.registerOpenBMCProvider()
 }
 
 // GetMetadata returns the metadata that is populated after each BMC function/method call

@@ -10,11 +10,11 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"os"
-	"strings"
 
 	"github.com/bmc-toolbox/bmclib/v2/constants"
-	"github.com/bmc-toolbox/bmclib/v2/errors"
+	brrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/bmc-toolbox/common"
+	"github.com/pkg/errors"
 )
 
 // API session setup response payload
@@ -180,8 +180,10 @@ func (a *ASRockRack) createUpdateUser(ctx context.Context, account *UserAccount)
 }
 
 // 1 Set BMC to flash mode and prepare flash area
-// at this point all logged in sessions are terminated
-// and no logins are permitted
+//
+// with the BMC set in flash mode, no new logins are accepted
+// and only a few endpoints can be queried with the existing session
+// one of the few being the install progress/flash status endpoint.
 func (a *ASRockRack) setFlashMode(ctx context.Context) error {
 	device := common.NewDevice()
 	device.Metadata = map[string]string{}
@@ -189,7 +191,8 @@ func (a *ASRockRack) setFlashMode(ctx context.Context) error {
 
 	pConfig := &preserveConfig{}
 	// preserve config is needed by e3c256d4i
-	if strings.EqualFold(device.Model, "E3C256D4ID-NL") {
+	switch device.Model {
+	case E3C256D4ID_NL:
 		pConfig = &preserveConfig{PreserveConfig: 1}
 	}
 
@@ -222,14 +225,20 @@ func multipartSize(fieldname, filename string) int64 {
 }
 
 // 2 Upload the firmware file
-func (a *ASRockRack) uploadFirmware(ctx context.Context, endpoint string, fwReader io.Reader, fileSize int64) error {
+func (a *ASRockRack) uploadFirmware(ctx context.Context, endpoint string, file *os.File) error {
+	var size int64
+	finfo, err := file.Stat()
+	if err != nil {
+		return errors.Wrap(err, "unable to determine file size")
+	}
+
+	size = finfo.Size()
+
 	fieldName, fileName := "fwimage", "image"
-	contentLength := multipartSize(fieldName, fileName) + fileSize
+	contentLength := multipartSize(fieldName, fileName) + size
 
 	// Before reading the file, rewind to the beginning
-	if file, ok := fwReader.(*os.File); ok {
-		_, _ = file.Seek(0, 0)
-	}
+	_, _ = file.Seek(0, 0)
 
 	// setup pipe
 	pipeReader, pipeWriter := io.Pipe()
@@ -250,7 +259,7 @@ func (a *ASRockRack) uploadFirmware(ctx context.Context, endpoint string, fwRead
 		}
 
 		// copy from source into form part writer
-		_, err = io.Copy(part, fwReader)
+		_, err = io.Copy(part, file)
 		if err != nil {
 			errCh <- err
 			return
@@ -377,7 +386,7 @@ func (a *ASRockRack) postCodeInfo(ctx context.Context) (*biosPOSTCode, error) {
 }
 
 // Query the inventory info endpoint
-func (a *ASRockRack) inventoryInfo(ctx context.Context) ([]*component, error) {
+func (a *ASRockRack) inventoryInfoE3C246D41D(ctx context.Context) ([]*component, error) {
 	resp, statusCode, err := a.queryHTTPS(ctx, "api/asrr/inventory_info", "GET", nil, nil, 0)
 	if err != nil {
 		return nil, err
@@ -553,7 +562,7 @@ func (a *ASRockRack) httpsLogin(ctx context.Context) error {
 	}
 
 	if statusCode == 401 {
-		return errors.ErrLoginFailed
+		return brrs.ErrLoginFailed
 	}
 
 	// Unmarshal login session
