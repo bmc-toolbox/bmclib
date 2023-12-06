@@ -29,6 +29,7 @@ var (
 	Features = registrar.Features{
 		providers.FeaturePowerState,
 		providers.FeaturePowerSet,
+		providers.FeatureBmcReset,
 		providers.FeatureFirmwareInstallSteps,
 		providers.FeatureFirmwareUploadInitiateInstall,
 		providers.FeatureFirmwareTaskStatus,
@@ -177,4 +178,9 @@ func (c *Conn) PowerSet(ctx context.Context, state string) (ok bool, err error) 
 // Inventory collects hardware inventory and install firmware information
 func (c *Conn) Inventory(ctx context.Context) (device *common.Device, err error) {
 	return c.redfishwrapper.Inventory(ctx, false)
+}
+
+// BmcReset power cycles the BMC
+func (c *Conn) BmcReset(ctx context.Context, resetType string) (ok bool, err error) {
+	return c.redfishwrapper.BMCReset(ctx, resetType)
 }
