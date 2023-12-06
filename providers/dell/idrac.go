@@ -42,7 +42,10 @@ var (
 		providers.FeatureFirmwareUploadInitiateInstall,
 		providers.FeatureFirmwareTaskStatus,
 		providers.FeatureInventoryRead,
+		providers.FeatureBmcReset,
 	}
+
+	errManufacturerUnknown = errors.New("error identifying device manufacturer")
 )
 
 type Config struct {
@@ -211,7 +214,10 @@ func (c *Conn) Inventory(ctx context.Context) (device *common.Device, err error)
 	return c.redfishwrapper.Inventory(ctx, false)
 }
 
-var errManufacturerUnknown = errors.New("error identifying device manufacturer")
+// BmcReset power cycles the BMC
+func (c *Conn) BmcReset(ctx context.Context, resetType string) (ok bool, err error) {
+	return c.redfishwrapper.BMCReset(ctx, resetType)
+}
 
 // deviceManufacturer returns the device manufacturer and model attributes
 func (c *Conn) deviceManufacturer(ctx context.Context) (vendor string, err error) {
