@@ -383,3 +383,47 @@ func (i *Ipmi) ClearSystemEventLog(ctx context.Context) (err error) {
 	_, err = i.run(ctx, []string{"sel", "clear"})
 	return err
 }
+
+// GetSystemEventLog returns the system event log entries in ID, Timestamp, Description, Message format
+func (i *Ipmi) GetSystemEventLog(ctx context.Context) (entries [][]string, err error) {
+	output, err := i.GetSystemEventLogRaw(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "error getting system event log")
+	}
+
+	entries = parseSystemEventLog(output)
+
+	return entries, nil
+}
+
+// parseSystemEventLogRaw parses the raw output of the system event log. Helper
+// function for GetSystemEventLog to make testing the parser easier.
+func parseSystemEventLog(raw string) (entries [][]string) {
+	scanner := bufio.NewScanner(strings.NewReader(raw))
+	for scanner.Scan() {
+		line := strings.Split(scanner.Text(), "|")
+		if len(line) < 6 {
+			continue
+		}
+		if line[0] == "ID" {
+			continue
+		}
+		for i := range line {
+			line[i] = strings.TrimSpace(line[i])
+		}
+		// ID, Timestamp (date time), Description, Message (message : assertion)
+		entries = append(entries, []string{line[0], fmt.Sprintf("%s %s", line[1], line[2]), line[3], fmt.Sprintf("%s : %s", line[4], line[5])})
+	}
+
+	return entries
+}
+
+// GetSystemEventLogRaw returns the raw SEL output
+func (i *Ipmi) GetSystemEventLogRaw(ctx context.Context) (eventlog string, err error) {
+	output, err := i.run(ctx, []string{"sel", "list"})
+	if err != nil {
+		return "", errors.Wrap(err, "error getting system event log")
+	}
+
+	return output, nil
+}

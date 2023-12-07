@@ -1,0 +1,50 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#LogEntryCollection.LogEntryCollection",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
+    "@odata.type": "#LogEntryCollection.LogEntryCollection",
+    "Description": "System Event Logs for this manager",
+    "Members": [
+        {
+            "@odata.context": "/redfish/v1/$metadata#LogEntry.LogEntry",
+            "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries/2",
+            "@odata.type": "#LogEntry.v1_6_1.LogEntry",
+            "Created": "2023-01-01T00:00:00-00:00",
+            "Description": "Log Entry 2",
+            "EntryCode": "Assert",
+            "EntryType": "SEL",
+            "GeneratorId": "0x0001",
+            "Id": "1",
+            "Links": {},
+            "Message": "OEM software event.",
+            "MessageArgs": [],
+            "MessageArgs@odata.count": 0,
+            "MessageId": "d000000",
+            "Name": "Log Entry 2",
+            "SensorNumber": 999,
+            "SensorType": null,
+            "Severity": "OK"
+        },
+        {
+            "@odata.context": "/redfish/v1/$metadata#LogEntry.LogEntry",
+            "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries/1",
+            "@odata.type": "#LogEntry.v1_6_1.LogEntry",
+            "Created": "2023-01-01T00:00:00-00:00",
+            "Description": "Log Entry 1",
+            "EntryCode": "Deassert",
+            "EntryType": "SEL",
+            "GeneratorId": "0x0001",
+            "Id": "1",
+            "Links": {},
+            "Message": "OEM software event.",
+            "MessageArgs": [],
+            "MessageArgs@odata.count": 0,
+            "MessageId": "d000000",
+            "Name": "Log Entry 1",
+            "SensorNumber": 999,
+            "SensorType": null,
+            "Severity": "OK"
+        }
+    ],
+    "Members@odata.count": 2,
+    "Name": "Log Entry Collection"
+}
