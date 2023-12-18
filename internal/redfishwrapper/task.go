@@ -74,9 +74,9 @@ func (c *Client) taskMessagesAsString(messages []common.Message) string {
 
 func (c *Client) ConvertTaskState(state string) constants.TaskState {
 	switch strings.ToLower(state) {
-	case "starting", "downloading", "downloaded":
+	case "starting", "downloading", "downloaded", "scheduling":
 		return constants.Initializing
-	case "running", "stopping", "cancelling", "scheduling":
+	case "running", "stopping", "cancelling":
 		return constants.Running
 	case "pending", "new":
 		return constants.Queued
