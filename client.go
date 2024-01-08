@@ -526,6 +526,15 @@ func (c *Client) ResetBMC(ctx context.Context, resetType string) (ok bool, err e
 	return ok, err
 }
 
+// DeactivateSOL pass through library function to deactivate active SOL sessions
+func (c *Client) DeactivateSOL(ctx context.Context) (err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "DeactivateSOL")
+	defer span.End()
+	metadata, err := bmc.DeactivateSOLFromInterfaces(ctx, c.perProviderTimeout(ctx), c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	return err
+}
+
 // Inventory pass through library function to collect hardware and firmware inventory
 func (c *Client) Inventory(ctx context.Context) (device *common.Device, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "Inventory")

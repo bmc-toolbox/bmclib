@@ -30,6 +30,7 @@ var (
 		providers.FeatureClearSystemEventLog,
 		providers.FeatureGetSystemEventLog,
 		providers.FeatureGetSystemEventLogRaw,
+		providers.FeatureDeactivateSOL,
 	}
 )
 
@@ -147,6 +148,11 @@ func (c *Conn) BootDeviceSet(ctx context.Context, bootDevice string, setPersiste
 // BmcReset will reset a BMC
 func (c *Conn) BmcReset(ctx context.Context, resetType string) (ok bool, err error) {
 	return c.ipmitool.PowerResetBmc(ctx, resetType)
+}
+
+// DeactivateSOL will deactivate active SOL sessions
+func (c *Conn) DeactivateSOL(ctx context.Context) (err error) {
+	return c.ipmitool.DeactivateSOL(ctx)
 }
 
 // UserRead list all users

@@ -60,4 +60,7 @@ const (
 
 	// FeatureFirmwareUploadInitiateInstall identifies an implementation that uploads firmware _and_ initiates the install process.
 	FeatureFirmwareUploadInitiateInstall registrar.Feature = "uploadandinitiateinstall"
+
+	// FeatureDeactivateSOL means an implementation that can deactivate active SOL sessions
+	FeatureDeactivateSOL registrar.Feature = "deactivatesol"
 )

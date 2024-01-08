@@ -427,3 +427,13 @@ func (i *Ipmi) GetSystemEventLogRaw(ctx context.Context) (eventlog string, err e
 
 	return output, nil
 }
+
+func (i *Ipmi) DeactivateSOL(ctx context.Context) (err error) {
+	out, err := i.run(ctx, []string{"sol", "deactivate"})
+	// Don't treat this as a failure (we just want to ensure there
+	// isn't an active SOL session left open)
+	if strings.TrimSpace(out) == "Info: SOL payload already de-activated" {
+		err = nil
+	}
+	return err
+}
