@@ -42,22 +42,21 @@ const (
 	FeatureScreenshot registrar.Feature = "screenshot"
 	// FeatureClearSystemEventLog means an implementation that clears the BMC System Event Log (SEL)
 	FeatureClearSystemEventLog registrar.Feature = "clearsystemeventlog"
+<<<<<<< HEAD
 	// FeatureGetSystemEventLog means an implementation that returns the BMC System Event Log (SEL)
 	FeatureGetSystemEventLog registrar.Feature = "getsystemeventlog"
 	// FeatureGetSystemEventLogRaw means an implementation that returns the BMC System Event Log (SEL) in raw format
 	FeatureGetSystemEventLogRaw registrar.Feature = "getsystemeventlograw"
+=======
+>>>>>>> cf12342 (clean up formating of const defs)
 	// FeatureFirmwareInstallSteps means an implementation returns the steps part of the firmware update process.
 	FeatureFirmwareInstallSteps registrar.Feature = "firmwareinstallsteps"
-
 	// FeatureFirmwareUpload means an implementation that uploads firmware for installing.
 	FeatureFirmwareUpload registrar.Feature = "firmwareupload"
-
 	// 	FeatureFirmwareInstallUploaded means an implementation that installs firmware uploaded using the firmwareupload feature.
 	FeatureFirmwareInstallUploaded registrar.Feature = "firmwareinstalluploaded"
-
 	// FeatureFirmwareTaskStatus identifies an implementaton that can return the status of a firmware upload/install task.
 	FeatureFirmwareTaskStatus registrar.Feature = "firmwaretaskstatus"
-
 	// FeatureFirmwareUploadInitiateInstall identifies an implementation that uploads firmware _and_ initiates the install process.
 	FeatureFirmwareUploadInitiateInstall registrar.Feature = "uploadandinitiateinstall"
 
