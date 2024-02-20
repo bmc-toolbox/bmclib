@@ -36,8 +36,8 @@ func (c *Client) GetBiosConfiguration(ctx context.Context) (biosConfig map[strin
 	return biosConfig, nil
 }
 
-func (c *Conn) SetBiosConfiguration(ctx context.Context, toSet map[string]string) (err error) {
-	systems, err := c.redfishwrapper.Systems()
+func (c *Client) SetBiosConfiguration(ctx context.Context, toSet map[string]string) (err error) {
+	systems, err := c.Systems()
 	if err != nil {
 		return err
 	}
@@ -49,7 +49,7 @@ func (c *Conn) SetBiosConfiguration(ctx context.Context, toSet map[string]string
 	}
 
 	for _, sys := range systems {
-		if !compatibleOdataID(sys.ODataID, systemsOdataIDs) {
+		if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
 			continue
 		}
 

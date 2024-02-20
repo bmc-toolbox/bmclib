@@ -36,6 +36,8 @@ var (
 		providers.FeatureInventoryRead,
 		providers.FeatureBmcReset,
 		providers.FeatureClearSystemEventLog,
+		providers.FeatureBiosConfigurationGetting,
+		providers.FeatureBiosConfigurationSetting,
 	}
 )
 
@@ -216,4 +218,9 @@ func (c *Conn) Inventory(ctx context.Context) (device *common.Device, err error)
 // GetBiosConfiguration return bios configuration
 func (c *Conn) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]string, err error) {
 	return c.redfishwrapper.GetBiosConfiguration(ctx)
+}
+
+// SetBiosConfiguration changes existing bios configuration
+func (c *Conn) SetBiosConfiguration(ctx context.Context, biosConfig map[string]string) (err error) {
+	return c.redfishwrapper.SetBiosConfiguration(ctx, biosConfig)
 }

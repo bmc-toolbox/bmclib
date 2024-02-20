@@ -556,6 +556,17 @@ func (c *Client) GetBiosConfiguration(ctx context.Context) (biosConfig map[strin
 	return biosConfig, err
 }
 
+func (c *Client) SetBiosConfiguration(ctx context.Context, biosConfig map[string]string) (err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetBiosConfiguration")
+	defer span.End()
+
+	metadata, err := bmc.SetBiosConfigurationInterfaces(ctx, c.registry().GetDriverInterfaces(), biosConfig)
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return err
+}
+
 // FirmwareInstall pass through library function to upload firmware and install firmware
 func (c *Client) FirmwareInstall(ctx context.Context, component string, operationApplyTime string, forceInstall bool, reader io.Reader) (taskID string, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "FirmwareInstall")

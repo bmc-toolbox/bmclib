@@ -43,6 +43,8 @@ var (
 		providers.FeatureFirmwareTaskStatus,
 		providers.FeatureInventoryRead,
 		providers.FeatureBmcReset,
+		providers.FeatureBiosConfigurationGetting,
+		providers.FeatureBiosConfigurationSetting,
 	}
 
 	errManufacturerUnknown = errors.New("error identifying device manufacturer")
