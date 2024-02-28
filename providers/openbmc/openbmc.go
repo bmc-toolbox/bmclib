@@ -115,7 +115,7 @@ func New(host, user, pass string, log logr.Logger, opts ...Option) *Conn {
 // Open a connection to a BMC via redfish
 func (c *Conn) Open(ctx context.Context) (err error) {
 	if err := c.deviceSupported(ctx); err != nil {
-		return nil
+		return err
 	}
 
 	if err := c.redfishwrapper.Open(ctx); err != nil {
