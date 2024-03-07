@@ -212,7 +212,6 @@ func (c *Client) SystemForceOff(ctx context.Context) (ok bool, err error) {
 
 		system.DisableEtagMatch(c.disableEtagMatch)
 
-
 		err = system.Reset(rf.ForceOffResetType)
 		if err != nil {
 			return false, err
@@ -220,4 +219,24 @@ func (c *Client) SystemForceOff(ctx context.Context) (ok bool, err error) {
 	}
 
 	return true, nil
+}
+
+// SendNMI tells the BMC to issue an NMI to the device
+func (c *Client) SendNMI(_ context.Context) error {
+	if err := c.SessionActive(); err != nil {
+		return errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
+	}
+
+	ss, err := c.client.Service.Systems()
+	if err != nil {
+		return err
+	}
+
+	for _, system := range ss {
+		if err = system.Reset(rf.NmiResetType); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

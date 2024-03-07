@@ -544,3 +544,8 @@ func hostIP(hostURL string) (string, error) {
 
 	return hostURLParsed.Host, nil
 }
+
+// SendNMI tells the BMC to issue an NMI to the device
+func (c *Client) SendNMI(ctx context.Context) error {
+	return c.serviceClient.redfish.SendNMI(ctx)
+}

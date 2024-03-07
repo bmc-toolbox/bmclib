@@ -219,6 +219,11 @@ func (c *Conn) BmcReset(ctx context.Context, resetType string) (ok bool, err err
 	return c.redfishwrapper.BMCReset(ctx, resetType)
 }
 
+// SendNMI tells the BMC to issue an NMI to the device
+func (c *Conn) SendNMI(ctx context.Context) error {
+	return c.redfishwrapper.SendNMI(ctx)
+}
+
 // deviceManufacturer returns the device manufacturer and model attributes
 func (c *Conn) deviceManufacturer(ctx context.Context) (vendor string, err error) {
 	systems, err := c.redfishwrapper.Systems()

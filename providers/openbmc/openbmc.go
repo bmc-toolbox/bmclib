@@ -184,3 +184,8 @@ func (c *Conn) Inventory(ctx context.Context) (device *common.Device, err error)
 func (c *Conn) BmcReset(ctx context.Context, resetType string) (ok bool, err error) {
 	return c.redfishwrapper.BMCReset(ctx, resetType)
 }
+
+// SendNMI tells the BMC to issue an NMI to the device
+func (c *Conn) SendNMI(ctx context.Context) error {
+	return c.redfishwrapper.SendNMI(ctx)
+}

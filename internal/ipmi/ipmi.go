@@ -437,3 +437,13 @@ func (i *Ipmi) DeactivateSOL(ctx context.Context) (err error) {
 	}
 	return err
 }
+
+// SendPowerDiag tells the BMC to issue an NMI to the device
+func (i *Ipmi) SendPowerDiag(ctx context.Context) error {
+	_, err := i.run(ctx, []string{"chassis", "power", "diag"})
+	if err != nil {
+		err = errors.Wrap(err, "failed sending power diag")
+	}
+
+	return err
+}
