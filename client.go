@@ -717,3 +717,14 @@ func (c *Client) GetSystemEventLogRaw(ctx context.Context) (eventlog string, err
 	c.setMetadata(metadata)
 	return eventlog, err
 }
+
+// SendNMI tells the BMC to issue an NMI to the device
+func (c *Client) SendNMI(ctx context.Context) error {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SendNMI")
+	defer span.End()
+
+	metadata, err := bmc.SendNMIFromInterface(ctx, c.perProviderTimeout(ctx), c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+
+	return err
+}

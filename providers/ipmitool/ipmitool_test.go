@@ -178,3 +178,21 @@ func TestSystemEventLogGetRaw(t *testing.T) {
 	t.Log(eventlog)
 	t.Fatal()
 }
+
+func TestSendNMI(t *testing.T) {
+	t.Skip("need real ipmi server")
+	host := "127.0.0.1"
+	port := "623"
+	user := "ADMIN"
+	pass := "ADMIN"
+	i, err := New(host, user, pass, WithPort(port), WithLogger(logging.DefaultLogger()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = i.SendNMI(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("NMI sent")
+	t.Fatal()
+}

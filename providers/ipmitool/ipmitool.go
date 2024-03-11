@@ -201,3 +201,8 @@ func (c *Conn) GetSystemEventLog(ctx context.Context) (entries [][]string, err e
 func (c *Conn) GetSystemEventLogRaw(ctx context.Context) (eventlog string, err error) {
 	return c.ipmitool.GetSystemEventLogRaw(ctx)
 }
+
+// SendNMI tells the BMC to issue an NMI to the device
+func (c *Conn) SendNMI(ctx context.Context) error {
+	return c.ipmitool.SendPowerDiag(ctx)
+}

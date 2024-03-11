@@ -217,3 +217,8 @@ func (c *Conn) Inventory(ctx context.Context) (device *common.Device, err error)
 func (c *Conn) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]string, err error) {
 	return c.redfishwrapper.GetBiosConfiguration(ctx)
 }
+
+// SendNMI tells the BMC to issue an NMI to the device
+func (c *Conn) SendNMI(ctx context.Context) error {
+	return c.redfishwrapper.SendNMI(ctx)
+}
