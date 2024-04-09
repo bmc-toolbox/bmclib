@@ -18,6 +18,24 @@ type biosConfigurationGetterProvider struct {
 	BiosConfigurationGetter
 }
 
+type BiosConfigurationSetter interface {
+	SetBiosConfiguration(ctx context.Context, biosConfig map[string]string) (err error)
+}
+
+type biosConfigurationSetterProvider struct {
+	name string
+	BiosConfigurationSetter
+}
+
+type BiosConfigurationResetter interface {
+	ResetBiosConfiguration(ctx context.Context) (err error)
+}
+
+type biosConfigurationResetterProvider struct {
+	name string
+	BiosConfigurationResetter
+}
+
 func biosConfiguration(ctx context.Context, generic []biosConfigurationGetterProvider) (biosConfig map[string]string, metadata Metadata, err error) {
 	var metadataLocal Metadata
 Loop:
@@ -46,6 +64,62 @@ Loop:
 	return biosConfig, metadataLocal, multierror.Append(err, errors.New("failure to get bios configuration"))
 }
 
+func setBiosConfiguration(ctx context.Context, generic []biosConfigurationSetterProvider, biosConfig map[string]string) (metadata Metadata, err error) {
+	var metadataLocal Metadata
+Loop:
+	for _, elem := range generic {
+		if elem.BiosConfigurationSetter == nil {
+			continue
+		}
+		select {
+		case <-ctx.Done():
+			err = multierror.Append(err, ctx.Err())
+			break Loop
+		default:
+			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			vErr := elem.SetBiosConfiguration(ctx, biosConfig)
+			if vErr != nil {
+				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
+				err = multierror.Append(err, vErr)
+				continue
+
+			}
+			metadataLocal.SuccessfulProvider = elem.name
+			return metadataLocal, nil
+		}
+	}
+
+	return metadataLocal, multierror.Append(err, errors.New("failure to set bios configuration"))
+}
+
+func resetBiosConfiguration(ctx context.Context, generic []biosConfigurationResetterProvider) (metadata Metadata, err error) {
+	var metadataLocal Metadata
+Loop:
+	for _, elem := range generic {
+		if elem.BiosConfigurationResetter == nil {
+			continue
+		}
+		select {
+		case <-ctx.Done():
+			err = multierror.Append(err, ctx.Err())
+			break Loop
+		default:
+			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			vErr := elem.ResetBiosConfiguration(ctx)
+			if vErr != nil {
+				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
+				err = multierror.Append(err, vErr)
+				continue
+
+			}
+			metadataLocal.SuccessfulProvider = elem.name
+			return metadataLocal, nil
+		}
+	}
+
+	return metadataLocal, multierror.Append(err, errors.New("failure to reset bios configuration"))
+}
+
 func GetBiosConfigurationInterfaces(ctx context.Context, generic []interface{}) (biosConfig map[string]string, metadata Metadata, err error) {
 	implementations := make([]biosConfigurationGetterProvider, 0)
 	for _, elem := range generic {
@@ -70,4 +144,56 @@ func GetBiosConfigurationInterfaces(ctx context.Context, generic []interface{}) 
 	}
 
 	return biosConfiguration(ctx, implementations)
+}
+
+func SetBiosConfigurationInterfaces(ctx context.Context, generic []interface{}, biosConfig map[string]string) (metadata Metadata, err error) {
+	implementations := make([]biosConfigurationSetterProvider, 0)
+	for _, elem := range generic {
+		temp := biosConfigurationSetterProvider{name: getProviderName(elem)}
+		switch p := elem.(type) {
+		case BiosConfigurationSetter:
+			temp.BiosConfigurationSetter = p
+			implementations = append(implementations, temp)
+		default:
+			e := fmt.Sprintf("not a BiosConfigurationSetter implementation: %T", p)
+			err = multierror.Append(err, errors.New(e))
+		}
+	}
+	if len(implementations) == 0 {
+		return metadata, multierror.Append(
+			err,
+			errors.Wrap(
+				bmclibErrs.ErrProviderImplementation,
+				("no BiosConfigurationSetter implementations found"),
+			),
+		)
+	}
+
+	return setBiosConfiguration(ctx, implementations, biosConfig)
+}
+
+func ResetBiosConfigurationInterfaces(ctx context.Context, generic []interface{}) (metadata Metadata, err error) {
+	implementations := make([]biosConfigurationResetterProvider, 0)
+	for _, elem := range generic {
+		temp := biosConfigurationResetterProvider{name: getProviderName(elem)}
+		switch p := elem.(type) {
+		case BiosConfigurationResetter:
+			temp.BiosConfigurationResetter = p
+			implementations = append(implementations, temp)
+		default:
+			e := fmt.Sprintf("not a BiosConfigurationResetter implementation: %T", p)
+			err = multierror.Append(err, errors.New(e))
+		}
+	}
+	if len(implementations) == 0 {
+		return metadata, multierror.Append(
+			err,
+			errors.Wrap(
+				bmclibErrs.ErrProviderImplementation,
+				("no BiosConfigurationResetter implementations found"),
+			),
+		)
+	}
+
+	return resetBiosConfiguration(ctx, implementations)
 }

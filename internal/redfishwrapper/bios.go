@@ -4,6 +4,7 @@ import (
 	"context"
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/stmcginnis/gofish/redfish"
 )
 
 func (c *Client) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]string, err error) {
@@ -33,4 +34,41 @@ func (c *Client) GetBiosConfiguration(ctx context.Context) (biosConfig map[strin
 	}
 
 	return biosConfig, nil
+}
+
+func (c *Client) SetBiosConfiguration(ctx context.Context, biosConfig map[string]string) (err error) {
+	systems, err := c.Systems()
+	if err != nil {
+		return err
+	}
+
+	settingsAttributes := make(redfish.SettingsAttributes)
+
+	for attr, value := range biosConfig {
+		settingsAttributes[attr] = value
+	}
+
+	for _, sys := range systems {
+		if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
+			continue
+		}
+
+		bios, err := sys.Bios()
+		if err != nil {
+			return err
+		}
+
+		err = bios.UpdateBiosAttributes(settingsAttributes)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (c *Client) ResetBiosConfiguration(ctx context.Context) (err error) {
+	// TODO(jwb) do the reset :P
+	return nil
 }

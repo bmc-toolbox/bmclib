@@ -218,6 +218,11 @@ func (c *Conn) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]
 	return c.redfishwrapper.GetBiosConfiguration(ctx)
 }
 
+// SetBiosConfiguration set bios configuration
+func (c *Conn) SetBiosConfiguration(ctx context.Context, biosConfig map[string]string) (err error) {
+	return c.redfishwrapper.SetBiosConfiguration(ctx, biosConfig)
+}
+
 // SendNMI tells the BMC to issue an NMI to the device
 func (c *Conn) SendNMI(ctx context.Context) error {
 	return c.redfishwrapper.SendNMI(ctx)
