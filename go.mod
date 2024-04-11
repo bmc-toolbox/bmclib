@@ -1,14 +1,14 @@
 module github.com/bmc-toolbox/bmclib/v2
 
-go 1.18
+go 1.22
 
 require (
 	dario.cat/mergo v1.0.0
 	github.com/Jeffail/gabs/v2 v2.7.0
-	github.com/bmc-toolbox/common v0.0.0-20230717121556-5eb9915a8a5a
+	github.com/bmc-toolbox/common v0.0.0-20231204194243-7bcbccab7116
 	github.com/bombsimon/logrusr/v2 v2.0.1
 	github.com/ghodss/yaml v1.0.0
-	github.com/go-logr/logr v1.3.0
+	github.com/go-logr/logr v1.4.1
 	github.com/go-logr/zerologr v1.2.3
 	github.com/google/go-cmp v0.6.0
 	github.com/hashicorp/go-multierror v1.1.1
@@ -18,13 +18,13 @@ require (
 	github.com/rs/zerolog v1.31.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stmcginnis/gofish v0.15.1-0.20231121142100-22a60a77be91
-	github.com/stretchr/testify v1.8.4
-	go.opentelemetry.io/otel v1.20.0
-	go.opentelemetry.io/otel/trace v1.20.0
+	github.com/stretchr/testify v1.9.0
+	go.opentelemetry.io/otel v1.25.0
+	go.opentelemetry.io/otel/trace v1.25.0
 	go.uber.org/goleak v1.2.1
-	golang.org/x/crypto v0.15.0
-	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa
-	golang.org/x/net v0.18.0
+	golang.org/x/crypto v0.22.0
+	golang.org/x/exp v0.0.0-20240409090435-93d18d7e34b8
+	golang.org/x/net v0.24.0
 	gopkg.in/go-playground/assert.v1 v1.2.1
 )
 
@@ -37,7 +37,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/satori/go.uuid v1.2.0 // indirect
-	golang.org/x/sys v0.14.0 // indirect
+	golang.org/x/sys v0.19.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
