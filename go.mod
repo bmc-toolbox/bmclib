@@ -19,7 +19,6 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stmcginnis/gofish v0.15.1-0.20231121142100-22a60a77be91
 	github.com/stretchr/testify v1.9.0
-	go.opencensus.io v0.24.0
 	go.opentelemetry.io/otel v1.24.0
 	go.opentelemetry.io/otel/trace v1.24.0
 	go.uber.org/goleak v1.2.1
@@ -33,7 +32,6 @@ require (
 	github.com/VictorLowther/simplexml v0.0.0-20180716164440-0bff93621230 // indirect
 	github.com/VictorLowther/soap v0.0.0-20150314151524-8e36fca84b22 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
