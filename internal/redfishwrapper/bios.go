@@ -4,6 +4,7 @@ import (
 	"context"
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/stmcginnis/gofish/common"
 	"github.com/stmcginnis/gofish/redfish"
 )
 
@@ -58,7 +59,8 @@ func (c *Client) SetBiosConfiguration(ctx context.Context, biosConfig map[string
 			return err
 		}
 
-		err = bios.UpdateBiosAttributes(settingsAttributes)
+		// TODO(jwb) We should handle passing different apply times here
+		err = bios.UpdateBiosAttributesApplyAt(settingsAttributes, common.OnResetApplyTime)
 
 		if err != nil {
 			return err
