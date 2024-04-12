@@ -91,5 +91,8 @@ func main() {
 		if err != nil {
 			l.Error(err)
 		}
+	default:
+		l.Fatal("Unknown mode: " + *mode)
+
 	}
 }
