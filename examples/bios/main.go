@@ -2,42 +2,71 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
-	"os"
+	"log"
+	"strings"
+	"time"
 
 	bmclib "github.com/bmc-toolbox/bmclib/v2"
+	"github.com/bmc-toolbox/bmclib/v2/providers"
 	logrusr "github.com/bombsimon/logrusr/v2"
+
 	"github.com/sirupsen/logrus"
 )
 
 func main() {
-	// setup logger
+	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
+	defer cancel()
+
+	// Command line option flag parsing
+	user := flag.String("user", "", "Username to login with")
+	pass := flag.String("password", "", "Username to login with")
+	host := flag.String("host", "", "BMC hostname to connect to")
+	mode := flag.String("mode", "get", "Mode [get,set,reset]")
+	flag.Parse()
+
+	// Logger configuration
 	l := logrus.New()
-	l.Level = logrus.TraceLevel
+	l.Level = logrus.DebugLevel
 	logger := logrusr.New(l)
 
+	// bmclib client abstraction
 	clientOpts := []bmclib.Option{bmclib.WithLogger(logger)}
 
-	host := os.Getenv("BMC_HOST")
-	bmcPass := os.Getenv("BMC_PASSWORD")
-	bmcUser := os.Getenv("BMC_USERNAME")
-	// init client
-	client := bmclib.NewClient(host, bmcUser, bmcPass, clientOpts...)
+	client := bmclib.NewClient(*host, *user, *pass, clientOpts...)
+	client.Registry.Drivers = client.Registry.Supports(providers.FeatureGetBiosConfiguration, providers.FeatureSetBiosConfiguration, providers.FeatureResetBiosConfiguration)
 
-	ctx := context.TODO()
-	// open BMC session
 	err := client.Open(ctx)
 	if err != nil {
-		l.Fatal(err, "bmc login failed")
+		log.Fatal(err, "bmc login failed")
 	}
 
 	defer client.Close(ctx)
 
-	// retrieve bios configuration
-	biosConfig, err := client.GetBiosConfiguration(ctx)
-	if err != nil {
-		l.Error(err)
-	}
+	// Operating mode selection
+	switch strings.ToLower(*mode) {
+	case "get":
+		// retrieve bios configuration
+		biosConfig, err := client.GetBiosConfiguration(ctx)
+		if err != nil {
+			l.Error(err)
+		}
 
-	fmt.Println(biosConfig)
+		fmt.Printf("biosConfig: %+v\n", biosConfig)
+	case "set":
+		exampleConfig := map[string]string{"TpmSecurity": "Off"}
+		fmt.Println("Attempting to set BIOS configuration:")
+		fmt.Printf("exampleConfig: %+v\n", exampleConfig)
+
+		err := client.SetBiosConfiguration(ctx, exampleConfig)
+		if err != nil {
+			l.Error(err)
+		}
+	case "reset":
+		err := client.ResetBiosConfiguration(ctx)
+		if err != nil {
+			l.Error(err)
+		}
+	}
 }
