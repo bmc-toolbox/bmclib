@@ -69,6 +69,27 @@ func (c *Client) SetBiosConfiguration(ctx context.Context, biosConfig map[string
 }
 
 func (c *Client) ResetBiosConfiguration(ctx context.Context) (err error) {
-	// TODO(jwb) do the reset :P
+	systems, err := c.Systems()
+	if err != nil {
+		return err
+	}
+
+	for _, sys := range systems {
+		if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
+			continue
+		}
+
+		bios, err := sys.Bios()
+		if err != nil {
+			return err
+		}
+
+		err = bios.ResetBios()
+
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
