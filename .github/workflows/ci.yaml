@@ -14,7 +14,7 @@ jobs:
     - name: Install Go
       uses: actions/setup-go@v3
       with:
-        go-version: '1.22'
+        go-version-file: go.mod
     - name: Run golangci-lint
       uses: golangci/golangci-lint-action@v3
       with:
@@ -34,7 +34,7 @@ jobs:
     - name: Install Go
       uses: actions/setup-go@v3
       with:
-        go-version: '1.22'
+        go-version-file: go.mod
     - name: make all-tests
       run: make all-tests
     - name: upload codecov
