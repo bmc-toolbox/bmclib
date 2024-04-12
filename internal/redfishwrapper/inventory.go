@@ -90,13 +90,13 @@ func (c *Client) Inventory(ctx context.Context, failOnError bool) (device *commo
 	}
 
 	// populate device System components attributes
-	err = c.systemAttributes(ctx, device, failOnError, softwareInventory)
+	err = c.systemAttributes(device, failOnError, softwareInventory)
 	if err != nil && failOnError {
 		return nil, err
 	}
 
 	// populate device BMC component attributes
-	err = c.bmcAttributes(ctx, device, failOnError, softwareInventory)
+	err = c.bmcAttributes(ctx, device, softwareInventory)
 	if err != nil && failOnError {
 		return nil, err
 	}
@@ -107,7 +107,7 @@ func (c *Client) Inventory(ctx context.Context, failOnError bool) (device *commo
 // DeviceVendorModel returns the device vendor and model attributes
 
 // bmcAttributes collects BMC component attributes
-func (c *Client) bmcAttributes(ctx context.Context, device *common.Device, failOnError bool, softwareInventory []*redfish.SoftwareInventory) (err error) {
+func (c *Client) bmcAttributes(ctx context.Context, device *common.Device, softwareInventory []*redfish.SoftwareInventory) (err error) {
 	managers, err := c.Managers(ctx)
 	if err != nil {
 		return err
@@ -193,7 +193,7 @@ func (c *Client) chassisAttributes(ctx context.Context, device *common.Device, f
 
 }
 
-func (c *Client) systemAttributes(ctx context.Context, device *common.Device, failOnError bool, softwareInventory []*redfish.SoftwareInventory) (err error) {
+func (c *Client) systemAttributes(device *common.Device, failOnError bool, softwareInventory []*redfish.SoftwareInventory) (err error) {
 	systems, err := c.Systems()
 	if err != nil {
 		return err
