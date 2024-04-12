@@ -27,7 +27,6 @@ import (
 	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
-	"go.opencensus.io/trace"
 	"go.opentelemetry.io/otel/attribute"
 	oteltrace "go.opentelemetry.io/otel/trace"
 	tracenoop "go.opentelemetry.io/otel/trace/noop"
@@ -319,7 +318,7 @@ func (c *Client) registry() *registrar.Registry {
 	return c.Registry
 }
 
-func (c *Client) RegisterSpanAttributes(m bmc.Metadata, span trace.Span) {
+func (c *Client) RegisterSpanAttributes(m bmc.Metadata, span oteltrace.Span) {
 	span.SetAttributes(attribute.String("host", c.Auth.Host))
 
 	span.SetAttributes(attribute.String("successful-provider", m.SuccessfulProvider))
