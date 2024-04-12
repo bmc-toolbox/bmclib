@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
-	"log"
+	"io"
+	"os"
 	"strings"
 	"time"
 
@@ -24,6 +26,8 @@ func main() {
 	pass := flag.String("password", "", "Username to login with")
 	host := flag.String("host", "", "BMC hostname to connect to")
 	mode := flag.String("mode", "get", "Mode [get,set,reset]")
+	dfile := flag.String("file", "", "Read data from file")
+
 	flag.Parse()
 
 	// Logger configuration
@@ -39,7 +43,7 @@ func main() {
 
 	err := client.Open(ctx)
 	if err != nil {
-		log.Fatal(err, "bmc login failed")
+		l.Fatal(err, "bmc login failed")
 	}
 
 	defer client.Close(ctx)
@@ -50,12 +54,31 @@ func main() {
 		// retrieve bios configuration
 		biosConfig, err := client.GetBiosConfiguration(ctx)
 		if err != nil {
-			l.Error(err)
+			l.Fatal(err)
 		}
 
 		fmt.Printf("biosConfig: %+v\n", biosConfig)
 	case "set":
-		exampleConfig := map[string]string{"TpmSecurity": "Off"}
+		exampleConfig := make(map[string]string)
+
+		if *dfile != "" {
+			jsonFile, err := os.Open(*dfile)
+			if err != nil {
+				l.Fatal(err)
+			}
+
+			defer jsonFile.Close()
+
+			jsonData, _ := io.ReadAll(jsonFile)
+
+			err = json.Unmarshal(jsonData, &exampleConfig)
+			if err != nil {
+				l.Fatal(err)
+			}
+		} else {
+			exampleConfig["TpmSecurity"] = "Off"
+		}
+
 		fmt.Println("Attempting to set BIOS configuration:")
 		fmt.Printf("exampleConfig: %+v\n", exampleConfig)
 
