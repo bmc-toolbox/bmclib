@@ -37,7 +37,7 @@ type biosConfigurationResetterProvider struct {
 }
 
 func biosConfiguration(ctx context.Context, generic []biosConfigurationGetterProvider) (biosConfig map[string]string, metadata Metadata, err error) {
-	var metadataLocal Metadata
+	metadata = newMetadata()
 Loop:
 	for _, elem := range generic {
 		if elem.BiosConfigurationGetter == nil {
@@ -48,7 +48,7 @@ Loop:
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			metadata.ProvidersAttempted = append(metadata.ProvidersAttempted, elem.name)
 			biosConfig, vErr := elem.GetBiosConfiguration(ctx)
 			if vErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
@@ -56,16 +56,16 @@ Loop:
 				continue
 
 			}
-			metadataLocal.SuccessfulProvider = elem.name
-			return biosConfig, metadataLocal, nil
+			metadata.SuccessfulProvider = elem.name
+			return biosConfig, metadata, nil
 		}
 	}
 
-	return biosConfig, metadataLocal, multierror.Append(err, errors.New("failure to get bios configuration"))
+	return biosConfig, metadata, multierror.Append(err, errors.New("failure to get bios configuration"))
 }
 
 func setBiosConfiguration(ctx context.Context, generic []biosConfigurationSetterProvider, biosConfig map[string]string) (metadata Metadata, err error) {
-	var metadataLocal Metadata
+	metadata = newMetadata()
 Loop:
 	for _, elem := range generic {
 		if elem.BiosConfigurationSetter == nil {
@@ -76,7 +76,7 @@ Loop:
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			metadata.ProvidersAttempted = append(metadata.ProvidersAttempted, elem.name)
 			vErr := elem.SetBiosConfiguration(ctx, biosConfig)
 			if vErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
@@ -84,16 +84,16 @@ Loop:
 				continue
 
 			}
-			metadataLocal.SuccessfulProvider = elem.name
-			return metadataLocal, nil
+			metadata.SuccessfulProvider = elem.name
+			return metadata, nil
 		}
 	}
 
-	return metadataLocal, multierror.Append(err, errors.New("failure to set bios configuration"))
+	return metadata, multierror.Append(err, errors.New("failure to set bios configuration"))
 }
 
 func resetBiosConfiguration(ctx context.Context, generic []biosConfigurationResetterProvider) (metadata Metadata, err error) {
-	var metadataLocal Metadata
+	metadata = newMetadata()
 Loop:
 	for _, elem := range generic {
 		if elem.BiosConfigurationResetter == nil {
@@ -104,7 +104,7 @@ Loop:
 			err = multierror.Append(err, ctx.Err())
 			break Loop
 		default:
-			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
+			metadata.ProvidersAttempted = append(metadata.ProvidersAttempted, elem.name)
 			vErr := elem.ResetBiosConfiguration(ctx)
 			if vErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
@@ -112,12 +112,12 @@ Loop:
 				continue
 
 			}
-			metadataLocal.SuccessfulProvider = elem.name
-			return metadataLocal, nil
+			metadata.SuccessfulProvider = elem.name
+			return metadata, nil
 		}
 	}
 
-	return metadataLocal, multierror.Append(err, errors.New("failure to reset bios configuration"))
+	return metadata, multierror.Append(err, errors.New("failure to reset bios configuration"))
 }
 
 func GetBiosConfigurationInterfaces(ctx context.Context, generic []interface{}) (biosConfig map[string]string, metadata Metadata, err error) {
