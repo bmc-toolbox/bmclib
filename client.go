@@ -28,7 +28,6 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
 	oteltrace "go.opentelemetry.io/otel/trace"
 	tracenoop "go.opentelemetry.io/otel/trace/noop"
 )
@@ -319,7 +318,7 @@ func (c *Client) registry() *registrar.Registry {
 	return c.Registry
 }
 
-func (c *Client) RegisterSpanAttributes(m bmc.Metadata, span trace.Span) {
+func (c *Client) RegisterSpanAttributes(m bmc.Metadata, span oteltrace.Span) {
 	span.SetAttributes(attribute.String("host", c.Auth.Host))
 
 	span.SetAttributes(attribute.String("successful-provider", m.SuccessfulProvider))
@@ -554,6 +553,28 @@ func (c *Client) GetBiosConfiguration(ctx context.Context) (biosConfig map[strin
 	metadata.RegisterSpanAttributes(c.Auth.Host, span)
 
 	return biosConfig, err
+}
+
+func (c *Client) SetBiosConfiguration(ctx context.Context, biosConfig map[string]string) (err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetBiosConfiguration")
+	defer span.End()
+
+	metadata, err := bmc.SetBiosConfigurationInterfaces(ctx, c.registry().GetDriverInterfaces(), biosConfig)
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return err
+}
+
+func (c *Client) ResetBiosConfiguration(ctx context.Context) (err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "ResetBiosConfiguration")
+	defer span.End()
+
+	metadata, err := bmc.ResetBiosConfigurationInterfaces(ctx, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return err
 }
 
 // FirmwareInstall pass through library function to upload firmware and install firmware

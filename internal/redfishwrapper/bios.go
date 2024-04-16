@@ -4,6 +4,8 @@ import (
 	"context"
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/stmcginnis/gofish/common"
+	"github.com/stmcginnis/gofish/redfish"
 )
 
 func (c *Client) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]string, err error) {
@@ -33,4 +35,63 @@ func (c *Client) GetBiosConfiguration(ctx context.Context) (biosConfig map[strin
 	}
 
 	return biosConfig, nil
+}
+
+func (c *Client) SetBiosConfiguration(ctx context.Context, biosConfig map[string]string) (err error) {
+	systems, err := c.Systems()
+	if err != nil {
+		return err
+	}
+
+	settingsAttributes := make(redfish.SettingsAttributes)
+
+	for attr, value := range biosConfig {
+		settingsAttributes[attr] = value
+	}
+
+	for _, sys := range systems {
+		if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
+			continue
+		}
+
+		bios, err := sys.Bios()
+		if err != nil {
+			return err
+		}
+
+		// TODO(jwb) We should handle passing different apply times here
+		err = bios.UpdateBiosAttributesApplyAt(settingsAttributes, common.OnResetApplyTime)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (c *Client) ResetBiosConfiguration(ctx context.Context) (err error) {
+	systems, err := c.Systems()
+	if err != nil {
+		return err
+	}
+
+	for _, sys := range systems {
+		if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
+			continue
+		}
+
+		bios, err := sys.Bios()
+		if err != nil {
+			return err
+		}
+
+		err = bios.ResetBios()
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

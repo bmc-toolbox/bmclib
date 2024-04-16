@@ -63,4 +63,13 @@ const (
 
 	// FeatureDeactivateSOL means an implementation that can deactivate active SOL sessions
 	FeatureDeactivateSOL registrar.Feature = "deactivatesol"
+
+	// FeatureResetBiosConfiguration means an implementation that can reset bios configuration back to 'factory' defaults
+	FeatureResetBiosConfiguration registrar.Feature = "resetbiosconfig"
+
+	// FeatureSetBiosConfiguration means an implementation that can set bios configuration from an input k/v map
+	FeatureSetBiosConfiguration registrar.Feature = "setbiosconfig"
+
+	// FeatureGetBiosConfiguration means an implementation that can get bios configuration in a simple k/v map
+	FeatureGetBiosConfiguration registrar.Feature = "getbiosconfig"
 )

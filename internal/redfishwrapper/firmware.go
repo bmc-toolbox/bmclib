@@ -47,7 +47,7 @@ func (c *Client) FirmwareUpload(ctx context.Context, updateFile *os.File, params
 		return "", errors.Wrap(errUpdateParams, err.Error())
 	}
 
-	installMethod, installURI, err := c.firmwareInstallMethodURI(ctx)
+	installMethod, installURI, err := c.firmwareInstallMethodURI()
 	if err != nil {
 		return "", errors.Wrap(bmclibErrs.ErrFirmwareUpload, err.Error())
 	}
@@ -69,14 +69,14 @@ func (c *Client) FirmwareUpload(ctx context.Context, updateFile *os.File, params
 	switch installMethod {
 	case multipartHttpUpload:
 		var uploadErr error
-		resp, uploadErr = c.multipartHTTPUpload(ctx, installURI, updateFile, parameters)
+		resp, uploadErr = c.multipartHTTPUpload(installURI, updateFile, parameters)
 		if uploadErr != nil {
 			return "", errors.Wrap(bmclibErrs.ErrFirmwareUpload, uploadErr.Error())
 		}
 
 	case unstructuredHttpPush:
 		var uploadErr error
-		resp, uploadErr = c.unstructuredHttpUpload(ctx, installURI, updateFile, parameters)
+		resp, uploadErr = c.unstructuredHttpUpload(installURI, updateFile)
 		if uploadErr != nil {
 			return "", errors.Wrap(bmclibErrs.ErrFirmwareUpload, uploadErr.Error())
 		}
@@ -212,7 +212,7 @@ type multipartPayload struct {
 	updateFile       *os.File
 }
 
-func (c *Client) multipartHTTPUpload(ctx context.Context, url string, update *os.File, params []byte) (*http.Response, error) {
+func (c *Client) multipartHTTPUpload(url string, update *os.File, params []byte) (*http.Response, error) {
 	if url == "" {
 		return nil, fmt.Errorf("unable to execute request, no target provided")
 	}
@@ -226,7 +226,7 @@ func (c *Client) multipartHTTPUpload(ctx context.Context, url string, update *os
 	return c.runRequestWithMultipartPayload(url, payload)
 }
 
-func (c *Client) unstructuredHttpUpload(ctx context.Context, url string, update io.Reader, params []byte) (*http.Response, error) {
+func (c *Client) unstructuredHttpUpload(url string, update io.Reader) (*http.Response, error) {
 	if url == "" {
 		return nil, fmt.Errorf("unable to execute request, no target provided")
 	}
@@ -240,7 +240,7 @@ func (c *Client) unstructuredHttpUpload(ctx context.Context, url string, update 
 }
 
 // firmwareUpdateMethodURI returns the updateMethod and URI
-func (c *Client) firmwareInstallMethodURI(ctx context.Context) (method installMethod, updateURI string, err error) {
+func (c *Client) firmwareInstallMethodURI() (method installMethod, updateURI string, err error) {
 	updateService, err := c.UpdateService()
 	if err != nil {
 		return "", "", errors.Wrap(bmclibErrs.ErrRedfishUpdateService, err.Error())

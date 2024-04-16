@@ -43,6 +43,9 @@ var (
 		providers.FeatureFirmwareTaskStatus,
 		providers.FeatureInventoryRead,
 		providers.FeatureBmcReset,
+		providers.FeatureGetBiosConfiguration,
+		providers.FeatureSetBiosConfiguration,
+		providers.FeatureResetBiosConfiguration,
 	}
 
 	errManufacturerUnknown = errors.New("error identifying device manufacturer")
@@ -217,6 +220,21 @@ func (c *Conn) Inventory(ctx context.Context) (device *common.Device, err error)
 // BmcReset power cycles the BMC
 func (c *Conn) BmcReset(ctx context.Context, resetType string) (ok bool, err error) {
 	return c.redfishwrapper.BMCReset(ctx, resetType)
+}
+
+// GetBiosConfiguration returns the BIOS configuration settings via the BMC
+func (c *Conn) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]string, err error) {
+	return c.redfishwrapper.GetBiosConfiguration(ctx)
+}
+
+// SetBiosConfiguration sets the BIOS configuration settings via the BMC
+func (c *Conn) SetBiosConfiguration(ctx context.Context, biosConfig map[string]string) (err error) {
+	return c.redfishwrapper.SetBiosConfiguration(ctx, biosConfig)
+}
+
+// ResetBiosConfiguration resets the BIOS configuration settings back to 'factory defaults' via the BMC
+func (c *Conn) ResetBiosConfiguration(ctx context.Context) (err error) {
+	return c.redfishwrapper.ResetBiosConfiguration(ctx)
 }
 
 // SendNMI tells the BMC to issue an NMI to the device

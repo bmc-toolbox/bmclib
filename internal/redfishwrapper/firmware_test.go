@@ -197,7 +197,7 @@ func TestFirmwareInstallMethodURI(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			gotMethod, gotURI, err := client.firmwareInstallMethodURI(ctx)
+			gotMethod, gotURI, err := client.firmwareInstallMethodURI()
 			if tc.err != nil {
 				assert.ErrorContains(t, err, tc.err.Error())
 				return
