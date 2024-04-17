@@ -17,14 +17,10 @@ import (
 	"github.com/stmcginnis/gofish/redfish"
 )
 
-var (
-	ErrUnsupportedHardware = errors.New("hardware not supported")
-)
-
 // bmc client interface implementations methods
 func (c *Conn) FirmwareInstallSteps(ctx context.Context, component string) ([]constants.FirmwareInstallStep, error) {
 	if err := c.deviceSupported(ctx); err != nil {
-		return nil, errors.Wrap(ErrUnsupportedHardware, err.Error())
+		return nil, bmcliberrs.NewErrUnsupportedHardware(err.Error())
 	}
 
 	return []constants.FirmwareInstallStep{
@@ -35,7 +31,7 @@ func (c *Conn) FirmwareInstallSteps(ctx context.Context, component string) ([]co
 
 func (c *Conn) FirmwareInstallUploadAndInitiate(ctx context.Context, component string, file *os.File) (taskID string, err error) {
 	if err := c.deviceSupported(ctx); err != nil {
-		return "", errors.Wrap(ErrUnsupportedHardware, err.Error())
+		return "", bmcliberrs.NewErrUnsupportedHardware(err.Error())
 	}
 
 	//	// expect atleast 5 minutes left in the deadline to proceed with the upload
@@ -102,7 +98,7 @@ func (c *Conn) checkQueueability(component string, tasks []*redfish.Task) error 
 // FirmwareTaskStatus returns the status of a firmware related task queued on the BMC.
 func (c *Conn) FirmwareTaskStatus(ctx context.Context, kind constants.FirmwareInstallStep, component, taskID, installVersion string) (state constants.TaskState, status string, err error) {
 	if err := c.deviceSupported(ctx); err != nil {
-		return "", "", errors.Wrap(ErrUnsupportedHardware, err.Error())
+		return "", "", bmcliberrs.NewErrUnsupportedHardware(err.Error())
 	}
 
 	// Dell jobs are turned into Redfish tasks on the idrac
