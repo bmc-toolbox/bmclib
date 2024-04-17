@@ -205,21 +205,37 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 
 // PowerStateGet gets the power state of a BMC machine
 func (c *Conn) PowerStateGet(ctx context.Context) (state string, err error) {
+	if err := c.deviceSupported(ctx); err != nil {
+		return "", bmcliberrs.NewErrUnsupportedHardware(err.Error())
+	}
+
 	return c.redfishwrapper.SystemPowerStatus(ctx)
 }
 
 // PowerSet sets the power state of a server
 func (c *Conn) PowerSet(ctx context.Context, state string) (ok bool, err error) {
+	if err := c.deviceSupported(ctx); err != nil {
+		return false, bmcliberrs.NewErrUnsupportedHardware(err.Error())
+	}
+
 	return c.redfishwrapper.PowerSet(ctx, state)
 }
 
 // Inventory collects hardware inventory and install firmware information
 func (c *Conn) Inventory(ctx context.Context) (device *common.Device, err error) {
+	if err := c.deviceSupported(ctx); err != nil {
+		return nil, bmcliberrs.NewErrUnsupportedHardware(err.Error())
+	}
+
 	return c.redfishwrapper.Inventory(ctx, false)
 }
 
 // BmcReset power cycles the BMC
 func (c *Conn) BmcReset(ctx context.Context, resetType string) (ok bool, err error) {
+	if err := c.deviceSupported(ctx); err != nil {
+		return false, bmcliberrs.NewErrUnsupportedHardware(err.Error())
+	}
+
 	return c.redfishwrapper.BMCReset(ctx, resetType)
 }
 
@@ -240,6 +256,10 @@ func (c *Conn) ResetBiosConfiguration(ctx context.Context) (err error) {
 
 // SendNMI tells the BMC to issue an NMI to the device
 func (c *Conn) SendNMI(ctx context.Context) error {
+	if err := c.deviceSupported(ctx); err != nil {
+		return bmcliberrs.NewErrUnsupportedHardware(err.Error())
+	}
+
 	return c.redfishwrapper.SendNMI(ctx)
 }
 
@@ -260,6 +280,10 @@ func (c *Conn) deviceManufacturer(ctx context.Context) (vendor string, err error
 }
 
 func (c *Conn) Screenshot(ctx context.Context) (image []byte, fileType string, err error) {
+	if err := c.deviceSupported(ctx); err != nil {
+		return nil, "", bmcliberrs.NewErrUnsupportedHardware(err.Error())
+	}
+
 	fileType = "png"
 
 	resp, err := c.redfishwrapper.PostWithHeaders(
