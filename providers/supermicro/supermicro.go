@@ -160,18 +160,24 @@ func (c *Client) Open(ctx context.Context) (err error) {
 		return errors.Wrap(bmclibErrs.ErrLoginFailed, strconv.Itoa(status))
 	}
 
+	// called after a session was opened but further login dependencies failed
+	closeWithError := func(ctx context.Context, err error) error {
+		_ = c.Close(ctx)
+		return err
+	}
+
 	if !bytes.Contains(body, []byte(`url_redirect.cgi?url_name=mainmenu`)) &&
 		!bytes.Contains(body, []byte(`url_redirect.cgi?url_name=topmenu`)) {
-		return errors.Wrap(bmclibErrs.ErrLoginFailed, "unexpected response contents")
+		return closeWithError(ctx, errors.Wrap(bmclibErrs.ErrLoginFailed, "unexpected response contents"))
 	}
 
 	contentsTopMenu, status, err := c.serviceClient.query(ctx, "cgi/url_redirect.cgi?url_name=topmenu", http.MethodGet, nil, nil, 0)
 	if err != nil {
-		return errors.Wrap(bmclibErrs.ErrLoginFailed, err.Error())
+		return closeWithError(ctx, errors.Wrap(bmclibErrs.ErrLoginFailed, err.Error()))
 	}
 
 	if status != 200 {
-		return errors.Wrap(bmclibErrs.ErrLoginFailed, strconv.Itoa(status))
+		return closeWithError(ctx, errors.Wrap(bmclibErrs.ErrLoginFailed, strconv.Itoa(status)))
 	}
 
 	// Note: older firmware version on the X11s don't use a CSRF token
@@ -183,11 +189,11 @@ func (c *Client) Open(ctx context.Context) (err error) {
 
 	c.bmc, err = c.bmcQueryor(ctx)
 	if err != nil {
-		return errors.Wrap(bmclibErrs.ErrLoginFailed, err.Error())
+		return closeWithError(ctx, errors.Wrap(bmclibErrs.ErrLoginFailed, err.Error()))
 	}
 
 	if err := c.serviceClient.redfishSession(ctx); err != nil {
-		return errors.Wrap(bmclibErrs.ErrLoginFailed, err.Error())
+		return closeWithError(ctx, errors.Wrap(bmclibErrs.ErrLoginFailed, err.Error()))
 	}
 
 	return nil
@@ -257,7 +263,7 @@ func (c *Client) bmcQueryor(ctx context.Context) (bmcQueryor, error) {
 
 	model := strings.ToLower(queryor.deviceModel())
 	if !strings.HasPrefix(model, "x12") && !strings.HasPrefix(model, "x11") {
-		return nil, errors.Wrap(ErrModelUnsupported, model)
+		return nil, errors.Wrap(ErrModelUnsupported, "expected one of X11* or X12*, got:"+model)
 	}
 
 	return queryor, nil
