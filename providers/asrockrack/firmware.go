@@ -24,6 +24,10 @@ const (
 
 // bmc client interface implementations methods
 func (a *ASRockRack) FirmwareInstallSteps(ctx context.Context, component string) ([]constants.FirmwareInstallStep, error) {
+	if err := a.supported(ctx); err != nil {
+		return nil, bmclibErrs.NewErrUnsupportedHardware(err.Error())
+	}
+
 	switch strings.ToUpper(component) {
 	case common.SlugBMC:
 		return []constants.FirmwareInstallStep{
