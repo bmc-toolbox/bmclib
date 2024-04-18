@@ -96,9 +96,5 @@ func (c *Conn) checkQueueability(component string, tasks []*redfish.Task) error 
 
 // FirmwareTaskStatus returns the status of a firmware related task queued on the BMC.
 func (c *Conn) FirmwareTaskStatus(ctx context.Context, kind constants.FirmwareInstallStep, component, taskID, installVersion string) (state constants.TaskState, status string, err error) {
-	if err := c.deviceSupported(ctx); err != nil {
-		return "", "", bmcliberrs.NewErrUnsupportedHardware(err.Error())
-	}
-
 	return c.redfishwrapper.TaskStatus(ctx, taskID)
 }
