@@ -189,31 +189,50 @@ func stateFinalized(s redfish.TaskState) bool {
 	return slices.Contains(finalized, s)
 }
 
-// redfish OEM parameter structs
-type BIOS struct {
-	PreserveME         bool `json:"PreserveME"`
-	PreserveNVRAM      bool `json:"PreserveNVRAM"`
-	PreserveSMBIOS     bool `json:"PreserveSMBIOS"`
-	PreserveOA         bool `json:"PreserveOA"`
-	PreserveSETUPCONF  bool `json:"PreserveSETUPCONF"`
-	PreserveSETUPPWD   bool `json:"PreserveSETUPPWD"`
-	PreserveSECBOOTKEY bool `json:"PreserveSECBOOTKEY"`
-	PreserveBOOTCONF   bool `json:"PreserveBOOTCONF"`
-}
-
-type BMC struct {
-	PreserveCfg bool `json:"PreserveCfg"`
-	PreserveSdr bool `json:"PreserveSdr"`
-	PreserveSsl bool `json:"PreserveSsl"`
-}
-
 type Supermicro struct {
-	*BIOS `json:"BIOS,omitempty"`
-	*BMC  `json:"BMC,omitempty"`
+	BIOS map[string]bool `json:"BIOS,omitempty"`
+	BMC  map[string]bool `json:"BMC,omitempty"`
 }
 
 type OEM struct {
 	Supermicro `json:"Supermicro"`
+}
+
+// redfish OEM fw install parameters
+func (c *x12) biosFwInstallParams() (map[string]bool, error) {
+	switch c.model {
+	case "x12spo-ntf":
+		return map[string]bool{
+			"PreserveME":       false,
+			"PreserveNVRAM":    false,
+			"PreserveSMBIOS":   true,
+			"BackupBIOS":       false,
+			"PreserveBOOTCONF": true,
+		}, nil
+	case "x12sth-sys":
+		return map[string]bool{
+			"PreserveME":         false,
+			"PreserveNVRAM":      false,
+			"PreserveSMBIOS":     true,
+			"PreserveOA":         true,
+			"PreserveSETUPCONF":  true,
+			"PreserveSETUPPWD":   true,
+			"PreserveSECBOOTKEY": true,
+			"PreserveBOOTCONF":   true,
+		}, nil
+	default:
+		// ideally we never get in this position, since theres model number validation in parent callers.
+		return nil, errors.New("unsupported model for BIOS fw install: " + c.model)
+	}
+}
+
+// redfish OEM fw install parameters
+func (c *x12) bmcFwInstallParams() map[string]bool {
+	return map[string]bool{
+		"PreserveCfg": true,
+		"PreserveSdr": true,
+		"PreserveSsl": true,
+	}
 }
 
 func (c *x12) redfishParameters(component, targetODataID string) (*rfw.RedfishUpdateServiceParameters, error) {
@@ -221,24 +240,16 @@ func (c *x12) redfishParameters(component, targetODataID string) (*rfw.RedfishUp
 
 	oem := OEM{}
 
+	biosInstallParams, err := c.biosFwInstallParams()
+	if err != nil {
+		return nil, err
+	}
+
 	switch strings.ToUpper(component) {
 	case common.SlugBIOS:
-		oem.Supermicro.BIOS = &BIOS{
-			PreserveME:         false,
-			PreserveNVRAM:      false,
-			PreserveSMBIOS:     true,
-			PreserveOA:         true,
-			PreserveSETUPCONF:  true,
-			PreserveSETUPPWD:   true,
-			PreserveSECBOOTKEY: true,
-			PreserveBOOTCONF:   true,
-		}
+		oem.Supermicro.BIOS = biosInstallParams
 	case common.SlugBMC:
-		oem.Supermicro.BMC = &BMC{
-			PreserveCfg: true,
-			PreserveSdr: true,
-			PreserveSsl: true,
-		}
+		oem.Supermicro.BMC = c.bmcFwInstallParams()
 	default:
 		return nil, errUnsupported
 	}
@@ -249,6 +260,8 @@ func (c *x12) redfishParameters(component, targetODataID string) (*rfw.RedfishUp
 	}
 
 	return &rfw.RedfishUpdateServiceParameters{
+		// NOTE:
+		// X12s support the OnReset Apply time for BIOS updates if we want to implement that in the future.
 		OperationApplyTime: constants.OnStartUpdateRequest,
 		Targets:            []string{targetODataID},
 		Oem:                b,
