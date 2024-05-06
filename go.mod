@@ -1,6 +1,6 @@
 module github.com/bmc-toolbox/bmclib/v2
 
-go 1.22
+go 1.18
 
 require (
 	dario.cat/mergo v1.0.0

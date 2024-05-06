@@ -255,6 +255,12 @@ The current bmclib version is `v2` and is being developed on the `main` branch.
 
 The previous bmclib version is in maintenance mode and can be found here [v1](https://github.com/bmc-toolbox/bmclib/v1).
 
+## Go version in `go.mod`
+
+As a library we will only bump the version of Go in the `go.mod` file when there are required dependencies in bmclib that necessitate
+a version bump. When consuming bmclib in your project, we recommend always building with the latest Go version but this
+should be in your hands as a user as much as possible.
+
 ## Acknowledgments
 
 bmclib v2 interfaces with Redfish on BMCs through the Gofish library https://github.com/stmcginnis/gofish
