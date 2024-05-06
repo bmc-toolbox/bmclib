@@ -61,8 +61,8 @@ func (c *Client) FirmwareInstallUploaded(ctx context.Context, component, uploadT
 	}
 
 	// x11's don't return a upload Task ID, since the upload mechanism is not redfish
-	if !strings.HasPrefix(c.bmc.deviceModel(), "x11") && uploadTaskID == "" {
-		return "", errUploadTaskIDExpected
+	if !strings.HasPrefix(strings.ToLower(c.bmc.deviceModel()), "x11") && uploadTaskID == "" {
+		return "", errors.Wrap(errUploadTaskIDExpected, "device model: "+c.bmc.deviceModel())
 	}
 
 	return c.bmc.firmwareInstallUploaded(ctx, component, uploadTaskID)
