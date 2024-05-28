@@ -36,6 +36,9 @@ var (
 		providers.FeatureInventoryRead,
 		providers.FeatureBmcReset,
 		providers.FeatureClearSystemEventLog,
+		providers.FeatureGetBiosConfiguration,
+		providers.FeatureSetBiosConfiguration,
+		providers.FeatureResetBiosConfiguration,
 	}
 )
 
@@ -221,6 +224,11 @@ func (c *Conn) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]
 // SetBiosConfiguration set bios configuration
 func (c *Conn) SetBiosConfiguration(ctx context.Context, biosConfig map[string]string) (err error) {
 	return c.redfishwrapper.SetBiosConfiguration(ctx, biosConfig)
+}
+
+// ResetBiosConfiguration set bios configuration
+func (c *Conn) ResetBiosConfiguration(ctx context.Context) (err error) {
+	return c.redfishwrapper.ResetBiosConfiguration(ctx)
 }
 
 // SendNMI tells the BMC to issue an NMI to the device

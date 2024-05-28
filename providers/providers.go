@@ -70,6 +70,9 @@ const (
 	// FeatureSetBiosConfiguration means an implementation that can set bios configuration from an input k/v map
 	FeatureSetBiosConfiguration registrar.Feature = "setbiosconfig"
 
+	// FeatureSetBiosConfigurationFromFile means an implementation that can set bios configuration from a vendor specific text file
+	FeatureSetBiosConfigurationFromFile registrar.Feature = "setbiosconfigfile"
+
 	// FeatureGetBiosConfiguration means an implementation that can get bios configuration in a simple k/v map
 	FeatureGetBiosConfiguration registrar.Feature = "getbiosconfig"
 )

@@ -426,7 +426,7 @@ func (c *serviceClient) redfishSession(ctx context.Context) (err error) {
 	return nil
 }
 
-func (c *serviceClient) supportsFirmwareInstall(ctx context.Context, model string) error {
+func (c *serviceClient) supportsFirmwareInstall(model string) error {
 	if model == "" {
 		return errors.Wrap(ErrModelUnknown, "unable to determine firmware install compatibility")
 	}

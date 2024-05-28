@@ -34,7 +34,7 @@ var (
 
 // bmc client interface implementations methods
 func (c *Client) FirmwareInstallSteps(ctx context.Context, component string) ([]constants.FirmwareInstallStep, error) {
-	if err := c.serviceClient.supportsFirmwareInstall(ctx, c.bmc.deviceModel()); err != nil {
+	if err := c.serviceClient.supportsFirmwareInstall(c.bmc.deviceModel()); err != nil {
 		return nil, err
 	}
 
@@ -42,7 +42,7 @@ func (c *Client) FirmwareInstallSteps(ctx context.Context, component string) ([]
 }
 
 func (c *Client) FirmwareUpload(ctx context.Context, component string, file *os.File) (taskID string, err error) {
-	if err := c.serviceClient.supportsFirmwareInstall(ctx, c.bmc.deviceModel()); err != nil {
+	if err := c.serviceClient.supportsFirmwareInstall(c.bmc.deviceModel()); err != nil {
 		return "", err
 	}
 
@@ -56,7 +56,7 @@ func (c *Client) FirmwareUpload(ctx context.Context, component string, file *os.
 }
 
 func (c *Client) FirmwareInstallUploaded(ctx context.Context, component, uploadTaskID string) (installTaskID string, err error) {
-	if err := c.serviceClient.supportsFirmwareInstall(ctx, c.bmc.deviceModel()); err != nil {
+	if err := c.serviceClient.supportsFirmwareInstall(c.bmc.deviceModel()); err != nil {
 		return "", err
 	}
 
@@ -70,7 +70,7 @@ func (c *Client) FirmwareInstallUploaded(ctx context.Context, component, uploadT
 
 // FirmwareTaskStatus returns the status of a firmware related task queued on the BMC.
 func (c *Client) FirmwareTaskStatus(ctx context.Context, kind constants.FirmwareInstallStep, component, taskID, installVersion string) (state constants.TaskState, status string, err error) {
-	if err := c.serviceClient.supportsFirmwareInstall(ctx, c.bmc.deviceModel()); err != nil {
+	if err := c.serviceClient.supportsFirmwareInstall(c.bmc.deviceModel()); err != nil {
 		return "", "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, err.Error())
 	}
 
