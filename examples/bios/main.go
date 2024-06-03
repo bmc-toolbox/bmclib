@@ -32,6 +32,7 @@ func main() {
 
 	// Logger configuration
 	l := logrus.New()
+	l.Level = logrus.DebugLevel
 	// l.Level = logrus.TraceLevel
 	logger := logrusr.New(l)
 	logger.V(9)
@@ -62,7 +63,7 @@ func main() {
 			l.Fatal(err)
 		}
 
-		fmt.Printf("biosConfig: %+v\n", biosConfig)
+		fmt.Printf("biosConfig: %#v\n", biosConfig)
 	case "set":
 		exampleConfig := make(map[string]string)
 
@@ -95,18 +96,17 @@ func main() {
 		exampleConfig := make(map[string]string)
 
 		if *dfile != "" {
-			jsonFile, err := os.Open(*dfile)
+			cfgFile, err := os.Open(*dfile)
 			if err != nil {
 				l.Fatal(err)
 			}
 
-			defer jsonFile.Close()
+			defer cfgFile.Close()
 
-			jsonData, _ := io.ReadAll(jsonFile)
-
+			jsonData, _ := io.ReadAll(cfgFile)
 			err = json.Unmarshal(jsonData, &exampleConfig)
 			if err != nil {
-				l.Fatal(err)
+				l.Error(err)
 			}
 		} else {
 			exampleConfig["TpmSecurity"] = "Off"
