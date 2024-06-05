@@ -32,6 +32,12 @@ github.com/bmc-toolbox/common v0.0.0-20240603195926-3b5f49af547c h1:ZEBcAi/NGrJq
 github.com/bmc-toolbox/common v0.0.0-20240603195926-3b5f49af547c/go.mod h1:Cdnkm+edb6C0pVkyCrwh3JTXAe0iUF9diDG/DztPI9I=
 github.com/bmc-toolbox/common v0.0.0-20240603200149-d7c52783cf3a h1:kyT7AEN1iav7MLqE4hspxlI6FT46RyUdQcij5EA1lbE=
 github.com/bmc-toolbox/common v0.0.0-20240603200149-d7c52783cf3a/go.mod h1:Cdnkm+edb6C0pVkyCrwh3JTXAe0iUF9diDG/DztPI9I=
+github.com/bmc-toolbox/common v0.0.0-20240605235353-a070a211ea91 h1:2fIuUXNjIIfs/+UyRdgi78BNw4nqJvOPzPgVvXgJDh8=
+github.com/bmc-toolbox/common v0.0.0-20240605235353-a070a211ea91/go.mod h1:Cdnkm+edb6C0pVkyCrwh3JTXAe0iUF9diDG/DztPI9I=
+github.com/bmc-toolbox/common v0.0.0-20240605235604-dd3030c2f298 h1:2xs7qhthgZySFn7wwXCSMB20miuY4gN2oQ1lueAvWFU=
+github.com/bmc-toolbox/common v0.0.0-20240605235604-dd3030c2f298/go.mod h1:Cdnkm+edb6C0pVkyCrwh3JTXAe0iUF9diDG/DztPI9I=
+github.com/bmc-toolbox/common v0.0.0-20240606000647-cfd9f1a6c4ad h1:lnIG+pB9t6EuX2I89gKdPj9rHbXA4cNRMMDO07ziX0E=
+github.com/bmc-toolbox/common v0.0.0-20240606000647-cfd9f1a6c4ad/go.mod h1:Cdnkm+edb6C0pVkyCrwh3JTXAe0iUF9diDG/DztPI9I=
 github.com/bombsimon/logrusr/v2 v2.0.1 h1:1VgxVNQMCvjirZIYaT9JYn6sAVGVEcNtRE0y4mvaOAM=
 github.com/bombsimon/logrusr/v2 v2.0.1/go.mod h1:ByVAX+vHdLGAfdroiMg6q0zgq2FODY2lc5YJvzmOJio=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
