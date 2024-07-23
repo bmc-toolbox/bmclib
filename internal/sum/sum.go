@@ -104,7 +104,7 @@ func (s *Exec) GetCurrentBiosCfg(ctx context.Context) (output string, err error)
 
 func (s *Exec) LoadDefaultBiosCfg(ctx context.Context) (err error) {
 	_, err = s.run(ctx, "LoadDefaultBiosCfg")
-	return
+	return err
 }
 
 func (s *Exec) ChangeBiosCfg(ctx context.Context, cfgFile string, reboot bool) (err error) {
@@ -116,20 +116,20 @@ func (s *Exec) ChangeBiosCfg(ctx context.Context, cfgFile string, reboot bool) (
 
 	_, err = s.run(ctx, "ChangeBiosCfg", args...)
 
-	return
+	return err
 }
 
 // GetBiosConfiguration return bios configuration
 func (s *Exec) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]string, err error) {
 	biosText, err := s.GetCurrentBiosCfg(ctx)
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	// We need to call vcm here to take the XML returned by SUM and convert it into a simple map
 	vcm, err := config.NewVendorConfigManager("xml", common.VendorSupermicro, map[string]string{})
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	err = vcm.Unmarshal(biosText)
@@ -149,7 +149,7 @@ func (s *Exec) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]
 func (s *Exec) SetBiosConfiguration(ctx context.Context, biosConfig map[string]string) (err error) {
 	vcm, err := config.NewVendorConfigManager("xml", common.VendorSupermicro, map[string]string{})
 	if err != nil {
-		return
+		return err
 	}
 
 	for k, v := range biosConfig {
@@ -223,7 +223,7 @@ func (s *Exec) SetBiosConfiguration(ctx context.Context, biosConfig map[string]s
 
 	xmlData, err := vcm.Marshal()
 	if err != nil {
-		return
+		return err
 	}
 
 	return s.SetBiosConfigurationFromFile(ctx, xmlData)
@@ -233,19 +233,19 @@ func (s *Exec) SetBiosConfigurationFromFile(ctx context.Context, cfg string) (er
 	// Open tmp file to hold cfg
 	inputConfigTmpFile, err := os.CreateTemp("", "bmclib")
 	if err != nil {
-		return
+		return err
 	}
 
 	defer os.Remove(inputConfigTmpFile.Name())
 
 	_, err = inputConfigTmpFile.WriteString(cfg)
 	if err != nil {
-		return
+		return err
 	}
 
 	err = inputConfigTmpFile.Close()
 	if err != nil {
-		return
+		return err
 	}
 
 	return s.ChangeBiosCfg(ctx, inputConfigTmpFile.Name(), false)
