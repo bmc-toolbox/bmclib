@@ -19,6 +19,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
+	"github.com/bmc-toolbox/bmclib/v2/internal/sum"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/bmc-toolbox/common"
 
@@ -51,6 +52,10 @@ var (
 		providers.FeaturePowerSet,
 		providers.FeaturePowerState,
 		providers.FeatureBmcReset,
+		providers.FeatureGetBiosConfiguration,
+		providers.FeatureSetBiosConfiguration,
+		providers.FeatureSetBiosConfigurationFromFile,
+		providers.FeatureResetBiosConfiguration,
 	}
 )
 
@@ -235,6 +240,42 @@ func (c *Client) Inventory(ctx context.Context) (device *common.Device, err erro
 	return c.serviceClient.redfish.Inventory(ctx, false)
 }
 
+// GetBiosConfiguration return bios configuration
+func (c *Client) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]string, err error) {
+	if c.serviceClient == nil || c.serviceClient.sum == nil {
+		return nil, errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.sum.GetBiosConfiguration(ctx)
+}
+
+// SetBiosConfiguration set bios configuration
+func (c *Client) SetBiosConfiguration(ctx context.Context, biosConfig map[string]string) (err error) {
+	if c.serviceClient == nil || c.serviceClient.sum == nil {
+		return errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.sum.SetBiosConfiguration(ctx, biosConfig)
+}
+
+// SetBiosConfigurationFromFile sets the bios configuration from a raw vendor config file
+func (c *Client) SetBIOSConfigurationFromFile(ctx context.Context, cfg string) (err error) {
+	if c.serviceClient == nil || c.serviceClient.sum == nil {
+		return errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.sum.SetBiosConfigurationFromFile(ctx, cfg)
+}
+
+// ResetBiosConfiguration sets the bios configuration back to "factory" defaults
+func (c *Client) ResetBiosConfiguration(ctx context.Context) (err error) {
+	if c.serviceClient == nil || c.serviceClient.sum == nil {
+		return errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.sum.ResetBiosConfiguration(ctx)
+}
+
 func (c *Client) bmcQueryor(ctx context.Context) (bmcQueryor, error) {
 	x11 := newX11Client(c.serviceClient, c.log)
 	x12 := newX12Client(c.serviceClient, c.log)
@@ -393,6 +434,7 @@ type serviceClient struct {
 	csrfToken string
 	client    *http.Client
 	redfish   *redfishwrapper.Client
+	sum       *sum.Exec
 }
 
 func newBmcServiceClient(host, port, user, pass string, client *http.Client) *serviceClient {

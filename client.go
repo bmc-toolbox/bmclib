@@ -23,7 +23,6 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/providers/openbmc"
 	"github.com/bmc-toolbox/bmclib/v2/providers/redfish"
 	"github.com/bmc-toolbox/bmclib/v2/providers/rpc"
-	"github.com/bmc-toolbox/bmclib/v2/providers/sum"
 	"github.com/bmc-toolbox/bmclib/v2/providers/supermicro"
 	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
@@ -73,7 +72,6 @@ type providerConfig struct {
 	supermicro supermicro.Config
 	rpc        rpc.Provider
 	openbmc    openbmc.Config
-	sum        sum.Exec
 }
 
 // NewClient returns a new Client struct
@@ -111,7 +109,6 @@ func NewClient(host, user, pass string, opts ...Option) *Client {
 			openbmc: openbmc.Config{
 				Port: "443",
 			},
-			sum: sum.Exec{},
 		},
 	}
 
@@ -265,23 +262,6 @@ func (c *Client) registerOpenBMCProvider() {
 	c.Registry.Register(openbmc.ProviderName, openbmc.ProviderProtocol, openbmc.Features, nil, driver)
 }
 
-// register sum provider
-func (c *Client) registerSumProvider() error {
-	sumOpts := []sum.Option{
-		sum.WithLogger(c.Logger),
-		sum.WithSumPath(c.providerConfig.sum.SumPath),
-	}
-
-	driverSum, err := sum.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, sumOpts...)
-	if err != nil {
-		return err
-	}
-
-	c.Registry.Register(sum.ProviderName, sum.ProviderProtocol, sum.Features, nil, driverSum)
-
-	return nil
-}
-
 func (c *Client) registerProviders() {
 	// register the rpc provider
 	// without the consumer URL there is no way to send RPC requests.
@@ -297,10 +277,6 @@ func (c *Client) registerProviders() {
 
 	if err := c.registerIPMIProvider(); err != nil {
 		c.Logger.Info("ipmitool provider not available", "error", err.Error())
-	}
-
-	if err := c.registerSumProvider(); err != nil {
-		c.Logger.Info("sum provider not available", "error", err.Error())
 	}
 
 	c.registerASRRProvider()

@@ -6,28 +6,9 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/bmc-toolbox/common"
 	"github.com/bmc-toolbox/common/config"
 	"github.com/go-logr/logr"
-	"github.com/jacobweinstock/registrar"
-)
-
-const (
-	// ProviderName for the provider implementation
-	ProviderName = "sum"
-	// ProviderProtocol for the provider implementation
-	ProviderProtocol = "sum"
-)
-
-var (
-	// Features implemented by SUM
-	Features = registrar.Features{
-		providers.FeatureGetBiosConfiguration,
-		providers.FeatureSetBiosConfiguration,
-		providers.FeatureSetBiosConfigurationFromFile,
-		providers.FeatureResetBiosConfiguration,
-	}
 )
 
 // Conn for Sum connection details
@@ -90,10 +71,6 @@ func (c *Exec) Open(ctx context.Context) (err error) {
 // Close a connection to a BMC
 func (c *Exec) Close(ctx context.Context) (err error) {
 	return nil
-}
-
-func (c *Exec) Name() string {
-	return ProviderName
 }
 
 func (s *Exec) run(ctx context.Context, command string, additionalArgs ...string) (output string, err error) {
@@ -249,10 +226,10 @@ func (s *Exec) SetBiosConfiguration(ctx context.Context, biosConfig map[string]s
 		return
 	}
 
-	return s.SetBIOSConfigurationFromFile(ctx, xmlData)
+	return s.SetBiosConfigurationFromFile(ctx, xmlData)
 }
 
-func (s *Exec) SetBIOSConfigurationFromFile(ctx context.Context, cfg string) (err error) {
+func (s *Exec) SetBiosConfigurationFromFile(ctx context.Context, cfg string) (err error) {
 	// Open tmp file to hold cfg
 	inputConfigTmpFile, err := os.CreateTemp("", "bmclib")
 	if err != nil {
