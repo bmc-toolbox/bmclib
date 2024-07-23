@@ -38,6 +38,8 @@ github.com/bmc-toolbox/common v0.0.0-20240605235604-dd3030c2f298 h1:2xs7qhthgZyS
 github.com/bmc-toolbox/common v0.0.0-20240605235604-dd3030c2f298/go.mod h1:Cdnkm+edb6C0pVkyCrwh3JTXAe0iUF9diDG/DztPI9I=
 github.com/bmc-toolbox/common v0.0.0-20240606000647-cfd9f1a6c4ad h1:lnIG+pB9t6EuX2I89gKdPj9rHbXA4cNRMMDO07ziX0E=
 github.com/bmc-toolbox/common v0.0.0-20240606000647-cfd9f1a6c4ad/go.mod h1:Cdnkm+edb6C0pVkyCrwh3JTXAe0iUF9diDG/DztPI9I=
+github.com/bmc-toolbox/common v0.0.0-20240723135842-8256ba794af8 h1:KK812W5Tpk0n5qcS0vZ0IYqhoZNkV66NuCIon99OGQ8=
+github.com/bmc-toolbox/common v0.0.0-20240723135842-8256ba794af8/go.mod h1:Cdnkm+edb6C0pVkyCrwh3JTXAe0iUF9diDG/DztPI9I=
 github.com/bombsimon/logrusr/v2 v2.0.1 h1:1VgxVNQMCvjirZIYaT9JYn6sAVGVEcNtRE0y4mvaOAM=
 github.com/bombsimon/logrusr/v2 v2.0.1/go.mod h1:ByVAX+vHdLGAfdroiMg6q0zgq2FODY2lc5YJvzmOJio=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
