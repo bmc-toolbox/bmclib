@@ -1,5 +1,8 @@
 package sum
 
+// SUM is Supermicro Update Manager
+// https://www.supermicro.com/en/solutions/management-software/supermicro-update-manager
+
 import (
 	"context"
 	"os"
