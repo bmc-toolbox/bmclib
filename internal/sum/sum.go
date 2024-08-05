@@ -1,18 +1,23 @@
 package sum
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
+
+	ex "github.com/bmc-toolbox/bmclib/v2/internal/executor"
 
 	"github.com/bmc-toolbox/common"
 	"github.com/bmc-toolbox/common/config"
 	"github.com/go-logr/logr"
 )
 
-// Conn for Sum connection details
-type Exec struct {
+// Mvcli is a mvcli command executor object
+type Sum struct {
+	Executor ex.Executor
 	SumPath  string
 	Log      logr.Logger
 	Host     string
@@ -21,22 +26,22 @@ type Exec struct {
 }
 
 // Option for setting optional Client values
-type Option func(*Exec)
+type Option func(*Sum)
 
 func WithSumPath(sumPath string) Option {
-	return func(c *Exec) {
+	return func(c *Sum) {
 		c.SumPath = sumPath
 	}
 }
 
 func WithLogger(log logr.Logger) Option {
-	return func(c *Exec) {
+	return func(c *Sum) {
 		c.Log = log
 	}
 }
 
-func New(host, user, pass string, opts ...Option) (*Exec, error) {
-	sum := &Exec{
+func New(host, user, pass string, opts ...Option) (*Sum, error) {
+	sum := &Sum{
 		Host:     host,
 		Username: user,
 		Password: pass,
@@ -60,20 +65,42 @@ func New(host, user, pass string, opts ...Option) (*Exec, error) {
 		}
 	}
 
+	e := ex.NewExecutor(sum.SumPath)
+	e.SetEnv([]string{"LC_ALL=C.UTF-8"})
+	// e.SetQuiet()
+	sum.Executor = e
+
 	return sum, nil
 }
 
+// Return a Fake mvcli executor for tests
+func NewFakeSum(r io.Reader) (*Sum, error) {
+	e := ex.NewFakeExecutor("sum")
+	b := bytes.Buffer{}
+
+	_, err := b.ReadFrom(r)
+	if err != nil {
+		return nil, err
+	}
+
+	e.SetStdout(b.Bytes())
+
+	return &Sum{
+		Executor: e,
+	}, nil
+}
+
 // Open a connection to a BMC
-func (c *Exec) Open(ctx context.Context) (err error) {
+func (c *Sum) Open(ctx context.Context) (err error) {
 	return nil
 }
 
 // Close a connection to a BMC
-func (c *Exec) Close(ctx context.Context) (err error) {
+func (c *Sum) Close(ctx context.Context) (err error) {
 	return nil
 }
 
-func (s *Exec) run(ctx context.Context, command string, additionalArgs ...string) (output string, err error) {
+func (s *Sum) run(ctx context.Context, command string, additionalArgs ...string) (output string, err error) {
 	// TODO(splaspood) use a tmp file here (as sum supports) to read the password
 	sumArgs := []string{"-i", s.Host, "-u", s.Username, "-p", s.Password, "-c", command}
 	sumArgs = append(sumArgs, additionalArgs...)
@@ -83,31 +110,26 @@ func (s *Exec) run(ctx context.Context, command string, additionalArgs ...string
 		sumArgs,
 	).Info("Calling sum")
 
-	cmd := exec.CommandContext(ctx, s.SumPath, sumArgs...)
-	b_out, err := cmd.CombinedOutput()
-	if err != nil || ctx.Err() != nil {
-		if err != nil {
-			return
-		}
+	s.Executor.SetArgs(sumArgs)
 
-		if ctx.Err() != nil {
-			return output, ctx.Err()
-		}
+	result, err := s.Executor.ExecWithContext(ctx)
+	if err != nil {
+		return string(result.Stderr), err
 	}
 
-	return string(b_out), err
+	return string(result.Stdout), err
 }
 
-func (s *Exec) GetCurrentBiosCfg(ctx context.Context) (output string, err error) {
+func (s *Sum) GetCurrentBiosCfg(ctx context.Context) (output string, err error) {
 	return s.run(ctx, "GetCurrentBiosCfg")
 }
 
-func (s *Exec) LoadDefaultBiosCfg(ctx context.Context) (err error) {
+func (s *Sum) LoadDefaultBiosCfg(ctx context.Context) (err error) {
 	_, err = s.run(ctx, "LoadDefaultBiosCfg")
 	return err
 }
 
-func (s *Exec) ChangeBiosCfg(ctx context.Context, cfgFile string, reboot bool) (err error) {
+func (s *Sum) ChangeBiosCfg(ctx context.Context, cfgFile string, reboot bool) (err error) {
 	args := []string{"--file", cfgFile}
 
 	if reboot {
@@ -120,7 +142,7 @@ func (s *Exec) ChangeBiosCfg(ctx context.Context, cfgFile string, reboot bool) (
 }
 
 // GetBiosConfiguration return bios configuration
-func (s *Exec) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]string, err error) {
+func (s *Sum) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]string, err error) {
 	biosText, err := s.GetCurrentBiosCfg(ctx)
 	if err != nil {
 		return nil, err
@@ -146,7 +168,7 @@ func (s *Exec) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]
 }
 
 // SetBiosConfiguration set bios configuration
-func (s *Exec) SetBiosConfiguration(ctx context.Context, biosConfig map[string]string) (err error) {
+func (s *Sum) SetBiosConfiguration(ctx context.Context, biosConfig map[string]string) (err error) {
 	vcm, err := config.NewVendorConfigManager("xml", common.VendorSupermicro, map[string]string{})
 	if err != nil {
 		return err
@@ -229,7 +251,7 @@ func (s *Exec) SetBiosConfiguration(ctx context.Context, biosConfig map[string]s
 	return s.SetBiosConfigurationFromFile(ctx, xmlData)
 }
 
-func (s *Exec) SetBiosConfigurationFromFile(ctx context.Context, cfg string) (err error) {
+func (s *Sum) SetBiosConfigurationFromFile(ctx context.Context, cfg string) (err error) {
 	// Open tmp file to hold cfg
 	inputConfigTmpFile, err := os.CreateTemp("", "bmclib")
 	if err != nil {
@@ -248,10 +270,10 @@ func (s *Exec) SetBiosConfigurationFromFile(ctx context.Context, cfg string) (er
 		return err
 	}
 
-	return s.ChangeBiosCfg(ctx, inputConfigTmpFile.Name(), false)
+	return s.ChangeBiosCfg(ctx, inputConfigTmpFile.Name(), true)
 }
 
 // ResetBiosConfiguration reset bios configuration
-func (s *Exec) ResetBiosConfiguration(ctx context.Context) (err error) {
+func (s *Sum) ResetBiosConfiguration(ctx context.Context) (err error) {
 	return s.LoadDefaultBiosCfg(ctx)
 }

@@ -434,7 +434,7 @@ type serviceClient struct {
 	csrfToken string
 	client    *http.Client
 	redfish   *redfishwrapper.Client
-	sum       *sum.Exec
+	sum       *sum.Sum
 }
 
 func newBmcServiceClient(host, port, user, pass string, client *http.Client) *serviceClient {
