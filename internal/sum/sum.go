@@ -15,7 +15,7 @@ import (
 	"github.com/go-logr/logr"
 )
 
-// Mvcli is a mvcli command executor object
+// Sum is a sum command executor object
 type Sum struct {
 	Executor ex.Executor
 	SumPath  string
@@ -73,7 +73,7 @@ func New(host, user, pass string, opts ...Option) (*Sum, error) {
 	return sum, nil
 }
 
-// Return a Fake mvcli executor for tests
+// Return a Fake sum executor for tests
 func NewFakeSum(r io.Reader) (*Sum, error) {
 	e := ex.NewFakeExecutor("sum")
 	b := bytes.Buffer{}
