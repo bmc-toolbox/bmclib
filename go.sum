@@ -8,6 +8,8 @@ github.com/VictorLowther/soap v0.0.0-20150314151524-8e36fca84b22 h1:a0MBqYm44o0N
 github.com/VictorLowther/soap v0.0.0-20150314151524-8e36fca84b22/go.mod h1:/B7V22rcz4860iDqstGvia/2+IYWXf3/JdQCVd/1D2A=
 github.com/bmc-toolbox/common v0.0.0-20240723135842-8256ba794af8 h1:KK812W5Tpk0n5qcS0vZ0IYqhoZNkV66NuCIon99OGQ8=
 github.com/bmc-toolbox/common v0.0.0-20240723135842-8256ba794af8/go.mod h1:Cdnkm+edb6C0pVkyCrwh3JTXAe0iUF9diDG/DztPI9I=
+github.com/bmc-toolbox/common v0.0.0-20240805193945-ce25765471a7 h1:+NcnInwZxn25daBCb3d1y3x9QF23uob1ghdiimj2Dwo=
+github.com/bmc-toolbox/common v0.0.0-20240805193945-ce25765471a7/go.mod h1:Cdnkm+edb6C0pVkyCrwh3JTXAe0iUF9diDG/DztPI9I=
 github.com/bombsimon/logrusr/v2 v2.0.1 h1:1VgxVNQMCvjirZIYaT9JYn6sAVGVEcNtRE0y4mvaOAM=
 github.com/bombsimon/logrusr/v2 v2.0.1/go.mod h1:ByVAX+vHdLGAfdroiMg6q0zgq2FODY2lc5YJvzmOJio=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=

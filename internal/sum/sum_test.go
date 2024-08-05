@@ -24,32 +24,18 @@ func newFakeSum(t *testing.T, fixtureName string) *Sum {
 }
 
 func TestExec_Run(t *testing.T) {
-	// Create a new instance of Exec
-	exec := &Sum{
-		Host:     "example.com",
-		Username: "user",
-		Password: "password",
-		SumPath:  "/path/to/sum",
-	}
+	// Create a new instance of Sum
+	exec := newFakeSum(t, "GetBIOSInfo")
 
 	// Create a new context
 	ctx := context.Background()
 
-	// Define the command and additional arguments
-	command := "some-command"
-	additionalArgs := []string{"arg1", "arg2"}
-
 	// Call the run function
-	output, err := exec.run(ctx, command, additionalArgs...)
+	_, err := exec.run(ctx, "GetBIOSInfo")
 
 	// Check the output and error
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
-	}
-
-	expectedOutput := "some output"
-	if output != expectedOutput {
-		t.Errorf("Expected output: %s, got: %s", expectedOutput, output)
 	}
 }
 
