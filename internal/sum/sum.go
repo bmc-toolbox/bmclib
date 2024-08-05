@@ -1,9 +1,7 @@
 package sum
 
 import (
-	"bytes"
 	"context"
-	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -71,23 +69,6 @@ func New(host, user, pass string, opts ...Option) (*Sum, error) {
 	sum.Executor = e
 
 	return sum, nil
-}
-
-// Return a Fake sum executor for tests
-func NewFakeSum(r io.Reader) (*Sum, error) {
-	e := ex.NewFakeExecutor("sum")
-	b := bytes.Buffer{}
-
-	_, err := b.ReadFrom(r)
-	if err != nil {
-		return nil, err
-	}
-
-	e.SetStdout(b.Bytes())
-
-	return &Sum{
-		Executor: e,
-	}, nil
 }
 
 // Open a connection to a BMC
