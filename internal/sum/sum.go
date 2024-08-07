@@ -68,7 +68,6 @@ func New(host, user, pass string, opts ...Option) (*Sum, error) {
 
 	e := ex.NewExecutor(sum.SumPath)
 	e.SetEnv([]string{"LC_ALL=C.UTF-8"})
-	// e.SetQuiet()
 	sum.Executor = e
 
 	return sum, nil
