@@ -33,13 +33,19 @@ func main() {
 	// Logger configuration
 	l := logrus.New()
 	l.Level = logrus.DebugLevel
+	// l.Level = logrus.TraceLevel
 	logger := logrusr.New(l)
+	logger.V(9)
 
 	// bmclib client abstraction
 	clientOpts := []bmclib.Option{bmclib.WithLogger(logger)}
 
 	client := bmclib.NewClient(*host, *user, *pass, clientOpts...)
-	client.Registry.Drivers = client.Registry.Supports(providers.FeatureGetBiosConfiguration, providers.FeatureSetBiosConfiguration, providers.FeatureResetBiosConfiguration)
+	client.Registry.Drivers = client.Registry.Supports(
+		providers.FeatureGetBiosConfiguration,
+		providers.FeatureSetBiosConfiguration,
+		providers.FeatureResetBiosConfiguration,
+		providers.FeatureSetBiosConfigurationFromFile)
 
 	err := client.Open(ctx)
 	if err != nil {
@@ -57,7 +63,7 @@ func main() {
 			l.Fatal(err)
 		}
 
-		fmt.Printf("biosConfig: %+v\n", biosConfig)
+		fmt.Printf("biosConfig: %#v\n", biosConfig)
 	case "set":
 		exampleConfig := make(map[string]string)
 
@@ -74,6 +80,33 @@ func main() {
 			err = json.Unmarshal(jsonData, &exampleConfig)
 			if err != nil {
 				l.Fatal(err)
+			}
+		} else {
+			exampleConfig["TpmSecurity"] = "Off"
+		}
+
+		fmt.Println("Attempting to set BIOS configuration:")
+		fmt.Printf("exampleConfig: %+v\n", exampleConfig)
+
+		err := client.SetBiosConfiguration(ctx, exampleConfig)
+		if err != nil {
+			l.Error(err)
+		}
+	case "setfile":
+		exampleConfig := make(map[string]string)
+
+		if *dfile != "" {
+			cfgFile, err := os.Open(*dfile)
+			if err != nil {
+				l.Fatal(err)
+			}
+
+			defer cfgFile.Close()
+
+			jsonData, _ := io.ReadAll(cfgFile)
+			err = json.Unmarshal(jsonData, &exampleConfig)
+			if err != nil {
+				l.Error(err)
 			}
 		} else {
 			exampleConfig["TpmSecurity"] = "Off"

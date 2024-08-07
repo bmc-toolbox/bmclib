@@ -1,0 +1,3634 @@
+Supermicro Update Manager (for UEFI BIOS) 2.14.0 (2024/02/15) (ARM64)
+Copyright(C) 2013-2024 Super Micro Computer, Inc. All rights reserved.
+.......................
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<BiosCfg>
+  <!--Supermicro Update Manager 2.14.0 (2024/02/15)-->
+  <!--File generated at 2024-08-02_20:07:34-->
+  <Menu name="Main">
+    <Information />
+    <Subtitle></Subtitle>
+    <Subtitle></Subtitle>
+    <Subtitle>Supermicro X11SCM-F</Subtitle>
+    <Text>BIOS Version(1.9)</Text>
+    <Text>Build Date(09/16/2022)</Text>
+    <Text>CPLD Version(03.B3.05)</Text>
+    <Subtitle></Subtitle>
+    <Subtitle>Memory Information</Subtitle>
+    <Text>Total Memory(32768 MB)</Text>
+  </Menu>
+  <Menu name="Advanced">
+    <Information />
+    <Menu name="Boot Feature">
+      <Information>
+        <Help><![CDATA[Boot Feature Configuration Page]]></Help>
+      </Information>
+      <Setting name="Fast Boot" order="1" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[Enables or disables boot with initialization of a minimal set of devices required to launch active boot option. Has no effect for BBS boot options.]]></Help>
+        </Information>
+      </Setting>
+      <Subtitle></Subtitle>
+      <Setting name="Quiet Boot" checkedStatus="Checked" type="CheckBox">
+        <!--Checked/Unchecked-->
+        <Information>
+          <DefaultStatus>Checked</DefaultStatus>
+          <Help><![CDATA[Enables or disables Quiet Boot option]]></Help>
+        </Information>
+      </Setting>
+      <Subtitle></Subtitle>
+      <Setting name="Bootup NumLock State" selectedOption="On" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="1">On</Option>
+            <Option value="0">Off</Option>
+          </AvailableOptions>
+          <DefaultOption>On</DefaultOption>
+          <Help><![CDATA[Select the keyboard NumLock state]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="Option ROM Messages" selectedOption="Force BIOS" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="1">Force BIOS</Option>
+            <Option value="0">Keep Current</Option>
+          </AvailableOptions>
+          <DefaultOption>Force BIOS</DefaultOption>
+          <Help><![CDATA[Set display mode for Option ROM]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="Wait For &quot;F1&quot; If Error" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Enable- BIOS will wait for user to press "F1" if some error happens. Disable- BIOS will continue to POST, user interaction not required]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="Re-try Boot" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Legacy Boot</Option>
+            <Option value="2">EFI Boot</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[Decide how to retry boot devices which fail to boot.]]></Help>
+        </Information>
+      </Setting>
+      <Subtitle></Subtitle>
+      <Setting name="Watch Dog Function" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[Enable or disable to turn on 5-minute watch dog timer. Upon timeout, JWD1 jumper determines system behavior.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="Restore on AC Power Loss" selectedOption="Last State" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Stay Off</Option>
+            <Option value="1">Power On</Option>
+            <Option value="2">Last State</Option>
+          </AvailableOptions>
+          <DefaultOption>Last State</DefaultOption>
+          <Help><![CDATA[Stay Off: System always remains off.
+Power On: System always turns on.
+Last State: System returns to previous state before AC lost.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="Power Button Function" selectedOption="Instant Off" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="1">Instant Off</Option>
+            <Option value="0">4 Seconds Override</Option>
+          </AvailableOptions>
+          <DefaultOption>Instant Off</DefaultOption>
+          <Help><![CDATA[Instant Off: Turn off system immediately in legacy OS.
+4 Seconds Override: Turn off system after depressed for 4 seconds.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="DeepSx Power Policies" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="4">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[configure the DeepSx Mode configuration.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="Correctable Error Threshold" numericValue="100" type="Numeric">
+        <Information>
+          <MaxValue>32767</MaxValue>
+          <MinValue>1</MinValue>
+          <StepSize>1</StepSize>
+          <DefaultValue>100</DefaultValue>
+          <Help><![CDATA[Fake item for MCEON support,Correctable Error Threshold]]></Help>
+        </Information>
+      </Setting>
+    </Menu>
+    <Menu name="CPU Configuration">
+      <Information>
+        <Help><![CDATA[CPU Configuration Parameters]]></Help>
+      </Information>
+      <Subtitle>CPU Configuration</Subtitle>
+      <Subtitle></Subtitle>
+      <Text>Intel(R) Xeon(R) E-2278G CPU @ 3.40GHz()</Text>
+      <Text>CPU Signature(0x906ED)</Text>
+      <Text>Microcode Revision(F4)</Text>
+      <Text>CPU Speed(3400 MHz)</Text>
+      <Text>L1 Data Cache(32 KB x 8)</Text>
+      <Text>L1 Instruction Cache(32 KB x 8)</Text>
+      <Text>L2 Cache(256 KB x 8)</Text>
+      <Text>L3 Cache(16 MB)</Text>
+      <Text>L4 Cache(N/A)</Text>
+      <Text>VMX(Supported)</Text>
+      <Text>SMX/TXT(Supported)</Text>
+      <Subtitle></Subtitle>
+      <Setting name="CPU Flex Ratio Override" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[Enable/Disable CPU Flex Ratio Programming]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="CPU Flex Ratio Settings" numericValue="34" type="Numeric">
+        <Information>
+          <MaxValue>63</MaxValue>
+          <MinValue>0</MinValue>
+          <StepSize>0</StepSize>
+          <DefaultValue>20</DefaultValue>
+          <Help><![CDATA[This value must be between Max Efficiency Ratio (LFM) and Maximum non-turbo ratio set by Hardware (HFM).]]></Help>
+          <WorkIf><![CDATA[ ( CPU Flex Ratio Override != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="Hardware Prefetcher" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[To turn on/off the MLC streamer prefetcher.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="Adjacent Cache Line Prefetch" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[To turn on/off prefetching of adjacent cache lines.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="Intel (VMX) Virtualization Technology" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[When enabled, a VMM can utilize the additional hardware capabilities provided by Vanderpool Technology.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="Active Processor Cores" selectedOption="All" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">All</Option>
+            <Option value="1">1</Option>
+            <Option value="2">2</Option>
+            <Option value="3">3</Option>
+            <Option value="4">4</Option>
+            <Option value="5">5</Option>
+            <Option value="6">6</Option>
+            <Option value="7">7</Option>
+          </AvailableOptions>
+          <DefaultOption>All</DefaultOption>
+          <Help><![CDATA[Number of cores to enable in each processor package.]]></Help>
+          <WorkIf><![CDATA[ (   TXT Support != 1 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="Hyper-Threading" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Enabled or Disabled Hyper-Threading Technology.]]></Help>
+          <WorkIf><![CDATA[ (   TXT Support != 1 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="BIST" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[Enable/Disable BIST (Built-In Self Test) on reset]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="AES" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Enable/Disable AES (Advanced Encryption Standard)]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="Boot Performance Mode" selectedOption="Max Non-Turbo Performance" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Power Saving</Option>
+            <Option value="1">Max Non-Turbo Performance</Option>
+            <Option value="2">Turbo Performance</Option>
+          </AvailableOptions>
+          <DefaultOption>Max Non-Turbo Performance</DefaultOption>
+          <Help><![CDATA[Select the performance state that the BIOS will set starting from reset vector.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="Intel(R) SpeedStep(tm)" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Allows more than two frequency ranges to be supported.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="Intel(R) Speed Shift Technology" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[Enable/Disable Intel(R) Speed Shift Technology support. Enabling will expose the CPPC v2 interface to allow for hardware controlled P-states.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="Turbo Mode" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[When Turbo Mode is enabled, the CPU temperature could hit 100°C. CPU throttling at this time is a normal behavior. A proper review on other thermal indexes will help you determine the real system state.]]></Help>
+          <WorkIf><![CDATA[ ( ( Intel(R) SpeedStep(tm) != 0 ) || ( Intel(R) Speed Shift Technology != 0 ) ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="Always Turbo Mode" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[When enable system will run in always turbo.]]></Help>
+          <WorkIf><![CDATA[ ( ( Intel(R) SpeedStep(tm) != 0 ) || ( Intel(R) Speed Shift Technology != 0 ) ) and ( Turbo Mode != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="Monitor/Mwait" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Enable/Disable Monitor/Mwait]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="C states" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Enable/Disable CPU Power Management. Allows CPU to go to C states when it's not 100% utilized.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="  Enhanced C-states" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Enable/Disable C1E. When enabled, CPU will switch to minimum speed when all cores enter C-State.]]></Help>
+          <WorkIf><![CDATA[ ( C states != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="  C-State Auto Demotion" selectedOption="C1 and C3" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">C1</Option>
+            <Option value="2">C3</Option>
+            <Option value="3">C1 and C3</Option>
+          </AvailableOptions>
+          <DefaultOption>C1 and C3</DefaultOption>
+          <Help><![CDATA[Configure C-State Auto Demotion]]></Help>
+          <WorkIf><![CDATA[ ( C states != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="  C-State Un-demotion" selectedOption="C1 and C3" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">C1</Option>
+            <Option value="2">C3</Option>
+            <Option value="3">C1 and C3</Option>
+          </AvailableOptions>
+          <DefaultOption>C1 and C3</DefaultOption>
+          <Help><![CDATA[Configure C-State Un-demotion]]></Help>
+          <WorkIf><![CDATA[ ( C states != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="  Package C-State Demotion" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[  Package C-State Demotion]]></Help>
+          <WorkIf><![CDATA[ ( C states != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="  Package C-State Un-demotion" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[  Package C-State Un-demotion]]></Help>
+          <WorkIf><![CDATA[ ( C states != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="CState Pre-Wake" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Disable - Sets bit 30 of POWER_CTL MSR(0x1FC) to 1 to disable the Cstate Pre-Wake]]></Help>
+          <WorkIf><![CDATA[ ( C states != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="Package C State Limit" selectedOption="Auto" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">C0/C1</Option>
+            <Option value="1">C2</Option>
+            <Option value="2">C3</Option>
+            <Option value="3">C6</Option>
+            <Option value="4">C7</Option>
+            <Option value="5">C7S</Option>
+            <Option value="6">C8</Option>
+            <Option value="7">C9</Option>
+            <Option value="8">C10</Option>
+            <Option value="254">Cpu Default</Option>
+            <Option value="255">Auto</Option>
+          </AvailableOptions>
+          <DefaultOption>Auto</DefaultOption>
+          <Help><![CDATA[Maximum Package C State Limit Setting. Cpu Default: Leaves to Factory default value.Auto: Initializes to deepest available Package C State Limit.]]></Help>
+          <WorkIf><![CDATA[ ( C states != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="Power Limit 1 Override" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[Enable/Disable Power Limit 1 override. If this option is disabled, BIOS will program the default values for Power Limit 1 and Power Limit 1 Time Window.]]></Help>
+          <WorkIf><![CDATA[ ( C states != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="Power Limit 1" numericValue="0" type="Numeric">
+        <Information>
+          <MaxValue>4095875</MaxValue>
+          <MinValue>0</MinValue>
+          <StepSize>125</StepSize>
+          <DefaultValue>0</DefaultValue>
+          <Help><![CDATA[Power Limit 1 in Milli Watts. BIOS will round to the nearest 1/8W when programming. 0 = no custom override. For 12.50W, enter 12500. Overclocking SKU: Value must be between Max and Min Power Limits (specified by PACKAGE_POWER_SKU_MSR). Other SKUs: This value must be between Min Power Limit and TDP Limit. If value is 0, BIOS will program TDP value.]]></Help>
+          <WorkIf><![CDATA[ ( C states != 0 ) and ( Power Limit 1 Override != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="Power Limit 1 Time Window" selectedOption="0" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">0</Option>
+            <Option value="1">1</Option>
+            <Option value="2">2</Option>
+            <Option value="3">3</Option>
+            <Option value="4">4</Option>
+            <Option value="5">5</Option>
+            <Option value="6">6</Option>
+            <Option value="7">7</Option>
+            <Option value="8">8</Option>
+            <Option value="10">10</Option>
+            <Option value="12">12</Option>
+            <Option value="14">14</Option>
+            <Option value="16">16</Option>
+            <Option value="20">20</Option>
+            <Option value="24">24</Option>
+            <Option value="28">28</Option>
+            <Option value="32">32</Option>
+            <Option value="40">40</Option>
+            <Option value="48">48</Option>
+            <Option value="56">56</Option>
+            <Option value="64">64</Option>
+            <Option value="80">80</Option>
+            <Option value="96">96</Option>
+            <Option value="112">112</Option>
+            <Option value="128">128</Option>
+          </AvailableOptions>
+          <DefaultOption>0</DefaultOption>
+          <Help><![CDATA[Power Limit 1 Time Window value in seconds. The value may vary from 0 to 128. 0 = use default value (28 sec). Defines time window which TDP value should be maintained.]]></Help>
+          <WorkIf><![CDATA[ ( C states != 0 ) and ( Power Limit 1 Override != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="Power Limit 2 Override" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Enable/Disable Power Limit 2 override. If this option is disabled, BIOS will program the default values for Power Limit 2.]]></Help>
+          <WorkIf><![CDATA[ ( C states != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="Power Limit 2" numericValue="0" type="Numeric">
+        <Information>
+          <MaxValue>4095875</MaxValue>
+          <MinValue>0</MinValue>
+          <StepSize>125</StepSize>
+          <DefaultValue>0</DefaultValue>
+          <Help><![CDATA[Power Limit 2 value in Milli Watts. BIOS will round to the nearest 1/8W when programming. If the value is 0, BIOS will program this value as 1.25*TDP. For 12.50W, enter 12500. Processor applies control policies such that the package power does not exceed this limit.]]></Help>
+          <WorkIf><![CDATA[ ( C states != 0 ) and ( Power Limit 2 Override != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Subtitle></Subtitle>
+      <!--Valid if:  ( C states != 0 ) -->
+      <Setting name="ACPI T-States" checkedStatus="Unchecked" type="CheckBox">
+        <!--Checked/Unchecked-->
+        <Information>
+          <DefaultStatus>Unchecked</DefaultStatus>
+          <Help><![CDATA[Enable/Disable ACPI T-States.]]></Help>
+          <WorkIf><![CDATA[ ( C states != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+    </Menu>
+    <Menu name="Chipset Configuration">
+      <Information>
+        <Help><![CDATA[System Chipset configuration.]]></Help>
+      </Information>
+      <Subtitle>WARNING: Setting wrong values in below sections may cause</Subtitle>
+      <Subtitle>         system to malfunction.</Subtitle>
+      <Menu name="System Agent (SA) Configuration">
+        <Information>
+          <Help><![CDATA[System Agent (SA) Parameters]]></Help>
+        </Information>
+        <Subtitle>System Agent (SA) Configuration</Subtitle>
+        <Subtitle></Subtitle>
+        <Text>SA PCIe Code Version(7.0.88.80)</Text>
+        <Text>VT-d(Supported)</Text>
+        <Subtitle></Subtitle>
+        <Menu name="Memory Configuration">
+          <Information>
+            <Help><![CDATA[Memory Configuration Parameters]]></Help>
+          </Information>
+          <Subtitle>Memory Configuration</Subtitle>
+          <Subtitle></Subtitle>
+          <Text>Memory RC Version(0.7.1.115)</Text>
+          <Text>Memory Frequency( 2667 MHz)</Text>
+          <Text>Memory Timings (tCL-tRCD-tRP-tRAS)(19-19-19-43)</Text>
+          <Subtitle></Subtitle>
+          <Text>DIMMA1(Not Present)</Text>
+          <Text>DIMMA2(Populated &amp; Enabled)</Text>
+          <Text>    Size(16384 MB (DDR4))</Text>
+          <Text>    Number of Ranks(2)</Text>
+          <Text>    Manufacturer(Micron Technology)</Text>
+          <Text>DIMMB1(Not Present)</Text>
+          <Text>DIMMB2(Populated &amp; Enabled)</Text>
+          <Text>    Size(16384 MB (DDR4))</Text>
+          <Text>    Number of Ranks(2)</Text>
+          <Text>    Manufacturer(Micron Technology)</Text>
+          <Subtitle></Subtitle>
+          <Setting name="Maximum Memory Frequency" selectedOption="Auto" type="Option">
+            <Information>
+              <AvailableOptions>
+                <Option value="0">Auto</Option>
+                <Option value="1067">1067</Option>
+                <Option value="1200">1200</Option>
+                <Option value="1333">1333</Option>
+                <Option value="1400">1400</Option>
+                <Option value="1600">1600</Option>
+                <Option value="1800">1800</Option>
+                <Option value="1867">1867</Option>
+                <Option value="2000">2000</Option>
+                <Option value="2133">2133</Option>
+                <Option value="2200">2200</Option>
+                <Option value="2400">2400</Option>
+                <Option value="2600">2600</Option>
+                <Option value="2667">2667</Option>
+                <Option value="2800">2800</Option>
+                <Option value="2933">2933</Option>
+                <Option value="3000">3000</Option>
+                <Option value="3200">3200</Option>
+                <Option value="3400">3400</Option>
+                <Option value="3467">3467</Option>
+                <Option value="3600">3600</Option>
+                <Option value="3733">3733</Option>
+                <Option value="3800">3800</Option>
+                <Option value="4000">4000</Option>
+                <Option value="4200">4200</Option>
+                <Option value="4267">4267</Option>
+                <Option value="4400">4400</Option>
+                <Option value="4533">4533</Option>
+                <Option value="4600">4600</Option>
+                <Option value="4800">4800</Option>
+                <Option value="5000">5000</Option>
+                <Option value="5067">5067</Option>
+                <Option value="5200">5200</Option>
+                <Option value="5333">5333</Option>
+                <Option value="5400">5400</Option>
+                <Option value="5600">5600</Option>
+                <Option value="5800">5800</Option>
+                <Option value="5867">5867</Option>
+                <Option value="6000">6000</Option>
+                <Option value="6133">6133</Option>
+                <Option value="6200">6200</Option>
+              </AvailableOptions>
+              <DefaultOption>Auto</DefaultOption>
+              <Help><![CDATA[Maximum Memory Frequency Selections in Mhz. Valid values should match the refclk, i.e. divide by 133 or 100]]></Help>
+            </Information>
+          </Setting>
+          <Setting name="Max TOLUD" selectedOption="Dynamic" type="Option">
+            <Information>
+              <AvailableOptions>
+                <Option value="0">Dynamic</Option>
+                <Option value="1">1 GB</Option>
+                <Option value="2">1.25 GB</Option>
+                <Option value="3">1.5 GB</Option>
+                <Option value="4">1.75 GB</Option>
+                <Option value="5">2 GB</Option>
+                <Option value="6">2.25 GB</Option>
+                <Option value="7">2.5 GB</Option>
+                <Option value="8">2.75 GB</Option>
+                <Option value="9">3 GB</Option>
+                <Option value="10">3.25 GB</Option>
+                <Option value="11">3.5 GB</Option>
+              </AvailableOptions>
+              <DefaultOption>Dynamic</DefaultOption>
+              <Help><![CDATA[Maximum Value of TOLUD. Dynamic assignment would adjust TOLUD automatically based on largest MMIO length of installed graphic controller]]></Help>
+            </Information>
+          </Setting>
+          <Setting name="Memory Scrambler" selectedOption="Enabled" type="Option">
+            <Information>
+              <AvailableOptions>
+                <Option value="0">Disabled</Option>
+                <Option value="1">Enabled</Option>
+              </AvailableOptions>
+              <DefaultOption>Enabled</DefaultOption>
+              <Help><![CDATA[Enable/Disable Memory Scrambler support.]]></Help>
+            </Information>
+          </Setting>
+          <Setting name="Fast Boot" order="2" selectedOption="Enabled" type="Option">
+            <Information>
+              <AvailableOptions>
+                <Option value="0">Disabled</Option>
+                <Option value="1">Enabled</Option>
+              </AvailableOptions>
+              <DefaultOption>Enabled</DefaultOption>
+              <Help><![CDATA[Enable/Disable fast path thru the MRC]]></Help>
+            </Information>
+          </Setting>
+          <Setting name="REFRESH_2X_MODE" selectedOption="Disabled" type="Option">
+            <Information>
+              <AvailableOptions>
+                <Option value="0">Disabled</Option>
+                <Option value="1">1- Enabled for WARM or HOT</Option>
+                <Option value="2">2- Enabled HOT only</Option>
+              </AvailableOptions>
+              <DefaultOption>Disabled</DefaultOption>
+              <Help><![CDATA[0- Disabled 1-iMC enables 2xRef when Warm and Hot 2- iMC enables 2xRef when Hot]]></Help>
+            </Information>
+          </Setting>
+        </Menu>
+        <Menu name="DMI/OPI Configuration">
+          <Information>
+            <Help><![CDATA[Control various DMI functions.]]></Help>
+          </Information>
+          <Subtitle>DMI/OPI Configuration</Subtitle>
+          <Subtitle></Subtitle>
+          <Text>DMI(X4  Gen3)</Text>
+          <Subtitle></Subtitle>
+          <Setting name="DMI Link ASPM Control" order="1" selectedOption="L1" type="Option">
+            <Information>
+              <AvailableOptions>
+                <Option value="0">Disabled</Option>
+                <Option value="1">L0s</Option>
+                <Option value="2">L1</Option>
+                <Option value="3">L0sL1</Option>
+              </AvailableOptions>
+              <DefaultOption>L1</DefaultOption>
+              <Help><![CDATA[Enable/Disable the control of Active State Power Management on SA side of the DMI Link.]]></Help>
+            </Information>
+          </Setting>
+          <Setting name="DMI Extended Sync Control" selectedOption="Disabled" type="Option">
+            <Information>
+              <AvailableOptions>
+                <Option value="1">Enabled</Option>
+                <Option value="0">Disabled</Option>
+              </AvailableOptions>
+              <DefaultOption>Disabled</DefaultOption>
+              <Help><![CDATA[Enable DMI Extended Synchronization.]]></Help>
+            </Information>
+          </Setting>
+          <Setting name="DMI De-emphasis Control" selectedOption="-3.5 dB" type="Option">
+            <Information>
+              <AvailableOptions>
+                <Option value="0">-6 dB</Option>
+                <Option value="1">-3.5 dB</Option>
+              </AvailableOptions>
+              <DefaultOption>-3.5 dB</DefaultOption>
+              <Help><![CDATA[Configure the De-emphasis control on DMI]]></Help>
+            </Information>
+          </Setting>
+        </Menu>
+        <Menu name="PEG Port Configuration">
+          <Information>
+            <Help><![CDATA[PEG Port Options]]></Help>
+          </Information>
+          <Subtitle>PEG Port Configuration</Subtitle>
+          <Subtitle></Subtitle>
+          <Text>CPU Slot6 PCI-E 3.0 X16(x8  Gen3)</Text>
+          <Setting name="  Enable Root Port" selectedOption="Auto" type="Option">
+            <Information>
+              <AvailableOptions>
+                <Option value="0">Disabled</Option>
+                <Option value="1">Enabled</Option>
+                <Option value="2">Auto</Option>
+              </AvailableOptions>
+              <DefaultOption>Auto</DefaultOption>
+              <Help><![CDATA[Enable or Disable the Root Port]]></Help>
+            </Information>
+          </Setting>
+          <Setting name="  Max Link Speed" selectedOption="Auto" type="Option">
+            <Information>
+              <AvailableOptions>
+                <Option value="0">Auto</Option>
+                <Option value="1">Gen1</Option>
+                <Option value="2">Gen2</Option>
+                <Option value="3">Gen3</Option>
+              </AvailableOptions>
+              <DefaultOption>Auto</DefaultOption>
+              <Help><![CDATA[Configure PEG 0:1:0 Max Speed]]></Help>
+            </Information>
+          </Setting>
+          <Setting name="  Max Link Width" selectedOption="Auto" type="Option">
+            <Information>
+              <AvailableOptions>
+                <Option value="0">Auto</Option>
+                <Option value="1">Force X1</Option>
+                <Option value="2">Force X2</Option>
+                <Option value="3">Force X4</Option>
+                <Option value="4">Force X8</Option>
+              </AvailableOptions>
+              <DefaultOption>Auto</DefaultOption>
+              <Help><![CDATA[Force PEG link to retrain to X1/2/4/8]]></Help>
+            </Information>
+          </Setting>
+          <Setting name="  ASPM" selectedOption="Auto" type="Option">
+            <Information>
+              <AvailableOptions>
+                <Option value="0">Disabled</Option>
+                <Option value="4">Auto</Option>
+                <Option value="1">ASPM L0s</Option>
+                <Option value="2">ASPM L1</Option>
+                <Option value="3">ASPM L0sL1</Option>
+              </AvailableOptions>
+              <DefaultOption>Auto</DefaultOption>
+              <Help><![CDATA[Control ASPM support for the PEG 0.  This has no effect if PEG is not the currently active device.]]></Help>
+            </Information>
+          </Setting>
+          <Setting name="    ASPM L0s" selectedOption="Both Root and Endpoint Ports" type="Option">
+            <Information>
+              <AvailableOptions>
+                <Option value="1">Root Port Only</Option>
+                <Option value="2">Endpoint Port Only</Option>
+                <Option value="3">Both Root and Endpoint Ports</Option>
+              </AvailableOptions>
+              <DefaultOption>Both Root and Endpoint Ports</DefaultOption>
+              <Help><![CDATA[PEG0: Enable PCIe ASPM L0s.]]></Help>
+              <WorkIf><![CDATA[ ( ( (   ASPM != 0 ) && (   ASPM != 2 ) ) && (   ASPM != 4 ) ) ]]></WorkIf>
+            </Information>
+          </Setting>
+          <Setting name="  De-emphasis Control" selectedOption="-3.5 dB" type="Option">
+            <Information>
+              <AvailableOptions>
+                <Option value="0">-6 dB</Option>
+                <Option value="1">-3.5 dB</Option>
+              </AvailableOptions>
+              <DefaultOption>-3.5 dB</DefaultOption>
+              <Help><![CDATA[PEG0: Configure the De-emphasis control on PEG]]></Help>
+            </Information>
+          </Setting>
+          <Setting name="  Power Limit Value" numericValue="75" type="Numeric">
+            <Information>
+              <MaxValue>255</MaxValue>
+              <MinValue>0</MinValue>
+              <StepSize>1</StepSize>
+              <DefaultValue>75</DefaultValue>
+              <Help><![CDATA[Sets the upper limit on power supplied by slot. Power limit (in Watts) is calculated by multiplying this value by the Slot Power Limit Scale. Values 0-255]]></Help>
+            </Information>
+          </Setting>
+          <Setting name="  Power Limit Scale" selectedOption="1.0x" type="Option">
+            <Information>
+              <AvailableOptions>
+                <Option value="0">1.0x</Option>
+                <Option value="1">0.1x</Option>
+                <Option value="2">0.01x</Option>
+                <Option value="3">0.001x</Option>
+              </AvailableOptions>
+              <DefaultOption>1.0x</DefaultOption>
+              <Help><![CDATA[Select the scale used for the Slot Power Limit Value.]]></Help>
+            </Information>
+          </Setting>
+          <Setting name="  Physical Slot Number" numericValue="1" type="Numeric">
+            <Information>
+              <MaxValue>8191</MaxValue>
+              <MinValue>0</MinValue>
+              <StepSize>1</StepSize>
+              <DefaultValue>1</DefaultValue>
+              <Help><![CDATA[Set the physical slot number attached to this Port. The number has to be globally unique within the chassis. Values  0-8191]]></Help>
+            </Information>
+          </Setting>
+          <Setting name="  Max Payload size" selectedOption="Auto" type="Option">
+            <Information>
+              <AvailableOptions>
+                <Option value="255">Auto</Option>
+                <Option value="0">128</Option>
+                <Option value="1">256 TLP</Option>
+              </AvailableOptions>
+              <DefaultOption>Auto</DefaultOption>
+              <Help><![CDATA[Select PEG0 Max Payload Size; Choose Auto(Default Device Capability) or force to 128/256 Bytes]]></Help>
+            </Information>
+          </Setting>
+          <Subtitle></Subtitle>
+          <Setting name="Program PCIe ASPM after OpROM" selectedOption="Disabled" type="Option">
+            <Information>
+              <AvailableOptions>
+                <Option value="0">Disabled</Option>
+                <Option value="1">Enabled</Option>
+              </AvailableOptions>
+              <DefaultOption>Disabled</DefaultOption>
+              <Help><![CDATA[Enabled: PCIe ASPM will be programmed after OpROM.
+Disabled: PCIe ASPM will be programmed before OpROM.]]></Help>
+            </Information>
+          </Setting>
+        </Menu>
+        <Subtitle></Subtitle>
+        <Setting name="VT-d" selectedOption="Enabled" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="0">Disabled</Option>
+              <Option value="1">Enabled</Option>
+            </AvailableOptions>
+            <DefaultOption>Enabled</DefaultOption>
+            <Help><![CDATA[VT-d capability]]></Help>
+          </Information>
+        </Setting>
+        <Setting name="Software Guard Extensions (SGX)" selectedOption="Software Controlled" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="0">Disabled</Option>
+              <Option value="1">Enabled</Option>
+              <Option value="2">Software Controlled</Option>
+            </AvailableOptions>
+            <DefaultOption>Software Controlled</DefaultOption>
+            <Help><![CDATA[Enable/Disable Software Guard Extensions (SGX)]]></Help>
+          </Information>
+        </Setting>
+        <Setting name="Select Owner EPOCH input type" selectedOption="No Change in Owner EPOCHs" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="0">No Change in Owner EPOCHs</Option>
+              <Option value="1">Change to New Random Owner EPOCHs</Option>
+              <Option value="2">Manual User Defined Owner EPOCHs</Option>
+            </AvailableOptions>
+            <DefaultOption>No Change in Owner EPOCHs</DefaultOption>
+            <Help><![CDATA[There are three Owner EPOCH modes (Each EPOCH is 64bit): no change in owner epoch, change to new random owner epoch and manually entered by user. After generating new epoch via 'Change to New Random Owner EPOCHs', the selection reverts back to 'No Change in Owner Epochs', this is to ensure Epoch stays same, across Sx states. After the user enters epoch values manually, the values will not be visible, for security reasons.]]></Help>
+            <WorkIf><![CDATA[ ( Software Guard Extensions (SGX) != 0 ) ]]></WorkIf>
+          </Information>
+        </Setting>
+        <Setting name="Software Guard Extensions Epoch 0" numericValue="6142344250440060711" type="Numeric">
+          <Information>
+            <MaxValue>18446744073709551615</MaxValue>
+            <MinValue>0</MinValue>
+            <StepSize>1</StepSize>
+            <DefaultValue>6142344250440060711</DefaultValue>
+            <Help><![CDATA[Software Guard Extensions Epoch 0]]></Help>
+            <WorkIf><![CDATA[ ( Software Guard Extensions (SGX) != 0 ) and ( Select Owner EPOCH input type == 2 ) ]]></WorkIf>
+          </Information>
+        </Setting>
+        <Setting name="Software Guard Extensions Epoch 1" numericValue="15521488688214965697" type="Numeric">
+          <Information>
+            <MaxValue>18446744073709551615</MaxValue>
+            <MinValue>0</MinValue>
+            <StepSize>1</StepSize>
+            <DefaultValue>15521488688214965697</DefaultValue>
+            <Help><![CDATA[Software Guard Extensions Epoch 1]]></Help>
+            <WorkIf><![CDATA[ ( Software Guard Extensions (SGX) != 0 ) and ( Select Owner EPOCH input type == 2 ) ]]></WorkIf>
+          </Information>
+        </Setting>
+        <Setting name="SGX Launch Control Policy" selectedOption="Unlocked" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="0">Unlocked</Option>
+              <Option value="1">Intel Locked</Option>
+              <Option value="2">Locked</Option>
+            </AvailableOptions>
+            <DefaultOption>Unlocked</DefaultOption>
+            <Help><![CDATA[Software Guard Extensions (SGX) Launch Control Policy. Options are:
+Intel Locked - Select Intel's Launch Enclave.
+Unlocked - Enable OS/VMM configuration of Launch Enclave.
+Locked - Allow owner to configure Launch Enclave.]]></Help>
+            <WorkIf><![CDATA[ ( Software Guard Extensions (SGX) != 0 ) ]]></WorkIf>
+          </Information>
+        </Setting>
+        <Setting name="SGX LE Public Key Hash 0" numericValue="0" type="Numeric">
+          <Information>
+            <MaxValue>18446744073709551615</MaxValue>
+            <MinValue>0</MinValue>
+            <StepSize>1</StepSize>
+            <DefaultValue>0</DefaultValue>
+            <Help><![CDATA[Bytes 0 - 7 of Software Guard Extensions (SGX) Launch Enclave Public Key Hash]]></Help>
+            <WorkIf><![CDATA[ ( Software Guard Extensions (SGX) != 0 ) and ( SGX Launch Control Policy == 2 ) ]]></WorkIf>
+          </Information>
+        </Setting>
+        <Setting name="SGX LE Public Key Hash 1" numericValue="0" type="Numeric">
+          <Information>
+            <MaxValue>18446744073709551615</MaxValue>
+            <MinValue>0</MinValue>
+            <StepSize>1</StepSize>
+            <DefaultValue>0</DefaultValue>
+            <Help><![CDATA[Byte 8 - 15 of Software Guard Extensions (SGX) Launch Enclave Public Key Hash]]></Help>
+            <WorkIf><![CDATA[ ( Software Guard Extensions (SGX) != 0 ) and ( SGX Launch Control Policy == 2 ) ]]></WorkIf>
+          </Information>
+        </Setting>
+        <Setting name="SGX LE Public Key Hash 2" numericValue="0" type="Numeric">
+          <Information>
+            <MaxValue>18446744073709551615</MaxValue>
+            <MinValue>0</MinValue>
+            <StepSize>1</StepSize>
+            <DefaultValue>0</DefaultValue>
+            <Help><![CDATA[Bytes 16 - 23 of Software Guard Extensions (SGX) Launch Enclave Public Key Hash]]></Help>
+            <WorkIf><![CDATA[ ( Software Guard Extensions (SGX) != 0 ) and ( SGX Launch Control Policy == 2 ) ]]></WorkIf>
+          </Information>
+        </Setting>
+        <Setting name="SGX LE Public Key Hash 3" numericValue="0" type="Numeric">
+          <Information>
+            <MaxValue>18446744073709551615</MaxValue>
+            <MinValue>0</MinValue>
+            <StepSize>1</StepSize>
+            <DefaultValue>0</DefaultValue>
+            <Help><![CDATA[Bytes 24 - 31 of Software Guard Extensions (SGX) Launch Enclave Public Key Hash]]></Help>
+            <WorkIf><![CDATA[ ( Software Guard Extensions (SGX) != 0 ) and ( SGX Launch Control Policy == 2 ) ]]></WorkIf>
+          </Information>
+        </Setting>
+        <Setting name="PRMRR Size" selectedOption="INVALID PRMRR" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="0">INVALID PRMRR</Option>
+              <!--Option ValidIf:  ( Software Guard Extensions (SGX) != 1 ) -->
+            </AvailableOptions>
+            <DefaultOption>INVALID PRMRR</DefaultOption>
+            <Help><![CDATA[Setting the PRMRR Size]]></Help>
+            <WorkIf><![CDATA[ ( Software Guard Extensions (SGX) != 0 ) and ( Software Guard Extensions (SGX) != 2 ) ]]></WorkIf>
+          </Information>
+        </Setting>
+        <Setting name="GNA Device (B0:D8:F0)" selectedOption="Enabled" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="1">Enabled</Option>
+              <Option value="0">Disabled</Option>
+            </AvailableOptions>
+            <DefaultOption>Enabled</DefaultOption>
+            <Help><![CDATA[Enable/Disable SA GNA Device.]]></Help>
+          </Information>
+        </Setting>
+        <Setting name="X2APIC Opt Out" selectedOption="Disabled" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="1">Enabled</Option>
+              <Option value="0">Disabled</Option>
+            </AvailableOptions>
+            <DefaultOption>Disabled</DefaultOption>
+            <Help><![CDATA[Enable/Disable X2APIC_OPT_OUT bit]]></Help>
+            <WorkIf><![CDATA[ ( VT-d != 0 ) ]]></WorkIf>
+          </Information>
+        </Setting>
+      </Menu>
+      <Menu name="PCH-IO Configuration">
+        <Information>
+          <Help><![CDATA[PCH Parameters]]></Help>
+        </Information>
+        <Subtitle>PCH-IO Configuration</Subtitle>
+        <Subtitle></Subtitle>
+        <Menu name="PCI Express Configuration">
+          <Information>
+            <Help><![CDATA[PCI Express Configuration settings]]></Help>
+          </Information>
+          <Subtitle>PCI Express Configuration</Subtitle>
+          <Subtitle></Subtitle>
+          <Setting name="DMI Link ASPM Control" order="2" selectedOption="Auto" type="Option">
+            <Information>
+              <AvailableOptions>
+                <Option value="0">Disabled</Option>
+                <Option value="1">L0s</Option>
+                <Option value="2">L1</Option>
+                <Option value="3">L0sL1</Option>
+                <Option value="4">Auto</Option>
+              </AvailableOptions>
+              <DefaultOption>Auto</DefaultOption>
+              <Help><![CDATA[The control of Active State Power Management of the DMI Link.]]></Help>
+            </Information>
+          </Setting>
+          <Setting name="Peer Memory Write Enable" selectedOption="Disabled" type="Option">
+            <Information>
+              <AvailableOptions>
+                <Option value="0">Disabled</Option>
+                <Option value="1">Enabled</Option>
+              </AvailableOptions>
+              <DefaultOption>Disabled</DefaultOption>
+              <Help><![CDATA[Peer Memory Write Enable/Disable]]></Help>
+            </Information>
+          </Setting>
+          <Menu name="M.2-P_1">
+            <Information>
+              <Help><![CDATA[PCI Express Root Port Settings.]]></Help>
+            </Information>
+            <Setting name="M.2-P_1 ASPM Support" selectedOption="Auto" type="Option">
+              <Information>
+                <AvailableOptions>
+                  <Option value="0">Disabled</Option>
+                  <Option value="1">L0s</Option>
+                  <Option value="2">L1</Option>
+                  <Option value="3">L0sL1</Option>
+                  <Option value="4">Auto</Option>
+                </AvailableOptions>
+                <DefaultOption>Auto</DefaultOption>
+                <Help><![CDATA[Set the ASPM Level:
+Force L0s - Force all links to L0s State
+AUTO - BIOS auto configure
+DISABLE - Disables ASPM]]></Help>
+              </Information>
+            </Setting>
+            <Setting name="M.2-P_1 Substates" selectedOption="L1.1 &amp; L1.2" type="Option">
+              <Information>
+                <AvailableOptions>
+                  <Option value="0">Disabled</Option>
+                  <Option value="1">L1.1</Option>
+                  <Option value="2">L1.1 &amp; L1.2</Option>
+                </AvailableOptions>
+                <DefaultOption>L1.1 &amp; L1.2</DefaultOption>
+                <Help><![CDATA[PCI Express L1 Substates settings.]]></Help>
+              </Information>
+            </Setting>
+            <Setting name="M.2-P_1 PCIe Speed" selectedOption="Auto" type="Option">
+              <Information>
+                <AvailableOptions>
+                  <Option value="0">Auto</Option>
+                  <Option value="1">Gen1</Option>
+                  <Option value="2">Gen2</Option>
+                  <Option value="3">Gen3</Option>
+                </AvailableOptions>
+                <DefaultOption>Auto</DefaultOption>
+                <Help><![CDATA[Configure PCIe Speed]]></Help>
+              </Information>
+            </Setting>
+          </Menu>
+          <Menu name="M.2-H_2">
+            <Information>
+              <Help><![CDATA[PCI Express Root Port Settings.]]></Help>
+            </Information>
+            <Setting name="M.2-H_2 ASPM Support" selectedOption="Auto" type="Option">
+              <Information>
+                <AvailableOptions>
+                  <Option value="0">Disabled</Option>
+                  <Option value="1">L0s</Option>
+                  <Option value="2">L1</Option>
+                  <Option value="3">L0sL1</Option>
+                  <Option value="4">Auto</Option>
+                </AvailableOptions>
+                <DefaultOption>Auto</DefaultOption>
+                <Help><![CDATA[Set the ASPM Level:
+Force L0s - Force all links to L0s State
+AUTO - BIOS auto configure
+DISABLE - Disables ASPM]]></Help>
+              </Information>
+            </Setting>
+            <Setting name="M.2-H_2 L1 Substates" selectedOption="L1.1 &amp; L1.2" type="Option">
+              <Information>
+                <AvailableOptions>
+                  <Option value="0">Disabled</Option>
+                  <Option value="1">L1.1</Option>
+                  <Option value="2">L1.1 &amp; L1.2</Option>
+                </AvailableOptions>
+                <DefaultOption>L1.1 &amp; L1.2</DefaultOption>
+                <Help><![CDATA[PCI Express L1 Substates settings.]]></Help>
+              </Information>
+            </Setting>
+            <Setting name="M.2-H_2 PCIe Speed" selectedOption="Auto" type="Option">
+              <Information>
+                <AvailableOptions>
+                  <Option value="0">Auto</Option>
+                  <Option value="1">Gen1</Option>
+                  <Option value="2">Gen2</Option>
+                  <Option value="3">Gen3</Option>
+                </AvailableOptions>
+                <DefaultOption>Auto</DefaultOption>
+                <Help><![CDATA[Configure PCIe Speed]]></Help>
+              </Information>
+            </Setting>
+          </Menu>
+        </Menu>
+        <Subtitle></Subtitle>
+        <Setting name="Port 61h Bit-4 Emulation" selectedOption="Enabled" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="0">Disabled</Option>
+              <Option value="1">Enabled</Option>
+            </AvailableOptions>
+            <DefaultOption>Enabled</DefaultOption>
+            <Help><![CDATA[Emulation of Port 61h bit-4 toggling in SMM]]></Help>
+          </Information>
+        </Setting>
+        <Setting name="PCIe PLL SSC" selectedOption="Enabled" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="255">Enabled</Option>
+              <Option value="0">Disabled</Option>
+            </AvailableOptions>
+            <DefaultOption>Enabled</DefaultOption>
+            <Help><![CDATA[Enables/Disables PCIe PLL SSC.]]></Help>
+          </Information>
+        </Setting>
+      </Menu>
+    </Menu>
+    <Menu name="Super IO Configuration">
+      <Information>
+        <Help><![CDATA[System Super IO Chip Parameters.]]></Help>
+      </Information>
+      <Subtitle>Super IO Configuration</Subtitle>
+      <Subtitle></Subtitle>
+      <Text>Super IO Chip(AST2500)</Text>
+      <Menu name="Serial Port 1 Configuration">
+        <Information>
+          <Help><![CDATA[Set Parameters of Serial Port 1 (COMA)]]></Help>
+        </Information>
+        <Subtitle>Serial Port 1 Configuration</Subtitle>
+        <Subtitle></Subtitle>
+        <Setting name="Serial Port" order="1" checkedStatus="Checked" type="CheckBox">
+          <!--Checked/Unchecked-->
+          <Information>
+            <DefaultStatus>Checked</DefaultStatus>
+            <Help><![CDATA[Enable or Disable Serial Port (COM)]]></Help>
+          </Information>
+        </Setting>
+        <Text>Device Settings(IO=3F8h; IRQ=4;)</Text>
+        <!--Valid if:  ( Serial Port$1 != 0 ) -->
+        <Subtitle></Subtitle>
+        <Setting name="Change Settings" order="1" selectedOption="Auto" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="0">Auto</Option>
+              <Option value="1">IO=3F8h; IRQ=4;</Option>
+              <Option value="3">IO=2F8h; IRQ=4;</Option>
+              <Option value="4">IO=3E8h; IRQ=4;</Option>
+              <Option value="5">IO=2E8h; IRQ=4;</Option>
+            </AvailableOptions>
+            <DefaultOption>Auto</DefaultOption>
+            <Help><![CDATA[Select an optimal settings for Super IO Device]]></Help>
+            <WorkIf><![CDATA[ ( Serial Port$1 != 0 ) ]]></WorkIf>
+          </Information>
+        </Setting>
+      </Menu>
+      <Menu name="Serial Port 2 Configuration">
+        <Information>
+          <Help><![CDATA[Set Parameters of Serial Port 2 (COMB)]]></Help>
+        </Information>
+        <Subtitle>Serial Port 2 Configuration</Subtitle>
+        <Subtitle></Subtitle>
+        <Setting name="Serial Port" order="2" checkedStatus="Checked" type="CheckBox">
+          <!--Checked/Unchecked-->
+          <Information>
+            <DefaultStatus>Checked</DefaultStatus>
+            <Help><![CDATA[Enable or Disable Serial Port (COM)]]></Help>
+          </Information>
+        </Setting>
+        <Text>Device Settings(IO=2F8h; IRQ=3;)</Text>
+        <!--Valid if:  ( Serial Port$2 != 0 ) -->
+        <Subtitle></Subtitle>
+        <Setting name="Change Settings" order="2" selectedOption="Auto" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="0">Auto</Option>
+              <Option value="1">IO=2F8h; IRQ=3;</Option>
+              <Option value="3">IO=3F8h; IRQ=3;</Option>
+              <Option value="4">IO=3E8h; IRQ=3;</Option>
+              <Option value="5">IO=2E8h; IRQ=3;</Option>
+            </AvailableOptions>
+            <DefaultOption>Auto</DefaultOption>
+            <Help><![CDATA[Select an optimal settings for Super IO Device]]></Help>
+            <WorkIf><![CDATA[ ( Serial Port$2 != 0 ) ]]></WorkIf>
+          </Information>
+        </Setting>
+      </Menu>
+    </Menu>
+    <Menu name="Serial Port Console Redirection">
+      <Information>
+        <Help><![CDATA[Serial Port Console Redirection]]></Help>
+      </Information>
+      <Subtitle></Subtitle>
+      <Subtitle>COM1</Subtitle>
+      <Setting name="Console Redirection" order="1" checkedStatus="Unchecked" type="CheckBox">
+        <!--Checked/Unchecked-->
+        <Information>
+          <DefaultStatus>Unchecked</DefaultStatus>
+          <Help><![CDATA[Console Redirection Enable or Disable.]]></Help>
+        </Information>
+      </Setting>
+      <Menu name="Console Redirection Settings" order="1">
+        <Information>
+          <Help><![CDATA[The settings specify how the host computer and the remote computer (which the user is using) will exchange data. Both computers should have the same or compatible settings.]]></Help>
+          <WorkIf><![CDATA[ ( Console Redirection$1 != 0 ) ]]></WorkIf>
+        </Information>
+        <Subtitle>COM1</Subtitle>
+        <Subtitle>Console Redirection Settings</Subtitle>
+        <Subtitle></Subtitle>
+        <Setting name="Terminal Type" order="1" selectedOption="VT100+" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="0">VT100</Option>
+              <Option value="1">VT100+</Option>
+              <Option value="2">VT-UTF8</Option>
+              <Option value="3">ANSI</Option>
+            </AvailableOptions>
+            <DefaultOption>VT100+</DefaultOption>
+            <Help><![CDATA[Emulation: ANSI: Extended ASCII char set. VT100: ASCII char set. VT100+: Extends VT100 to support color, function keys, etc. VT-UTF8: Uses UTF8 encoding to map Unicode chars onto 1 or more bytes.]]></Help>
+          </Information>
+        </Setting>
+        <Setting name="Bits per second" order="1" selectedOption="115200" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="3">9600</Option>
+              <Option value="4">19200</Option>
+              <Option value="5">38400</Option>
+              <Option value="6">57600</Option>
+              <Option value="7">115200</Option>
+            </AvailableOptions>
+            <DefaultOption>115200</DefaultOption>
+            <Help><![CDATA[Selects serial port transmission speed. The speed must be matched on the other side. Long or noisy lines may require lower speeds.]]></Help>
+          </Information>
+        </Setting>
+        <Setting name="Data Bits" order="1" selectedOption="8" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="7">7</Option>
+              <Option value="8">8</Option>
+            </AvailableOptions>
+            <DefaultOption>8</DefaultOption>
+            <Help><![CDATA[Data Bits]]></Help>
+          </Information>
+        </Setting>
+        <Setting name="Parity" order="1" selectedOption="None" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="1">None</Option>
+              <Option value="2">Even</Option>
+              <Option value="3">Odd</Option>
+              <Option value="4">Mark</Option>
+              <Option value="5">Space</Option>
+            </AvailableOptions>
+            <DefaultOption>None</DefaultOption>
+            <Help><![CDATA[A parity bit can be sent with the data bits to detect some transmission errors. Even: parity bit is 0 if the num of 1's in the data bits is even. Odd: parity bit is 0 if num of 1's in the data bits is odd.  Mark: parity bit is always 1. Space: Parity bit is always 0. Mark and Space Parity do not allow for error detection. They can be used as an additional data bit.]]></Help>
+          </Information>
+        </Setting>
+        <Setting name="Stop Bits" order="1" selectedOption="1" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="1">1</Option>
+              <Option value="3">2</Option>
+            </AvailableOptions>
+            <DefaultOption>1</DefaultOption>
+            <Help><![CDATA[Stop bits indicate the end of a serial data packet. (A start bit indicates the beginning). The standard setting is 1 stop bit. Communication with slow devices may require more than 1 stop bit.]]></Help>
+          </Information>
+        </Setting>
+        <Setting name="Flow Control" order="1" selectedOption="None" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="0">None</Option>
+              <Option value="1">Hardware RTS/CTS</Option>
+            </AvailableOptions>
+            <DefaultOption>None</DefaultOption>
+            <Help><![CDATA[Flow control can prevent data loss from buffer overflow. When sending data, if the receiving buffers are full, a 'stop' signal can be sent to stop the data flow. Once the buffers are empty, a 'start' signal can be sent to re-start the flow. Hardware flow control uses two wires to send start/stop signals.]]></Help>
+          </Information>
+        </Setting>
+        <Setting name="VT-UTF8 Combo Key Support" order="1" checkedStatus="Checked" type="CheckBox">
+          <!--Checked/Unchecked-->
+          <Information>
+            <DefaultStatus>Checked</DefaultStatus>
+            <Help><![CDATA[Enable VT-UTF8 Combination Key Support for ANSI/VT100 terminals]]></Help>
+          </Information>
+        </Setting>
+        <Setting name="Recorder Mode" order="1" checkedStatus="Unchecked" type="CheckBox">
+          <!--Checked/Unchecked-->
+          <Information>
+            <DefaultStatus>Unchecked</DefaultStatus>
+            <Help><![CDATA[With this mode enabled only text will be sent. This is to capture Terminal data.]]></Help>
+          </Information>
+        </Setting>
+        <Setting name="Resolution 100x31" order="1" checkedStatus="Checked" type="CheckBox">
+          <!--Checked/Unchecked-->
+          <Information>
+            <DefaultStatus>Checked</DefaultStatus>
+            <Help><![CDATA[Enables or disables extended terminal resolution]]></Help>
+          </Information>
+        </Setting>
+        <Setting name="Putty KeyPad" order="1" selectedOption="VT100" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="1">VT100</Option>
+              <Option value="2">LINUX</Option>
+              <Option value="4">XTERMR6</Option>
+              <Option value="8">SCO</Option>
+              <Option value="16">ESCN</Option>
+              <Option value="32">VT400</Option>
+            </AvailableOptions>
+            <DefaultOption>VT100</DefaultOption>
+            <Help><![CDATA[Select FunctionKey and KeyPad on Putty.]]></Help>
+          </Information>
+        </Setting>
+        <Subtitle></Subtitle>
+      </Menu>
+      <Subtitle></Subtitle>
+      <Subtitle>SOL</Subtitle>
+      <Setting name="Console Redirection" order="2" checkedStatus="Checked" type="CheckBox">
+        <!--Checked/Unchecked-->
+        <Information>
+          <DefaultStatus>Checked</DefaultStatus>
+          <Help><![CDATA[Console Redirection Enable or Disable.]]></Help>
+        </Information>
+      </Setting>
+      <Menu name="Console Redirection Settings" order="2">
+        <Information>
+          <Help><![CDATA[The settings specify how the host computer and the remote computer (which the user is using) will exchange data. Both computers should have the same or compatible settings.]]></Help>
+          <WorkIf><![CDATA[ ( Console Redirection$2 != 0 ) ]]></WorkIf>
+        </Information>
+        <Subtitle>SOL</Subtitle>
+        <Subtitle>Console Redirection Settings</Subtitle>
+        <Subtitle></Subtitle>
+        <Setting name="Terminal Type" order="2" selectedOption="VT100+" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="0">VT100</Option>
+              <Option value="1">VT100+</Option>
+              <Option value="2">VT-UTF8</Option>
+              <Option value="3">ANSI</Option>
+            </AvailableOptions>
+            <DefaultOption>VT100+</DefaultOption>
+            <Help><![CDATA[Emulation: ANSI: Extended ASCII char set. VT100: ASCII char set. VT100+: Extends VT100 to support color, function keys, etc. VT-UTF8: Uses UTF8 encoding to map Unicode chars onto 1 or more bytes.]]></Help>
+          </Information>
+        </Setting>
+        <Setting name="Bits per second" order="2" selectedOption="115200" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="3">9600</Option>
+              <Option value="4">19200</Option>
+              <Option value="5">38400</Option>
+              <Option value="6">57600</Option>
+              <Option value="7">115200</Option>
+            </AvailableOptions>
+            <DefaultOption>115200</DefaultOption>
+            <Help><![CDATA[Selects serial port transmission speed. The speed must be matched on the other side. Long or noisy lines may require lower speeds.]]></Help>
+          </Information>
+        </Setting>
+        <Setting name="Data Bits" order="2" selectedOption="8" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="7">7</Option>
+              <Option value="8">8</Option>
+            </AvailableOptions>
+            <DefaultOption>8</DefaultOption>
+            <Help><![CDATA[Data Bits]]></Help>
+          </Information>
+        </Setting>
+        <Setting name="Parity" order="2" selectedOption="None" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="1">None</Option>
+              <Option value="2">Even</Option>
+              <Option value="3">Odd</Option>
+              <Option value="4">Mark</Option>
+              <Option value="5">Space</Option>
+            </AvailableOptions>
+            <DefaultOption>None</DefaultOption>
+            <Help><![CDATA[A parity bit can be sent with the data bits to detect some transmission errors. Even: parity bit is 0 if the num of 1's in the data bits is even. Odd: parity bit is 0 if num of 1's in the data bits is odd.  Mark: parity bit is always 1. Space: Parity bit is always 0. Mark and Space Parity do not allow for error detection. They can be used as an additional data bit.]]></Help>
+          </Information>
+        </Setting>
+        <Setting name="Stop Bits" order="2" selectedOption="1" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="1">1</Option>
+              <Option value="3">2</Option>
+            </AvailableOptions>
+            <DefaultOption>1</DefaultOption>
+            <Help><![CDATA[Stop bits indicate the end of a serial data packet. (A start bit indicates the beginning). The standard setting is 1 stop bit. Communication with slow devices may require more than 1 stop bit.]]></Help>
+          </Information>
+        </Setting>
+        <Setting name="Flow Control" order="2" selectedOption="None" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="0">None</Option>
+              <Option value="1">Hardware RTS/CTS</Option>
+            </AvailableOptions>
+            <DefaultOption>None</DefaultOption>
+            <Help><![CDATA[Flow control can prevent data loss from buffer overflow. When sending data, if the receiving buffers are full, a 'stop' signal can be sent to stop the data flow. Once the buffers are empty, a 'start' signal can be sent to re-start the flow. Hardware flow control uses two wires to send start/stop signals.]]></Help>
+          </Information>
+        </Setting>
+        <Setting name="VT-UTF8 Combo Key Support" order="2" checkedStatus="Checked" type="CheckBox">
+          <!--Checked/Unchecked-->
+          <Information>
+            <DefaultStatus>Checked</DefaultStatus>
+            <Help><![CDATA[Enable VT-UTF8 Combination Key Support for ANSI/VT100 terminals]]></Help>
+          </Information>
+        </Setting>
+        <Setting name="Recorder Mode" order="2" checkedStatus="Unchecked" type="CheckBox">
+          <!--Checked/Unchecked-->
+          <Information>
+            <DefaultStatus>Unchecked</DefaultStatus>
+            <Help><![CDATA[With this mode enabled only text will be sent. This is to capture Terminal data.]]></Help>
+          </Information>
+        </Setting>
+        <Setting name="Resolution 100x31" order="2" checkedStatus="Checked" type="CheckBox">
+          <!--Checked/Unchecked-->
+          <Information>
+            <DefaultStatus>Checked</DefaultStatus>
+            <Help><![CDATA[Enables or disables extended terminal resolution]]></Help>
+          </Information>
+        </Setting>
+        <Setting name="Putty KeyPad" order="2" selectedOption="VT100" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="1">VT100</Option>
+              <Option value="2">LINUX</Option>
+              <Option value="4">XTERMR6</Option>
+              <Option value="8">SCO</Option>
+              <Option value="16">ESCN</Option>
+              <Option value="32">VT400</Option>
+            </AvailableOptions>
+            <DefaultOption>VT100</DefaultOption>
+            <Help><![CDATA[Select FunctionKey and KeyPad on Putty.]]></Help>
+          </Information>
+        </Setting>
+        <Subtitle></Subtitle>
+      </Menu>
+      <Subtitle></Subtitle>
+      <Subtitle>Legacy Console Redirection</Subtitle>
+      <Menu name="Legacy Console Redirection Settings">
+        <Information>
+          <Help><![CDATA[Legacy Console Redirection Settings]]></Help>
+        </Information>
+        <Subtitle>Legacy Console Redirection Settings</Subtitle>
+        <Subtitle></Subtitle>
+        <Setting name="Redirection COM Port" selectedOption="COM1" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="0">COM1</Option>
+              <Option value="1">SOL</Option>
+            </AvailableOptions>
+            <DefaultOption>COM1</DefaultOption>
+            <Help><![CDATA[Select a COM port to display redirection of Legacy OS and Legacy OPROM Messages]]></Help>
+          </Information>
+        </Setting>
+        <Setting name="Legacy OS Redirection Resolution" selectedOption="80x25" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="0">80x24</Option>
+              <Option value="1">80x25</Option>
+            </AvailableOptions>
+            <DefaultOption>80x25</DefaultOption>
+            <Help><![CDATA[On Legacy OS, the Number of Rows and Columns supported redirection]]></Help>
+          </Information>
+        </Setting>
+        <Setting name="Redirection After BIOS POST" selectedOption="Always Enable" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="0">Always Enable</Option>
+              <Option value="1">BootLoader</Option>
+            </AvailableOptions>
+            <DefaultOption>Always Enable</DefaultOption>
+            <Help><![CDATA[When Bootloader is selected, then Legacy Console Redirection is disabled before booting to legacy OS. When Always Enable is selected, then Legacy Console Redirection is enabled for legacy OS. Default setting for this option is set to Always Enable.]]></Help>
+          </Information>
+        </Setting>
+      </Menu>
+      <Subtitle></Subtitle>
+      <Subtitle>Serial Port for Out-of-Band Management/</Subtitle>
+      <Subtitle>Windows Emergency Management Services (EMS)</Subtitle>
+      <Setting name="Console Redirection" order="3" checkedStatus="Unchecked" type="CheckBox">
+        <!--Checked/Unchecked-->
+        <Information>
+          <DefaultStatus>Unchecked</DefaultStatus>
+          <Help><![CDATA[Console Redirection Enable or Disable.]]></Help>
+        </Information>
+      </Setting>
+      <Menu name="Console Redirection Settings" order="3">
+        <Information>
+          <Help><![CDATA[The settings specify how the host computer and the remote computer (which the user is using) will exchange data. Both computers should have the same or compatible settings.]]></Help>
+          <WorkIf><![CDATA[ ( Console Redirection$3 != 0 ) ]]></WorkIf>
+        </Information>
+        <Setting name="Out-of-Band Mgmt Port" selectedOption="COM1" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="0">COM1</Option>
+              <Option value="1">SOL</Option>
+            </AvailableOptions>
+            <DefaultOption>COM1</DefaultOption>
+            <Help><![CDATA[Microsoft Windows Emergency Management Services (EMS) allows for remote management of a Windows Server OS through a serial port.]]></Help>
+          </Information>
+        </Setting>
+        <Setting name="Terminal Type" order="3" selectedOption="VT-UTF8" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="0">VT100</Option>
+              <Option value="1">VT100+</Option>
+              <Option value="2">VT-UTF8</Option>
+              <Option value="3">ANSI</Option>
+            </AvailableOptions>
+            <DefaultOption>VT-UTF8</DefaultOption>
+            <Help><![CDATA[VT-UTF8 is the preferred terminal type for out-of-band management. The next best choice is VT100+ and then VT100. See above, in Console Redirection Settings page, for more Help with Terminal Type/Emulation.]]></Help>
+            <WorkIf><![CDATA[ ( Console Redirection$3 != 0 ) ]]></WorkIf>
+          </Information>
+        </Setting>
+        <Setting name="Bits per second" order="3" selectedOption="115200" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="3">9600</Option>
+              <Option value="4">19200</Option>
+              <Option value="6">57600</Option>
+              <Option value="7">115200</Option>
+            </AvailableOptions>
+            <DefaultOption>115200</DefaultOption>
+            <Help><![CDATA[Selects serial port transmission speed. The speed must be matched on the other side. Long or noisy lines may require lower speeds.]]></Help>
+            <WorkIf><![CDATA[ ( Console Redirection$3 != 0 ) ]]></WorkIf>
+          </Information>
+        </Setting>
+        <Setting name="Flow Control" order="3" selectedOption="None" type="Option">
+          <Information>
+            <AvailableOptions>
+              <Option value="0">None</Option>
+              <Option value="1">Hardware RTS/CTS</Option>
+              <Option value="2">Software Xon/Xoff</Option>
+            </AvailableOptions>
+            <DefaultOption>None</DefaultOption>
+            <Help><![CDATA[Flow control can prevent data loss from buffer overflow. When sending data, if the receiving buffers are full, a 'stop' signal can be sent to stop the data flow. Once the buffers are empty, a 'start' signal can be sent to re-start the flow. Hardware flow control uses two wires to send start/stop signals.]]></Help>
+            <WorkIf><![CDATA[ ( Console Redirection$3 != 0 ) ]]></WorkIf>
+          </Information>
+        </Setting>
+        <Text>Data Bits(8)</Text>
+        <!--Valid if:  ( Console Redirection$3 != 0 ) -->
+        <Text>Parity(None)</Text>
+        <!--Valid if:  ( Console Redirection$3 != 0 ) -->
+        <Text>Stop Bits(1)</Text>
+        <!--Valid if:  ( Console Redirection$3 != 0 ) -->
+      </Menu>
+    </Menu>
+    <Menu name="SATA And RSTe Configuration">
+      <Information>
+        <Help><![CDATA[SATA Device Options Settings]]></Help>
+      </Information>
+      <Subtitle>SATA And RSTe Configuration</Subtitle>
+      <Subtitle></Subtitle>
+      <Setting name="SATA Controller(s)" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="1">Enabled</Option>
+            <Option value="0">Disabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Enable/Disable SATA Device.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="SATA Mode Selection" selectedOption="AHCI" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">AHCI</Option>
+            <Option value="1">RAID</Option>
+          </AvailableOptions>
+          <DefaultOption>AHCI</DefaultOption>
+          <Help><![CDATA[Determines how SATA controller(s) operate.]]></Help>
+          <WorkIf><![CDATA[ ( SATA Controller(s) != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="SATA Interrupt Selection" selectedOption="MSI" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">MSI-x</Option>
+            <Option value="1">MSI</Option>
+            <Option value="2">Legacy</Option>
+          </AvailableOptions>
+          <DefaultOption>MSI</DefaultOption>
+          <Help><![CDATA[Select which interrupt will be available to OS. This option only takes effect if SATA controller is in RAID mode]]></Help>
+          <WorkIf><![CDATA[ ( SATA Controller(s) != 0 ) and ( SATA Mode Selection == 1 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="Aggressive LPM Support" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[Enable PCH to aggressively enter link power state.]]></Help>
+          <WorkIf><![CDATA[ ( SATA Controller(s) != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="Storage Option ROM/UEFI Driver" selectedOption="Legacy" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Do not launch</Option>
+            <Option value="1">UEFI</Option>
+            <Option value="2">Legacy</Option>
+          </AvailableOptions>
+          <DefaultOption>Legacy</DefaultOption>
+          <Help><![CDATA[Controls the execution of UEFI and Legacy Storage OpROM]]></Help>
+          <WorkIf><![CDATA[ ( SATA Controller(s) != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Text>Serial ATA Port 0(Micron_5300_MT (480.1GB))</Text>
+      <!--Valid if:  ( SATA Controller(s) != 0 ) -->
+      <Text>  Software Preserve(SUPPORTED)</Text>
+      <!--Valid if:  ( SATA Controller(s) != 0 ) -->
+      <Setting name="  Port 0 Hot Plug" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Designates this port as Hot Pluggable.]]></Help>
+          <WorkIf><![CDATA[ ( SATA Controller(s) != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="  Port 0 Spin Up Device" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[If enabled for any of ports Staggerred Spin Up will be performed and only the drives which have this option enabled will spin up at boot. Otherwise all drives spin up at boot.]]></Help>
+          <WorkIf><![CDATA[ ( SATA Controller(s) != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="  Port 0 SATA Device Type" selectedOption="Hard Disk Drive" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Hard Disk Drive</Option>
+            <Option value="1">Solid State Drive</Option>
+          </AvailableOptions>
+          <DefaultOption>Hard Disk Drive</DefaultOption>
+          <Help><![CDATA[Identify the SATA port is connected to Solid State Drive or Hard Disk Drive]]></Help>
+          <WorkIf><![CDATA[ ( SATA Controller(s) != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Text>Serial ATA Port 1(Micron_5300_MT (480.1GB))</Text>
+      <!--Valid if:  ( SATA Controller(s) != 0 ) -->
+      <Text>  Software Preserve(SUPPORTED)</Text>
+      <!--Valid if:  ( SATA Controller(s) != 0 ) -->
+      <Setting name="  Port 1 Hot Plug" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Designates this port as Hot Pluggable.]]></Help>
+          <WorkIf><![CDATA[ ( SATA Controller(s) != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="  Port 1 Spin Up Device" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[If enabled for any of ports Staggerred Spin Up will be performed and only the drives which have this option enabled will spin up at boot. Otherwise all drives spin up at boot.]]></Help>
+          <WorkIf><![CDATA[ ( SATA Controller(s) != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="  Port 1 SATA Device Type" selectedOption="Hard Disk Drive" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Hard Disk Drive</Option>
+            <Option value="1">Solid State Drive</Option>
+          </AvailableOptions>
+          <DefaultOption>Hard Disk Drive</DefaultOption>
+          <Help><![CDATA[Identify the SATA port is connected to Solid State Drive or Hard Disk Drive]]></Help>
+          <WorkIf><![CDATA[ ( SATA Controller(s) != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Text>Serial ATA Port 2(Empty)</Text>
+      <!--Valid if:  ( SATA Controller(s) != 0 ) -->
+      <Text>  Software Preserve(Unknown)</Text>
+      <!--Valid if:  ( SATA Controller(s) != 0 ) -->
+      <Setting name="  Port 2 Hot Plug" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Designates this port as Hot Pluggable.]]></Help>
+          <WorkIf><![CDATA[ ( SATA Controller(s) != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="  Port 2 Spin Up Device" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[If enabled for any of ports Staggerred Spin Up will be performed and only the drives which have this option enabled will spin up at boot. Otherwise all drives spin up at boot.]]></Help>
+          <WorkIf><![CDATA[ ( SATA Controller(s) != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="  Port 2 SATA Device Type" selectedOption="Hard Disk Drive" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Hard Disk Drive</Option>
+            <Option value="1">Solid State Drive</Option>
+          </AvailableOptions>
+          <DefaultOption>Hard Disk Drive</DefaultOption>
+          <Help><![CDATA[Identify the SATA port is connected to Solid State Drive or Hard Disk Drive]]></Help>
+          <WorkIf><![CDATA[ ( SATA Controller(s) != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Text>Serial ATA Port 3(Empty)</Text>
+      <!--Valid if:  ( SATA Controller(s) != 0 ) -->
+      <Text>  Software Preserve(Unknown)</Text>
+      <!--Valid if:  ( SATA Controller(s) != 0 ) -->
+      <Setting name="  Port 3 Hot Plug" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Designates this port as Hot Pluggable.]]></Help>
+          <WorkIf><![CDATA[ ( SATA Controller(s) != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="  Port 3 Spin Up Device" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[If enabled for any of ports Staggerred Spin Up will be performed and only the drives which have this option enabled will spin up at boot. Otherwise all drives spin up at boot.]]></Help>
+          <WorkIf><![CDATA[ ( SATA Controller(s) != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="  Port 3 SATA Device Type" selectedOption="Hard Disk Drive" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Hard Disk Drive</Option>
+            <Option value="1">Solid State Drive</Option>
+          </AvailableOptions>
+          <DefaultOption>Hard Disk Drive</DefaultOption>
+          <Help><![CDATA[Identify the SATA port is connected to Solid State Drive or Hard Disk Drive]]></Help>
+          <WorkIf><![CDATA[ ( SATA Controller(s) != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Text>Serial ATA Port 4(Empty)</Text>
+      <!--Valid if:  ( SATA Controller(s) != 0 ) -->
+      <Text>  Software Preserve(Unknown)</Text>
+      <!--Valid if:  ( SATA Controller(s) != 0 ) -->
+      <Setting name="  Port 4 Hot Plug" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Designates this port as Hot Pluggable.]]></Help>
+          <WorkIf><![CDATA[ ( SATA Controller(s) != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="  Port 4 Spin Up Device" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[If enabled for any of ports Staggerred Spin Up will be performed and only the drives which have this option enabled will spin up at boot. Otherwise all drives spin up at boot.]]></Help>
+          <WorkIf><![CDATA[ ( SATA Controller(s) != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="  Port 4 SATA Device Type" selectedOption="Hard Disk Drive" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Hard Disk Drive</Option>
+            <Option value="1">Solid State Drive</Option>
+          </AvailableOptions>
+          <DefaultOption>Hard Disk Drive</DefaultOption>
+          <Help><![CDATA[Identify the SATA port is connected to Solid State Drive or Hard Disk Drive]]></Help>
+          <WorkIf><![CDATA[ ( SATA Controller(s) != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Text>Serial ATA Port 5(Empty)</Text>
+      <!--Valid if:  ( SATA Controller(s) != 0 ) -->
+      <Text>  Software Preserve(Unknown)</Text>
+      <!--Valid if:  ( SATA Controller(s) != 0 ) -->
+      <Setting name="  Port 5 Hot Plug" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Designates this port as Hot Pluggable.]]></Help>
+          <WorkIf><![CDATA[ ( SATA Controller(s) != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="  Port 5 Spin Up Device" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[If enabled for any of ports Staggerred Spin Up will be performed and only the drives which have this option enabled will spin up at boot. Otherwise all drives spin up at boot.]]></Help>
+          <WorkIf><![CDATA[ ( SATA Controller(s) != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="  Port 5 SATA Device Type" selectedOption="Hard Disk Drive" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Hard Disk Drive</Option>
+            <Option value="1">Solid State Drive</Option>
+          </AvailableOptions>
+          <DefaultOption>Hard Disk Drive</DefaultOption>
+          <Help><![CDATA[Identify the SATA port is connected to Solid State Drive or Hard Disk Drive]]></Help>
+          <WorkIf><![CDATA[ ( SATA Controller(s) != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Text>Serial ATA Port 6(Empty)</Text>
+      <!--Valid if:  ( SATA Controller(s) != 0 ) -->
+      <Text>  Software Preserve(Unknown)</Text>
+      <!--Valid if:  ( SATA Controller(s) != 0 ) -->
+      <Setting name="  Port 6 Hot Plug" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Designates this port as Hot Pluggable.]]></Help>
+          <WorkIf><![CDATA[ ( SATA Controller(s) != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="  Port 6 Spin Up Device" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[If enabled for any of ports Staggerred Spin Up will be performed and only the drives which have this option enabled will spin up at boot. Otherwise all drives spin up at boot.]]></Help>
+          <WorkIf><![CDATA[ ( SATA Controller(s) != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="  Port 6 SATA Device Type" selectedOption="Hard Disk Drive" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Hard Disk Drive</Option>
+            <Option value="1">Solid State Drive</Option>
+          </AvailableOptions>
+          <DefaultOption>Hard Disk Drive</DefaultOption>
+          <Help><![CDATA[Identify the SATA port is connected to Solid State Drive or Hard Disk Drive]]></Help>
+          <WorkIf><![CDATA[ ( SATA Controller(s) != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+    </Menu>
+    <Menu name="PCH-FW Configuration">
+      <Information>
+        <Help><![CDATA[Advanced Mode]]></Help>
+      </Information>
+      <Subtitle>PCH-FW Configuration</Subtitle>
+      <Text>Operational Firmware Version(5.1.4.700)</Text>
+      <Text>Backup Firmware Version(N/A)</Text>
+      <Text>Recovery Firmware Version(5.1.4.700)</Text>
+      <Text>ME Firmware Features(SiEn
+NM
+PECIProxy
+ICC
+MeStorageServices
+BootGuard
+PmBusProxy
+HSIO
+PCHDebug
+PowerThermalUtility
+PCHThermalSensorInit
+DeepSx
+DirectMeUpdate
+TelemetryHub
+)</Text>
+      <Text>ME Firmware Status #1(0x00000255)</Text>
+      <Text>ME Firmware Status #2(0x89118027)</Text>
+      <Text>  Current State(Operational)</Text>
+      <Text>  Error Code(No Error)</Text>
+    </Menu>
+    <Menu name="ACPI Settings">
+      <Information>
+        <Help><![CDATA[]]></Help>
+      </Information>
+      <Setting name="WHEA Support" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Enable or disable Windows Hardware Error Architecture.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="High Precision Event Timer" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Enable or Disable the High Precision Event Timer.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="Native PCIE Enable" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Bit - PCIe Native * control
+ 0 - ~ Hot Plug
+ 1 - SHPC Native Hot Plug control
+ 2 - ~ Power Management Events
+ 3 - PCIe Advanced Error Reporting control
+ 4 - PCIe Capability Structure control
+ 5 - Latency Tolerance Reporting control]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="Native ASPM" selectedOption="Auto" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="2">Auto</Option>
+            <Option value="1">Enabled</Option>
+            <Option value="0">Disabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Auto</DefaultOption>
+          <Help><![CDATA[Enabled - OS Controlled ASPM, Disabled - BIOS Controlled ASPM]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="PCI AER Support" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[Enable/Disable ACPI OS to natively manage PCI Advanced Error Reporting.]]></Help>
+        </Information>
+      </Setting>
+    </Menu>
+    <Menu name="USB Configuration">
+      <Information>
+        <Help><![CDATA[USB Configuration Parameters]]></Help>
+      </Information>
+      <Subtitle>USB Configuration</Subtitle>
+      <Subtitle></Subtitle>
+      <Text>USB Module Version(23)</Text>
+      <Subtitle></Subtitle>
+      <Text>USB Controllers:()</Text>
+      <Subtitle>      1 XHCI</Subtitle>
+      <Text>USB Devices:()</Text>
+      <Subtitle>      1 Keyboard, 1 Mouse, 1 Hub</Subtitle>
+      <Subtitle></Subtitle>
+      <Setting name="Legacy USB Support" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Enabled</Option>
+            <Option value="1">Disabled</Option>
+            <Option value="2">Auto</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Enables Legacy USB support. AUTO option disables legacy support if no USB devices are connected. DISABLE option will keep USB devices available only for EFI applications.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="XHCI Hand-off" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="1">Enabled</Option>
+            <Option value="0">Disabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[This is a workaround for OSes without XHCI hand-off support. The XHCI ownership change should be claimed by XHCI driver.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="USB Mass Storage Driver Support" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Enable/Disable USB Mass Storage Driver Support.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="Port 60/64 Emulation" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Enables I/O port 60h/64h emulation support. This should be enabled for the complete USB keyboard legacy support for non-USB aware OSes.]]></Help>
+        </Information>
+      </Setting>
+    </Menu>
+    <Menu name="PCIe/PCI/PnP Configuration">
+      <Information>
+        <Help><![CDATA[PCI Hot-Plug Settings]]></Help>
+      </Information>
+      <Subtitle>Option ROM execution</Subtitle>
+      <Setting name="PCI PERR/SERR Support" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[PCI PERR/SERR enable/disable.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="Above 4GB MMIO BIOS assignment" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="1">Enabled</Option>
+            <Option value="0">Disabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[Enable/Disable above 4GB MemoryMappedIO BIOS assignment
+
+This is enabled automatically when Aperture Size is set to 2048MB.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="BME DMA Mitigation" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[Re-enable Bus Master Attribute disabled during Pci enumeration for PCI Bridges after SMM Locked ]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="VGA Priority" selectedOption="Onboard" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="1">Onboard</Option>
+            <Option value="2">Offboard</Option>
+          </AvailableOptions>
+          <DefaultOption>Onboard</DefaultOption>
+          <Help><![CDATA[Select active Video type]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="Onboard Video Option ROM" selectedOption="Legacy" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="1">Legacy</Option>
+            <Option value="2">EFI</Option>
+            <Option value="0">Disabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Legacy</DefaultOption>
+          <Help><![CDATA[Select which onboard video firmware type to be loaded.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="NVMe Firmware Source" selectedOption="Vendor Defined Firmware" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Vendor Defined Firmware</Option>
+            <Option value="1">AMI Native Support</Option>
+          </AvailableOptions>
+          <DefaultOption>Vendor Defined Firmware</DefaultOption>
+          <Help><![CDATA[AMI Native FW Support or Device Vendor Defined FW Support]]></Help>
+        </Information>
+      </Setting>
+      <Subtitle></Subtitle>
+      <Subtitle>PCIe/PCI/PnP Configuration</Subtitle>
+      <Setting name="RSC-RR1U-E16 PCI-E 3.0 X16 OPROM" selectedOption="Legacy" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Legacy</Option>
+            <Option value="2">EFI</Option>
+          </AvailableOptions>
+          <DefaultOption>Legacy</DefaultOption>
+          <Help><![CDATA[Enable or Disable RSC-RR1U-E16 OPROM option.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="M.2-P_1 OPROM" selectedOption="Legacy" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Legacy</Option>
+            <Option value="2">EFI</Option>
+          </AvailableOptions>
+          <DefaultOption>Legacy</DefaultOption>
+          <Help><![CDATA[Enables or disables M.2-P_1 OPROM option.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="M.2-H_2 OPROM" selectedOption="Legacy" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Legacy</Option>
+            <Option value="2">EFI</Option>
+          </AvailableOptions>
+          <DefaultOption>Legacy</DefaultOption>
+          <Help><![CDATA[Enables or disables M.2-H_2 OPROM option.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="Onboard LAN Option ROM Type" selectedOption="Legacy" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Legacy</Option>
+            <Option value="1">EFI</Option>
+          </AvailableOptions>
+          <DefaultOption>Legacy</DefaultOption>
+          <Help><![CDATA[Select which firmware type to be loaded for onboard LANs]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="Onboard LAN1 Option ROM" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">PXE</Option>
+            <Option value="2">iSCSI</Option>
+          </AvailableOptions>
+          <DefaultOption>PXE</DefaultOption>
+          <Help><![CDATA[Select which firmware function to be loaded for onboard LAN1.]]></Help>
+          <WorkIf><![CDATA[ ( Onboard LAN Option ROM Type != 1 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="Onboard LAN2 Option ROM" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">PXE</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[Select which firmware function to be loaded for onboard LAN2]]></Help>
+          <WorkIf><![CDATA[ ( Onboard LAN Option ROM Type != 1 ) and ( Onboard LAN1 Option ROM <= 1 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="Network Stack" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Enable/Disable UEFI Network Stack]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="IPv4 PXE Support" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Enable/Disable IPv4 PXE boot support. If disabled, IPv4 PXE boot support will not be available.]]></Help>
+          <WorkIf><![CDATA[ ( Network Stack != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="IPv4 HTTP Support" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[Enable/Disable IPv4 HTTP boot support. If disabled, IPv4 HTTP boot support will not be available.]]></Help>
+          <WorkIf><![CDATA[ ( Network Stack != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="IPv6 PXE Support" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Enable/Disable IPv6 PXE boot support. If disabled, IPv6 PXE boot support will not be available.]]></Help>
+          <WorkIf><![CDATA[ ( Network Stack != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="IPv6 HTTP Support" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[Enable/Disable IPv6 HTTP boot support. If disabled, IPv6 HTTP boot support will not be available.]]></Help>
+          <WorkIf><![CDATA[ ( Network Stack != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="IPSEC Certificate" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[Support to Enable/Disable IPSEC certificate for Ikev.]]></Help>
+          <WorkIf><![CDATA[ ( Network Stack != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="PXE boot wait time" numericValue="0" type="Numeric">
+        <Information>
+          <MaxValue>5</MaxValue>
+          <MinValue>0</MinValue>
+          <StepSize>1</StepSize>
+          <DefaultValue>0</DefaultValue>
+          <Help><![CDATA[Wait time in seconds to press ESC key to abort the PXE boot. Use either +/- or numeric keys to set the value.]]></Help>
+          <WorkIf><![CDATA[ ( Network Stack != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="Media detect count" numericValue="1" type="Numeric">
+        <Information>
+          <MaxValue>50</MaxValue>
+          <MinValue>1</MinValue>
+          <StepSize>1</StepSize>
+          <DefaultValue>1</DefaultValue>
+          <Help><![CDATA[Number of times the presence of media will be checked. Use either +/- or numeric keys to set the value.]]></Help>
+          <WorkIf><![CDATA[ ( Network Stack != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+    </Menu>
+    <Menu name="Network Configuration">
+      <Information>
+        <Help><![CDATA[Network Configuration Settings]]></Help>
+        <WorkIf><![CDATA[ ( Onboard LAN Option ROM Type != 0 ) ]]></WorkIf>
+      </Information>
+    </Menu>
+    <Menu name="Trusted Computing">
+      <Information>
+        <Help><![CDATA[Trusted Computing Settings]]></Help>
+      </Information>
+      <Subtitle>  TPM20 Device Found</Subtitle>
+      <Text>  Firmware Version:(7.62)</Text>
+      <Text>  Vendor:(IFX)</Text>
+      <Subtitle></Subtitle>
+      <Setting name="  Security Device Support" selectedOption="Enable" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disable</Option>
+            <Option value="1">Enable</Option>
+          </AvailableOptions>
+          <DefaultOption>Enable</DefaultOption>
+          <Help><![CDATA[Enables or Disables BIOS support for security device. O.S. will not show Security Device. TCG EFI protocol and INT1A interface will not be available.]]></Help>
+        </Information>
+      </Setting>
+      <Text>  Active PCR banks(SHA-1,SHA256)</Text>
+      <!--Valid if:  (   Security Device Support != 0 ) -->
+      <Text>  Available PCR banks(SHA-1,SHA256)</Text>
+      <!--Valid if:  (   Security Device Support != 0 ) -->
+      <Subtitle></Subtitle>
+      <Setting name="  SHA-1 PCR Bank" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Enable or Disable SHA-1 PCR Bank]]></Help>
+          <WorkIf><![CDATA[ (   TPM2.0 UEFI Spec Version != 1 ) and (   Security Device Support != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="  SHA256 PCR Bank" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="2">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Enable or Disable SHA256 PCR Bank]]></Help>
+          <WorkIf><![CDATA[ (   TPM2.0 UEFI Spec Version != 1 ) and (   Security Device Support != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Subtitle></Subtitle>
+      <Setting name="  Pending Operation" selectedOption="None" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">None</Option>
+            <Option value="1">TPM Clear</Option>
+          </AvailableOptions>
+          <DefaultOption>None</DefaultOption>
+          <Help><![CDATA[Schedule an Operation for the Security Device. NOTE: Your Computer will reboot during restart in order to change State of Security Device.]]></Help>
+          <WorkIf><![CDATA[ (   Security Device Support != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="  Platform Hierarchy" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Enable or Disable Platform Hierarchy]]></Help>
+          <WorkIf><![CDATA[ (   Security Device Support != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="  Storage Hierarchy" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Enable or Disable Storage Hierarchy]]></Help>
+          <WorkIf><![CDATA[ (   Security Device Support != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="  Endorsement Hierarchy" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Enable or Disable Endorsement Hierarchy]]></Help>
+          <WorkIf><![CDATA[ (   Security Device Support != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="  TPM2.0 UEFI Spec Version" selectedOption="TCG_2" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="1">TCG_1_2</Option>
+            <Option value="2">TCG_2</Option>
+          </AvailableOptions>
+          <DefaultOption>TCG_2</DefaultOption>
+          <Help><![CDATA[Select the TCG2 Spec Version Support,
+
+TCG_1_2: the Compatible mode for Win8/Win10,
+
+TCG_2: Support new TCG2 protocol and event format for Win10 or later]]></Help>
+          <WorkIf><![CDATA[ (   Security Device Support != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="  Physical Presence Spec Version" selectedOption="1.3" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">1.2</Option>
+            <Option value="1">1.3</Option>
+          </AvailableOptions>
+          <DefaultOption>1.3</DefaultOption>
+          <Help><![CDATA[  Select to Tell O.S. to support PPI Spec Version 1.2 or 1.3. Note some HCK tests might not support 1.3.]]></Help>
+          <WorkIf><![CDATA[ (   Security Device Support != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="  PH Randomization" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Enables or Disables Platform Hierarchy randomization. DO NOT ENABLE THIS QUESTION IN PRODUCTION PLATFORMS. THIS IS FOR DEVELOPMENT TESTING. OVERRIDE ChangePlatformAuth ELINK for production platforms supporting TXT.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="  Device Select" selectedOption="Auto" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">TPM 1.2</Option>
+            <Option value="1">TPM 2.0</Option>
+            <Option value="2">Auto</Option>
+          </AvailableOptions>
+          <DefaultOption>Auto</DefaultOption>
+          <Help><![CDATA[TPM 1.2 will restrict support to TPM 1.2 devices, TPM 2.0 will restrict support to TPM 2.0 devices, Auto will support both with the default set to TPM 2.0 devices if not found, TPM 1.2 devices will be enumerated ]]></Help>
+          <WorkIf><![CDATA[ (   Security Device Support != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="  Supermicro BIOS-Based TPM Provision Support" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[Notice!!! Enabling this setup option will lock your TPM for production platform. You will not be able to delete the NV indexes.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="  TXT Support" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[Enables utilization of additional hardware capabilities provided by Intel (R) Trusted Execution Technology.
+
+Changes require a full power cycle to take effect.]]></Help>
+          <WorkIf><![CDATA[ ( ( ( ( Intel (VMX) Virtualization Technology != 0 ) && ( VT-d != 0 ) ) && ( Active Processor Cores == 0 ) ) && ( Hyper-Threading != 0 ) ) ]]></WorkIf>
+        </Information>
+      </Setting>
+    </Menu>
+    <Menu name="HTTP BOOT Configuration">
+      <Information>
+        <Help><![CDATA[HTTP BOOT Settings]]></Help>
+      </Information>
+      <Subtitle>HTTP BOOT Configuration</Subtitle>
+      <Setting name="HTTP Boot One Time" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[After create Http Boot Option, it will auto boot into HttpBoot in first time]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="Input the description" type="String">
+        <Information>
+          <MinSize>0</MinSize>
+          <MaxSize>75</MaxSize>
+          <DefaultString></DefaultString>
+          <Help><![CDATA[]]></Help>
+          <AllowingMultipleLine>False</AllowingMultipleLine>
+        </Information>
+        <StringValue><![CDATA[]]></StringValue>
+      </Setting>
+      <Setting name="Boot URI" type="String">
+        <Information>
+          <MinSize>0</MinSize>
+          <MaxSize>80</MaxSize>
+          <DefaultString></DefaultString>
+          <Help><![CDATA[A new Boot Option will be created according to this Boot URI.]]></Help>
+          <AllowingMultipleLine>False</AllowingMultipleLine>
+        </Information>
+        <StringValue><![CDATA[]]></StringValue>
+      </Setting>
+    </Menu>
+    <Subtitle></Subtitle>
+  </Menu>
+  <Menu name="Event Logs">
+    <Information />
+    <Menu name="Change SMBIOS Event Log Settings">
+      <Information>
+        <Help><![CDATA[Press <Enter> to change the SMBIOS Event Log configuration.]]></Help>
+      </Information>
+      <Subtitle>Enabling/Disabling Options</Subtitle>
+      <Setting name="SMBIOS Event Log" selectedOption="Enabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Enabled</DefaultOption>
+          <Help><![CDATA[Change this to enable or disable all features of SMBIOS Event Logging during boot.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="Memory Corrected Error Enabling" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[Enable/Disable the runtime event for memory correctable errors.]]></Help>
+        </Information>
+      </Setting>
+      <Subtitle></Subtitle>
+      <Subtitle>Erasing Settings</Subtitle>
+      <Setting name="Erase Event Log" selectedOption="No" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">No</Option>
+            <Option value="1">Yes, Next reset</Option>
+            <Option value="2">Yes, Every reset</Option>
+          </AvailableOptions>
+          <DefaultOption>No</DefaultOption>
+          <Help><![CDATA[Choose options for erasing SMBIOS Event Log.  Erasing is done prior to any logging activation during reset.]]></Help>
+          <WorkIf><![CDATA[ ( SMBIOS Event Log != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="When Log is Full" selectedOption="Do Nothing" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Do Nothing</Option>
+            <Option value="1">Erase Immediately</Option>
+          </AvailableOptions>
+          <DefaultOption>Do Nothing</DefaultOption>
+          <Help><![CDATA[Choose options for reactions to a full SMBIOS Event Log.]]></Help>
+          <WorkIf><![CDATA[ ( SMBIOS Event Log != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Subtitle></Subtitle>
+      <Subtitle>SMBIOS Event Log Standard Settings</Subtitle>
+      <Setting name="Log System Boot Event" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="1">Enabled</Option>
+            <Option value="0">Disabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[Choose option to enable/disable logging of System boot event]]></Help>
+          <WorkIf><![CDATA[ ( SMBIOS Event Log != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="MECI" numericValue="1" type="Numeric">
+        <Information>
+          <MaxValue>255</MaxValue>
+          <MinValue>1</MinValue>
+          <StepSize>1</StepSize>
+          <DefaultValue>1</DefaultValue>
+          <Help><![CDATA[Mutiple Event Count Increment:  The number of occurrences of a duplicate event that must pass before the multiple-event counter of log entry is updated.The value ranges from 1 to 255.]]></Help>
+          <WorkIf><![CDATA[ ( SMBIOS Event Log != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+      <Setting name="METW" numericValue="60" type="Numeric">
+        <Information>
+          <MaxValue>99</MaxValue>
+          <MinValue>0</MinValue>
+          <StepSize>1</StepSize>
+          <DefaultValue>60</DefaultValue>
+          <Help><![CDATA[Mutiple Event Time Window:  The number of minutes which must pass between duplicate log entries which utilize a multiple-event counter. The value ranges from 0 to 99 minutes.]]></Help>
+          <WorkIf><![CDATA[ ( SMBIOS Event Log != 0 ) ]]></WorkIf>
+        </Information>
+      </Setting>
+    </Menu>
+    <Menu name="View SMBIOS Event Log">
+      <Information>
+        <Help><![CDATA[Press <Enter> to view the SMBIOS Event Log records.]]></Help>
+      </Information>
+      <Subtitle>DATE     TIME      ERROR CODE  SEVERITY</Subtitle>
+      <Subtitle></Subtitle>
+    </Menu>
+    <Subtitle></Subtitle>
+  </Menu>
+  <Menu name="Security">
+    <Information />
+    <Subtitle>Password Description</Subtitle>
+    <Subtitle></Subtitle>
+    <Subtitle>If the Administrator / User password is set, then this only limits access to Setup and is asked for when entering Setup. Please set Administrator password first in order for setting User password, if clear Administrator password, User password will be cleared as well. </Subtitle>
+    <Subtitle>The password length must be in the following range:</Subtitle>
+    <Text>Minimum length(3)</Text>
+    <Text>Maximum length(20)</Text>
+    <Subtitle></Subtitle>
+    <Setting name="Password Check" selectedOption="Setup" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">Setup</Option>
+          <Option value="1">Always</Option>
+        </AvailableOptions>
+        <DefaultOption>Setup</DefaultOption>
+        <Help><![CDATA[Setup: Check password while invoking setup. Always: Check password while invoking setup as well as on each boot.]]></Help>
+      </Information>
+    </Setting>
+    <Setting name="Hard Drive Security Frozen" selectedOption="Disabled" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="1">Enabled</Option>
+          <Option value="0">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>Disabled</DefaultOption>
+        <Help><![CDATA[Enabled/Disabled Freeze Lock Security Feature]]></Help>
+      </Information>
+    </Setting>
+    <Subtitle></Subtitle>
+    <Menu name="Supermicro Security Erase Configuration">
+      <Information>
+        <Help><![CDATA[]]></Help>
+      </Information>
+      <Text>Security Module Version(1.00)</Text>
+      <Text>HDD Name(Micron_5300_MTFDDAK480TDT)</Text>
+      <Text>HDD Serial Number(20422B887014)</Text>
+      <Text>Security Mode(SAT3 Supported)</Text>
+      <Text>Estimated Time(2 Minutes)</Text>
+      <Text>HDD User Pwd Status(NOT INSTALLED)</Text>
+      <Setting name="Security Function" order="1" selectedOption="Disable" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disable</Option>
+            <Option value="1">Set Password</Option>
+            <Option value="2">Security Erase - Password</Option>
+            <Option value="4">Security Erase - Without Password</Option>
+          </AvailableOptions>
+          <DefaultOption>Disable</DefaultOption>
+          <Help><![CDATA[Password: When SATA user password was set, device and password can be erased by SATA user password.
+Without Password: System will set a default password '111111111' for SATA user password, and erase device with '111111111'.
+If SATA user password is set, system will return fail status.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="Password" order="1" type="String">
+        <Information>
+          <MinSize>0</MinSize>
+          <MaxSize>32</MaxSize>
+          <DefaultString></DefaultString>
+          <Help><![CDATA[Supermicro HDD Security function]]></Help>
+          <AllowingMultipleLine>False</AllowingMultipleLine>
+        </Information>
+        <StringValue><![CDATA[]]></StringValue>
+      </Setting>
+      <Subtitle></Subtitle>
+      <Text>HDD Name(Micron_5300_MTFDDAK480TDT)</Text>
+      <Text>HDD Serial Number(20422B8885C5)</Text>
+      <Text>Security Mode(SAT3 Supported)</Text>
+      <Text>Estimated Time(2 Minutes)</Text>
+      <Text>HDD User Pwd Status(NOT INSTALLED)</Text>
+      <Setting name="Security Function" order="2" selectedOption="Disable" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disable</Option>
+            <Option value="1">Set Password</Option>
+            <Option value="2">Security Erase - Password</Option>
+            <Option value="4">Security Erase - Without Password</Option>
+          </AvailableOptions>
+          <DefaultOption>Disable</DefaultOption>
+          <Help><![CDATA[Password: When SATA user password was set, device and password can be erased by SATA user password.
+Without Password: System will set a default password '111111111' for SATA user password, and erase device with '111111111'.
+If SATA user password is set, system will return fail status.]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="Password" order="2" type="String">
+        <Information>
+          <MinSize>0</MinSize>
+          <MaxSize>32</MaxSize>
+          <DefaultString></DefaultString>
+          <Help><![CDATA[Supermicro HDD Security function]]></Help>
+          <AllowingMultipleLine>False</AllowingMultipleLine>
+        </Information>
+        <StringValue><![CDATA[]]></StringValue>
+      </Setting>
+      <Subtitle></Subtitle>
+    </Menu>
+    <Subtitle></Subtitle>
+    <Setting name="Administrator Password" type="Password">
+      <Information>
+        <Help><![CDATA[Set Administrator Password]]></Help>
+        <MinSize>3</MinSize>
+        <MaxSize>20</MaxSize>
+        <HasPassword>False</HasPassword>
+      </Information>
+      <NewPassword><![CDATA[]]></NewPassword>
+      <ConfirmNewPassword><![CDATA[]]></ConfirmNewPassword>
+    </Setting>
+    <Setting name="User Password" type="Password">
+      <Information>
+        <Help><![CDATA[Set User Password]]></Help>
+        <WorkIf><![CDATA[ ( Administrator Password != 0 ) ]]></WorkIf>
+        <MinSize>3</MinSize>
+        <MaxSize>20</MaxSize>
+        <HasPassword>False</HasPassword>
+      </Information>
+      <NewPassword><![CDATA[]]></NewPassword>
+      <ConfirmNewPassword><![CDATA[]]></ConfirmNewPassword>
+    </Setting>
+    <Subtitle></Subtitle>
+    <Subtitle></Subtitle>
+    <Subtitle></Subtitle>
+    <Menu name="SMC Secure Boot Configuration">
+      <Information>
+        <Help><![CDATA[SecureBoot Option]]></Help>
+      </Information>
+      <Setting name="Secure Boot" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Enabled</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[Secure Boot feature is Active if Secure Boot is Enabled,
+Platform Key(PK) is enrolled and the System is in User mode.
+The mode change requires platform reset]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="Reset Keys Type" selectedOption="Disabled" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Disabled</Option>
+            <Option value="1">Reset all keys to default</Option>
+            <Option value="2">Delete all keys</Option>
+            <Option value="3">Delete PK key</Option>
+          </AvailableOptions>
+          <DefaultOption>Disabled</DefaultOption>
+          <Help><![CDATA[Reset Keys Type]]></Help>
+        </Information>
+      </Setting>
+      <Text>System Mode(Setup)</Text>
+      <Text>Secure Boot(Not Active)</Text>
+      <Setting name="Secure Boot Mode" selectedOption="Setup" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">Setup</Option>
+            <Option value="2">Audit</Option>
+          </AvailableOptions>
+          <DefaultOption>Setup</DefaultOption>
+          <Help><![CDATA[Secure Boot Mode]]></Help>
+        </Information>
+      </Setting>
+    </Menu>
+    <Subtitle>HDD Security Configuration:</Subtitle>
+    <Menu name="P0:Micron_5300_MTFDDAK480TDT">
+      <Information>
+        <Help><![CDATA[HDD Security Configuration for selected drive]]></Help>
+      </Information>
+      <Subtitle>HDD Password Description :</Subtitle>
+      <Subtitle></Subtitle>
+      <Subtitle>Allows Access to Set, Modify and Clear</Subtitle>
+      <Subtitle></Subtitle>
+      <Subtitle>HDD PASSWORD CONFIGURATION:</Subtitle>
+      <Subtitle></Subtitle>
+      <Text>Security Supported :(Yes)</Text>
+      <Text>Security Supported :(No)</Text>
+      <Text>Security Enabled   :(No)</Text>
+      <Text>Security Locked    :(Yes)</Text>
+      <Text>Security Locked    :(No)</Text>
+      <Text>Security Frozen    :(No)</Text>
+      <Text>HDD User Pwd Status:(INSTALLED)</Text>
+      <Text>HDD User Pwd Status:(NOT INSTALLED)</Text>
+      <Text>HDD Master Pwd Status :(NOT INSTALLED)</Text>
+      <Subtitle></Subtitle>
+      <Setting name="Set User Password" order="1" type="Password">
+        <Information>
+          <Help><![CDATA[Set HDD User Password. 
+*** Advisable to Power Cycle System after Setting Hard Disk Passwords ***.
+Discard or Save changes option in setup does not have any impact on HDD when password is set or removed. If the 'Set HDD User Password' option is hidden, do power cycle to enable the option again]]></Help>
+          <MinSize>0</MinSize>
+          <MaxSize>32</MaxSize>
+          <HasPassword>False</HasPassword>
+        </Information>
+        <PasswordValue><![CDATA[]]></PasswordValue>
+      </Setting>
+      <Subtitle></Subtitle>
+      <Subtitle></Subtitle>
+    </Menu>
+    <Menu name="P1:Micron_5300_MTFDDAK480TDT">
+      <Information>
+        <Help><![CDATA[HDD Security Configuration for selected drive]]></Help>
+      </Information>
+      <Subtitle>HDD Password Description :</Subtitle>
+      <Subtitle></Subtitle>
+      <Subtitle>Allows Access to Set, Modify and Clear</Subtitle>
+      <Subtitle></Subtitle>
+      <Subtitle>HDD PASSWORD CONFIGURATION:</Subtitle>
+      <Subtitle></Subtitle>
+      <Text>Security Supported :(No)</Text>
+      <Text>Security Enabled   :(Yes)</Text>
+      <Text>Security Locked    :(No)</Text>
+      <Text>Security Frozen    :(Yes)</Text>
+      <Text>Security Frozen    :(No)</Text>
+      <Text>HDD User Pwd Status:(NOT INSTALLED)</Text>
+      <Text>HDD Master Pwd Status :(INSTALLED)</Text>
+      <Text>HDD Master Pwd Status :(NOT INSTALLED)</Text>
+      <Subtitle></Subtitle>
+      <Setting name="Set User Password" order="2" type="Password">
+        <Information>
+          <Help><![CDATA[Set HDD User Password. 
+*** Advisable to Power Cycle System after Setting Hard Disk Passwords ***.
+Discard or Save changes option in setup does not have any impact on HDD when password is set or removed. If the 'Set HDD User Password' option is hidden, do power cycle to enable the option again]]></Help>
+          <MinSize>0</MinSize>
+          <MaxSize>32</MaxSize>
+          <HasPassword>False</HasPassword>
+        </Information>
+        <PasswordValue><![CDATA[]]></PasswordValue>
+      </Setting>
+      <Subtitle></Subtitle>
+      <Subtitle></Subtitle>
+    </Menu>
+    <Subtitle></Subtitle>
+    <Subtitle></Subtitle>
+  </Menu>
+  <Menu name="Boot">
+    <Information />
+    <Subtitle>Boot Configuration</Subtitle>
+    <Setting name="Setup Prompt Timeout" numericValue="1" type="Numeric">
+      <Information>
+        <MaxValue>65535</MaxValue>
+        <MinValue>1</MinValue>
+        <StepSize>1</StepSize>
+        <DefaultValue>1</DefaultValue>
+        <Help><![CDATA[Number of seconds to wait for setup activation key. 65535(0xFFFF) means indefinite waiting.]]></Help>
+      </Information>
+    </Setting>
+    <Subtitle></Subtitle>
+    <Setting name="Boot mode select" selectedOption="LEGACY" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">LEGACY</Option>
+          <Option value="1">UEFI</Option>
+          <Option value="2">DUAL</Option>
+        </AvailableOptions>
+        <DefaultOption>DUAL</DefaultOption>
+        <Help><![CDATA[Select boot mode LEGACY/UEFI]]></Help>
+      </Information>
+    </Setting>
+    <Subtitle></Subtitle>
+    <Subtitle>FIXED BOOT ORDER Priorities</Subtitle>
+    <Setting name="UEFI Boot Option #1" selectedOption="UEFI Hard Disk" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">UEFI Hard Disk</Option>
+          <Option value="1">UEFI CD/DVD</Option>
+          <Option value="2">UEFI USB Hard Disk</Option>
+          <Option value="3">UEFI USB CD/DVD</Option>
+          <Option value="4">UEFI USB Key</Option>
+          <Option value="5">UEFI USB Floppy</Option>
+          <Option value="6">UEFI USB Lan</Option>
+          <Option value="7">UEFI Network</Option>
+          <Option value="8">UEFI AP:UEFI: Built-in EFI Shell</Option>
+          <Option value="9">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>UEFI Hard Disk</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 0, 2, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="UEFI Boot Option #2" selectedOption="UEFI CD/DVD" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">UEFI Hard Disk</Option>
+          <Option value="1">UEFI CD/DVD</Option>
+          <Option value="2">UEFI USB Hard Disk</Option>
+          <Option value="3">UEFI USB CD/DVD</Option>
+          <Option value="4">UEFI USB Key</Option>
+          <Option value="5">UEFI USB Floppy</Option>
+          <Option value="6">UEFI USB Lan</Option>
+          <Option value="7">UEFI Network</Option>
+          <Option value="8">UEFI AP:UEFI: Built-in EFI Shell</Option>
+          <Option value="9">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>UEFI CD/DVD</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 0, 2, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="UEFI Boot Option #3" selectedOption="UEFI USB Hard Disk" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">UEFI Hard Disk</Option>
+          <Option value="1">UEFI CD/DVD</Option>
+          <Option value="2">UEFI USB Hard Disk</Option>
+          <Option value="3">UEFI USB CD/DVD</Option>
+          <Option value="4">UEFI USB Key</Option>
+          <Option value="5">UEFI USB Floppy</Option>
+          <Option value="6">UEFI USB Lan</Option>
+          <Option value="7">UEFI Network</Option>
+          <Option value="8">UEFI AP:UEFI: Built-in EFI Shell</Option>
+          <Option value="9">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>UEFI USB Hard Disk</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 0, 2, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="UEFI Boot Option #4" selectedOption="UEFI USB CD/DVD" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">UEFI Hard Disk</Option>
+          <Option value="1">UEFI CD/DVD</Option>
+          <Option value="2">UEFI USB Hard Disk</Option>
+          <Option value="3">UEFI USB CD/DVD</Option>
+          <Option value="4">UEFI USB Key</Option>
+          <Option value="5">UEFI USB Floppy</Option>
+          <Option value="6">UEFI USB Lan</Option>
+          <Option value="7">UEFI Network</Option>
+          <Option value="8">UEFI AP:UEFI: Built-in EFI Shell</Option>
+          <Option value="9">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>UEFI USB CD/DVD</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 0, 2, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="UEFI Boot Option #5" selectedOption="UEFI USB Key" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">UEFI Hard Disk</Option>
+          <Option value="1">UEFI CD/DVD</Option>
+          <Option value="2">UEFI USB Hard Disk</Option>
+          <Option value="3">UEFI USB CD/DVD</Option>
+          <Option value="4">UEFI USB Key</Option>
+          <Option value="5">UEFI USB Floppy</Option>
+          <Option value="6">UEFI USB Lan</Option>
+          <Option value="7">UEFI Network</Option>
+          <Option value="8">UEFI AP:UEFI: Built-in EFI Shell</Option>
+          <Option value="9">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>UEFI USB Key</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 0, 2, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="UEFI Boot Option #6" selectedOption="UEFI USB Floppy" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">UEFI Hard Disk</Option>
+          <Option value="1">UEFI CD/DVD</Option>
+          <Option value="2">UEFI USB Hard Disk</Option>
+          <Option value="3">UEFI USB CD/DVD</Option>
+          <Option value="4">UEFI USB Key</Option>
+          <Option value="5">UEFI USB Floppy</Option>
+          <Option value="6">UEFI USB Lan</Option>
+          <Option value="7">UEFI Network</Option>
+          <Option value="8">UEFI AP:UEFI: Built-in EFI Shell</Option>
+          <Option value="9">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>UEFI USB Floppy</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 0, 2, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="UEFI Boot Option #7" selectedOption="UEFI USB Lan" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">UEFI Hard Disk</Option>
+          <Option value="1">UEFI CD/DVD</Option>
+          <Option value="2">UEFI USB Hard Disk</Option>
+          <Option value="3">UEFI USB CD/DVD</Option>
+          <Option value="4">UEFI USB Key</Option>
+          <Option value="5">UEFI USB Floppy</Option>
+          <Option value="6">UEFI USB Lan</Option>
+          <Option value="7">UEFI Network</Option>
+          <Option value="8">UEFI AP:UEFI: Built-in EFI Shell</Option>
+          <Option value="9">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>UEFI USB Lan</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 0, 2, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="UEFI Boot Option #8" selectedOption="UEFI Network" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">UEFI Hard Disk</Option>
+          <Option value="1">UEFI CD/DVD</Option>
+          <Option value="2">UEFI USB Hard Disk</Option>
+          <Option value="3">UEFI USB CD/DVD</Option>
+          <Option value="4">UEFI USB Key</Option>
+          <Option value="5">UEFI USB Floppy</Option>
+          <Option value="6">UEFI USB Lan</Option>
+          <Option value="7">UEFI Network</Option>
+          <Option value="8">UEFI AP:UEFI: Built-in EFI Shell</Option>
+          <Option value="9">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>UEFI Network</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 0, 2, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="UEFI Boot Option #9" selectedOption="UEFI AP:UEFI: Built-in EFI Shell" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">UEFI Hard Disk</Option>
+          <Option value="1">UEFI CD/DVD</Option>
+          <Option value="2">UEFI USB Hard Disk</Option>
+          <Option value="3">UEFI USB CD/DVD</Option>
+          <Option value="4">UEFI USB Key</Option>
+          <Option value="5">UEFI USB Floppy</Option>
+          <Option value="6">UEFI USB Lan</Option>
+          <Option value="7">UEFI Network</Option>
+          <Option value="8">UEFI AP:UEFI: Built-in EFI Shell</Option>
+          <Option value="9">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>UEFI AP:UEFI: Built-in EFI Shell</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 0, 2, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="Legacy Boot Option #1" selectedOption="Hard Disk: Micron_5300_MTFDDAK480TDT" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">Hard Disk: Micron_5300_MTFDDAK480TDT</Option>
+          <Option value="1">CD/DVD</Option>
+          <Option value="2">USB Hard Disk</Option>
+          <Option value="3">USB CD/DVD</Option>
+          <Option value="4">USB Key</Option>
+          <Option value="5">USB Floppy</Option>
+          <Option value="6">USB Lan</Option>
+          <Option value="7">Network:FlexBoot v3.5.901 (PCI 01:00.0)</Option>
+          <Option value="8">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>Hard Disk: Micron_5300_MTFDDAK480TDT</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 1, 2, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="Legacy Boot Option #2" selectedOption="Network:FlexBoot v3.5.901 (PCI 01:00.0)" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">Hard Disk: Micron_5300_MTFDDAK480TDT</Option>
+          <Option value="1">CD/DVD</Option>
+          <Option value="2">USB Hard Disk</Option>
+          <Option value="3">USB CD/DVD</Option>
+          <Option value="4">USB Key</Option>
+          <Option value="5">USB Floppy</Option>
+          <Option value="6">USB Lan</Option>
+          <Option value="7">Network:FlexBoot v3.5.901 (PCI 01:00.0)</Option>
+          <Option value="8">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>CD/DVD</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 1, 2, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="Legacy Boot Option #3" selectedOption="Disabled" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">Hard Disk: Micron_5300_MTFDDAK480TDT</Option>
+          <Option value="1">CD/DVD</Option>
+          <Option value="2">USB Hard Disk</Option>
+          <Option value="3">USB CD/DVD</Option>
+          <Option value="4">USB Key</Option>
+          <Option value="5">USB Floppy</Option>
+          <Option value="6">USB Lan</Option>
+          <Option value="7">Network:FlexBoot v3.5.901 (PCI 01:00.0)</Option>
+          <Option value="8">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>USB Hard Disk</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 1, 2, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="Legacy Boot Option #4" selectedOption="Disabled" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">Hard Disk: Micron_5300_MTFDDAK480TDT</Option>
+          <Option value="1">CD/DVD</Option>
+          <Option value="2">USB Hard Disk</Option>
+          <Option value="3">USB CD/DVD</Option>
+          <Option value="4">USB Key</Option>
+          <Option value="5">USB Floppy</Option>
+          <Option value="6">USB Lan</Option>
+          <Option value="7">Network:FlexBoot v3.5.901 (PCI 01:00.0)</Option>
+          <Option value="8">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>USB CD/DVD</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 1, 2, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="Legacy Boot Option #5" selectedOption="Disabled" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">Hard Disk: Micron_5300_MTFDDAK480TDT</Option>
+          <Option value="1">CD/DVD</Option>
+          <Option value="2">USB Hard Disk</Option>
+          <Option value="3">USB CD/DVD</Option>
+          <Option value="4">USB Key</Option>
+          <Option value="5">USB Floppy</Option>
+          <Option value="6">USB Lan</Option>
+          <Option value="7">Network:FlexBoot v3.5.901 (PCI 01:00.0)</Option>
+          <Option value="8">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>USB Key</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 1, 2, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="Legacy Boot Option #6" selectedOption="Disabled" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">Hard Disk: Micron_5300_MTFDDAK480TDT</Option>
+          <Option value="1">CD/DVD</Option>
+          <Option value="2">USB Hard Disk</Option>
+          <Option value="3">USB CD/DVD</Option>
+          <Option value="4">USB Key</Option>
+          <Option value="5">USB Floppy</Option>
+          <Option value="6">USB Lan</Option>
+          <Option value="7">Network:FlexBoot v3.5.901 (PCI 01:00.0)</Option>
+          <Option value="8">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>USB Floppy</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 1, 2, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="Legacy Boot Option #7" selectedOption="Disabled" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">Hard Disk: Micron_5300_MTFDDAK480TDT</Option>
+          <Option value="1">CD/DVD</Option>
+          <Option value="2">USB Hard Disk</Option>
+          <Option value="3">USB CD/DVD</Option>
+          <Option value="4">USB Key</Option>
+          <Option value="5">USB Floppy</Option>
+          <Option value="6">USB Lan</Option>
+          <Option value="7">Network:FlexBoot v3.5.901 (PCI 01:00.0)</Option>
+          <Option value="8">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>USB Lan</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 1, 2, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="Legacy Boot Option #8" selectedOption="Disabled" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">Hard Disk: Micron_5300_MTFDDAK480TDT</Option>
+          <Option value="1">CD/DVD</Option>
+          <Option value="2">USB Hard Disk</Option>
+          <Option value="3">USB CD/DVD</Option>
+          <Option value="4">USB Key</Option>
+          <Option value="5">USB Floppy</Option>
+          <Option value="6">USB Lan</Option>
+          <Option value="7">Network:FlexBoot v3.5.901 (PCI 01:00.0)</Option>
+          <Option value="8">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>Network:FlexBoot v3.5.901 (PCI 01:00.0)</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 1, 2, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="DUAL Boot Option #1" selectedOption="Hard Disk: Micron_5300_MTFDDAK480TDT" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">Hard Disk: Micron_5300_MTFDDAK480TDT</Option>
+          <Option value="1">CD/DVD</Option>
+          <Option value="2">USB Hard Disk</Option>
+          <Option value="3">USB CD/DVD</Option>
+          <Option value="4">USB Key</Option>
+          <Option value="5">USB Floppy</Option>
+          <Option value="6">USB Lan</Option>
+          <Option value="7">Network:FlexBoot v3.5.901 (PCI 01:00.0)</Option>
+          <Option value="8">UEFI Hard Disk</Option>
+          <Option value="9">UEFI CD/DVD</Option>
+          <Option value="10">UEFI USB Hard Disk</Option>
+          <Option value="11">UEFI USB CD/DVD</Option>
+          <Option value="12">UEFI USB Key</Option>
+          <Option value="13">UEFI USB Floppy</Option>
+          <Option value="14">UEFI USB Lan</Option>
+          <Option value="15">UEFI Network</Option>
+          <Option value="16">UEFI AP:UEFI: Built-in EFI Shell</Option>
+          <Option value="17">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>Hard Disk: Micron_5300_MTFDDAK480TDT</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 0, 1, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="DUAL Boot Option #2" selectedOption="CD/DVD" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">Hard Disk: Micron_5300_MTFDDAK480TDT</Option>
+          <Option value="1">CD/DVD</Option>
+          <Option value="2">USB Hard Disk</Option>
+          <Option value="3">USB CD/DVD</Option>
+          <Option value="4">USB Key</Option>
+          <Option value="5">USB Floppy</Option>
+          <Option value="6">USB Lan</Option>
+          <Option value="7">Network:FlexBoot v3.5.901 (PCI 01:00.0)</Option>
+          <Option value="8">UEFI Hard Disk</Option>
+          <Option value="9">UEFI CD/DVD</Option>
+          <Option value="10">UEFI USB Hard Disk</Option>
+          <Option value="11">UEFI USB CD/DVD</Option>
+          <Option value="12">UEFI USB Key</Option>
+          <Option value="13">UEFI USB Floppy</Option>
+          <Option value="14">UEFI USB Lan</Option>
+          <Option value="15">UEFI Network</Option>
+          <Option value="16">UEFI AP:UEFI: Built-in EFI Shell</Option>
+          <Option value="17">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>CD/DVD</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 0, 1, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="DUAL Boot Option #3" selectedOption="USB Hard Disk" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">Hard Disk: Micron_5300_MTFDDAK480TDT</Option>
+          <Option value="1">CD/DVD</Option>
+          <Option value="2">USB Hard Disk</Option>
+          <Option value="3">USB CD/DVD</Option>
+          <Option value="4">USB Key</Option>
+          <Option value="5">USB Floppy</Option>
+          <Option value="6">USB Lan</Option>
+          <Option value="7">Network:FlexBoot v3.5.901 (PCI 01:00.0)</Option>
+          <Option value="8">UEFI Hard Disk</Option>
+          <Option value="9">UEFI CD/DVD</Option>
+          <Option value="10">UEFI USB Hard Disk</Option>
+          <Option value="11">UEFI USB CD/DVD</Option>
+          <Option value="12">UEFI USB Key</Option>
+          <Option value="13">UEFI USB Floppy</Option>
+          <Option value="14">UEFI USB Lan</Option>
+          <Option value="15">UEFI Network</Option>
+          <Option value="16">UEFI AP:UEFI: Built-in EFI Shell</Option>
+          <Option value="17">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>USB Hard Disk</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 0, 1, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="DUAL Boot Option #4" selectedOption="USB CD/DVD" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">Hard Disk: Micron_5300_MTFDDAK480TDT</Option>
+          <Option value="1">CD/DVD</Option>
+          <Option value="2">USB Hard Disk</Option>
+          <Option value="3">USB CD/DVD</Option>
+          <Option value="4">USB Key</Option>
+          <Option value="5">USB Floppy</Option>
+          <Option value="6">USB Lan</Option>
+          <Option value="7">Network:FlexBoot v3.5.901 (PCI 01:00.0)</Option>
+          <Option value="8">UEFI Hard Disk</Option>
+          <Option value="9">UEFI CD/DVD</Option>
+          <Option value="10">UEFI USB Hard Disk</Option>
+          <Option value="11">UEFI USB CD/DVD</Option>
+          <Option value="12">UEFI USB Key</Option>
+          <Option value="13">UEFI USB Floppy</Option>
+          <Option value="14">UEFI USB Lan</Option>
+          <Option value="15">UEFI Network</Option>
+          <Option value="16">UEFI AP:UEFI: Built-in EFI Shell</Option>
+          <Option value="17">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>USB CD/DVD</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 0, 1, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="DUAL Boot Option #5" selectedOption="USB Key" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">Hard Disk: Micron_5300_MTFDDAK480TDT</Option>
+          <Option value="1">CD/DVD</Option>
+          <Option value="2">USB Hard Disk</Option>
+          <Option value="3">USB CD/DVD</Option>
+          <Option value="4">USB Key</Option>
+          <Option value="5">USB Floppy</Option>
+          <Option value="6">USB Lan</Option>
+          <Option value="7">Network:FlexBoot v3.5.901 (PCI 01:00.0)</Option>
+          <Option value="8">UEFI Hard Disk</Option>
+          <Option value="9">UEFI CD/DVD</Option>
+          <Option value="10">UEFI USB Hard Disk</Option>
+          <Option value="11">UEFI USB CD/DVD</Option>
+          <Option value="12">UEFI USB Key</Option>
+          <Option value="13">UEFI USB Floppy</Option>
+          <Option value="14">UEFI USB Lan</Option>
+          <Option value="15">UEFI Network</Option>
+          <Option value="16">UEFI AP:UEFI: Built-in EFI Shell</Option>
+          <Option value="17">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>USB Key</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 0, 1, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="DUAL Boot Option #6" selectedOption="USB Floppy" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">Hard Disk: Micron_5300_MTFDDAK480TDT</Option>
+          <Option value="1">CD/DVD</Option>
+          <Option value="2">USB Hard Disk</Option>
+          <Option value="3">USB CD/DVD</Option>
+          <Option value="4">USB Key</Option>
+          <Option value="5">USB Floppy</Option>
+          <Option value="6">USB Lan</Option>
+          <Option value="7">Network:FlexBoot v3.5.901 (PCI 01:00.0)</Option>
+          <Option value="8">UEFI Hard Disk</Option>
+          <Option value="9">UEFI CD/DVD</Option>
+          <Option value="10">UEFI USB Hard Disk</Option>
+          <Option value="11">UEFI USB CD/DVD</Option>
+          <Option value="12">UEFI USB Key</Option>
+          <Option value="13">UEFI USB Floppy</Option>
+          <Option value="14">UEFI USB Lan</Option>
+          <Option value="15">UEFI Network</Option>
+          <Option value="16">UEFI AP:UEFI: Built-in EFI Shell</Option>
+          <Option value="17">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>USB Floppy</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 0, 1, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="DUAL Boot Option #7" selectedOption="USB Lan" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">Hard Disk: Micron_5300_MTFDDAK480TDT</Option>
+          <Option value="1">CD/DVD</Option>
+          <Option value="2">USB Hard Disk</Option>
+          <Option value="3">USB CD/DVD</Option>
+          <Option value="4">USB Key</Option>
+          <Option value="5">USB Floppy</Option>
+          <Option value="6">USB Lan</Option>
+          <Option value="7">Network:FlexBoot v3.5.901 (PCI 01:00.0)</Option>
+          <Option value="8">UEFI Hard Disk</Option>
+          <Option value="9">UEFI CD/DVD</Option>
+          <Option value="10">UEFI USB Hard Disk</Option>
+          <Option value="11">UEFI USB CD/DVD</Option>
+          <Option value="12">UEFI USB Key</Option>
+          <Option value="13">UEFI USB Floppy</Option>
+          <Option value="14">UEFI USB Lan</Option>
+          <Option value="15">UEFI Network</Option>
+          <Option value="16">UEFI AP:UEFI: Built-in EFI Shell</Option>
+          <Option value="17">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>USB Lan</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 0, 1, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="DUAL Boot Option #8" selectedOption="Network:FlexBoot v3.5.901 (PCI 01:00.0)" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">Hard Disk: Micron_5300_MTFDDAK480TDT</Option>
+          <Option value="1">CD/DVD</Option>
+          <Option value="2">USB Hard Disk</Option>
+          <Option value="3">USB CD/DVD</Option>
+          <Option value="4">USB Key</Option>
+          <Option value="5">USB Floppy</Option>
+          <Option value="6">USB Lan</Option>
+          <Option value="7">Network:FlexBoot v3.5.901 (PCI 01:00.0)</Option>
+          <Option value="8">UEFI Hard Disk</Option>
+          <Option value="9">UEFI CD/DVD</Option>
+          <Option value="10">UEFI USB Hard Disk</Option>
+          <Option value="11">UEFI USB CD/DVD</Option>
+          <Option value="12">UEFI USB Key</Option>
+          <Option value="13">UEFI USB Floppy</Option>
+          <Option value="14">UEFI USB Lan</Option>
+          <Option value="15">UEFI Network</Option>
+          <Option value="16">UEFI AP:UEFI: Built-in EFI Shell</Option>
+          <Option value="17">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>Network:FlexBoot v3.5.901 (PCI 01:00.0)</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 0, 1, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="DUAL Boot Option #9" selectedOption="UEFI Hard Disk" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">Hard Disk: Micron_5300_MTFDDAK480TDT</Option>
+          <Option value="1">CD/DVD</Option>
+          <Option value="2">USB Hard Disk</Option>
+          <Option value="3">USB CD/DVD</Option>
+          <Option value="4">USB Key</Option>
+          <Option value="5">USB Floppy</Option>
+          <Option value="6">USB Lan</Option>
+          <Option value="7">Network:FlexBoot v3.5.901 (PCI 01:00.0)</Option>
+          <Option value="8">UEFI Hard Disk</Option>
+          <Option value="9">UEFI CD/DVD</Option>
+          <Option value="10">UEFI USB Hard Disk</Option>
+          <Option value="11">UEFI USB CD/DVD</Option>
+          <Option value="12">UEFI USB Key</Option>
+          <Option value="13">UEFI USB Floppy</Option>
+          <Option value="14">UEFI USB Lan</Option>
+          <Option value="15">UEFI Network</Option>
+          <Option value="16">UEFI AP:UEFI: Built-in EFI Shell</Option>
+          <Option value="17">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>UEFI Hard Disk</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 0, 1, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="DUAL Boot Option #10" selectedOption="UEFI CD/DVD" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">Hard Disk: Micron_5300_MTFDDAK480TDT</Option>
+          <Option value="1">CD/DVD</Option>
+          <Option value="2">USB Hard Disk</Option>
+          <Option value="3">USB CD/DVD</Option>
+          <Option value="4">USB Key</Option>
+          <Option value="5">USB Floppy</Option>
+          <Option value="6">USB Lan</Option>
+          <Option value="7">Network:FlexBoot v3.5.901 (PCI 01:00.0)</Option>
+          <Option value="8">UEFI Hard Disk</Option>
+          <Option value="9">UEFI CD/DVD</Option>
+          <Option value="10">UEFI USB Hard Disk</Option>
+          <Option value="11">UEFI USB CD/DVD</Option>
+          <Option value="12">UEFI USB Key</Option>
+          <Option value="13">UEFI USB Floppy</Option>
+          <Option value="14">UEFI USB Lan</Option>
+          <Option value="15">UEFI Network</Option>
+          <Option value="16">UEFI AP:UEFI: Built-in EFI Shell</Option>
+          <Option value="17">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>UEFI CD/DVD</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 0, 1, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="DUAL Boot Option #11" selectedOption="UEFI USB Hard Disk" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">Hard Disk: Micron_5300_MTFDDAK480TDT</Option>
+          <Option value="1">CD/DVD</Option>
+          <Option value="2">USB Hard Disk</Option>
+          <Option value="3">USB CD/DVD</Option>
+          <Option value="4">USB Key</Option>
+          <Option value="5">USB Floppy</Option>
+          <Option value="6">USB Lan</Option>
+          <Option value="7">Network:FlexBoot v3.5.901 (PCI 01:00.0)</Option>
+          <Option value="8">UEFI Hard Disk</Option>
+          <Option value="9">UEFI CD/DVD</Option>
+          <Option value="10">UEFI USB Hard Disk</Option>
+          <Option value="11">UEFI USB CD/DVD</Option>
+          <Option value="12">UEFI USB Key</Option>
+          <Option value="13">UEFI USB Floppy</Option>
+          <Option value="14">UEFI USB Lan</Option>
+          <Option value="15">UEFI Network</Option>
+          <Option value="16">UEFI AP:UEFI: Built-in EFI Shell</Option>
+          <Option value="17">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>UEFI USB Hard Disk</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 0, 1, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="DUAL Boot Option #12" selectedOption="UEFI USB CD/DVD" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">Hard Disk: Micron_5300_MTFDDAK480TDT</Option>
+          <Option value="1">CD/DVD</Option>
+          <Option value="2">USB Hard Disk</Option>
+          <Option value="3">USB CD/DVD</Option>
+          <Option value="4">USB Key</Option>
+          <Option value="5">USB Floppy</Option>
+          <Option value="6">USB Lan</Option>
+          <Option value="7">Network:FlexBoot v3.5.901 (PCI 01:00.0)</Option>
+          <Option value="8">UEFI Hard Disk</Option>
+          <Option value="9">UEFI CD/DVD</Option>
+          <Option value="10">UEFI USB Hard Disk</Option>
+          <Option value="11">UEFI USB CD/DVD</Option>
+          <Option value="12">UEFI USB Key</Option>
+          <Option value="13">UEFI USB Floppy</Option>
+          <Option value="14">UEFI USB Lan</Option>
+          <Option value="15">UEFI Network</Option>
+          <Option value="16">UEFI AP:UEFI: Built-in EFI Shell</Option>
+          <Option value="17">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>UEFI USB CD/DVD</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 0, 1, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="DUAL Boot Option #13" selectedOption="UEFI USB Key" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">Hard Disk: Micron_5300_MTFDDAK480TDT</Option>
+          <Option value="1">CD/DVD</Option>
+          <Option value="2">USB Hard Disk</Option>
+          <Option value="3">USB CD/DVD</Option>
+          <Option value="4">USB Key</Option>
+          <Option value="5">USB Floppy</Option>
+          <Option value="6">USB Lan</Option>
+          <Option value="7">Network:FlexBoot v3.5.901 (PCI 01:00.0)</Option>
+          <Option value="8">UEFI Hard Disk</Option>
+          <Option value="9">UEFI CD/DVD</Option>
+          <Option value="10">UEFI USB Hard Disk</Option>
+          <Option value="11">UEFI USB CD/DVD</Option>
+          <Option value="12">UEFI USB Key</Option>
+          <Option value="13">UEFI USB Floppy</Option>
+          <Option value="14">UEFI USB Lan</Option>
+          <Option value="15">UEFI Network</Option>
+          <Option value="16">UEFI AP:UEFI: Built-in EFI Shell</Option>
+          <Option value="17">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>UEFI USB Key</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 0, 1, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="DUAL Boot Option #14" selectedOption="UEFI USB Floppy" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">Hard Disk: Micron_5300_MTFDDAK480TDT</Option>
+          <Option value="1">CD/DVD</Option>
+          <Option value="2">USB Hard Disk</Option>
+          <Option value="3">USB CD/DVD</Option>
+          <Option value="4">USB Key</Option>
+          <Option value="5">USB Floppy</Option>
+          <Option value="6">USB Lan</Option>
+          <Option value="7">Network:FlexBoot v3.5.901 (PCI 01:00.0)</Option>
+          <Option value="8">UEFI Hard Disk</Option>
+          <Option value="9">UEFI CD/DVD</Option>
+          <Option value="10">UEFI USB Hard Disk</Option>
+          <Option value="11">UEFI USB CD/DVD</Option>
+          <Option value="12">UEFI USB Key</Option>
+          <Option value="13">UEFI USB Floppy</Option>
+          <Option value="14">UEFI USB Lan</Option>
+          <Option value="15">UEFI Network</Option>
+          <Option value="16">UEFI AP:UEFI: Built-in EFI Shell</Option>
+          <Option value="17">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>UEFI USB Floppy</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 0, 1, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="DUAL Boot Option #15" selectedOption="UEFI USB Lan" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">Hard Disk: Micron_5300_MTFDDAK480TDT</Option>
+          <Option value="1">CD/DVD</Option>
+          <Option value="2">USB Hard Disk</Option>
+          <Option value="3">USB CD/DVD</Option>
+          <Option value="4">USB Key</Option>
+          <Option value="5">USB Floppy</Option>
+          <Option value="6">USB Lan</Option>
+          <Option value="7">Network:FlexBoot v3.5.901 (PCI 01:00.0)</Option>
+          <Option value="8">UEFI Hard Disk</Option>
+          <Option value="9">UEFI CD/DVD</Option>
+          <Option value="10">UEFI USB Hard Disk</Option>
+          <Option value="11">UEFI USB CD/DVD</Option>
+          <Option value="12">UEFI USB Key</Option>
+          <Option value="13">UEFI USB Floppy</Option>
+          <Option value="14">UEFI USB Lan</Option>
+          <Option value="15">UEFI Network</Option>
+          <Option value="16">UEFI AP:UEFI: Built-in EFI Shell</Option>
+          <Option value="17">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>UEFI USB Lan</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 0, 1, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="DUAL Boot Option #16" selectedOption="UEFI Network" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">Hard Disk: Micron_5300_MTFDDAK480TDT</Option>
+          <Option value="1">CD/DVD</Option>
+          <Option value="2">USB Hard Disk</Option>
+          <Option value="3">USB CD/DVD</Option>
+          <Option value="4">USB Key</Option>
+          <Option value="5">USB Floppy</Option>
+          <Option value="6">USB Lan</Option>
+          <Option value="7">Network:FlexBoot v3.5.901 (PCI 01:00.0)</Option>
+          <Option value="8">UEFI Hard Disk</Option>
+          <Option value="9">UEFI CD/DVD</Option>
+          <Option value="10">UEFI USB Hard Disk</Option>
+          <Option value="11">UEFI USB CD/DVD</Option>
+          <Option value="12">UEFI USB Key</Option>
+          <Option value="13">UEFI USB Floppy</Option>
+          <Option value="14">UEFI USB Lan</Option>
+          <Option value="15">UEFI Network</Option>
+          <Option value="16">UEFI AP:UEFI: Built-in EFI Shell</Option>
+          <Option value="17">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>UEFI Network</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 0, 1, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Setting name="DUAL Boot Option #17" selectedOption="UEFI AP:UEFI: Built-in EFI Shell" type="Option">
+      <Information>
+        <AvailableOptions>
+          <Option value="0">Hard Disk: Micron_5300_MTFDDAK480TDT</Option>
+          <Option value="1">CD/DVD</Option>
+          <Option value="2">USB Hard Disk</Option>
+          <Option value="3">USB CD/DVD</Option>
+          <Option value="4">USB Key</Option>
+          <Option value="5">USB Floppy</Option>
+          <Option value="6">USB Lan</Option>
+          <Option value="7">Network:FlexBoot v3.5.901 (PCI 01:00.0)</Option>
+          <Option value="8">UEFI Hard Disk</Option>
+          <Option value="9">UEFI CD/DVD</Option>
+          <Option value="10">UEFI USB Hard Disk</Option>
+          <Option value="11">UEFI USB CD/DVD</Option>
+          <Option value="12">UEFI USB Key</Option>
+          <Option value="13">UEFI USB Floppy</Option>
+          <Option value="14">UEFI USB Lan</Option>
+          <Option value="15">UEFI Network</Option>
+          <Option value="16">UEFI AP:UEFI: Built-in EFI Shell</Option>
+          <Option value="17">Disabled</Option>
+        </AvailableOptions>
+        <DefaultOption>UEFI AP:UEFI: Built-in EFI Shell</DefaultOption>
+        <Help><![CDATA[Sets the system boot order]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 0, 1, 3, 4, 5 ] ) ]]></WorkIf>
+      </Information>
+    </Setting>
+    <Subtitle></Subtitle>
+    <Subtitle></Subtitle>
+    <Subtitle></Subtitle>
+    <Menu name="UEFI Application Boot Priorities">
+      <Information>
+        <Help><![CDATA[Specifies the Boot Device Priority sequence from available UEFI Application.]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 0 ] ) ]]></WorkIf>
+      </Information>
+      <Setting name="Boot Option #1" order="1" selectedOption="UEFI: Built-in EFI Shell" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">UEFI: Built-in EFI Shell</Option>
+            <Option value="18">Disabled</Option>
+          </AvailableOptions>
+          <DefaultOption>UEFI: Built-in EFI Shell</DefaultOption>
+          <Help><![CDATA[Sets the system boot order]]></Help>
+        </Information>
+      </Setting>
+    </Menu>
+    <Menu name="Hard Disk Drive BBS Priorities">
+      <Information>
+        <Help><![CDATA[Specifies the Boot Device Priority sequence from available Hard Disk Drives.]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 1 ] ) ]]></WorkIf>
+      </Information>
+      <Setting name="Boot Option #1" order="2" selectedOption="P0: Micron_5300_MTFDDAK480TDT(SATA,Port:0)" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">P0: Micron_5300_MTFDDAK480TDT(SATA,Port:0)</Option>
+            <Option value="1">P1: Micron_5300_MTFDDAK480TDT(SATA,Port:1)</Option>
+            <Option value="18">Disabled</Option>
+          </AvailableOptions>
+          <DefaultOption>P0: Micron_5300_MTFDDAK480TDT(SATA,Port:0)</DefaultOption>
+          <Help><![CDATA[Sets the system boot order]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="Boot Option #2" order="1" selectedOption="P1: Micron_5300_MTFDDAK480TDT(SATA,Port:1)" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">P0: Micron_5300_MTFDDAK480TDT(SATA,Port:0)</Option>
+            <Option value="1">P1: Micron_5300_MTFDDAK480TDT(SATA,Port:1)</Option>
+            <Option value="18">Disabled</Option>
+          </AvailableOptions>
+          <DefaultOption>P1: Micron_5300_MTFDDAK480TDT(SATA,Port:1)</DefaultOption>
+          <Help><![CDATA[Sets the system boot order]]></Help>
+        </Information>
+      </Setting>
+    </Menu>
+    <Menu name="NETWORK Drive BBS Priorities">
+      <Information>
+        <Help><![CDATA[Specifies the Boot Device Priority sequence from available NETWORK Drives.]]></Help>
+        <WorkIf><![CDATA[ ( Boot mode select is not in [ 1 ] ) ]]></WorkIf>
+      </Information>
+      <Setting name="Boot Option #1" order="3" selectedOption="FlexBoot v3.5.901 (PCI 01:00.0)" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">FlexBoot v3.5.901 (PCI 01:00.0)</Option>
+            <Option value="1">FlexBoot v3.5.901 (PCI 01:00.1)</Option>
+            <Option value="18">Disabled</Option>
+          </AvailableOptions>
+          <DefaultOption>FlexBoot v3.5.901 (PCI 01:00.0)</DefaultOption>
+          <Help><![CDATA[Sets the system boot order]]></Help>
+        </Information>
+      </Setting>
+      <Setting name="Boot Option #2" order="2" selectedOption="FlexBoot v3.5.901 (PCI 01:00.1)" type="Option">
+        <Information>
+          <AvailableOptions>
+            <Option value="0">FlexBoot v3.5.901 (PCI 01:00.0)</Option>
+            <Option value="1">FlexBoot v3.5.901 (PCI 01:00.1)</Option>
+            <Option value="18">Disabled</Option>
+          </AvailableOptions>
+          <DefaultOption>FlexBoot v3.5.901 (PCI 01:00.1)</DefaultOption>
+          <Help><![CDATA[Sets the system boot order]]></Help>
+        </Information>
+      </Setting>
+    </Menu>
+  </Menu>
+</BiosCfg>
+
