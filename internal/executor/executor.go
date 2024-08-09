@@ -16,17 +16,9 @@ type Executor interface {
 	ExecWithContext(context.Context) (*Result, error)
 	SetArgs([]string)
 	SetEnv([]string)
-	SetQuiet()
-	SetVerbose()
 	GetCmd() string
-	DisableBinCheck()
-	SetStdin(io.Reader)
-	CmdPath() string
 	CheckExecutable() error
-	// for tests
 	SetStdout([]byte)
-	SetStderr([]byte)
-	SetExitCode(int)
 }
 
 func NewExecutor(cmd string) Executor {
@@ -58,12 +50,6 @@ func (e *Execute) GetCmd() string {
 	return strings.Join(cmd, " ")
 }
 
-// CmdPath returns the absolute path to the executable
-// this means the caller should not have disabled CheckBin.
-func (e *Execute) CmdPath() string {
-	return e.Cmd
-}
-
 // SetArgs sets the command args
 func (e *Execute) SetArgs(a []string) {
 	e.Args = a
@@ -74,36 +60,8 @@ func (e *Execute) SetEnv(env []string) {
 	e.Env = env
 }
 
-// SetQuiet lowers the verbosity
-func (e *Execute) SetQuiet() {
-	e.Quiet = true
-}
-
-// SetVerbose does whats it says
-func (e *Execute) SetVerbose() {
-	e.Quiet = false
-}
-
-// SetStdin sets the reader to the command stdin
-func (e *Execute) SetStdin(r io.Reader) {
-	e.Stdin = r
-}
-
-// DisableBinCheck disables validating the binary exists and is executable
-func (e *Execute) DisableBinCheck() {
-	e.CheckBin = false
-}
-
 // SetStdout doesn't do much, is around for tests
 func (e *Execute) SetStdout(_ []byte) {
-}
-
-// SetStderr doesn't do much, is around for tests
-func (e *Execute) SetStderr(_ []byte) {
-}
-
-// SetExitCode doesn't do much, is around for tests
-func (e *Execute) SetExitCode(_ int) {
 }
 
 // ExecWithContext executes the command and returns the Result object

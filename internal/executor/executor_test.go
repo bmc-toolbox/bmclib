@@ -17,7 +17,6 @@ func Test_Stdin(t *testing.T) {
 	e.Cmd = "grep"
 	e.Args = []string{"hello"}
 	e.Stdin = bytes.NewReader([]byte("hello"))
-	e.SetQuiet()
 
 	result, err := e.ExecWithContext(context.Background())
 	if err != nil {
