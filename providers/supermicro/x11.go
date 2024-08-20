@@ -39,7 +39,8 @@ func (c *x11) queryDeviceModel(ctx context.Context) (string, error) {
 	errBoardPartNumUnknown := errors.New("baseboard part number unknown")
 	data, err := c.fruInfo(ctx)
 	if err != nil {
-		if strings.Contains(err.Error(), "404") {
+		c.log.Error(err, "fruInfo error")
+		if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "<html>") {
 			return "", ErrXMLAPIUnsupported
 		}
 

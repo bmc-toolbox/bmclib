@@ -27,6 +27,7 @@ var (
 		"X11SSE-F",
 		"X12STH-SYS",
 		"X12SPO-NTF",
+		"X13DEM",
 	}
 
 	errUploadTaskIDExpected = errors.New("expected an firmware upload taskID")

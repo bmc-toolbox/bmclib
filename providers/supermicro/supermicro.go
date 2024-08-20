@@ -175,10 +175,14 @@ func (c *Client) Open(ctx context.Context) (err error) {
 		return err
 	}
 
-	if !bytes.Contains(body, []byte(`url_redirect.cgi?url_name=mainmenu`)) &&
-		!bytes.Contains(body, []byte(`url_redirect.cgi?url_name=topmenu`)) {
+	// X13 appears to have dropped the initial 'mainmenu' redirect
+	if !bytes.Contains(body, []byte(`url_redirect.cgi?url_name=topmenu`)) {
 		return closeWithError(ctx, errors.Wrap(bmclibErrs.ErrLoginFailed, "unexpected response contents"))
 	}
+	// if !bytes.Contains(body, []byte(`url_redirect.cgi?url_name=mainmenu`)) &&
+	// 	!bytes.Contains(body, []byte(`url_redirect.cgi?url_name=topmenu`)) {
+	// 	return closeWithError(ctx, errors.Wrap(bmclibErrs.ErrLoginFailed, "unexpected response contents"))
+	// }
 
 	contentsTopMenu, status, err := c.serviceClient.query(ctx, "cgi/url_redirect.cgi?url_name=topmenu", http.MethodGet, nil, nil, 0)
 	if err != nil {
@@ -197,6 +201,7 @@ func (c *Client) Open(ctx context.Context) (err error) {
 	c.serviceClient.setCsrfToken(csrfToken)
 
 	c.bmc, err = c.bmcQueryor(ctx)
+
 	if err != nil {
 		return closeWithError(ctx, errors.Wrap(bmclibErrs.ErrLoginFailed, err.Error()))
 	}
@@ -283,10 +288,11 @@ func (c *Client) ResetBiosConfiguration(ctx context.Context) (err error) {
 func (c *Client) bmcQueryor(ctx context.Context) (bmcQueryor, error) {
 	x11 := newX11Client(c.serviceClient, c.log)
 	x12 := newX12Client(c.serviceClient, c.log)
+	x13 := newX13Client(c.serviceClient, c.log)
 
 	var queryor bmcQueryor
 
-	for _, bmc := range []bmcQueryor{x11, x12} {
+	for _, bmc := range []bmcQueryor{x11, x12, x13} {
 		var err error
 
 		// Note to maintainers: x12 lacks support for the ipmi.cgi endpoint,
@@ -309,8 +315,8 @@ func (c *Client) bmcQueryor(ctx context.Context) (bmcQueryor, error) {
 	}
 
 	model := strings.ToLower(queryor.deviceModel())
-	if !strings.HasPrefix(model, "x12") && !strings.HasPrefix(model, "x11") {
-		return nil, errors.Wrap(ErrModelUnsupported, "expected one of X11* or X12*, got:"+model)
+	if !strings.HasPrefix(model, "x13") && !strings.HasPrefix(model, "x12") && !strings.HasPrefix(model, "x11") {
+		return nil, errors.Wrap(ErrModelUnsupported, "expected one of X11*, X12* or X13*, got:"+model)
 	}
 
 	return queryor, nil
