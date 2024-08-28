@@ -222,7 +222,7 @@ func (c *x12) biosFwInstallParams() (map[string]bool, error) {
 		}, nil
 	default:
 		// ideally we never get in this position, since theres model number validation in parent callers.
-		return nil, errors.New("unsupported model for BIOS fw install: " + c.model)
+		return nil, errors.New("unsupported model for x12 BIOS fw install: " + c.model)
 	}
 }
 

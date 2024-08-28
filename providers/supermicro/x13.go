@@ -136,64 +136,6 @@ func (c *x13) firmwareTaskActive(ctx context.Context, component string) error {
 	return nil
 }
 
-// // noTasksRunning returns an error if a firmware related task was found active
-// func noTasksRunning(component string, t *redfish.Task) error {
-// 	errTaskActive := errors.New("A firmware task was found active for component: " + component)
-
-// 	const (
-// 		// The redfish task name when the BMC is verifies the uploaded BMC firmware.
-// 		verifyBMCFirmware = "BMC Verify"
-// 		// The redfish task name when the BMC is installing the uploaded BMC firmware.
-// 		updateBMCFirmware = "BMC Update"
-// 		// The redfish task name when the BMC is verifies the uploaded BIOS firmware.
-// 		verifyBIOSFirmware = "BIOS Verify"
-// 		// The redfish task name when the BMC is installing the uploaded BIOS firmware.
-// 		updateBIOSFirmware = "BIOS Update"
-// 	)
-
-// 	var verifyTaskName, updateTaskName string
-
-// 	switch strings.ToUpper(component) {
-// 	case common.SlugBMC:
-// 		verifyTaskName = verifyBMCFirmware
-// 		updateTaskName = updateBMCFirmware
-// 	case common.SlugBIOS:
-// 		verifyTaskName = verifyBIOSFirmware
-// 		updateTaskName = updateBIOSFirmware
-// 	}
-
-// 	taskInfo := fmt.Sprintf("id: %s, state: %s, status: %s", t.ID, t.TaskState, t.TaskStatus)
-
-// 	switch t.Name {
-// 	case verifyTaskName:
-// 		return errors.Wrap(errTaskActive, taskInfo)
-// 	case updateTaskName:
-// 		return errors.Wrap(errTaskActive, taskInfo)
-// 	default:
-// 		return nil
-// 	}
-// }
-
-// func stateFinalized(s redfish.TaskState) bool {
-// 	finalized := []redfish.TaskState{
-// 		redfish.CompletedTaskState,
-// 		redfish.CancelledTaskState,
-// 		redfish.InterruptedTaskState,
-// 		redfish.ExceptionTaskState,
-// 	}
-
-// 	return slices.Contains(finalized, s)
-// }
-
-// type Supermicro struct {
-// 	BIOS map[string]bool `json:"BIOS,omitempty"`
-// 	BMC  map[string]bool `json:"BMC,omitempty"`
-// }
-
-// type OEM struct {
-// 	Supermicro `json:"Supermicro"`
-// }
-
 // redfish OEM fw install parameters
 func (c *x13) biosFwInstallParams() (map[string]bool, error) {
 	switch c.model {
@@ -210,7 +152,7 @@ func (c *x13) biosFwInstallParams() (map[string]bool, error) {
 		}, nil
 	default:
 		// ideally we never get in this position, since theres model number validation in parent callers.
-		return nil, errors.New("unsupported model for BIOS fw install: " + c.model)
+		return nil, errors.New("unsupported model for x13 BIOS fw install: " + c.model)
 	}
 }
 
