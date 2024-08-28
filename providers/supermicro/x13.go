@@ -197,15 +197,7 @@ func (c *x13) firmwareTaskActive(ctx context.Context, component string) error {
 // redfish OEM fw install parameters
 func (c *x13) biosFwInstallParams() (map[string]bool, error) {
 	switch c.model {
-	case "x13spo-ntf":
-		return map[string]bool{
-			"PreserveME":       false,
-			"PreserveNVRAM":    false,
-			"PreserveSMBIOS":   true,
-			"BackupBIOS":       false,
-			"PreserveBOOTCONF": true,
-		}, nil
-	case "x13sth-sys":
+	case "x13dem":
 		return map[string]bool{
 			"PreserveME":         false,
 			"PreserveNVRAM":      false,
