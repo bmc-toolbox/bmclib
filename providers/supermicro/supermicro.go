@@ -286,24 +286,53 @@ func (c *Client) ResetBiosConfiguration(ctx context.Context) (err error) {
 }
 
 func (c *Client) bmcQueryor(ctx context.Context) (bmcQueryor, error) {
-	x11 := newX11Client(c.serviceClient, c.log)
-	x12 := newX12Client(c.serviceClient, c.log)
-	x13 := newX13Client(c.serviceClient, c.log)
+	x11bmc := newX11Client(c.serviceClient, c.log)
+	x12bmc := newX12Client(c.serviceClient, c.log)
+	x13bmc := newX13Client(c.serviceClient, c.log)
 
 	var queryor bmcQueryor
 
-	for _, bmc := range []bmcQueryor{x11, x12, x13} {
+	expected := func(deviceModel string, bmc bmcQueryor) bool {
+		deviceModel = strings.ToLower(deviceModel)
+		switch bmc.(type) {
+		case *x11:
+			if strings.HasPrefix(deviceModel, "x11") {
+				return true
+			}
+		case *x12:
+			if strings.HasPrefix(deviceModel, "x12") {
+				return true
+			}
+		case *x13:
+			if strings.HasPrefix(deviceModel, "x13") {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	for _, bmc := range []bmcQueryor{x11bmc, x12bmc, x13bmc} {
 		var err error
 
+<<<<<<< HEAD
 		// Note to maintainers: x12 lacks support for the ipmi.cgi endpoint,
 		// which will lead to our graceful handling of ErrXMLAPIUnsupported below.
 		_, err = bmc.queryDeviceModel(ctx)
+=======
+		deviceModel, err := bmc.queryDeviceModel(ctx)
+>>>>>>> 3d1fe09 (providers/supermicro/supermicro.go: Fix bmcQueryor to properly match queryor to model)
 		if err != nil {
 			if errors.Is(err, ErrXMLAPIUnsupported) {
 				continue
 			}
 
 			return nil, errors.Wrap(ErrModelUnknown, err.Error())
+		}
+
+		// ensure the device model matches the expected queryor
+		if !expected(deviceModel, bmc) {
+			continue
 		}
 
 		queryor = bmc
