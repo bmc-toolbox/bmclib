@@ -142,6 +142,10 @@ func (c *x12) firmwareTaskActive(ctx context.Context, component string) error {
 
 // noTasksRunning returns an error if a firmware related task was found active
 func noTasksRunning(component string, t *redfish.Task) error {
+	if t.TaskState == "Killed" {
+		return nil
+	}
+
 	errTaskActive := errors.New("A firmware task was found active for component: " + component)
 
 	const (
