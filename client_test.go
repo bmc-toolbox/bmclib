@@ -228,10 +228,10 @@ func TestOpenFiltered(t *testing.T) {
 	defer cl.Close(context.Background())
 	want := []string{"tester3", "tester1", "tester2"}
 	if diff := cmp.Diff(cl.GetMetadata().ProvidersAttempted, want); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("diff: %s", diff)
 	}
 	want = []string{"tester1", "tester2", "tester3"}
 	if diff := cmp.Diff(registryNames(cl.Registry.Drivers), want); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("diff: %s", diff)
 	}
 }

@@ -558,7 +558,7 @@ func (a *ASRockRack) httpsLogin(ctx context.Context) error {
 
 	resp, statusCode, err := a.queryHTTPS(ctx, urlEndpoint, "POST", bytes.NewReader(payload), headers, 0)
 	if err != nil {
-		return fmt.Errorf("Error logging in: " + err.Error())
+		return errors.Wrap(err, "logging in")
 	}
 
 	if statusCode == 401 {
@@ -568,7 +568,7 @@ func (a *ASRockRack) httpsLogin(ctx context.Context) error {
 	// Unmarshal login session
 	err = json.Unmarshal(resp, a.loginSession)
 	if err != nil {
-		return fmt.Errorf("error unmarshalling response payload: " + err.Error())
+		return errors.Wrap(err, "unmarshalling response payload")
 	}
 
 	return nil
@@ -578,7 +578,7 @@ func (a *ASRockRack) httpsLogin(ctx context.Context) error {
 func (a *ASRockRack) httpsLogout(ctx context.Context) error {
 	_, statusCode, err := a.queryHTTPS(ctx, "api/session", "DELETE", nil, nil, 0)
 	if err != nil {
-		return fmt.Errorf("Error logging out: " + err.Error())
+		return errors.Wrap(err, "logging out")
 	}
 
 	if statusCode != http.StatusOK {
