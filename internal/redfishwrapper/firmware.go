@@ -29,6 +29,12 @@ const (
 )
 
 var (
+	// the URI for starting a firmware update via StartUpdate is defined in the Redfish Resource and
+	// Schema Guide (2024.1)
+	startUpdateURI = "redfish/v1/UpdateService/Actions/UpdateService.StartUpdate"
+)
+
+var (
 	errMultiPartPayload   = errors.New("error preparing multipart payload")
 	errUpdateParams       = errors.New("error in redfish UpdateParameters payload")
 	errTaskIdFromRespBody = errors.New("failed to identify firmware install taskID from response body")
@@ -117,8 +123,9 @@ func (c *Client) StartUpdateForUploadedFirmware(ctx context.Context) (taskID str
 		return "", errors.Wrap(err, "error querying redfish update service")
 	}
 
-	// start update
-	resp, err := updateService.GetClient().PostWithHeaders(updateService.StartUpdateTarget, nil, nil)
+	// Start update the hard way. We do this to get back the task object from the response body so that
+	// we can parse the task id out of it.
+	resp, err := updateService.GetClient().PostWithHeaders(startUpdateURI, nil, nil)
 	if err != nil {
 		return "", errors.Wrap(err, "error querying redfish start update endpoint")
 	}
