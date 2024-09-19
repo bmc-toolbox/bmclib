@@ -69,10 +69,12 @@ func (c *x13) firmwareInstallSteps(component string) ([]constants.FirmwareInstal
 		return nil, err
 	}
 
+	// return []constants.FirmwareInstallStep{
+	// 	constants.FirmwareInstallStepUploadInitiateInstall,
+	// 	constants.FirmwareInstallStepInstallStatus,
+	// }, nil
 	return []constants.FirmwareInstallStep{
-		constants.FirmwareInstallStepUpload,
-		constants.FirmwareInstallStepUploadStatus,
-		constants.FirmwareInstallStepInstallUploaded,
+		constants.FirmwareInstallStepUploadInitiateInstall,
 		constants.FirmwareInstallStepInstallStatus,
 	}, nil
 }
