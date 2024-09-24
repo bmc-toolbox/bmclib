@@ -14,7 +14,6 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	brrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/bmc-toolbox/common"
-	"github.com/pkg/errors"
 )
 
 // API session setup response payload
@@ -229,7 +228,7 @@ func (a *ASRockRack) uploadFirmware(ctx context.Context, endpoint string, file *
 	var size int64
 	finfo, err := file.Stat()
 	if err != nil {
-		return errors.Wrap(err, "unable to determine file size")
+		return fmt.Errorf("unable to determine file size: %w", err)
 	}
 
 	size = finfo.Size()
@@ -558,7 +557,7 @@ func (a *ASRockRack) httpsLogin(ctx context.Context) error {
 
 	resp, statusCode, err := a.queryHTTPS(ctx, urlEndpoint, "POST", bytes.NewReader(payload), headers, 0)
 	if err != nil {
-		return fmt.Errorf("Error logging in: " + err.Error())
+		return fmt.Errorf("logging in: %w", err)
 	}
 
 	if statusCode == 401 {
@@ -568,7 +567,7 @@ func (a *ASRockRack) httpsLogin(ctx context.Context) error {
 	// Unmarshal login session
 	err = json.Unmarshal(resp, a.loginSession)
 	if err != nil {
-		return fmt.Errorf("error unmarshalling response payload: " + err.Error())
+		return fmt.Errorf("unmarshalling response payload: %w", err)
 	}
 
 	return nil
@@ -578,7 +577,7 @@ func (a *ASRockRack) httpsLogin(ctx context.Context) error {
 func (a *ASRockRack) httpsLogout(ctx context.Context) error {
 	_, statusCode, err := a.queryHTTPS(ctx, "api/session", "DELETE", nil, nil, 0)
 	if err != nil {
-		return fmt.Errorf("Error logging out: " + err.Error())
+		return fmt.Errorf("logging out: %w", err)
 	}
 
 	if statusCode != http.StatusOK {

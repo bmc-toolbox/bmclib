@@ -21,12 +21,12 @@ func Test_FirmwareInfo(t *testing.T) {
 
 	err := aClient.httpsLogin(context.TODO())
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("login: %s", err.Error())
 	}
 
 	fwInfo, err := aClient.firmwareInfo(context.TODO())
 	if err != nil {
-		t.Error(err.Error())
+		t.Errorf("firmwareInfo: %s", err.Error())
 	}
 
 	assert.Equal(t, expected, fwInfo)
@@ -35,7 +35,7 @@ func Test_FirmwareInfo(t *testing.T) {
 func TestInventoryInfo(t *testing.T) {
 	err := aClient.httpsLogin(context.TODO())
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("login: %s", err.Error())
 	}
 
 	inventory, err := aClient.inventoryInfoE3C246D41D(context.TODO())
@@ -50,7 +50,7 @@ func TestInventoryInfo(t *testing.T) {
 func Test_fruInfo(t *testing.T) {
 	err := aClient.httpsLogin(context.TODO())
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("login: %s", err.Error())
 	}
 
 	frus, err := aClient.fruInfo(context.TODO())
@@ -64,7 +64,7 @@ func Test_fruInfo(t *testing.T) {
 func Test_sensors(t *testing.T) {
 	err := aClient.httpsLogin(context.TODO())
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("login: %s", err.Error())
 	}
 
 	sensors, err := aClient.sensors(context.TODO())
@@ -83,7 +83,7 @@ func Test_biosPOSTCode(t *testing.T) {
 
 	err := aClient.httpsLogin(context.TODO())
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("login: %s", err.Error())
 	}
 
 	info, err := aClient.postCodeInfo(context.TODO())
@@ -102,7 +102,7 @@ func Test_chassisStatus(t *testing.T) {
 
 	err := aClient.httpsLogin(context.TODO())
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("login: %s", err.Error())
 	}
 
 	info, err := aClient.chassisStatusInfo(context.TODO())
