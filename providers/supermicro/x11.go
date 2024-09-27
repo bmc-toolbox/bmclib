@@ -14,6 +14,7 @@ import (
 	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
+	"github.com/stmcginnis/gofish/redfish"
 	"golang.org/x/exp/slices"
 )
 
@@ -142,4 +143,12 @@ func (c *x11) firmwareTaskStatus(ctx context.Context, component, _ string) (stat
 	}
 
 	return "", "", errors.Wrap(bmclibErrs.ErrFirmwareTaskStatus, "component unsupported: "+component)
+}
+
+func (c *x11) getBootProgress() (*redfish.BootProgress, error) {
+	return nil, fmt.Errorf("%w: not supported on x11 models", bmclibErrs.ErrRedfishVersionIncompatible)
+}
+
+func (c *x11) bootComplete() (bool, error) {
+	return false, fmt.Errorf("%w: not supported on x11 models", bmclibErrs.ErrRedfishVersionIncompatible)
 }

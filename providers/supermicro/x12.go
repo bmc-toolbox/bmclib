@@ -314,3 +314,21 @@ func (c *x12) firmwareTaskStatus(ctx context.Context, component, taskID string) 
 
 	return c.redfish.TaskStatus(ctx, taskID)
 }
+
+func (c *x12) getBootProgress() (*redfish.BootProgress, error) {
+	bps, err := c.redfish.GetBootProgress()
+	if err != nil {
+		return nil, err
+	}
+	return bps[0], nil
+}
+
+// this is some syntactic sugar to avoid having to code potentially provider- or model-specific knowledge into a caller
+func (c *x12) bootComplete() (bool, error) {
+	bp, err := c.getBootProgress()
+	if err != nil {
+		return false, err
+	}
+	// we determined this by experiment on SYS-510T-MR with redfish 1.14.0
+	return bp.LastState == redfish.SystemHardwareInitializationCompleteBootProgressTypes, nil
+}

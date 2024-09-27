@@ -3,9 +3,11 @@ package redfishwrapper
 import (
 	"context"
 	"crypto/x509"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -225,6 +227,58 @@ func (c *Client) VersionCompatible() bool {
 	}
 
 	return !slices.Contains(c.versionsNotCompatible, c.client.Service.RedfishVersion)
+}
+
+// redfishVersionMeetsOrExceeds compares this connection's redfish version to what is provided
+// as a requirement. We rely on the stated structure of the version string as described in the
+// Protocol Version (section 6.6) of the Redfish spec. If an implementation's version string is
+// non-conforming this function returns false.
+func redfishVersionMeetsOrExceeds(version string, major, minor, patch int) bool {
+	if version == "" {
+		return false
+	}
+
+	parts := strings.Split(version, ".")
+	if len(parts) != 3 {
+		return false
+	}
+
+	var rfVer []int64
+	for _, part := range parts {
+		ver, err := strconv.ParseInt(part, 10, 32)
+		if err != nil {
+			return false
+		}
+		rfVer = append(rfVer, ver)
+	}
+
+	if rfVer[0] < int64(major) {
+		return false
+	}
+
+	if rfVer[1] < int64(minor) {
+		return false
+	}
+
+	return rfVer[2] >= int64(patch)
+}
+
+func (c *Client) GetBootProgress() ([]*redfish.BootProgress, error) {
+	if !redfishVersionMeetsOrExceeds(c.client.Service.RedfishVersion, 1, 13, 0) {
+		return nil, fmt.Errorf("%w: %s", bmclibErrs.ErrRedfishVersionIncompatible, c.client.Service.RedfishVersion)
+	}
+
+	systems, err := c.client.Service.Systems()
+	if err != nil {
+		return nil, fmt.Errorf("retrieving redfish systems collection: %w", err)
+	}
+
+	bps := []*redfish.BootProgress{}
+	for _, sys := range systems {
+		bps = append(bps, &sys.BootProgress)
+	}
+
+	return bps, nil
 }
 
 func (c *Client) PostWithHeaders(ctx context.Context, url string, payload interface{}, headers map[string]string) (*http.Response, error) {

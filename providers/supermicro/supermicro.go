@@ -22,6 +22,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/internal/sum"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/bmc-toolbox/common"
+	"github.com/stmcginnis/gofish/redfish"
 
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
@@ -56,6 +57,7 @@ var (
 		providers.FeatureSetBiosConfiguration,
 		providers.FeatureSetBiosConfigurationFromFile,
 		providers.FeatureResetBiosConfiguration,
+		providers.FeatureBootProgress,
 	}
 )
 
@@ -120,6 +122,8 @@ type bmcQueryor interface {
 	// returns the device model, that was queried previously with queryDeviceModel
 	deviceModel() (model string)
 	supportsInstall(component string) error
+	getBootProgress() (*redfish.BootProgress, error)
+	bootComplete() (bool, error)
 }
 
 // New returns connection with a Supermicro client initialized
@@ -285,6 +289,8 @@ func (c *Client) bmcQueryor(ctx context.Context) (bmcQueryor, error) {
 	for _, bmc := range []bmcQueryor{x11, x12} {
 		var err error
 
+		// Note to maintainers: x12 lacks support for the ipmi.cgi endpoint,
+		// which will lead to our graceful handling of ErrXMLAPIUnsupported below.
 		_, err = bmc.queryDeviceModel(ctx)
 		if err != nil {
 			if errors.Is(err, ErrXMLAPIUnsupported) {
@@ -596,4 +602,14 @@ func hostIP(hostURL string) (string, error) {
 // SendNMI tells the BMC to issue an NMI to the device
 func (c *Client) SendNMI(ctx context.Context) error {
 	return c.serviceClient.redfish.SendNMI(ctx)
+}
+
+// GetBootProgress allows a caller to follow along as the system goes through its boot sequence
+func (c *Client) GetBootProgress() (*redfish.BootProgress, error) {
+	return c.bmc.getBootProgress()
+}
+
+// BootComplete checks if this system has reached the last state for boot
+func (c *Client) BootComplete() (bool, error) {
+	return c.bmc.bootComplete()
 }

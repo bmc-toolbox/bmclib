@@ -75,4 +75,7 @@ const (
 
 	// FeatureGetBiosConfiguration means an implementation that can get bios configuration in a simple k/v map
 	FeatureGetBiosConfiguration registrar.Feature = "getbiosconfig"
+
+	// FeatureBootProgress indicates that the implementation supports reading the BootProgress from the BMC
+	FeatureBootProgress registrar.Feature = "bootprogress"
 )

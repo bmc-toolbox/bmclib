@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"testing"
 
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/stmcginnis/gofish/redfish"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -217,4 +219,125 @@ func TestSystemsBIOSOdataID(t *testing.T) {
 			client.Close(context.Background())
 		})
 	}
+}
+
+func TestRedfishVersionMeetsOrExceeds(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name    string
+		version string
+		exp     bool
+	}{
+		{
+			"empty string",
+			"",
+			false,
+		},
+		{
+			"short string",
+			"1.2",
+			false,
+		},
+		{
+			"bogus component",
+			"1.asdf.2",
+			false,
+		},
+		{
+			"major too low",
+			"0.3.4",
+			false,
+		},
+		{
+			"minor too low",
+			"1.1.3",
+			false,
+		},
+		{
+			"patch too low",
+			"1.2.2",
+			false,
+		},
+		{
+			"meets",
+			"1.2.3",
+			true,
+		},
+		{
+			"exceeds",
+			"1.2.4",
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		got := redfishVersionMeetsOrExceeds(tc.version, 1, 2, 3)
+		assert.Equal(t, tc.exp, got, "testcase %s", tc.name)
+	}
+}
+
+func TestGetBootProgress(t *testing.T) {
+	tests := map[string]struct {
+		hfunc  map[string]func(http.ResponseWriter, *http.Request)
+		expect []*redfish.BootProgress
+		err    error
+	}{
+		"happy case": {
+			hfunc: map[string]func(http.ResponseWriter, *http.Request){
+				// service root
+				"/redfish/v1/":          endpointFunc(t, "smc_1.14.0_serviceroot.json"),
+				"/redfish/v1/Systems":   endpointFunc(t, "smc_1.14.0_systems.json"),
+				"/redfish/v1/Systems/1": endpointFunc(t, "smc_1.14.0_systems_1.json"),
+			},
+			expect: []*redfish.BootProgress{
+				&redfish.BootProgress{
+					LastState: redfish.SystemHardwareInitializationCompleteBootProgressTypes,
+				},
+			},
+			err: nil,
+		},
+		"insufficient redfish version": {
+			hfunc: map[string]func(http.ResponseWriter, *http.Request){
+				"/redfish/v1/": endpointFunc(t, "smc_1.9.0_serviceroot.json"),
+			},
+			expect: nil,
+			err:    bmclibErrs.ErrRedfishVersionIncompatible,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			mux := http.NewServeMux()
+			handleFunc := tc.hfunc
+			for endpoint, handler := range handleFunc {
+				mux.HandleFunc(endpoint, handler)
+			}
+
+			server := httptest.NewTLSServer(mux)
+			defer server.Close()
+
+			parsedURL, err := url.Parse(server.URL)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "")
+
+			err = client.Open(context.TODO())
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer client.Close(context.TODO())
+
+			got, err := client.GetBootProgress()
+			if err != nil {
+				assert.ErrorIs(t, err, tc.err)
+				return
+			}
+
+			assert.ElementsMatch(t, tc.expect, got)
+		})
+	}
+
 }
