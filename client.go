@@ -566,6 +566,17 @@ func (c *Client) SetBiosConfiguration(ctx context.Context, biosConfig map[string
 	return err
 }
 
+func (c *Client) SetBiosConfigurationFromFile(ctx context.Context, cfg string) (err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetBiosConfigurationFromFile")
+	defer span.End()
+
+	metadata, err := bmc.SetBiosConfigurationFromFileInterfaces(ctx, c.registry().GetDriverInterfaces(), cfg)
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return err
+}
+
 func (c *Client) ResetBiosConfiguration(ctx context.Context) (err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "ResetBiosConfiguration")
 	defer span.End()
