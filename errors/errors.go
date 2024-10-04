@@ -42,6 +42,9 @@ var (
 	// ErrUserAccountUpdate is returned when the user account failed to be updated
 	ErrUserAccountUpdate = errors.New("user account attributes could not be updated")
 
+	// ErrRedfishVersionIncompatible is returned when a given version of redfish doesn't support a feature
+	ErrRedfishVersionIncompatible = errors.New("operation not supported in this redfish version")
+
 	// ErrRedfishChassisOdataID is returned when no compatible Chassis Odata IDs were identified
 	ErrRedfishChassisOdataID = errors.New("no compatible Chassis Odata IDs identified")
 
