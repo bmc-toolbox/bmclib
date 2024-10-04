@@ -264,6 +264,9 @@ func redfishVersionMeetsOrExceeds(version string, major, minor, patch int) bool 
 }
 
 func (c *Client) GetBootProgress() ([]*redfish.BootProgress, error) {
+	// The redfish standard adopts the BootProgress object in 1.13.0. Earlier versions of redfish return
+	// json NULL, which gofish turns into a zero-value object of BootProgress. We gate this on the RedfishVersion
+	// to avoid the complexity of interpreting whether a given value is legitimate.
 	if !redfishVersionMeetsOrExceeds(c.client.Service.RedfishVersion, 1, 13, 0) {
 		return nil, fmt.Errorf("%w: %s", bmclibErrs.ErrRedfishVersionIncompatible, c.client.Service.RedfishVersion)
 	}

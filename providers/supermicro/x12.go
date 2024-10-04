@@ -329,6 +329,6 @@ func (c *x12) bootComplete() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	// we determined this by experiment on SYS-510T-MR with redfish 1.14.0
+	// we determined this by experiment on X12STH-SYS with redfish 1.14.0
 	return bp.LastState == redfish.SystemHardwareInitializationCompleteBootProgressTypes, nil
 }
