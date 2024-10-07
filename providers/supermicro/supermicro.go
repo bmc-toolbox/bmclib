@@ -315,13 +315,7 @@ func (c *Client) bmcQueryor(ctx context.Context) (bmcQueryor, error) {
 	for _, bmc := range []bmcQueryor{x11bmc, x12bmc, x13bmc} {
 		var err error
 
-<<<<<<< HEAD
-		// Note to maintainers: x12 lacks support for the ipmi.cgi endpoint,
-		// which will lead to our graceful handling of ErrXMLAPIUnsupported below.
-		_, err = bmc.queryDeviceModel(ctx)
-=======
 		deviceModel, err := bmc.queryDeviceModel(ctx)
->>>>>>> 3d1fe09 (providers/supermicro/supermicro.go: Fix bmcQueryor to properly match queryor to model)
 		if err != nil {
 			if errors.Is(err, ErrXMLAPIUnsupported) {
 				continue
