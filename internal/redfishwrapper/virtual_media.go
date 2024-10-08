@@ -48,22 +48,20 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL stri
 					return false, err
 				}
 			}
-			if mediaURL != "" {
-				if slices.Contains(vm.MediaTypes, mediaKind) {
-					if err := vm.InsertMedia(mediaURL, true, true); err != nil {
-						// Some BMC's (Supermicro SYS-E300-D9, for example) don't support the "inserted" and "writeProtected" properties,
-						// so we try to insert the media without them if the first attempt fails.
-						if err := vm.InsertMediaConfig(rf.VirtualMediaConfig{Image: mediaURL}); err != nil {
-							return false, err
-						}
-					}
-					return true, nil
-				}
-
+			if mediaURL == "" {
+				// Only ejecting the media was requested.
+				return true, nil
+			}
+			if !slices.Contains(vm.MediaTypes, mediaKind) {
 				return false, fmt.Errorf("media kind %s not supported by BMC, supported media kinds %q", kind, vm.MediaTypes)
 			}
-
-			// Only ejecting the media was requested.
+			if err := vm.InsertMedia(mediaURL, true, true); err != nil {
+				// Some BMC's (Supermicro X11SDV-4C-TLN2F, for example) don't support the "inserted" and "writeProtected" properties,
+				// so we try to insert the media without them if the first attempt fails.
+				if err := vm.InsertMediaConfig(rf.VirtualMediaConfig{Image: mediaURL}); err != nil {
+					return false, err
+				}
+			}
 			return true, nil
 		}
 	}
