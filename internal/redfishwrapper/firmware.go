@@ -19,6 +19,7 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	redfish "github.com/stmcginnis/gofish/redfish"
 )
 
 type installMethod string
@@ -103,6 +104,14 @@ func (c *Client) FirmwareUpload(ctx context.Context, updateFile *os.File, params
 			bmclibErrs.ErrFirmwareUpload,
 			"unexpected status code returned: "+resp.Status,
 		)
+	}
+
+	// For X13 the full Task structure is returned in the body.   If we can Unmarshall then we can safely assume
+	// that redfishTask.ID contains the ID.
+	redfishTask := &redfish.Task{}
+	err = json.Unmarshal(response, redfishTask)
+	if err == nil {
+		return redfishTask.ID, nil
 	}
 
 	// The response contains a location header pointing to the task URI
