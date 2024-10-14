@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/stmcginnis/gofish/redfish"
 
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
@@ -31,7 +32,7 @@ const (
 var (
 	// the URI for starting a firmware update via StartUpdate is defined in the Redfish Resource and
 	// Schema Guide (2024.1)
-	startUpdateURI = "redfish/v1/UpdateService/Actions/UpdateService.StartUpdate"
+	startUpdateURI = "/redfish/v1/UpdateService/Actions/UpdateService.StartUpdate"
 )
 
 var (
@@ -112,6 +113,16 @@ func (c *Client) FirmwareUpload(ctx context.Context, updateFile *os.File, params
 		return taskIDFromLocationHeader(location)
 	}
 
+	rfTask := &redfish.Task{}
+	if err := rfTask.UnmarshalJSON(response); err != nil {
+		// we got invalid JSON
+		return "", fmt.Errorf("unmarshaling redfish response: %w", err)
+	}
+	// it's possible to get well-formed JSON that isn't a Task (thanks SMC). Test that we have something sensible.
+	if strings.Contains(rfTask.ODataType, "Task") {
+		return rfTask.ID, nil
+	}
+
 	return taskIDFromResponseBody(response)
 }
 
@@ -144,6 +155,15 @@ func (c *Client) StartUpdateForUploadedFirmware(ctx context.Context) (taskID str
 	var location = resp.Header.Get("Location")
 	if strings.Contains(location, "/TaskService/Tasks/") {
 		return taskIDFromLocationHeader(location)
+	}
+
+	rfTask := &redfish.Task{}
+	if err := rfTask.UnmarshalJSON(response); err != nil {
+		// we got invalid JSON
+		return "", fmt.Errorf("unmarshaling redfish response: %w", err)
+	}
+	if strings.Contains(rfTask.ODataType, "Task") {
+		return rfTask.ID, nil
 	}
 
 	return taskIDFromResponseBody(response)
