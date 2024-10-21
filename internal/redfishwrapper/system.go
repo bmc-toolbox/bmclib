@@ -35,7 +35,12 @@ func (c *Client) Systems() ([]*redfish.ComputerSystem, error) {
 		return nil, err
 	}
 
-	return c.client.Service.Systems()
+	s, err := c.client.Service.Systems()
+	if err != nil {
+		return nil, err
+	}
+
+	return c.matchingSystem(s), nil
 }
 
 // Managers gets the manager instances of this service.
@@ -54,4 +59,14 @@ func (c *Client) Chassis(ctx context.Context) ([]*redfish.Chassis, error) {
 	}
 
 	return c.client.Service.Chassis()
+}
+
+func (c *Client) matchingSystem(systems []*redfish.ComputerSystem) []*redfish.ComputerSystem {
+	for _, s := range systems {
+		if s.Name == c.systemName {
+			return []*redfish.ComputerSystem{s}
+		}
+	}
+
+	return systems
 }

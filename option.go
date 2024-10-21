@@ -118,6 +118,12 @@ func WithRedfishEtagMatchDisabled(d bool) Option {
 	}
 }
 
+func WithRedfishSystemName(name string) Option {
+	return func(args *Client) {
+		args.providerConfig.gofish.SystemName = name
+	}
+}
+
 func WithIntelAMTHostScheme(hostScheme string) Option {
 	return func(args *Client) {
 		args.providerConfig.intelamt.HostScheme = hostScheme

@@ -199,6 +199,7 @@ func (c *Client) registerGofishProvider() {
 		redfish.WithUseBasicAuth(c.providerConfig.gofish.UseBasicAuth),
 		redfish.WithPort(c.providerConfig.gofish.Port),
 		redfish.WithEtagMatchDisabled(c.providerConfig.gofish.DisableEtagMatch),
+		redfish.WithSystemName(c.providerConfig.gofish.SystemName),
 	}
 
 	driverGoFish := redfish.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger, gofishOpts...)

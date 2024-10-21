@@ -31,6 +31,7 @@ type Client struct {
 	port                  string
 	user                  string
 	pass                  string
+	systemName            string
 	basicAuth             bool
 	disableEtagMatch      bool
 	versionsNotCompatible []string // a slice of redfish versions to ignore as incompatible
@@ -87,6 +88,12 @@ func WithEtagMatchDisabled(d bool) Option {
 func WithLogger(l *logr.Logger) Option {
 	return func(c *Client) {
 		c.logger = *l
+	}
+}
+
+func WithSystemName(name string) Option {
+	return func(c *Client) {
+		c.systemName = name
 	}
 }
 
