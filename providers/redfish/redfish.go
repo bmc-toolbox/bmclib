@@ -61,6 +61,7 @@ type Config struct {
 	UseBasicAuth          bool
 	// DisableEtagMatch disables the If-Match Etag header from being included by the Gofish driver.
 	DisableEtagMatch bool
+	SystemName       string
 }
 
 // Option for setting optional Client values
@@ -96,6 +97,12 @@ func WithUseBasicAuth(useBasicAuth bool) Option {
 	}
 }
 
+func WithSystemName(name string) Option {
+	return func(c *Config) {
+		c.SystemName = name
+	}
+}
+
 // WithEtagMatchDisabled disables the If-Match Etag header from being included by the Gofish driver.
 //
 // As of the current implementation this disables the header for POST/PATCH requests to the System entity endpoints.
@@ -120,6 +127,8 @@ func New(host, user, pass string, log logr.Logger, opts ...Option) *Conn {
 		redfishwrapper.WithHTTPClient(defaultConfig.HttpClient),
 		redfishwrapper.WithVersionsNotCompatible(defaultConfig.VersionsNotCompatible),
 		redfishwrapper.WithEtagMatchDisabled(defaultConfig.DisableEtagMatch),
+		redfishwrapper.WithBasicAuthEnabled(defaultConfig.UseBasicAuth),
+		redfishwrapper.WithSystemName(defaultConfig.SystemName),
 	}
 
 	if defaultConfig.RootCAs != nil {
