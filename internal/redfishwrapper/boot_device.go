@@ -89,7 +89,7 @@ func (c *Client) SystemBootDeviceSet(_ context.Context, bootDevice string, setPe
 		return false, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
-	systems, err := c.client.Service.Systems()
+	systems, err := c.Systems()
 	if err != nil {
 		return false, err
 	}
@@ -136,7 +136,7 @@ func (c *Client) GetBootDeviceOverride(_ context.Context) (override bmc.BootDevi
 		return override, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
-	systems, err := c.client.Service.Systems()
+	systems, err := c.Systems()
 	if err != nil {
 		return override, err
 	}
