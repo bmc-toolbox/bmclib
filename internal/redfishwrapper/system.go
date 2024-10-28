@@ -49,7 +49,24 @@ func (c *Client) Managers(ctx context.Context) ([]*redfish.Manager, error) {
 		return nil, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
-	return c.client.Service.Managers()
+	ms, err := c.client.Service.Managers()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, m := range ms {
+		sys, err := m.ManagerForServers()
+		if err != nil {
+			continue
+		}
+		for _, s := range sys {
+			if s.Name == c.systemName {
+				return []*redfish.Manager{m}, nil
+			}
+		}
+	}
+
+	return ms, nil
 }
 
 // Chassis gets the chassis instances managed by this service.
