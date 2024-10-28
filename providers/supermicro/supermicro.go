@@ -136,13 +136,17 @@ func NewClient(host, user, pass string, log logr.Logger, opts ...Option) *Client
 		opt(defaultConfig)
 	}
 
-	serviceClient := newBmcServiceClient(
+	serviceClient, err := newBmcServiceClient(
 		host,
 		defaultConfig.Port,
 		user,
 		pass,
 		httpclient.Build(defaultConfig.httpClientSetupFuncs...),
 	)
+
+	if err != nil {
+		return nil
+	}
 
 	return &Client{
 		serviceClient: serviceClient,
@@ -443,12 +447,20 @@ type serviceClient struct {
 	sum       *sum.Sum
 }
 
-func newBmcServiceClient(host, port, user, pass string, client *http.Client) *serviceClient {
+func newBmcServiceClient(host, port, user, pass string, client *http.Client) (*serviceClient, error) {
+	sc := &serviceClient{host: host, port: port, user: user, pass: pass, client: client}
+
 	if !strings.HasPrefix(host, "https://") && !strings.HasPrefix(host, "http://") {
-		host = "https://" + host
+		sc.host = "https://" + host
 	}
 
-	return &serviceClient{host: host, port: port, user: user, pass: pass, client: client}
+	s, err := sum.New(host, user, pass)
+	if err != nil {
+		return nil, err
+	}
+	sc.sum = s
+
+	return sc, nil
 }
 
 func (c *serviceClient) setCsrfToken(t string) {
