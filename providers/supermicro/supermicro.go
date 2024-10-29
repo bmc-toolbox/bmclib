@@ -144,6 +144,9 @@ func NewClient(host, user, pass string, log logr.Logger, opts ...Option) *Client
 		httpclient.Build(defaultConfig.httpClientSetupFuncs...),
 	)
 
+	// We probably want to treat this as a fatal error and/or pass the error back to the caller
+	// I did not want to chase that thread atm, so we intentionally return nil here if
+	// newBmcServiceClient returns an error.
 	if err != nil {
 		return nil
 	}
