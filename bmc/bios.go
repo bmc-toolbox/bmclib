@@ -210,7 +210,7 @@ func SetBiosConfigurationFromFileInterfaces(ctx context.Context, generic []inter
 			temp.BiosConfigurationSetter = p
 			implementations = append(implementations, temp)
 		default:
-			e := fmt.Sprintf("not a BiosConfigurationSetter implementation: %T", p)
+			e := fmt.Sprintf("not a BiosConfigurationSetterFromFile implementation: %T", p)
 			err = multierror.Append(err, errors.New(e))
 		}
 	}
@@ -219,7 +219,7 @@ func SetBiosConfigurationFromFileInterfaces(ctx context.Context, generic []inter
 			err,
 			errors.Wrap(
 				bmclibErrs.ErrProviderImplementation,
-				("no BiosConfigurationSetter implementations found"),
+				("no BiosConfigurationSetterFromFile implementations found"),
 			),
 		)
 	}
