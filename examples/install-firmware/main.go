@@ -79,7 +79,7 @@ func main() {
 	}
 	defer fh.Close()
 
-	taskID, err := cl.FirmwareInstall(ctx, *component, constants.FirmwareApplyOnReset, true, fh)
+	taskID, err := cl.FirmwareInstall(ctx, *component, string(constants.OnReset), true, fh)
 	if err != nil {
 		l.Fatal(err)
 	}
@@ -125,7 +125,7 @@ func main() {
 			l.WithFields(logrus.Fields{"state": state, "component": *component}).Info("firmware install completed")
 			os.Exit(0)
 
-		case constants.FirmwareInstallPowerCyleHost:
+		case constants.FirmwareInstallPowerCycleHost:
 			l.WithFields(logrus.Fields{"state": state, "component": *component}).Info("host powercycle required")
 
 			if _, err := cl.SetPowerState(ctx, "cycle"); err != nil {

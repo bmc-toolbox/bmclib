@@ -124,14 +124,14 @@ func TestPowerStateGet(t *testing.T) {
 		shouldErr  bool
 		url        string
 	}{
-		"success":       {},
+		"success":       {powerState: "on"},
 		"unknown state": {shouldErr: true},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			rsp := testConsumer{
-				rp: ResponsePayload{Result: tc.powerState},
+				rp: ResponsePayload{ID: 123, Host: "127.0.1.1", Result: tc.powerState},
 			}
 			if tc.shouldErr {
 				rsp.rp.Error = &ResponseError{Code: 500, Message: "failed"}

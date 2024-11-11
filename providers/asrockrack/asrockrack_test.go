@@ -4,58 +4,55 @@ import (
 	"context"
 	"os"
 	"testing"
+	"time"
 
 	"gopkg.in/go-playground/assert.v1"
 )
 
-func Test_Compatible(t *testing.T) {
-	b := aClient.Compatible(context.TODO())
-	if !b {
-		t.Errorf("expected true, got false")
-	}
-}
-
-func Test_httpLogin(t *testing.T) {
+func TestHttpLogin(t *testing.T) {
 	err := aClient.httpsLogin(context.TODO())
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("login: %s", err.Error())
 	}
 
 	assert.Equal(t, "l5L29IP7", aClient.loginSession.CSRFToken)
 }
 
-func Test_Close(t *testing.T) {
+func TestClose(t *testing.T) {
 	err := aClient.httpsLogin(context.TODO())
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("login setup: %s", err.Error())
 	}
 
 	err = aClient.httpsLogout(context.TODO())
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("logout: %s", err.Error())
 	}
 }
 
-func Test_FirwmwareUpdateBMC(t *testing.T) {
+func TestFirwmwareUpdateBMC(t *testing.T) {
 	err := aClient.httpsLogin(context.TODO())
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("login: %s", err.Error())
 	}
 
 	upgradeFile := "/tmp/dummy-E3C246D4I-NL_L0.01.00.ima"
 	_, err = os.Create(upgradeFile)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("create file: %s", err.Error())
 	}
 
 	fh, err := os.Open(upgradeFile)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("file open: %s", err.Error())
 	}
 
 	defer fh.Close()
-	err = aClient.firmwareInstallBMC(context.TODO(), fh, 0)
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Minute*15)
+	defer cancel()
+
+	err = aClient.firmwareUploadBMC(ctx, fh)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("upload: %s", err.Error())
 	}
 }

@@ -106,3 +106,93 @@ func TestBMCReset(t *testing.T) {
 	t.Log(state)
 	t.Fatal()
 }
+
+func TestDeactivateSOL(t *testing.T) {
+	t.Skip("need real ipmi server")
+	host := "127.0.0.1"
+	port := "623"
+	user := "ADMIN"
+	pass := "ADMIN"
+	i, err := New(host, user, pass, WithPort(port), WithLogger(logging.DefaultLogger()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = i.DeactivateSOL(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(err != nil)
+	t.Fatal()
+}
+
+func TestSystemEventLogClear(t *testing.T) {
+	t.Skip("need real ipmi server")
+	host := "127.0.0.1"
+	port := "623"
+	user := "ADMIN"
+	pass := "ADMIN"
+	i, err := New(host, user, pass, WithPort(port), WithLogger(logging.DefaultLogger()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = i.ClearSystemEventLog(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("System Event Log cleared")
+	t.Fatal()
+}
+
+func TestSystemEventLogGet(t *testing.T) {
+	t.Skip("need real ipmi server")
+	host := "127.0.0.1"
+	port := "623"
+	user := "ADMIN"
+	pass := "ADMIN"
+	i, err := New(host, user, pass, WithPort(port), WithLogger(logging.DefaultLogger()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	entries, err := i.GetSystemEventLog(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(entries)
+	t.Fatal()
+}
+
+func TestSystemEventLogGetRaw(t *testing.T) {
+	t.Skip("need real ipmi server")
+	host := "127.0.0.1"
+	port := "623"
+	user := "ADMIN"
+	pass := "ADMIN"
+	i, err := New(host, user, pass, WithPort(port), WithLogger(logging.DefaultLogger()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	eventlog, err := i.GetSystemEventLogRaw(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(eventlog)
+	t.Fatal()
+}
+
+func TestSendNMI(t *testing.T) {
+	t.Skip("need real ipmi server")
+	host := "127.0.0.1"
+	port := "623"
+	user := "ADMIN"
+	pass := "ADMIN"
+	i, err := New(host, user, pass, WithPort(port), WithLogger(logging.DefaultLogger()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = i.SendNMI(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("NMI sent")
+	t.Fatal()
+}

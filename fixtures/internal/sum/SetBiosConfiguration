@@ -1,0 +1,16 @@
+Supermicro Update Manager (for UEFI BIOS) 2.14.0 (2024/02/15) (ARM64)
+Copyright(C) 2013-2024 Super Micro Computer, Inc. All rights reserved.
+.................[0m
+[0m[1m[1m[1mStatus:[0m[0m [0mThe managed system 10.145.129.168 is rebooting.
+
+.............................[0mDone
+....
+.................[0m
+[0m
+
+[1m[1m[1mNote:[0m[0m [0mNo BIOS setting has been changed.
+
+[0m[1m[1m[1mStatus:[0m[0m [0mThe BIOS configuration is updated for 10.145.129.168
+
+[0m[0m[0;33m[0;33m[0;33mWARNING[0m[0m: [0mWithout option --post_complete, please manually confirm the managed system is POST complete before executing next action.
+

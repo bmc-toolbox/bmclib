@@ -1,0 +1,92 @@
+{
+    "@odata.type": "#Manager.v1_7_0.Manager",
+    "@odata.id": "/redfish/v1/Managers/1",
+    "Id": "1",
+    "Name": "Manager",
+    "Description": "BMC",
+    "ManagerType": "BMC",
+    "UUID": "00000000-0000-0000-0000-3CECEFCEFEDA",
+    "Model": "ASPEED",
+    "FirmwareVersion": "01.13.04",
+    "DateTime": "2023-11-06T14:16:52Z",
+    "DateTimeLocalOffset": "+00:00",
+    "Status": {
+        "State": "Enabled",
+        "Health": "OK"
+    },
+    "GraphicalConsole": {
+        "ServiceEnabled": true,
+        "MaxConcurrentSessions": 4,
+        "ConnectTypesSupported": [
+            "KVMIP"
+        ]
+    },
+    "SerialConsole": {
+        "ServiceEnabled": true,
+        "MaxConcurrentSessions": 1,
+        "ConnectTypesSupported": [
+            "SSH",
+            "IPMI"
+        ]
+    },
+    "CommandShell": {
+        "ServiceEnabled": true,
+        "MaxConcurrentSessions": 0,
+        "ConnectTypesSupported": [
+            "SSH"
+        ]
+    },
+    "NetworkProtocol": {
+        "@odata.id": "/redfish/v1/Managers/1/NetworkProtocol"
+    },
+    "EthernetInterfaces": {
+        "@odata.id": "/redfish/v1/Managers/1/EthernetInterfaces"
+    },
+    "SerialInterfaces": {
+        "@odata.id": "/redfish/v1/Managers/1/SerialInterfaces"
+    },
+    "LogServices": {
+        "@odata.id": "/redfish/v1/Managers/1/LogServices"
+    },
+    "VirtualMedia": {
+        "@odata.id": "/redfish/v1/Managers/1/VirtualMedia"
+    },
+    "HostInterfaces": {
+        "@odata.id": "/redfish/v1/Managers/1/HostInterfaces"
+    },
+    "LldpService": {
+        "@odata.id": "/redfish/v1/Managers/1/LldpService"
+    },
+    "Links": {
+        "ManagerForServers@odata.count": 1,
+        "ManagerForServers": [
+            {
+                "@odata.id": "/redfish/v1/Systems/1"
+            }
+        ],
+        "ManagerForChassis@odata.count": 1,
+        "ManagerForChassis": [
+            {
+                "@odata.id": "/redfish/v1/Chassis/1"
+            }
+        ],
+        "ManagerInChassis": {
+            "@odata.id": "/redfish/v1/Chassis/1/"
+        },
+        "ActiveSoftwareImage": {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/BMC"
+        },
+        "SoftwareImages@odata.count": 1,
+        "SoftwareImages": [
+            {
+                "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/BMC"
+            }
+        ],
+        "Oem": {}
+    },
+    "Actions": {
+        "#Manager.Reset": {
+            "target": "/redfish/v1/Managers/1/Actions/Manager.Reset"
+        }
+    }
+}

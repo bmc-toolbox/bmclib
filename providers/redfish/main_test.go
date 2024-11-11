@@ -26,14 +26,17 @@ var (
 // jsonResponse returns the fixture json response for a request URI
 func jsonResponse(endpoint string) []byte {
 	jsonResponsesMap := map[string]string{
-		"/redfish/v1/":              fixturesDir + "/v1/serviceroot.json",
-		"/redfish/v1/UpdateService": fixturesDir + "/v1/updateservice.json",
-		"/redfish/v1/Systems":       fixturesDir + "/v1/systems.json",
+		"/redfish/v1/Managers":                                            fixturesDir + "/v1/dell/managers.json",
+		"/redfish/v1/Managers/iDRAC.Embedded.1":                           fixturesDir + "/v1/dell/manager.idrac.embedded.1.json",
+		"/redfish/v1/Managers/iDRAC.Embedded.1/LogServices":               fixturesDir + "/v1/dell/logservices.json",
+		"/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel":           fixturesDir + "/v1/dell/logservices.sel.json",
+		"/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries":   fixturesDir + "/v1/dell/entries.json",
+		"/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries/1": fixturesDir + "/v1/dell/selentries/1.json",
+		"/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries/2": fixturesDir + "/v1/dell/selentries/2.json",
 
-		"/redfish/v1/Systems/System.Embedded.1":                                    fixturesDir + "/v1/dell/system.embedded.1.json",
-		"/redfish/v1/Systems/System.Embedded.1/Bios":                               fixturesDir + "/v1/dell/bios.json",
-		"/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/Jobs?$expand=*($levels=1)": fixturesDir + "/v1/dell/jobs.json",
-		"/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/Jobs/JID_467762674724":     fixturesDir + "/v1/dell/job_delete_ok.json",
+		"/redfish/v1/":                          fixturesDir + "/v1/serviceroot.json",
+		"/redfish/v1/UpdateService":             fixturesDir + "/v1/updateservice.json",
+		"/redfish/v1/Systems":                   fixturesDir + "/v1/systems.json",
 	}
 
 	fh, err := os.Open(jsonResponsesMap[endpoint])
@@ -57,9 +60,6 @@ func TestMain(m *testing.M) {
 		handler := http.NewServeMux()
 		handler.HandleFunc("/redfish/v1/", serviceRoot)
 		handler.HandleFunc("/redfish/v1/SessionService/Sessions", sessionService)
-		handler.HandleFunc("/redfish/v1/UpdateService/MultipartUpload", multipartUpload)
-		handler.HandleFunc("/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/Jobs?$expand=*($levels=1)", dellJobs)
-
 		return httptest.NewTLSServer(handler)
 	}()
 

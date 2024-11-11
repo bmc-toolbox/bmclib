@@ -4,15 +4,15 @@ import (
 	"context"
 	"crypto/x509"
 	"net/http"
-	"strings"
 
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
+	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
-	"github.com/pkg/errors"
 
+	"github.com/bmc-toolbox/bmclib/v2/bmc"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
@@ -34,9 +34,11 @@ var (
 		providers.FeatureBootDeviceSet,
 		providers.FeatureVirtualMedia,
 		providers.FeatureInventoryRead,
-		providers.FeatureFirmwareInstall,
-		providers.FeatureFirmwareInstallStatus,
 		providers.FeatureBmcReset,
+		providers.FeatureClearSystemEventLog,
+		providers.FeatureGetBiosConfiguration,
+		providers.FeatureSetBiosConfiguration,
+		providers.FeatureResetBiosConfiguration,
 	}
 )
 
@@ -57,6 +59,9 @@ type Config struct {
 	VersionsNotCompatible []string
 	RootCAs               *x509.CertPool
 	UseBasicAuth          bool
+	// DisableEtagMatch disables the If-Match Etag header from being included by the Gofish driver.
+	DisableEtagMatch bool
+	SystemName       string
 }
 
 // Option for setting optional Client values
@@ -92,6 +97,21 @@ func WithUseBasicAuth(useBasicAuth bool) Option {
 	}
 }
 
+func WithSystemName(name string) Option {
+	return func(c *Config) {
+		c.SystemName = name
+	}
+}
+
+// WithEtagMatchDisabled disables the If-Match Etag header from being included by the Gofish driver.
+//
+// As of the current implementation this disables the header for POST/PATCH requests to the System entity endpoints.
+func WithEtagMatchDisabled(d bool) Option {
+	return func(c *Config) {
+		c.DisableEtagMatch = d
+	}
+}
+
 // New returns connection with a redfish client initialized
 func New(host, user, pass string, log logr.Logger, opts ...Option) *Conn {
 	defaultConfig := &Config{
@@ -106,10 +126,15 @@ func New(host, user, pass string, log logr.Logger, opts ...Option) *Conn {
 	rfOpts := []redfishwrapper.Option{
 		redfishwrapper.WithHTTPClient(defaultConfig.HttpClient),
 		redfishwrapper.WithVersionsNotCompatible(defaultConfig.VersionsNotCompatible),
+		redfishwrapper.WithEtagMatchDisabled(defaultConfig.DisableEtagMatch),
+		redfishwrapper.WithBasicAuthEnabled(defaultConfig.UseBasicAuth),
+		redfishwrapper.WithSystemName(defaultConfig.SystemName),
 	}
+
 	if defaultConfig.RootCAs != nil {
 		rfOpts = append(rfOpts, redfishwrapper.WithSecureTLS(defaultConfig.RootCAs))
 	}
+
 	return &Conn{
 		Log:                  log,
 		failInventoryOnError: false,
@@ -165,24 +190,6 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 	return err == nil
 }
 
-// DeviceVendorModel returns the device manufacturer and model attributes
-func (c *Conn) DeviceVendorModel(ctx context.Context) (vendor, model string, err error) {
-	systems, err := c.redfishwrapper.Systems()
-	if err != nil {
-		return "", "", err
-	}
-
-	for _, sys := range systems {
-		if !compatibleOdataID(sys.ODataID, systemsOdataIDs) {
-			continue
-		}
-
-		return sys.Manufacturer, sys.Model, nil
-	}
-
-	return vendor, model, bmclibErrs.ErrRedfishSystemOdataID
-}
-
 // BmcReset power cycles the BMC
 func (c *Conn) BmcReset(ctx context.Context, resetType string) (ok bool, err error) {
 	return c.redfishwrapper.BMCReset(ctx, resetType)
@@ -195,20 +202,7 @@ func (c *Conn) PowerStateGet(ctx context.Context) (state string, err error) {
 
 // PowerSet sets the power state of a server
 func (c *Conn) PowerSet(ctx context.Context, state string) (ok bool, err error) {
-	switch strings.ToLower(state) {
-	case "on":
-		return c.redfishwrapper.SystemPowerOn(ctx)
-	case "off":
-		return c.redfishwrapper.SystemForceOff(ctx)
-	case "soft":
-		return c.redfishwrapper.SystemPowerOff(ctx)
-	case "reset":
-		return c.redfishwrapper.SystemReset(ctx)
-	case "cycle":
-		return c.redfishwrapper.SystemPowerCycle(ctx)
-	default:
-		return false, errors.New("unknown power action")
-	}
+	return c.redfishwrapper.PowerSet(ctx, state)
 }
 
 // BootDeviceSet sets the boot device
@@ -216,7 +210,37 @@ func (c *Conn) BootDeviceSet(ctx context.Context, bootDevice string, setPersiste
 	return c.redfishwrapper.SystemBootDeviceSet(ctx, bootDevice, setPersistent, efiBoot)
 }
 
+// BootDeviceOverrideGet gets the boot override device information
+func (c *Conn) BootDeviceOverrideGet(ctx context.Context) (bmc.BootDeviceOverride, error) {
+	return c.redfishwrapper.GetBootDeviceOverride(ctx)
+}
+
 // SetVirtualMedia sets the virtual media
 func (c *Conn) SetVirtualMedia(ctx context.Context, kind string, mediaURL string) (ok bool, err error) {
 	return c.redfishwrapper.SetVirtualMedia(ctx, kind, mediaURL)
+}
+
+// Inventory collects hardware inventory and install firmware information
+func (c *Conn) Inventory(ctx context.Context) (device *common.Device, err error) {
+	return c.redfishwrapper.Inventory(ctx, c.failInventoryOnError)
+}
+
+// GetBiosConfiguration return bios configuration
+func (c *Conn) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]string, err error) {
+	return c.redfishwrapper.GetBiosConfiguration(ctx)
+}
+
+// SetBiosConfiguration set bios configuration
+func (c *Conn) SetBiosConfiguration(ctx context.Context, biosConfig map[string]string) (err error) {
+	return c.redfishwrapper.SetBiosConfiguration(ctx, biosConfig)
+}
+
+// ResetBiosConfiguration set bios configuration
+func (c *Conn) ResetBiosConfiguration(ctx context.Context) (err error) {
+	return c.redfishwrapper.ResetBiosConfiguration(ctx)
+}
+
+// SendNMI tells the BMC to issue an NMI to the device
+func (c *Conn) SendNMI(ctx context.Context) error {
+	return c.redfishwrapper.SendNMI(ctx)
 }

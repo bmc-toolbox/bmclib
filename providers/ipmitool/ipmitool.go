@@ -27,6 +27,10 @@ var (
 		providers.FeatureUserRead,
 		providers.FeatureBmcReset,
 		providers.FeatureBootDeviceSet,
+		providers.FeatureClearSystemEventLog,
+		providers.FeatureGetSystemEventLog,
+		providers.FeatureGetSystemEventLogRaw,
+		providers.FeatureDeactivateSOL,
 	}
 )
 
@@ -146,6 +150,11 @@ func (c *Conn) BmcReset(ctx context.Context, resetType string) (ok bool, err err
 	return c.ipmitool.PowerResetBmc(ctx, resetType)
 }
 
+// DeactivateSOL will deactivate active SOL sessions
+func (c *Conn) DeactivateSOL(ctx context.Context) (err error) {
+	return c.ipmitool.DeactivateSOL(ctx)
+}
+
 // UserRead list all users
 func (c *Conn) UserRead(ctx context.Context) (users []map[string]string, err error) {
 	return c.ipmitool.ReadUsers(ctx)
@@ -179,4 +188,21 @@ func (c *Conn) PowerSet(ctx context.Context, state string) (ok bool, err error) 
 	}
 
 	return ok, err
+}
+
+func (c *Conn) ClearSystemEventLog(ctx context.Context) (err error) {
+	return c.ipmitool.ClearSystemEventLog(ctx)
+}
+
+func (c *Conn) GetSystemEventLog(ctx context.Context) (entries [][]string, err error) {
+	return c.ipmitool.GetSystemEventLog(ctx)
+}
+
+func (c *Conn) GetSystemEventLogRaw(ctx context.Context) (eventlog string, err error) {
+	return c.ipmitool.GetSystemEventLogRaw(ctx)
+}
+
+// SendNMI tells the BMC to issue an NMI to the device
+func (c *Conn) SendNMI(ctx context.Context) error {
+	return c.ipmitool.SendPowerDiag(ctx)
 }

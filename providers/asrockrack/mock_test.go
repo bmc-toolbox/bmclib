@@ -82,6 +82,7 @@ func mockASRockBMC() *httptest.Server {
 	// fw update endpoints - in order of invocation
 	handler.HandleFunc("/api/maintenance/flash", bmcFirmwareUpgrade)
 	handler.HandleFunc("/api/maintenance/firmware", bmcFirmwareUpgrade)
+	handler.HandleFunc("/api/maintenance/firmware/firmware", bmcFirmwareUpgrade)
 	handler.HandleFunc("/api/maintenance/firmware/verification", bmcFirmwareUpgrade)
 	handler.HandleFunc("/api/maintenance/firmware/upgrade", bmcFirmwareUpgrade)
 	handler.HandleFunc("/api/maintenance/firmware/flash-progress", bmcFirmwareUpgrade)
@@ -211,7 +212,7 @@ func bmcFirmwareUpgrade(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 
 		// 2. upload firmware
-		case "/api/maintenance/firmware":
+		case "/api/maintenance/firmware", "/api/maintenance/firmware/firmware":
 
 			// validate flash mode set
 			if !fwUpgradeState.FlashModeSet {
@@ -306,11 +307,6 @@ func session(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 		}
 	case "DELETE":
-		//1for h, values := range r.Header {
-		//1	for _, v := range values {
-		//1		fmt.Println(h, v)
-		//1	}
-		//1}
 		if r.Header.Get("X-Csrftoken") != "l5L29IP7" {
 			w.WriteHeader(http.StatusBadRequest)
 		}

@@ -2,9 +2,10 @@ package asrockrack
 
 import (
 	"context"
-	"io"
+	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -21,117 +22,180 @@ const (
 	versionStrEmpty    = 2
 )
 
-// FirmwareInstall uploads and initiates firmware update for the component
-func (a *ASRockRack) FirmwareInstall(ctx context.Context, component, applyAt string, forceInstall bool, reader io.Reader) (jobID string, err error) {
-	var size int64
-	if file, ok := reader.(*os.File); ok {
-		finfo, err := file.Stat()
-		if err != nil {
-			a.log.V(2).Error(err, "unable to determine file size")
-		}
-
-		size = finfo.Size()
+// bmc client interface implementations methods
+func (a *ASRockRack) FirmwareInstallSteps(ctx context.Context, component string) ([]constants.FirmwareInstallStep, error) {
+	if err := a.supported(ctx); err != nil {
+		return nil, bmclibErrs.NewErrUnsupportedHardware(err.Error())
 	}
 
-	switch component {
-	case common.SlugBIOS:
-		err = a.firmwareInstallBIOS(ctx, reader, size)
+	switch strings.ToUpper(component) {
 	case common.SlugBMC:
-		err = a.firmwareInstallBMC(ctx, reader, size)
-	default:
-		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, "component unsupported: "+component)
+		return []constants.FirmwareInstallStep{
+			constants.FirmwareInstallStepUpload,
+			constants.FirmwareInstallStepInstallUploaded,
+			constants.FirmwareInstallStepInstallStatus,
+			constants.FirmwareInstallStepResetBMCPostInstall,
+			constants.FirmwareInstallStepResetBMCOnInstallFailure,
+		}, nil
 	}
 
-	if err != nil {
-		err = errors.Wrap(bmclibErrs.ErrFirmwareInstall, err.Error())
-	}
-
-	return jobID, err
+	return nil, errors.Wrap(bmclibErrs.ErrFirmwareUpload, "component unsupported: "+component)
 }
 
-// FirmwareInstallStatus returns the status of the firmware install process, a bool value indicating if the component requires a reset
-func (a *ASRockRack) FirmwareInstallStatus(ctx context.Context, installVersion, component, taskID string) (status string, err error) {
-	switch component {
-	case common.SlugBIOS, common.SlugBMC:
-		return a.firmwareUpdateStatus(ctx, component, installVersion)
-	default:
-		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, "component unsupported: "+component)
+func (a *ASRockRack) FirmwareUpload(ctx context.Context, component string, file *os.File) (taskID string, err error) {
+	switch strings.ToUpper(component) {
+	case common.SlugBIOS:
+		return "", a.firmwareUploadBIOS(ctx, file)
+	case common.SlugBMC:
+		return "", a.firmwareUploadBMC(ctx, file)
 	}
+
+	return "", errors.Wrap(bmclibErrs.ErrFirmwareUpload, "component unsupported: "+component)
+
 }
 
-// firmwareInstallBMC uploads and installs firmware for the BMC component
-func (a *ASRockRack) firmwareInstallBMC(ctx context.Context, reader io.Reader, fileSize int64) error {
-	var err error
+func (a *ASRockRack) firmwareUploadBMC(ctx context.Context, file *os.File) error {
+	//	// expect atleast 5 minutes left in the deadline to proceed with the upload
+	d, _ := ctx.Deadline()
+	if time.Until(d) < 5*time.Minute {
+		return errors.New("remaining context deadline insufficient to perform update: " + time.Until(d).String())
+	}
 
-	// 1. set the device to flash mode - prepares the flash
+	// Beware: this locks some capabilities, e.g. the access to fruAttributes
 	a.log.V(2).WithValues("step", "1/4").Info("set device to flash mode, takes a minute...")
-	err = a.setFlashMode(ctx)
+	err := a.setFlashMode(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed in step 1/4 - set device to flash mode")
+		return errors.Wrap(
+			bmclibErrs.ErrFirmwareUpload,
+			"failed in step 1/3 - set device to flash mode: "+err.Error(),
+		)
 	}
 
-	// 2. upload firmware image file
-	a.log.V(2).WithValues("step", "2/4").Info("upload BMC firmware image")
-	err = a.uploadFirmware(ctx, "api/maintenance/firmware", reader, fileSize)
-	if err != nil {
-		return errors.Wrap(err, "failed in step 2/4 - upload BMC firmware image")
+	var fwEndpoint string
+	switch a.deviceModel {
+	// E3C256D4ID-NL calls a different endpoint for firmware upload
+	case "E3C256D4ID-NL":
+		fwEndpoint = "api/maintenance/firmware/firmware"
+	default:
+		fwEndpoint = "api/maintenance/firmware"
 	}
 
-	// 3. BMC to verify the uploaded file
-	err = a.verifyUploadedFirmware(ctx)
+	a.log.V(2).WithValues("step", "2/4").Info("upload BMC firmware image to " + fwEndpoint)
+	err = a.uploadFirmware(ctx, fwEndpoint, file)
+	if err != nil {
+		return errors.Wrap(
+			bmclibErrs.ErrFirmwareUpload,
+			"failed in step 2/3 - upload BMC firmware image: "+err.Error(),
+		)
+	}
+
 	a.log.V(2).WithValues("step", "3/4").Info("verify uploaded BMC firmware")
+	err = a.verifyUploadedFirmware(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed in step 3/4 - verify uploaded BMC firmware")
-	}
-
-	// 4. Run the upgrade - preserving current config
-	a.log.V(2).WithValues("step", "4/4").Info("proceed with BMC firmware install, preserve current configuration")
-	err = a.upgradeBMC(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed in step 4/4 - proceed with BMC firmware install")
+		return errors.Wrap(
+			bmclibErrs.ErrFirmwareUpload,
+			"failed in step 3/3 - verify uploaded BMC firmware: "+err.Error(),
+		)
 	}
 
 	return nil
 }
 
-// firmwareInstallBIOS uploads and installs firmware for the BIOS component
-func (a *ASRockRack) firmwareInstallBIOS(ctx context.Context, reader io.Reader, fileSize int64) error {
-	var err error
-
-	// 1. upload firmware image file
+func (a *ASRockRack) firmwareUploadBIOS(ctx context.Context, file *os.File) error {
 	a.log.V(2).WithValues("step", "1/3").Info("upload BIOS firmware image")
-	err = a.uploadFirmware(ctx, "api/asrr/maintenance/BIOS/firmware", reader, fileSize)
+	err := a.uploadFirmware(ctx, "api/asrr/maintenance/BIOS/firmware", file)
 	if err != nil {
-		return errors.Wrap(err, "failed in step 1/3 - upload BIOS firmware image")
+		return errors.Wrap(
+			bmclibErrs.ErrFirmwareUpload,
+			"failed in step 1/3 - upload BIOS firmware image: "+err.Error(),
+		)
 	}
 
-	// 2. set update parameters to preserve configurations
 	a.log.V(2).WithValues("step", "2/3").Info("set BIOS preserve flash configuration")
 	err = a.biosUpgradeConfiguration(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed in step 2/3 - set flash configuration")
+		return errors.Wrap(
+			bmclibErrs.ErrFirmwareUpload,
+			"failed in step 2/3 - set flash configuration: "+err.Error(),
+		)
 	}
 
 	// 3. run upgrade
 	a.log.V(2).WithValues("step", "3/3").Info("proceed with BIOS firmware install")
 	err = a.upgradeBIOS(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed in step 3/3 - proceed with BIOS firmware install")
+		return errors.Wrap(
+			bmclibErrs.ErrFirmwareUpload,
+			"failed in step 3/3 - proceed with BIOS firmware install: "+err.Error(),
+		)
 	}
 
 	return nil
 }
 
+func (a *ASRockRack) FirmwareInstallUploaded(ctx context.Context, component, uploadTaskID string) (installTaskID string, err error) {
+	switch strings.ToUpper(component) {
+	case common.SlugBIOS:
+		return "", a.firmwareInstallUploadedBIOS(ctx)
+	case common.SlugBMC:
+		return "", a.firmwareInstallUploadedBMC(ctx)
+	}
+
+	return "", errors.Wrap(bmclibErrs.ErrFirmwareInstall, "component unsupported: "+component)
+}
+
+// firmwareInstallUploadedBIOS uploads and installs firmware for the BMC component
+func (a *ASRockRack) firmwareInstallUploadedBIOS(ctx context.Context) error {
+	// 4. Run the upgrade - preserving current config
+	a.log.V(2).WithValues("step", "install").Info("proceed with BIOS firmware install, preserve current configuration")
+	err := a.upgradeBIOS(ctx)
+	if err != nil {
+		return errors.Wrap(
+			bmclibErrs.ErrFirmwareInstallUploaded,
+			"failed in step 4/4 - proceed with BMC firmware install: "+err.Error(),
+		)
+	}
+
+	return nil
+}
+
+// firmwareInstallUploadedBMC uploads and installs firmware for the BMC component
+func (a *ASRockRack) firmwareInstallUploadedBMC(ctx context.Context) error {
+	// 4. Run the upgrade - preserving current config
+	a.log.V(2).WithValues("step", "install").Info("proceed with BMC firmware install, preserve current configuration")
+	err := a.upgradeBMC(ctx)
+	if err != nil {
+		return errors.Wrap(
+			bmclibErrs.ErrFirmwareInstallUploaded,
+			"failed in step 4/4 - proceed with BMC firmware install"+err.Error(),
+		)
+	}
+
+	return nil
+}
+
+// FirmwareTaskStatus returns the status of a firmware related task queued on the BMC.
+func (a *ASRockRack) FirmwareTaskStatus(ctx context.Context, kind constants.FirmwareInstallStep, component, taskID, installVersion string) (state constants.TaskState, status string, err error) {
+	component = strings.ToUpper(component)
+	switch component {
+	case common.SlugBIOS, common.SlugBMC:
+		return a.firmwareUpdateStatus(ctx, component, installVersion)
+	default:
+		return "", "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, "component unsupported: "+component)
+	}
+}
+
 // firmwareUpdateBIOSStatus returns the BIOS firmware install status
-func (a *ASRockRack) firmwareUpdateStatus(ctx context.Context, component string, installVersion string) (status string, err error) {
+func (a *ASRockRack) firmwareUpdateStatus(ctx context.Context, component string, installVersion string) (state constants.TaskState, status string, err error) {
 	var endpoint string
+	component = strings.ToUpper(component)
 	switch component {
 	case common.SlugBIOS:
 		endpoint = "api/asrr/maintenance/BIOS/flash-progress"
 	case common.SlugBMC:
 		endpoint = "api/maintenance/firmware/flash-progress"
 	default:
-		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, "component unsupported: "+component)
+		return "", "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, "component unsupported: "+component)
 	}
 
 	// 1. query the flash progress endpoint
@@ -143,11 +207,15 @@ func (a *ASRockRack) firmwareUpdateStatus(ctx context.Context, component string,
 	}
 
 	if progress != nil {
+		status = fmt.Sprintf("action: %s, progress: %s", progress.Action, progress.Progress)
+
 		switch progress.State {
 		case 0:
-			return constants.FirmwareInstallRunning, nil
+			return constants.Running, status, nil
+		case 1: // "Flashing To be done"
+			return constants.Queued, status, nil
 		case 2:
-			return constants.FirmwareInstallComplete, nil
+			return constants.Complete, status, nil
 		default:
 			a.log.V(3).WithValues("state", progress.State).Info("warn", "bmc returned unknown flash progress state")
 		}
@@ -160,19 +228,26 @@ func (a *ASRockRack) firmwareUpdateStatus(ctx context.Context, component string,
 
 	installStatus, err = a.versionInstalled(ctx, component, installVersion)
 	if err != nil {
-		return "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, err.Error())
+		return "", "", errors.Wrap(bmclibErrs.ErrFirmwareInstallStatus, err.Error())
 	}
 
 	switch installStatus {
 	case versionStrMatch:
-		return constants.FirmwareInstallComplete, nil
+		if progress == nil {
+			// TODO: we should pass the force parameter to firmwareUpdateStatus,
+			// so that we can know if we expect a version change or not
+			a.log.V(3).Info("Nil progress + no version change -> unknown")
+			return constants.Unknown, status, nil
+		}
+
+		return constants.Complete, status, nil
 	case versionStrEmpty:
-		return constants.FirmwareInstallUnknown, nil
+		return constants.Unknown, status, nil
 	case versionStrMismatch:
-		return constants.FirmwareInstallRunning, nil
+		return constants.Running, status, nil
 	}
 
-	return constants.FirmwareInstallUnknown, nil
+	return constants.Unknown, status, nil
 }
 
 // versionInstalled returns int values on the status of the firmware version install
@@ -181,6 +256,7 @@ func (a *ASRockRack) firmwareUpdateStatus(ctx context.Context, component string,
 // - 1 indicates the given version parameter does not match the version installed
 // - 2 the version parameter returned from the BMC is empty (which means the BMC needs a reset)
 func (a *ASRockRack) versionInstalled(ctx context.Context, component, version string) (status int, err error) {
+	component = strings.ToUpper(component)
 	if !internal.StringInSlice(component, []string{common.SlugBIOS, common.SlugBMC}) {
 		return versionStrError, errors.Wrap(bmclibErrs.ErrFirmwareInstall, "component unsupported: "+component)
 	}

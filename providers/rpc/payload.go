@@ -9,6 +9,7 @@ const (
 	PowerSetMethod     Method = "setPowerState"
 	PowerGetMethod     Method = "getPowerState"
 	VirtualMediaMethod Method = "setVirtualMedia"
+	PingMethod         Method = "ping"
 )
 
 // RequestPayload is the payload sent to the ConsumerURL.

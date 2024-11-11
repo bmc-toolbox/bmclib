@@ -5,7 +5,6 @@ import (
 	"context"
 	"crypto/x509"
 	"encoding/base64"
-	"encoding/xml"
 	"fmt"
 	"io"
 	"net/http"
@@ -17,8 +16,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bmc-toolbox/bmclib/v2/constants"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
+	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
+	"github.com/bmc-toolbox/bmclib/v2/internal/sum"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
+	"github.com/bmc-toolbox/common"
+	"github.com/stmcginnis/gofish/redfish"
+
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 	"github.com/pkg/errors"
@@ -38,8 +43,21 @@ var (
 	// Features implemented
 	Features = registrar.Features{
 		providers.FeatureScreenshot,
-		providers.FeatureFirmwareInstall,
-		providers.FeatureFirmwareInstallStatus,
+		providers.FeatureMountFloppyImage,
+		providers.FeatureUnmountFloppyImage,
+		providers.FeatureFirmwareUpload,
+		providers.FeatureFirmwareInstallUploaded,
+		providers.FeatureFirmwareTaskStatus,
+		providers.FeatureFirmwareInstallSteps,
+		providers.FeatureInventoryRead,
+		providers.FeaturePowerSet,
+		providers.FeaturePowerState,
+		providers.FeatureBmcReset,
+		providers.FeatureGetBiosConfiguration,
+		providers.FeatureSetBiosConfiguration,
+		providers.FeatureSetBiosConfigurationFromFile,
+		providers.FeatureResetBiosConfiguration,
+		providers.FeatureBootProgress,
 	}
 )
 
@@ -49,12 +67,15 @@ var (
 //   - screen capture
 //   - bios firmware install
 //   - bmc firmware install
-// product: SYS-510T-MR, baseboard part number: X12STH-SYS
+//
+// product: SYS-510T-MR, baseboard part number: X12STH-SYS, X12SPO-NTF
 //   - screen capture
+//   - floppy image mount
 // product: 6029P-E1CR12L, baseboard part number: X11DPH-T
 // . - screen capture
 //   - bios firmware install
 //   - bmc firmware install
+//   - floppy image mount
 
 type Config struct {
 	HttpClient           *http.Client
@@ -86,22 +107,27 @@ func WithPort(port string) Option {
 
 // Connection details
 type Client struct {
-	client    *http.Client
-	host      string
-	user      string
-	pass      string
-	port      string
-	csrfToken string
-	model     string
-	log       logr.Logger
+	serviceClient *serviceClient
+	bmc           bmcQueryor
+	log           logr.Logger
+}
+
+type bmcQueryor interface {
+	firmwareInstallSteps(component string) ([]constants.FirmwareInstallStep, error)
+	firmwareUpload(ctx context.Context, component string, file *os.File) (taskID string, err error)
+	firmwareInstallUploaded(ctx context.Context, component, uploadTaskID string) (installTaskID string, err error)
+	firmwareTaskStatus(ctx context.Context, component, taskID string) (state constants.TaskState, status string, err error)
+	// query device model from the bmc
+	queryDeviceModel(ctx context.Context) (model string, err error)
+	// returns the device model, that was queried previously with queryDeviceModel
+	deviceModel() (model string)
+	supportsInstall(component string) error
+	getBootProgress() (*redfish.BootProgress, error)
+	bootComplete() (bool, error)
 }
 
 // New returns connection with a Supermicro client initialized
 func NewClient(host, user, pass string, log logr.Logger, opts ...Option) *Client {
-	if !strings.HasPrefix(host, "https://") && !strings.HasPrefix(host, "http://") {
-		host = "https://" + host
-	}
-
 	defaultConfig := &Config{
 		Port: "443",
 	}
@@ -110,13 +136,24 @@ func NewClient(host, user, pass string, log logr.Logger, opts ...Option) *Client
 		opt(defaultConfig)
 	}
 
+	serviceClient, err := newBmcServiceClient(
+		host,
+		defaultConfig.Port,
+		user,
+		pass,
+		httpclient.Build(defaultConfig.httpClientSetupFuncs...),
+	)
+
+	// We probably want to treat this as a fatal error and/or pass the error back to the caller
+	// I did not want to chase that thread atm, so we intentionally return nil here if
+	// newBmcServiceClient returns an error.
+	if err != nil {
+		return nil
+	}
+
 	return &Client{
-		host:   host,
-		user:   user,
-		pass:   pass,
-		port:   defaultConfig.Port,
-		client: httpclient.Build(defaultConfig.httpClientSetupFuncs...),
-		log:    log,
+		serviceClient: serviceClient,
+		log:           log,
 	}
 }
 
@@ -124,43 +161,166 @@ func NewClient(host, user, pass string, log logr.Logger, opts ...Option) *Client
 func (c *Client) Open(ctx context.Context) (err error) {
 	data := fmt.Sprintf(
 		"name=%s&pwd=%s&check=00",
-		base64.StdEncoding.EncodeToString([]byte(c.user)),
-		base64.StdEncoding.EncodeToString([]byte(c.pass)),
+		base64.StdEncoding.EncodeToString([]byte(c.serviceClient.user)),
+		base64.StdEncoding.EncodeToString([]byte(c.serviceClient.pass)),
 	)
 
 	headers := map[string]string{"Content-Type": "application/x-www-form-urlencoded"}
 
-	body, status, err := c.query(ctx, "cgi/login.cgi", http.MethodPost, bytes.NewBufferString(data), headers, 0)
+	body, status, err := c.serviceClient.query(ctx, "cgi/login.cgi", http.MethodPost, bytes.NewBufferString(data), headers, 0)
 	if err != nil {
 		return errors.Wrap(bmclibErrs.ErrLoginFailed, err.Error())
 	}
 
 	if status != 200 {
 		return errors.Wrap(bmclibErrs.ErrLoginFailed, strconv.Itoa(status))
+	}
+
+	// called after a session was opened but further login dependencies failed
+	closeWithError := func(ctx context.Context, err error) error {
+		_ = c.Close(ctx)
+		return err
 	}
 
 	if !bytes.Contains(body, []byte(`url_redirect.cgi?url_name=mainmenu`)) &&
 		!bytes.Contains(body, []byte(`url_redirect.cgi?url_name=topmenu`)) {
-		return errors.Wrap(bmclibErrs.ErrLoginFailed, "unexpected response contents")
+		return closeWithError(ctx, errors.Wrap(bmclibErrs.ErrLoginFailed, "unexpected response contents"))
 	}
 
-	contentsTopMenu, status, err := c.query(ctx, "cgi/url_redirect.cgi?url_name=topmenu", http.MethodGet, nil, nil, 0)
+	contentsTopMenu, status, err := c.serviceClient.query(ctx, "cgi/url_redirect.cgi?url_name=topmenu", http.MethodGet, nil, nil, 0)
 	if err != nil {
-		return errors.Wrap(bmclibErrs.ErrLoginFailed, err.Error())
+		return closeWithError(ctx, errors.Wrap(bmclibErrs.ErrLoginFailed, err.Error()))
 	}
 
 	if status != 200 {
-		return errors.Wrap(bmclibErrs.ErrLoginFailed, strconv.Itoa(status))
+		return closeWithError(ctx, errors.Wrap(bmclibErrs.ErrLoginFailed, strconv.Itoa(status)))
 	}
 
-	token := parseToken(contentsTopMenu)
-	if token == "" {
-		return errors.Wrap(bmclibErrs.ErrLoginFailed, "could not parse CSRF-TOKEN from page")
+	// Note: older firmware version on the X11s don't use a CSRF token
+	// so here theres no explicit requirement for it to be found.
+	//
+	// X11DPH-T 01.71.11 10/25/2019
+	csrfToken := parseToken(contentsTopMenu)
+	c.serviceClient.setCsrfToken(csrfToken)
+
+	c.bmc, err = c.bmcQueryor(ctx)
+	if err != nil {
+		return closeWithError(ctx, errors.Wrap(bmclibErrs.ErrLoginFailed, err.Error()))
 	}
 
-	c.csrfToken = token
+	if err := c.serviceClient.redfishSession(ctx); err != nil {
+		return closeWithError(ctx, errors.Wrap(bmclibErrs.ErrLoginFailed, err.Error()))
+	}
 
 	return nil
+}
+
+// PowerStateGet gets the power state of a BMC machine
+func (c *Client) PowerStateGet(ctx context.Context) (state string, err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return "", errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.SystemPowerStatus(ctx)
+}
+
+// PowerSet sets the power state of a server
+func (c *Client) PowerSet(ctx context.Context, state string) (ok bool, err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return false, errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.PowerSet(ctx, state)
+}
+
+// BmcReset power cycles the BMC
+func (c *Client) BmcReset(ctx context.Context, resetType string) (ok bool, err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return false, errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.BMCReset(ctx, resetType)
+}
+
+// Inventory collects hardware inventory and install firmware information
+func (c *Client) Inventory(ctx context.Context) (device *common.Device, err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return nil, errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.Inventory(ctx, false)
+}
+
+// GetBiosConfiguration return bios configuration
+func (c *Client) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]string, err error) {
+	if c.serviceClient == nil || c.serviceClient.sum == nil {
+		return nil, errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.sum.GetBiosConfiguration(ctx)
+}
+
+// SetBiosConfiguration set bios configuration
+func (c *Client) SetBiosConfiguration(ctx context.Context, biosConfig map[string]string) (err error) {
+	if c.serviceClient == nil || c.serviceClient.sum == nil {
+		return errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.sum.SetBiosConfiguration(ctx, biosConfig)
+}
+
+// SetBiosConfigurationFromFile sets the bios configuration from a raw vendor config file
+func (c *Client) SetBiosConfigurationFromFile(ctx context.Context, cfg string) (err error) {
+	if c.serviceClient == nil || c.serviceClient.sum == nil {
+		return errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.sum.SetBiosConfigurationFromFile(ctx, cfg)
+}
+
+// ResetBiosConfiguration sets the bios configuration back to "factory" defaults
+func (c *Client) ResetBiosConfiguration(ctx context.Context) (err error) {
+	if c.serviceClient == nil || c.serviceClient.sum == nil {
+		return errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.sum.ResetBiosConfiguration(ctx)
+}
+
+func (c *Client) bmcQueryor(ctx context.Context) (bmcQueryor, error) {
+	x11 := newX11Client(c.serviceClient, c.log)
+	x12 := newX12Client(c.serviceClient, c.log)
+
+	var queryor bmcQueryor
+
+	for _, bmc := range []bmcQueryor{x11, x12} {
+		var err error
+
+		// Note to maintainers: x12 lacks support for the ipmi.cgi endpoint,
+		// which will lead to our graceful handling of ErrXMLAPIUnsupported below.
+		_, err = bmc.queryDeviceModel(ctx)
+		if err != nil {
+			if errors.Is(err, ErrXMLAPIUnsupported) {
+				continue
+			}
+
+			return nil, errors.Wrap(ErrModelUnknown, err.Error())
+		}
+
+		queryor = bmc
+		break
+	}
+
+	if queryor == nil {
+		return nil, errors.Wrap(ErrModelUnknown, "failed to setup query client")
+	}
+
+	model := strings.ToLower(queryor.deviceModel())
+	if !strings.HasPrefix(model, "x12") && !strings.HasPrefix(model, "x11") {
+		return nil, errors.Wrap(ErrModelUnsupported, "expected one of X11* or X12*, got:"+model)
+	}
+
+	return queryor, nil
 }
 
 func parseToken(body []byte) string {
@@ -177,7 +337,7 @@ func parseToken(body []byte) string {
 		return ""
 	}
 
-	re, err := regexp.Compile(`"CSRF_TOKEN", "(?P<token>.*)"`)
+	re, err := regexp.Compile(fmt.Sprintf(`"%s", "(?P<token>.*)"`, key))
 	if err != nil {
 		return ""
 	}
@@ -192,17 +352,26 @@ func parseToken(body []byte) string {
 
 // Close a connection to a Supermicro BMC using the vendor API.
 func (c *Client) Close(ctx context.Context) error {
-	if c.client == nil {
+	if c.serviceClient.client == nil {
 		return nil
 	}
 
-	_, status, err := c.query(ctx, "cgi/logout.cgi", http.MethodGet, nil, nil, 0)
+	_, status, err := c.serviceClient.query(ctx, "cgi/logout.cgi", http.MethodGet, nil, nil, 0)
 	if err != nil {
 		return errors.Wrap(bmclibErrs.ErrLogoutFailed, err.Error())
 	}
 
 	if status != 200 {
 		return errors.Wrap(bmclibErrs.ErrLogoutFailed, strconv.Itoa(status))
+	}
+
+	if c.serviceClient.redfish != nil {
+		err = c.serviceClient.redfish.Close(ctx)
+		if err != nil {
+			return errors.Wrap(bmclibErrs.ErrLogoutFailed, err.Error())
+		}
+
+		c.serviceClient.redfish = nil
 	}
 
 	return nil
@@ -237,7 +406,7 @@ func (c *Client) fetchScreenPreview(ctx context.Context) ([]byte, error) {
 	headers := map[string]string{"Content-Type": "application/x-www-form-urlencoded"}
 
 	endpoint := "cgi/url_redirect.cgi?url_name=Snapshot&url_type=img"
-	body, status, err := c.query(ctx, endpoint, http.MethodGet, nil, headers, 0)
+	body, status, err := c.serviceClient.query(ctx, endpoint, http.MethodGet, nil, headers, 0)
 	if err != nil {
 		return nil, errors.Wrap(bmclibErrs.ErrScreenshot, strconv.Itoa(status))
 	}
@@ -254,7 +423,7 @@ func (c *Client) initScreenPreview(ctx context.Context) error {
 
 	data := "op=sys_preview&_="
 
-	body, status, err := c.query(ctx, "cgi/op.cgi", http.MethodPost, bytes.NewBufferString(data), headers, 0)
+	body, status, err := c.serviceClient.query(ctx, "cgi/op.cgi", http.MethodPost, bytes.NewBufferString(data), headers, 0)
 	if err != nil {
 		return errors.Wrap(bmclibErrs.ErrScreenshot, err.Error())
 	}
@@ -270,65 +439,71 @@ func (c *Client) initScreenPreview(ctx context.Context) error {
 	return nil
 }
 
-// PowerSet sets the power state of a server
-func (c *Client) PowerSet(ctx context.Context, state string) (ok bool, err error) {
-	switch strings.ToLower(state) {
-	case "cycle":
-		return c.powerCycle(ctx)
-	default:
-		return false, errors.New("action not implemented for provider")
-	}
+type serviceClient struct {
+	host      string
+	port      string
+	user      string
+	pass      string
+	csrfToken string
+	client    *http.Client
+	redfish   *redfishwrapper.Client
+	sum       *sum.Sum
 }
 
-func (c *Client) fruInfo(ctx context.Context) (*FruInfo, error) {
-	headers := map[string]string{"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+func newBmcServiceClient(host, port, user, pass string, client *http.Client) (*serviceClient, error) {
+	sc := &serviceClient{host: host, port: port, user: user, pass: pass, client: client}
 
-	payload := "op=FRU_INFO.XML&r=(0,0)&_="
+	if !strings.HasPrefix(host, "https://") && !strings.HasPrefix(host, "http://") {
+		sc.host = "https://" + host
+	}
 
-	body, status, err := c.query(ctx, "cgi/ipmi.cgi", http.MethodPost, bytes.NewBufferString(payload), headers, 0)
+	s, err := sum.New(host, user, pass)
 	if err != nil {
-		return nil, errors.Wrap(ErrQueryFRUInfo, err.Error())
+		return nil, err
 	}
+	sc.sum = s
 
-	if status != 200 {
-		return nil, unexpectedResponseErr([]byte(payload), body, status)
-	}
-
-	if !bytes.Contains(body, []byte(`<IPMI>`)) {
-		return nil, unexpectedResponseErr([]byte(payload), body, status)
-	}
-
-	data := &IPMI{}
-	if err := xml.Unmarshal(body, data); err != nil {
-		return nil, errors.Wrap(ErrQueryFRUInfo, err.Error())
-	}
-
-	return data.FruInfo, nil
+	return sc, nil
 }
 
-// powerCycle using SMC XML API
-//
-// This method is only here for the case when firmware updates are being applied using this provider.
-func (c *Client) powerCycle(ctx context.Context) (bool, error) {
-	payload := []byte(`op=SET_POWER_INFO.XML&r=(1,3)&_=`)
-
-	headers := map[string]string{
-		"Content-type": "application/x-www-form-urlencoded; charset=UTF-8",
-	}
-
-	body, status, err := c.query(ctx, "cgi/ipmi.cgi", http.MethodPost, bytes.NewBuffer(payload), headers, 0)
-	if err != nil {
-		return false, err
-	}
-
-	if status != http.StatusOK {
-		return false, unexpectedResponseErr(payload, body, status)
-	}
-
-	return true, nil
+func (c *serviceClient) setCsrfToken(t string) {
+	c.csrfToken = t
 }
 
-func (c *Client) query(ctx context.Context, endpoint, method string, payload io.Reader, headers map[string]string, contentLength int64) ([]byte, int, error) {
+func (c *serviceClient) redfishSession(ctx context.Context) (err error) {
+	if c.redfish != nil && c.redfish.SessionActive() == nil {
+		return nil
+	}
+
+	c.redfish = redfishwrapper.NewClient(
+		c.host,
+		c.port,
+		c.user,
+		c.pass,
+		redfishwrapper.WithHTTPClient(c.client),
+	)
+	if err := c.redfish.Open(ctx); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *serviceClient) supportsFirmwareInstall(model string) error {
+	if model == "" {
+		return errors.Wrap(ErrModelUnknown, "unable to determine firmware install compatibility")
+	}
+
+	for _, s := range supportedModels {
+		if strings.EqualFold(s, model) {
+			return nil
+		}
+	}
+
+	return errors.Wrap(ErrModelUnsupported, "firmware install not supported for: "+model)
+}
+
+func (c *serviceClient) query(ctx context.Context, endpoint, method string, payload io.Reader, headers map[string]string, contentLength int64) ([]byte, int, error) {
 	var body []byte
 	var err error
 	var req *http.Request
@@ -383,6 +558,7 @@ func (c *Client) query(ctx context.Context, endpoint, method string, payload io.
 		if cookie.Name == "SID" && cookie.Value != "" {
 			req.AddCookie(cookie)
 		}
+
 	}
 
 	var reqDump []byte
@@ -436,4 +612,19 @@ func hostIP(hostURL string) (string, error) {
 	}
 
 	return hostURLParsed.Host, nil
+}
+
+// SendNMI tells the BMC to issue an NMI to the device
+func (c *Client) SendNMI(ctx context.Context) error {
+	return c.serviceClient.redfish.SendNMI(ctx)
+}
+
+// GetBootProgress allows a caller to follow along as the system goes through its boot sequence
+func (c *Client) GetBootProgress() (*redfish.BootProgress, error) {
+	return c.bmc.getBootProgress()
+}
+
+// BootComplete checks if this system has reached the last state for boot
+func (c *Client) BootComplete() (bool, error) {
+	return c.bmc.bootComplete()
 }

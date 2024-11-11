@@ -377,3 +377,73 @@ func (i *Ipmi) ReadUsers(ctx context.Context) (users []map[string]string, err er
 
 	return users, err
 }
+
+// ClearSystemEventLog clears the system event log
+func (i *Ipmi) ClearSystemEventLog(ctx context.Context) (err error) {
+	_, err = i.run(ctx, []string{"sel", "clear"})
+	return err
+}
+
+// GetSystemEventLog returns the system event log entries in ID, Timestamp, Description, Message format
+func (i *Ipmi) GetSystemEventLog(ctx context.Context) (entries [][]string, err error) {
+	output, err := i.GetSystemEventLogRaw(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "error getting system event log")
+	}
+
+	entries = parseSystemEventLog(output)
+
+	return entries, nil
+}
+
+// parseSystemEventLogRaw parses the raw output of the system event log. Helper
+// function for GetSystemEventLog to make testing the parser easier.
+func parseSystemEventLog(raw string) (entries [][]string) {
+	scanner := bufio.NewScanner(strings.NewReader(raw))
+	for scanner.Scan() {
+		line := strings.Split(scanner.Text(), "|")
+		if len(line) < 6 {
+			continue
+		}
+		if line[0] == "ID" {
+			continue
+		}
+		for i := range line {
+			line[i] = strings.TrimSpace(line[i])
+		}
+		// ID, Timestamp (date time), Description, Message (message : assertion)
+		entries = append(entries, []string{line[0], fmt.Sprintf("%s %s", line[1], line[2]), line[3], fmt.Sprintf("%s : %s", line[4], line[5])})
+	}
+
+	return entries
+}
+
+// GetSystemEventLogRaw returns the raw SEL output
+func (i *Ipmi) GetSystemEventLogRaw(ctx context.Context) (eventlog string, err error) {
+	output, err := i.run(ctx, []string{"sel", "list"})
+	if err != nil {
+		return "", errors.Wrap(err, "error getting system event log")
+	}
+
+	return output, nil
+}
+
+func (i *Ipmi) DeactivateSOL(ctx context.Context) (err error) {
+	out, err := i.run(ctx, []string{"sol", "deactivate"})
+	// Don't treat this as a failure (we just want to ensure there
+	// isn't an active SOL session left open)
+	if strings.TrimSpace(out) == "Info: SOL payload already de-activated" {
+		err = nil
+	}
+	return err
+}
+
+// SendPowerDiag tells the BMC to issue an NMI to the device
+func (i *Ipmi) SendPowerDiag(ctx context.Context) error {
+	_, err := i.run(ctx, []string{"chassis", "power", "diag"})
+	if err != nil {
+		err = errors.Wrap(err, "failed sending power diag")
+	}
+
+	return err
+}

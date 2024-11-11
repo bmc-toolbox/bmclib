@@ -48,37 +48,14 @@ func TestRequestKVS(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			kvs := requestKVS(tc.req)
+			buf := new(bytes.Buffer)
+			_, _ = io.Copy(buf, tc.req.Body)
+			kvs := requestKVS(tc.req.Method, tc.req.URL.String(), tc.req.Header, buf)
 			if diff := cmp.Diff(kvs, tc.expected); diff != "" {
 				t.Fatalf("requestKVS() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
-}
-
-func TestRequestKVSOneOffs(t *testing.T) {
-	t.Run("nil body", func(t *testing.T) {
-		req, _ := http.NewRequestWithContext(context.Background(), http.MethodPost, "http://example.com", nil)
-		got := requestKVS(req)
-		if diff := cmp.Diff(got, []interface{}{"request", requestDetails{}}); diff != "" {
-			t.Logf("got: %+v", got)
-			t.Fatalf("requestKVS(req) mismatch (-want +got):\n%s", diff)
-		}
-	})
-	t.Run("nil request", func(t *testing.T) {
-		if diff := cmp.Diff(requestKVS(nil), []interface{}{"request", requestDetails{}}); diff != "" {
-			t.Fatalf("requestKVS(nil) mismatch (-want +got):\n%s", diff)
-		}
-	})
-
-	t.Run("failed to unmarshal body", func(t *testing.T) {
-		req, _ := http.NewRequestWithContext(context.Background(), http.MethodPost, "http://example.com", bytes.NewBufferString("invalid"))
-		got := requestKVS(req)
-		if diff := cmp.Diff(got, []interface{}{"request", requestDetails{URL: "http://example.com", Method: http.MethodPost, Headers: http.Header{}}}); diff != "" {
-			t.Logf("got: %+v", got)
-			t.Fatalf("requestKVS(req) mismatch (-want +got):\n%s", diff)
-		}
-	})
 }
 
 func TestResponseKVS(t *testing.T) {

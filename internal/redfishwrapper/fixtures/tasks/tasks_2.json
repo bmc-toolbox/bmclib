@@ -1,0 +1,27 @@
+{
+    "@odata.type": "#Task.v1_4_3.Task",
+    "@odata.id": "/redfish/v1/TaskService/Tasks/2",
+    "Id": "2",
+    "Name": "BIOS Update",
+    "TaskState": "Completed",
+    "StartTime": "2023-11-06T12:05:47+00:00",
+    "EndTime": "2023-11-06T12:12:37+00:00",
+    "PercentComplete": 100,
+    "HidePayload": true,
+    "TaskMonitor": "/redfish/v1/TaskMonitor/MaiRrV41mtzxlYvKWrO72tK0LK0e1zL",
+    "TaskStatus": "OK",
+    "Messages": [
+        {
+            "MessageId": "",
+            "RelatedProperties": [
+                ""
+            ],
+            "Message": "",
+            "MessageArgs": [
+                ""
+            ],
+            "Severity": ""
+        }
+    ],
+    "Oem": {}
+}

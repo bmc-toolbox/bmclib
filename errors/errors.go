@@ -42,6 +42,9 @@ var (
 	// ErrUserAccountUpdate is returned when the user account failed to be updated
 	ErrUserAccountUpdate = errors.New("user account attributes could not be updated")
 
+	// ErrRedfishVersionIncompatible is returned when a given version of redfish doesn't support a feature
+	ErrRedfishVersionIncompatible = errors.New("operation not supported in this redfish version")
+
 	// ErrRedfishChassisOdataID is returned when no compatible Chassis Odata IDs were identified
 	ErrRedfishChassisOdataID = errors.New("no compatible Chassis Odata IDs identified")
 
@@ -63,8 +66,17 @@ var (
 	// ErrFirmwareInstall is returned for firmware install failures
 	ErrFirmwareInstall = errors.New("error updating firmware")
 
+	// ErrFirmwareInstallUploaded is returned for a firmware install call on a firmware previously uploaded.
+	ErrFirmwareInstallUploaded = errors.New("error installing uploaded firmware")
+
 	// ErrFirmwareInstallStatus is returned for firmware install status read
 	ErrFirmwareInstallStatus = errors.New("error querying firmware install status")
+
+	// ErrFirmwareTaskStatus is returned when a query for the firmware upload status fails
+	ErrFirmwareTaskStatus = errors.New("error querying firmware upload status")
+
+	// ErrFirmwareVerifyTask indicates a firmware verify task is in progress or did not complete successfully,
+	ErrFirmwareVerifyTask = errors.New("error firmware upload verify task")
 
 	// ErrRedfishUpdateService is returned on redfish update service errors
 	ErrRedfishUpdateService = errors.New("redfish update service error")
@@ -105,6 +117,15 @@ var (
 	// ErrSessionExpired is returned when the BMC session is not valid
 	// the receiver can then choose to request a new session.
 	ErrSessionExpired = errors.New("session expired")
+
+	// ErrSystemVendorModel is returned when the system vendor, model attributes could not be identified.
+	ErrSystemVendorModel = errors.New("error identifying system vendor, model attributes")
+
+	// ErrRedfishNoSystems is returned when the API of the device provides and empty array of systems.
+	ErrRedfishNoSystems = errors.New("redfish: no Systems were found on the device")
+
+	// ErrBMCUpdating is returned when the BMC is going through an update and will not serve other queries.
+	ErrBMCUpdating = errors.New("a BMC firmware update is in progress")
 )
 
 type ErrUnsupportedHardware struct {

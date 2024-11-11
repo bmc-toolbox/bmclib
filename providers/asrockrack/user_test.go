@@ -62,7 +62,7 @@ func Test_UserRead(t *testing.T) {
 
 	err := aClient.httpsLogin(context.TODO())
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("login: %s", err.Error())
 	}
 
 	users, err := aClient.UserRead(context.TODO())
@@ -159,7 +159,7 @@ func Test_UserUpdate(t *testing.T) {
 func Test_createUser(t *testing.T) {
 	err := aClient.httpsLogin(context.TODO())
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("login: %s", err.Error())
 	}
 
 	account := &UserAccount{
@@ -202,7 +202,7 @@ func Test_createUser(t *testing.T) {
 func Test_userAccounts(t *testing.T) {
 	err := aClient.httpsLogin(context.TODO())
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("login: %s", err.Error())
 	}
 
 	account0 := &UserAccount{

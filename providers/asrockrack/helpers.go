@@ -12,7 +12,8 @@ import (
 	"os"
 
 	"github.com/bmc-toolbox/bmclib/v2/constants"
-	"github.com/bmc-toolbox/bmclib/v2/errors"
+	brrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/bmc-toolbox/common"
 )
 
 // API session setup response payload
@@ -178,10 +179,29 @@ func (a *ASRockRack) createUpdateUser(ctx context.Context, account *UserAccount)
 }
 
 // 1 Set BMC to flash mode and prepare flash area
-// at this point all logged in sessions are terminated
-// and no logins are permitted
+//
+// with the BMC set in flash mode, no new logins are accepted
+// and only a few endpoints can be queried with the existing session
+// one of the few being the install progress/flash status endpoint.
 func (a *ASRockRack) setFlashMode(ctx context.Context) error {
-	_, statusCode, err := a.queryHTTPS(ctx, "api/maintenance/flash", "PUT", nil, nil, 0)
+	device := common.NewDevice()
+	device.Metadata = map[string]string{}
+	_ = a.fruAttributes(ctx, &device)
+
+	pConfig := &preserveConfig{}
+	// preserve config is needed by e3c256d4i
+	switch device.Model {
+	case E3C256D4ID_NL:
+		pConfig = &preserveConfig{PreserveConfig: 1}
+	}
+
+	payload, err := json.Marshal(pConfig)
+	if err != nil {
+		return err
+	}
+
+	headers := map[string]string{"Content-Type": "application/json"}
+	_, statusCode, err := a.queryHTTPS(ctx, "api/maintenance/flash", "PUT", bytes.NewReader(payload), headers, 0)
 	if err != nil {
 		return err
 	}
@@ -204,9 +224,20 @@ func multipartSize(fieldname, filename string) int64 {
 }
 
 // 2 Upload the firmware file
-func (a *ASRockRack) uploadFirmware(ctx context.Context, endpoint string, fwReader io.Reader, fileSize int64) error {
+func (a *ASRockRack) uploadFirmware(ctx context.Context, endpoint string, file *os.File) error {
+	var size int64
+	finfo, err := file.Stat()
+	if err != nil {
+		return fmt.Errorf("unable to determine file size: %w", err)
+	}
+
+	size = finfo.Size()
+
 	fieldName, fileName := "fwimage", "image"
-	contentLength := multipartSize(fieldName, fileName) + fileSize
+	contentLength := multipartSize(fieldName, fileName) + size
+
+	// Before reading the file, rewind to the beginning
+	_, _ = file.Seek(0, 0)
 
 	// setup pipe
 	pipeReader, pipeWriter := io.Pipe()
@@ -227,7 +258,7 @@ func (a *ASRockRack) uploadFirmware(ctx context.Context, endpoint string, fwRead
 		}
 
 		// copy from source into form part writer
-		_, err = io.Copy(part, fwReader)
+		_, err = io.Copy(part, file)
 		if err != nil {
 			errCh <- err
 			return
@@ -354,7 +385,7 @@ func (a *ASRockRack) postCodeInfo(ctx context.Context) (*biosPOSTCode, error) {
 }
 
 // Query the inventory info endpoint
-func (a *ASRockRack) inventoryInfo(ctx context.Context) ([]*component, error) {
+func (a *ASRockRack) inventoryInfoE3C246D41D(ctx context.Context) ([]*component, error) {
 	resp, statusCode, err := a.queryHTTPS(ctx, "api/asrr/inventory_info", "GET", nil, nil, 0)
 	if err != nil {
 		return nil, err
@@ -526,17 +557,17 @@ func (a *ASRockRack) httpsLogin(ctx context.Context) error {
 
 	resp, statusCode, err := a.queryHTTPS(ctx, urlEndpoint, "POST", bytes.NewReader(payload), headers, 0)
 	if err != nil {
-		return fmt.Errorf("Error logging in: " + err.Error())
+		return fmt.Errorf("logging in: %w", err)
 	}
 
 	if statusCode == 401 {
-		return errors.ErrLoginFailed
+		return brrs.ErrLoginFailed
 	}
 
 	// Unmarshal login session
 	err = json.Unmarshal(resp, a.loginSession)
 	if err != nil {
-		return fmt.Errorf("error unmarshalling response payload: " + err.Error())
+		return fmt.Errorf("unmarshalling response payload: %w", err)
 	}
 
 	return nil
@@ -546,7 +577,7 @@ func (a *ASRockRack) httpsLogin(ctx context.Context) error {
 func (a *ASRockRack) httpsLogout(ctx context.Context) error {
 	_, statusCode, err := a.queryHTTPS(ctx, "api/session", "DELETE", nil, nil, 0)
 	if err != nil {
-		return fmt.Errorf("Error logging out: " + err.Error())
+		return fmt.Errorf("logging out: %w", err)
 	}
 
 	if statusCode != http.StatusOK {
@@ -584,7 +615,7 @@ func (a *ASRockRack) queryHTTPS(ctx context.Context, endpoint, method string, pa
 	}
 
 	// debug dump request
-	if os.Getenv("BMCLIB_LOG_LEVEL") == "trace" {
+	if os.Getenv(constants.EnvEnableDebug) == "true" {
 		reqDump, _ := httputil.DumpRequestOut(req, true)
 		a.log.V(3).Info("trace", "url", URL, "requestDump", string(reqDump))
 	}
@@ -595,7 +626,7 @@ func (a *ASRockRack) queryHTTPS(ctx context.Context, endpoint, method string, pa
 	}
 
 	// debug dump response
-	if os.Getenv("BMCLIB_LOG_LEVEL") == "trace" {
+	if os.Getenv(constants.EnvEnableDebug) == "true" {
 		respDump, _ := httputil.DumpResponse(resp, true)
 		a.log.V(3).Info("trace", "responseDump", string(respDump))
 	}
