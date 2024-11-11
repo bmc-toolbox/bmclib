@@ -1,4 +1,4 @@
-module github.com/bmc-toolbox/bmclib/v2
+module github.com/metal-toolbox/bmclib
 
 go 1.21
 
