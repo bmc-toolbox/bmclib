@@ -93,29 +93,14 @@ func main() {
 			l.Error(err)
 		}
 	case "setfile":
-		exampleConfig := make(map[string]string)
+		fmt.Println("Attempting to set BIOS configuration:")
 
-		if *dfile != "" {
-			cfgFile, err := os.Open(*dfile)
-			if err != nil {
-				l.Fatal(err)
-			}
-
-			defer cfgFile.Close()
-
-			jsonData, _ := io.ReadAll(cfgFile)
-			err = json.Unmarshal(jsonData, &exampleConfig)
-			if err != nil {
-				l.Error(err)
-			}
-		} else {
-			exampleConfig["TpmSecurity"] = "Off"
+		contents, err := os.ReadFile(*dfile)
+		if err != nil {
+			l.Fatal(err)
 		}
 
-		fmt.Println("Attempting to set BIOS configuration:")
-		fmt.Printf("exampleConfig: %+v\n", exampleConfig)
-
-		err := client.SetBiosConfiguration(ctx, exampleConfig)
+		err = client.SetBiosConfigurationFromFile(ctx, string(contents))
 		if err != nil {
 			l.Error(err)
 		}
@@ -126,6 +111,5 @@ func main() {
 		}
 	default:
 		l.Fatal("Unknown mode: " + *mode)
-
 	}
 }

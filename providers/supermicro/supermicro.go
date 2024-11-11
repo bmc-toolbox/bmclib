@@ -270,7 +270,7 @@ func (c *Client) SetBiosConfiguration(ctx context.Context, biosConfig map[string
 }
 
 // SetBiosConfigurationFromFile sets the bios configuration from a raw vendor config file
-func (c *Client) SetBIOSConfigurationFromFile(ctx context.Context, cfg string) (err error) {
+func (c *Client) SetBiosConfigurationFromFile(ctx context.Context, cfg string) (err error) {
 	if c.serviceClient == nil || c.serviceClient.sum == nil {
 		return errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
 	}
