@@ -1,30 +1,30 @@
 # bmclib v2 - board management controller library
 
-[![Status](https://github.com/bmc-toolbox/bmclib/actions/workflows/ci.yaml/badge.svg)](https://github.com/bmc-toolbox/bmclib/actions)
-[![Go Report Card](https://goreportcard.com/badge/github.com/bmc-toolbox/bmclib)](https://goreportcard.com/report/github.com/bmc-toolbox/bmclib/v2)
-[![GoDoc](https://godoc.org/github.com/bmc-toolbox/bmclib/v2?status.svg)](https://godoc.org/github.com/bmc-toolbox/bmclib/v2)
+[![Status](https://github.com/metal-toolbox/bmclib/actions/workflows/ci.yaml/badge.svg)](https://github.com/metal-toolbox/bmclib/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/metal-toolbox/bmclib)](https://goreportcard.com/report/github.com/metal-toolbox/bmclib)
+[![GoDoc](https://godoc.org/github.com/metal-toolbox/bmclib?status.svg)](https://godoc.org/github.com/metal-toolbox/bmclib)
 
 bmclib v2 is a library to abstract interacting with baseboard management controllers.
 
 ## Supported BMC interfaces.
 
- - [Redfish](https://github.com/bmc-toolbox/bmclib/tree/main/providers/redfish)
- - [IPMItool](https://github.com/bmc-toolbox/bmclib/tree/main/providers/ipmitool)
- - [Intel AMT](https://github.com/bmc-toolbox/bmclib/tree/main/providers/intelamt)
- - [Asrockrack](https://github.com/bmc-toolbox/bmclib/tree/main/providers/asrockrack)
+ - [Redfish](https://github.com/metal-toolbox/bmclib/tree/main/providers/redfish)
+ - [IPMItool](https://github.com/metal-toolbox/bmclib/tree/main/providers/ipmitool)
+ - [Intel AMT](https://github.com/metal-toolbox/bmclib/tree/main/providers/intelamt)
+ - [Asrockrack](https://github.com/metal-toolbox/bmclib/tree/main/providers/asrockrack)
  - [RPC](providers/rpc/)
 
 ## Installation
 
 ```bash
-go get github.com/bmc-toolbox/bmclib/v2
+go get github.com/metal-toolbox/bmclib
 ```
 
 ## Import
 
 ```go
 import (
-  bmclib "github.com/bmc-toolbox/bmclib/v2"
+  bmclib "github.com/metal-toolbox/bmclib"
 )
 ```
 
@@ -34,7 +34,7 @@ The snippet below connects to a BMC and retrieves the device hardware, firmware 
 
 ```go
 import (
-  bmclib "github.com/bmc-toolbox/bmclib/v2"
+  bmclib "github.com/metal-toolbox/bmclib"
 )
 
     // setup logger
@@ -73,7 +73,7 @@ More sample code can be found in [examples](./examples/)
 
 ## BMC connections
 
-bmclib performs queries on BMCs using [multiple `drivers`](https://github.com/bmc-toolbox/bmclib/blob/main/bmc/connection.go#L30),
+bmclib performs queries on BMCs using [multiple `drivers`](https://github.com/metal-toolbox/bmclib/blob/main/bmc/connection.go#L30),
 these `drivers` are the various services exposed by a BMC - `redfish` `IPMI` `SSH` and `vendor API` which is basically a custom vendor API endpoint.
 
 The bmclib client determines which driver to use for an action like `Power cycle` or `Create user`
@@ -102,7 +102,7 @@ client.Registry.Drivers = driver
 ```
 
 Filter drivers to query based on compatibility, this will attempt to check if the driver is
-[compatible](https://github.com/bmc-toolbox/bmclib/blob/main/providers/redfish/redfish.go#L70)
+[compatible](https://github.com/metal-toolbox/bmclib/blob/main/providers/redfish/redfish.go#L70)
 ideally, this method should be invoked when the client is ready to perform a BMC action.
 
 ```go
@@ -191,7 +191,7 @@ state, err := cl.GetPowerState(ctx)
 
 The `bmclib.Client` can be configured to filter BMC calls based on a few different criteria. Filtering modifies the order and/or the number of providers for BMC calls. This filtering can be permanent or on a one-time basis.
 
-All providers are stored in a registry (see [`Client.Registry`](https://github.com/bmc-toolbox/bmclib/blob/b5cdfa3ffe026d3cc3257953abe3234b278ca20a/client.go#L29)) and the default order for providers in the registry is `ipmitool`, `asrockrack`, `gofish`, `IntelAMT`. The default order is defined [here](https://github.com/bmc-toolbox/bmclib/blob/b5cdfa3ffe026d3cc3257953abe3234b278ca20a/client.go#L152).
+All providers are stored in a registry (see [`Client.Registry`](https://github.com/metal-toolbox/bmclib/blob/b5cdfa3ffe026d3cc3257953abe3234b278ca20a/client.go#L29)) and the default order for providers in the registry is `ipmitool`, `asrockrack`, `gofish`, `IntelAMT`. The default order is defined [here](https://github.com/metal-toolbox/bmclib/blob/b5cdfa3ffe026d3cc3257953abe3234b278ca20a/client.go#L152).
 
 ### Permanent Filtering
 
@@ -248,27 +248,3 @@ cl := bmclib.NewClient(
           bmclib.WithTracerProvider(otel.GetTracerProvider()),
       )
 ```
-
-## Versions
-
-The current bmclib version is `v2` and is being developed on the `main` branch.
-
-The previous bmclib version is in maintenance mode and can be found here [v1](https://github.com/bmc-toolbox/bmclib/v1).
-
-## Go version in `go.mod`
-
-As a library we will only bump the version of Go in the `go.mod` file when there are required dependencies in bmclib that necessitate
-a version bump. When consuming bmclib in your project, we recommend always building with the latest Go version but this
-should be in your hands as a user as much as possible.
-
-## Acknowledgments
-
-bmclib v2 interfaces with Redfish on BMCs through the Gofish library https://github.com/stmcginnis/gofish
-
-bmclib was originally developed for [Booking.com](http://www.booking.com). With approval from [Booking.com](http://www.booking.com),
-the code and specification were generalized and published as Open Source on github, for which the authors would like to express their gratitude.
-
-### Authors
-
-- [Joel Rebello](https://github.com/joelrebel)
-- [Jacob Weinstock](https://github.com/jacobweinstock)

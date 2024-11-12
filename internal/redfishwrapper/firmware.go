@@ -18,8 +18,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish/redfish"
 
-	"github.com/bmc-toolbox/bmclib/v2/constants"
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/metal-toolbox/bmclib/constants"
+	bmclibErrs "github.com/metal-toolbox/bmclib/errors"
 )
 
 type installMethod string

@@ -5,11 +5,11 @@ import (
 	"errors"
 	"strings"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
-	"github.com/bmc-toolbox/bmclib/v2/internal/ipmi"
-	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
+	bmclibErrs "github.com/metal-toolbox/bmclib/errors"
+	"github.com/metal-toolbox/bmclib/internal/ipmi"
+	"github.com/metal-toolbox/bmclib/providers"
 )
 
 const (

@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/v2/logging"
 	"github.com/google/go-cmp/cmp"
 	"github.com/jacobweinstock/registrar"
+	"github.com/metal-toolbox/bmclib/logging"
 	"gopkg.in/go-playground/assert.v1"
 )
 

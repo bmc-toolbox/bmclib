@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/hashicorp/go-multierror"
+	bmclibErrs "github.com/metal-toolbox/bmclib/errors"
 	"github.com/pkg/errors"
 )
 

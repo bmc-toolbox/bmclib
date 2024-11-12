@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/v2"
 	"github.com/bombsimon/logrusr/v2"
+	"github.com/metal-toolbox/bmclib"
 	"github.com/sirupsen/logrus"
 )
 

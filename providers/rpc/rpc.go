@@ -13,10 +13,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
+	"github.com/metal-toolbox/bmclib/internal/httpclient"
+	"github.com/metal-toolbox/bmclib/providers"
 )
 
 const (

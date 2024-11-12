@@ -9,10 +9,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/bmc-toolbox/bmclib/v2/constants"
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
-	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
+	common "github.com/metal-toolbox/bmc-common"
+	"github.com/metal-toolbox/bmclib/constants"
+	bmclibErrs "github.com/metal-toolbox/bmclib/errors"
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish/redfish"
 	"golang.org/x/exp/slices"

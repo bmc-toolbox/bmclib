@@ -9,11 +9,11 @@ import (
 	"os/exec"
 	"strings"
 
-	ex "github.com/bmc-toolbox/bmclib/v2/internal/executor"
+	ex "github.com/metal-toolbox/bmclib/internal/executor"
 
-	"github.com/bmc-toolbox/common"
-	"github.com/bmc-toolbox/common/config"
 	"github.com/go-logr/logr"
+	common "github.com/metal-toolbox/bmc-common"
+	"github.com/metal-toolbox/bmc-common/config"
 )
 
 // Sum is a sum command executor object

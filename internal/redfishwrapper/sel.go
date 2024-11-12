@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	bmclibErrs "github.com/metal-toolbox/bmclib/errors"
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish/redfish"
 )

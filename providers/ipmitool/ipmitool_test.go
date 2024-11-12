@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/bmc-toolbox/bmclib/v2/logging"
+	"github.com/metal-toolbox/bmclib/logging"
 )
 
 func TestMain(m *testing.M) {

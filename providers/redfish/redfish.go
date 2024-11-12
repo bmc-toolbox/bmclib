@@ -5,15 +5,15 @@ import (
 	"crypto/x509"
 	"net/http"
 
-	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
-	"github.com/bmc-toolbox/bmclib/v2/providers"
-	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
+	common "github.com/metal-toolbox/bmc-common"
+	"github.com/metal-toolbox/bmclib/internal/httpclient"
+	"github.com/metal-toolbox/bmclib/internal/redfishwrapper"
+	"github.com/metal-toolbox/bmclib/providers"
 
-	"github.com/bmc-toolbox/bmclib/v2/bmc"
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/metal-toolbox/bmclib/bmc"
+	bmclibErrs "github.com/metal-toolbox/bmclib/errors"
 )
 
 const (

@@ -13,20 +13,20 @@ import (
 	"time"
 
 	"dario.cat/mergo"
-	"github.com/bmc-toolbox/bmclib/v2/bmc"
-	"github.com/bmc-toolbox/bmclib/v2/constants"
-	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/v2/providers/asrockrack"
-	"github.com/bmc-toolbox/bmclib/v2/providers/dell"
-	"github.com/bmc-toolbox/bmclib/v2/providers/intelamt"
-	"github.com/bmc-toolbox/bmclib/v2/providers/ipmitool"
-	"github.com/bmc-toolbox/bmclib/v2/providers/openbmc"
-	"github.com/bmc-toolbox/bmclib/v2/providers/redfish"
-	"github.com/bmc-toolbox/bmclib/v2/providers/rpc"
-	"github.com/bmc-toolbox/bmclib/v2/providers/supermicro"
-	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
+	common "github.com/metal-toolbox/bmc-common"
+	"github.com/metal-toolbox/bmclib/bmc"
+	"github.com/metal-toolbox/bmclib/constants"
+	"github.com/metal-toolbox/bmclib/internal/httpclient"
+	"github.com/metal-toolbox/bmclib/providers/asrockrack"
+	"github.com/metal-toolbox/bmclib/providers/dell"
+	"github.com/metal-toolbox/bmclib/providers/intelamt"
+	"github.com/metal-toolbox/bmclib/providers/ipmitool"
+	"github.com/metal-toolbox/bmclib/providers/openbmc"
+	"github.com/metal-toolbox/bmclib/providers/redfish"
+	"github.com/metal-toolbox/bmclib/providers/rpc"
+	"github.com/metal-toolbox/bmclib/providers/supermicro"
 	"go.opentelemetry.io/otel/attribute"
 	oteltrace "go.opentelemetry.io/otel/trace"
 	tracenoop "go.opentelemetry.io/otel/trace/noop"
@@ -35,7 +35,7 @@ import (
 const (
 	// default connection timeout
 	defaultConnectTimeout = 30 * time.Second
-	pkgName               = "github.com/bmc-toolbox/bmclib"
+	pkgName               = "github.com/metal-toolbox/bmclib"
 )
 
 // Client for BMC interactions

@@ -3,8 +3,8 @@ package redfishwrapper
 import (
 	"context"
 
-	"github.com/bmc-toolbox/bmclib/v2/bmc"
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/metal-toolbox/bmclib/bmc"
+	bmclibErrs "github.com/metal-toolbox/bmclib/errors"
 	"github.com/pkg/errors"
 	rf "github.com/stmcginnis/gofish/redfish"
 )

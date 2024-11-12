@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	bmclib "github.com/bmc-toolbox/bmclib/v2"
-	"github.com/bmc-toolbox/bmclib/v2/providers"
 	logrusr "github.com/bombsimon/logrusr/v2"
+	bmclib "github.com/metal-toolbox/bmclib"
+	"github.com/metal-toolbox/bmclib/providers"
 
 	"github.com/sirupsen/logrus"
 )

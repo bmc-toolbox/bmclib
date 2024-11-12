@@ -11,9 +11,9 @@ import (
 	"net/http/httputil"
 	"os"
 
-	"github.com/bmc-toolbox/bmclib/v2/constants"
-	brrs "github.com/bmc-toolbox/bmclib/v2/errors"
-	"github.com/bmc-toolbox/common"
+	common "github.com/metal-toolbox/bmc-common"
+	"github.com/metal-toolbox/bmclib/constants"
+	brrs "github.com/metal-toolbox/bmclib/errors"
 )
 
 // API session setup response payload

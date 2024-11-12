@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	bmclibErrs "github.com/metal-toolbox/bmclib/errors"
 	"github.com/stretchr/testify/assert"
 )
 

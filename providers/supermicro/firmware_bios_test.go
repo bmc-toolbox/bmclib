@@ -8,8 +8,8 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/go-logr/logr"
+	"github.com/metal-toolbox/bmclib/internal/httpclient"
 	"github.com/stretchr/testify/assert"
 )
 

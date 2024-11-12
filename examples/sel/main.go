@@ -7,9 +7,9 @@ import (
 	"io/ioutil"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/v2"
-	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/bombsimon/logrusr/v2"
+	"github.com/metal-toolbox/bmclib"
+	"github.com/metal-toolbox/bmclib/providers"
 	"github.com/sirupsen/logrus"
 )
 

@@ -16,20 +16,20 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/v2/constants"
-	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
-	"github.com/bmc-toolbox/bmclib/v2/internal/sum"
-	"github.com/bmc-toolbox/bmclib/v2/providers"
-	"github.com/bmc-toolbox/common"
+	common "github.com/metal-toolbox/bmc-common"
+	"github.com/metal-toolbox/bmclib/constants"
+	"github.com/metal-toolbox/bmclib/internal/httpclient"
+	"github.com/metal-toolbox/bmclib/internal/redfishwrapper"
+	"github.com/metal-toolbox/bmclib/internal/sum"
+	"github.com/metal-toolbox/bmclib/providers"
 	"github.com/stmcginnis/gofish/redfish"
 
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 	"github.com/pkg/errors"
 
-	bmclibconsts "github.com/bmc-toolbox/bmclib/v2/constants"
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	bmclibconsts "github.com/metal-toolbox/bmclib/constants"
+	bmclibErrs "github.com/metal-toolbox/bmclib/errors"
 )
 
 const (

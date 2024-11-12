@@ -4,10 +4,10 @@ import (
 	"context"
 	"strings"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	bmclibErrs "github.com/metal-toolbox/bmclib/errors"
 	"github.com/pkg/errors"
 
-	"github.com/bmc-toolbox/common"
+	common "github.com/metal-toolbox/bmc-common"
 	redfish "github.com/stmcginnis/gofish/redfish"
 )
 

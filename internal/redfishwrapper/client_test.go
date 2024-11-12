@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"testing"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	bmclibErrs "github.com/metal-toolbox/bmclib/errors"
 	"github.com/stmcginnis/gofish/redfish"
 	"github.com/stretchr/testify/assert"
 )

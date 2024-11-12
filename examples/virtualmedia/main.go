@@ -8,8 +8,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/v2"
 	"github.com/go-logr/logr"
+	"github.com/metal-toolbox/bmclib"
 )
 
 func main() {

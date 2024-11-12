@@ -13,8 +13,8 @@ import (
 	"os"
 	"testing"
 
-	berrors "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/go-logr/logr"
+	berrors "github.com/metal-toolbox/bmclib/errors"
 	"github.com/stretchr/testify/assert"
 )
 

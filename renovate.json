@@ -1,0 +1,26 @@
+{
+  "extends": [
+    "config:base",
+    ":rebaseStalePrs",
+    ":dependencyDashboard"
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["security"]
+  },
+  "labels": ["dependencies"],
+  "rollbackPrs": true,
+  "rebaseWhen": "auto",
+  "addLabels": ["dependencies"],
+  "stabilityDays": 3,
+  "postUpdateOptions": [
+    "gomodTidy"
+  ],
+"packageRules": [
+  {
+    "description": "Automatically merge minor and patch-level updates",
+    "matchUpdateTypes": ["minor", "patch", "digest"],
+    "automerge": true
+  }
+]
+}

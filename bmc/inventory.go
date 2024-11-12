@@ -5,10 +5,10 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/go-multierror"
+	common "github.com/metal-toolbox/bmc-common"
 	"github.com/pkg/errors"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
-	"github.com/bmc-toolbox/common"
+	bmclibErrs "github.com/metal-toolbox/bmclib/errors"
 )
 
 // InventoryGetter defines methods to retrieve device hardware and firmware inventory

@@ -14,7 +14,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	bmclibErrs "github.com/metal-toolbox/bmclib/errors"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/goleak"
 )

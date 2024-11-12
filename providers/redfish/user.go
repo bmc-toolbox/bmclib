@@ -3,7 +3,7 @@ package redfish
 import (
 	"context"
 
-	"github.com/bmc-toolbox/bmclib/v2/internal"
+	"github.com/metal-toolbox/bmclib/internal"
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish/redfish"
 )

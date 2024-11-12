@@ -3,7 +3,7 @@ package asrockrack
 import (
 	"context"
 
-	"github.com/bmc-toolbox/common"
+	common "github.com/metal-toolbox/bmc-common"
 )
 
 // Inventory returns hardware and firmware inventory

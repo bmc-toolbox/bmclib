@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/v2/providers/rpc"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
+	"github.com/metal-toolbox/bmclib/internal/httpclient"
+	"github.com/metal-toolbox/bmclib/providers/rpc"
 	oteltrace "go.opentelemetry.io/otel/trace"
 )
 

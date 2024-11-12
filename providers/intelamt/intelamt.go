@@ -5,10 +5,10 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/iamt"
 	"github.com/jacobweinstock/registrar"
+	"github.com/metal-toolbox/bmclib/providers"
 )
 
 const (

@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/v2/constants"
-	bmcliberrs "github.com/bmc-toolbox/bmclib/v2/errors"
-	rfw "github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
-	"github.com/bmc-toolbox/common"
+	common "github.com/metal-toolbox/bmc-common"
+	"github.com/metal-toolbox/bmclib/constants"
+	bmcliberrs "github.com/metal-toolbox/bmclib/errors"
+	rfw "github.com/metal-toolbox/bmclib/internal/redfishwrapper"
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish/redfish"
 )

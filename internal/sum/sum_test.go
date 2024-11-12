@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	ex "github.com/bmc-toolbox/bmclib/v2/internal/executor"
+	ex "github.com/metal-toolbox/bmclib/internal/executor"
 )
 
 func newFakeSum(t *testing.T, fixtureName string) *Sum {

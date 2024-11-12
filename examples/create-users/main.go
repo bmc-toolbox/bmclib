@@ -10,8 +10,8 @@ import (
 	"os"
 	"time"
 
-	bmclib "github.com/bmc-toolbox/bmclib/v2"
 	"github.com/bombsimon/logrusr/v2"
+	bmclib "github.com/metal-toolbox/bmclib"
 	"github.com/sirupsen/logrus"
 )
 

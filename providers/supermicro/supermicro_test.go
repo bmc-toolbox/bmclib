@@ -10,8 +10,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/go-logr/logr"
+	"github.com/metal-toolbox/bmclib/internal/redfishwrapper"
 	"github.com/stretchr/testify/assert"
 )
 

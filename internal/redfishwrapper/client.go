@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
-	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/go-logr/logr"
+	bmclibErrs "github.com/metal-toolbox/bmclib/errors"
+	"github.com/metal-toolbox/bmclib/internal/httpclient"
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish"
 	"github.com/stmcginnis/gofish/redfish"

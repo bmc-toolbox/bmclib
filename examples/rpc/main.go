@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/v2"
-	"github.com/bmc-toolbox/bmclib/v2/logging"
-	"github.com/bmc-toolbox/bmclib/v2/providers/rpc"
+	"github.com/metal-toolbox/bmclib"
+	"github.com/metal-toolbox/bmclib/logging"
+	"github.com/metal-toolbox/bmclib/providers/rpc"
 )
 
 func main() {
