@@ -27,6 +27,7 @@ var (
 		"X11SSE-F",
 		"X12STH-SYS",
 		"X12SPO-NTF",
+		"X13DEM",
 	}
 
 	errUploadTaskIDExpected = errors.New("expected an firmware upload taskID")
@@ -46,7 +47,7 @@ func (c *Client) FirmwareUpload(ctx context.Context, component string, file *os.
 		return "", err
 	}
 
-	//	// expect atleast 5 minutes left in the deadline to proceed with the upload
+	// expect atleast 5 minutes left in the deadline to proceed with the upload
 	d, _ := ctx.Deadline()
 	if time.Until(d) < 5*time.Minute {
 		return "", errors.New("remaining context deadline insufficient to perform update: " + time.Until(d).String())

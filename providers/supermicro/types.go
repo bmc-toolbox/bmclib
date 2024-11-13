@@ -16,3 +16,12 @@ type Board struct {
 	ProdName  string `xml:"PROD_NAME,attr"`
 	SerialNum string `xml:"SERIAL_NUM,attr"`
 }
+
+type Supermicro struct {
+	BIOS map[string]bool `json:"BIOS,omitempty"`
+	BMC  map[string]bool `json:"BMC,omitempty"`
+}
+
+type OEM struct {
+	Supermicro `json:"Supermicro"`
+}

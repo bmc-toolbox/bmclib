@@ -143,7 +143,7 @@ func TestOpen(t *testing.T) {
 					<title></title>
 					<script language="JavaScript" type="text/javascript">
 				<!--
-					self.location = "../cgi/url_redirect.cgi?url_name=mainmenu";
+					self.location = "../cgi/url_redirect.cgi?url_name=topmenu";
 				-->
 					</script>
 				</head>
