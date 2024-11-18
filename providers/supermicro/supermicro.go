@@ -287,18 +287,31 @@ func (c *Client) ResetBiosConfiguration(ctx context.Context) (err error) {
 }
 
 func (c *Client) bmcQueryor(ctx context.Context) (bmcQueryor, error) {
-	x11 := newX11Client(c.serviceClient, c.log)
-	x12 := newX12Client(c.serviceClient, c.log)
-	x13 := newX13Client(c.serviceClient, c.log)
+	bmcModels := []struct {
+		bmc         bmcQueryor
+		modelFamily string
+	}{
+		{
+			newX11Client(c.serviceClient, c.log),
+			"x11",
+		},
+		{
+			newX12Client(c.serviceClient, c.log),
+			"x12",
+		},
+		{
+			newX13Client(c.serviceClient, c.log),
+			"x13",
+		},
+	}
 
-	var queryor bmcQueryor
-
-	for _, bmc := range []bmcQueryor{x11, x12, x13} {
+	var model string
+	for _, bmcModel := range bmcModels {
 		var err error
 
-		// Note to maintainers: x12 lacks support for the ipmi.cgi endpoint,
+		// Note to maintainers: x12 and x13 lacks support for the ipmi.cgi endpoint,
 		// which will lead to our graceful handling of ErrXMLAPIUnsupported below.
-		_, err = bmc.queryDeviceModel(ctx)
+		tempModel, err := bmcModel.bmc.queryDeviceModel(ctx)
 		if err != nil {
 			if errors.Is(err, ErrXMLAPIUnsupported) {
 				continue
@@ -307,24 +320,17 @@ func (c *Client) bmcQueryor(ctx context.Context) (bmcQueryor, error) {
 			return nil, errors.Wrap(ErrModelUnknown, err.Error())
 		}
 
-		queryor = bmc
-		break
-	}
+		if strings.HasPrefix(tempModel, bmcModel.modelFamily) {
+			return bmcModel.bmc, nil
+		}
 
-	if queryor == nil {
-		return nil, errors.Wrap(ErrModelUnknown, "failed to setup query client")
-	}
-
-	model := strings.ToLower(queryor.deviceModel())
-	acceptedModels := []string{"x11", "x12", "x13"}
-
-	for _, acceptedModel := range acceptedModels {
-		if strings.HasPrefix(model, acceptedModel) {
-			return queryor, nil
+		// For returning more informative error bellow
+		if model != "" {
+			tempModel = model
 		}
 	}
 
-	return nil, errors.Wrapf(ErrModelUnsupported, "Got: %s, expected one of: %s", model, strings.Join(acceptedModels, ", "))
+	return nil, errors.Wrapf(ErrModelUnknown, "failed to setup query client, had unsupported model: %s", model)
 }
 
 func parseToken(body []byte) string {

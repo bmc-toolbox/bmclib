@@ -169,6 +169,21 @@ func (c *Client) StartUpdateForUploadedFirmware(ctx context.Context) (taskID str
 	return taskIDFromResponseBody(response)
 }
 
+// StartUpdateForUploadedFirmware starts an update for a firmware file previously uploaded
+func (c *Client) StartUpdateForUploadedFirmwareNoTaskID(ctx context.Context) error {
+	updateService, err := c.client.Service.UpdateService()
+	if err != nil {
+		return errors.Wrap(err, "error querying redfish update service")
+	}
+
+	err = updateService.StartUpdate()
+	if err != nil {
+		return errors.Wrap(err, "error querying redfish start update endpoint")
+	}
+
+	return nil
+}
+
 type TaskAccepted struct {
 	Accepted struct {
 		Code                string `json:"code"`

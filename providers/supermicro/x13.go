@@ -139,24 +139,15 @@ func (c *x13) firmwareTaskActive(ctx context.Context, component string) error {
 // redfish OEM fw install parameters
 func (c *x13) biosFwInstallParams() (map[string]bool, error) {
 	switch c.model {
-	case "x12spo-ntf":
+	case "x13dem":
 		return map[string]bool{
-			"PreserveME":       false,
-			"PreserveNVRAM":    false,
-			"PreserveSMBIOS":   true,
-			"BackupBIOS":       false,
-			"PreserveBOOTCONF": true,
-		}, nil
-	case "x12sth-sys":
-		return map[string]bool{
-			"PreserveME":         false,
-			"PreserveNVRAM":      false,
 			"PreserveSMBIOS":     true,
 			"PreserveOA":         true,
 			"PreserveSETUPCONF":  true,
 			"PreserveSETUPPWD":   true,
 			"PreserveSECBOOTKEY": true,
 			"PreserveBOOTCONF":   true,
+			"BackupBIOS":         false,
 		}, nil
 	default:
 		// ideally we never get in this position, since theres model number validation in parent callers.
@@ -170,6 +161,7 @@ func (c *x13) bmcFwInstallParams() map[string]bool {
 		"PreserveCfg": true,
 		"PreserveSdr": true,
 		"PreserveSsl": true,
+		"BackupBMC":   false,
 	}
 }
 
@@ -234,7 +226,7 @@ func (c *x13) firmwareInstallUploaded(ctx context.Context, component, uploadTask
 
 	taskInfo := fmt.Sprintf("id: %s, state: %s, status: %s", task.ID, task.TaskState, task.TaskStatus)
 
-	if task.TaskState != redfish.CompletedTaskState {
+	if task.TaskState != redfish.CompletedTaskState && task.TaskState != redfish.PendingTaskState {
 		return "", errors.Wrap(brrs.ErrFirmwareVerifyTask, taskInfo)
 	}
 
@@ -242,7 +234,13 @@ func (c *x13) firmwareInstallUploaded(ctx context.Context, component, uploadTask
 		return "", errors.Wrap(brrs.ErrFirmwareVerifyTask, taskInfo)
 	}
 
-	return c.redfish.StartUpdateForUploadedFirmware(ctx)
+	err = c.redfish.StartUpdateForUploadedFirmwareNoTaskID(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	// X13s dont create a new task id when going from upload to install, so we pass through the same one
+	return uploadTaskID, nil
 }
 
 func (c *x13) firmwareTaskStatus(ctx context.Context, component, taskID string) (state constants.TaskState, status string, err error) {
@@ -267,7 +265,7 @@ func (c *x13) bootComplete() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	// TODO?
+
 	// we determined this by experiment on X12STH-SYS with redfish 1.14.0
 	return bp.LastState == redfish.SystemHardwareInitializationCompleteBootProgressTypes, nil
 }
