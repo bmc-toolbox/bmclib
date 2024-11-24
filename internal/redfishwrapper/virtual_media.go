@@ -44,7 +44,7 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL stri
 
 		for _, vm := range virtualMedia {
 			var ejected bool
-			if vm.Inserted {
+			if vm.Inserted && vm.SupportsMediaEject {
 				if err := vm.EjectMedia(); err != nil {
 					return false, err
 				}
@@ -53,7 +53,7 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL stri
 			if mediaURL == "" {
 				// Only ejecting the media was requested.
 				// For BMC's that don't support the "inserted" property, we need to eject the media if it's not already ejected.
-				if !ejected {
+				if !ejected && vm.SupportsMediaEject {
 					if err := vm.EjectMedia(); err != nil {
 						return false, err
 					}
