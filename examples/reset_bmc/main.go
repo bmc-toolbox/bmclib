@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"log"
 	"os"
 	"time"
@@ -16,22 +17,19 @@ func main() {
 	defer cancel()
 
 	// set BMC parameters here
-	host := "10.211.132.157"
-	user := "root"
-	pass := "yxvZdxAQ38ZWlZ"
+	host := flag.String("host", "", "BMC hostname to connect to")
+	user := flag.String("user", "", "Username to login with")
+	pass := flag.String("pass", "", "Username to login with")
+	flag.Parse()
 
 	l := logrus.New()
 	l.Level = logrus.DebugLevel
 	logger := logrusr.New(l)
 
-	if host == "" || user == "" || pass == "" {
-		log.Fatal("required host/user/pass parameters not defined")
-	}
-
 	os.Setenv("DEBUG_BMCLIB", "true")
 	defer os.Unsetenv("DEBUG_BMCLIB")
 
-	cl := bmclib.NewClient(host, user, pass, bmclib.WithLogger(logger))
+	cl := bmclib.NewClient(*host, *user, *pass, bmclib.WithLogger(logger))
 
 	err := cl.Open(ctx)
 	if err != nil {

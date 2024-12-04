@@ -288,17 +288,31 @@ func (c *Client) ResetBiosConfiguration(ctx context.Context) (err error) {
 }
 
 func (c *Client) bmcQueryor(ctx context.Context) (bmcQueryor, error) {
-	x11 := newX11Client(c.serviceClient, c.log)
-	x12 := newX12Client(c.serviceClient, c.log)
+	bmcModels := []struct {
+		bmc         bmcQueryor
+		modelFamily string
+	}{
+		{
+			newX11Client(c.serviceClient, c.log),
+			"x11",
+		},
+		{
+			newX12Client(c.serviceClient, c.log),
+			"x12",
+		},
+		{
+			newX13Client(c.serviceClient, c.log),
+			"x13",
+		},
+	}
 
-	var queryor bmcQueryor
-
-	for _, bmc := range []bmcQueryor{x11, x12} {
+	var model string
+	for _, bmcModel := range bmcModels {
 		var err error
 
-		// Note to maintainers: x12 lacks support for the ipmi.cgi endpoint,
+		// Note to maintainers: x12 and x13 lacks support for the ipmi.cgi endpoint,
 		// which will lead to our graceful handling of ErrXMLAPIUnsupported below.
-		_, err = bmc.queryDeviceModel(ctx)
+		tempModel, err := bmcModel.bmc.queryDeviceModel(ctx)
 		if err != nil {
 			if errors.Is(err, ErrXMLAPIUnsupported) {
 				continue
@@ -307,20 +321,17 @@ func (c *Client) bmcQueryor(ctx context.Context) (bmcQueryor, error) {
 			return nil, errors.Wrap(ErrModelUnknown, err.Error())
 		}
 
-		queryor = bmc
-		break
+		if strings.HasPrefix(strings.ToLower(tempModel), bmcModel.modelFamily) {
+			return bmcModel.bmc, nil
+		}
+
+		// For returning more informative error bellow
+		if tempModel != "" {
+			model = tempModel
+		}
 	}
 
-	if queryor == nil {
-		return nil, errors.Wrap(ErrModelUnknown, "failed to setup query client")
-	}
-
-	model := strings.ToLower(queryor.deviceModel())
-	if !strings.HasPrefix(model, "x12") && !strings.HasPrefix(model, "x11") {
-		return nil, errors.Wrap(ErrModelUnsupported, "expected one of X11* or X12*, got:"+model)
-	}
-
-	return queryor, nil
+	return nil, errors.Wrapf(ErrModelUnknown, "failed to setup query client, had unsupported model: %s", model)
 }
 
 func parseToken(body []byte) string {
@@ -558,7 +569,6 @@ func (c *serviceClient) query(ctx context.Context, endpoint, method string, payl
 		if cookie.Name == "SID" && cookie.Value != "" {
 			req.AddCookie(cookie)
 		}
-
 	}
 
 	var reqDump []byte

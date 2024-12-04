@@ -17,24 +17,24 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-type x12 struct {
+type x13 struct {
 	*serviceClient
 	model string
 	log   logr.Logger
 }
 
-func newX12Client(client *serviceClient, logger logr.Logger) bmcQueryor {
-	return &x12{
+func newX13Client(client *serviceClient, logger logr.Logger) bmcQueryor {
+	return &x13{
 		serviceClient: client,
 		log:           logger,
 	}
 }
 
-func (c *x12) deviceModel() string {
+func (c *x13) deviceModel() string {
 	return c.model
 }
 
-func (c *x12) queryDeviceModel(ctx context.Context) (string, error) {
+func (c *x13) queryDeviceModel(ctx context.Context) (string, error) {
 	if err := c.redfishSession(ctx); err != nil {
 		return "", err
 	}
@@ -53,7 +53,7 @@ func (c *x12) queryDeviceModel(ctx context.Context) (string, error) {
 	return c.model, nil
 }
 
-func (c *x12) supportsInstall(component string) error {
+func (c *x13) supportsInstall(component string) error {
 	errComponentNotSupported := fmt.Errorf("component %s on device %s not supported", component, c.model)
 
 	supported := []string{common.SlugBIOS, common.SlugBMC}
@@ -64,7 +64,7 @@ func (c *x12) supportsInstall(component string) error {
 	return nil
 }
 
-func (c *x12) firmwareInstallSteps(component string) ([]constants.FirmwareInstallStep, error) {
+func (c *x13) firmwareInstallSteps(component string) ([]constants.FirmwareInstallStep, error) {
 	if err := c.supportsInstall(component); err != nil {
 		return nil, err
 	}
@@ -78,7 +78,7 @@ func (c *x12) firmwareInstallSteps(component string) ([]constants.FirmwareInstal
 }
 
 // upload firmware
-func (c *x12) firmwareUpload(ctx context.Context, component string, file *os.File) (taskID string, err error) {
+func (c *x13) firmwareUpload(ctx context.Context, component string, file *os.File) (taskID string, err error) {
 	if err = c.supportsInstall(component); err != nil {
 		return "", err
 	}
@@ -115,7 +115,7 @@ func (c *x12) firmwareUpload(ctx context.Context, component string, file *os.Fil
 }
 
 // returns an error when a bmc firmware install is active
-func (c *x12) firmwareTaskActive(ctx context.Context, component string) error {
+func (c *x13) firmwareTaskActive(ctx context.Context, component string) error {
 	tasks, err := c.redfish.Tasks(ctx)
 	if err != nil {
 		return errors.Wrap(err, "error querying redfish tasks")
@@ -137,44 +137,36 @@ func (c *x12) firmwareTaskActive(ctx context.Context, component string) error {
 }
 
 // redfish OEM fw install parameters
-func (c *x12) biosFwInstallParams() (map[string]bool, error) {
+func (c *x13) biosFwInstallParams() (map[string]bool, error) {
 	switch c.model {
-	case "x12spo-ntf":
+	case "x13dem":
 		return map[string]bool{
-			"PreserveME":       false,
-			"PreserveNVRAM":    false,
-			"PreserveSMBIOS":   true,
-			"BackupBIOS":       false,
-			"PreserveBOOTCONF": true,
-		}, nil
-	case "x12sth-sys":
-		return map[string]bool{
-			"PreserveME":         false,
-			"PreserveNVRAM":      false,
 			"PreserveSMBIOS":     true,
 			"PreserveOA":         true,
 			"PreserveSETUPCONF":  true,
 			"PreserveSETUPPWD":   true,
 			"PreserveSECBOOTKEY": true,
 			"PreserveBOOTCONF":   true,
+			"BackupBIOS":         false,
 		}, nil
 	default:
 		// ideally we never get in this position, since theres model number validation in parent callers.
-		return nil, errors.New("unsupported model for X12 BIOS fw install: " + c.model)
+		return nil, errors.New("unsupported model for X13 BIOS fw install: " + c.model)
 	}
 }
 
 // redfish OEM fw install parameters
-func (c *x12) bmcFwInstallParams() map[string]bool {
+func (c *x13) bmcFwInstallParams() map[string]bool {
 	return map[string]bool{
 		"PreserveCfg": true,
 		"PreserveSdr": true,
 		"PreserveSsl": true,
+		"BackupBMC":   false,
 	}
 }
 
-func (c *x12) redfishParameters(component, targetODataID string) (*rfw.RedfishUpdateServiceParameters, error) {
-	errUnsupported := errors.New("redfish parameters for x12 hardware component not supported: " + component)
+func (c *x13) redfishParameters(component, targetODataID string) (*rfw.RedfishUpdateServiceParameters, error) {
+	errUnsupported := errors.New("redfish parameters for x13 hardware component not supported: " + component)
 
 	oem := OEM{}
 
@@ -199,14 +191,14 @@ func (c *x12) redfishParameters(component, targetODataID string) (*rfw.RedfishUp
 
 	return &rfw.RedfishUpdateServiceParameters{
 		// NOTE:
-		// X12s support the OnReset Apply time for BIOS updates if we want to implement that in the future.
+		// X13s support the OnReset Apply time for BIOS updates if we want to implement that in the future.
 		OperationApplyTime: constants.OnStartUpdateRequest,
 		Targets:            []string{targetODataID},
 		Oem:                b,
 	}, nil
 }
 
-func (c *x12) redfishOdataID(ctx context.Context, component string) (string, error) {
+func (c *x13) redfishOdataID(ctx context.Context, component string) (string, error) {
 	errUnsupported := errors.New("unable to return redfish OData ID for unsupported component: " + component)
 
 	switch strings.ToUpper(component) {
@@ -221,7 +213,7 @@ func (c *x12) redfishOdataID(ctx context.Context, component string) (string, err
 	return "", errUnsupported
 }
 
-func (c *x12) firmwareInstallUploaded(ctx context.Context, component, uploadTaskID string) (installTaskID string, err error) {
+func (c *x13) firmwareInstallUploaded(ctx context.Context, component, uploadTaskID string) (installTaskID string, err error) {
 	if err = c.supportsInstall(component); err != nil {
 		return "", err
 	}
@@ -234,7 +226,7 @@ func (c *x12) firmwareInstallUploaded(ctx context.Context, component, uploadTask
 
 	taskInfo := fmt.Sprintf("id: %s, state: %s, status: %s", task.ID, task.TaskState, task.TaskStatus)
 
-	if task.TaskState != redfish.CompletedTaskState {
+	if task.TaskState != redfish.CompletedTaskState && task.TaskState != redfish.PendingTaskState {
 		return "", errors.Wrap(brrs.ErrFirmwareVerifyTask, taskInfo)
 	}
 
@@ -242,10 +234,16 @@ func (c *x12) firmwareInstallUploaded(ctx context.Context, component, uploadTask
 		return "", errors.Wrap(brrs.ErrFirmwareVerifyTask, taskInfo)
 	}
 
-	return c.redfish.StartUpdateForUploadedFirmware(ctx)
+	err = c.redfish.StartUpdateForUploadedFirmwareNoTaskID(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	// X13s dont create a new task id when going from upload to install, so we pass through the same one
+	return uploadTaskID, nil
 }
 
-func (c *x12) firmwareTaskStatus(ctx context.Context, component, taskID string) (state constants.TaskState, status string, err error) {
+func (c *x13) firmwareTaskStatus(ctx context.Context, component, taskID string) (state constants.TaskState, status string, err error) {
 	if err = c.supportsInstall(component); err != nil {
 		return "", "", errors.Wrap(brrs.ErrFirmwareTaskStatus, err.Error())
 	}
@@ -253,7 +251,7 @@ func (c *x12) firmwareTaskStatus(ctx context.Context, component, taskID string) 
 	return c.redfish.TaskStatus(ctx, taskID)
 }
 
-func (c *x12) getBootProgress() (*redfish.BootProgress, error) {
+func (c *x13) getBootProgress() (*redfish.BootProgress, error) {
 	bps, err := c.redfish.GetBootProgress()
 	if err != nil {
 		return nil, err
@@ -262,11 +260,12 @@ func (c *x12) getBootProgress() (*redfish.BootProgress, error) {
 }
 
 // this is some syntactic sugar to avoid having to code potentially provider- or model-specific knowledge into a caller
-func (c *x12) bootComplete() (bool, error) {
+func (c *x13) bootComplete() (bool, error) {
 	bp, err := c.getBootProgress()
 	if err != nil {
 		return false, err
 	}
+
 	// we determined this by experiment on X12STH-SYS with redfish 1.14.0
 	return bp.LastState == redfish.SystemHardwareInitializationCompleteBootProgressTypes, nil
 }

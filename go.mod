@@ -1,6 +1,6 @@
 module github.com/metal-toolbox/bmclib
 
-go 1.21
+go 1.22
 
 require (
 	dario.cat/mergo v1.0.0
@@ -13,6 +13,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/jacobweinstock/iamt v0.0.0-20230502042727-d7cdbe67d9ef
 	github.com/jacobweinstock/registrar v0.4.7
+	github.com/metal-toolbox/bmc-common v1.0.2
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.31.0
 	github.com/sirupsen/logrus v1.9.3
@@ -34,7 +35,6 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/metal-toolbox/bmc-common v1.0.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/satori/go.uuid v1.2.0 // indirect
 	golang.org/x/sys v0.20.0 // indirect
