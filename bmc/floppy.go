@@ -55,6 +55,9 @@ func mountFloppyImage(ctx context.Context, image io.Reader, p []floppyImageUploa
 func MountFloppyImageFromInterfaces(ctx context.Context, image io.Reader, p []interface{}) (metadata Metadata, err error) {
 	providers := make([]floppyImageUploaderProvider, 0)
 	for _, elem := range p {
+		if elem == nil {
+			continue
+		}
 		temp := floppyImageUploaderProvider{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case FloppyImageMounter:
@@ -125,6 +128,9 @@ func unmountFloppyImage(ctx context.Context, p []floppyImageUnmounterProvider) (
 func UnmountFloppyImageFromInterfaces(ctx context.Context, p []interface{}) (metadata Metadata, err error) {
 	providers := make([]floppyImageUnmounterProvider, 0)
 	for _, elem := range p {
+		if elem == nil {
+			continue
+		}
 		temp := floppyImageUnmounterProvider{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case FloppyImageUnmounter:

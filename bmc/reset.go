@@ -61,6 +61,9 @@ func ResetBMCFromInterfaces(ctx context.Context, timeout time.Duration, resetTyp
 
 	bmcSetters := make([]bmcProviders, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := bmcProviders{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case BMCResetter:

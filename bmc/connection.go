@@ -62,6 +62,9 @@ func OpenConnectionFromInterfaces(ctx context.Context, timeout time.Duration, pr
 	// For every provider, launch a goroutine that attempts to open a connection and report
 	// back via the results channel what happened.
 	for _, elem := range providers {
+		if elem == nil {
+			continue
+		}
 		switch p := elem.(type) {
 		case Opener:
 			providerName := getProviderName(elem)
@@ -138,6 +141,9 @@ func CloseConnectionFromInterfaces(ctx context.Context, generic []interface{}) (
 
 	closers := make([]connectionProviders, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := connectionProviders{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case Closer:

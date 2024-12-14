@@ -57,6 +57,9 @@ func GetInventoryFromInterfaces(ctx context.Context, generic []interface{}) (dev
 
 	implementations := make([]inventoryGetterProvider, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := inventoryGetterProvider{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case InventoryGetter:

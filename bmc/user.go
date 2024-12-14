@@ -75,6 +75,9 @@ func createUser(ctx context.Context, timeout time.Duration, user, pass, role str
 func CreateUserFromInterfaces(ctx context.Context, timeout time.Duration, user, pass, role string, generic []interface{}) (ok bool, metadata Metadata, err error) {
 	userCreators := make([]userProviders, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := userProviders{name: getProviderName(elem)}
 		switch u := elem.(type) {
 		case UserCreator:
@@ -128,6 +131,9 @@ func updateUser(ctx context.Context, timeout time.Duration, user, pass, role str
 func UpdateUserFromInterfaces(ctx context.Context, timeout time.Duration, user, pass, role string, generic []interface{}) (ok bool, metadata Metadata, err error) {
 	userUpdaters := make([]userProviders, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := userProviders{name: getProviderName(elem)}
 		switch u := elem.(type) {
 		case UserUpdater:
@@ -181,6 +187,9 @@ func deleteUser(ctx context.Context, timeout time.Duration, user string, u []use
 func DeleteUserFromInterfaces(ctx context.Context, timeout time.Duration, user string, generic []interface{}) (ok bool, metadata Metadata, err error) {
 	userDeleters := make([]userProviders, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := userProviders{name: getProviderName(elem)}
 		switch u := elem.(type) {
 		case UserDeleter:
@@ -230,6 +239,9 @@ func readUsers(ctx context.Context, timeout time.Duration, u []userProviders) (u
 func ReadUsersFromInterfaces(ctx context.Context, timeout time.Duration, generic []interface{}) (users []map[string]string, metadata Metadata, err error) {
 	userReaders := make([]userProviders, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := userProviders{name: getProviderName(elem)}
 		switch u := elem.(type) {
 		case UserReader:

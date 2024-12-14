@@ -71,6 +71,9 @@ func FirmwareInstallFromInterfaces(ctx context.Context, component, operationAppl
 
 	implementations := make([]firmwareInstallerProvider, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := firmwareInstallerProvider{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case FirmwareInstaller:
@@ -152,6 +155,9 @@ func FirmwareInstallStatusFromInterfaces(ctx context.Context, installVersion, co
 
 	implementations := make([]firmwareInstallVerifierProvider, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := firmwareInstallVerifierProvider{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case FirmwareInstallVerifier:
@@ -227,6 +233,9 @@ func FirmwareInstallUploadAndInitiateFromInterfaces(ctx context.Context, compone
 
 	implementations := make([]firmwareInstallProvider, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := firmwareInstallProvider{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case FirmwareInstallProvider:
@@ -306,6 +315,9 @@ func FirmwareInstallerUploadedFromInterfaces(ctx context.Context, component, upl
 
 	implementations := make([]firmwareInstallerWithOptionsProvider, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := firmwareInstallerWithOptionsProvider{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case FirmwareInstallerUploaded:
@@ -345,6 +357,9 @@ func FirmwareInstallStepsFromInterfaces(ctx context.Context, component string, g
 
 	implementations := make([]firmwareInstallStepsGetterProvider, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := firmwareInstallStepsGetterProvider{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case FirmwareInstallStepsGetter:
@@ -413,6 +428,9 @@ func FirmwareUploadFromInterfaces(ctx context.Context, component string, file *o
 
 	implementations := make([]firmwareUploaderProvider, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := firmwareUploaderProvider{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case FirmwareUploader:
@@ -527,6 +545,9 @@ func FirmwareTaskStatusFromInterfaces(ctx context.Context, kind bconsts.Firmware
 
 	implementations := make([]firmwareTaskVerifierProvider, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := firmwareTaskVerifierProvider{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case FirmwareTaskVerifier:
