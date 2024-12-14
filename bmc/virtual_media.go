@@ -54,6 +54,9 @@ func setVirtualMedia(ctx context.Context, kind string, mediaURL string, b []virt
 func SetVirtualMediaFromInterfaces(ctx context.Context, kind string, mediaURL string, generic []interface{}) (ok bool, metadata Metadata, err error) {
 	bdSetters := make([]virtualMediaProviders, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := virtualMediaProviders{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case VirtualMediaSetter:

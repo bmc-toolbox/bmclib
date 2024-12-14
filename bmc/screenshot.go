@@ -52,6 +52,9 @@ func screenshot(ctx context.Context, generic []screenshotGetterProvider) (image 
 func ScreenshotFromInterfaces(ctx context.Context, generic []interface{}) (image []byte, fileType string, metadata Metadata, err error) {
 	implementations := make([]screenshotGetterProvider, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := screenshotGetterProvider{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case ScreenshotGetter:

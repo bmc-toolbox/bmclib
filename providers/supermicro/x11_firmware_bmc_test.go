@@ -91,7 +91,7 @@ func TestX11SetBMCFirmwareInstallMode(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			serviceClient, err := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
+			serviceClient := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
 			assert.Nil(t, err)
 
 			client := &x11{serviceClient: serviceClient, log: logr.Discard()}
@@ -186,7 +186,7 @@ func TestX11UploadBMCFirmware(t *testing.T) {
 				defer os.Remove(binPath)
 			}
 
-			serviceClient, err := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
+			serviceClient := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
 			assert.Nil(t, err)
 			serviceClient.csrfToken = "foobar"
 			client := &x11{serviceClient: serviceClient, log: logr.Discard()}
@@ -268,7 +268,7 @@ func TestX11VerifyBMCFirmwareVersion(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			serviceClient, err := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
+			serviceClient := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
 			assert.Nil(t, err)
 			serviceClient.csrfToken = "foobar"
 			client := &x11{serviceClient: serviceClient, log: logr.Discard()}
@@ -350,7 +350,7 @@ func TestX11InitiateBMCFirmwareInstall(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			serviceClient, err := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
+			serviceClient := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
 			assert.Nil(t, err)
 			serviceClient.csrfToken = "foobar"
 			client := &x11{serviceClient: serviceClient, log: logr.Discard()}
@@ -514,7 +514,7 @@ func TestX11StatusBMCFirmwareInstall(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			serviceClient, err := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
+			serviceClient := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
 			assert.Nil(t, err)
 
 			serviceClient.csrfToken = "foobar"

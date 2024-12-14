@@ -57,6 +57,9 @@ func postCode(ctx context.Context, generic []postCodeGetterProvider) (status str
 func GetPostCodeInterfaces(ctx context.Context, generic []interface{}) (status string, code int, metadata Metadata, err error) {
 	implementations := make([]postCodeGetterProvider, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := postCodeGetterProvider{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case PostCodeGetter:

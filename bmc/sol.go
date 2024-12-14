@@ -53,6 +53,9 @@ func deactivateSOL(ctx context.Context, timeout time.Duration, b []deactivatorPr
 func DeactivateSOLFromInterfaces(ctx context.Context, timeout time.Duration, generic []interface{}) (metadata Metadata, err error) {
 	deactivators := make([]deactivatorProvider, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := deactivatorProvider{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case SOLDeactivator:

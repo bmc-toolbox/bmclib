@@ -56,6 +56,9 @@ func clearSystemEventLog(ctx context.Context, timeout time.Duration, s []systemE
 func ClearSystemEventLogFromInterfaces(ctx context.Context, timeout time.Duration, generic []interface{}) (metadata Metadata, err error) {
 	selServices := make([]systemEventLogProviders, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := systemEventLogProviders{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case SystemEventLog:
@@ -107,6 +110,9 @@ func getSystemEventLog(ctx context.Context, timeout time.Duration, s []systemEve
 func GetSystemEventLogFromInterfaces(ctx context.Context, timeout time.Duration, generic []interface{}) (sel SystemEventLogEntries, metadata Metadata, err error) {
 	selServices := make([]systemEventLogProviders, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := systemEventLogProviders{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case SystemEventLog:
@@ -158,6 +164,9 @@ func getSystemEventLogRaw(ctx context.Context, timeout time.Duration, s []system
 func GetSystemEventLogRawFromInterfaces(ctx context.Context, timeout time.Duration, generic []interface{}) (eventlog string, metadata Metadata, err error) {
 	selServices := make([]systemEventLogProviders, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := systemEventLogProviders{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case SystemEventLog:

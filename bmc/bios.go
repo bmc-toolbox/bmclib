@@ -152,6 +152,9 @@ Loop:
 func GetBiosConfigurationInterfaces(ctx context.Context, generic []interface{}) (biosConfig map[string]string, metadata Metadata, err error) {
 	implementations := make([]biosConfigurationGetterProvider, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := biosConfigurationGetterProvider{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case BiosConfigurationGetter:
@@ -178,6 +181,9 @@ func GetBiosConfigurationInterfaces(ctx context.Context, generic []interface{}) 
 func SetBiosConfigurationInterfaces(ctx context.Context, generic []interface{}, biosConfig map[string]string) (metadata Metadata, err error) {
 	implementations := make([]biosConfigurationSetterProvider, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := biosConfigurationSetterProvider{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case BiosConfigurationSetter:
@@ -204,6 +210,9 @@ func SetBiosConfigurationInterfaces(ctx context.Context, generic []interface{}, 
 func SetBiosConfigurationFromFileInterfaces(ctx context.Context, generic []interface{}, cfg string) (metadata Metadata, err error) {
 	implementations := make([]biosConfigurationSetterProvider, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := biosConfigurationSetterProvider{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case BiosConfigurationSetter:
@@ -230,6 +239,9 @@ func SetBiosConfigurationFromFileInterfaces(ctx context.Context, generic []inter
 func ResetBiosConfigurationInterfaces(ctx context.Context, generic []interface{}) (metadata Metadata, err error) {
 	implementations := make([]biosConfigurationResetterProvider, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := biosConfigurationResetterProvider{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case BiosConfigurationResetter:

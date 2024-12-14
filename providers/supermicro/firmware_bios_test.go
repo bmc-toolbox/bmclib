@@ -80,7 +80,7 @@ func Test_setComponentUpdateMisc(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			serviceClient, err := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
+			serviceClient := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
 			assert.Nil(t, err)
 
 			serviceClient.csrfToken = "foobar"
@@ -171,7 +171,7 @@ func Test_setBIOSFirmwareInstallMode(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			serviceClient, err := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
+			serviceClient := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
 			assert.Nil(t, err)
 
 			serviceClient.csrfToken = "foobar"

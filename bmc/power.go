@@ -79,6 +79,9 @@ func SetPowerStateFromInterfaces(ctx context.Context, timeout time.Duration, sta
 
 	powerSetter := make([]powerProviders, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := powerProviders{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case PowerSetter:
@@ -132,6 +135,9 @@ func GetPowerStateFromInterfaces(ctx context.Context, timeout time.Duration, gen
 
 	powerStateGetter := make([]powerProviders, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := powerProviders{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case PowerStateGetter:

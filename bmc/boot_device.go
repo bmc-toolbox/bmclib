@@ -94,6 +94,9 @@ func setBootDevice(ctx context.Context, timeout time.Duration, bootDevice string
 func SetBootDeviceFromInterfaces(ctx context.Context, timeout time.Duration, bootDevice string, setPersistent, efiBoot bool, generic []interface{}) (ok bool, metadata Metadata, err error) {
 	bdSetters := make([]bootDeviceProviders, 0)
 	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
 		temp := bootDeviceProviders{name: getProviderName(elem)}
 		switch p := elem.(type) {
 		case BootDeviceSetter:
@@ -148,6 +151,9 @@ func GetBootDeviceOverrideFromInterface(
 	metadata = newMetadata()
 
 	for _, elem := range providers {
+		if elem == nil {
+			continue
+		}
 		switch p := elem.(type) {
 		case BootDeviceOverrideGetter:
 			provider := &bootOverrideProvider{name: getProviderName(elem), bootOverrideGetter: p}
