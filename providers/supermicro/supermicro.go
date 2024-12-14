@@ -136,20 +136,13 @@ func NewClient(host, user, pass string, log logr.Logger, opts ...Option) *Client
 		opt(defaultConfig)
 	}
 
-	serviceClient, err := newBmcServiceClient(
+	serviceClient := newBmcServiceClient(
 		host,
 		defaultConfig.Port,
 		user,
 		pass,
 		httpclient.Build(defaultConfig.httpClientSetupFuncs...),
 	)
-
-	// We probably want to treat this as a fatal error and/or pass the error back to the caller
-	// I did not want to chase that thread atm, so we intentionally return nil here if
-	// newBmcServiceClient returns an error.
-	if err != nil {
-		return nil
-	}
 
 	return &Client{
 		serviceClient: serviceClient,
@@ -450,20 +443,27 @@ type serviceClient struct {
 	sum       *sum.Sum
 }
 
-func newBmcServiceClient(host, port, user, pass string, client *http.Client) (*serviceClient, error) {
+func newBmcServiceClient(host, port, user, pass string, client *http.Client) *serviceClient {
 	sc := &serviceClient{host: host, port: port, user: user, pass: pass, client: client}
 
 	if !strings.HasPrefix(host, "https://") && !strings.HasPrefix(host, "http://") {
 		sc.host = "https://" + host
 	}
 
+	// sum is only for firmware related operations. Failing the client entirely because of a sum error
+	// means all the other functionality is not available. I don't think that is what we want. So, instead
+	// of failing the function will just set sc.sum to nil. There are checks in place in this package to
+	// handle sc.sum being nil. The tradeoff here is that the reason that sum failed, which from the current
+	// code is only if the `sum` binary is not found, is not returned to the caller. So if firmware operations
+	// are not working, binary not found is the reason.
 	s, err := sum.New(host, user, pass)
 	if err != nil {
-		return nil, err
+		sc.sum = nil
+	} else {
+		sc.sum = s
 	}
-	sc.sum = s
 
-	return sc, nil
+	return sc
 }
 
 func (c *serviceClient) setCsrfToken(t string) {
