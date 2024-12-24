@@ -3,28 +3,27 @@ module github.com/bmc-toolbox/bmclib/v2
 go 1.21
 
 require (
-	dario.cat/mergo v1.0.0
+	dario.cat/mergo v1.0.1
 	github.com/Jeffail/gabs/v2 v2.7.0
-	github.com/bmc-toolbox/common v0.0.0-20240806132831-ba8adc6a35e3
+	github.com/bmc-toolbox/common v0.0.0-20241031162543-6b96e5981a0d
 	github.com/bombsimon/logrusr/v2 v2.0.1
 	github.com/ghodss/yaml v1.0.0
-	github.com/go-logr/logr v1.4.1
+	github.com/go-logr/logr v1.4.2
 	github.com/go-logr/zerologr v1.2.3
 	github.com/google/go-cmp v0.6.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/jacobweinstock/iamt v0.0.0-20230502042727-d7cdbe67d9ef
 	github.com/jacobweinstock/registrar v0.4.7
 	github.com/pkg/errors v0.9.1
-	github.com/rs/zerolog v1.31.0
+	github.com/rs/zerolog v1.33.0
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stmcginnis/gofish v0.19.0
-	github.com/stretchr/testify v1.9.0
-	go.opentelemetry.io/otel v1.24.0
-	go.opentelemetry.io/otel/trace v1.24.0
-	go.uber.org/goleak v1.2.1
+	github.com/stmcginnis/gofish v0.20.0
+	github.com/stretchr/testify v1.10.0
+	go.opentelemetry.io/otel v1.29.0
+	go.opentelemetry.io/otel/trace v1.29.0
+	go.uber.org/goleak v1.3.0
 	golang.org/x/crypto v0.31.0
-	golang.org/x/exp v0.0.0-20240409090435-93d18d7e34b8
-	golang.org/x/net v0.25.0
+	golang.org/x/net v0.33.0
 	gopkg.in/go-playground/assert.v1 v1.2.1
 )
 
