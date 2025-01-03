@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -17,7 +18,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish"
 	"github.com/stmcginnis/gofish/redfish"
-	"golang.org/x/exp/slices"
 )
 
 var (

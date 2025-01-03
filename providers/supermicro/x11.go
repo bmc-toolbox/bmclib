@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/bmc-toolbox/bmclib/v2/constants"
@@ -15,7 +16,6 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish/redfish"
-	"golang.org/x/exp/slices"
 )
 
 type x11 struct {
