@@ -72,7 +72,7 @@ func (c *Config) Name() string {
 
 func (c *Config) Open(ctx context.Context) error {
 	c.client.WithTimeout(getTimeout(ctx))
-	return c.client.Connect()
+	return c.client.Connect(ctx)
 }
 
 func getTimeout(ctx context.Context) time.Duration {
@@ -84,12 +84,12 @@ func getTimeout(ctx context.Context) time.Duration {
 	return time.Until(deadline)
 }
 
-func (c *Config) Close(_ context.Context) error {
-	return c.client.Close()
+func (c *Config) Close(ctx context.Context) error {
+	return c.client.Close(ctx)
 }
 
-func (c *Config) PowerStateGet(_ context.Context) (string, error) {
-	r, err := c.client.GetChassisStatus()
+func (c *Config) PowerStateGet(ctx context.Context) (string, error) {
+	r, err := c.client.GetChassisStatus(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -101,7 +101,7 @@ func (c *Config) PowerStateGet(_ context.Context) (string, error) {
 	return state, nil
 }
 
-func (c *Config) PowerSet(_ context.Context, state string) (bool, error) {
+func (c *Config) PowerSet(ctx context.Context, state string) (bool, error) {
 	var action ipmi.ChassisControl
 	switch strings.ToLower(state) {
 	case "on":
@@ -111,7 +111,7 @@ func (c *Config) PowerSet(_ context.Context, state string) (bool, error) {
 	case "soft":
 		action = ipmi.ChassisControlSoftShutdown
 	case "reset":
-		action = ipmi.ChassisControlHardwareRest
+		action = ipmi.ChassisControlHardReset
 	case "cycle":
 		action = ipmi.ChassisControlPowerCycle
 	default:
@@ -120,7 +120,7 @@ func (c *Config) PowerSet(_ context.Context, state string) (bool, error) {
 
 	// ipmi.ChassisControlResponse is an empty struct.
 	// No methods return any actual response. So we ignore it.
-	_, err := c.client.ChassisControl(action)
+	_, err := c.client.ChassisControl(ctx, action)
 	if err != nil {
 		return false, err
 	}
@@ -128,7 +128,7 @@ func (c *Config) PowerSet(_ context.Context, state string) (bool, error) {
 	return true, nil
 }
 
-func (c *Config) BootDeviceSet(_ context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
+func (c *Config) BootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
 	d := ipmi.BootDeviceSelectorNoOverride
 	switch strings.ToLower(bootDevice) {
 	case "pxe":
@@ -151,15 +151,15 @@ func (c *Config) BootDeviceSet(_ context.Context, bootDevice string, setPersiste
 		bt = ipmi.BIOSBootTypeEFI
 	}
 
-	if err := c.client.SetBootDevice(d, bt, setPersistent); err != nil {
+	if err := c.client.SetBootDevice(ctx, d, bt, setPersistent); err != nil {
 		return false, err
 	}
 
 	return true, nil
 }
 
-func (c *Config) UserRead(_ context.Context) (users []map[string]string, err error) {
-	u, err := c.client.ListUser(0)
+func (c *Config) UserRead(ctx context.Context) (users []map[string]string, err error) {
+	u, err := c.client.ListUser(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
