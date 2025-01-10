@@ -194,7 +194,7 @@ func firmwareInstallStatusWait(ctx context.Context, cl *bmclib.Client, l *logrus
 		case constants.FirmwareInstallFailed:
 			l.WithFields(logrus.Fields{"state": state, "status": status, "component": component}).Infof("%s failed", step)
 			os.Exit(1)
-		case constants.FirmwareInstallComplete, constants.FirmwareInstallQueued:
+		case constants.FirmwareInstallComplete:
 			l.WithFields(logrus.Fields{"state": state, "status": status, "component": component}).Infof("%s completed", step)
 			return
 		case constants.FirmwareInstallPowerCycleHost:

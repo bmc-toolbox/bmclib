@@ -248,7 +248,17 @@ func (c *x13) firmwareTaskStatus(ctx context.Context, component, taskID string) 
 		return "", "", errors.Wrap(brrs.ErrFirmwareTaskStatus, err.Error())
 	}
 
-	return c.redfish.TaskStatus(ctx, taskID)
+	state, status, err = c.redfish.TaskStatus(ctx, taskID)
+	if err != nil {
+		return
+	}
+
+	// X13 "Pending" Status (which gets converted to a "Queued" Status) means the upload is complete
+	if state == constants.Queued {
+		state = constants.Complete
+	}
+
+	return
 }
 
 func (c *x13) getBootProgress() (*redfish.BootProgress, error) {

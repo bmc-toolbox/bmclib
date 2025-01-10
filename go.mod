@@ -13,7 +13,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/jacobweinstock/iamt v0.0.0-20230502042727-d7cdbe67d9ef
 	github.com/jacobweinstock/registrar v0.4.7
-	github.com/metal-toolbox/bmc-common v1.0.2
+	github.com/metal-toolbox/bmc-common v1.0.3
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.31.0
 	github.com/sirupsen/logrus v1.9.3
