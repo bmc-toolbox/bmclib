@@ -5,7 +5,7 @@ go 1.21
 require (
 	dario.cat/mergo v1.0.1
 	github.com/Jeffail/gabs/v2 v2.7.0
-	github.com/bmc-toolbox/common v0.0.0-20241031162543-6b96e5981a0d
+	github.com/bmc-toolbox/common v0.0.0-20250112191656-b6de52e8303d
 	github.com/bombsimon/logrusr/v2 v2.0.1
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-logr/logr v1.4.2
