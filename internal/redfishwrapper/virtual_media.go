@@ -33,6 +33,7 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL stri
 		return false, errors.New("invalid media type")
 	}
 
+	supportedMediaTypes := []string{}
 	for _, m := range managers {
 		virtualMedia, err := m.VirtualMedia()
 		if err != nil {
@@ -43,24 +44,32 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL stri
 		}
 
 		for _, vm := range virtualMedia {
+			if !slices.Contains(vm.MediaTypes, mediaKind) {
+				for _, mt := range vm.MediaTypes {
+					supportedMediaTypes = append(supportedMediaTypes, string(mt))
+				}
+				continue
+			}
 			if mediaURL == "" {
 				// Only ejecting the media was requested.
-				// For BMC's that don't support the "inserted" property, we need to eject the media if it's not already ejected.
 				if vm.Inserted && vm.SupportsMediaEject {
 					if err := vm.EjectMedia(); err != nil {
-						return false, err
+						return false, fmt.Errorf("error ejecting media: %v", err)
 					}
 				}
 				return true, nil
 			}
+			// Ejecting the media before inserting a new new media makes the success rate of inserting the new media higher.
 			if vm.Inserted && vm.SupportsMediaEject {
 				if err := vm.EjectMedia(); err != nil {
-					return false, err
+					return false, fmt.Errorf("error ejecting media before inserting media: %v", err)
 				}
 			}
-			if !slices.Contains(vm.MediaTypes, mediaKind) {
-				return false, fmt.Errorf("media kind %s not supported by BMC, supported media kinds %q", kind, vm.MediaTypes)
+
+			if !vm.SupportsMediaInsert {
+				return false, fmt.Errorf("BMC does not support inserting virtual media of kind: %s", kind)
 			}
+
 			if err := vm.InsertMedia(mediaURL, true, true); err != nil {
 				// Some BMC's (Supermicro X11SDV-4C-TLN2F, for example) don't support the "inserted" and "writeProtected" properties,
 				// so we try to insert the media without them if the first attempt fails.
@@ -72,8 +81,7 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL stri
 		}
 	}
 
-	// If we actual get here, then something very unexpected happened as there isn't a known code path that would cause this error to be returned.
-	return false, errors.New("unexpected error setting virtual media")
+	return false, fmt.Errorf("not a supported media type: %s. supported media types: %v", kind, supportedMediaTypes)
 }
 
 func (c *Client) InsertedVirtualMedia(ctx context.Context) ([]string, error) {
