@@ -19,7 +19,7 @@ import (
 
 // bmc client interface implementations methods
 func (c *Conn) FirmwareInstallSteps(ctx context.Context, component string) ([]constants.FirmwareInstallStep, error) {
-	if err := c.deviceSupported(ctx); err != nil {
+	if err := c.deviceSupported(); err != nil {
 		return nil, bmcliberrs.NewErrUnsupportedHardware(err.Error())
 	}
 
@@ -30,7 +30,7 @@ func (c *Conn) FirmwareInstallSteps(ctx context.Context, component string) ([]co
 }
 
 func (c *Conn) FirmwareInstallUploadAndInitiate(ctx context.Context, component string, file *os.File) (taskID string, err error) {
-	if err := c.deviceSupported(ctx); err != nil {
+	if err := c.deviceSupported(); err != nil {
 		return "", bmcliberrs.NewErrUnsupportedHardware(err.Error())
 	}
 
@@ -97,7 +97,7 @@ func (c *Conn) checkQueueability(component string, tasks []*redfish.Task) error 
 
 // FirmwareTaskStatus returns the status of a firmware related task queued on the BMC.
 func (c *Conn) FirmwareTaskStatus(ctx context.Context, kind constants.FirmwareInstallStep, component, taskID, installVersion string) (state constants.TaskState, status string, err error) {
-	if err := c.deviceSupported(ctx); err != nil {
+	if err := c.deviceSupported(); err != nil {
 		return "", "", bmcliberrs.NewErrUnsupportedHardware(err.Error())
 	}
 

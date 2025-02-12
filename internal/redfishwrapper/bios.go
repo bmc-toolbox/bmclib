@@ -61,7 +61,6 @@ func (c *Client) SetBiosConfiguration(ctx context.Context, biosConfig map[string
 
 		// TODO(jwb) We should handle passing different apply times here
 		err = bios.UpdateBiosAttributesApplyAt(settingsAttributes, common.OnResetApplyTime)
-
 		if err != nil {
 			return err
 		}

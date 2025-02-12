@@ -45,6 +45,7 @@ var (
 		providers.FeatureBmcReset,
 		providers.FeatureGetBiosConfiguration,
 		providers.FeatureSetBiosConfiguration,
+		providers.FeatureSetBiosConfigurationFromFile,
 		providers.FeatureResetBiosConfiguration,
 	}
 
@@ -134,7 +135,7 @@ func (c *Conn) Open(ctx context.Context) (err error) {
 
 	// because this uses the redfish interface and the redfish interface
 	// is available across various BMC vendors, we verify the device we're connected to is dell.
-	if err := c.deviceSupported(ctx); err != nil {
+	if err := c.deviceSupported(); err != nil {
 		if er := c.redfishwrapper.Close(ctx); er != nil {
 			return fmt.Errorf("%v: %w", err, er)
 		}
@@ -145,8 +146,8 @@ func (c *Conn) Open(ctx context.Context) (err error) {
 	return nil
 }
 
-func (c *Conn) deviceSupported(ctx context.Context) error {
-	manufacturer, err := c.deviceManufacturer(ctx)
+func (c *Conn) deviceSupported() error {
+	manufacturer, err := c.deviceManufacturer()
 	if err != nil {
 		return err
 	}
@@ -232,6 +233,17 @@ func (c *Conn) SetBiosConfiguration(ctx context.Context, biosConfig map[string]s
 	return c.redfishwrapper.SetBiosConfiguration(ctx, biosConfig)
 }
 
+// SetBiosConfigurationFromFile sets the bios configuration from a raw vendor config file
+func (c *Conn) SetBiosConfigurationFromFile(ctx context.Context, biosConfg string) (err error) {
+	configMap := make(map[string]string)
+	err = json.Unmarshal([]byte(biosConfg), &configMap)
+	if err != nil {
+		return errors.Wrap(err, "failed to unmarshal config file")
+	}
+
+	return c.redfishwrapper.SetBiosConfiguration(ctx, configMap)
+}
+
 // ResetBiosConfiguration resets the BIOS configuration settings back to 'factory defaults' via the BMC
 func (c *Conn) ResetBiosConfiguration(ctx context.Context) (err error) {
 	return c.redfishwrapper.ResetBiosConfiguration(ctx)
@@ -243,7 +255,7 @@ func (c *Conn) SendNMI(ctx context.Context) error {
 }
 
 // deviceManufacturer returns the device manufacturer and model attributes
-func (c *Conn) deviceManufacturer(ctx context.Context) (vendor string, err error) {
+func (c *Conn) deviceManufacturer() (vendor string, err error) {
 	systems, err := c.redfishwrapper.Systems()
 	if err != nil {
 		return "", errors.Wrap(errManufacturerUnknown, err.Error())
