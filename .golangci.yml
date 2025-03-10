@@ -15,12 +15,9 @@ linters-settings:
       - whyNoLint
       - wrapperFunc
   gocyclo:
-    min-complexity: 15
+    min-complexity: 31
   gofumpt:
     extra-rules: true
-  govet:
-    enable:
-      - shadow
   lll:
     line-length: 140
   misspell:

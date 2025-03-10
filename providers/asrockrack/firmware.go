@@ -215,7 +215,7 @@ func (a *ASRockRack) firmwareUpdateStatus(ctx context.Context, component, instal
 		case 2:
 			return constants.Complete, status, nil
 		default:
-			a.log.V(3).WithValues("state", progress.State).Info("warn", "bmc returned unknown flash progress state")
+			a.log.V(3).WithValues("state", progress.State).Info("warn: bmc returned unknown flash progress state")
 		}
 	}
 
@@ -262,7 +262,7 @@ func (a *ASRockRack) versionInstalled(ctx context.Context, component, version st
 	fwInfo, err := a.firmwareInfo(ctx)
 	if err != nil {
 		err = errors.Wrap(err, "error querying for firmware info: ")
-		a.log.V(3).Info("warn", err.Error())
+		a.log.V(3).Info("warn", "err", err.Error())
 		return versionStrError, err
 	}
 

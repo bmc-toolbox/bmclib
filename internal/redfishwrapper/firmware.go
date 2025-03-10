@@ -317,39 +317,39 @@ func (p pipeReaderFakeSeeker) Seek(offset int64, whence int) (int64, error) {
 //
 // It creates a temporary form without reading in the update file payload and returns
 // sizeOf(form) + sizeOf(update file)
-func multipartPayloadSize(payload *multipartPayload) (int64, *bytes.Buffer, error) {
+func multipartPayloadSize(payload *multipartPayload) (int64, error) {
 	body := &bytes.Buffer{}
 	form := multipart.NewWriter(body)
 
 	// Add UpdateParameters field part
 	part, err := updateParametersFormField("UpdateParameters", form)
 	if err != nil {
-		return 0, body, err
+		return 0, err
 	}
 
 	if _, err = io.Copy(part, bytes.NewReader(payload.updateParameters)); err != nil {
-		return 0, body, err
+		return 0, err
 	}
 
 	// Add updateFile form
 	_, err = form.CreateFormFile("UpdateFile", filepath.Base(payload.updateFile.Name()))
 	if err != nil {
-		return 0, body, err
+		return 0, err
 	}
 
 	// determine update file size
 	finfo, err := payload.updateFile.Stat()
 	if err != nil {
-		return 0, body, err
+		return 0, err
 	}
 
 	// add terminating boundary to multipart form
 	err = form.Close()
 	if err != nil {
-		return 0, body, err
+		return 0, err
 	}
 
-	return int64(body.Len()) + finfo.Size(), body, nil
+	return int64(body.Len()) + finfo.Size(), nil
 }
 
 // runRequestWithMultipartPayload is a copy of https://github.com/stmcginnis/gofish/blob/main/client.go#L349
@@ -385,7 +385,7 @@ func (c *Client) runRequestWithMultipartPayload(url string, payload *multipartPa
 	//
 	// Without the content-length header the http client will set the Transfer-Encoding to 'chunked'
 	// and that does not work for some BMCs (iDracs).
-	contentLength, _, err := multipartPayloadSize(payload)
+	contentLength, err := multipartPayloadSize(payload)
 	if err != nil {
 		return nil, errors.Wrap(err, "error determining multipart payload size")
 	}

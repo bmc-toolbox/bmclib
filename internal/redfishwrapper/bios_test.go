@@ -31,13 +31,13 @@ func biosConfigFromFixture(t *testing.T) map[string]string {
 	}
 
 	var bios map[string]any
-	err = json.Unmarshal([]byte(b), &bios)
+	err = json.Unmarshal(b, &bios)
 	if err != nil {
 		t.Fatalf("%s, failed to unmarshal fixture: %s", err.Error(), fixturePath)
 	}
 
 	expectedBiosConfig := make(map[string]string)
-	for k, v := range bios["Attributes"].(map[string]any) {
+	for k, v := range bios["Attributes"].(map[string]any) { // nolint:forcetypeassert
 		expectedBiosConfig[k] = fmt.Sprintf("%v", v)
 	}
 

@@ -242,7 +242,7 @@ func (c *Conn) SendNMI(ctx context.Context) error {
 }
 
 // deviceManufacturer returns the device manufacturer and model attributes
-func (c *Conn) deviceManufacturer(ctx context.Context) (vendor string, err error) {
+func (c *Conn) deviceManufacturer(context.Context) (vendor string, err error) {
 	systems, err := c.redfishwrapper.Systems()
 	if err != nil {
 		return "", errors.Wrap(errManufacturerUnknown, err.Error())
@@ -270,6 +270,8 @@ func (c *Conn) Screenshot(ctx context.Context) (image []byte, fileType string, e
 	if err != nil {
 		return nil, "", errors.Wrap(bmclibErrs.ErrScreenshot, err.Error())
 	}
+
+	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

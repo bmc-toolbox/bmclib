@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"os"
 	"testing"
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
@@ -75,8 +74,7 @@ func Test_UserRead(t *testing.T) {
 	}
 
 	// test account retrieval failure error
-	os.Setenv("TEST_FAIL_QUERY", "womp")
-	defer os.Unsetenv("TEST_FAIL_QUERY")
+	t.Setenv("TEST_FAIL_QUERY", "womp womp") // nolint:dupword
 
 	_, err = aClient.UserRead(context.TODO())
 	assert.Equal(t, errors.Is(err, bmclibErrs.ErrRetrievingUserAccounts), true)

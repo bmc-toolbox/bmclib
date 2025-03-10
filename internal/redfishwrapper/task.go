@@ -58,7 +58,7 @@ func (c *Client) taskMessagesAsString(messages []common.Message) string {
 		return ""
 	}
 
-	var found []string
+	var found []string // nolint:prealloc
 	for _, m := range messages {
 		if m.Message == "" {
 			continue
@@ -95,6 +95,8 @@ func (c *Client) TaskStateActive(state constants.TaskState) (bool, error) {
 		return true, nil
 	case constants.Complete, constants.Failed:
 		return false, nil
+	case constants.PowerCycleHost, constants.Unknown:
+		fallthrough
 	default:
 		return false, errors.Wrap(errUnexpectedTaskState, string(state))
 	}

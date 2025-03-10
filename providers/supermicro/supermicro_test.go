@@ -117,7 +117,7 @@ func TestOpen(t *testing.T) {
 			"foo",
 			"bar",
 			handlerFuncMap{
-				"/": func(w http.ResponseWriter, r *http.Request) {
+				"/": func(w http.ResponseWriter, _ *http.Request) {
 					w.WriteHeader(http.StatusOK)
 				},
 				"/redfish/v1/": endpointFunc(t, "serviceroot.json"),

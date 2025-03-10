@@ -16,7 +16,10 @@ import (
 
 func testRequest(method, reqURL string, body RequestPayload, headers http.Header) *http.Request {
 	buf := new(bytes.Buffer)
-	_ = json.NewEncoder(buf).Encode(body)
+	err := json.NewEncoder(buf).Encode(body)
+	if err != nil {
+		panic(err)
+	}
 	req, _ := http.NewRequestWithContext(context.Background(), method, reqURL, buf)
 	req.Header = headers
 	return req

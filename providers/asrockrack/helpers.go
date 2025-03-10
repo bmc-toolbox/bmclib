@@ -413,7 +413,7 @@ func (a *ASRockRack) fruInfo(ctx context.Context) ([]*fru, error) {
 		return nil, fmt.Errorf("non 200 response: %d", statusCode)
 	}
 
-	data := []map[string]*fru{}
+	data := []map[string]*fru{} // nolint:musttag
 	err = json.Unmarshal(resp, &data)
 	if err != nil {
 		return nil, err
