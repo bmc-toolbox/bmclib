@@ -14,6 +14,7 @@ import (
 	"github.com/jacobweinstock/registrar"
 	common "github.com/metal-toolbox/bmc-common"
 	"github.com/metal-toolbox/bmclib/internal/httpclient"
+	"github.com/metal-toolbox/bmclib/internal/racadm"
 	"github.com/metal-toolbox/bmclib/internal/redfishwrapper"
 	"github.com/metal-toolbox/bmclib/providers"
 	"github.com/pkg/errors"
@@ -96,6 +97,7 @@ func WithUseBasicAuth(useBasicAuth bool) Option {
 // Conn details for redfish client
 type Conn struct {
 	redfishwrapper *redfishwrapper.Client
+	racadm         *racadm.Racadm
 	Log            logr.Logger
 }
 
@@ -123,6 +125,7 @@ func New(host, user, pass string, log logr.Logger, opts ...Option) *Conn {
 
 	return &Conn{
 		Log:            log,
+		racadm:         racadm.New(host, user, pass),
 		redfishwrapper: redfishwrapper.NewClient(host, defaultConfig.Port, user, pass, rfOpts...),
 	}
 }
@@ -235,13 +238,7 @@ func (c *Conn) SetBiosConfiguration(ctx context.Context, biosConfig map[string]s
 
 // SetBiosConfigurationFromFile sets the bios configuration from a raw vendor config file
 func (c *Conn) SetBiosConfigurationFromFile(ctx context.Context, biosConfg string) (err error) {
-	configMap := make(map[string]string)
-	err = json.Unmarshal([]byte(biosConfg), &configMap)
-	if err != nil {
-		return errors.Wrap(err, "failed to unmarshal config file")
-	}
-
-	return c.redfishwrapper.SetBiosConfiguration(ctx, configMap)
+	return c.racadm.ChangeBiosCfg(ctx, biosConfg)
 }
 
 // ResetBiosConfiguration resets the BIOS configuration settings back to 'factory defaults' via the BMC
