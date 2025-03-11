@@ -9,6 +9,7 @@ import (
 )
 
 func newFakeSum(t *testing.T, fixtureName string) *Sum {
+	t.Helper()
 	e := &Sum{
 		Executor: ex.NewFakeExecutor("sum"),
 	}

@@ -128,14 +128,14 @@ var (
 	ErrBMCUpdating = errors.New("a BMC firmware update is in progress")
 )
 
-type ErrUnsupportedHardware struct {
+type UnsupportedHardwareError struct {
 	msg string
 }
 
-func (e *ErrUnsupportedHardware) Error() string {
+func (e *UnsupportedHardwareError) Error() string {
 	return fmt.Sprintf("Hardware not supported: %s", e.msg)
 }
 
 func NewErrUnsupportedHardware(s string) error {
-	return &ErrUnsupportedHardware{s}
+	return &UnsupportedHardwareError{s}
 }

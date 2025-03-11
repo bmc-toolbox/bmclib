@@ -56,7 +56,7 @@ func TestInventory(t *testing.T) {
 			}
 			assert.Equal(t, tc.returnDevice, device)
 			assert.Equal(t, tc.providerName, metadata.SuccessfulProvider)
-			assert.Equal(t, tc.providersAttempted, len(metadata.ProvidersAttempted))
+			assert.Len(t, metadata.ProvidersAttempted, tc.providersAttempted)
 		})
 	}
 }

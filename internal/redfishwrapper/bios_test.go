@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func biosConfigFromFixture(t *testing.T) map[string]string {
@@ -87,7 +88,7 @@ func TestGetBiosConfiguration(t *testing.T) {
 			}
 
 			biosConfig, err := client.GetBiosConfiguration(ctx)
-			assert.Nil(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tc.expectedBiosConfig, biosConfig)
 		})
 	}

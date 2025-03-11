@@ -2,12 +2,12 @@ package asrockrack
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"testing"
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // NOTE: user accounts are defined in mock_test.go as JSON payload in the userPayload var
@@ -69,7 +69,7 @@ func Test_UserRead(t *testing.T) {
 
 	for _, tt := range testCases {
 		ok, err := aClient.UserCreate(context.TODO(), tt.user, tt.pass, tt.role)
-		assert.Equal(t, errors.Is(err, tt.err), true, tt.tName)
+		require.ErrorIs(t, err, tt.err, tt.tName)
 		assert.Equal(t, tt.ok, ok, tt.tName)
 	}
 
@@ -77,7 +77,7 @@ func Test_UserRead(t *testing.T) {
 	t.Setenv("TEST_FAIL_QUERY", "womp womp") // nolint:dupword
 
 	_, err = aClient.UserRead(context.TODO())
-	assert.Equal(t, errors.Is(err, bmclibErrs.ErrRetrievingUserAccounts), true)
+	assert.ErrorIs(t, err, bmclibErrs.ErrRetrievingUserAccounts)
 }
 
 func Test_UserCreate(t *testing.T) {
@@ -110,7 +110,7 @@ func Test_UserCreate(t *testing.T) {
 
 	for _, tt := range tests {
 		ok, err := aClient.UserCreate(context.TODO(), tt.user, tt.pass, tt.role)
-		assert.Equal(t, errors.Is(err, tt.err), true, tt.tName)
+		require.ErrorIs(t, err, tt.err, tt.tName)
 		assert.Equal(t, tt.ok, ok, tt.tName)
 	}
 }
@@ -145,7 +145,7 @@ func Test_UserUpdate(t *testing.T) {
 
 	for _, tt := range tests {
 		ok, err := aClient.UserUpdate(context.TODO(), tt.user, tt.pass, tt.role)
-		assert.Equal(t, errors.Is(err, tt.err), true, tt.tName)
+		require.ErrorIs(t, err, tt.err, tt.tName)
 		assert.Equal(t, tt.ok, ok, tt.tName)
 	}
 }
@@ -223,6 +223,6 @@ func Test_userAccounts(t *testing.T) {
 		t.Error(err)
 	}
 
-	assert.Equal(t, 10, len(accounts))
+	assert.Len(t, accounts, 10)
 	assert.Equal(t, account0, accounts[0])
 }

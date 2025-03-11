@@ -10,6 +10,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestConvertTaskState(t *testing.T) {
@@ -209,9 +210,9 @@ func TestTaskStatus(t *testing.T) {
 				return
 			}
 
-			assert.Nil(t, err)
-			assert.Equal(t, tc.expectedState, state)
-			assert.Equal(t, tc.expectedStatus, status)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedState, state)
+			require.Equal(t, tc.expectedStatus, status)
 
 			client.Close(context.Background())
 		})
@@ -291,9 +292,9 @@ func TestTask(t *testing.T) {
 				return
 			}
 
-			assert.Nil(t, err)
-			assert.NotNil(t, got)
-			assert.Equal(t, tc.expectTaskStatus, string(got.TaskStatus))
+			require.NoError(t, err)
+			require.NotNil(t, got)
+			require.Equal(t, tc.expectTaskStatus, string(got.TaskStatus))
 			assert.Equal(t, tc.expectTaskState, string(got.TaskState))
 
 			client.Close(context.Background())

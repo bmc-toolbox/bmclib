@@ -16,6 +16,7 @@ import (
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/goleak"
 )
 
@@ -121,7 +122,7 @@ func TestRunRequestWithMultipartPayload(t *testing.T) {
 				return
 			}
 
-			assert.Nil(t, err)
+			require.NoError(t, err)
 			resp.Body.Close()
 			client.Close(context.Background())
 		})
@@ -204,8 +205,8 @@ func TestFirmwareInstallMethodURI(t *testing.T) {
 				return
 			}
 
-			assert.Nil(t, err)
-			assert.Equal(t, tc.expectInstallMethod, gotMethod)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectInstallMethod, gotMethod)
 			assert.Equal(t, tc.expectUpdateURI, gotURI)
 
 			client.Close(context.Background())
@@ -248,7 +249,7 @@ func TestTaskIDFromResponseBody(t *testing.T) {
 				return
 			}
 
-			assert.Nil(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tc.expectedID, taskID)
 		})
 	}
@@ -301,7 +302,7 @@ func TestTaskIDFromLocationHeader(t *testing.T) {
 				return
 			}
 
-			assert.Nil(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tc.expectedID, taskID)
 		})
 	}
@@ -336,10 +337,10 @@ func TestUpdateParametersFormField(t *testing.T) {
 				return
 			}
 
-			assert.NoError(t, err)
-			assert.Contains(t, buf.String(), `Content-Disposition: form-data; name="UpdateParameters`)
-			assert.Contains(t, buf.String(), `Content-Type: application/json`)
-			assert.NotNil(t, output)
+			require.NoError(t, err)
+			require.Contains(t, buf.String(), `Content-Disposition: form-data; name="UpdateParameters`)
+			require.Contains(t, buf.String(), `Content-Type: application/json`)
+			require.NotNil(t, output)
 
 			// Validate the created multipart form content
 			err = writer.Close()
@@ -398,7 +399,7 @@ func TestMultipartPayloadSize(t *testing.T) {
 				assert.Contains(t, err.Error(), tc.errorMsg)
 			}
 
-			assert.Nil(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tc.expectedSize, gotSize)
 		})
 	}

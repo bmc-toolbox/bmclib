@@ -64,7 +64,7 @@ func TestFirmwareInstall(t *testing.T) {
 			}
 			assert.Equal(t, tc.returnTaskID, taskID)
 			assert.Equal(t, tc.providerName, metadata.SuccessfulProvider)
-			assert.Equal(t, tc.providersAttempted, len(metadata.ProvidersAttempted))
+			assert.Len(t, metadata.ProvidersAttempted, tc.providersAttempted)
 		})
 	}
 }
@@ -160,7 +160,7 @@ func TestFirmwareInstallStatus(t *testing.T) {
 			}
 			assert.Equal(t, tc.returnStatus, taskID)
 			assert.Equal(t, tc.providerName, metadata.SuccessfulProvider)
-			assert.Equal(t, tc.providersAttempted, len(metadata.ProvidersAttempted))
+			assert.Len(t, metadata.ProvidersAttempted, tc.providersAttempted)
 		})
 	}
 }
@@ -254,7 +254,7 @@ func TestFirmwareInstallUploadAndInitiate(t *testing.T) {
 			}
 			assert.Equal(t, tc.returnTaskID, taskID)
 			assert.Equal(t, tc.providerName, metadata.SuccessfulProvider)
-			assert.Equal(t, tc.providersAttempted, len(metadata.ProvidersAttempted))
+			assert.Len(t, metadata.ProvidersAttempted, tc.providersAttempted)
 		})
 	}
 }
@@ -348,7 +348,7 @@ func TestFirmwareInstallUploaded(t *testing.T) {
 			}
 			assert.Equal(t, tc.returnTaskID, taskID)
 			assert.Equal(t, tc.providerName, metadata.SuccessfulProvider)
-			assert.Equal(t, tc.providersAttempted, len(metadata.ProvidersAttempted))
+			assert.Len(t, metadata.ProvidersAttempted, tc.providersAttempted)
 		})
 	}
 }
@@ -442,7 +442,7 @@ func TestFirmwareUpload(t *testing.T) {
 			}
 			assert.Equal(t, tc.returnTaskID, taskID)
 			assert.Equal(t, tc.providerName, metadata.SuccessfulProvider)
-			assert.Equal(t, tc.providersAttempted, len(metadata.ProvidersAttempted))
+			assert.Len(t, metadata.ProvidersAttempted, tc.providersAttempted)
 		})
 	}
 }
@@ -547,7 +547,7 @@ func TestFirmwareInstallSteps(t *testing.T) {
 			}
 			assert.Equal(t, tc.returnSteps, steps)
 			assert.Equal(t, tc.providerName, metadata.SuccessfulProvider)
-			assert.Equal(t, tc.providersAttempted, len(metadata.ProvidersAttempted))
+			assert.Len(t, metadata.ProvidersAttempted, tc.providersAttempted)
 		})
 	}
 }
@@ -605,7 +605,7 @@ func TestFirmwareTaskStatus(t *testing.T) {
 			assert.Equal(t, tc.returnState, state)
 			assert.Equal(t, tc.returnStatus, status)
 			assert.Equal(t, tc.providerName, metadata.SuccessfulProvider)
-			assert.Equal(t, tc.providersAttempted, len(metadata.ProvidersAttempted))
+			assert.Len(t, metadata.ProvidersAttempted, tc.providersAttempted)
 		})
 	}
 }
@@ -653,7 +653,7 @@ func TestFirmwareTaskStatusFromInterfaces(t *testing.T) {
 			assert.Equal(t, tc.returnState, state)
 			assert.Equal(t, tc.returnStatus, status)
 			assert.Equal(t, tc.providerName, metadata.SuccessfulProvider)
-			assert.Equal(t, tc.providersAttempted, len(metadata.ProvidersAttempted))
+			assert.Len(t, metadata.ProvidersAttempted, tc.providersAttempted)
 		})
 	}
 }

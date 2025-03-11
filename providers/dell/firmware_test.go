@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestConvFirmwareTaskOem(t *testing.T) {
@@ -83,10 +84,10 @@ func TestConvFirmwareTaskOem(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			job, err := convFirmwareTaskOem(tc.oemdata)
 			if tc.expectedErr == "" {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, tc.expectedJob, job)
 			} else {
-				assert.Error(t, err)
+				require.Error(t, err)
 				assert.Contains(t, err.Error(), tc.expectedErr)
 			}
 		})

@@ -37,7 +37,6 @@ linters:
     - cyclop
     - depguard
     - err113 # todo(*maybe* enable in future PR)
-    - errname # maybe should be enabled
     - exhaustruct
     - forbidigo
     - funlen
@@ -64,8 +63,7 @@ linters:
     - perfsprint
     - revive # todo(enable in future PR)
     - tagliatelle
-    - tenv # should be enabled
-    - testifylint # should be enabled
+    - tenv # deprecated (since v1.64.0) due to: Duplicate feature in another linter. Replaced by usetesting.
     - testpackage
     - thelper # should be enabled
     - varnamelen

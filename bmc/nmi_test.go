@@ -7,6 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type mockNMISender struct {
@@ -113,9 +114,9 @@ func TestSendNMIFromInterface(t *testing.T) {
 			metadata, err := SendNMIFromInterface(context.Background(), timeout, tt.mockSenders)
 
 			if tt.errMsg == "" {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			} else {
-				assert.ErrorContains(t, err, tt.errMsg)
+				require.ErrorContains(t, err, tt.errMsg)
 			}
 
 			assert.Equal(t, tt.expectedMetadata, metadata)
