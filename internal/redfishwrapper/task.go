@@ -74,13 +74,13 @@ func (c *Client) ConvertTaskState(state string) constants.TaskState {
 	switch strings.ToLower(state) {
 	case "starting", "downloading", "downloaded", "scheduling":
 		return constants.Initializing
-	case "running", "stopping", "cancelling":
+	case "running", "stopping", "cancelling": // nolint:misspell
 		return constants.Running
 	case "pending", "new":
 		return constants.Queued
 	case "scheduled":
 		return constants.PowerCycleHost
-	case "interrupted", "killed", "exception", "cancelled", "suspended", "failed":
+	case "interrupted", "killed", "exception", "cancelled", "suspended", "failed": // nolint:misspell
 		return constants.Failed
 	case "completed":
 		return constants.Complete

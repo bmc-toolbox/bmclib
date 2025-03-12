@@ -24,14 +24,14 @@ func TestConvertTaskState(t *testing.T) {
 		{"scheduling state", "scheduling", constants.Initializing},
 		{"running state", "running", constants.Running},
 		{"stopping state", "stopping", constants.Running},
-		{"cancelling state", "cancelling", constants.Running},
+		{"cancelling state", "cancelling", constants.Running}, // nolint:misspell
 		{"pending state", "pending", constants.Queued},
 		{"new state", "new", constants.Queued},
 		{"scheduled state", "scheduled", constants.PowerCycleHost},
 		{"interrupted state", "interrupted", constants.Failed},
 		{"killed state", "killed", constants.Failed},
 		{"exception state", "exception", constants.Failed},
-		{"cancelled state", "cancelled", constants.Failed},
+		{"cancelled state", "cancelled", constants.Failed}, // nolint:misspell
 		{"suspended state", "suspended", constants.Failed},
 		{"failed state", "failed", constants.Failed},
 		{"completed state", "completed", constants.Complete},
