@@ -40,7 +40,6 @@ func inventory(ctx context.Context, generic []inventoryGetterProvider) (device *
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				err = multierror.Append(err, vErr)
 				continue
-
 			}
 			metadataLocal.SuccessfulProvider = elem.name
 			return device, metadataLocal, nil

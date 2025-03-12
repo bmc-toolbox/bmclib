@@ -85,7 +85,6 @@ func (c *x11) checkComponentUpdateMisc(ctx context.Context, stage string) error 
 	// When SYSOFF=1 the system requires a power cycle
 	default:
 		return errors.New("unknown stage: " + stage)
-
 	}
 
 	headers := map[string]string{

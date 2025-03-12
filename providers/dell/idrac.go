@@ -135,7 +135,7 @@ func (c *Conn) Open(ctx context.Context) (err error) {
 	// is available across various BMC vendors, we verify the device we're connected to is dell.
 	if err := c.deviceSupported(ctx); err != nil {
 		if er := c.redfishwrapper.Close(ctx); er != nil {
-			return fmt.Errorf("%v: %w", err, er)
+			return fmt.Errorf("%w: %w", err, er)
 		}
 
 		return err
@@ -276,7 +276,7 @@ func (c *Conn) Screenshot(ctx context.Context) (image []byte, fileType string, e
 		return nil, "", errors.Wrap(bmclibErrs.ErrScreenshot, err.Error())
 	}
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		return nil, "", errors.Wrap(bmclibErrs.ErrScreenshot, resp.Status)
 	}
 

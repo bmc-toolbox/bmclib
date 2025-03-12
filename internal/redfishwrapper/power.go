@@ -119,7 +119,6 @@ func (c *Client) SystemReset(ctx context.Context) (ok bool, err error) {
 		system.DisableEtagMatch(c.disableEtagMatch)
 		err = system.Reset(rf.PowerCycleResetType)
 		if err != nil {
-
 			_, _ = c.SystemPowerOff(ctx)
 
 			for wait := 1; wait < 10; wait++ {

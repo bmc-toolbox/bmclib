@@ -11,7 +11,7 @@ type (
 )
 
 const (
-	// EnvEnableDebug is the const for the environment variable to cause bmclib to dump debugging debugging information.
+	// EnvEnableDebug is the const for the environment variable to cause bmclib to dump debugging information.
 	// the valid parameter for this environment variable is 'true'
 	EnvEnableDebug = "DEBUG_BMCLIB"
 

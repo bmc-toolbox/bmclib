@@ -77,7 +77,6 @@ func (c *Client) collectPSUs(ch *redfish.Chassis, device *common.Device, softwar
 		c.firmwareAttributes(common.SlugPSU, psu.ID, p.Firmware, softwareInventory)
 
 		device.PSUs = append(device.PSUs, p)
-
 	}
 	return nil
 }
@@ -160,7 +159,6 @@ func (c *Client) collectNICs(sys *redfish.ComputerSystem, device *common.Device,
 		portFirmwareVersion := getFirmwareVersionFromController(adapter.Controllers, len(ports))
 
 		for _, networkPort := range ports {
-
 			// populate network ports general data
 			nicPort := &common.NICPort{}
 			c.collectNetworkPortInfo(nicPort, adapter, networkPort, portFirmwareVersion, softwareInventory)
@@ -200,7 +198,6 @@ func (c *Client) collectNetworkPortInfo(
 	}
 
 	if networkPort != nil {
-
 		nicPort.Description = networkPort.Description
 		nicPort.PCIVendorID = networkPort.VendorID
 		nicPort.Status = &common.Status{
@@ -358,9 +355,7 @@ func (c *Client) collectDrives(sys *redfish.ComputerSystem, device *common.Devic
 			c.firmwareAttributes("Disk", drive.ID, d.Firmware, softwareInventory)
 
 			device.Drives = append(device.Drives, d)
-
 		}
-
 	}
 
 	return nil
@@ -375,7 +370,6 @@ func (c *Client) collectStorageControllers(sys *redfish.ComputerSystem, device *
 
 	for _, member := range storage {
 		for _, controller := range member.StorageControllers {
-
 			cs := &common.StorageController{
 				Common: common.Common{
 					Description: controller.Name,

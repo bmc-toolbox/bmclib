@@ -71,7 +71,7 @@ type Config struct {
 }
 
 // New creates a new AMT connection
-func New(host string, user string, pass string, opts ...Option) *Conn {
+func New(host, user, pass string, opts ...Option) *Conn {
 	defaultClient := &Config{
 		HostScheme: "http",
 		Port:       16992,

@@ -194,7 +194,7 @@ func TestOpen(t *testing.T) {
 					assert.Equal(t, r.Method, http.MethodPost)
 					assert.Equal(t, r.Header.Get("Content-Type"), "application/x-www-form-urlencoded")
 					response := []byte(`barf`)
-					w.WriteHeader(401)
+					w.WriteHeader(http.StatusUnauthorized)
 					_, _ = w.Write(response)
 				},
 			},
@@ -261,7 +261,7 @@ func TestClose(t *testing.T) {
 					t.Fatal(err)
 				}
 
-				w.WriteHeader(200)
+				w.WriteHeader(http.StatusOK)
 			},
 		},
 	}
@@ -325,7 +325,7 @@ func TestInitScreenPreview(t *testing.T) {
 			"400",
 			"/cgi/op.cgi",
 			func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(400)
+				w.WriteHeader(http.StatusBadRequest)
 			},
 		},
 	}
@@ -382,7 +382,7 @@ func TestFetchScreenPreview(t *testing.T) {
 			"400",
 			"/cgi/url_redirect.cgi",
 			func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(400)
+				w.WriteHeader(http.StatusBadRequest)
 			},
 		},
 	}

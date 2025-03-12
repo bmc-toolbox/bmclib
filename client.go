@@ -501,7 +501,7 @@ func (c *Client) SetBootDevice(ctx context.Context, bootDevice string, setPersis
 // server. Specifically, the method ejects any currently attached virtual media, and then if
 // mediaURL isn't empty, attaches a virtual media device of type kind whose contents are
 // streamed from the indicated URL.
-func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL string) (ok bool, err error) {
+func (c *Client) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (ok bool, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetVirtualMedia")
 	defer span.End()
 
@@ -588,7 +588,7 @@ func (c *Client) ResetBiosConfiguration(ctx context.Context) (err error) {
 }
 
 // FirmwareInstall pass through library function to upload firmware and install firmware
-func (c *Client) FirmwareInstall(ctx context.Context, component string, operationApplyTime string, forceInstall bool, reader io.Reader) (taskID string, err error) {
+func (c *Client) FirmwareInstall(ctx context.Context, component, operationApplyTime string, forceInstall bool, reader io.Reader) (taskID string, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "FirmwareInstall")
 	defer span.End()
 
@@ -599,7 +599,7 @@ func (c *Client) FirmwareInstall(ctx context.Context, component string, operatio
 	return taskID, err
 }
 
-// Note: this interface is to be deprecated in favour of a more generic FirmwareTaskStatus.
+// Note: this interface is to be deprecated in favor of a more generic FirmwareTaskStatus.
 //
 // FirmwareInstallStatus pass through library function to check firmware install status
 func (c *Client) FirmwareInstallStatus(ctx context.Context, installVersion, component, taskID string) (status string, err error) {

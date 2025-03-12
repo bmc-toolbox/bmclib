@@ -153,7 +153,7 @@ func Test_setBIOSFirmwareInstallMode(t *testing.T) {
 			"400",
 			"/cgi/ipmi.cgi",
 			func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(400)
+				w.WriteHeader(http.StatusBadRequest)
 			},
 		},
 	}

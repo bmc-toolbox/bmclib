@@ -75,7 +75,7 @@ func Test_UserRead(t *testing.T) {
 	}
 
 	// test account retrieval failure error
-	os.Setenv("TEST_FAIL_QUERY", "womp womp")
+	os.Setenv("TEST_FAIL_QUERY", "womp")
 	defer os.Unsetenv("TEST_FAIL_QUERY")
 
 	_, err = aClient.UserRead(context.TODO())

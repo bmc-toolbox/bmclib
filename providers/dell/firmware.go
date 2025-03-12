@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -165,7 +166,7 @@ func (c *Conn) job(jobID string) (*Dell, error) {
 		return nil, errors.Wrap(errLookup, err.Error())
 	}
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		return nil, errors.Wrap(errLookup, "unexpected status code: "+resp.Status)
 	}
 

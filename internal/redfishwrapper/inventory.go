@@ -176,7 +176,6 @@ func (c *Client) chassisAttributes(ctx context.Context, device *common.Device, f
 		if err != nil && failOnError {
 			return err
 		}
-
 	}
 
 	err = c.collectCPLDs(device, softwareInventory)
@@ -264,7 +263,6 @@ func (c *Client) firmwareAttributes(slug, id string, firmwareObj *common.Firmwar
 		// include previously installed firmware attributes
 		if strings.HasPrefix(inv.ID, "Previous") {
 			if strings.Contains(inv.ID, id) || strings.EqualFold(slug, inv.Name) {
-
 				if firmwareObj == nil {
 					firmwareObj = &common.Firmware{}
 				}
@@ -283,7 +281,6 @@ func (c *Client) firmwareAttributes(slug, id string, firmwareObj *common.Firmwar
 		// update firmwareObj with installed firmware attributes
 		if strings.HasPrefix(inv.ID, "Installed") {
 			if strings.Contains(inv.ID, id) || strings.EqualFold(slug, inv.Name) {
-
 				if firmwareObj == nil {
 					firmwareObj = &common.Firmware{}
 				}

@@ -80,12 +80,12 @@ func WithHTTPClient(c *http.Client) ASRockOption {
 }
 
 // New returns a new ASRockRack instance ready to be used
-func New(ip string, username string, password string, log logr.Logger) *ASRockRack {
+func New(ip, username, password string, log logr.Logger) *ASRockRack {
 	return NewWithOptions(ip, username, password, log)
 }
 
 // NewWithOptions returns a new ASRockRack instance with options ready to be used
-func NewWithOptions(ip string, username string, password string, log logr.Logger, opts ...ASRockOption) *ASRockRack {
+func NewWithOptions(ip, username, password string, log logr.Logger, opts ...ASRockOption) *ASRockRack {
 	r := &ASRockRack{
 		ip:           ip,
 		username:     username,

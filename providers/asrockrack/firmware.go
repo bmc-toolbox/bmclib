@@ -184,7 +184,7 @@ func (a *ASRockRack) FirmwareTaskStatus(ctx context.Context, kind constants.Firm
 }
 
 // firmwareUpdateBIOSStatus returns the BIOS firmware install status
-func (a *ASRockRack) firmwareUpdateStatus(ctx context.Context, component string, installVersion string) (state constants.TaskState, status string, err error) {
+func (a *ASRockRack) firmwareUpdateStatus(ctx context.Context, component, installVersion string) (state constants.TaskState, status string, err error) {
 	var endpoint string
 	component = strings.ToUpper(component)
 	switch component {

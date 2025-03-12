@@ -39,7 +39,7 @@ func TestRunRequestWithMultipartPayload(t *testing.T) {
 	defer os.Remove(binPath)
 
 	multipartEndpoint := func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != "POST" {
+		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusNotFound)
 		}
 

@@ -25,7 +25,7 @@ type FirmwareInstaller interface {
 	//
 	// return values:
 	// taskID - A taskID is returned if the update process on the BMC returns an identifier for the update process.
-	FirmwareInstall(ctx context.Context, component string, operationApplyTime string, forceInstall bool, reader io.Reader) (taskID string, err error)
+	FirmwareInstall(ctx context.Context, component, operationApplyTime string, forceInstall bool, reader io.Reader) (taskID string, err error)
 }
 
 // firmwareInstallerProvider is an internal struct to correlate an implementation/provider and its name
@@ -54,7 +54,6 @@ func firmwareInstall(ctx context.Context, component, operationApplyTime string, 
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				metadata.FailedProviderDetail[elem.name] = err.Error()
 				continue
-
 			}
 			metadata.SuccessfulProvider = elem.name
 			return taskID, metadata, nil
@@ -96,7 +95,7 @@ func FirmwareInstallFromInterfaces(ctx context.Context, component, operationAppl
 	return firmwareInstall(ctx, component, operationApplyTime, forceInstall, reader, implementations)
 }
 
-// Note: this interface is to be deprecated in favour of a more generic FirmwareTaskVerifier.
+// Note: this interface is to be deprecated in favor of a more generic FirmwareTaskVerifier.
 //
 // FirmwareInstallVerifier defines an interface to check firmware install status
 type FirmwareInstallVerifier interface {
@@ -138,7 +137,6 @@ func firmwareInstallStatus(ctx context.Context, installVersion, component, taskI
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				metadata.FailedProviderDetail[elem.name] = err.Error()
 				continue
-
 			}
 			metadata.SuccessfulProvider = elem.name
 			return status, metadata, nil
@@ -298,7 +296,6 @@ func firmwareInstallUploaded(ctx context.Context, component, uploadTaskID string
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				metadata.FailedProviderDetail[elem.name] = err.Error()
 				continue
-
 			}
 			metadata.SuccessfulProvider = elem.name
 			return installTaskID, metadata, nil
@@ -401,7 +398,6 @@ func firmwareInstallSteps(ctx context.Context, component string, generic []firmw
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				metadata.FailedProviderDetail[elem.name] = err.Error()
 				continue
-
 			}
 			metadata.SuccessfulProvider = elem.name
 			return steps, metadata, nil
@@ -472,7 +468,6 @@ func firmwareUpload(ctx context.Context, component string, file *os.File, generi
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				metadata.FailedProviderDetail[elem.name] = err.Error()
 				continue
-
 			}
 			metadata.SuccessfulProvider = elem.name
 			return taskID, metadata, nil

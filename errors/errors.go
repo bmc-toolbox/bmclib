@@ -15,7 +15,7 @@ var (
 	// ErrNotAuthenticated is returned when the session is not active.
 	ErrNotAuthenticated = errors.New("not authenticated")
 
-	// ErrNon200Response is returned when bmclib recieves an unexpected non-200 status code for a query
+	// ErrNon200Response is returned when bmclib receives an unexpected non-200 status code for a query
 	ErrNon200Response = errors.New("non-200 response returned for the endpoint")
 
 	// ErrNotImplemented is returned for not implemented methods called
