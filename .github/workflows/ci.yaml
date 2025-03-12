@@ -19,7 +19,7 @@ jobs:
       uses: golangci/golangci-lint-action@v3
       with:
         args: -v --config .golangci.yml --timeout=5m
-        version: latest
+        version: v1.64
     - name: make all-checks
       run: make all-checks
   test:
