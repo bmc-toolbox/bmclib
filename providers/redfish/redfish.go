@@ -5,15 +5,14 @@ import (
 	"crypto/x509"
 	"net/http"
 
+	"github.com/bmc-toolbox/bmclib/v2/bmc"
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
-
-	"github.com/bmc-toolbox/bmclib/v2/bmc"
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 const (

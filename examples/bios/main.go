@@ -13,7 +13,6 @@ import (
 	bmclib "github.com/bmc-toolbox/bmclib/v2"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
 	logrusr "github.com/bombsimon/logrusr/v2"
-
 	"github.com/sirupsen/logrus"
 )
 

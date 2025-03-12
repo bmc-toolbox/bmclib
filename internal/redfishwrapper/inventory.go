@@ -5,9 +5,8 @@ import (
 	"strings"
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
-	"github.com/pkg/errors"
-
 	"github.com/bmc-toolbox/common"
+	"github.com/pkg/errors"
 	redfish "github.com/stmcginnis/gofish/redfish"
 )
 

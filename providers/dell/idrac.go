@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strings"
 
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
@@ -17,8 +18,6 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 	"github.com/pkg/errors"
-
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 const (

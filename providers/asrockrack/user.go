@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pkg/errors"
-
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/bmc-toolbox/bmclib/v2/internal"
+	"github.com/pkg/errors"
 )
 
 // TODO: standardize these across Redfish, IPMI, Vendor GUI

@@ -7,9 +7,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/stretchr/testify/assert"
 )
 
 // NOTE: user accounts are defined in mock_test.go as JSON payload in the userPayload var

@@ -9,7 +9,6 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	bconsts "github.com/bmc-toolbox/bmclib/v2/constants"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
-
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 )
