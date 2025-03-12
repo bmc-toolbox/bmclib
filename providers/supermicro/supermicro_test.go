@@ -67,7 +67,6 @@ func TestParseToken(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			gotToken := parseToken(tc.body)
 			assert.Equal(t, tc.expectToken, gotToken)
-
 		})
 	}
 }
@@ -237,7 +236,6 @@ func TestOpen(t *testing.T) {
 			assert.Nil(t, err)
 		})
 	}
-
 }
 
 func TestClose(t *testing.T) {
@@ -293,7 +291,6 @@ func TestClose(t *testing.T) {
 			assert.Nil(t, client.serviceClient.redfish)
 		})
 	}
-
 }
 
 func TestInitScreenPreview(t *testing.T) {
@@ -354,7 +351,6 @@ func TestInitScreenPreview(t *testing.T) {
 			}
 
 			assert.Nil(t, err)
-
 		})
 	}
 }

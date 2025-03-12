@@ -127,15 +127,13 @@ type biosUpdateAction struct {
 	Action int `json:"action"`
 }
 
-var (
-	knownPOSTCodes = map[int]string{
-		160: constants.POSTStateOS,
-		2:   constants.POSTStateBootINIT, // no differentiation between BIOS init and PXE boot
-		144: constants.POSTStateUEFI,
-		154: constants.POSTStateUEFI,
-		178: constants.POSTStateUEFI,
-	}
-)
+var knownPOSTCodes = map[int]string{
+	160: constants.POSTStateOS,
+	2:   constants.POSTStateBootINIT, // no differentiation between BIOS init and PXE boot
+	144: constants.POSTStateUEFI,
+	154: constants.POSTStateUEFI,
+	178: constants.POSTStateUEFI,
+}
 
 func (a *ASRockRack) listUsers(ctx context.Context) ([]*UserAccount, error) {
 	resp, statusCode, err := a.queryHTTPS(ctx, "api/settings/users", "GET", nil, nil, 0)

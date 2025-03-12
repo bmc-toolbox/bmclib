@@ -119,7 +119,6 @@ func (c *x11) checkComponentUpdateMisc(ctx context.Context, stage string) error 
 }
 
 func (c *x11) setBIOSFirmwareInstallMode(ctx context.Context) error {
-
 	payload := []byte(`op=BIOS_UPLOAD.XML&r=(0,0)&_=`)
 
 	headers := map[string]string{
@@ -159,7 +158,6 @@ func (c *x11) setBIOSFirmwareInstallMode(ctx context.Context) error {
 	default:
 		return unexpectedResponseErr(payload, body, status)
 	}
-
 }
 
 func (c *x11) setBiosUpdateStart(ctx context.Context) error {
@@ -261,7 +259,6 @@ func (c *x11) uploadBIOSFirmware(ctx context.Context, fwReader io.Reader) error 
 		map[string]string{"Content-Type": payloadWriter.FormDataContentType()},
 		0,
 	)
-
 	if err != nil {
 		return errors.Wrap(ErrMultipartForm, err.Error())
 	}

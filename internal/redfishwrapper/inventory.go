@@ -190,7 +190,6 @@ func (c *Client) chassisAttributes(ctx context.Context, device *common.Device, f
 	}
 
 	return nil
-
 }
 
 func (c *Client) systemAttributes(device *common.Device, failOnError bool, softwareInventory []*redfish.SoftwareInventory) (err error) {

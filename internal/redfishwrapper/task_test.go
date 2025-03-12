@@ -277,7 +277,7 @@ func TestTask(t *testing.T) {
 
 			ctx := context.Background()
 
-			//os.Setenv("DEBUG_BMCLIB", "true")
+			// os.Setenv("DEBUG_BMCLIB", "true")
 			client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "", WithBasicAuthEnabled(true))
 
 			err = client.Open(ctx)

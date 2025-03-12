@@ -53,9 +53,7 @@ func (c *x12) queryDeviceModel(ctx context.Context) (string, error) {
 	return c.model, nil
 }
 
-var (
-	errUploadTaskIDEmpty = errors.New("firmware upload request returned empty firmware upload verify TaskID")
-)
+var errUploadTaskIDEmpty = errors.New("firmware upload request returned empty firmware upload verify TaskID")
 
 func (c *x12) supportsInstall(component string) error {
 	errComponentNotSupported := fmt.Errorf("component %s on device %s not supported", component, c.model)
@@ -277,7 +275,7 @@ func (c *x12) redfishOdataID(ctx context.Context, component string) (string, err
 	case common.SlugBIOS:
 		// hardcoded since SMCs without the DCMS license will throw license errors
 		return "/redfish/v1/Systems/1/Bios", nil
-		//return c.redfish.SystemsBIOSOdataID(ctx)
+		// return c.redfish.SystemsBIOSOdataID(ctx)
 	}
 
 	return "", errUnsupported

@@ -194,7 +194,6 @@ func (c *Client) collectNetworkPortInfo(
 	firmware string,
 	softwareInventory []*redfish.SoftwareInventory,
 ) {
-
 	if adapter != nil {
 		nicPort.Vendor = adapter.Manufacturer
 		nicPort.Model = adapter.Model
@@ -484,7 +483,6 @@ func (c *Client) collectDIMMs(sys *redfish.ComputerSystem, device *common.Device
 
 // collecCPLDs populates the device with CPLD component attributes
 func (c *Client) collectCPLDs(device *common.Device, softwareInventory []*redfish.SoftwareInventory) (err error) {
-
 	cpld := &common.CPLD{
 		Common: common.Common{
 			Vendor:   common.FormatVendorName(device.Vendor),

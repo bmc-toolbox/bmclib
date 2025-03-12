@@ -12,9 +12,7 @@ import (
 	redfish "github.com/stmcginnis/gofish/redfish"
 )
 
-var (
-	errUnexpectedTaskState = errors.New("unexpected task state")
-)
+var errUnexpectedTaskState = errors.New("unexpected task state")
 
 func (c *Client) Task(ctx context.Context, taskID string) (*redfish.Task, error) {
 	tasks, err := c.Tasks(ctx)

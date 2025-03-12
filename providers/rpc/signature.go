@@ -19,7 +19,6 @@ func createSignaturePayload(body []byte, h http.Header) []byte {
 	// add headers to signature payload, no space between values.
 	for _, val := range h {
 		body = append(body, []byte(strings.Join(val, ""))...)
-
 	}
 
 	return body

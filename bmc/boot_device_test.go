@@ -3,10 +3,10 @@ package bmc
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
-	"fmt"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/go-multierror"
 	"github.com/stretchr/testify/assert"

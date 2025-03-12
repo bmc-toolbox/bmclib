@@ -103,7 +103,7 @@ func Test_Screenshot(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			//os.Setenv("DEBUG_BMCLIB", "true")
+			// os.Setenv("DEBUG_BMCLIB", "true")
 			client := New(parsedURL.Hostname(), "", "", logr.Discard(), WithPort(parsedURL.Port()), WithUseBasicAuth(true))
 
 			err = client.Open(context.TODO())

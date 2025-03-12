@@ -23,24 +23,22 @@ const (
 	ProviderProtocol = "redfish"
 )
 
-var (
-	// Features implemented by gofish
-	Features = registrar.Features{
-		providers.FeaturePowerSet,
-		providers.FeaturePowerState,
-		providers.FeatureUserCreate,
-		providers.FeatureUserUpdate,
-		providers.FeatureUserDelete,
-		providers.FeatureBootDeviceSet,
-		providers.FeatureVirtualMedia,
-		providers.FeatureInventoryRead,
-		providers.FeatureBmcReset,
-		providers.FeatureClearSystemEventLog,
-		providers.FeatureGetBiosConfiguration,
-		providers.FeatureSetBiosConfiguration,
-		providers.FeatureResetBiosConfiguration,
-	}
-)
+// Features implemented by gofish
+var Features = registrar.Features{
+	providers.FeaturePowerSet,
+	providers.FeaturePowerState,
+	providers.FeatureUserCreate,
+	providers.FeatureUserUpdate,
+	providers.FeatureUserDelete,
+	providers.FeatureBootDeviceSet,
+	providers.FeatureVirtualMedia,
+	providers.FeatureInventoryRead,
+	providers.FeatureBmcReset,
+	providers.FeatureClearSystemEventLog,
+	providers.FeatureGetBiosConfiguration,
+	providers.FeatureSetBiosConfiguration,
+	providers.FeatureResetBiosConfiguration,
+}
 
 // Conn details for redfish client
 type Conn struct {

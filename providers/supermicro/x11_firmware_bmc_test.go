@@ -173,7 +173,7 @@ func TestX11UploadBMCFirmware(t *testing.T) {
 			if tc.fwFilename != "" {
 				tmpdir := t.TempDir()
 				binPath := filepath.Join(tmpdir, tc.fwFilename)
-				err := os.WriteFile(binPath, []byte(tc.fwFileContents), 0600)
+				err := os.WriteFile(binPath, []byte(tc.fwFileContents), 0o600)
 				if err != nil {
 					t.Fatal(err)
 				}

@@ -32,7 +32,6 @@ func TestExec_Run(t *testing.T) {
 
 	// Call the run function
 	_, err := exec.run(ctx, "GetBIOSInfo")
-
 	// Check the output and error
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
@@ -59,7 +58,6 @@ func TestExec_SetBiosConfiguration(t *testing.T) {
 
 	// Call the SetBiosConfiguration function
 	err := exec.SetBiosConfiguration(ctx, biosConfig)
-
 	// Check for any errors
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
@@ -76,7 +74,6 @@ func TestExec_GetBiosConfiguration(t *testing.T) {
 
 	// Call the SetBiosConfiguration function
 	biosConfig, err := exec.GetBiosConfiguration(ctx)
-
 	// Check for any errors
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)

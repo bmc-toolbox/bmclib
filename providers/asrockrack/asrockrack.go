@@ -27,22 +27,20 @@ const (
 	E3C246D4I_NL  = "E3C246D4I-NL"
 )
 
-var (
-	// Features implemented by asrockrack https
-	Features = registrar.Features{
-		providers.FeaturePostCodeRead,
-		providers.FeatureBmcReset,
-		providers.FeatureUserCreate,
-		providers.FeatureUserUpdate,
-		providers.FeatureFirmwareUpload,
-		providers.FeatureFirmwareInstallUploaded,
-		providers.FeatureFirmwareTaskStatus,
-		providers.FeatureFirmwareInstallSteps,
-		providers.FeatureInventoryRead,
-		providers.FeaturePowerSet,
-		providers.FeaturePowerState,
-	}
-)
+// Features implemented by asrockrack https
+var Features = registrar.Features{
+	providers.FeaturePostCodeRead,
+	providers.FeatureBmcReset,
+	providers.FeatureUserCreate,
+	providers.FeatureUserUpdate,
+	providers.FeatureFirmwareUpload,
+	providers.FeatureFirmwareInstallUploaded,
+	providers.FeatureFirmwareTaskStatus,
+	providers.FeatureFirmwareInstallSteps,
+	providers.FeatureInventoryRead,
+	providers.FeaturePowerSet,
+	providers.FeaturePowerState,
+}
 
 // ASRockRack holds the status and properties of a connection to a asrockrack bmc
 type ASRockRack struct {

@@ -126,7 +126,7 @@ func (c *Conn) Open(ctx context.Context) (err error) {
 }
 
 func (c *Conn) deviceSupported(ctx context.Context) error {
-	var host = c.host
+	host := c.host
 	if !strings.HasPrefix(host, "https://") && !strings.HasPrefix(host, "http://") {
 		host = "https://" + host
 	}

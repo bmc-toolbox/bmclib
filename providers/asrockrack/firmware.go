@@ -51,7 +51,6 @@ func (a *ASRockRack) FirmwareUpload(ctx context.Context, component string, file 
 	}
 
 	return "", errors.Wrap(bmclibErrs.ErrFirmwareUpload, "component unsupported: "+component)
-
 }
 
 func (a *ASRockRack) firmwareUploadBMC(ctx context.Context, file *os.File) error {

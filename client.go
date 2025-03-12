@@ -208,7 +208,6 @@ func (c *Client) registerGofishProvider() {
 
 // register Intel AMT provider
 func (c *Client) registerIntelAMTProvider() {
-
 	iamtOpts := []intelamt.Option{
 		intelamt.WithLogger(c.Logger),
 		intelamt.WithHostScheme(c.providerConfig.intelamt.HostScheme),
@@ -221,7 +220,7 @@ func (c *Client) registerIntelAMTProvider() {
 // register Dell gofish provider
 func (c *Client) registerDellProvider() {
 	dellGofishHttpClient := *c.httpClient
-	//dellGofishHttpClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
+	// dellGofishHttpClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
 	dellGofishOpts := []dell.Option{
 		dell.WithHttpClient(&dellGofishHttpClient),
 		dell.WithVersionsNotCompatible(c.providerConfig.dell.VersionsNotCompatible),
@@ -373,7 +372,6 @@ func (c *Client) Open(ctx context.Context) error {
 
 // Close pass through to library function
 func (c *Client) Close(ctx context.Context) (err error) {
-
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "Close")
 	defer span.End()
 
@@ -613,7 +611,6 @@ func (c *Client) FirmwareInstallStatus(ctx context.Context, installVersion, comp
 	metadata.RegisterSpanAttributes(c.Auth.Host, span)
 
 	return status, err
-
 }
 
 // PostCodeGetter pass through library function to return the BIOS/UEFI POST code

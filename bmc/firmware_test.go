@@ -68,6 +68,7 @@ func TestFirmwareInstall(t *testing.T) {
 		})
 	}
 }
+
 func TestFirmwareInstallFromInterfaces(t *testing.T) {
 	testCases := []struct {
 		testName          string

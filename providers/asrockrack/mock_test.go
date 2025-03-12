@@ -35,9 +35,11 @@ var (
 )
 
 // setup test BMC
-var server *httptest.Server
-var bmcURL *url.URL
-var fwUpgradeState *testFwUpgradeState
+var (
+	server         *httptest.Server
+	bmcURL         *url.URL
+	fwUpgradeState *testFwUpgradeState
+)
 
 type testFwUpgradeState struct {
 	FlashModeSet     bool

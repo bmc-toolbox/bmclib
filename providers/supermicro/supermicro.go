@@ -39,27 +39,25 @@ const (
 	ProviderProtocol = "vendorapi"
 )
 
-var (
-	// Features implemented
-	Features = registrar.Features{
-		providers.FeatureScreenshot,
-		providers.FeatureMountFloppyImage,
-		providers.FeatureUnmountFloppyImage,
-		providers.FeatureFirmwareUpload,
-		providers.FeatureFirmwareInstallUploaded,
-		providers.FeatureFirmwareTaskStatus,
-		providers.FeatureFirmwareInstallSteps,
-		providers.FeatureInventoryRead,
-		providers.FeaturePowerSet,
-		providers.FeaturePowerState,
-		providers.FeatureBmcReset,
-		providers.FeatureGetBiosConfiguration,
-		providers.FeatureSetBiosConfiguration,
-		providers.FeatureSetBiosConfigurationFromFile,
-		providers.FeatureResetBiosConfiguration,
-		providers.FeatureBootProgress,
-	}
-)
+// Features implemented
+var Features = registrar.Features{
+	providers.FeatureScreenshot,
+	providers.FeatureMountFloppyImage,
+	providers.FeatureUnmountFloppyImage,
+	providers.FeatureFirmwareUpload,
+	providers.FeatureFirmwareInstallUploaded,
+	providers.FeatureFirmwareTaskStatus,
+	providers.FeatureFirmwareInstallSteps,
+	providers.FeatureInventoryRead,
+	providers.FeaturePowerSet,
+	providers.FeaturePowerState,
+	providers.FeatureBmcReset,
+	providers.FeatureGetBiosConfiguration,
+	providers.FeatureSetBiosConfiguration,
+	providers.FeatureSetBiosConfigurationFromFile,
+	providers.FeatureResetBiosConfiguration,
+	providers.FeatureBootProgress,
+}
 
 // supports
 //
@@ -584,7 +582,6 @@ func (c *serviceClient) query(ctx context.Context, endpoint, method string, payl
 		if cookie.Name == "SID" && cookie.Value != "" {
 			req.AddCookie(cookie)
 		}
-
 	}
 
 	var reqDump []byte
@@ -634,7 +631,6 @@ func hostIP(hostURL string) (string, error) {
 
 	if strings.Contains(hostURLParsed.Host, ":") {
 		return strings.Split(hostURLParsed.Host, ":")[0], nil
-
 	}
 
 	return hostURLParsed.Host, nil
