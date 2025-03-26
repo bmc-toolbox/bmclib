@@ -5,15 +5,14 @@ import (
 	"crypto/x509"
 	"net/http"
 
+	"github.com/bmc-toolbox/bmclib/v2/bmc"
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
-
-	"github.com/bmc-toolbox/bmclib/v2/bmc"
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 const (
@@ -23,24 +22,22 @@ const (
 	ProviderProtocol = "redfish"
 )
 
-var (
-	// Features implemented by gofish
-	Features = registrar.Features{
-		providers.FeaturePowerSet,
-		providers.FeaturePowerState,
-		providers.FeatureUserCreate,
-		providers.FeatureUserUpdate,
-		providers.FeatureUserDelete,
-		providers.FeatureBootDeviceSet,
-		providers.FeatureVirtualMedia,
-		providers.FeatureInventoryRead,
-		providers.FeatureBmcReset,
-		providers.FeatureClearSystemEventLog,
-		providers.FeatureGetBiosConfiguration,
-		providers.FeatureSetBiosConfiguration,
-		providers.FeatureResetBiosConfiguration,
-	}
-)
+// Features implemented by gofish
+var Features = registrar.Features{
+	providers.FeaturePowerSet,
+	providers.FeaturePowerState,
+	providers.FeatureUserCreate,
+	providers.FeatureUserUpdate,
+	providers.FeatureUserDelete,
+	providers.FeatureBootDeviceSet,
+	providers.FeatureVirtualMedia,
+	providers.FeatureInventoryRead,
+	providers.FeatureBmcReset,
+	providers.FeatureClearSystemEventLog,
+	providers.FeatureGetBiosConfiguration,
+	providers.FeatureSetBiosConfiguration,
+	providers.FeatureResetBiosConfiguration,
+}
 
 // Conn details for redfish client
 type Conn struct {
@@ -216,7 +213,7 @@ func (c *Conn) BootDeviceOverrideGet(ctx context.Context) (bmc.BootDeviceOverrid
 }
 
 // SetVirtualMedia sets the virtual media
-func (c *Conn) SetVirtualMedia(ctx context.Context, kind string, mediaURL string) (ok bool, err error) {
+func (c *Conn) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (ok bool, err error) {
 	return c.redfishwrapper.SetVirtualMedia(ctx, kind, mediaURL)
 }
 

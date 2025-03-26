@@ -8,10 +8,9 @@ import (
 	"time"
 
 	"github.com/bmc-toolbox/bmclib/v2/constants"
-	"github.com/bmc-toolbox/common"
-
 	bmcliberrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	rfw "github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
+	"github.com/bmc-toolbox/common"
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish/redfish"
 )

@@ -47,7 +47,6 @@ func clearSystemEventLog(ctx context.Context, timeout time.Duration, s []systemE
 			metadataLocal.SuccessfulProvider = elem.name
 			return metadataLocal, nil
 		}
-
 	}
 
 	return metadataLocal, multierror.Append(err, errors.New("failed to reset System Event Log"))
@@ -101,7 +100,6 @@ func getSystemEventLog(ctx context.Context, timeout time.Duration, s []systemEve
 			metadataLocal.SuccessfulProvider = elem.name
 			return sel, metadataLocal, nil
 		}
-
 	}
 
 	return nil, metadataLocal, multierror.Append(err, errors.New("failed to get System Event Log"))
@@ -155,7 +153,6 @@ func getSystemEventLogRaw(ctx context.Context, timeout time.Duration, s []system
 			metadataLocal.SuccessfulProvider = elem.name
 			return eventlog, metadataLocal, nil
 		}
-
 	}
 
 	return eventlog, metadataLocal, multierror.Append(err, errors.New("failed to get System Event Log"))

@@ -2,6 +2,7 @@ package httpclient
 
 import (
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -52,9 +53,9 @@ func TestBuildWithOptions(t *testing.T) {
 				opts = append(opts, SecureTLSOption(tc.withCertPool(server.Certificate())))
 			}
 			client := Build(opts...)
-			req, _ := http.NewRequest(http.MethodGet, server.URL, nil)
+			req, _ := http.NewRequest(http.MethodGet, server.URL, http.NoBody) // nolint:noctx
 
-			_, err := client.Do(req)
+			resp, err := client.Do(req)
 			if tc.wantErr {
 				if err == nil {
 					t.Fatal("Missing expected error")
@@ -62,7 +63,7 @@ func TestBuildWithOptions(t *testing.T) {
 
 				// Different versions of Go return different error messages so we just
 				// check that its a *url.Error{}
-				if _, ok := err.(*url.Error); !ok {
+				if errors.Is(err, &url.Error{}) {
 					t.Fatalf("Missing expected error: got %T: '%s'", err, err)
 				}
 				return
@@ -71,6 +72,8 @@ func TestBuildWithOptions(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Got unexpected error %s", err)
 			}
+
+			resp.Body.Close()
 		})
 	}
 }

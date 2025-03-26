@@ -250,13 +250,13 @@ func redfishVersionMeetsOrExceeds(version string, major, minor, patch int) bool 
 		return false
 	}
 
-	var rfVer []int64
-	for _, part := range parts {
-		ver, err := strconv.ParseInt(part, 10, 32)
+	rfVer := make([]int64, 3)
+	for i := range parts {
+		ver, err := strconv.ParseInt(parts[i], 10, 32)
 		if err != nil {
 			return false
 		}
-		rfVer = append(rfVer, ver)
+		rfVer[i] = ver
 	}
 
 	if rfVer[0] < int64(major) {

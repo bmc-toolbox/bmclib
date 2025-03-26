@@ -138,7 +138,7 @@ func TestManagerOdataID(t *testing.T) {
 
 			ctx := context.Background()
 
-			//os.Setenv("DEBUG_BMCLIB", "true")
+			// os.Setenv("DEBUG_BMCLIB", "true")
 			client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "")
 
 			err = client.Open(ctx)
@@ -291,7 +291,7 @@ func TestGetBootProgress(t *testing.T) {
 				"/redfish/v1/Systems/1": endpointFunc(t, "smc_1.14.0_systems_1.json"),
 			},
 			expect: []*redfish.BootProgress{
-				&redfish.BootProgress{
+				{
 					LastState: redfish.SystemHardwareInitializationCompleteBootProgressTypes,
 				},
 			},
@@ -339,5 +339,4 @@ func TestGetBootProgress(t *testing.T) {
 			assert.ElementsMatch(t, tc.expect, got)
 		})
 	}
-
 }

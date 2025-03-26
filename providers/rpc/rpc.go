@@ -131,7 +131,7 @@ type Experimental struct {
 }
 
 // New returns a new Config containing all the defaults for the rpc provider.
-func New(consumerURL string, host string, secrets Secrets) *Provider {
+func New(consumerURL, host string, secrets Secrets) *Provider {
 	// defaults
 	c := &Provider{
 		Host:        host,

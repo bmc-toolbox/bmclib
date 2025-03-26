@@ -7,9 +7,7 @@ import (
 	"os"
 
 	"github.com/bmc-toolbox/bmclib/v2/constants"
-	bconsts "github.com/bmc-toolbox/bmclib/v2/constants"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
-
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 )
@@ -26,7 +24,7 @@ type FirmwareInstaller interface {
 	//
 	// return values:
 	// taskID - A taskID is returned if the update process on the BMC returns an identifier for the update process.
-	FirmwareInstall(ctx context.Context, component string, operationApplyTime string, forceInstall bool, reader io.Reader) (taskID string, err error)
+	FirmwareInstall(ctx context.Context, component, operationApplyTime string, forceInstall bool, reader io.Reader) (taskID string, err error)
 }
 
 // firmwareInstallerProvider is an internal struct to correlate an implementation/provider and its name
@@ -55,7 +53,6 @@ func firmwareInstall(ctx context.Context, component, operationApplyTime string, 
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				metadata.FailedProviderDetail[elem.name] = err.Error()
 				continue
-
 			}
 			metadata.SuccessfulProvider = elem.name
 			return taskID, metadata, nil
@@ -97,7 +94,7 @@ func FirmwareInstallFromInterfaces(ctx context.Context, component, operationAppl
 	return firmwareInstall(ctx, component, operationApplyTime, forceInstall, reader, implementations)
 }
 
-// Note: this interface is to be deprecated in favour of a more generic FirmwareTaskVerifier.
+// Note: this interface is to be deprecated in favor of a more generic FirmwareTaskVerifier.
 //
 // FirmwareInstallVerifier defines an interface to check firmware install status
 type FirmwareInstallVerifier interface {
@@ -139,7 +136,6 @@ func firmwareInstallStatus(ctx context.Context, installVersion, component, taskI
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				metadata.FailedProviderDetail[elem.name] = err.Error()
 				continue
-
 			}
 			metadata.SuccessfulProvider = elem.name
 			return status, metadata, nil
@@ -299,7 +295,6 @@ func firmwareInstallUploaded(ctx context.Context, component, uploadTaskID string
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				metadata.FailedProviderDetail[elem.name] = err.Error()
 				continue
-
 			}
 			metadata.SuccessfulProvider = elem.name
 			return installTaskID, metadata, nil
@@ -402,7 +397,6 @@ func firmwareInstallSteps(ctx context.Context, component string, generic []firmw
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				metadata.FailedProviderDetail[elem.name] = err.Error()
 				continue
-
 			}
 			metadata.SuccessfulProvider = elem.name
 			return steps, metadata, nil
@@ -473,7 +467,6 @@ func firmwareUpload(ctx context.Context, component string, file *os.File, generi
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				metadata.FailedProviderDetail[elem.name] = err.Error()
 				continue
-
 			}
 			metadata.SuccessfulProvider = elem.name
 			return taskID, metadata, nil
@@ -499,7 +492,7 @@ type FirmwareTaskVerifier interface {
 	// return values:
 	// state - returns one of the FirmwareTask statuses (see devices/constants.go).
 	// status - returns firmware task progress or other arbitrary task information.
-	FirmwareTaskStatus(ctx context.Context, kind bconsts.FirmwareInstallStep, component, taskID, installVersion string) (state constants.TaskState, status string, err error)
+	FirmwareTaskStatus(ctx context.Context, kind constants.FirmwareInstallStep, component, taskID, installVersion string) (state constants.TaskState, status string, err error)
 }
 
 // firmwareTaskVerifierProvider is an internal struct to correlate an implementation/provider and its name
@@ -510,7 +503,7 @@ type firmwareTaskVerifierProvider struct {
 
 // firmwareTaskStatus returns the status of the firmware upload process.
 
-func firmwareTaskStatus(ctx context.Context, kind bconsts.FirmwareInstallStep, component, taskID, installVersion string, generic []firmwareTaskVerifierProvider) (state constants.TaskState, status string, metadata Metadata, err error) {
+func firmwareTaskStatus(ctx context.Context, kind constants.FirmwareInstallStep, component, taskID, installVersion string, generic []firmwareTaskVerifierProvider) (state constants.TaskState, status string, metadata Metadata, err error) {
 	metadata = newMetadata()
 
 	for _, elem := range generic {
@@ -540,7 +533,7 @@ func firmwareTaskStatus(ctx context.Context, kind bconsts.FirmwareInstallStep, c
 }
 
 // FirmwareTaskStatusFromInterfaces identifies implementations of the FirmwareTaskVerifier interface and passes the found implementations to the firmwareTaskStatus() wrapper.
-func FirmwareTaskStatusFromInterfaces(ctx context.Context, kind bconsts.FirmwareInstallStep, component, taskID, installVersion string, generic []interface{}) (state constants.TaskState, status string, metadata Metadata, err error) {
+func FirmwareTaskStatusFromInterfaces(ctx context.Context, kind constants.FirmwareInstallStep, component, taskID, installVersion string, generic []interface{}) (state constants.TaskState, status string, metadata Metadata, err error) {
 	metadata = newMetadata()
 
 	implementations := make([]firmwareTaskVerifierProvider, 0)

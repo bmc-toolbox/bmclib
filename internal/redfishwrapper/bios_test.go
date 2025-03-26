@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func biosConfigFromFixture(t *testing.T) map[string]string {
@@ -31,13 +32,13 @@ func biosConfigFromFixture(t *testing.T) map[string]string {
 	}
 
 	var bios map[string]any
-	err = json.Unmarshal([]byte(b), &bios)
+	err = json.Unmarshal(b, &bios)
 	if err != nil {
 		t.Fatalf("%s, failed to unmarshal fixture: %s", err.Error(), fixturePath)
 	}
 
 	expectedBiosConfig := make(map[string]string)
-	for k, v := range bios["Attributes"].(map[string]any) {
+	for k, v := range bios["Attributes"].(map[string]any) { // nolint:forcetypeassert
 		expectedBiosConfig[k] = fmt.Sprintf("%v", v)
 	}
 
@@ -87,7 +88,7 @@ func TestGetBiosConfiguration(t *testing.T) {
 			}
 
 			biosConfig, err := client.GetBiosConfiguration(ctx)
-			assert.Nil(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tc.expectedBiosConfig, biosConfig)
 		})
 	}

@@ -16,6 +16,7 @@ import (
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/goleak"
 )
 
@@ -25,7 +26,7 @@ func TestRunRequestWithMultipartPayload(t *testing.T) {
 	// init things
 	tmpdir := t.TempDir()
 	binPath := filepath.Join(tmpdir, "test.bin")
-	err := os.WriteFile(binPath, []byte(`HELLOWORLD`), 0600)
+	err := os.WriteFile(binPath, []byte(`HELLOWORLD`), 0o600)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,7 +40,7 @@ func TestRunRequestWithMultipartPayload(t *testing.T) {
 	defer os.Remove(binPath)
 
 	multipartEndpoint := func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != "POST" {
+		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusNotFound)
 		}
 
@@ -115,13 +116,14 @@ func TestRunRequestWithMultipartPayload(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			_, err = client.runRequestWithMultipartPayload(tc.updateURI, tc.payload)
+			resp, err := client.runRequestWithMultipartPayload(tc.updateURI, tc.payload)
 			if tc.err != nil {
 				assert.ErrorContains(t, err, tc.err.Error())
 				return
 			}
 
-			assert.Nil(t, err)
+			require.NoError(t, err)
+			resp.Body.Close()
 			client.Close(context.Background())
 		})
 	}
@@ -203,8 +205,8 @@ func TestFirmwareInstallMethodURI(t *testing.T) {
 				return
 			}
 
-			assert.Nil(t, err)
-			assert.Equal(t, tc.expectInstallMethod, gotMethod)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectInstallMethod, gotMethod)
 			assert.Equal(t, tc.expectUpdateURI, gotURI)
 
 			client.Close(context.Background())
@@ -247,7 +249,7 @@ func TestTaskIDFromResponseBody(t *testing.T) {
 				return
 			}
 
-			assert.Nil(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tc.expectedID, taskID)
 		})
 	}
@@ -300,7 +302,7 @@ func TestTaskIDFromLocationHeader(t *testing.T) {
 				return
 			}
 
-			assert.Nil(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tc.expectedID, taskID)
 		})
 	}
@@ -335,15 +337,14 @@ func TestUpdateParametersFormField(t *testing.T) {
 				return
 			}
 
-			assert.NoError(t, err)
-			assert.Contains(t, buf.String(), `Content-Disposition: form-data; name="UpdateParameters`)
-			assert.Contains(t, buf.String(), `Content-Type: application/json`)
-			assert.NotNil(t, output)
+			require.NoError(t, err)
+			require.Contains(t, buf.String(), `Content-Disposition: form-data; name="UpdateParameters`)
+			require.Contains(t, buf.String(), `Content-Type: application/json`)
+			require.NotNil(t, output)
 
 			// Validate the created multipart form content
 			err = writer.Close()
 			assert.NoError(t, err)
-
 		})
 	}
 }
@@ -358,14 +359,13 @@ func TestMultipartPayloadSize(t *testing.T) {
 		"foobar",
 		struct{}{},
 	})
-
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	tmpdir := t.TempDir()
 	binPath := filepath.Join(tmpdir, "test.bin")
-	err = os.WriteFile(binPath, []byte(`HELLOWORLD`), 0600)
+	err = os.WriteFile(binPath, []byte(`HELLOWORLD`), 0o600)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -394,12 +394,12 @@ func TestMultipartPayloadSize(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.testName, func(t *testing.T) {
-			gotSize, _, err := multipartPayloadSize(tc.payload)
+			gotSize, err := multipartPayloadSize(tc.payload)
 			if tc.errorMsg != "" {
 				assert.Contains(t, err.Error(), tc.errorMsg)
 			}
 
-			assert.Nil(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tc.expectedSize, gotSize)
 		})
 	}

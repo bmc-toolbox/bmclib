@@ -13,6 +13,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -67,7 +68,6 @@ func TestParseToken(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			gotToken := parseToken(tc.body)
 			assert.Equal(t, tc.expectToken, gotToken)
-
 		})
 	}
 }
@@ -92,6 +92,7 @@ func mustReadFile(t *testing.T, filename string) []byte {
 }
 
 var endpointFunc = func(t *testing.T, file string) http.HandlerFunc {
+	t.Helper()
 	return func(w http.ResponseWriter, r *http.Request) {
 		// expect either GET or Delete methods
 		if r.Method != http.MethodGet && r.Method != http.MethodPost && r.Method != http.MethodDelete {
@@ -118,13 +119,13 @@ func TestOpen(t *testing.T) {
 			"foo",
 			"bar",
 			handlerFuncMap{
-				"/": func(w http.ResponseWriter, r *http.Request) {
+				"/": func(w http.ResponseWriter, _ *http.Request) {
 					w.WriteHeader(http.StatusOK)
 				},
 				"/redfish/v1/": endpointFunc(t, "serviceroot.json"),
 				// first request to login
 				"/cgi/login.cgi": func(w http.ResponseWriter, r *http.Request) {
-					assert.Equal(t, r.Method, http.MethodPost)
+					assert.Equal(t, http.MethodPost, r.Method)
 					assert.Equal(t, "application/x-www-form-urlencoded", r.Header.Get("Content-Type"))
 
 					b, err := io.ReadAll(r.Body)
@@ -155,7 +156,7 @@ func TestOpen(t *testing.T) {
 
 				// second request for the csrf token
 				"/cgi/url_redirect.cgi": func(w http.ResponseWriter, r *http.Request) {
-					assert.Equal(t, r.Method, http.MethodGet)
+					assert.Equal(t, http.MethodGet, r.Method)
 					assert.Equal(t, "url_name=topmenu", r.URL.RawQuery)
 					_, err := io.ReadAll(r.Body)
 					if err != nil {
@@ -167,7 +168,7 @@ func TestOpen(t *testing.T) {
 				},
 				// request for model
 				"/cgi/ipmi.cgi": func(w http.ResponseWriter, r *http.Request) {
-					assert.Equal(t, r.Method, http.MethodPost)
+					assert.Equal(t, http.MethodPost, r.Method)
 					assert.Equal(t, "application/x-www-form-urlencoded; charset=UTF-8", r.Header.Get("Content-Type"))
 
 					b, err := io.ReadAll(r.Body)
@@ -192,10 +193,10 @@ func TestOpen(t *testing.T) {
 			"bar",
 			handlerFuncMap{
 				"/cgi/login.cgi": func(w http.ResponseWriter, r *http.Request) {
-					assert.Equal(t, r.Method, http.MethodPost)
-					assert.Equal(t, r.Header.Get("Content-Type"), "application/x-www-form-urlencoded")
+					assert.Equal(t, http.MethodPost, r.Method)
+					assert.Equal(t, "application/x-www-form-urlencoded", r.Header.Get("Content-Type"))
 					response := []byte(`barf`)
-					w.WriteHeader(401)
+					w.WriteHeader(http.StatusUnauthorized)
 					_, _ = w.Write(response)
 				},
 			},
@@ -234,10 +235,9 @@ func TestOpen(t *testing.T) {
 				return
 			}
 
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 		})
 	}
-
 }
 
 func TestClose(t *testing.T) {
@@ -256,14 +256,14 @@ func TestClose(t *testing.T) {
 			"bar",
 			"/cgi/logout.cgi",
 			func(w http.ResponseWriter, r *http.Request) {
-				assert.Equal(t, r.Method, http.MethodGet)
+				assert.Equal(t, http.MethodGet, r.Method)
 
 				_, err := io.ReadAll(r.Body)
 				if err != nil {
 					t.Fatal(err)
 				}
 
-				w.WriteHeader(200)
+				w.WriteHeader(http.StatusOK)
 			},
 		},
 	}
@@ -289,11 +289,10 @@ func TestClose(t *testing.T) {
 				return
 			}
 
-			assert.Nil(t, err)
+			require.NoError(t, err)
 			assert.Nil(t, client.serviceClient.redfish)
 		})
 	}
-
 }
 
 func TestInitScreenPreview(t *testing.T) {
@@ -308,8 +307,8 @@ func TestInitScreenPreview(t *testing.T) {
 			"",
 			"/cgi/op.cgi",
 			func(w http.ResponseWriter, r *http.Request) {
-				assert.Equal(t, r.Method, http.MethodPost)
-				assert.Equal(t, r.Header.Get("Content-Type"), "application/x-www-form-urlencoded")
+				assert.Equal(t, http.MethodPost, r.Method)
+				assert.Equal(t, "application/x-www-form-urlencoded", r.Header.Get("Content-Type"))
 
 				b, err := io.ReadAll(r.Body)
 				if err != nil {
@@ -328,7 +327,7 @@ func TestInitScreenPreview(t *testing.T) {
 			"400",
 			"/cgi/op.cgi",
 			func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(400)
+				w.WriteHeader(http.StatusBadRequest)
 			},
 		},
 	}
@@ -353,8 +352,7 @@ func TestInitScreenPreview(t *testing.T) {
 				return
 			}
 
-			assert.Nil(t, err)
-
+			assert.NoError(t, err)
 		})
 	}
 }
@@ -373,8 +371,8 @@ func TestFetchScreenPreview(t *testing.T) {
 			"",
 			"/cgi/url_redirect.cgi",
 			func(w http.ResponseWriter, r *http.Request) {
-				assert.Equal(t, r.Method, http.MethodGet)
-				assert.Equal(t, r.Header.Get("Content-Type"), "application/x-www-form-urlencoded")
+				assert.Equal(t, http.MethodGet, r.Method)
+				assert.Equal(t, "application/x-www-form-urlencoded", r.Header.Get("Content-Type"))
 				assert.Equal(t, "url_name=Snapshot&url_type=img", r.URL.RawQuery)
 
 				_, _ = w.Write([]byte(`fake image is fake`))
@@ -386,7 +384,7 @@ func TestFetchScreenPreview(t *testing.T) {
 			"400",
 			"/cgi/url_redirect.cgi",
 			func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(400)
+				w.WriteHeader(http.StatusBadRequest)
 			},
 		},
 	}
@@ -412,7 +410,7 @@ func TestFetchScreenPreview(t *testing.T) {
 				return
 			}
 
-			assert.Nil(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tc.expectImage, image)
 		})
 	}

@@ -17,6 +17,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestX11SetBMCFirmwareInstallMode(t *testing.T) {
@@ -73,7 +74,7 @@ func TestX11SetBMCFirmwareInstallMode(t *testing.T) {
 			"400",
 			"/cgi/ipmi.cgi",
 			func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(400)
+				w.WriteHeader(http.StatusBadRequest)
 			},
 		},
 	}
@@ -92,7 +93,7 @@ func TestX11SetBMCFirmwareInstallMode(t *testing.T) {
 			}
 
 			serviceClient := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
-			assert.Nil(t, err)
+			require.NoError(t, err)
 
 			client := &x11{serviceClient: serviceClient, log: logr.Discard()}
 
@@ -103,7 +104,7 @@ func TestX11SetBMCFirmwareInstallMode(t *testing.T) {
 					return
 				}
 
-				assert.Nil(t, err)
+				assert.NoError(t, err)
 			}
 		})
 	}
@@ -133,7 +134,7 @@ func TestX11UploadBMCFirmware(t *testing.T) {
 
 				// validate content type
 				mediaType, params, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
-				assert.Nil(t, err)
+				assert.NoError(t, err)
 
 				assert.Equal(t, "multipart/form-data", mediaType)
 
@@ -142,13 +143,13 @@ func TestX11UploadBMCFirmware(t *testing.T) {
 
 				// validate firmware image part
 				part, err := reader.NextPart()
-				assert.Nil(t, err)
+				assert.NoError(t, err)
 
 				assert.Equal(t, `form-data; name="fw_image"; filename="blob.bin"`, part.Header.Get("Content-Disposition"))
 
 				// validate csrf-token part
 				part, err = reader.NextPart()
-				assert.Nil(t, err)
+				assert.NoError(t, err)
 
 				assert.Equal(t, `form-data; name="CSRF_TOKEN"`, part.Header.Get("Content-Disposition"))
 			},
@@ -173,7 +174,7 @@ func TestX11UploadBMCFirmware(t *testing.T) {
 			if tc.fwFilename != "" {
 				tmpdir := t.TempDir()
 				binPath := filepath.Join(tmpdir, tc.fwFilename)
-				err := os.WriteFile(binPath, []byte(tc.fwFileContents), 0600)
+				err := os.WriteFile(binPath, []byte(tc.fwFileContents), 0o600)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -187,7 +188,7 @@ func TestX11UploadBMCFirmware(t *testing.T) {
 			}
 
 			serviceClient := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
-			assert.Nil(t, err)
+			require.NoError(t, err)
 			serviceClient.csrfToken = "foobar"
 			client := &x11{serviceClient: serviceClient, log: logr.Discard()}
 
@@ -198,7 +199,7 @@ func TestX11UploadBMCFirmware(t *testing.T) {
 					return
 				}
 
-				assert.Nil(t, err)
+				assert.NoError(t, err)
 			}
 		})
 	}
@@ -269,7 +270,7 @@ func TestX11VerifyBMCFirmwareVersion(t *testing.T) {
 			}
 
 			serviceClient := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
-			assert.Nil(t, err)
+			require.NoError(t, err)
 			serviceClient.csrfToken = "foobar"
 			client := &x11{serviceClient: serviceClient, log: logr.Discard()}
 
@@ -280,7 +281,7 @@ func TestX11VerifyBMCFirmwareVersion(t *testing.T) {
 					return
 				}
 
-				assert.Nil(t, err)
+				assert.NoError(t, err)
 			}
 		})
 	}
@@ -351,7 +352,7 @@ func TestX11InitiateBMCFirmwareInstall(t *testing.T) {
 			}
 
 			serviceClient := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
-			assert.Nil(t, err)
+			require.NoError(t, err)
 			serviceClient.csrfToken = "foobar"
 			client := &x11{serviceClient: serviceClient, log: logr.Discard()}
 
@@ -362,7 +363,7 @@ func TestX11InitiateBMCFirmwareInstall(t *testing.T) {
 					return
 				}
 
-				assert.Nil(t, err)
+				assert.NoError(t, err)
 			}
 		})
 	}
@@ -515,7 +516,7 @@ func TestX11StatusBMCFirmwareInstall(t *testing.T) {
 			}
 
 			serviceClient := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
-			assert.Nil(t, err)
+			require.NoError(t, err)
 
 			serviceClient.csrfToken = "foobar"
 			client := &x11{serviceClient: serviceClient, log: logr.Discard()}
@@ -529,8 +530,8 @@ func TestX11StatusBMCFirmwareInstall(t *testing.T) {
 				}
 			}
 
-			assert.Nil(t, err)
-			assert.Equal(t, tc.expectState, gotState)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectState, gotState)
 			assert.Equal(t, tc.expectStatus, gotStatus)
 		})
 	}

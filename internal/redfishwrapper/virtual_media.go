@@ -10,7 +10,7 @@ import (
 )
 
 // Set the virtual media attached to the system, or just eject everything if mediaURL is empty.
-func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL string) (bool, error) {
+func (c *Client) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (bool, error) {
 	managers, err := c.Managers(ctx)
 	if err != nil {
 		return false, err
@@ -54,15 +54,15 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL stri
 				// Only ejecting the media was requested.
 				if vm.Inserted && vm.SupportsMediaEject {
 					if err := vm.EjectMedia(); err != nil {
-						return false, fmt.Errorf("error ejecting media: %v", err)
+						return false, fmt.Errorf("error ejecting media: %w", err)
 					}
 				}
 				return true, nil
 			}
-			// Ejecting the media before inserting a new new media makes the success rate of inserting the new media higher.
+			// Ejecting the media before inserting a new media makes the success rate of inserting the new media higher.
 			if vm.Inserted && vm.SupportsMediaEject {
 				if err := vm.EjectMedia(); err != nil {
-					return false, fmt.Errorf("error ejecting media before inserting media: %v", err)
+					return false, fmt.Errorf("error ejecting media before inserting media: %w", err)
 				}
 			}
 

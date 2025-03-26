@@ -43,7 +43,6 @@ func postCode(ctx context.Context, generic []postCodeGetterProvider) (status str
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				err = multierror.Append(err, vErr)
 				continue
-
 			}
 			metadataLocal.SuccessfulProvider = elem.name
 			return status, code, metadataLocal, nil

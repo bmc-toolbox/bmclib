@@ -10,6 +10,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestConvertTaskState(t *testing.T) {
@@ -24,14 +25,14 @@ func TestConvertTaskState(t *testing.T) {
 		{"scheduling state", "scheduling", constants.Initializing},
 		{"running state", "running", constants.Running},
 		{"stopping state", "stopping", constants.Running},
-		{"cancelling state", "cancelling", constants.Running},
+		{"cancelling state", "cancelling", constants.Running}, // nolint:misspell
 		{"pending state", "pending", constants.Queued},
 		{"new state", "new", constants.Queued},
 		{"scheduled state", "scheduled", constants.PowerCycleHost},
 		{"interrupted state", "interrupted", constants.Failed},
 		{"killed state", "killed", constants.Failed},
 		{"exception state", "exception", constants.Failed},
-		{"cancelled state", "cancelled", constants.Failed},
+		{"cancelled state", "cancelled", constants.Failed}, // nolint:misspell
 		{"suspended state", "suspended", constants.Failed},
 		{"failed state", "failed", constants.Failed},
 		{"completed state", "completed", constants.Complete},
@@ -209,9 +210,9 @@ func TestTaskStatus(t *testing.T) {
 				return
 			}
 
-			assert.Nil(t, err)
-			assert.Equal(t, tc.expectedState, state)
-			assert.Equal(t, tc.expectedStatus, status)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedState, state)
+			require.Equal(t, tc.expectedStatus, status)
 
 			client.Close(context.Background())
 		})
@@ -277,7 +278,7 @@ func TestTask(t *testing.T) {
 
 			ctx := context.Background()
 
-			//os.Setenv("DEBUG_BMCLIB", "true")
+			// os.Setenv("DEBUG_BMCLIB", "true")
 			client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "", WithBasicAuthEnabled(true))
 
 			err = client.Open(ctx)
@@ -291,9 +292,9 @@ func TestTask(t *testing.T) {
 				return
 			}
 
-			assert.Nil(t, err)
-			assert.NotNil(t, got)
-			assert.Equal(t, tc.expectTaskStatus, string(got.TaskStatus))
+			require.NoError(t, err)
+			require.NotNil(t, got)
+			require.Equal(t, tc.expectTaskStatus, string(got.TaskStatus))
 			assert.Equal(t, tc.expectTaskState, string(got.TaskState))
 
 			client.Close(context.Background())

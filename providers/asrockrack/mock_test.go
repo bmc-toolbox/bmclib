@@ -35,9 +35,11 @@ var (
 )
 
 // setup test BMC
-var server *httptest.Server
-var bmcURL *url.URL
-var fwUpgradeState *testFwUpgradeState
+var (
+	server         *httptest.Server
+	bmcURL         *url.URL
+	fwUpgradeState *testFwUpgradeState
+)
 
 type testFwUpgradeState struct {
 	FlashModeSet     bool
@@ -97,27 +99,27 @@ func mockASRockBMC() *httptest.Server {
 
 func index(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		_, _ = w.Write([]byte(`ASRockRack`))
 	}
 }
 
 func userAccountList(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		if os.Getenv("TEST_FAIL_QUERY") != "" {
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
 			_, _ = w.Write(usersPayload)
 		}
-	case "PUT":
+	case http.MethodPut:
 		httpRequestTestVar = r
 	}
 }
 
 func biosFirmwareUpgrade(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "POST":
+	case http.MethodPost:
 		switch r.RequestURI {
 		case "/api/asrr/maintenance/BIOS/firmware":
 
@@ -137,7 +139,7 @@ func biosFirmwareUpgrade(w http.ResponseWriter, r *http.Request) {
 
 func bmcFirmwareUpgrade(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		switch r.RequestURI {
 		// 3. bmc verifies uploaded firmware image
 		case "/api/maintenance/firmware/verification":
@@ -166,7 +168,7 @@ func bmcFirmwareUpgrade(w http.ResponseWriter, r *http.Request) {
 			resp = bytes.Replace(resp, []byte("__PERCENT__"), []byte(strconv.Itoa(fwUpgradeState.UpgradePercent)), 1)
 			_, _ = w.Write(resp)
 		}
-	case "PUT":
+	case http.MethodPut:
 
 		switch r.RequestURI {
 		// 1. set device to flash mode
@@ -206,7 +208,7 @@ func bmcFirmwareUpgrade(w http.ResponseWriter, r *http.Request) {
 			_, _ = b.ReadFrom(r.Body)
 			_, _ = w.Write(b.Bytes())
 		}
-	case "POST":
+	case http.MethodPost:
 		switch r.RequestURI {
 		case "/api/maintenance/reset":
 			w.WriteHeader(http.StatusOK)
@@ -240,28 +242,28 @@ func bmcFirmwareUpgrade(w http.ResponseWriter, r *http.Request) {
 
 func fwinfo(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		_, _ = w.Write(fwinfoResponse)
 	}
 }
 
 func fruinfo(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		_, _ = w.Write(fruinfoResponse)
 	}
 }
 
 func inventoryinfo(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		_, _ = w.Write(inventoryinfoResponse)
 	}
 }
 
 func sensorsinfo(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		fh, err := os.Open("./fixtures/E3C246D4I-NL/sensors.json")
 		if err != nil {
 			log.Fatal(err)
@@ -277,21 +279,21 @@ func sensorsinfo(w http.ResponseWriter, r *http.Request) {
 
 func biosPOSTCodeinfo(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		_, _ = w.Write(biosPOSTCodeResponse)
 	}
 }
 
 func chassisStatusInfo(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		_, _ = w.Write(chassisStatusResponse)
 	}
 }
 
 func session(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "POST":
+	case http.MethodPost:
 		// login to BMC
 		b, _ := io.ReadAll(r.Body)
 		if string(b) == string(loginPayload) {
@@ -306,7 +308,7 @@ func session(w http.ResponseWriter, r *http.Request) {
 		} else {
 			w.WriteHeader(http.StatusBadRequest)
 		}
-	case "DELETE":
+	case http.MethodDelete:
 		if r.Header.Get("X-Csrftoken") != "l5L29IP7" {
 			w.WriteHeader(http.StatusBadRequest)
 		}

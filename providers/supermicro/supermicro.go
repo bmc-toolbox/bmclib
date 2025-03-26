@@ -17,19 +17,16 @@ import (
 	"time"
 
 	"github.com/bmc-toolbox/bmclib/v2/constants"
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/bmc-toolbox/bmclib/v2/internal/sum"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/bmc-toolbox/common"
-	"github.com/stmcginnis/gofish/redfish"
-
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 	"github.com/pkg/errors"
-
-	bmclibconsts "github.com/bmc-toolbox/bmclib/v2/constants"
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/stmcginnis/gofish/redfish"
 )
 
 const (
@@ -39,27 +36,25 @@ const (
 	ProviderProtocol = "vendorapi"
 )
 
-var (
-	// Features implemented
-	Features = registrar.Features{
-		providers.FeatureScreenshot,
-		providers.FeatureMountFloppyImage,
-		providers.FeatureUnmountFloppyImage,
-		providers.FeatureFirmwareUpload,
-		providers.FeatureFirmwareInstallUploaded,
-		providers.FeatureFirmwareTaskStatus,
-		providers.FeatureFirmwareInstallSteps,
-		providers.FeatureInventoryRead,
-		providers.FeaturePowerSet,
-		providers.FeaturePowerState,
-		providers.FeatureBmcReset,
-		providers.FeatureGetBiosConfiguration,
-		providers.FeatureSetBiosConfiguration,
-		providers.FeatureSetBiosConfigurationFromFile,
-		providers.FeatureResetBiosConfiguration,
-		providers.FeatureBootProgress,
-	}
-)
+// Features implemented
+var Features = registrar.Features{
+	providers.FeatureScreenshot,
+	providers.FeatureMountFloppyImage,
+	providers.FeatureUnmountFloppyImage,
+	providers.FeatureFirmwareUpload,
+	providers.FeatureFirmwareInstallUploaded,
+	providers.FeatureFirmwareTaskStatus,
+	providers.FeatureFirmwareInstallSteps,
+	providers.FeatureInventoryRead,
+	providers.FeaturePowerSet,
+	providers.FeaturePowerState,
+	providers.FeatureBmcReset,
+	providers.FeatureGetBiosConfiguration,
+	providers.FeatureSetBiosConfiguration,
+	providers.FeatureSetBiosConfigurationFromFile,
+	providers.FeatureResetBiosConfiguration,
+	providers.FeatureBootProgress,
+}
 
 // supports
 //
@@ -415,7 +410,7 @@ func (c *Client) Screenshot(ctx context.Context) (image []byte, fileType string,
 	// retrieve screen preview
 	image, errFetch := c.fetchScreenPreview(ctx)
 	if errFetch != nil {
-		return nil, "", err
+		return nil, "", err // nolint:nilerr
 	}
 
 	return image, fileType, nil
@@ -529,7 +524,7 @@ func (c *serviceClient) supportsFirmwareInstall(model string) error {
 	return errors.Wrap(ErrModelUnsupported, "firmware install not supported for: "+model)
 }
 
-func (c *serviceClient) query(ctx context.Context, endpoint, method string, payload io.Reader, headers map[string]string, contentLength int64) ([]byte, int, error) {
+func (c *serviceClient) query(ctx context.Context, endpoint, method string, payload io.Reader, headers map[string]string, _ int64) ([]byte, int, error) {
 	var body []byte
 	var err error
 	var req *http.Request
@@ -567,13 +562,6 @@ func (c *serviceClient) query(ctx context.Context, endpoint, method string, payl
 		req.Header.Add(k, v)
 	}
 
-	// Content-Length headers are ignored, unless defined in this manner
-	// https://go.googlesource.com/go/+/go1.20/src/net/http/request.go#165
-	// https://go.googlesource.com/go/+/go1.20/src/net/http/request.go#91
-	if contentLength > 0 {
-		req.ContentLength = contentLength
-	}
-
 	endpointURL, err := url.Parse(hostEndpoint)
 	if err != nil {
 		return nil, 0, err
@@ -584,12 +572,11 @@ func (c *serviceClient) query(ctx context.Context, endpoint, method string, payl
 		if cookie.Name == "SID" && cookie.Value != "" {
 			req.AddCookie(cookie)
 		}
-
 	}
 
 	var reqDump []byte
 
-	if os.Getenv(bmclibconsts.EnvEnableDebug) == "true" {
+	if os.Getenv(constants.EnvEnableDebug) == "true" {
 		reqDump, _ = httputil.DumpRequestOut(req, true)
 	}
 
@@ -600,7 +587,7 @@ func (c *serviceClient) query(ctx context.Context, endpoint, method string, payl
 
 	// cookies are visible after the request has been made, so we dump the request and cookies here
 	// https://github.com/golang/go/issues/22745
-	if os.Getenv(bmclibconsts.EnvEnableDebug) == "true" {
+	if os.Getenv(constants.EnvEnableDebug) == "true" {
 		fmt.Println(string(reqDump))
 
 		for _, v := range req.Cookies() {
@@ -610,7 +597,7 @@ func (c *serviceClient) query(ctx context.Context, endpoint, method string, payl
 	}
 
 	// debug dump response
-	if os.Getenv(bmclibconsts.EnvEnableDebug) == "true" {
+	if os.Getenv(constants.EnvEnableDebug) == "true" {
 		respDump, _ := httputil.DumpResponse(resp, true)
 
 		fmt.Println(string(respDump))
@@ -634,7 +621,6 @@ func hostIP(hostURL string) (string, error) {
 
 	if strings.Contains(hostURLParsed.Host, ":") {
 		return strings.Split(hostURLParsed.Host, ":")[0], nil
-
 	}
 
 	return hostURLParsed.Host, nil

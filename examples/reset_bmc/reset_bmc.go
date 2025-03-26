@@ -44,5 +44,4 @@ func main() {
 	if err != nil {
 		l.Error(err)
 	}
-
 }

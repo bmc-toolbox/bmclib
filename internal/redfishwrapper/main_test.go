@@ -28,7 +28,9 @@ func mustReadFile(t *testing.T, filename string) []byte {
 }
 
 var endpointFunc = func(t *testing.T, file string) http.HandlerFunc {
+	t.Helper()
 	return func(w http.ResponseWriter, r *http.Request) {
+		t.Helper()
 		if file == "404" {
 			w.WriteHeader(http.StatusNotFound)
 		}

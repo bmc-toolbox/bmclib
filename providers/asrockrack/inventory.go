@@ -206,7 +206,6 @@ func (a *ASRockRack) componentAttributesE3C246(ctx context.Context, fwInfo *firm
 				},
 			)
 		}
-
 	}
 
 	return nil

@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	ex "github.com/bmc-toolbox/bmclib/v2/internal/executor"
-
 	"github.com/bmc-toolbox/common"
 	"github.com/bmc-toolbox/common/config"
 	"github.com/go-logr/logr"

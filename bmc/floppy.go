@@ -77,7 +77,6 @@ func MountFloppyImageFromInterfaces(ctx context.Context, image io.Reader, p []in
 				"no FloppyImageMounter implementations found",
 			),
 		)
-
 	}
 
 	return mountFloppyImage(ctx, image, providers)

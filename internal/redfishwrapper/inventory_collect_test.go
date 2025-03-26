@@ -110,7 +110,6 @@ func TestInventoryCollectNetworkPortInfo(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestInventoryCollectEthernetInfo(t *testing.T) {
@@ -166,7 +165,8 @@ func TestInventoryCollectEthernetInfo(t *testing.T) {
 			name:               "full",
 			nicPort:            testNicPort,
 			ethernetInterfaces: testMatchingEthList,
-			wantedNicPort:      wNicPortFull},
+			wantedNicPort:      wNicPortFull,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

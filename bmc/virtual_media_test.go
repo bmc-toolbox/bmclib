@@ -15,7 +15,7 @@ type virtualMediaTester struct {
 	MakeErrorOut bool
 }
 
-func (r *virtualMediaTester) SetVirtualMedia(ctx context.Context, kind string, mediaURL string) (ok bool, err error) {
+func (r *virtualMediaTester) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (ok bool, err error) {
 	if r.MakeErrorOut {
 		return ok, errors.New("setting virtual media failed")
 	}

@@ -40,13 +40,13 @@ func OpenConnectionFromInterfaces(ctx context.Context, timeout time.Duration, pr
 	}
 
 	// Create a context with the specified timeout. This is done for backward compatibility but
-	// we should consider removing the timeout parameter alltogether given the context will
+	// we should consider removing the timeout parameter altogether given the context will
 	// container the timeout.
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	// result facilitates communication of data between the concurrent opener goroutines and
-	// the the parent goroutine.
+	// the parent goroutine.
 	type result struct {
 		ProviderName string
 		Opener       Opener
@@ -135,7 +135,7 @@ func closeConnection(ctx context.Context, c []connectionProviders) (metadata Met
 	return metadata, multierror.Append(err, errors.New("failed to close connection"))
 }
 
-// CloseConnectionFromInterfaces identifies implementations of the Closer() interface and and passes the found implementations to the closeConnection() wrapper
+// CloseConnectionFromInterfaces identifies implementations of the Closer() interface and passes the found implementations to the closeConnection() wrapper
 func CloseConnectionFromInterfaces(ctx context.Context, generic []interface{}) (metadata Metadata, err error) {
 	metadata = newMetadata()
 

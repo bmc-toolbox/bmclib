@@ -59,7 +59,7 @@ func TestPostCode(t *testing.T) {
 			assert.Equal(t, tc.returnStatus, status)
 			assert.Equal(t, tc.returnCode, code)
 			assert.Equal(t, tc.providerName, metadata.SuccessfulProvider)
-			assert.Equal(t, tc.providersAttempted, len(metadata.ProvidersAttempted))
+			assert.Len(t, metadata.ProvidersAttempted, tc.providersAttempted)
 		})
 	}
 }

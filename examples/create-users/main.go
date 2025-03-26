@@ -95,5 +95,4 @@ func main() {
 	}
 
 	l.WithField("count", i).Info("created users")
-
 }

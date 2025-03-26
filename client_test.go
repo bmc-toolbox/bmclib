@@ -138,6 +138,7 @@ func TestWithConnectionTimeout(t *testing.T) {
 }
 
 func TestDefaultTimeout(t *testing.T) {
+	// nolint:containedctx
 	tests := map[string]struct {
 		ctx  context.Context
 		want func(n int) time.Duration
@@ -209,9 +210,9 @@ func (t *testProvider) BootDeviceSet(ctx context.Context, bootDevice string, set
 }
 
 func registryNames(r []*registrar.Driver) []string {
-	var names []string
-	for _, d := range r {
-		names = append(names, d.Name)
+	names := make([]string, len(r))
+	for i := range r {
+		names[i] = r[i].Name
 	}
 	return names
 }

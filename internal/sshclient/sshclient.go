@@ -23,7 +23,7 @@ type SSHClient struct {
 }
 
 // New creates a new SSH client
-func New(addr string, username string, password string) (*SSHClient, error) {
+func New(addr, username, password string) (*SSHClient, error) {
 	cfg := &ssh.ClientConfig{
 		User: username,
 		Auth: []ssh.AuthMethod{

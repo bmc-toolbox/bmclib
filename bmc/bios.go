@@ -55,7 +55,6 @@ Loop:
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				err = multierror.Append(err, vErr)
 				continue
-
 			}
 			metadata.SuccessfulProvider = elem.name
 			return biosConfig, metadata, nil
@@ -83,7 +82,6 @@ Loop:
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				err = multierror.Append(err, vErr)
 				continue
-
 			}
 			metadata.SuccessfulProvider = elem.name
 			return metadata, nil
@@ -111,7 +109,6 @@ Loop:
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				err = multierror.Append(err, vErr)
 				continue
-
 			}
 			metadata.SuccessfulProvider = elem.name
 			return metadata, nil
@@ -139,7 +136,6 @@ Loop:
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				err = multierror.Append(err, vErr)
 				continue
-
 			}
 			metadata.SuccessfulProvider = elem.name
 			return metadata, nil

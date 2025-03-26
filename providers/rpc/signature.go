@@ -19,7 +19,6 @@ func createSignaturePayload(body []byte, h http.Header) []byte {
 	// add headers to signature payload, no space between values.
 	for _, val := range h {
 		body = append(body, []byte(strings.Join(val, ""))...)
-
 	}
 
 	return body
@@ -49,9 +48,9 @@ func sign(data []byte, h Hashes, prefixSigDisabled bool) (Signatures, error) {
 // ToShort returns the short version of an algorithm.
 func (a Algorithm) ToShort() Algorithm {
 	switch a {
-	case SHA256:
+	case SHA256, SHA256Short:
 		return SHA256Short
-	case SHA512:
+	case SHA512, SHA512Short:
 		return SHA512Short
 	default:
 		return a
@@ -60,18 +59,18 @@ func (a Algorithm) ToShort() Algorithm {
 
 // NewSHA256 returns a map of SHA256 HMACs from the given secrets.
 func NewSHA256(secret ...string) Hashes {
-	var hsh []hash.Hash
-	for _, s := range secret {
-		hsh = append(hsh, hmac.New(sha256.New, []byte(s)))
+	hsh := make([]hash.Hash, len(secret))
+	for i := range secret {
+		hsh[i] = hmac.New(sha256.New, []byte(secret[i]))
 	}
 	return Hashes{SHA256: hsh}
 }
 
 // NewSHA512 returns a map of SHA512 HMACs from the given secrets.
 func NewSHA512(secret ...string) Hashes {
-	var hsh []hash.Hash
-	for _, s := range secret {
-		hsh = append(hsh, hmac.New(sha512.New, []byte(s)))
+	hsh := make([]hash.Hash, len(secret))
+	for i := range secret {
+		hsh[i] = hmac.New(sha512.New, []byte(secret[i]))
 	}
 	return Hashes{SHA512: hsh}
 }
