@@ -3,7 +3,6 @@ package rpc
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"hash"
 	"io"
@@ -224,28 +223,23 @@ func (p *Provider) BootDeviceSet(ctx context.Context, bootDevice string, setPers
 
 // PowerSet sets the power state of a BMC machine.
 func (p *Provider) PowerSet(ctx context.Context, state string) (ok bool, err error) {
-	switch strings.ToLower(state) {
-	case "on", "off", "cycle":
-		rp := RequestPayload{
-			ID:     time.Now().UnixNano(),
-			Host:   p.Host,
-			Method: PowerSetMethod,
-			Params: PowerSetParams{
-				State: strings.ToLower(state),
-			},
-		}
-		resp, err := p.process(ctx, rp)
-		if err != nil {
-			return ok, err
-		}
-		if resp.Error != nil && resp.Error.Code != 0 {
-			return ok, fmt.Errorf("error from rpc consumer: %v", resp.Error)
-		}
-
-		return true, nil
+	rp := RequestPayload{
+		ID:     time.Now().UnixNano(),
+		Host:   p.Host,
+		Method: PowerSetMethod,
+		Params: PowerSetParams{
+			State: strings.ToLower(state),
+		},
+	}
+	resp, err := p.process(ctx, rp)
+	if err != nil {
+		return ok, err
+	}
+	if resp.Error != nil && resp.Error.Code != 0 {
+		return ok, fmt.Errorf("error from rpc consumer: %v", resp.Error)
 	}
 
-	return false, errors.New("requested power state is not supported")
+	return true, nil
 }
 
 // PowerStateGet gets the power state of a BMC machine.
