@@ -247,6 +247,9 @@ func (i *Ipmi) PowerOnForce(ctx context.Context) (status bool, err error) {
 
 // PowerOff power off the machine via bmc
 func (i *Ipmi) PowerOff(ctx context.Context) (status bool, err error) {
+	if on, err := i.IsOn(ctx); err == nil && !on {
+		return true, nil
+	}
 	output, err := i.run(ctx, []string{"chassis", "power", "off"})
 	if strings.Contains(output, "Chassis Power Control: Down/Off") {
 		return true, err
