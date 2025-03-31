@@ -18,6 +18,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/providers/asrockrack"
 	"github.com/bmc-toolbox/bmclib/v2/providers/dell"
+	"github.com/bmc-toolbox/bmclib/v2/providers/goipmi"
 	"github.com/bmc-toolbox/bmclib/v2/providers/intelamt"
 	"github.com/bmc-toolbox/bmclib/v2/providers/ipmitool"
 	"github.com/bmc-toolbox/bmclib/v2/providers/openbmc"
@@ -72,6 +73,7 @@ type providerConfig struct {
 	supermicro supermicro.Config
 	rpc        rpc.Provider
 	openbmc    openbmc.Config
+	goipmi     goipmi.Config
 }
 
 // NewClient returns a new Client struct
@@ -108,6 +110,10 @@ func NewClient(host, user, pass string, opts ...Option) *Client {
 			rpc: rpc.Provider{},
 			openbmc: openbmc.Config{
 				Port: "443",
+			},
+			goipmi: goipmi.Config{
+				CipherSuite: 3,
+				Port:        623,
 			},
 		},
 	}
@@ -246,6 +252,16 @@ func (c *Client) registerSupermicroProvider() {
 	)
 
 	c.Registry.Register(supermicro.ProviderName, supermicro.ProviderProtocol, supermicro.Features, nil, driverSupermicro)
+
+	// register goipmi provider
+	goipmiOpts := []goipmi.Option{goipmi.WithCipherSuite(c.providerConfig.goipmi.CipherSuite)}
+	driverGoipmi, err := goipmi.New(c.Auth.Host, c.providerConfig.goipmi.Port, c.Auth.User, c.Auth.Pass, goipmiOpts...)
+	if err != nil {
+		c.Logger.Info("goipmi provider not available", "error", err.Error())
+	} else {
+		driverGoipmi.Log = c.Logger
+		c.Registry.Register(goipmi.ProviderName, goipmi.ProviderProtocol, goipmi.Features, nil, driverGoipmi)
+	}
 }
 
 func (c *Client) registerOpenBMCProvider() {
