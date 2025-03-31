@@ -11,6 +11,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_setComponentUpdateMisc(t *testing.T) {
@@ -81,7 +82,7 @@ func Test_setComponentUpdateMisc(t *testing.T) {
 			}
 
 			serviceClient := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
-			assert.Nil(t, err)
+			require.NoError(t, err)
 
 			serviceClient.csrfToken = "foobar"
 			client := &x11{serviceClient: serviceClient, log: logr.Discard()}
@@ -93,7 +94,7 @@ func Test_setComponentUpdateMisc(t *testing.T) {
 					return
 				}
 
-				assert.Nil(t, err)
+				assert.NoError(t, err)
 			}
 		})
 	}
@@ -153,7 +154,7 @@ func Test_setBIOSFirmwareInstallMode(t *testing.T) {
 			"400",
 			"/cgi/ipmi.cgi",
 			func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(400)
+				w.WriteHeader(http.StatusBadRequest)
 			},
 		},
 	}
@@ -172,7 +173,7 @@ func Test_setBIOSFirmwareInstallMode(t *testing.T) {
 			}
 
 			serviceClient := newBmcServiceClient(parsedURL.Hostname(), parsedURL.Port(), "foo", "bar", httpclient.Build())
-			assert.Nil(t, err)
+			require.NoError(t, err)
 
 			serviceClient.csrfToken = "foobar"
 			client := &x11{serviceClient: serviceClient, log: logr.Discard()}
@@ -184,7 +185,7 @@ func Test_setBIOSFirmwareInstallMode(t *testing.T) {
 					return
 				}
 
-				assert.Nil(t, err)
+				assert.NoError(t, err)
 			}
 		})
 	}

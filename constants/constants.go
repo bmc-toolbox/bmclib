@@ -11,7 +11,7 @@ type (
 )
 
 const (
-	// EnvEnableDebug is the const for the environment variable to cause bmclib to dump debugging debugging information.
+	// EnvEnableDebug is the const for the environment variable to cause bmclib to dump debugging information.
 	// the valid parameter for this environment variable is 'true'
 	EnvEnableDebug = "DEBUG_BMCLIB"
 
@@ -33,7 +33,7 @@ const (
 	// Redfish firmware apply at constants
 	// FirmwareApplyImmediate sets the firmware to be installed immediately after upload
 	Immediate OperationApplyTime = "Immediate"
-	//FirmwareApplyOnReset sets the firmware to be install on device power cycle/reset
+	// FirmwareApplyOnReset sets the firmware to be install on device power cycle/reset
 	OnReset OperationApplyTime = "OnReset"
 	// FirmwareOnStartUpdateRequest sets the firmware install to begin after the start request has been sent.
 	OnStartUpdateRequest OperationApplyTime = "OnStartUpdateRequest"

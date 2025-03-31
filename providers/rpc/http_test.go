@@ -16,7 +16,10 @@ import (
 
 func testRequest(method, reqURL string, body RequestPayload, headers http.Header) *http.Request {
 	buf := new(bytes.Buffer)
-	_ = json.NewEncoder(buf).Encode(body)
+	err := json.NewEncoder(buf).Encode(body)
+	if err != nil {
+		panic(err)
+	}
 	req, _ := http.NewRequestWithContext(context.Background(), method, reqURL, buf)
 	req.Header = headers
 	return req
@@ -64,7 +67,7 @@ func TestResponseKVS(t *testing.T) {
 		expected []interface{}
 	}{
 		"one": {
-			resp: &http.Response{StatusCode: 200, Header: http.Header{"Content-Type": []string{"application/json"}}, Body: io.NopCloser(strings.NewReader(`{"id":1,"host":"127.0.0.1"}`))},
+			resp: &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Content-Type": []string{"application/json"}}, Body: io.NopCloser(strings.NewReader(`{"id":1,"host":"127.0.0.1"}`))},
 			expected: []interface{}{"response", responseDetails{
 				StatusCode: 200,
 				Headers:    http.Header{"Content-Type": {"application/json"}},

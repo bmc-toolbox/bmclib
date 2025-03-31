@@ -15,7 +15,7 @@ func Test_GetSystemEventLog(t *testing.T) {
 	}
 
 	assert.NotNil(t, entries)
-	assert.Equal(t, 2, len(entries))
+	assert.Len(t, entries, 2)
 }
 
 // Write tests for GetSystemEventLogRaw

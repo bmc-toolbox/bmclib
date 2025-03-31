@@ -2,14 +2,12 @@ package asrockrack
 
 import (
 	"context"
-	"errors"
 	"net/http"
-	"os"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // NOTE: user accounts are defined in mock_test.go as JSON payload in the userPayload var
@@ -23,28 +21,25 @@ type testCase struct {
 	tName string
 }
 
-var (
-	// common set of test cases
-	testCases = []testCase{
-
-		{
-			"foo",
-			"baz",
-			"",
-			false,
-			bmclibErrs.ErrInvalidUserRole,
-			"role not defined",
-		},
-		{
-			"foo",
-			"",
-			"Administrator",
-			false,
-			bmclibErrs.ErrUserParamsRequired,
-			"param not defined",
-		},
-	}
-)
+// common set of test cases
+var testCases = []testCase{
+	{
+		"foo",
+		"baz",
+		"",
+		false,
+		bmclibErrs.ErrInvalidUserRole,
+		"role not defined",
+	},
+	{
+		"foo",
+		"",
+		"Administrator",
+		false,
+		bmclibErrs.ErrUserParamsRequired,
+		"param not defined",
+	},
+}
 
 func Test_UserRead(t *testing.T) {
 	expected := []map[string]string{
@@ -74,30 +69,29 @@ func Test_UserRead(t *testing.T) {
 
 	for _, tt := range testCases {
 		ok, err := aClient.UserCreate(context.TODO(), tt.user, tt.pass, tt.role)
-		assert.Equal(t, errors.Is(err, tt.err), true, tt.tName)
+		require.ErrorIs(t, err, tt.err, tt.tName)
 		assert.Equal(t, tt.ok, ok, tt.tName)
 	}
 
 	// test account retrieval failure error
-	os.Setenv("TEST_FAIL_QUERY", "womp womp")
-	defer os.Unsetenv("TEST_FAIL_QUERY")
+	t.Setenv("TEST_FAIL_QUERY", "womp womp") // nolint:dupword
 
 	_, err = aClient.UserRead(context.TODO())
-	assert.Equal(t, errors.Is(err, bmclibErrs.ErrRetrievingUserAccounts), true)
+	assert.ErrorIs(t, err, bmclibErrs.ErrRetrievingUserAccounts)
 }
 
 func Test_UserCreate(t *testing.T) {
-
 	tests := testCases
 	tests = append(tests,
-		[]testCase{{
-			"root",
-			"calvin",
-			"Administrator",
-			true,
-			nil,
-			"user account is created",
-		},
+		[]testCase{
+			{
+				"root",
+				"calvin",
+				"Administrator",
+				true,
+				nil,
+				"user account is created",
+			},
 			{
 				"admin",
 				"foo",
@@ -116,7 +110,7 @@ func Test_UserCreate(t *testing.T) {
 
 	for _, tt := range tests {
 		ok, err := aClient.UserCreate(context.TODO(), tt.user, tt.pass, tt.role)
-		assert.Equal(t, errors.Is(err, tt.err), true, tt.tName)
+		require.ErrorIs(t, err, tt.err, tt.tName)
 		assert.Equal(t, tt.ok, ok, tt.tName)
 	}
 }
@@ -151,7 +145,7 @@ func Test_UserUpdate(t *testing.T) {
 
 	for _, tt := range tests {
 		ok, err := aClient.UserUpdate(context.TODO(), tt.user, tt.pass, tt.role)
-		assert.Equal(t, errors.Is(err, tt.err), true, tt.tName)
+		require.ErrorIs(t, err, tt.err, tt.tName)
 		assert.Equal(t, tt.ok, ok, tt.tName)
 	}
 }
@@ -196,7 +190,6 @@ func Test_createUser(t *testing.T) {
 	}
 
 	assert.Equal(t, "application/json", contentType)
-
 }
 
 func Test_userAccounts(t *testing.T) {
@@ -230,6 +223,6 @@ func Test_userAccounts(t *testing.T) {
 		t.Error(err)
 	}
 
-	assert.Equal(t, 10, len(accounts))
+	assert.Len(t, accounts, 10)
 	assert.Equal(t, account0, accounts[0])
 }

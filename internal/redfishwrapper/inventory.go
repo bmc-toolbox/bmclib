@@ -5,9 +5,8 @@ import (
 	"strings"
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
-	"github.com/pkg/errors"
-
 	"github.com/bmc-toolbox/common"
+	"github.com/pkg/errors"
 	redfish "github.com/stmcginnis/gofish/redfish"
 )
 
@@ -177,7 +176,6 @@ func (c *Client) chassisAttributes(ctx context.Context, device *common.Device, f
 		if err != nil && failOnError {
 			return err
 		}
-
 	}
 
 	err = c.collectCPLDs(device, softwareInventory)
@@ -190,7 +188,6 @@ func (c *Client) chassisAttributes(ctx context.Context, device *common.Device, f
 	}
 
 	return nil
-
 }
 
 func (c *Client) systemAttributes(device *common.Device, failOnError bool, softwareInventory []*redfish.SoftwareInventory) (err error) {
@@ -266,7 +263,6 @@ func (c *Client) firmwareAttributes(slug, id string, firmwareObj *common.Firmwar
 		// include previously installed firmware attributes
 		if strings.HasPrefix(inv.ID, "Previous") {
 			if strings.Contains(inv.ID, id) || strings.EqualFold(slug, inv.Name) {
-
 				if firmwareObj == nil {
 					firmwareObj = &common.Firmware{}
 				}
@@ -285,7 +281,6 @@ func (c *Client) firmwareAttributes(slug, id string, firmwareObj *common.Firmwar
 		// update firmwareObj with installed firmware attributes
 		if strings.HasPrefix(inv.ID, "Installed") {
 			if strings.Contains(inv.ID, id) || strings.EqualFold(slug, inv.Name) {
-
 				if firmwareObj == nil {
 					firmwareObj = &common.Firmware{}
 				}

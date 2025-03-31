@@ -3,13 +3,14 @@ package bmc
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
-	"fmt"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/go-multierror"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type bootDeviceTester struct {
@@ -236,9 +237,9 @@ func TestBootDeviceOverrideGet(t *testing.T) {
 			override, metadata, err := GetBootDeviceOverrideFromInterface(ctx, 0, testCase.getters)
 
 			if testCase.expectedErrorMsg != "" {
-				assert.ErrorContains(t, err, testCase.expectedErrorMsg)
+				require.ErrorContains(t, err, testCase.expectedErrorMsg)
 			} else {
-				assert.Nil(t, err)
+				require.NoError(t, err)
 			}
 			assert.Equal(t, testCase.expectedOverride, override)
 			assert.Equal(t, testCase.expectedMetadata, &metadata)

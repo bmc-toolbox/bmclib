@@ -7,6 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type mockSystemEventLogService struct {
@@ -37,13 +38,13 @@ func TestClearSystemEventLog(t *testing.T) {
 	// Test with a mock SystemEventLogService that returns nil
 	mockService := &mockSystemEventLogService{name: "mock1", err: nil}
 	metadata, err := clearSystemEventLog(ctx, timeout, []systemEventLogProviders{{name: mockService.name, systemEventLogProvider: mockService}})
-	assert.Nil(t, err)
-	assert.Equal(t, mockService.name, metadata.SuccessfulProvider)
+	require.NoError(t, err)
+	require.Equal(t, mockService.name, metadata.SuccessfulProvider)
 
 	// Test with a mock SystemEventLogService that returns an error
 	mockService = &mockSystemEventLogService{name: "mock2", err: errors.New("mock error")}
 	metadata, err = clearSystemEventLog(ctx, timeout, []systemEventLogProviders{{name: mockService.name, systemEventLogProvider: mockService}})
-	assert.NotNil(t, err)
+	require.Error(t, err)
 	assert.NotEqual(t, mockService.name, metadata.SuccessfulProvider)
 }
 
@@ -53,18 +54,18 @@ func TestClearSystemEventLogFromInterfaces(t *testing.T) {
 
 	// Test with an empty slice
 	metadata, err := ClearSystemEventLogFromInterfaces(ctx, timeout, []interface{}{})
-	assert.NotNil(t, err)
-	assert.Empty(t, metadata.SuccessfulProvider)
+	require.Error(t, err)
+	require.Empty(t, metadata.SuccessfulProvider)
 
 	// Test with a slice containing a non-SystemEventLog object
 	metadata, err = ClearSystemEventLogFromInterfaces(ctx, timeout, []interface{}{"not a SystemEventLog Service"})
-	assert.NotNil(t, err)
-	assert.Empty(t, metadata.SuccessfulProvider)
+	require.Error(t, err)
+	require.Empty(t, metadata.SuccessfulProvider)
 
 	// Test with a slice containing a mock SystemEventLogService that returns nil
 	mockService := &mockSystemEventLogService{name: "mock1"}
 	metadata, err = ClearSystemEventLogFromInterfaces(ctx, timeout, []interface{}{mockService})
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, mockService.name, metadata.SuccessfulProvider)
 }
 
@@ -75,12 +76,12 @@ func TestGetSystemEventLog(t *testing.T) {
 	// Test with a mock SystemEventLogService that returns nil
 	mockService := &mockSystemEventLogService{name: "mock1", err: nil}
 	_, _, err := getSystemEventLog(ctx, timeout, []systemEventLogProviders{{name: mockService.name, systemEventLogProvider: mockService}})
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	// Test with a mock SystemEventLogService that returns an error
 	mockService = &mockSystemEventLogService{name: "mock2", err: errors.New("mock error")}
 	_, _, err = getSystemEventLog(ctx, timeout, []systemEventLogProviders{{name: mockService.name, systemEventLogProvider: mockService}})
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 }
 
 func TestGetSystemEventLogFromInterfaces(t *testing.T) {
@@ -89,16 +90,16 @@ func TestGetSystemEventLogFromInterfaces(t *testing.T) {
 
 	// Test with an empty slice
 	_, _, err := GetSystemEventLogFromInterfaces(ctx, timeout, []interface{}{})
-	assert.NotNil(t, err)
+	require.Error(t, err)
 
 	// Test with a slice containing a non-SystemEventLog object
 	_, _, err = GetSystemEventLogFromInterfaces(ctx, timeout, []interface{}{"not a SystemEventLog Service"})
-	assert.NotNil(t, err)
+	require.Error(t, err)
 
 	// Test with a slice containing a mock SystemEventLogService that returns nil
 	mockService := &mockSystemEventLogService{name: "mock1"}
 	_, _, err = GetSystemEventLogFromInterfaces(ctx, timeout, []interface{}{mockService})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }
 
 func TestGetSystemEventLogRaw(t *testing.T) {
@@ -108,12 +109,12 @@ func TestGetSystemEventLogRaw(t *testing.T) {
 	// Test with a mock SystemEventLogService that returns nil
 	mockService := &mockSystemEventLogService{name: "mock1", err: nil}
 	_, _, err := getSystemEventLogRaw(ctx, timeout, []systemEventLogProviders{{name: mockService.name, systemEventLogProvider: mockService}})
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	// Test with a mock SystemEventLogService that returns an error
 	mockService = &mockSystemEventLogService{name: "mock2", err: errors.New("mock error")}
 	_, _, err = getSystemEventLogRaw(ctx, timeout, []systemEventLogProviders{{name: mockService.name, systemEventLogProvider: mockService}})
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 }
 
 func TestGetSystemEventLogRawFromInterfaces(t *testing.T) {
@@ -122,14 +123,14 @@ func TestGetSystemEventLogRawFromInterfaces(t *testing.T) {
 
 	// Test with an empty slice
 	_, _, err := GetSystemEventLogRawFromInterfaces(ctx, timeout, []interface{}{})
-	assert.NotNil(t, err)
+	require.Error(t, err)
 
 	// Test with a slice containing a non-SystemEventLog object
 	_, _, err = GetSystemEventLogRawFromInterfaces(ctx, timeout, []interface{}{"not a SystemEventLog Service"})
-	assert.NotNil(t, err)
+	require.Error(t, err)
 
 	// Test with a slice containing a mock SystemEventLogService that returns nil
 	mockService := &mockSystemEventLogService{name: "mock1"}
 	_, _, err = GetSystemEventLogRawFromInterfaces(ctx, timeout, []interface{}{mockService})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }

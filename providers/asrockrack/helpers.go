@@ -127,15 +127,13 @@ type biosUpdateAction struct {
 	Action int `json:"action"`
 }
 
-var (
-	knownPOSTCodes = map[int]string{
-		160: constants.POSTStateOS,
-		2:   constants.POSTStateBootINIT, // no differentiation between BIOS init and PXE boot
-		144: constants.POSTStateUEFI,
-		154: constants.POSTStateUEFI,
-		178: constants.POSTStateUEFI,
-	}
-)
+var knownPOSTCodes = map[int]string{
+	160: constants.POSTStateOS,
+	2:   constants.POSTStateBootINIT, // no differentiation between BIOS init and PXE boot
+	144: constants.POSTStateUEFI,
+	154: constants.POSTStateUEFI,
+	178: constants.POSTStateUEFI,
+}
 
 func (a *ASRockRack) listUsers(ctx context.Context) ([]*UserAccount, error) {
 	resp, statusCode, err := a.queryHTTPS(ctx, "api/settings/users", "GET", nil, nil, 0)
@@ -415,7 +413,7 @@ func (a *ASRockRack) fruInfo(ctx context.Context) ([]*fru, error) {
 		return nil, fmt.Errorf("non 200 response: %d", statusCode)
 	}
 
-	data := []map[string]*fru{}
+	data := []map[string]*fru{} // nolint:musttag
 	err = json.Unmarshal(resp, &data)
 	if err != nil {
 		return nil, err

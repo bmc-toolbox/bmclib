@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strings"
 
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
@@ -17,8 +18,6 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 	"github.com/pkg/errors"
-
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 const (
@@ -136,7 +135,7 @@ func (c *Conn) Open(ctx context.Context) (err error) {
 	// is available across various BMC vendors, we verify the device we're connected to is dell.
 	if err := c.deviceSupported(ctx); err != nil {
 		if er := c.redfishwrapper.Close(ctx); er != nil {
-			return fmt.Errorf("%v: %w", err, er)
+			return fmt.Errorf("%w: %w", err, er)
 		}
 
 		return err
@@ -243,7 +242,7 @@ func (c *Conn) SendNMI(ctx context.Context) error {
 }
 
 // deviceManufacturer returns the device manufacturer and model attributes
-func (c *Conn) deviceManufacturer(ctx context.Context) (vendor string, err error) {
+func (c *Conn) deviceManufacturer(context.Context) (vendor string, err error) {
 	systems, err := c.redfishwrapper.Systems()
 	if err != nil {
 		return "", errors.Wrap(errManufacturerUnknown, err.Error())
@@ -272,12 +271,14 @@ func (c *Conn) Screenshot(ctx context.Context) (image []byte, fileType string, e
 		return nil, "", errors.Wrap(bmclibErrs.ErrScreenshot, err.Error())
 	}
 
+	defer resp.Body.Close()
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, "", errors.Wrap(bmclibErrs.ErrScreenshot, err.Error())
 	}
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		return nil, "", errors.Wrap(bmclibErrs.ErrScreenshot, resp.Status)
 	}
 

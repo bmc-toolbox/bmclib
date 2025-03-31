@@ -5,16 +5,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pkg/errors"
-
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/bmc-toolbox/bmclib/v2/internal"
+	"github.com/pkg/errors"
 )
 
-var (
-	// TODO: standardize these across Redfish, IPMI, Vendor GUI
-	validRoles = []string{"Administrator", "Operator", "User"}
-)
+// TODO: standardize these across Redfish, IPMI, Vendor GUI
+var validRoles = []string{"Administrator", "Operator", "User"}
 
 // UserAccount is a ASRR BMC user account struct
 type UserAccount struct {

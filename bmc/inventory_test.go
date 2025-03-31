@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/bmc-toolbox/bmclib/v2/errors"
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/bmc-toolbox/common"
 	"github.com/stretchr/testify/assert"
 )
@@ -57,7 +56,7 @@ func TestInventory(t *testing.T) {
 			}
 			assert.Equal(t, tc.returnDevice, device)
 			assert.Equal(t, tc.providerName, metadata.SuccessfulProvider)
-			assert.Equal(t, tc.providersAttempted, len(metadata.ProvidersAttempted))
+			assert.Len(t, metadata.ProvidersAttempted, tc.providersAttempted)
 		})
 	}
 }
@@ -73,7 +72,7 @@ func TestInventoryFromInterfaces(t *testing.T) {
 		badImplementation  bool
 	}{
 		{"success with metadata", &common.Device{Common: common.Common{Vendor: "foo"}}, nil, 5 * time.Second, "foo", 1, false},
-		{"failure with bad implementation", nil, bmclibErrs.ErrProviderImplementation, 5 * time.Second, "foo", 1, true},
+		{"failure with bad implementation", nil, errors.ErrProviderImplementation, 5 * time.Second, "foo", 1, true},
 	}
 
 	for _, tc := range testCases {

@@ -27,22 +27,20 @@ const (
 	E3C246D4I_NL  = "E3C246D4I-NL"
 )
 
-var (
-	// Features implemented by asrockrack https
-	Features = registrar.Features{
-		providers.FeaturePostCodeRead,
-		providers.FeatureBmcReset,
-		providers.FeatureUserCreate,
-		providers.FeatureUserUpdate,
-		providers.FeatureFirmwareUpload,
-		providers.FeatureFirmwareInstallUploaded,
-		providers.FeatureFirmwareTaskStatus,
-		providers.FeatureFirmwareInstallSteps,
-		providers.FeatureInventoryRead,
-		providers.FeaturePowerSet,
-		providers.FeaturePowerState,
-	}
-)
+// Features implemented by asrockrack https
+var Features = registrar.Features{
+	providers.FeaturePostCodeRead,
+	providers.FeatureBmcReset,
+	providers.FeatureUserCreate,
+	providers.FeatureUserUpdate,
+	providers.FeatureFirmwareUpload,
+	providers.FeatureFirmwareInstallUploaded,
+	providers.FeatureFirmwareTaskStatus,
+	providers.FeatureFirmwareInstallSteps,
+	providers.FeatureInventoryRead,
+	providers.FeaturePowerSet,
+	providers.FeaturePowerState,
+}
 
 // ASRockRack holds the status and properties of a connection to a asrockrack bmc
 type ASRockRack struct {
@@ -82,12 +80,12 @@ func WithHTTPClient(c *http.Client) ASRockOption {
 }
 
 // New returns a new ASRockRack instance ready to be used
-func New(ip string, username string, password string, log logr.Logger) *ASRockRack {
+func New(ip, username, password string, log logr.Logger) *ASRockRack {
 	return NewWithOptions(ip, username, password, log)
 }
 
 // NewWithOptions returns a new ASRockRack instance with options ready to be used
-func NewWithOptions(ip string, username string, password string, log logr.Logger, opts ...ASRockOption) *ASRockRack {
+func NewWithOptions(ip, username, password string, log logr.Logger, opts ...ASRockOption) *ASRockRack {
 	r := &ASRockRack{
 		ip:           ip,
 		username:     username,

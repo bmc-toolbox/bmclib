@@ -15,11 +15,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
-	"github.com/stmcginnis/gofish/redfish"
-
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/pkg/errors"
+	"github.com/stmcginnis/gofish/redfish"
 )
 
 type installMethod string
@@ -29,11 +28,9 @@ const (
 	multipartHttpUpload  installMethod = "multipartUpload"
 )
 
-var (
-	// the URI for starting a firmware update via StartUpdate is defined in the Redfish Resource and
-	// Schema Guide (2024.1)
-	startUpdateURI = "/redfish/v1/UpdateService/Actions/UpdateService.StartUpdate"
-)
+// the URI for starting a firmware update via StartUpdate is defined in the Redfish Resource and
+// Schema Guide (2024.1)
+var startUpdateURI = "/redfish/v1/UpdateService/Actions/UpdateService.StartUpdate"
 
 var (
 	errMultiPartPayload   = errors.New("error preparing multipart payload")
@@ -108,7 +105,7 @@ func (c *Client) FirmwareUpload(ctx context.Context, updateFile *os.File, params
 
 	// The response contains a location header pointing to the task URI
 	// Location: /redfish/v1/TaskService/Tasks/JID_467696020275
-	var location = resp.Header.Get("Location")
+	location := resp.Header.Get("Location")
 	if strings.Contains(location, "/TaskService/Tasks/") {
 		return taskIDFromLocationHeader(location)
 	}
@@ -152,7 +149,7 @@ func (c *Client) StartUpdateForUploadedFirmware(ctx context.Context) (taskID str
 		return "", errors.Wrap(errStartUpdate, "unexpected status code returned: "+resp.Status)
 	}
 
-	var location = resp.Header.Get("Location")
+	location := resp.Header.Get("Location")
 	if strings.Contains(location, "/TaskService/Tasks/") {
 		return taskIDFromLocationHeader(location)
 	}
@@ -263,7 +260,6 @@ func (c *Client) unstructuredHttpUpload(url string, update io.Reader) (*http.Res
 	payloadReadSeeker := bytes.NewReader(b)
 
 	return c.RunRawRequestWithHeaders(http.MethodPost, url, payloadReadSeeker, "application/octet-stream", nil)
-
 }
 
 // firmwareUpdateMethodURI returns the updateMethod and URI
@@ -321,39 +317,39 @@ func (p pipeReaderFakeSeeker) Seek(offset int64, whence int) (int64, error) {
 //
 // It creates a temporary form without reading in the update file payload and returns
 // sizeOf(form) + sizeOf(update file)
-func multipartPayloadSize(payload *multipartPayload) (int64, *bytes.Buffer, error) {
+func multipartPayloadSize(payload *multipartPayload) (int64, error) {
 	body := &bytes.Buffer{}
 	form := multipart.NewWriter(body)
 
 	// Add UpdateParameters field part
 	part, err := updateParametersFormField("UpdateParameters", form)
 	if err != nil {
-		return 0, body, err
+		return 0, err
 	}
 
 	if _, err = io.Copy(part, bytes.NewReader(payload.updateParameters)); err != nil {
-		return 0, body, err
+		return 0, err
 	}
 
 	// Add updateFile form
 	_, err = form.CreateFormFile("UpdateFile", filepath.Base(payload.updateFile.Name()))
 	if err != nil {
-		return 0, body, err
+		return 0, err
 	}
 
 	// determine update file size
 	finfo, err := payload.updateFile.Stat()
 	if err != nil {
-		return 0, body, err
+		return 0, err
 	}
 
 	// add terminating boundary to multipart form
 	err = form.Close()
 	if err != nil {
-		return 0, body, err
+		return 0, err
 	}
 
-	return int64(body.Len()) + finfo.Size(), body, nil
+	return int64(body.Len()) + finfo.Size(), nil
 }
 
 // runRequestWithMultipartPayload is a copy of https://github.com/stmcginnis/gofish/blob/main/client.go#L349
@@ -389,7 +385,7 @@ func (c *Client) runRequestWithMultipartPayload(url string, payload *multipartPa
 	//
 	// Without the content-length header the http client will set the Transfer-Encoding to 'chunked'
 	// and that does not work for some BMCs (iDracs).
-	contentLength, _, err := multipartPayloadSize(payload)
+	contentLength, err := multipartPayloadSize(payload)
 	if err != nil {
 		return nil, errors.Wrap(err, "error determining multipart payload size")
 	}
