@@ -22,7 +22,6 @@ require (
 	go.opentelemetry.io/otel v1.29.0
 	go.opentelemetry.io/otel/trace v1.29.0
 	go.uber.org/goleak v1.3.0
-	golang.org/x/crypto v0.31.0
 	golang.org/x/net v0.33.0
 	gopkg.in/go-playground/assert.v1 v1.2.1
 )
