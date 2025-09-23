@@ -161,9 +161,3 @@ func WithTracerProvider(provider oteltrace.TracerProvider) Option {
 		}
 	}
 }
-
-func WithGoipmiCipherSuite(cipherSuite int) Option {
-	return func(args *Client) {
-		args.providerConfig.goipmi.CipherSuite = cipherSuite
-	}
-}

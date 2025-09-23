@@ -3,6 +3,7 @@ package ipmi
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/go-logr/logr"
@@ -27,50 +28,9 @@ type Option func(*Ipmi)
 
 func WithCipherSuite(cipherSuite string) Option {
 	return func(i *Ipmi) {
-		// Convert string to int, default to 3 if invalid
-		switch cipherSuite {
-		case "0":
-			i.cipherSuite = 0
-		case "1":
-			i.cipherSuite = 1
-		case "2":
-			i.cipherSuite = 2
-		case "3":
-			i.cipherSuite = 3
-		case "4":
-			i.cipherSuite = 4
-		case "5":
-			i.cipherSuite = 5
-		case "6":
-			i.cipherSuite = 6
-		case "7":
-			i.cipherSuite = 7
-		case "8":
-			i.cipherSuite = 8
-		case "9":
-			i.cipherSuite = 9
-		case "10":
-			i.cipherSuite = 10
-		case "11":
-			i.cipherSuite = 11
-		case "12":
-			i.cipherSuite = 12
-		case "13":
-			i.cipherSuite = 13
-		case "14":
-			i.cipherSuite = 14
-		case "15":
-			i.cipherSuite = 15
-		case "16":
-			i.cipherSuite = 16
-		case "17":
-			i.cipherSuite = 17
-		case "18":
-			i.cipherSuite = 18
-		case "19":
-			i.cipherSuite = 19
-		default:
-			i.cipherSuite = 3
+		cipherId, err := strconv.Atoi(cipherSuite)
+		if err == nil && (0 <= cipherId && cipherId <= 19) {
+			i.cipherSuite = cipherId
 		}
 	}
 }
@@ -128,50 +88,10 @@ func parseSystemEventLog(raw string) (entries [][]string) {
 }
 
 func toCipherSuiteID(c int) ipmi.CipherSuiteID {
-	switch c {
-	case 0:
-		return ipmi.CipherSuiteID0
-	case 1:
-		return ipmi.CipherSuiteID1
-	case 2:
-		return ipmi.CipherSuiteID2
-	case 3:
-		return ipmi.CipherSuiteID3
-	case 4:
-		return ipmi.CipherSuiteID4
-	case 5:
-		return ipmi.CipherSuiteID5
-	case 6:
-		return ipmi.CipherSuiteID6
-	case 7:
-		return ipmi.CipherSuiteID7
-	case 8:
-		return ipmi.CipherSuiteID8
-	case 9:
-		return ipmi.CipherSuiteID9
-	case 10:
-		return ipmi.CipherSuiteID10
-	case 11:
-		return ipmi.CipherSuiteID11
-	case 12:
-		return ipmi.CipherSuiteID12
-	case 13:
-		return ipmi.CipherSuiteID13
-	case 14:
-		return ipmi.CipherSuiteID14
-	case 15:
-		return ipmi.CipherSuiteID15
-	case 16:
-		return ipmi.CipherSuiteID16
-	case 17:
-		return ipmi.CipherSuiteID17
-	case 18:
-		return ipmi.CipherSuiteID18
-	case 19:
-		return ipmi.CipherSuiteID19
-	default:
-		return ipmi.CipherSuiteID3
+	if c >= 0 && c <= 19 {
+		return ipmi.CipherSuiteID(c)
 	}
+	return ipmi.CipherSuiteID3
 }
 
 // ensureConnected ensures the IPMI client is connected

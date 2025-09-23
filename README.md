@@ -12,7 +12,6 @@ bmclib v2 is a library to abstract interacting with baseboard management control
 - [IPMItool](https://github.com/bmc-toolbox/bmclib/tree/main/providers/ipmitool)
 - [Intel AMT](https://github.com/bmc-toolbox/bmclib/tree/main/providers/intelamt)
 - [Asrockrack](https://github.com/bmc-toolbox/bmclib/tree/main/providers/asrockrack)
-- [Pure Go IPMI](https://github.com/bmc-toolbox/bmclib/tree/main/providers/goipmi)
 - [Supermicro](https://github.com/bmc-toolbox/bmclib/tree/main/providers/supermicro)
 - [RPC](providers/rpc/)
 
