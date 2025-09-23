@@ -3,6 +3,7 @@ package ipmitool
 import (
 	"context"
 	"errors"
+	"strconv"
 	"strings"
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
@@ -41,10 +42,9 @@ type Conn struct {
 }
 
 type Config struct {
-	CipherSuite  string
-	IpmitoolPath string
-	Log          logr.Logger
-	Port         string
+	CipherSuite string
+	Log         logr.Logger
+	Port        string
 }
 
 // Option for setting optional Client values
@@ -68,12 +68,6 @@ func WithCipherSuite(cipherSuite string) Option {
 	}
 }
 
-func WithIpmitoolPath(ipmitoolPath string) Option {
-	return func(c *Config) {
-		c.IpmitoolPath = ipmitoolPath
-	}
-}
-
 func New(host, user, pass string, opts ...Option) (*Conn, error) {
 	defaultConfig := &Config{
 		Port: "623",
@@ -84,12 +78,17 @@ func New(host, user, pass string, opts ...Option) (*Conn, error) {
 		opt(defaultConfig)
 	}
 
+	// Convert port string to int
+	port := 623
+	if portInt, err := strconv.Atoi(defaultConfig.Port); err == nil {
+		port = portInt
+	}
+
 	iopts := []ipmi.Option{
-		ipmi.WithIpmitoolPath(defaultConfig.IpmitoolPath),
 		ipmi.WithCipherSuite(defaultConfig.CipherSuite),
 		ipmi.WithLogger(defaultConfig.Log),
 	}
-	ipt, err := ipmi.New(user, pass, host+":"+defaultConfig.Port, iopts...)
+	ipt, err := ipmi.New(user, pass, host, port, iopts...)
 	if err != nil {
 		return nil, err
 	}

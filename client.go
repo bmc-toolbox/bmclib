@@ -174,7 +174,6 @@ func (c *Client) registerIPMIProvider() error {
 		ipmitool.WithLogger(c.Logger),
 		ipmitool.WithPort(c.providerConfig.ipmitool.Port),
 		ipmitool.WithCipherSuite(c.providerConfig.ipmitool.CipherSuite),
-		ipmitool.WithIpmitoolPath(c.providerConfig.ipmitool.IpmitoolPath),
 	}
 
 	driverIpmitool, err := ipmitool.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, ipmiOpts...)

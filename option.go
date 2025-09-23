@@ -66,12 +66,6 @@ func WithIpmitoolPort(port string) Option {
 	}
 }
 
-func WithIpmitoolPath(path string) Option {
-	return func(args *Client) {
-		args.providerConfig.ipmitool.IpmitoolPath = path
-	}
-}
-
 func WithAsrockrackHTTPClient(httpClient *http.Client) Option {
 	return func(args *Client) {
 		args.providerConfig.asrock.HttpClient = httpClient
