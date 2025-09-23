@@ -5,7 +5,7 @@ go 1.21
 require (
 	dario.cat/mergo v1.0.1
 	github.com/Jeffail/gabs/v2 v2.7.0
-	github.com/bmc-toolbox/common v0.0.0-20241031162543-6b96e5981a0d
+	github.com/bmc-toolbox/common v0.0.0-20250112191656-b6de52e8303d
 	github.com/bombsimon/logrusr/v2 v2.0.1
 	github.com/bougou/go-ipmi v0.6.0
 	github.com/ghodss/yaml v1.0.0
@@ -23,7 +23,6 @@ require (
 	go.opentelemetry.io/otel v1.29.0
 	go.opentelemetry.io/otel/trace v1.29.0
 	go.uber.org/goleak v1.3.0
-	golang.org/x/crypto v0.31.0
 	golang.org/x/net v0.33.0
 	gopkg.in/go-playground/assert.v1 v1.2.1
 )

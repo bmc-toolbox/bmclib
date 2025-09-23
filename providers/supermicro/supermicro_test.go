@@ -187,21 +187,13 @@ func TestOpen(t *testing.T) {
 		},
 		{
 			"login error",
-			"401: failed to login",
+			"failed to login",
 			"foo",
 			"bar",
 			handlerFuncMap{
 				"/cgi/login.cgi": func(w http.ResponseWriter, r *http.Request) {
 					assert.Equal(t, r.Method, http.MethodPost)
 					assert.Equal(t, r.Header.Get("Content-Type"), "application/x-www-form-urlencoded")
-
-					b, err := io.ReadAll(r.Body)
-					if err != nil {
-						t.Fatal(err)
-					}
-
-					assert.Equal(t, `name=Zm9v&pwd=YmFy&check=00`, string(b))
-
 					response := []byte(`barf`)
 					w.WriteHeader(401)
 					_, _ = w.Write(response)

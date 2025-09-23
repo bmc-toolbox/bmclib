@@ -150,34 +150,60 @@ func NewClient(host, user, pass string, log logr.Logger, opts ...Option) *Client
 	}
 }
 
-// Open a connection to a Supermicro BMC using the vendor API.
-func (c *Client) Open(ctx context.Context) (err error) {
+func (c *Client) login(ctx context.Context, encodeCreds bool) error {
+	var user, pass string
+	if encodeCreds {
+		user = base64.StdEncoding.EncodeToString([]byte(c.serviceClient.user))
+		pass = base64.StdEncoding.EncodeToString([]byte(c.serviceClient.pass))
+	} else {
+		user = c.serviceClient.user
+		pass = c.serviceClient.pass
+	}
+
 	data := fmt.Sprintf(
 		"name=%s&pwd=%s&check=00",
-		base64.StdEncoding.EncodeToString([]byte(c.serviceClient.user)),
-		base64.StdEncoding.EncodeToString([]byte(c.serviceClient.pass)),
+		user,
+		pass,
 	)
 
 	headers := map[string]string{"Content-Type": "application/x-www-form-urlencoded"}
 
 	body, status, err := c.serviceClient.query(ctx, "cgi/login.cgi", http.MethodPost, bytes.NewBufferString(data), headers, 0)
 	if err != nil {
-		return errors.Wrap(bmclibErrs.ErrLoginFailed, err.Error())
+		return err
 	}
 
 	if status != 200 {
-		return errors.Wrap(bmclibErrs.ErrLoginFailed, strconv.Itoa(status))
+		return errors.Wrap(ErrUnexpectedStatusCode, strconv.Itoa(status))
 	}
 
+	// Older Supermicro boards return 200 for failed logins
+	if !bytes.Contains(body, []byte(`url_redirect.cgi?url_name=mainmenu`)) &&
+		!bytes.Contains(body, []byte(`url_redirect.cgi?url_name=topmenu`)) {
+		return ErrUnexpectedResponse
+	}
+
+	return nil
+}
+
+// Open a connection to a Supermicro BMC using the vendor API.
+func (c *Client) Open(ctx context.Context) (err error) {
 	// called after a session was opened but further login dependencies failed
 	closeWithError := func(ctx context.Context, err error) error {
 		_ = c.Close(ctx)
 		return err
 	}
 
-	if !bytes.Contains(body, []byte(`url_redirect.cgi?url_name=mainmenu`)) &&
-		!bytes.Contains(body, []byte(`url_redirect.cgi?url_name=topmenu`)) {
-		return closeWithError(ctx, errors.Wrap(bmclibErrs.ErrLoginFailed, "unexpected response contents"))
+	// first attempt login with base64 encoded user,pass
+	if err := c.login(ctx, true); err != nil {
+		if !errors.Is(err, ErrUnexpectedResponse) && !errors.Is(err, ErrUnexpectedStatusCode) {
+			return closeWithError(ctx, errors.Wrap(bmclibErrs.ErrLoginFailed, err.Error()))
+		}
+
+		// retry with plain text user, pass
+		if err2 := c.login(ctx, false); err2 != nil {
+			return closeWithError(ctx, errors.Wrap(bmclibErrs.ErrLoginFailed, err2.Error()))
+		}
 	}
 
 	contentsTopMenu, status, err := c.serviceClient.query(ctx, "cgi/url_redirect.cgi?url_name=topmenu", http.MethodGet, nil, nil, 0)
