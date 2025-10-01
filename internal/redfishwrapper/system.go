@@ -2,6 +2,7 @@ package redfishwrapper
 
 import (
 	"context"
+	"fmt"
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 
@@ -40,7 +41,19 @@ func (c *Client) Systems() ([]*redfish.ComputerSystem, error) {
 		return nil, err
 	}
 
-	return c.matchingSystem(s), nil
+	// If no system name is set and there is only one system, return it.
+	// This is to handle backwards compatibility where we didn't require passing
+	// a system name to the client.
+	if c.systemName == "" && len(s) == 1 {
+		return s, nil
+	}
+
+	ms := c.matchingSystem(s)
+	if len(ms) == 0 {
+		return nil, fmt.Errorf("no matching redfish system found for %s", c.systemName)
+	}
+
+	return ms, nil
 }
 
 // Managers gets the manager instances of this service.
@@ -52,6 +65,13 @@ func (c *Client) Managers(ctx context.Context) ([]*redfish.Manager, error) {
 	ms, err := c.client.Service.Managers()
 	if err != nil {
 		return nil, err
+	}
+
+	// If no system name is set and there is only one manager, return it.
+	// This is to handle backwards compatibility where we didn't require passing
+	// a system name to the client.
+	if c.systemName == "" && len(ms) == 1 {
+		return ms, nil
 	}
 
 	for _, m := range ms {
@@ -85,5 +105,5 @@ func (c *Client) matchingSystem(systems []*redfish.ComputerSystem) []*redfish.Co
 		}
 	}
 
-	return systems
+	return []*redfish.ComputerSystem{}
 }
