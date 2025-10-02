@@ -36,16 +36,13 @@ func (c *Client) BMCReset(ctx context.Context, resetType string) (ok bool, err e
 		return false, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
-	managers, err := c.Managers(ctx)
+	manager, err := c.Manager(ctx)
 	if err != nil {
 		return false, err
 	}
 
-	for _, manager := range managers {
-		err = manager.Reset(rf.ResetType(resetType))
-		if err != nil {
-			return false, err
-		}
+	if err = manager.Reset(rf.ResetType(resetType)); err != nil {
+		return false, err
 	}
 
 	return true, nil
@@ -57,23 +54,20 @@ func (c *Client) SystemPowerOn(ctx context.Context) (ok bool, err error) {
 		return false, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
-	ss, err := c.Systems()
+	system, err := c.System()
 	if err != nil {
 		return false, err
 	}
 
-	for _, system := range ss {
-		if system.PowerState == rf.OnPowerState {
-			break
-		}
-
-		system.DisableEtagMatch(c.disableEtagMatch)
-
-		err = system.Reset(rf.OnResetType)
-		if err != nil {
-			return false, err
-		}
+	if system.PowerState == rf.OnPowerState {
+		return true, nil
 	}
+
+	system.DisableEtagMatch(c.disableEtagMatch)
+	if err = system.Reset(rf.OnResetType); err != nil {
+		return false, err
+	}
+
 	return true, nil
 }
 
@@ -83,22 +77,19 @@ func (c *Client) SystemPowerOff(ctx context.Context) (ok bool, err error) {
 		return false, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
-	ss, err := c.Systems()
+	system, err := c.System()
 	if err != nil {
 		return false, err
 	}
 
-	for _, system := range ss {
-		if system.PowerState == rf.OffPowerState {
-			break
-		}
+	if system.PowerState == rf.OffPowerState {
+		return true, nil
+	}
 
-		system.DisableEtagMatch(c.disableEtagMatch)
+	system.DisableEtagMatch(c.disableEtagMatch)
 
-		err = system.Reset(rf.GracefulShutdownResetType)
-		if err != nil {
-			return false, err
-		}
+	if err = system.Reset(rf.GracefulShutdownResetType); err != nil {
+		return false, err
 	}
 
 	return false, nil
@@ -110,31 +101,26 @@ func (c *Client) SystemReset(ctx context.Context) (ok bool, err error) {
 		return false, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
-	ss, err := c.Systems()
+	system, err := c.System()
 	if err != nil {
 		return false, err
 	}
 
-	for _, system := range ss {
-		system.DisableEtagMatch(c.disableEtagMatch)
-		err = system.Reset(rf.PowerCycleResetType)
-		if err != nil {
+	system.DisableEtagMatch(c.disableEtagMatch)
+	if err = system.Reset(rf.PowerCycleResetType); err != nil {
+		_, _ = c.SystemPowerOff(ctx)
 
-			_, _ = c.SystemPowerOff(ctx)
-
-			for wait := 1; wait < 10; wait++ {
-				status, _ := c.SystemPowerStatus(ctx)
-				if status == "off" {
-					break
-				}
-				time.Sleep(1 * time.Second)
+		for wait := 1; wait < 10; wait++ {
+			status, _ := c.SystemPowerStatus(ctx)
+			if status == "off" {
+				break
 			}
-
-			_, errMsg := c.SystemPowerOn(ctx)
-
-			return true, errMsg
+			time.Sleep(1 * time.Second)
 		}
+
+		return c.SystemPowerOn(ctx)
 	}
+
 	return true, nil
 }
 
@@ -144,27 +130,19 @@ func (c *Client) SystemPowerCycle(ctx context.Context) (ok bool, err error) {
 		return false, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
-	ss, err := c.Systems()
+	system, err := c.System()
 	if err != nil {
 		return false, err
 	}
 
-	res, err := c.SystemPowerStatus(ctx)
-	if err != nil {
-		return false, fmt.Errorf("power cycle failed: unable to get current state")
+	if system.PowerState == rf.OffPowerState {
+		return false, fmt.Errorf("power cycle failed: Command not supported in present state: %v", system.PowerState)
 	}
 
-	if strings.ToLower(res) == "off" {
-		return false, fmt.Errorf("power cycle failed: Command not supported in present state: %v", res)
-	}
+	system.DisableEtagMatch(c.disableEtagMatch)
 
-	for _, system := range ss {
-		system.DisableEtagMatch(c.disableEtagMatch)
-
-		err = system.Reset(rf.ForceRestartResetType)
-		if err != nil {
-			return false, errors.WithMessage(err, "power cycle failed")
-		}
+	if err = system.Reset(rf.ForceRestartResetType); err != nil {
+		return false, errors.WithMessage(err, "power cycle failed")
 	}
 
 	return true, nil
@@ -176,16 +154,12 @@ func (c *Client) SystemPowerStatus(ctx context.Context) (result string, err erro
 		return result, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
-	ss, err := c.Systems()
+	system, err := c.System()
 	if err != nil {
 		return "", err
 	}
 
-	for _, system := range ss {
-		return string(system.PowerState), nil
-	}
-
-	return "", errors.New("unable to retrieve status")
+	return string(system.PowerState), nil
 }
 
 // SystemForceOff powers off the system, without waiting for the OS to shutdown.
@@ -194,22 +168,19 @@ func (c *Client) SystemForceOff(ctx context.Context) (ok bool, err error) {
 		return false, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
-	ss, err := c.Systems()
+	system, err := c.System()
 	if err != nil {
 		return false, err
 	}
 
-	for _, system := range ss {
-		if system.PowerState == rf.OffPowerState {
-			break
-		}
+	if system.PowerState == rf.OffPowerState {
+		return true, nil
+	}
 
-		system.DisableEtagMatch(c.disableEtagMatch)
+	system.DisableEtagMatch(c.disableEtagMatch)
 
-		err = system.Reset(rf.ForceOffResetType)
-		if err != nil {
-			return false, err
-		}
+	if err = system.Reset(rf.ForceOffResetType); err != nil {
+		return false, err
 	}
 
 	return true, nil
@@ -221,16 +192,10 @@ func (c *Client) SendNMI(_ context.Context) error {
 		return errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
-	ss, err := c.Systems()
+	system, err := c.System()
 	if err != nil {
 		return err
 	}
 
-	for _, system := range ss {
-		if err = system.Reset(rf.NmiResetType); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return system.Reset(rf.NmiResetType)
 }

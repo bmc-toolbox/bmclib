@@ -10,10 +10,10 @@ import (
 
 func TestMatchingSystem(t *testing.T) {
 	tests := map[string]struct {
-		client      *Client
-		systems     []*redfish.ComputerSystem
-		expectCount int
-		expectNames []string
+		client       *Client
+		systems      []*redfish.ComputerSystem
+		expectErr    bool
+		expectSystem *redfish.ComputerSystem
 	}{
 		"finds matching system by name": {
 			client: &Client{
@@ -31,8 +31,12 @@ func TestMatchingSystem(t *testing.T) {
 					},
 				},
 			},
-			expectCount: 1,
-			expectNames: []string{"System1"},
+			expectErr: false,
+			expectSystem: &redfish.ComputerSystem{
+				Entity: common.Entity{
+					Name: "System1",
+				},
+			},
 		},
 		"no matching system found": {
 			client: &Client{
@@ -45,16 +49,16 @@ func TestMatchingSystem(t *testing.T) {
 					},
 				},
 			},
-			expectCount: 0,
-			expectNames: []string{},
+			expectErr:    true,
+			expectSystem: nil,
 		},
 		"empty systems list": {
 			client: &Client{
 				systemName: "System1",
 			},
-			systems:     []*redfish.ComputerSystem{},
-			expectCount: 0,
-			expectNames: []string{},
+			systems:      []*redfish.ComputerSystem{},
+			expectErr:    true,
+			expectSystem: nil,
 		},
 		"system name empty": {
 			client: &Client{
@@ -72,21 +76,19 @@ func TestMatchingSystem(t *testing.T) {
 					},
 				},
 			},
-			expectCount: 0,
-			expectNames: []string{},
+			expectErr:    true,
+			expectSystem: nil,
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result := tc.client.matchingSystem(tc.systems)
-
-			assert.Len(t, result, tc.expectCount)
-
-			for i, system := range result {
-				if i < len(tc.expectNames) {
-					assert.Equal(t, tc.expectNames[i], system.Name)
-				}
+			result, err := tc.client.matchingSystem(tc.systems)
+			if tc.expectErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.expectSystem, result)
 			}
 		})
 	}

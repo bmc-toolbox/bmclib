@@ -89,41 +89,39 @@ func (c *Client) SystemBootDeviceSet(_ context.Context, bootDevice string, setPe
 		return false, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
-	systems, err := c.Systems()
+	system, err := c.System()
 	if err != nil {
 		return false, err
 	}
 
-	for _, system := range systems {
-		boot := system.Boot
+	boot := system.Boot
 
-		boot.BootSourceOverrideTarget, err = bootDeviceStringToTarget(bootDevice)
-		if err != nil {
+	boot.BootSourceOverrideTarget, err = bootDeviceStringToTarget(bootDevice)
+	if err != nil {
+		return false, err
+	}
+
+	if setPersistent {
+		boot.BootSourceOverrideEnabled = rf.ContinuousBootSourceOverrideEnabled
+	} else {
+		boot.BootSourceOverrideEnabled = rf.OnceBootSourceOverrideEnabled
+	}
+
+	if efiBoot {
+		boot.BootSourceOverrideMode = rf.UEFIBootSourceOverrideMode
+	} else {
+		boot.BootSourceOverrideMode = rf.LegacyBootSourceOverrideMode
+	}
+
+	if err = system.SetBoot(boot); err != nil {
+		// Some redfish implementations don't like all the fields we're setting so we
+		// try again here with a minimal set of fields. This has shown to work with the
+		// Redfish implementation on HP DL160 Gen10.
+		secondTry := rf.Boot{}
+		secondTry.BootSourceOverrideTarget = boot.BootSourceOverrideTarget
+		secondTry.BootSourceOverrideEnabled = boot.BootSourceOverrideEnabled
+		if err = system.SetBoot(secondTry); err != nil {
 			return false, err
-		}
-
-		if setPersistent {
-			boot.BootSourceOverrideEnabled = rf.ContinuousBootSourceOverrideEnabled
-		} else {
-			boot.BootSourceOverrideEnabled = rf.OnceBootSourceOverrideEnabled
-		}
-
-		if efiBoot {
-			boot.BootSourceOverrideMode = rf.UEFIBootSourceOverrideMode
-		} else {
-			boot.BootSourceOverrideMode = rf.LegacyBootSourceOverrideMode
-		}
-
-		if err = system.SetBoot(boot); err != nil {
-			// Some redfish implementations don't like all the fields we're setting so we
-			// try again here with a minimal set of fields. This has shown to work with the
-			// Redfish implementation on HP DL160 Gen10.
-			secondTry := rf.Boot{}
-			secondTry.BootSourceOverrideTarget = boot.BootSourceOverrideTarget
-			secondTry.BootSourceOverrideEnabled = boot.BootSourceOverrideEnabled
-			if err = system.SetBoot(secondTry); err != nil {
-				return false, err
-			}
 		}
 	}
 
@@ -136,30 +134,22 @@ func (c *Client) GetBootDeviceOverride(_ context.Context) (override bmc.BootDevi
 		return override, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
 
-	systems, err := c.Systems()
+	system, err := c.System()
 	if err != nil {
 		return override, err
 	}
 
-	for _, system := range systems {
-		if system == nil {
-			continue
-		}
-
-		boot := system.Boot
-		bootDevice, err := bootTargetToBootDeviceType(boot.BootSourceOverrideTarget)
-		if err != nil {
-			return override, err
-		}
-
-		override = bmc.BootDeviceOverride{
-			IsPersistent: boot.BootSourceOverrideEnabled == rf.ContinuousBootSourceOverrideEnabled,
-			IsEFIBoot:    boot.BootSourceOverrideMode == rf.UEFIBootSourceOverrideMode,
-			Device:       bootDevice,
-		}
-
-		return override, nil
+	boot := system.Boot
+	bootDevice, err := bootTargetToBootDeviceType(boot.BootSourceOverrideTarget)
+	if err != nil {
+		return override, err
 	}
 
-	return override, bmclibErrs.ErrRedfishNoSystems
+	override = bmc.BootDeviceOverride{
+		IsPersistent: boot.BootSourceOverrideEnabled == rf.ContinuousBootSourceOverrideEnabled,
+		IsEFIBoot:    boot.BootSourceOverrideMode == rf.UEFIBootSourceOverrideMode,
+		Device:       bootDevice,
+	}
+
+	return override, nil
 }
