@@ -247,9 +247,9 @@ func (c *x12) redfishParameters(component, targetODataID string) (*rfw.RedfishUp
 
 	switch strings.ToUpper(component) {
 	case common.SlugBIOS:
-		oem.Supermicro.BIOS = biosInstallParams
+		oem.BIOS = biosInstallParams
 	case common.SlugBMC:
-		oem.Supermicro.BMC = c.bmcFwInstallParams()
+		oem.BMC = c.bmcFwInstallParams()
 	default:
 		return nil, errUnsupported
 	}

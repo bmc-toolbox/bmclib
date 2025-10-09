@@ -142,15 +142,15 @@ func (c *Conn) statusFromTaskOem(taskID string, oem json.RawMessage) (constants.
 		return "", "", err
 	}
 
-	s := strings.ToLower(data.Dell.JobState)
+	s := strings.ToLower(data.JobState)
 	state := c.redfishwrapper.ConvertTaskState(s)
 
 	status := fmt.Sprintf(
 		"id: %s, state: %s, status: %s, progress: %d%%",
 		taskID,
-		data.Dell.JobState,
-		data.Dell.Message,
-		data.Dell.PercentComplete,
+		data.JobState,
+		data.Message,
+		data.PercentComplete,
 	)
 
 	return state, status, nil
@@ -219,12 +219,12 @@ func convFirmwareTaskOem(oemdata json.RawMessage) (oem, error) {
 		return oem, errors.Wrap(errTaskOem, "failed to unmarshal: "+err.Error())
 	}
 
-	if oem.Dell.Description == "" || oem.Dell.JobState == "" {
+	if oem.Description == "" || oem.JobState == "" {
 		return oem, errors.Wrap(errTaskOem, "invalid oem data")
 	}
 
-	if oem.Dell.JobType != "FirmwareUpdate" {
-		return oem, errors.Wrap(errTaskOem, "unexpected job type: "+oem.Dell.JobType)
+	if oem.JobType != "FirmwareUpdate" {
+		return oem, errors.Wrap(errTaskOem, "unexpected job type: "+oem.JobType)
 	}
 
 	return oem, nil
