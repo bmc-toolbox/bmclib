@@ -9,36 +9,34 @@ import (
 )
 
 func (c *Client) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]string, err error) {
-	systems, err := c.Systems()
+	sys, err := c.System()
 	if err != nil {
 		return nil, err
 	}
 
 	biosConfig = make(map[string]string)
-	for _, sys := range systems {
-		if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
-			continue
-		}
+	if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
+		return biosConfig, nil
+	}
 
-		bios, err := sys.Bios()
-		if err != nil {
-			return nil, err
-		}
+	bios, err := sys.Bios()
+	if err != nil {
+		return nil, err
+	}
 
-		if bios == nil {
-			return nil, bmclibErrs.ErrNoBiosAttributes
-		}
+	if bios == nil {
+		return nil, bmclibErrs.ErrNoBiosAttributes
+	}
 
-		for attr := range bios.Attributes {
-			biosConfig[attr] = bios.Attributes.String(attr)
-		}
+	for attr := range bios.Attributes {
+		biosConfig[attr] = bios.Attributes.String(attr)
 	}
 
 	return biosConfig, nil
 }
 
 func (c *Client) SetBiosConfiguration(ctx context.Context, biosConfig map[string]string) (err error) {
-	systems, err := c.Systems()
+	sys, err := c.System()
 	if err != nil {
 		return err
 	}
@@ -49,49 +47,33 @@ func (c *Client) SetBiosConfiguration(ctx context.Context, biosConfig map[string
 		settingsAttributes[attr] = value
 	}
 
-	for _, sys := range systems {
-		if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
-			continue
-		}
-
-		bios, err := sys.Bios()
-		if err != nil {
-			return err
-		}
-
-		// TODO(jwb) We should handle passing different apply times here
-		err = bios.UpdateBiosAttributesApplyAt(settingsAttributes, common.OnResetApplyTime)
-
-		if err != nil {
-			return err
-		}
+	if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
+		return nil
 	}
 
-	return nil
-}
-
-func (c *Client) ResetBiosConfiguration(ctx context.Context) (err error) {
-	systems, err := c.Systems()
+	bios, err := sys.Bios()
 	if err != nil {
 		return err
 	}
 
-	for _, sys := range systems {
-		if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
-			continue
-		}
+	// TODO(jwb) We should handle passing different apply times here
+	return bios.UpdateBiosAttributesApplyAt(settingsAttributes, common.OnResetApplyTime)
+}
 
-		bios, err := sys.Bios()
-		if err != nil {
-			return err
-		}
-
-		err = bios.ResetBios()
-
-		if err != nil {
-			return err
-		}
+func (c *Client) ResetBiosConfiguration(ctx context.Context) (err error) {
+	sys, err := c.System()
+	if err != nil {
+		return err
 	}
 
-	return nil
+	if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
+		return nil
+	}
+
+	bios, err := sys.Bios()
+	if err != nil {
+		return err
+	}
+
+	return bios.ResetBios()
 }

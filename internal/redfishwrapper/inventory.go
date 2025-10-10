@@ -115,6 +115,9 @@ func (c *Client) bmcAttributes(ctx context.Context, device *common.Device, softw
 
 	var compatible int
 	for _, manager := range managers {
+		if managers == nil {
+			continue
+		}
 		if !c.compatibleOdataID(manager.ODataID, managerOdataIDs) {
 			continue
 		}
@@ -194,53 +197,44 @@ func (c *Client) chassisAttributes(ctx context.Context, device *common.Device, f
 }
 
 func (c *Client) systemAttributes(device *common.Device, failOnError bool, softwareInventory []*redfish.SoftwareInventory) (err error) {
-	systems, err := c.Systems()
+	sys, err := c.System()
 	if err != nil {
 		return err
 	}
 
-	compatible := 0
-	for _, sys := range systems {
-		if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
-			continue
-		}
-
-		compatible++
-
-		if sys.Manufacturer != "" && sys.Model != "" && sys.SerialNumber != "" {
-			device.Vendor = sys.Manufacturer
-			device.Model = sys.Model
-			device.Serial = sys.SerialNumber
-		}
-
-		type collectorFuncs []func(
-			sys *redfish.ComputerSystem,
-			device *common.Device,
-			softwareInventory []*redfish.SoftwareInventory,
-		) error
-
-		// slice of collector methods
-		funcs := collectorFuncs{
-			c.collectCPUs,
-			c.collectDIMMs,
-			c.collectDrives,
-			c.collectBIOS,
-			c.collectNICs,
-			c.collectTPMs,
-			c.collectStorageControllers,
-		}
-
-		// execute collector methods
-		for _, f := range funcs {
-			err := f(sys, device, softwareInventory)
-			if err != nil && failOnError {
-				return err
-			}
-		}
+	if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
+		return bmclibErrs.ErrRedfishSystemOdataID
 	}
 
-	if compatible == 0 {
-		return bmclibErrs.ErrRedfishSystemOdataID
+	if sys.Manufacturer != "" && sys.Model != "" && sys.SerialNumber != "" {
+		device.Vendor = sys.Manufacturer
+		device.Model = sys.Model
+		device.Serial = sys.SerialNumber
+	}
+
+	type collectorFuncs []func(
+		sys *redfish.ComputerSystem,
+		device *common.Device,
+		softwareInventory []*redfish.SoftwareInventory,
+	) error
+
+	// slice of collector methods
+	funcs := collectorFuncs{
+		c.collectCPUs,
+		c.collectDIMMs,
+		c.collectDrives,
+		c.collectBIOS,
+		c.collectNICs,
+		c.collectTPMs,
+		c.collectStorageControllers,
+	}
+
+	// execute collector methods
+	for _, f := range funcs {
+		err := f(sys, device, softwareInventory)
+		if err != nil && failOnError {
+			return err
+		}
 	}
 
 	return nil

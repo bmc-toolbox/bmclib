@@ -2,6 +2,7 @@ package redfishwrapper
 
 import (
 	"context"
+	"fmt"
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 
@@ -29,22 +30,33 @@ func (c *Client) UpdateService() (*redfish.UpdateService, error) {
 	return c.client.Service.UpdateService()
 }
 
-// Systems get the system instances from the service.
-func (c *Client) Systems() ([]*redfish.ComputerSystem, error) {
+// System gets the system matching c.systemName or when c.systemName is not set
+// and there is only one system it returns that system.
+func (c *Client) System() (*redfish.ComputerSystem, error) {
 	if err := c.SessionActive(); err != nil {
 		return nil, err
 	}
 
-	s, err := c.client.Service.Systems()
+	systems, err := c.client.Service.Systems()
 	if err != nil {
 		return nil, err
 	}
 
-	return c.matchingSystem(s), nil
+	// If no system name is set and there is only one system, return it.
+	// This is to handle backwards compatibility where we didn't require passing
+	// a system name to the client.
+	if c.systemName == "" && len(systems) == 1 && systems[0] != nil {
+		return systems[0], nil
+	}
+
+	return c.matchingSystem(systems)
 }
 
-// Managers gets the manager instances of this service.
-func (c *Client) Managers(ctx context.Context) ([]*redfish.Manager, error) {
+// Manager gets the manager instances of this service. It matches the manager
+// to the system name if one is set in the client. If no system name is set
+// and there is only one manager it returns that manager. Otherwise it returns
+// an error.
+func (c *Client) Manager(ctx context.Context) (*redfish.Manager, error) {
 	if err := c.SessionActive(); err != nil {
 		return nil, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
 	}
@@ -54,19 +66,32 @@ func (c *Client) Managers(ctx context.Context) ([]*redfish.Manager, error) {
 		return nil, err
 	}
 
+	// If no system name is set and there is only one manager, return it.
+	// This is to handle backwards compatibility where we didn't require passing
+	// a system name to the client.
+	if c.systemName == "" && len(ms) == 1 && ms[0] != nil {
+		return ms[0], nil
+	}
+
 	for _, m := range ms {
 		sys, err := m.ManagerForServers()
 		if err != nil {
 			continue
 		}
-		for _, s := range sys {
-			if s.Name == c.systemName {
-				return []*redfish.Manager{m}, nil
-			}
+		if _, err := c.matchingSystem(sys); err == nil {
+			return m, nil
 		}
 	}
 
-	return ms, nil
+	return nil, fmt.Errorf("no matching redfish manager found for system: %s", c.systemName)
+}
+
+func (c *Client) Managers(ctx context.Context) ([]*redfish.Manager, error) {
+	if err := c.SessionActive(); err != nil {
+		return nil, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
+	}
+
+	return c.client.Service.Managers()
 }
 
 // Chassis gets the chassis instances managed by this service.
@@ -78,12 +103,12 @@ func (c *Client) Chassis(ctx context.Context) ([]*redfish.Chassis, error) {
 	return c.client.Service.Chassis()
 }
 
-func (c *Client) matchingSystem(systems []*redfish.ComputerSystem) []*redfish.ComputerSystem {
+func (c *Client) matchingSystem(systems []*redfish.ComputerSystem) (*redfish.ComputerSystem, error) {
 	for _, s := range systems {
-		if s.Name == c.systemName {
-			return []*redfish.ComputerSystem{s}
+		if s != nil && s.Name == c.systemName {
+			return s, nil
 		}
 	}
 
-	return systems
+	return nil, fmt.Errorf("no matching redfish system found for system: %s", c.systemName)
 }
