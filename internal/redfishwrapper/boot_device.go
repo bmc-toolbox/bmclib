@@ -59,6 +59,10 @@ var bootDeviceTypeMappings = []bootDeviceMapping{
 		BootDeviceType: bmc.BootDeviceTypeUtil,
 		RedFishTarget:  rf.UtilitiesBootSourceOverrideTarget,
 	},
+	{
+		BootDeviceType: bmc.BootDeviceUefiHTTP,
+		RedFishTarget:  rf.UefiHTTPBootSourceOverrideTarget,
+	},
 }
 
 // bootDeviceStringToTarget gets the RedFish BootSourceOverrideTarget that corresponds to the given device string,
