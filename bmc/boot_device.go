@@ -23,6 +23,7 @@ const (
 	BootDeviceTypeSDCard      BootDeviceType = "sd_card"
 	BootDeviceTypeUSB         BootDeviceType = "usb"
 	BootDeviceTypeUtil        BootDeviceType = "utilities"
+	BootDeviceUefiHTTP        BootDeviceType = "uefi_http"
 )
 
 // BootDeviceSetter sets the next boot device for a machine
