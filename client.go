@@ -18,6 +18,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/providers/asrockrack"
 	"github.com/bmc-toolbox/bmclib/v2/providers/dell"
+	"github.com/bmc-toolbox/bmclib/v2/providers/homeassistant"
 	"github.com/bmc-toolbox/bmclib/v2/providers/intelamt"
 	"github.com/bmc-toolbox/bmclib/v2/providers/ipmitool"
 	"github.com/bmc-toolbox/bmclib/v2/providers/openbmc"
@@ -64,14 +65,15 @@ type Auth struct {
 
 // providerConfig contains per provider specific configuration.
 type providerConfig struct {
-	ipmitool   ipmitool.Config
-	asrock     asrockrack.Config
-	gofish     redfish.Config
-	intelamt   intelamt.Config
-	dell       dell.Config
-	supermicro supermicro.Config
-	rpc        rpc.Provider
-	openbmc    openbmc.Config
+	ipmitool      ipmitool.Config
+	asrock        asrockrack.Config
+	gofish        redfish.Config
+	intelamt      intelamt.Config
+	dell          dell.Config
+	supermicro    supermicro.Config
+	rpc           rpc.Provider
+	openbmc       openbmc.Config
+	homeassistant homeassistant.Config
 }
 
 // NewClient returns a new Client struct
@@ -109,6 +111,7 @@ func NewClient(host, user, pass string, opts ...Option) *Client {
 			openbmc: openbmc.Config{
 				Port: "443",
 			},
+			homeassistant: homeassistant.Config{},
 		},
 	}
 
@@ -146,6 +149,21 @@ func (c *Client) defaultTimeout(ctx context.Context) time.Duration {
 		return time.Until(deadline)
 	}
 	return time.Until(deadline) / time.Duration(l)
+}
+
+func (c *Client) registerHomeAssistantProvider() error {
+	driverHA := homeassistant.New(c.Auth.Host, c.Auth.Pass)
+	c.providerConfig.homeassistant.Logger = c.Logger
+	httpClient := *c.httpClient
+	httpClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
+	c.providerConfig.homeassistant.HTTPClient = &httpClient
+
+	if err := mergo.Merge(driverHA, c.providerConfig.homeassistant, mergo.WithOverride); err != nil {
+		return fmt.Errorf("failed to merge user specified homeassistant config with the config defaults, homeassistant provider not available: %w", err)
+	}
+	c.Registry.Register(homeassistant.ProviderName, homeassistant.ProviderProtocol, homeassistant.Features, nil, driverHA)
+
+	return nil
 }
 
 func (c *Client) registerRPCProvider() error {
@@ -264,6 +282,18 @@ func (c *Client) registerOpenBMCProvider() {
 }
 
 func (c *Client) registerProviders() {
+	// register the homeassistant provider, if options for it were provided
+	if c.providerConfig.homeassistant.SwitchEntityID != "" {
+		// when the rpc provider is to be used, we won't register any other providers.
+		err := c.registerHomeAssistantProvider()
+		if err == nil {
+			c.Logger.Info("note: with the homeassistant provider registered, no other providers will be registered and available")
+			return
+		}
+		c.Logger.Info("failed to register homeassistant provider, falling back to registering all other providers", "error", err.Error())
+
+	}
+
 	// register the rpc provider
 	// without the consumer URL there is no way to send RPC requests.
 	if c.providerConfig.rpc.ConsumerURL != "" {
