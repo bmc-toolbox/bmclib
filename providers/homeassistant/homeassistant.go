@@ -76,12 +76,10 @@ func (p *Config) Open(ctx context.Context) error {
 }
 
 func (p *Config) haGetEntityState(ctx context.Context, haEntityId string) (EntityStateResponse, error) {
-	haBaseUrl, err := url.Parse(p.ApiUrl)
+	stateUrl, err := url.JoinPath(p.ApiUrl, "api", "states", haEntityId)
 	if err != nil {
 		return EntityStateResponse{}, err
 	}
-
-	stateUrl := haBaseUrl.String() + "/api/states/" + haEntityId
 	p.Logger.Info("Testing connection to Home Assistant API", "url", stateUrl)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", stateUrl, nil)
@@ -149,10 +147,6 @@ func (p *Config) PowerStateGet(ctx context.Context) (state string, err error) {
 // PowerSet sets the power state of a BMC machine.
 func (p *Config) PowerSet(ctx context.Context, state string) (ok bool, err error) {
 	// Send a POST request to the Home Assistant API to toggle the switch entity
-	haBaseUrl, err := url.Parse(p.ApiUrl)
-	if err != nil {
-		return false, err
-	}
 
 	var service string
 	if state == "on" {
@@ -163,7 +157,10 @@ func (p *Config) PowerSet(ctx context.Context, state string) (ok bool, err error
 		return false, fmt.Errorf("invalid power state: %s", state)
 	}
 
-	serviceUrl := haBaseUrl.String() + "/api/services/switch/" + service
+	serviceUrl, err := url.JoinPath(p.ApiUrl, "api", "services", "switch", service)
+	if err != nil {
+		return false, err
+	}
 	p.Logger.Info("Setting Home Assistant entity power state", "url", serviceUrl, "entity", p.SwitchEntityID, "desiredState", state)
 	reqBodyMap := map[string]interface{}{
 		"entity_id": p.SwitchEntityID,
