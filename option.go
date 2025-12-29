@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
+	"github.com/bmc-toolbox/bmclib/v2/providers/homeassistant"
 	"github.com/bmc-toolbox/bmclib/v2/providers/rpc"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
@@ -155,6 +156,12 @@ func WithDellRedfishUseBasicAuth(useBasicAuth bool) Option {
 func WithRPCOpt(opt rpc.Provider) Option {
 	return func(args *Client) {
 		args.providerConfig.rpc = opt
+	}
+}
+
+func WithHomeAssistantOpt(opt homeassistant.Config) Option {
+	return func(args *Client) {
+		args.providerConfig.homeassistant = opt
 	}
 }
 
