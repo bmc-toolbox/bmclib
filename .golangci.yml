@@ -1,125 +1,156 @@
-  govet:
-    auto-fix: true
-    linters-settings:
-    enable:
-     - fieldalignment
-    check-shadowing: true
-    settings:
-      printf:
-        funcs:
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
-  golint:
-    min-confidence: 0
-  gocyclo:
-    min-complexity: 10
-  maligned:
-    suggest-new: true
-  dupl:
-    threshold: 100
-  goconst:
-    min-len: 2
-    min-occurrences: 2
-  depguard:
-    list-type: blacklist
-    packages:
-      # logging is allowed only by logutils.Log, logrus
-      # is allowed to use only in logutils package
-      - github.com/sirupsen/logrus
-  misspell:
-    locale: US
-    auto-fix: true
-  lll:
-    line-length: 140
-  goimports:
-    local-prefixes: github.com/golangci/golangci-lint
-  gocritic:
-    auto-fix: true
-    enabled-tags:
-      - performance
-      - style
-      - experimental
-    disabled-checks:
-      - wrapperFunc
-  gofumpt:
-    extra-rules: true
-    auto-fix: true
-  wsl:
-    auto-fix: true
-  stylecheck:
-    auto-fix: true
-
-linters:
-  enable:
-    - errcheck
-    - gosimple
-    - govet
-    - gofmt
-    - gocyclo
-    - ineffassign
-    - stylecheck
-    - deadcode
-    - staticcheck
-    - structcheck
-    - unused
-    - prealloc
-    - typecheck
-    - varcheck
-    # additional linters
-    - bodyclose
-    - gocritic
-    - whitespace
-    - wsl
-    - goimports
-    - golint
-    - misspell
-    - goerr113
-    - noctx
-  enable-all: false
-  disable-all: true
-
+version: "2"
 run:
-  skip-dirs:
-
-
-issues:
-  exclude-rules:
-    - linters:
-        - gosec
-      text: "weak cryptographic primitive"
-
-    - linters:
-        - stylecheck
-      text: "ST1016"
-  exclude:
-    # Default excludes from `golangci-lint run --help` with EXC0002 removed
-    # EXC0001 errcheck: Almost all programs ignore errors on these functions and in most cases it's ok
-    - Error return value of .((os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*print(f|ln)?|os\.(Un)?Setenv). is not checked
-    # EXC0002 golint: Annoying issue about not having a comment. The rare codebase has such comments
-    # - (comment on exported (method|function|type|const)|should have( a package)? comment|comment should be of the form)
-    # EXC0003 golint: False positive when tests are defined in package 'test'
-    - func name will be used as test\.Test.* by other packages, and that stutters; consider calling this
-    # EXC0004 govet: Common false positives
-    - (possible misuse of unsafe.Pointer|should have signature)
-    # EXC0005 staticcheck: Developers tend to write in C-style with an explicit 'break' in a 'switch', so it's ok to ignore
-    - ineffective break statement. Did you mean to break out of the outer loop
-    # EXC0006 gosec: Too many false-positives on 'unsafe' usage
-    - Use of unsafe calls should be audited
-    # EXC0007 gosec: Too many false-positives for parametrized shell calls
-    - Subprocess launch(ed with variable|ing should be audited)
-    # EXC0008 gosec: Duplicated errcheck checks
-    - (G104|G307)
-    # EXC0009 gosec: Too many issues in popular repos
-    - (Expect directory permissions to be 0750 or less|Expect file permissions to be 0600 or less)
-    # EXC0010 gosec: False positive is triggered by 'src, err := ioutil.ReadFile(filename)'
-    - Potential file inclusion via variable
-exclude-use-default: false
-
-# golangci.com configuration
-# https://github.com/golangci/golangci/wiki/Configuration
-#service:
-#  golangci-lint-version: 1.15.x # use the fixed version to not introduce new linters unexpectedly
-#  prepare:
-#    - echo "here I can run custom commands, but no preparation needed for this repo"
+  # The default runtime timeout is 1m, which doesn't work well on Github Actions.
+  timeout: 4m
+linters:
+  default: none
+  enable:
+    - asciicheck
+    - bodyclose
+    - copyloopvar
+    - cyclop
+    - dogsled
+    - dupl
+    - durationcheck
+    - errcheck
+    - errname
+    - errorlint
+    - exhaustive
+    - forcetypeassert
+    - gocognit
+    - goconst
+    - gocritic
+    - goheader
+    - goprintffuncname
+    - gosec
+    - govet
+    - importas
+    - ineffassign
+    - makezero
+    - misspell
+    - nakedret
+    - nestif
+    - nilerr
+    - noctx
+    - nolintlint
+    - predeclared
+    - revive
+    - rowserrcheck
+    - sqlclosecheck
+    - staticcheck
+    - thelper
+    - tparallel
+    - unconvert
+    - unparam
+    - unused
+    - wastedassign
+    - whitespace
+  settings:
+    govet:
+      enable:
+       - fieldalignment
+      settings:
+        printf:
+          funcs:
+            - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
+            - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
+            - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
+            - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
+    gocyclo:
+      min-complexity: 10
+    dupl:
+      threshold: 100
+    goconst:
+      min-len: 2
+      min-occurrences: 2
+    misspell:
+      locale: US
+    lll:
+      line-length: 140
+    gocritic:
+      enabled-tags:
+        - performance
+        - style
+        - experimental
+      disabled-checks:
+        - wrapperFunc
+    cyclop:
+      max-complexity: 37
+      package-average: 34
+    errorlint:
+      # Forcing %w in error wrapping forces authors to make errors part of their package APIs. The decision to make
+      # an error part of a package API should be a conscious decision by the author.
+      # Also see Hyrums Law.
+      errorf: false
+      asserts: false
+    exhaustive:
+      default-signifies-exhaustive: true
+    gocognit:
+      min-complexity: 98
+    nestif:
+      min-complexity: 8
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+      allow-unused: false
+    revive:
+      severity: warning
+      rules:
+        - name: atomic
+        - name: blank-imports
+        - name: bool-literal-in-expr
+        - name: confusing-naming
+        - name: constant-logical-expr
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: deep-exit
+        - name: defer
+        - name: range-val-in-closure
+        - name: range-val-address
+        - name: dot-imports
+        - name: error-naming
+        - name: error-return
+        - name: error-strings
+        - name: errorf
+        - name: exported
+        - name: identical-branches
+        - name: if-return
+        - name: import-shadowing
+        - name: increment-decrement
+        - name: indent-error-flow
+        - name: indent-error-flow
+        - name: package-comments
+        - name: range
+        - name: receiver-naming
+        - name: redefines-builtin-id
+        - name: superfluous-else
+        - name: struct-tag
+        - name: time-naming
+        - name: unexported-naming
+        - name: unexported-return
+        - name: unnecessary-stmt
+        - name: unreachable-code
+        - name: unused-parameter
+        - name: var-declaration
+        - name: var-naming
+        - name: unconditional-recursion
+        - name: waitgroup-by-value
+        # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#struct-tag
+        - name: struct-tag
+          arguments:
+            - json,inline
+            - yaml,omitzero
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - examples
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - examples

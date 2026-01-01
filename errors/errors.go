@@ -112,7 +112,7 @@ var (
 	ErrBMCColdResetRequired = errors.New("BMC cold reset required")
 
 	// ErrHostPowercycleRequired is returned when a host powercycle is required.
-	ErrHostPowercycleRequired = errors.New("Host power cycle required")
+	ErrHostPowercycleRequired = errors.New("host power cycle required")
 
 	// ErrSessionExpired is returned when the BMC session is not valid
 	// the receiver can then choose to request a new session.
