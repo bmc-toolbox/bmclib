@@ -104,7 +104,6 @@ func (c *Conn) Open(ctx context.Context) (err error) {
 }
 
 // Close a connection to a BMC
-// Fixed: Accept context parameter to implement bmclib Closer interface
 func (c *Conn) Close(ctx context.Context) (err error) {
 	return c.client.Close(ctx)
 }
