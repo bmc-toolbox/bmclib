@@ -18,6 +18,7 @@ var (
 	// board part numbers
 	//
 	supportedModels = []string{
+		"X11SSL-F",
 		"X11SCM-F",
 		"X11DPH-T",
 		"X11SCH-F",
