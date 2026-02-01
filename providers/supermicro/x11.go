@@ -149,11 +149,19 @@ func (c *x11) firmwareInstallSteps(component string) ([]constants.FirmwareInstal
 		return nil, err
 	}
 
-	return []constants.FirmwareInstallStep{
+	steps := []constants.FirmwareInstallStep{
 		constants.FirmwareInstallStepUpload,
 		constants.FirmwareInstallStepInstallUploaded,
 		constants.FirmwareInstallStepInstallStatus,
-	}, nil
+	}
+
+	// On a failure the X11 BMC has to be removed from the
+	// flash mode - which is done through a BMC reset
+	if strings.EqualFold(component, common.SlugBMC) {
+		steps = append(steps, constants.FirmwareInstallStepResetBMCOnInstallFailure)
+	}
+
+	return steps, nil
 }
 
 func (c *x11) firmwareUpload(ctx context.Context, component string, file *os.File) (string, error) {
