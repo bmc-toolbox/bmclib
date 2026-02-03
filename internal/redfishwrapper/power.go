@@ -8,7 +8,7 @@ import (
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/pkg/errors"
-	rf "github.com/stmcginnis/gofish/redfish"
+	"github.com/stmcginnis/gofish/schemas"
 )
 
 // PowerSet sets the power state of a server
@@ -41,7 +41,7 @@ func (c *Client) BMCReset(ctx context.Context, resetType string) (ok bool, err e
 		return false, err
 	}
 
-	if err = manager.Reset(rf.ResetType(resetType)); err != nil {
+	if _, err = manager.Reset(schemas.ResetType(resetType)); err != nil {
 		return false, err
 	}
 
@@ -59,12 +59,12 @@ func (c *Client) SystemPowerOn(ctx context.Context) (ok bool, err error) {
 		return false, err
 	}
 
-	if system.PowerState == rf.OnPowerState {
+	if system.PowerState == schemas.OnPowerState {
 		return true, nil
 	}
 
 	system.DisableEtagMatch(c.disableEtagMatch)
-	if err = system.Reset(rf.OnResetType); err != nil {
+	if _, err = system.Reset(schemas.OnResetType); err != nil {
 		return false, err
 	}
 
@@ -82,13 +82,13 @@ func (c *Client) SystemPowerOff(ctx context.Context) (ok bool, err error) {
 		return false, err
 	}
 
-	if system.PowerState == rf.OffPowerState {
+	if system.PowerState == schemas.OffPowerState {
 		return true, nil
 	}
 
 	system.DisableEtagMatch(c.disableEtagMatch)
 
-	if err = system.Reset(rf.GracefulShutdownResetType); err != nil {
+	if _, err = system.Reset(schemas.GracefulShutdownResetType); err != nil {
 		return false, err
 	}
 
@@ -107,7 +107,7 @@ func (c *Client) SystemReset(ctx context.Context) (ok bool, err error) {
 	}
 
 	system.DisableEtagMatch(c.disableEtagMatch)
-	if err = system.Reset(rf.PowerCycleResetType); err != nil {
+	if _, err = system.Reset(schemas.PowerCycleResetType); err != nil {
 		_, _ = c.SystemPowerOff(ctx)
 
 		for wait := 1; wait < 10; wait++ {
@@ -135,13 +135,13 @@ func (c *Client) SystemPowerCycle(ctx context.Context) (ok bool, err error) {
 		return false, err
 	}
 
-	if system.PowerState == rf.OffPowerState {
+	if system.PowerState == schemas.OffPowerState {
 		return false, fmt.Errorf("power cycle failed: Command not supported in present state: %v", system.PowerState)
 	}
 
 	system.DisableEtagMatch(c.disableEtagMatch)
 
-	if err = system.Reset(rf.ForceRestartResetType); err != nil {
+	if _, err = system.Reset(schemas.ForceRestartResetType); err != nil {
 		return false, errors.WithMessage(err, "power cycle failed")
 	}
 
@@ -173,13 +173,13 @@ func (c *Client) SystemForceOff(ctx context.Context) (ok bool, err error) {
 		return false, err
 	}
 
-	if system.PowerState == rf.OffPowerState {
+	if system.PowerState == schemas.OffPowerState {
 		return true, nil
 	}
 
 	system.DisableEtagMatch(c.disableEtagMatch)
 
-	if err = system.Reset(rf.ForceOffResetType); err != nil {
+	if _, err = system.Reset(schemas.ForceOffResetType); err != nil {
 		return false, err
 	}
 
@@ -197,5 +197,6 @@ func (c *Client) SendNMI(_ context.Context) error {
 		return err
 	}
 
-	return system.Reset(rf.NmiResetType)
+	_, err = system.Reset(schemas.NmiResetType)
+	return err
 }

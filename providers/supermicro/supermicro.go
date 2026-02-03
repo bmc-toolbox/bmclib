@@ -22,7 +22,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/internal/sum"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/bmc-toolbox/common"
-	"github.com/stmcginnis/gofish/redfish"
+	"github.com/stmcginnis/gofish/schemas"
 
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
@@ -122,7 +122,7 @@ type bmcQueryor interface {
 	// returns the device model, that was queried previously with queryDeviceModel
 	deviceModel() (model string)
 	supportsInstall(component string) error
-	getBootProgress() (*redfish.BootProgress, error)
+	getBootProgress() (*schemas.BootProgress, error)
 	bootComplete() (bool, error)
 }
 
@@ -646,7 +646,7 @@ func (c *Client) SendNMI(ctx context.Context) error {
 }
 
 // GetBootProgress allows a caller to follow along as the system goes through its boot sequence
-func (c *Client) GetBootProgress() (*redfish.BootProgress, error) {
+func (c *Client) GetBootProgress() (*schemas.BootProgress, error) {
 	return c.bmc.getBootProgress()
 }
 

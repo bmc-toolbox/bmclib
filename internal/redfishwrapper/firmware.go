@@ -16,7 +16,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/stmcginnis/gofish/redfish"
+	"github.com/stmcginnis/gofish/schemas"
 
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
@@ -113,7 +113,7 @@ func (c *Client) FirmwareUpload(ctx context.Context, updateFile *os.File, params
 		return taskIDFromLocationHeader(location)
 	}
 
-	rfTask := &redfish.Task{}
+	rfTask := &schemas.Task{}
 	if err := rfTask.UnmarshalJSON(response); err != nil {
 		// we got invalid JSON
 		return "", fmt.Errorf("unmarshaling redfish response: %w", err)
@@ -157,7 +157,7 @@ func (c *Client) StartUpdateForUploadedFirmware(ctx context.Context) (taskID str
 		return taskIDFromLocationHeader(location)
 	}
 
-	rfTask := &redfish.Task{}
+	rfTask := &schemas.Task{}
 	if err := rfTask.UnmarshalJSON(response); err != nil {
 		// we got invalid JSON
 		return "", fmt.Errorf("unmarshaling redfish response: %w", err)
@@ -281,8 +281,8 @@ func (c *Client) firmwareInstallMethodURI() (method installMethod, updateURI str
 	switch {
 	case updateService.MultipartHTTPPushURI != "":
 		return multipartHttpUpload, updateService.MultipartHTTPPushURI, nil
-	case updateService.HTTPPushURI != "":
-		return unstructuredHttpPush, updateService.HTTPPushURI, nil
+	case updateService.HTTPPushURI != "": //nolint:staticcheck
+		return unstructuredHttpPush, updateService.HTTPPushURI, nil //nolint:staticcheck
 	}
 
 	return "", "", errors.Wrap(bmclibErrs.ErrRedfishUpdateService, "unsupported update method")

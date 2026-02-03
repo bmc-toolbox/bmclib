@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/bmc-toolbox/common"
-	redfish "github.com/stmcginnis/gofish/redfish"
+	"github.com/stmcginnis/gofish/schemas"
 )
 
 var (
@@ -69,11 +69,11 @@ func (c *Client) Inventory(ctx context.Context, failOnError bool) (device *commo
 		return nil, errors.Wrap(bmclibErrs.ErrRedfishSoftwareInventory, err.Error())
 	}
 
-	softwareInventory := []*redfish.SoftwareInventory{}
+	softwareInventory := []*schemas.SoftwareInventory{}
 
 	if updateService != nil {
 		// nolint
-		softwareInventory, err = updateService.FirmwareInventories()
+		softwareInventory, err = updateService.FirmwareInventory()
 		if err != nil && failOnError {
 			return nil, errors.Wrap(bmclibErrs.ErrRedfishSoftwareInventory, err.Error())
 		}
@@ -107,7 +107,7 @@ func (c *Client) Inventory(ctx context.Context, failOnError bool) (device *commo
 // DeviceVendorModel returns the device vendor and model attributes
 
 // bmcAttributes collects BMC component attributes
-func (c *Client) bmcAttributes(ctx context.Context, device *common.Device, softwareInventory []*redfish.SoftwareInventory) (err error) {
+func (c *Client) bmcAttributes(ctx context.Context, device *common.Device, softwareInventory []*schemas.SoftwareInventory) (err error) {
 	managers, err := c.Managers(ctx)
 	if err != nil {
 		return err
@@ -157,7 +157,7 @@ func (c *Client) bmcAttributes(ctx context.Context, device *common.Device, softw
 }
 
 // chassisAttributes populates the device chassis attributes
-func (c *Client) chassisAttributes(ctx context.Context, device *common.Device, failOnError bool, softwareInventory []*redfish.SoftwareInventory) (err error) {
+func (c *Client) chassisAttributes(ctx context.Context, device *common.Device, failOnError bool, softwareInventory []*schemas.SoftwareInventory) (err error) {
 	chassis, err := c.Chassis(ctx)
 	if err != nil {
 		return err
@@ -196,7 +196,7 @@ func (c *Client) chassisAttributes(ctx context.Context, device *common.Device, f
 
 }
 
-func (c *Client) systemAttributes(device *common.Device, failOnError bool, softwareInventory []*redfish.SoftwareInventory) (err error) {
+func (c *Client) systemAttributes(device *common.Device, failOnError bool, softwareInventory []*schemas.SoftwareInventory) (err error) {
 	sys, err := c.System()
 	if err != nil {
 		return err
@@ -213,9 +213,9 @@ func (c *Client) systemAttributes(device *common.Device, failOnError bool, softw
 	}
 
 	type collectorFuncs []func(
-		sys *redfish.ComputerSystem,
+		sys *schemas.ComputerSystem,
 		device *common.Device,
-		softwareInventory []*redfish.SoftwareInventory,
+		softwareInventory []*schemas.SoftwareInventory,
 	) error
 
 	// slice of collector methods
@@ -247,7 +247,7 @@ func (c *Client) systemAttributes(device *common.Device, failOnError bool, softw
 // slug - the component slug constant
 // id - the component ID
 // previous - when true returns previously installed firmware, else returns the current
-func (c *Client) firmwareAttributes(slug, id string, firmwareObj *common.Firmware, softwareInventory []*redfish.SoftwareInventory) {
+func (c *Client) firmwareAttributes(slug, id string, firmwareObj *common.Firmware, softwareInventory []*schemas.SoftwareInventory) {
 	if len(softwareInventory) == 0 {
 		return
 	}

@@ -16,7 +16,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish/oem/smc"
-	"github.com/stmcginnis/gofish/redfish"
+	"github.com/stmcginnis/gofish/schemas"
 )
 
 type x11 struct {
@@ -203,7 +203,7 @@ func (c *x11) firmwareTaskStatus(ctx context.Context, component, _ string) (stat
 	return "", "", errors.Wrap(bmclibErrs.ErrFirmwareTaskStatus, "component unsupported: "+component)
 }
 
-func (c *x11) getBootProgress() (*redfish.BootProgress, error) {
+func (c *x11) getBootProgress() (*schemas.BootProgress, error) {
 	return nil, fmt.Errorf("%w: not supported on x11 models", bmclibErrs.ErrRedfishVersionIncompatible)
 }
 

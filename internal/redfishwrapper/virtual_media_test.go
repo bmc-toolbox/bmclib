@@ -37,14 +37,14 @@ func TestGetVirtualMedia(t *testing.T) {
 		"dell idrac - system path has virtual media": {
 			// Dell iDRAC case: Manager has no VirtualMedia, System has VirtualMedia
 			hfunc: map[string]func(http.ResponseWriter, *http.Request){
-				"/redfish/v1/":                                            endpointFunc(t, "dell/serviceroot.json"),
-				"/redfish/v1/Managers":                                    endpointFunc(t, "dell/managers.json"),
-				"/redfish/v1/Managers/iDRAC.Embedded.1":                   endpointFunc(t, "dell/manager.idrac.embedded.1.json"),
-				"/redfish/v1/Systems":                                     endpointFunc(t, "dell/systems.json"),
-				"/redfish/v1/Systems/System.Embedded.1":                   endpointFunc(t, "dell/system.embedded.1.virtualmedia.json"),
-				"/redfish/v1/Systems/System.Embedded.1/VirtualMedia":      endpointFunc(t, "dell/virtualmedia_collection.json"),
-				"/redfish/v1/Systems/System.Embedded.1/VirtualMedia/1":    endpointFunc(t, "dell/virtualmedia_1.json"),
-				"/redfish/v1/Systems/System.Embedded.1/VirtualMedia/2":    endpointFunc(t, "dell/virtualmedia_2.json"),
+				"/redfish/v1/":                                         endpointFunc(t, "dell/serviceroot.json"),
+				"/redfish/v1/Managers":                                 endpointFunc(t, "dell/managers.json"),
+				"/redfish/v1/Managers/iDRAC.Embedded.1":                endpointFunc(t, "dell/manager.idrac.embedded.1.json"),
+				"/redfish/v1/Systems":                                  endpointFunc(t, "dell/systems.json"),
+				"/redfish/v1/Systems/System.Embedded.1":                endpointFunc(t, "dell/system.embedded.1.virtualmedia.json"),
+				"/redfish/v1/Systems/System.Embedded.1/VirtualMedia":   endpointFunc(t, "dell/virtualmedia_collection.json"),
+				"/redfish/v1/Systems/System.Embedded.1/VirtualMedia/1": endpointFunc(t, "dell/virtualmedia_1.json"),
+				"/redfish/v1/Systems/System.Embedded.1/VirtualMedia/2": endpointFunc(t, "dell/virtualmedia_2.json"),
 			},
 			basicAuth:   true,
 			expectCount: 2,
@@ -54,10 +54,10 @@ func TestGetVirtualMedia(t *testing.T) {
 			// Neither Manager nor System exposes VirtualMedia
 			hfunc: map[string]func(http.ResponseWriter, *http.Request){
 				"/redfish/v1/":                          endpointFunc(t, "dell/serviceroot.json"),
-				"/redfish/v1/Managers":                   endpointFunc(t, "dell/managers.json"),
-				"/redfish/v1/Managers/iDRAC.Embedded.1":  endpointFunc(t, "dell/manager.idrac.embedded.1.json"),
-				"/redfish/v1/Systems":                    endpointFunc(t, "dell/systems.json"),
-				"/redfish/v1/Systems/System.Embedded.1":  endpointFunc(t, "dell/system.embedded.1.json"),
+				"/redfish/v1/Managers":                  endpointFunc(t, "dell/managers.json"),
+				"/redfish/v1/Managers/iDRAC.Embedded.1": endpointFunc(t, "dell/manager.idrac.embedded.1.json"),
+				"/redfish/v1/Systems":                   endpointFunc(t, "dell/systems.json"),
+				"/redfish/v1/Systems/System.Embedded.1": endpointFunc(t, "dell/system.embedded.1.json"),
 			},
 			basicAuth:   true,
 			expectCount: 0,
