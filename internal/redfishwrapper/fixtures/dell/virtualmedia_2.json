@@ -1,0 +1,43 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#VirtualMedia.VirtualMedia",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/VirtualMedia/2",
+    "@odata.type": "#VirtualMedia.v1_6_4.VirtualMedia",
+    "@odata.etag": "W/\"gen-2\"",
+    "Id": "2",
+    "Name": "VirtualMedia Instance 2",
+    "Description": "iDRAC Virtual Media Instance",
+    "Image": null,
+    "ImageName": null,
+    "Inserted": false,
+    "ConnectedVia": "NotConnected",
+    "WriteProtected": null,
+    "TransferMethod": null,
+    "TransferProtocolType": null,
+    "VerifyCertificate": false,
+    "MediaTypes": [
+        "CD",
+        "DVD",
+        "USBStick"
+    ],
+    "MediaTypes@odata.count": 3,
+    "Actions": {
+        "#VirtualMedia.InsertMedia": {
+            "target": "/redfish/v1/Systems/System.Embedded.1/VirtualMedia/2/Actions/VirtualMedia.InsertMedia",
+            "TransferProtocolType@Redfish.AllowableValues": [
+                "CIFS",
+                "HTTP",
+                "HTTPS",
+                "NFS"
+            ],
+            "TransferMethod@Redfish.AllowableValues": [
+                "Stream"
+            ]
+        },
+        "#VirtualMedia.EjectMedia": {
+            "target": "/redfish/v1/Systems/System.Embedded.1/VirtualMedia/2/Actions/VirtualMedia.EjectMedia"
+        }
+    },
+    "Certificates": {
+        "@odata.id": "/redfish/v1/Systems/System.Embedded.1/VirtualMedia/2/Certificates"
+    }
+}
