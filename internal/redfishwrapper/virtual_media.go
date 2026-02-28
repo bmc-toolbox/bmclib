@@ -9,14 +9,40 @@ import (
 	rf "github.com/stmcginnis/gofish/redfish"
 )
 
-// Set the virtual media attached to the system, or just eject everything if mediaURL is empty.
-func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL string) (bool, error) {
+// getVirtualMedia retrieves virtual media resources by first checking the
+// Redfish Manager path and falling back to the System path if none are found.
+//
+// Some BMC implementations (e.g., Dell iDRAC) expose VirtualMedia under the
+// System resource (/redfish/v1/Systems/{SystemId}/VirtualMedia) rather than
+// the Manager resource (/redfish/v1/Managers/{ManagerId}/VirtualMedia).
+// Both locations are valid per the Redfish specification.
+func (c *Client) getVirtualMedia(ctx context.Context) ([]*rf.VirtualMedia, error) {
+	// Try Manager path first (standard Redfish location).
 	m, err := c.Manager(ctx)
-	if err != nil {
-		return false, err
+	if err == nil {
+		vm, err := m.VirtualMedia()
+		if err == nil && len(vm) > 0 {
+			return vm, nil
+		}
 	}
 
+	// Fallback to System path (Dell iDRAC and other implementations that
+	// expose VirtualMedia under ComputerSystem per Redfish spec v1.12.0+).
+	sys, err := c.System()
+	if err == nil {
+		vm, err := sys.VirtualMedia()
+		if err == nil && len(vm) > 0 {
+			return vm, nil
+		}
+	}
+
+	return nil, errors.New("no virtual media found at Manager or System resource paths")
+}
+
+// Set the virtual media attached to the system, or just eject everything if mediaURL is empty.
+func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL string) (bool, error) {
 	var mediaKind rf.VirtualMediaType
+
 	switch kind {
 	case "CD":
 		mediaKind = rf.CDMediaType
@@ -30,22 +56,22 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL stri
 		return false, errors.New("invalid media type")
 	}
 
-	supportedMediaTypes := []string{}
-	virtualMedia, err := m.VirtualMedia()
+	virtualMedia, err := c.getVirtualMedia(ctx)
 	if err != nil {
 		return false, err
 	}
-	if len(virtualMedia) == 0 {
-		return false, errors.New("no virtual media found")
-	}
+
+	supportedMediaTypes := []string{}
 
 	for _, vm := range virtualMedia {
 		if !slices.Contains(vm.MediaTypes, mediaKind) {
 			for _, mt := range vm.MediaTypes {
 				supportedMediaTypes = append(supportedMediaTypes, string(mt))
 			}
+
 			continue
 		}
+
 		if mediaURL == "" {
 			// Only ejecting the media was requested.
 			if vm.Inserted && vm.SupportsMediaEject {
@@ -53,8 +79,10 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL stri
 					return false, fmt.Errorf("error ejecting media: %v", err)
 				}
 			}
+
 			return true, nil
 		}
+
 		// Ejecting the media before inserting a new new media makes the success rate of inserting the new media higher.
 		if vm.Inserted && vm.SupportsMediaEject {
 			if err := vm.EjectMedia(); err != nil {
@@ -73,6 +101,7 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL stri
 				return false, err
 			}
 		}
+
 		return true, nil
 	}
 
@@ -80,17 +109,12 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL stri
 }
 
 func (c *Client) InsertedVirtualMedia(ctx context.Context) ([]string, error) {
-	manager, err := c.Manager(ctx)
+	virtualMedia, err := c.getVirtualMedia(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	var inserted []string
-
-	virtualMedia, err := manager.VirtualMedia()
-	if err != nil {
-		return nil, err
-	}
 
 	for _, media := range virtualMedia {
 		if media.Inserted {

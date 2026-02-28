@@ -1,0 +1,38 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#ComputerSystem.ComputerSystem",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1",
+    "@odata.type": "#ComputerSystem.v1_22_0.ComputerSystem",
+    "Id": "System.Embedded.1",
+    "Name": "System",
+    "Description": "Computer System which represents a machine (physical or virtual) and the local resources such as memory, cpu and other devices that can be accessed from that machine.",
+    "Manufacturer": "Dell Inc.",
+    "Model": "PowerEdge R660",
+    "PowerState": "Off",
+    "Status": {
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    },
+    "Boot": {
+        "BootSourceOverrideEnabled": "Disabled",
+        "BootSourceOverrideMode": "Legacy",
+        "BootSourceOverrideTarget": "None"
+    },
+    "VirtualMedia": {
+        "@odata.id": "/redfish/v1/Systems/System.Embedded.1/VirtualMedia"
+    },
+    "Links": {
+        "ManagedBy": [
+            {
+                "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1"
+            }
+        ],
+        "ManagedBy@odata.count": 1,
+        "Chassis": [
+            {
+                "@odata.id": "/redfish/v1/Chassis/System.Embedded.1"
+            }
+        ],
+        "Chassis@odata.count": 1
+    }
+}
