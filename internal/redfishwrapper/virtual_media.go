@@ -39,7 +39,9 @@ func (c *Client) getVirtualMedia(ctx context.Context) ([]*rf.VirtualMedia, error
 	return nil, errors.New("no virtual media found at Manager or System resource paths")
 }
 
-// Set the virtual media attached to the system, or just eject everything if mediaURL is empty.
+// SetVirtualMedia sets virtual media on the system. If mediaURL is empty,
+// matching media may be ejected. When multiple matching virtual media slots
+// exist, each slot is tried in order until one succeeds.
 func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL string) (bool, error) {
 	var mediaKind rf.VirtualMediaType
 
@@ -62,6 +64,7 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL stri
 	}
 
 	supportedMediaTypes := []string{}
+	var slotErrors []error
 
 	for _, vm := range virtualMedia {
 		if !slices.Contains(vm.MediaTypes, mediaKind) {
@@ -76,33 +79,41 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL stri
 			// Only ejecting the media was requested.
 			if vm.Inserted && vm.SupportsMediaEject {
 				if err := vm.EjectMedia(); err != nil {
-					return false, fmt.Errorf("error ejecting media: %v", err)
+					slotErrors = append(slotErrors, fmt.Errorf("%s: eject: %w", vm.ODataID, err))
+					continue
 				}
 			}
 
 			return true, nil
 		}
 
-		// Ejecting the media before inserting a new new media makes the success rate of inserting the new media higher.
+		// Ejecting the media before inserting new media makes the success rate of inserting the new media higher.
 		if vm.Inserted && vm.SupportsMediaEject {
 			if err := vm.EjectMedia(); err != nil {
-				return false, fmt.Errorf("error ejecting media before inserting media: %v", err)
+				slotErrors = append(slotErrors, fmt.Errorf("%s: eject before insert: %w", vm.ODataID, err))
+				continue
 			}
 		}
 
 		if !vm.SupportsMediaInsert {
-			return false, fmt.Errorf("BMC does not support inserting virtual media of kind: %s", kind)
+			slotErrors = append(slotErrors, fmt.Errorf("%s: does not support insert", vm.ODataID))
+			continue
 		}
 
 		if err := vm.InsertMedia(mediaURL, true, true); err != nil {
-			// Some BMC's (Supermicro X11SDV-4C-TLN2F, for example) don't support the "inserted" and "writeProtected" properties,
-			// so we try to insert the media without them if the first attempt fails.
+			// Some BMCs (e.g., Supermicro X11SDV-4C-TLN2F) don't support the
+			// Inserted and WriteProtected properties, so retry without them.
 			if err := vm.InsertMediaConfig(rf.VirtualMediaConfig{Image: mediaURL}); err != nil {
-				return false, err
+				slotErrors = append(slotErrors, fmt.Errorf("%s: insert: %w", vm.ODataID, err))
+				continue
 			}
 		}
 
 		return true, nil
+	}
+
+	if len(slotErrors) > 0 {
+		return false, fmt.Errorf("all matching virtual media slots failed: %w", errors.Join(slotErrors...))
 	}
 
 	return false, fmt.Errorf("not a supported media type: %s. supported media types: %v", kind, supportedMediaTypes)
