@@ -176,6 +176,49 @@ func TestInsertedVirtualMedia_DellSystemPath(t *testing.T) {
 	assert.Empty(t, inserted)
 }
 
+func TestSetVirtualMedia_SlotFallback(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/redfish/v1/", endpointFunc(t, "dell/serviceroot.json"))
+	mux.HandleFunc("/redfish/v1/Managers", endpointFunc(t, "dell/managers.json"))
+	mux.HandleFunc("/redfish/v1/Managers/iDRAC.Embedded.1", endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+	mux.HandleFunc("/redfish/v1/Systems", endpointFunc(t, "dell/systems.json"))
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1", endpointFunc(t, "dell/system.embedded.1.virtualmedia.json"))
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/VirtualMedia", endpointFunc(t, "dell/virtualmedia_collection.json"))
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/VirtualMedia/1", endpointFunc(t, "dell/virtualmedia_1.json"))
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/VirtualMedia/2", endpointFunc(t, "dell/virtualmedia_2.json"))
+	// VirtualMedia/2 (first in collection) rejects InsertMedia with 500.
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/VirtualMedia/2/Actions/VirtualMedia.InsertMedia",
+		func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+		},
+	)
+	// VirtualMedia/1 (second in collection) accepts InsertMedia.
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/VirtualMedia/1/Actions/VirtualMedia.InsertMedia",
+		func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusNoContent)
+		},
+	)
+
+	server := httptest.NewTLSServer(mux)
+	defer server.Close()
+
+	parsedURL, err := url.Parse(server.URL)
+	require.NoError(t, err)
+
+	ctx := context.Background()
+
+	client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "", WithBasicAuthEnabled(true))
+
+	err = client.Open(ctx)
+	require.NoError(t, err)
+
+	defer client.Close(ctx)
+
+	ok, err := client.SetVirtualMedia(ctx, "CD", "http://example.com/boot.iso")
+	assert.NoError(t, err)
+	assert.True(t, ok)
+}
+
 func TestSetVirtualMedia_InvalidMediaType(t *testing.T) {
 	// Test that invalid media type returns an error before any Redfish calls
 	mux := http.NewServeMux()
