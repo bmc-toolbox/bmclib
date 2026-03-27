@@ -28,7 +28,6 @@ import (
 	"github.com/jacobweinstock/registrar"
 	"github.com/pkg/errors"
 
-	bmclibconsts "github.com/bmc-toolbox/bmclib/v2/constants"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
@@ -589,7 +588,7 @@ func (c *serviceClient) query(ctx context.Context, endpoint, method string, payl
 
 	var reqDump []byte
 
-	if os.Getenv(bmclibconsts.EnvEnableDebug) == "true" {
+	if os.Getenv(constants.EnvEnableDebug) == "true" {
 		reqDump, _ = httputil.DumpRequestOut(req, true)
 	}
 
@@ -600,7 +599,7 @@ func (c *serviceClient) query(ctx context.Context, endpoint, method string, payl
 
 	// cookies are visible after the request has been made, so we dump the request and cookies here
 	// https://github.com/golang/go/issues/22745
-	if os.Getenv(bmclibconsts.EnvEnableDebug) == "true" {
+	if os.Getenv(constants.EnvEnableDebug) == "true" {
 		fmt.Println(string(reqDump))
 
 		for _, v := range req.Cookies() {
@@ -610,7 +609,7 @@ func (c *serviceClient) query(ctx context.Context, endpoint, method string, payl
 	}
 
 	// debug dump response
-	if os.Getenv(bmclibconsts.EnvEnableDebug) == "true" {
+	if os.Getenv(constants.EnvEnableDebug) == "true" {
 		respDump, _ := httputil.DumpResponse(resp, true)
 
 		fmt.Println(string(respDump))
