@@ -14,7 +14,7 @@ import (
 	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
-	"github.com/stmcginnis/gofish/redfish"
+	"github.com/stmcginnis/gofish/schemas"
 )
 
 type x12 struct {
@@ -141,7 +141,7 @@ func (c *x12) firmwareTaskActive(ctx context.Context, component string) error {
 }
 
 // noTasksRunning returns an error if a firmware related task was found active
-func noTasksRunning(component string, t *redfish.Task) error {
+func noTasksRunning(component string, t *schemas.Task) error {
 	errTaskActive := errors.New("A firmware task was found active for component: " + component)
 
 	const (
@@ -178,12 +178,12 @@ func noTasksRunning(component string, t *redfish.Task) error {
 	}
 }
 
-func stateFinalized(s redfish.TaskState) bool {
-	finalized := []redfish.TaskState{
-		redfish.CompletedTaskState,
-		redfish.CancelledTaskState,
-		redfish.InterruptedTaskState,
-		redfish.ExceptionTaskState,
+func stateFinalized(s schemas.TaskState) bool {
+	finalized := []schemas.TaskState{
+		schemas.CompletedTaskState,
+		schemas.CancelledTaskState,
+		schemas.InterruptedTaskState,
+		schemas.ExceptionTaskState,
 	}
 
 	return slices.Contains(finalized, s)
@@ -296,7 +296,7 @@ func (c *x12) firmwareInstallUploaded(ctx context.Context, component, uploadTask
 
 	taskInfo := fmt.Sprintf("id: %s, state: %s, status: %s", task.ID, task.TaskState, task.TaskStatus)
 
-	if task.TaskState != redfish.CompletedTaskState {
+	if task.TaskState != schemas.CompletedTaskState {
 		return "", errors.Wrap(brrs.ErrFirmwareVerifyTask, taskInfo)
 	}
 
@@ -315,7 +315,7 @@ func (c *x12) firmwareTaskStatus(ctx context.Context, component, taskID string) 
 	return c.redfish.TaskStatus(ctx, taskID)
 }
 
-func (c *x12) getBootProgress() (*redfish.BootProgress, error) {
+func (c *x12) getBootProgress() (*schemas.BootProgress, error) {
 	bps, err := c.redfish.GetBootProgress()
 	if err != nil {
 		return nil, err
@@ -330,5 +330,5 @@ func (c *x12) bootComplete() (bool, error) {
 		return false, err
 	}
 	// we determined this by experiment on X12STH-SYS with redfish 1.14.0
-	return bp.LastState == redfish.SystemHardwareInitializationCompleteBootProgressTypes, nil
+	return bp.LastState == schemas.SystemHardwareInitializationCompleteBootProgressTypes, nil
 }

@@ -6,7 +6,7 @@ import (
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/pkg/errors"
-	"github.com/stmcginnis/gofish/redfish"
+	"github.com/stmcginnis/gofish/schemas"
 )
 
 // ClearSystemEventLog clears all of the LogServices logs
@@ -27,7 +27,7 @@ func (c *Client) ClearSystemEventLog(ctx context.Context) (err error) {
 		}
 
 		for _, logService := range logServices {
-			err = logService.ClearLog()
+			_, err = logService.ClearLog("")
 			if err != nil {
 				return err
 			}
@@ -76,7 +76,7 @@ func (c *Client) GetSystemEventLog(ctx context.Context) (entries [][]string, err
 
 // GetSystemEventLogRaw returns the raw SEL
 func (c *Client) GetSystemEventLogRaw(ctx context.Context) (eventlog string, err error) {
-	var allEntries []*redfish.LogEntry
+	var allEntries []*schemas.LogEntry
 
 	if err := c.SessionActive(); err != nil {
 		return "", errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())

@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"slices"
 
-	rf "github.com/stmcginnis/gofish/redfish"
+	"github.com/stmcginnis/gofish"
+	"github.com/stmcginnis/gofish/schemas"
 )
 
 // getVirtualMedia retrieves virtual media resources by first checking the
@@ -16,7 +17,7 @@ import (
 // System resource (/redfish/v1/Systems/{SystemId}/VirtualMedia) rather than
 // the Manager resource (/redfish/v1/Managers/{ManagerId}/VirtualMedia).
 // Both locations are valid per the Redfish specification.
-func (c *Client) getVirtualMedia(ctx context.Context) ([]*rf.VirtualMedia, error) {
+func (c *Client) getVirtualMedia(ctx context.Context) ([]*schemas.VirtualMedia, error) {
 	// Try Manager path first (standard Redfish location).
 	m, err := c.Manager(ctx)
 	if err == nil {
@@ -43,17 +44,17 @@ func (c *Client) getVirtualMedia(ctx context.Context) ([]*rf.VirtualMedia, error
 // matching media may be ejected. When multiple matching virtual media slots
 // exist, each slot is tried in order until one succeeds.
 func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL string) (bool, error) {
-	var mediaKind rf.VirtualMediaType
+	var mediaKind schemas.VirtualMediaType
 
 	switch kind {
 	case "CD":
-		mediaKind = rf.CDMediaType
+		mediaKind = schemas.CDVirtualMediaType
 	case "Floppy":
-		mediaKind = rf.FloppyMediaType
+		mediaKind = schemas.FloppyVirtualMediaType
 	case "USBStick":
-		mediaKind = rf.USBStickMediaType
+		mediaKind = schemas.USBStickVirtualMediaType
 	case "DVD":
-		mediaKind = rf.DVDMediaType
+		mediaKind = schemas.DVDVirtualMediaType
 	default:
 		return false, errors.New("invalid media type")
 	}
@@ -77,8 +78,8 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL stri
 
 		if mediaURL == "" {
 			// Only ejecting the media was requested.
-			if vm.Inserted && vm.SupportsMediaEject {
-				if err := vm.EjectMedia(); err != nil {
+			if *vm.Inserted && vm.SupportsMediaEject {
+				if _, err := vm.EjectMedia(); err != nil {
 					slotErrors = append(slotErrors, fmt.Errorf("%s: eject: %w", vm.ODataID, err))
 					continue
 				}
@@ -88,8 +89,8 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL stri
 		}
 
 		// Ejecting the media before inserting new media makes the success rate of inserting the new media higher.
-		if vm.Inserted && vm.SupportsMediaEject {
-			if err := vm.EjectMedia(); err != nil {
+		if *vm.Inserted && vm.SupportsMediaEject {
+			if _, err := vm.EjectMedia(); err != nil {
 				slotErrors = append(slotErrors, fmt.Errorf("%s: eject before insert: %w", vm.ODataID, err))
 				continue
 			}
@@ -100,10 +101,16 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL stri
 			continue
 		}
 
-		if err := vm.InsertMedia(mediaURL, true, true); err != nil {
+		insertMedia := schemas.VirtualMediaInsertMediaParameters{
+			Image:          mediaURL,
+			Inserted:       gofish.ToRef(true),
+			WriteProtected: gofish.ToRef(true),
+		}
+		if _, err := vm.InsertMedia(&insertMedia); err != nil {
 			// Some BMCs (e.g., Supermicro X11SDV-4C-TLN2F) don't support the
 			// Inserted and WriteProtected properties, so retry without them.
-			if err := vm.InsertMediaConfig(rf.VirtualMediaConfig{Image: mediaURL}); err != nil {
+			insertMedia = schemas.VirtualMediaInsertMediaParameters{Image: mediaURL}
+			if _, err := vm.InsertMedia(&insertMedia); err != nil {
 				slotErrors = append(slotErrors, fmt.Errorf("%s: insert: %w", vm.ODataID, err))
 				continue
 			}
@@ -128,7 +135,7 @@ func (c *Client) InsertedVirtualMedia(ctx context.Context) ([]string, error) {
 	var inserted []string
 
 	for _, media := range virtualMedia {
-		if media.Inserted {
+		if *media.Inserted {
 			inserted = append(inserted, media.ID)
 		}
 	}

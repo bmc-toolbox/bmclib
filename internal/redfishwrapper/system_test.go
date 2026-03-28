@@ -3,37 +3,36 @@ package redfishwrapper
 import (
 	"testing"
 
-	"github.com/stmcginnis/gofish/common"
-	"github.com/stmcginnis/gofish/redfish"
+	"github.com/stmcginnis/gofish/schemas"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestMatchingSystem(t *testing.T) {
 	tests := map[string]struct {
 		client       *Client
-		systems      []*redfish.ComputerSystem
+		systems      []*schemas.ComputerSystem
 		expectErr    bool
-		expectSystem *redfish.ComputerSystem
+		expectSystem *schemas.ComputerSystem
 	}{
 		"finds matching system by name": {
 			client: &Client{
 				systemName: "System1",
 			},
-			systems: []*redfish.ComputerSystem{
+			systems: []*schemas.ComputerSystem{
 				{
-					Entity: common.Entity{
+					Entity: schemas.Entity{
 						Name: "System1",
 					},
 				},
 				{
-					Entity: common.Entity{
+					Entity: schemas.Entity{
 						Name: "System2",
 					},
 				},
 			},
 			expectErr: false,
-			expectSystem: &redfish.ComputerSystem{
-				Entity: common.Entity{
+			expectSystem: &schemas.ComputerSystem{
+				Entity: schemas.Entity{
 					Name: "System1",
 				},
 			},
@@ -42,9 +41,9 @@ func TestMatchingSystem(t *testing.T) {
 			client: &Client{
 				systemName: "NonExistent",
 			},
-			systems: []*redfish.ComputerSystem{
+			systems: []*schemas.ComputerSystem{
 				{
-					Entity: common.Entity{
+					Entity: schemas.Entity{
 						Name: "System1",
 					},
 				},
@@ -56,7 +55,7 @@ func TestMatchingSystem(t *testing.T) {
 			client: &Client{
 				systemName: "System1",
 			},
-			systems:      []*redfish.ComputerSystem{},
+			systems:      []*schemas.ComputerSystem{},
 			expectErr:    true,
 			expectSystem: nil,
 		},
@@ -64,14 +63,14 @@ func TestMatchingSystem(t *testing.T) {
 			client: &Client{
 				systemName: "",
 			},
-			systems: []*redfish.ComputerSystem{
+			systems: []*schemas.ComputerSystem{
 				{
-					Entity: common.Entity{
+					Entity: schemas.Entity{
 						Name: "System1",
 					},
 				},
 				{
-					Entity: common.Entity{
+					Entity: schemas.Entity{
 						Name: "System2",
 					},
 				},

@@ -4,8 +4,7 @@ import (
 	"context"
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
-	"github.com/stmcginnis/gofish/common"
-	"github.com/stmcginnis/gofish/redfish"
+	"github.com/stmcginnis/gofish/schemas"
 )
 
 func (c *Client) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]string, err error) {
@@ -41,7 +40,7 @@ func (c *Client) SetBiosConfiguration(ctx context.Context, biosConfig map[string
 		return err
 	}
 
-	settingsAttributes := make(redfish.SettingsAttributes)
+	settingsAttributes := make(schemas.SettingsAttributes)
 
 	for attr, value := range biosConfig {
 		settingsAttributes[attr] = value
@@ -57,7 +56,7 @@ func (c *Client) SetBiosConfiguration(ctx context.Context, biosConfig map[string
 	}
 
 	// TODO(jwb) We should handle passing different apply times here
-	return bios.UpdateBiosAttributesApplyAt(settingsAttributes, common.OnResetApplyTime)
+	return bios.UpdateBiosAttributesApplyAt(settingsAttributes, schemas.OnResetSettingsApplyTime)
 }
 
 func (c *Client) ResetBiosConfiguration(ctx context.Context) (err error) {
@@ -75,5 +74,6 @@ func (c *Client) ResetBiosConfiguration(ctx context.Context) (err error) {
 		return err
 	}
 
-	return bios.ResetBios()
+	_, err = bios.ResetBios()
+	return err
 }
