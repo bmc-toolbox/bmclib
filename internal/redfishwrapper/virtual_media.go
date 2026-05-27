@@ -113,6 +113,8 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL stri
 
 		var insertErrors []error
 
+		// Some BMCs (e.g., Supermicro X11SDV-4C-TLN2F) don't support the
+		// Inserted and WriteProtected properties, so retry without them.
 		for _, insertMedia := range insertMediaAttempts {
 			if _, err := vm.InsertMedia(&insertMedia); err != nil {
 				insertErrors = append(insertErrors, err)
