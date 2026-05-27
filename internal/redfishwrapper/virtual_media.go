@@ -78,7 +78,7 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL stri
 
 		if mediaURL == "" {
 			// Only ejecting the media was requested.
-			if *vm.Inserted && vm.SupportsMediaEject {
+			if gofish.Deref(vm.Inserted) {
 				if _, err := vm.EjectMedia(); err != nil {
 					slotErrors = append(slotErrors, fmt.Errorf("%s: eject: %w", vm.ODataID, err))
 					continue
@@ -89,34 +89,41 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL stri
 		}
 
 		// Ejecting the media before inserting new media makes the success rate of inserting the new media higher.
-		if *vm.Inserted && vm.SupportsMediaEject {
+		if gofish.Deref(vm.Inserted) {
 			if _, err := vm.EjectMedia(); err != nil {
 				slotErrors = append(slotErrors, fmt.Errorf("%s: eject before insert: %w", vm.ODataID, err))
 				continue
 			}
 		}
 
-		if !vm.SupportsMediaInsert {
-			slotErrors = append(slotErrors, fmt.Errorf("%s: does not support insert", vm.ODataID))
-			continue
+		insertMediaAttempts := []schemas.VirtualMediaInsertMediaParameters{
+			{
+				Image:          mediaURL,
+				Inserted:       gofish.ToRef(true),
+				WriteProtected: gofish.ToRef(true),
+			},
+			{
+				Image:    mediaURL,
+				Inserted: gofish.ToRef(true),
+			},
+			{
+				Image: mediaURL,
+			},
 		}
 
-		insertMedia := schemas.VirtualMediaInsertMediaParameters{
-			Image:          mediaURL,
-			Inserted:       gofish.ToRef(true),
-			WriteProtected: gofish.ToRef(true),
-		}
-		if _, err := vm.InsertMedia(&insertMedia); err != nil {
-			// Some BMCs (e.g., Supermicro X11SDV-4C-TLN2F) don't support the
-			// Inserted and WriteProtected properties, so retry without them.
-			insertMedia = schemas.VirtualMediaInsertMediaParameters{Image: mediaURL}
+		var insertErrors []error
+
+		for _, insertMedia := range insertMediaAttempts {
 			if _, err := vm.InsertMedia(&insertMedia); err != nil {
-				slotErrors = append(slotErrors, fmt.Errorf("%s: insert: %w", vm.ODataID, err))
+				insertErrors = append(insertErrors, err)
 				continue
 			}
+
+			return true, nil
 		}
 
-		return true, nil
+		slotErrors = append(slotErrors, fmt.Errorf("%s: insert: %w", vm.ODataID, errors.Join(insertErrors...)))
+		continue
 	}
 
 	if len(slotErrors) > 0 {
@@ -135,7 +142,7 @@ func (c *Client) InsertedVirtualMedia(ctx context.Context) ([]string, error) {
 	var inserted []string
 
 	for _, media := range virtualMedia {
-		if *media.Inserted {
+		if gofish.Deref(media.Inserted) {
 			inserted = append(inserted, media.ID)
 		}
 	}
