@@ -2,9 +2,11 @@ package redfishwrapper
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -217,6 +219,254 @@ func TestSetVirtualMedia_SlotFallback(t *testing.T) {
 	ok, err := client.SetVirtualMedia(ctx, "CD", "http://example.com/boot.iso")
 	assert.NoError(t, err)
 	assert.True(t, ok)
+}
+
+func TestSetVirtualMedia_InsertPatchFallbackWithoutAction(t *testing.T) {
+	const virtualMediaCollection = `{
+		"@odata.context": "/redfish/v1/$metadata#VirtualMediaCollection.VirtualMediaCollection",
+		"@odata.id": "/redfish/v1/Systems/System.Embedded.1/VirtualMedia",
+		"@odata.type": "#VirtualMediaCollection.VirtualMediaCollection",
+		"Members": [
+			{
+				"@odata.id": "/redfish/v1/Systems/System.Embedded.1/VirtualMedia/1"
+			}
+		],
+		"Members@odata.count": 1,
+		"Name": "Virtual Media Services"
+	}`
+
+	const virtualMediaWithoutActions = `{
+		"@odata.context": "/redfish/v1/$metadata#VirtualMedia.VirtualMedia",
+		"@odata.id": "/redfish/v1/Systems/System.Embedded.1/VirtualMedia/1",
+		"@odata.type": "#VirtualMedia.v1_2_0.VirtualMedia",
+		"Id": "1",
+		"Name": "VirtualMedia",
+		"Image": "",
+		"Inserted": false,
+		"ConnectedVia": "NotConnected",
+		"WriteProtected": true,
+		"MediaTypes": ["CD", "DVD"]
+	}`
+
+	var patchCalled bool
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/redfish/v1/", endpointFunc(t, "dell/serviceroot.json"))
+	mux.HandleFunc("/redfish/v1/Managers", endpointFunc(t, "dell/managers.json"))
+	mux.HandleFunc("/redfish/v1/Managers/iDRAC.Embedded.1", endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+	mux.HandleFunc("/redfish/v1/Systems", endpointFunc(t, "dell/systems.json"))
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1", endpointFunc(t, "dell/system.embedded.1.virtualmedia.json"))
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/VirtualMedia", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		_, _ = w.Write([]byte(virtualMediaCollection))
+	})
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/VirtualMedia/1", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			_, _ = w.Write([]byte(virtualMediaWithoutActions))
+		case http.MethodPatch:
+			patchCalled = true
+			w.WriteHeader(http.StatusNoContent)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
+
+	server := httptest.NewTLSServer(mux)
+	defer server.Close()
+
+	parsedURL, err := url.Parse(server.URL)
+	require.NoError(t, err)
+
+	ctx := context.Background()
+
+	client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "", WithBasicAuthEnabled(true))
+
+	err = client.Open(ctx)
+	require.NoError(t, err)
+
+	defer client.Close(ctx)
+
+	ok, err := client.SetVirtualMedia(ctx, "CD", "http://example.com/boot.iso")
+	assert.NoError(t, err)
+	assert.True(t, ok)
+	assert.True(t, patchCalled, "expected InsertMedia fallback to PATCH the VirtualMedia resource")
+}
+
+func TestSetVirtualMedia_InsertPatchFallbackRequiresInsertedWithoutWriteProtected(t *testing.T) {
+	const virtualMediaCollection = `{
+		"@odata.context": "/redfish/v1/$metadata#VirtualMediaCollection.VirtualMediaCollection",
+		"@odata.id": "/redfish/v1/Systems/System.Embedded.1/VirtualMedia",
+		"@odata.type": "#VirtualMediaCollection.VirtualMediaCollection",
+		"Members": [
+			{
+				"@odata.id": "/redfish/v1/Systems/System.Embedded.1/VirtualMedia/1"
+			}
+		],
+		"Members@odata.count": 1,
+		"Name": "Virtual Media Services"
+	}`
+
+	const virtualMediaWithoutActions = `{
+		"@odata.context": "/redfish/v1/$metadata#VirtualMedia.VirtualMedia",
+		"@odata.id": "/redfish/v1/Systems/System.Embedded.1/VirtualMedia/1",
+		"@odata.type": "#VirtualMedia.v1_2_0.VirtualMedia",
+		"Id": "1",
+		"Name": "VirtualMedia",
+		"Image": "",
+		"Inserted": false,
+		"ConnectedVia": "NotConnected",
+		"WriteProtected": true,
+		"MediaTypes": ["CD", "DVD"]
+	}`
+
+	var patchAttempts int
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/redfish/v1/", endpointFunc(t, "dell/serviceroot.json"))
+	mux.HandleFunc("/redfish/v1/Managers", endpointFunc(t, "dell/managers.json"))
+	mux.HandleFunc("/redfish/v1/Managers/iDRAC.Embedded.1", endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+	mux.HandleFunc("/redfish/v1/Systems", endpointFunc(t, "dell/systems.json"))
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1", endpointFunc(t, "dell/system.embedded.1.virtualmedia.json"))
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/VirtualMedia", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		_, _ = w.Write([]byte(virtualMediaCollection))
+	})
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/VirtualMedia/1", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			_, _ = w.Write([]byte(virtualMediaWithoutActions))
+		case http.MethodPatch:
+			patchAttempts++
+
+			body, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+
+			payload := string(body)
+
+			// First attempt includes WriteProtected and is rejected by this BMC.
+			if strings.Contains(payload, "WriteProtected") {
+				w.WriteHeader(http.StatusBadRequest)
+				_, _ = w.Write([]byte(`{"error":{"message":"WriteProtected is not accepted"}}`))
+				return
+			}
+
+			// The BMC requires Inserted to be present.
+			if !strings.Contains(payload, "Inserted") {
+				w.WriteHeader(http.StatusBadRequest)
+				_, _ = w.Write([]byte(`{"error":{"message":"The property Inserted is a required property and must be included in the request."}}`))
+				return
+			}
+
+			w.WriteHeader(http.StatusNoContent)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
+
+	server := httptest.NewTLSServer(mux)
+	defer server.Close()
+
+	parsedURL, err := url.Parse(server.URL)
+	require.NoError(t, err)
+
+	ctx := context.Background()
+
+	client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "", WithBasicAuthEnabled(true))
+
+	err = client.Open(ctx)
+	require.NoError(t, err)
+
+	defer client.Close(ctx)
+
+	ok, err := client.SetVirtualMedia(ctx, "CD", "http://example.com/boot.iso")
+	assert.NoError(t, err)
+	assert.True(t, ok)
+	assert.Equal(t, 2, patchAttempts)
+}
+
+func TestSetVirtualMedia_EjectPatchFallbackWithoutAction(t *testing.T) {
+	const virtualMediaCollection = `{
+		"@odata.context": "/redfish/v1/$metadata#VirtualMediaCollection.VirtualMediaCollection",
+		"@odata.id": "/redfish/v1/Systems/System.Embedded.1/VirtualMedia",
+		"@odata.type": "#VirtualMediaCollection.VirtualMediaCollection",
+		"Members": [
+			{
+				"@odata.id": "/redfish/v1/Systems/System.Embedded.1/VirtualMedia/1"
+			}
+		],
+		"Members@odata.count": 1,
+		"Name": "Virtual Media Services"
+	}`
+
+	const insertedVirtualMediaWithoutActions = `{
+		"@odata.context": "/redfish/v1/$metadata#VirtualMedia.VirtualMedia",
+		"@odata.id": "/redfish/v1/Systems/System.Embedded.1/VirtualMedia/1",
+		"@odata.type": "#VirtualMedia.v1_2_0.VirtualMedia",
+		"Id": "1",
+		"Name": "VirtualMedia",
+		"Image": "http://example.com/old.iso",
+		"Inserted": true,
+		"ConnectedVia": "URI",
+		"WriteProtected": true,
+		"MediaTypes": ["CD", "DVD"]
+	}`
+
+	var patchCalled bool
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/redfish/v1/", endpointFunc(t, "dell/serviceroot.json"))
+	mux.HandleFunc("/redfish/v1/Managers", endpointFunc(t, "dell/managers.json"))
+	mux.HandleFunc("/redfish/v1/Managers/iDRAC.Embedded.1", endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+	mux.HandleFunc("/redfish/v1/Systems", endpointFunc(t, "dell/systems.json"))
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1", endpointFunc(t, "dell/system.embedded.1.virtualmedia.json"))
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/VirtualMedia", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		_, _ = w.Write([]byte(virtualMediaCollection))
+	})
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/VirtualMedia/1", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			_, _ = w.Write([]byte(insertedVirtualMediaWithoutActions))
+		case http.MethodPatch:
+			patchCalled = true
+			w.WriteHeader(http.StatusNoContent)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
+
+	server := httptest.NewTLSServer(mux)
+	defer server.Close()
+
+	parsedURL, err := url.Parse(server.URL)
+	require.NoError(t, err)
+
+	ctx := context.Background()
+
+	client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "", WithBasicAuthEnabled(true))
+
+	err = client.Open(ctx)
+	require.NoError(t, err)
+
+	defer client.Close(ctx)
+
+	ok, err := client.SetVirtualMedia(ctx, "CD", "")
+	assert.NoError(t, err)
+	assert.True(t, ok)
+	assert.True(t, patchCalled, "expected EjectMedia fallback to PATCH the VirtualMedia resource")
 }
 
 func TestSetVirtualMedia_InvalidMediaType(t *testing.T) {
