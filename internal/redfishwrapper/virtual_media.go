@@ -78,6 +78,10 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL stri
 
 		if mediaURL == "" {
 			// Only ejecting the media was requested.
+			// Attempt to eject media.
+			// The gofish library v0.22.0+ supports fallback to PATCH if standard Actions are not available.
+			// This logic first checks if media is inserted, then attempts eject via Action or PATCH.
+			// This is relevant for BMCs like Lenovo XCC that may not expose standard EjectMedia actions.
 			if gofish.Deref(vm.Inserted) {
 				if _, err := vm.EjectMedia(); err != nil {
 					slotErrors = append(slotErrors, fmt.Errorf("%s: eject: %w", vm.ODataID, err))
@@ -111,6 +115,12 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL stri
 			},
 		}
 
+		// Attempt to insert media using different parameter combinations.
+		// The gofish library v0.22.0+ supports fallback to PATCH if standard Actions are not available.
+		// This sequence tries:
+		// 1. Image + Inserted + WriteProtected (standard)
+		// 2. Image + Inserted (for BMCs requiring Inserted but not WriteProtected, e.g., some Lenovo XCC implementations)
+		// 3. Image only (for BMCs that might not support Inserted/WriteProtected properties)
 		var insertErrors []error
 
 		// Some BMCs (e.g., Supermicro X11SDV-4C-TLN2F) don't support the
