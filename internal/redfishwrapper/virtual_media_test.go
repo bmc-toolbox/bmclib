@@ -248,7 +248,7 @@ func TestSetVirtualMedia_InsertPatchFallbackWithoutAction(t *testing.T) {
 		"MediaTypes": ["CD", "DVD"]
 	}`
 
-	var patchCalled bool
+	var patchAttempts int
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/redfish/v1/", endpointFunc(t, "dell/serviceroot.json"))
@@ -269,7 +269,7 @@ func TestSetVirtualMedia_InsertPatchFallbackWithoutAction(t *testing.T) {
 		case http.MethodGet:
 			_, _ = w.Write([]byte(virtualMediaWithoutActions))
 		case http.MethodPatch:
-			patchCalled = true
+			patchAttempts++
 			w.WriteHeader(http.StatusNoContent)
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -294,7 +294,7 @@ func TestSetVirtualMedia_InsertPatchFallbackWithoutAction(t *testing.T) {
 	ok, err := client.SetVirtualMedia(ctx, "CD", "http://example.com/boot.iso")
 	assert.NoError(t, err)
 	assert.True(t, ok)
-	assert.True(t, patchCalled, "expected InsertMedia fallback to PATCH the VirtualMedia resource")
+	assert.Equal(t, 1, patchAttempts, "expected InsertMedia fallback to PATCH the VirtualMedia resource once")
 }
 
 func TestSetVirtualMedia_InsertPatchFallbackRequiresInsertedWithoutWriteProtected(t *testing.T) {

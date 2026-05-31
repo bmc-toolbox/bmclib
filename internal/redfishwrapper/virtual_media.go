@@ -94,9 +94,10 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL stri
 
 		// Ejecting the media before inserting new media makes the success rate of inserting the new media higher.
 		if gofish.Deref(vm.Inserted) {
+			// Attempt to eject media. If it fails, record the error but continue to attempt insertion,
+			// as some BMCs might allow insert even if eject fails or auto-replace media.
 			if _, err := vm.EjectMedia(); err != nil {
-				slotErrors = append(slotErrors, fmt.Errorf("%s: eject before insert: %w", vm.ODataID, err))
-				continue
+				slotErrors = append(slotErrors, fmt.Errorf("%s: eject before insert failed: %w. Attempting insert anyway.", vm.ODataID, err))
 			}
 		}
 
@@ -120,11 +121,9 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL stri
 		// This sequence tries:
 		// 1. Image + Inserted + WriteProtected (standard)
 		// 2. Image + Inserted (for BMCs requiring Inserted but not WriteProtected, e.g., some Lenovo XCC implementations)
-		// 3. Image only (for BMCs that might not support Inserted/WriteProtected properties)
+		// 3. Image only (for BMCs that don't support Inserted/WriteProtected properties, e.g., Supermicro X11SDV-4C-TLN2F)
 		var insertErrors []error
 
-		// Some BMCs (e.g., Supermicro X11SDV-4C-TLN2F) don't support the
-		// Inserted and WriteProtected properties, so retry without them.
 		for _, insertMedia := range insertMediaAttempts {
 			if _, err := vm.InsertMedia(&insertMedia); err != nil {
 				insertErrors = append(insertErrors, err)

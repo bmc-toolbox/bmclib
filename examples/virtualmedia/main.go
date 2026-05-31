@@ -20,13 +20,19 @@ func main() {
 	user := flag.String("user", "", "BMC username, required")
 	pass := flag.String("password", "", "BMC password, required")
 	host := flag.String("host", "", "BMC hostname or IP address, required")
-	isoURL := flag.String("iso", "", "The HTTP URL to the ISO/image to be mounted")
+	isoURL := flag.String("iso", "", "The HTTP URL to the ISO/image to be mounted; not valid with -eject")
 	mediaKind := flag.String("media-kind", "CD", "Virtual media kind: CD, DVD, Floppy, USBStick")
 	eject := flag.Bool("eject", false, "Eject/unmount virtual media instead of mounting")
 	flag.Parse()
 
 	if *user == "" || *pass == "" || *host == "" {
 		fmt.Fprintln(os.Stderr, "user, password, and host are required")
+		flag.PrintDefaults()
+		os.Exit(1)
+	}
+
+	if *eject && *isoURL != "" {
+		fmt.Fprintln(os.Stderr, "iso must not be supplied when -eject is set")
 		flag.PrintDefaults()
 		os.Exit(1)
 	}

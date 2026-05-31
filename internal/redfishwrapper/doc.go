@@ -14,7 +14,7 @@ bmclib supports attaching and ejecting virtual media through the Redfish `gofish
 		}
 		defer cl.Close(ctx)
 
-		# Attach an ISO image as CD/DVD virtual media:
+		// Attach an ISO image as CD/DVD virtual media:
 		ok, err := cl.SetVirtualMedia(ctx, "CD", "https://example.com/installer.iso")
 		if err != nil {
 	  	return(err)
@@ -23,7 +23,7 @@ bmclib supports attaching and ejecting virtual media through the Redfish `gofish
 	  	return(fmt.Errorf("failed to set virtual media"))
 		}
 
-		# To eject currently attached virtual media, pass an empty media URL:
+		// To eject currently attached virtual media, pass an empty media URL:
 		ok, err := cl.SetVirtualMedia(ctx, "CD", "")
 		if err != nil {
 	  	return(err)
