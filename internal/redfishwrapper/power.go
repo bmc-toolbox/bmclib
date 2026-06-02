@@ -92,7 +92,7 @@ func (c *Client) SystemPowerOff(ctx context.Context) (ok bool, err error) {
 		return false, err
 	}
 
-	return false, nil
+	return true, nil
 }
 
 // SystemReset power cycles the system.
