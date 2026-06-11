@@ -1,0 +1,40 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Thermal.Thermal",
+    "@odata.id": "/redfish/v1/Chassis/1/Thermal",
+    "@odata.type": "#Thermal.v1_4_0.Thermal",
+    "Id": "Thermal",
+    "Name": "Thermal",
+    "Temperatures@odata.count": 1,
+    "Temperatures": [
+        {
+            "@odata.id": "/redfish/v1/Chassis/1/Thermal#/Temperatures/0",
+            "MemberId": "0",
+            "Name": "Ambient Temp",
+            "SensorNumber": 49,
+            "ReadingCelsius": 23,
+            "UpperThresholdNonCritical": 43,
+            "UpperThresholdCritical": 47,
+            "UpperThresholdFatal": 50,
+            "Status": {
+                "Health": "OK",
+                "State": "Enabled"
+            }
+        }
+    ],
+    "Fans@odata.count": 1,
+    "Fans": [
+        {
+            "@odata.id": "/redfish/v1/Chassis/1/Thermal#/Fans/0",
+            "MemberId": "0",
+            "Name": "Fan 1 Tach",
+            "FanName": "Fan 1 Tach",
+            "SensorNumber": 65,
+            "Reading": 6840,
+            "ReadingUnits": "RPM",
+            "Status": {
+                "Health": "OK",
+                "State": "Enabled"
+            }
+        }
+    ]
+}

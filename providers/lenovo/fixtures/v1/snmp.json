@@ -1,0 +1,26 @@
+{
+    "@odata.id": "/redfish/v1/Managers/1/NetworkProtocol/Oem/Lenovo/SNMP",
+    "@odata.type": "#LenovoSNMPProtocol.v1_0_0.LenovoSNMPProtocol",
+    "Id": "SNMP",
+    "Name": "SNMP Protocol",
+    "CommunityNames": ["public"],
+    "SNMPTraps": {
+        "SNMPv1TrapEnabled": false,
+        "ProtocolEnabled": false,
+        "Port": 162,
+        "Targets": [
+            {
+                "Addresses": [null]
+            }
+        ],
+        "AlertRecipient": {
+            "WarningEvents": {"AcceptedEvents": [], "Enabled": false},
+            "CriticalEvents": {"AcceptedEvents": [], "Enabled": false},
+            "SystemEvents": {"AcceptedEvents": [], "Enabled": false}
+        }
+    },
+    "SNMPv3Agent": {
+        "ProtocolEnabled": false,
+        "Port": 161
+    }
+}

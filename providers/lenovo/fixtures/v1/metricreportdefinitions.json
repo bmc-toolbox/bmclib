@@ -1,0 +1,7 @@
+{
+    "@odata.id": "/redfish/v1/TelemetryService/MetricReportDefinitions",
+    "@odata.type": "#MetricReportDefinitionCollection.MetricReportDefinitionCollection",
+    "Name": "Metric Report Definition Collection",
+    "Members@odata.count": 1,
+    "Members": [{"@odata.id": "/redfish/v1/TelemetryService/MetricReportDefinitions/PowerMetrics"}]
+}

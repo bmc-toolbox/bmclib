@@ -1,0 +1,69 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#ServiceRoot.ServiceRoot",
+    "@odata.id": "/redfish/v1/",
+    "@odata.type": "#ServiceRoot.v1_5_0.ServiceRoot",
+    "Id": "RootService",
+    "Name": "Root Service",
+    "Description": "This resource is used to represent a service root for a Redfish implementation.",
+    "Vendor": "Lenovo",
+    "Product": "ThinkSystem",
+    "RedfishVersion": "1.15.0",
+    "UUID": "92384634-2938-2342-8820-489239905423",
+    "AccountService": {
+        "@odata.id": "/redfish/v1/AccountService"
+    },
+    "CertificateService": {
+        "@odata.id": "/redfish/v1/CertificateService"
+    },
+    "Chassis": {
+        "@odata.id": "/redfish/v1/Chassis"
+    },
+    "EventService": {
+        "@odata.id": "/redfish/v1/EventService"
+    },
+    "JobService": {
+        "@odata.id": "/redfish/v1/JobService"
+    },
+    "JsonSchemas": {
+        "@odata.id": "/redfish/v1/JsonSchemas"
+    },
+    "Managers": {
+        "@odata.id": "/redfish/v1/Managers"
+    },
+    "Registries": {
+        "@odata.id": "/redfish/v1/Registries"
+    },
+    "SessionService": {
+        "@odata.id": "/redfish/v1/SessionService"
+    },
+    "Systems": {
+        "@odata.id": "/redfish/v1/Systems"
+    },
+    "Tasks": {
+        "@odata.id": "/redfish/v1/TaskService"
+    },
+    "TelemetryService": {
+        "@odata.id": "/redfish/v1/TelemetryService"
+    },
+    "UpdateService": {
+        "@odata.id": "/redfish/v1/UpdateService"
+    },
+    "Links": {
+        "Sessions": {
+            "@odata.id": "/redfish/v1/SessionService/Sessions"
+        }
+    },
+    "ProtocolFeaturesSupported": {
+        "ExcerptQuery": true,
+        "ExpandQuery": {
+            "ExpandAll": true,
+            "Levels": true,
+            "Links": true,
+            "MaxLevels": 2,
+            "NoLinks": true
+        },
+        "FilterQuery": true,
+        "OnlyMemberQuery": true,
+        "SelectQuery": true
+    }
+}

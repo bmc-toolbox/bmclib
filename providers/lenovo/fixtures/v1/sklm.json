@@ -1,0 +1,12 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#LenovoSecureKeyLifecycle.LenovoSecureKeyLifecycle",
+    "@odata.id": "/redfish/v1/Managers/1/Oem/Lenovo/SecureKeyLifecycleService",
+    "@odata.type": "#LenovoSecureKeyLifecycle.v1_0_0.LenovoSecureKeyLifecycle",
+    "Id": "SecureKeyLifecycleService",
+    "Name": "Secure Key Lifecycle Service",
+    "DeviceGroup": "TKLM_DEV_GROUP",
+    "KeyRepoServers": [
+        {"HostName": "10.0.0.10", "Port": 5696},
+        {"HostName": "", "Port": 5696}
+    ]
+}

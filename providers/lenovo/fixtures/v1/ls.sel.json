@@ -1,0 +1,14 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#LogService.LogService",
+    "@odata.id": "/redfish/v1/Managers/1/LogServices/Sel",
+    "@odata.type": "#LogService.v1_3_0.LogService",
+    "Id": "Sel",
+    "Name": "IPMI SEL",
+    "OverWritePolicy": "WrapsWhenFull",
+    "Entries": {"@odata.id": "/redfish/v1/Managers/1/LogServices/Sel/Entries"},
+    "Actions": {
+        "#LogService.ClearLog": {
+            "target": "/redfish/v1/Managers/1/LogServices/Sel/Actions/LogService.ClearLog"
+        }
+    }
+}

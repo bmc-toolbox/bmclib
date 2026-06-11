@@ -1,0 +1,14 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#UpdateService.UpdateService",
+    "@odata.id": "/redfish/v1/UpdateService",
+    "@odata.type": "#UpdateService.v1_8_0.UpdateService",
+    "Id": "UpdateService",
+    "Name": "Update Service",
+    "ServiceEnabled": true,
+    "HttpPushUri": "/fwupdate",
+    "MultipartHttpPushUri": "/mfwupdate",
+    "HttpPushUriTargetsBusy": true,
+    "FirmwareInventory": {
+        "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory"
+    }
+}

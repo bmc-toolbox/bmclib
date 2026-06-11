@@ -1,0 +1,17 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#VirtualMedia.VirtualMedia",
+    "@odata.id": "/redfish/v1/Managers/1/VirtualMedia/CD",
+    "@odata.type": "#VirtualMedia.v1_3_0.VirtualMedia",
+    "Id": "CD",
+    "Name": "Remote CD",
+    "MediaTypes": [
+        "CD",
+        "DVD"
+    ],
+    "Image": null,
+    "ImageName": null,
+    "Inserted": false,
+    "WriteProtected": true,
+    "ConnectedVia": "NotConnected",
+    "TransferProtocolType": null
+}

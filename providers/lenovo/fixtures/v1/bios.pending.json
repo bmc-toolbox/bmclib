@@ -1,0 +1,11 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Bios.Bios",
+    "@odata.id": "/redfish/v1/Systems/1/Bios/Pending",
+    "@odata.type": "#Bios.v1_2_0.Bios",
+    "@odata.etag": "\"6c40cc24cc1762f085cb94\"",
+    "Id": "Pending",
+    "Name": "BIOS Configuration Pending Settings",
+    "Description": "BIOS Configuration Pending Settings",
+    "AttributeRegistry": "BiosAttributeRegistry.1.0.0",
+    "Attributes": {}
+}

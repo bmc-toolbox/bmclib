@@ -1,0 +1,16 @@
+{
+    "@odata.id": "/redfish/v1/EventService",
+    "@odata.type": "#EventService.v1_7_0.EventService",
+    "Id": "EventService",
+    "Name": "Event Service",
+    "ServiceEnabled": true,
+    "DeliveryRetryAttempts": 3,
+    "DeliveryRetryIntervalSeconds": 60,
+    "ServerSentEventUri": "/redfish/v1/EventService/SSE",
+    "Subscriptions": {"@odata.id": "/redfish/v1/EventService/Subscriptions"},
+    "Actions": {
+        "#EventService.SubmitTestEvent": {
+            "target": "/redfish/v1/EventService/Actions/EventService.SubmitTestEvent"
+        }
+    }
+}
