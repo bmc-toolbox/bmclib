@@ -1,0 +1,38 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Storage.Storage",
+    "@odata.id": "/redfish/v1/Systems/1/Storage/RAID_Slot1",
+    "@odata.type": "#Storage.v1_9_0.Storage",
+    "Id": "RAID_Slot1",
+    "Name": "RAID Controller",
+    "Status": {
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    },
+    "StorageControllers": [
+        {
+            "@odata.id": "/redfish/v1/Systems/1/Storage/RAID_Slot1#/StorageControllers/0",
+            "MemberId": "0",
+            "Name": "ThinkSystem RAID 930-8i",
+            "Manufacturer": "Lenovo",
+            "Model": "ThinkSystem RAID 930-8i 2GB Flash",
+            "FirmwareVersion": "51.10.0-3151",
+            "Status": {
+                "Health": "OK",
+                "State": "Enabled"
+            }
+        }
+    ],
+    "Drives@odata.count": 2,
+    "Drives": [
+        {
+            "@odata.id": "/redfish/v1/Systems/1/Storage/RAID_Slot1/Drives/Disk.0"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/1/Storage/RAID_Slot1/Drives/Disk.1"
+        }
+    ],
+    "Volumes": {
+        "@odata.id": "/redfish/v1/Systems/1/Storage/RAID_Slot1/Volumes"
+    }
+}

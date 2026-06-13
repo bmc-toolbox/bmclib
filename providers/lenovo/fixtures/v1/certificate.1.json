@@ -1,0 +1,15 @@
+{
+    "@odata.id": "/redfish/v1/Managers/1/NetworkProtocol/HTTPS/Certificates/1",
+    "@odata.type": "#Certificate.v1_6_0.Certificate",
+    "Id": "1",
+    "Name": "HTTPS Certificate",
+    "CertificateType": "PEM",
+    "Subject": {"CommonName": "XCC-7Z60-SN"},
+    "Issuer": {"CommonName": "XCC-7Z60-SN"},
+    "ValidNotBefore": "2023-01-01T00:00:00Z",
+    "ValidNotAfter": "2033-01-01T00:00:00Z",
+    "Actions": {
+        "#Certificate.Rekey": {"target": "/redfish/v1/Managers/1/NetworkProtocol/HTTPS/Certificates/1/Actions/Certificate.Rekey"},
+        "#Certificate.Renew": {"target": "/redfish/v1/Managers/1/NetworkProtocol/HTTPS/Certificates/1/Actions/Certificate.Renew"}
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Role.Role",
+    "@odata.id": "/redfish/v1/AccountService/Roles/Operator",
+    "@odata.type": "#Role.v1_3_1.Role",
+    "Id": "Operator",
+    "Name": "User Role",
+    "RoleId": "Operator",
+    "IsPredefined": true,
+    "AssignedPrivileges": ["Login", "ConfigureComponents", "ConfigureSelf"]
+}

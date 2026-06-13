@@ -34,3 +34,11 @@ tags
 out/
 
 coverage.txt
+
+# Compiled example binaries (e.g. `go build ./examples/lenovo-smoketest/` drops
+# a `lenovo-smoketest` ELF in the repo root). Anchored so it never matches the
+# examples/lenovo-smoketest/ source directory.
+/lenovo-smoketest
+
+# Real-hardware dump output from examples/lenovo-smoketest/dump-xcc.sh
+xcc-dump/

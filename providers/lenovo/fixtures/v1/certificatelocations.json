@@ -1,0 +1,11 @@
+{
+    "@odata.id": "/redfish/v1/CertificateService/CertificateLocations",
+    "@odata.type": "#CertificateLocations.v1_0_2.CertificateLocations",
+    "Id": "CertificateLocations",
+    "Name": "Certificate Locations",
+    "Links": {
+        "Certificates": [
+            {"@odata.id": "/redfish/v1/Managers/1/NetworkProtocol/HTTPS/Certificates/1"}
+        ]
+    }
+}

@@ -1,0 +1,8 @@
+{
+    "@odata.id": "/redfish/v1/Managers/1/HostInterfaces/1",
+    "@odata.type": "#HostInterface.v1_3_0.HostInterface",
+    "Id": "1",
+    "Name": "Host Interface",
+    "InterfaceEnabled": true,
+    "HostInterfaceType": "NetworkHostInterface"
+}

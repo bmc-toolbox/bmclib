@@ -1,0 +1,41 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Manager.Manager",
+    "@odata.id": "/redfish/v1/Managers/1",
+    "@odata.type": "#Manager.v1_9_0.Manager",
+    "Id": "1",
+    "Name": "Manager",
+    "ManagerType": "BMC",
+    "FirmwareVersion": "TEE142M-2.41",
+    "Status": {
+        "Health": "OK",
+        "State": "Enabled"
+    },
+    "VirtualMedia": {
+        "@odata.id": "/redfish/v1/Managers/1/VirtualMedia"
+    },
+    "LogServices": {
+        "@odata.id": "/redfish/v1/Managers/1/LogServices"
+    },
+    "EthernetInterfaces": {
+        "@odata.id": "/redfish/v1/Managers/1/EthernetInterfaces"
+    },
+    "HostInterfaces": {
+        "@odata.id": "/redfish/v1/Managers/1/HostInterfaces"
+    },
+    "SerialInterfaces": {
+        "@odata.id": "/redfish/v1/Managers/1/SerialInterfaces"
+    },
+    "NetworkProtocol": {
+        "@odata.id": "/redfish/v1/Managers/1/NetworkProtocol"
+    },
+    "Actions": {
+        "#Manager.Reset": {
+            "target": "/redfish/v1/Managers/1/Actions/Manager.Reset",
+            "ResetType@Redfish.AllowableValues": ["GracefulRestart", "ForceRestart"]
+        },
+        "#Manager.ResetToDefaults": {
+            "target": "/redfish/v1/Managers/1/Actions/Manager.ResetToDefaults",
+            "ResetType@Redfish.AllowableValues": ["ResetAll"]
+        }
+    }
+}

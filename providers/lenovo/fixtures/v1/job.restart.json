@@ -1,0 +1,13 @@
+{
+    "@odata.id": "/redfish/v1/JobService/Jobs/Restart",
+    "@odata.type": "#Job.v1_0_6.Job",
+    "Id": "Restart",
+    "Name": "Scheduled Restart",
+    "JobState": "Scheduled",
+    "PercentComplete": 0,
+    "StartTime": "2024-06-01T02:00:00Z",
+    "Schedule": {
+        "Name": "weekly",
+        "RecurrenceInterval": "P7D"
+    }
+}

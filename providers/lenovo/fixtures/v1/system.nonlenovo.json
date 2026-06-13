@@ -1,0 +1,30 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#ComputerSystem.ComputerSystem",
+    "@odata.id": "/redfish/v1/Systems/1",
+    "@odata.type": "#ComputerSystem.v1_10_0.ComputerSystem",
+    "Id": "1",
+    "Name": "System",
+    "Manufacturer": "Dell Inc.",
+    "Model": "PowerEdge R6515",
+    "SerialNumber": "CN000000",
+    "UUID": "4c4c4544-004c-4410-8058-c6c04f443533",
+    "PowerState": "On",
+    "SystemType": "Physical",
+    "Status": {
+        "Health": "OK",
+        "State": "Enabled"
+    },
+    "Actions": {
+        "#ComputerSystem.Reset": {
+            "target": "/redfish/v1/Systems/1/Actions/ComputerSystem.Reset",
+            "ResetType@Redfish.AllowableValues": [
+                "On",
+                "ForceOff",
+                "GracefulShutdown",
+                "GracefulRestart",
+                "ForceRestart",
+                "Nmi"
+            ]
+        }
+    }
+}

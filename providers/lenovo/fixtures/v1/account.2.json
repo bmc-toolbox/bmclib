@@ -1,0 +1,11 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#ManagerAccount.ManagerAccount",
+    "@odata.id": "/redfish/v1/AccountService/Accounts/2",
+    "@odata.type": "#ManagerAccount.v1_6_0.ManagerAccount",
+    "Id": "2",
+    "Name": "User Account 2",
+    "UserName": "",
+    "RoleId": "",
+    "Enabled": false,
+    "Locked": false
+}

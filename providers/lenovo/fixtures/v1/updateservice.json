@@ -1,0 +1,23 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#UpdateService.UpdateService",
+    "@odata.id": "/redfish/v1/UpdateService",
+    "@odata.type": "#UpdateService.v1_8_0.UpdateService",
+    "Id": "UpdateService",
+    "Name": "Update Service",
+    "ServiceEnabled": true,
+    "HttpPushUri": "/fwupdate",
+    "MultipartHttpPushUri": "/mfwupdate",
+    "HttpPushUriTargetsBusy": false,
+    "HttpPushUriTargets": [],
+    "FirmwareInventory": {
+        "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory"
+    },
+    "Actions": {
+        "#UpdateService.SimpleUpdate": {
+            "target": "/redfish/v1/UpdateService/Actions/UpdateService.SimpleUpdate"
+        },
+        "#UpdateService.StartUpdate": {
+            "target": "/redfish/v1/UpdateService/Actions/UpdateService.StartUpdate"
+        }
+    }
+}

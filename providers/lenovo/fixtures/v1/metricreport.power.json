@@ -1,0 +1,13 @@
+{
+    "@odata.id": "/redfish/v1/TelemetryService/MetricReports/PowerMetrics",
+    "@odata.type": "#MetricReport.v1_4_2.MetricReport",
+    "Id": "PowerMetrics",
+    "Name": "Power Metrics Report",
+    "MetricReportDefinition": {
+        "@odata.id": "/redfish/v1/TelemetryService/MetricReportDefinitions/PowerMetrics"
+    },
+    "MetricValues": [
+        {"MetricProperty": "/redfish/v1/Chassis/1/Power#/PowerControl/0/PowerMetrics/MaxConsumedWatts", "MetricValue": "287", "Timestamp": "2026-06-09T11:58:30+00:00"},
+        {"MetricProperty": "/redfish/v1/Chassis/1/Power#/PowerControl/0/PowerMetrics/MinConsumedWatts", "MetricValue": "23", "Timestamp": "2026-06-09T11:58:30+00:00"}
+    ]
+}

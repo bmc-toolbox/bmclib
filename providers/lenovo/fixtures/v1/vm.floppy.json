@@ -1,0 +1,17 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#VirtualMedia.VirtualMedia",
+    "@odata.id": "/redfish/v1/Managers/1/VirtualMedia/Floppy",
+    "@odata.type": "#VirtualMedia.v1_3_0.VirtualMedia",
+    "Id": "Floppy",
+    "Name": "Remote Floppy",
+    "MediaTypes": [
+        "Floppy",
+        "USBStick"
+    ],
+    "Image": "http://192.168.1.2/boot.img",
+    "ImageName": "boot.img",
+    "Inserted": true,
+    "WriteProtected": false,
+    "ConnectedVia": "URI",
+    "TransferProtocolType": "HTTP"
+}

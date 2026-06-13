@@ -1,0 +1,15 @@
+{
+    "@odata.id": "/redfish/v1/Managers/1/EthernetInterfaces/eth0",
+    "@odata.type": "#EthernetInterface.v1_6_0.EthernetInterface",
+    "Id": "eth0",
+    "Name": "Manager Ethernet Interface",
+    "MACAddress": "7C:D3:0A:11:22:33",
+    "HostName": "XCC-SR650",
+    "InterfaceEnabled": true,
+    "IPv4Addresses": [
+        {"Address": "10.0.0.50", "SubnetMask": "255.255.255.0", "Gateway": "10.0.0.1", "AddressOrigin": "Static"}
+    ],
+    "IPv6Addresses": [
+        {"Address": "fe80::7ed3:aff:fe11:2233", "PrefixLength": 64, "AddressOrigin": "LinkLocal"}
+    ]
+}

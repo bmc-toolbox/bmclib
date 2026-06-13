@@ -1,0 +1,7 @@
+{
+    "@odata.id": "/redfish/v1/Managers/1/SerialInterfaces",
+    "@odata.type": "#SerialInterfaceCollection.SerialInterfaceCollection",
+    "Name": "Serial Interface Collection",
+    "Members@odata.count": 1,
+    "Members": [{"@odata.id": "/redfish/v1/Managers/1/SerialInterfaces/1"}]
+}

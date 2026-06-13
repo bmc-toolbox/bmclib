@@ -1,0 +1,10 @@
+{
+    "@odata.id": "/redfish/v1/EventService/Subscriptions/1",
+    "@odata.type": "#EventDestination.v1_10_0.EventDestination",
+    "Id": "1",
+    "Name": "Subscription 1",
+    "Destination": "https://listener.example.com/webhook",
+    "Protocol": "Redfish",
+    "Context": "lenovo-test",
+    "SubscriptionType": "RedfishEvent"
+}

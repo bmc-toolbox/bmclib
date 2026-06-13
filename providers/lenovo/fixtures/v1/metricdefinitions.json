@@ -1,0 +1,10 @@
+{
+    "@odata.id": "/redfish/v1/TelemetryService/MetricDefinitions",
+    "@odata.type": "#MetricDefinitionCollection.MetricDefinitionCollection",
+    "Name": "Metric Definition Collection",
+    "Members@odata.count": 2,
+    "Members": [
+        {"@odata.id": "/redfish/v1/TelemetryService/MetricDefinitions/PowerConsumedWatts"},
+        {"@odata.id": "/redfish/v1/TelemetryService/MetricDefinitions/InletTemp"}
+    ]
+}
