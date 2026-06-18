@@ -244,15 +244,13 @@ func (c *Conn) SendNMI(ctx context.Context) error {
 
 // deviceManufacturer returns the device manufacturer and model attributes
 func (c *Conn) deviceManufacturer(ctx context.Context) (vendor string, err error) {
-	systems, err := c.redfishwrapper.Systems()
+	sys, err := c.redfishwrapper.System()
 	if err != nil {
 		return "", errors.Wrap(errManufacturerUnknown, err.Error())
 	}
 
-	for _, sys := range systems {
-		if sys.Manufacturer != "" {
-			return sys.Manufacturer, nil
-		}
+	if sys.Manufacturer != "" {
+		return sys.Manufacturer, nil
 	}
 
 	return "", errManufacturerUnknown

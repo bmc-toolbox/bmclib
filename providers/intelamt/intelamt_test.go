@@ -53,7 +53,7 @@ func (m *mock) SetPXE(ctx context.Context) error {
 
 func TestClose(t *testing.T) {
 	conn := &Conn{client: &mock{}}
-	if err := conn.Close(); err != nil {
+	if err := conn.Close(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -88,7 +88,7 @@ func TestBootDeviceSet(t *testing.T) {
 			if err := conn.Open(ctx); err != nil {
 				t.Fatal(err)
 			}
-			defer conn.Close()
+			defer conn.Close(ctx)
 			got, err := conn.BootDeviceSet(ctx, tt.device, false, false)
 			if err != nil && tt.err == nil {
 				t.Fatalf("expected nil error, got: %v", err)
@@ -127,7 +127,7 @@ func TestPowerStateGet(t *testing.T) {
 			if err := conn.Open(ctx); err != nil {
 				t.Fatal(err)
 			}
-			defer conn.Close()
+			defer conn.Close(ctx)
 			got, err := conn.PowerStateGet(ctx)
 			if err != nil && tt.err == nil {
 				t.Fatalf("expected nil error, got: %v", err)
@@ -179,7 +179,7 @@ func TestPowerSet(t *testing.T) {
 			if err := conn.Open(ctx); err != nil {
 				t.Fatal(err)
 			}
-			defer conn.Close()
+			defer conn.Close(ctx)
 			got, err := conn.PowerSet(ctx, tt.wantState)
 			if err != nil && tt.err == nil {
 				t.Fatalf("expected nil error, got: %v", err)
@@ -213,7 +213,7 @@ func TestCompatible(t *testing.T) {
 			}
 			conn := &Conn{client: m}
 			ctx := context.Background()
-			defer conn.Close()
+			defer conn.Close(ctx)
 			got := conn.Compatible(ctx)
 			if diff := cmp.Diff(got, tt.want); diff != "" {
 				t.Fatal(diff)

@@ -104,8 +104,8 @@ func (c *Conn) Open(ctx context.Context) (err error) {
 }
 
 // Close a connection to a BMC
-func (c *Conn) Close() (err error) {
-	return c.client.Close(context.Background())
+func (c *Conn) Close(ctx context.Context) (err error) {
+	return c.client.Close(ctx)
 }
 
 // Compatible tests whether a BMC is compatible with the ipmitool provider

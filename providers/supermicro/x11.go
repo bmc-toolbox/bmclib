@@ -16,7 +16,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish/oem/smc"
-	"github.com/stmcginnis/gofish/redfish"
+	"github.com/stmcginnis/gofish/schemas"
 )
 
 type x11 struct {
@@ -149,11 +149,19 @@ func (c *x11) firmwareInstallSteps(component string) ([]constants.FirmwareInstal
 		return nil, err
 	}
 
-	return []constants.FirmwareInstallStep{
+	steps := []constants.FirmwareInstallStep{
 		constants.FirmwareInstallStepUpload,
 		constants.FirmwareInstallStepInstallUploaded,
 		constants.FirmwareInstallStepInstallStatus,
-	}, nil
+	}
+
+	// On a failure the X11 BMC has to be removed from the
+	// flash mode - which is done through a BMC reset
+	if strings.EqualFold(component, common.SlugBMC) {
+		steps = append(steps, constants.FirmwareInstallStepResetBMCOnInstallFailure)
+	}
+
+	return steps, nil
 }
 
 func (c *x11) firmwareUpload(ctx context.Context, component string, file *os.File) (string, error) {
@@ -195,7 +203,7 @@ func (c *x11) firmwareTaskStatus(ctx context.Context, component, _ string) (stat
 	return "", "", errors.Wrap(bmclibErrs.ErrFirmwareTaskStatus, "component unsupported: "+component)
 }
 
-func (c *x11) getBootProgress() (*redfish.BootProgress, error) {
+func (c *x11) getBootProgress() (*schemas.BootProgress, error) {
 	return nil, fmt.Errorf("%w: not supported on x11 models", bmclibErrs.ErrRedfishVersionIncompatible)
 }
 

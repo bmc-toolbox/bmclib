@@ -14,7 +14,7 @@ import (
 	rfw "github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/bmc-toolbox/common"
 	"github.com/pkg/errors"
-	"github.com/stmcginnis/gofish/redfish"
+	"github.com/stmcginnis/gofish/schemas"
 )
 
 // bmc client interface implementations methods
@@ -61,7 +61,7 @@ func (c *Conn) FirmwareInstallUploadAndInitiate(ctx context.Context, component s
 }
 
 // checkQueueability returns an error if an existing firmware task is in progress for the given component
-func (c *Conn) checkQueueability(component string, tasks []*redfish.Task) error {
+func (c *Conn) checkQueueability(component string, tasks []*schemas.Task) error {
 	errTaskActive := errors.New("A firmware job was found active for component: " + component)
 
 	// Redfish on the Idrac names firmware install tasks in this manner.
@@ -113,7 +113,7 @@ func (c *Conn) FirmwareTaskStatus(ctx context.Context, kind constants.FirmwareIn
 		return "", "", err
 	}
 
-	return c.statusFromTaskOem(taskID, task.Oem)
+	return c.statusFromTaskOem(taskID, task.OEM)
 }
 
 func (c *Conn) statusFromJob(taskID string) (constants.TaskState, string, error) {

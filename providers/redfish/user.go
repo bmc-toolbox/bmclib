@@ -5,7 +5,7 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/v2/internal"
 	"github.com/pkg/errors"
-	"github.com/stmcginnis/gofish/redfish"
+	"github.com/stmcginnis/gofish/schemas"
 )
 
 var (
@@ -121,7 +121,7 @@ func (c *Conn) UserCreate(ctx context.Context, user, pass, role string) (ok bool
 			account.UserName = user
 			account.Password = pass
 			account.RoleID = role
-			account.AccountTypes = []redfish.AccountTypes{"Redfish", "OEM"}
+			account.AccountTypes = []schemas.AccountTypes{"Redfish", "OEM"}
 
 			err := account.Update()
 			if err != nil {

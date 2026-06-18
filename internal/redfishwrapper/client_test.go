@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
-	"github.com/stmcginnis/gofish/redfish"
+	"github.com/stmcginnis/gofish/schemas"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -280,7 +280,7 @@ func TestRedfishVersionMeetsOrExceeds(t *testing.T) {
 func TestGetBootProgress(t *testing.T) {
 	tests := map[string]struct {
 		hfunc  map[string]func(http.ResponseWriter, *http.Request)
-		expect []*redfish.BootProgress
+		expect []*schemas.BootProgress
 		err    error
 	}{
 		"happy case": {
@@ -290,9 +290,9 @@ func TestGetBootProgress(t *testing.T) {
 				"/redfish/v1/Systems":   endpointFunc(t, "smc_1.14.0_systems.json"),
 				"/redfish/v1/Systems/1": endpointFunc(t, "smc_1.14.0_systems_1.json"),
 			},
-			expect: []*redfish.BootProgress{
-				&redfish.BootProgress{
-					LastState: redfish.SystemHardwareInitializationCompleteBootProgressTypes,
+			expect: []*schemas.BootProgress{
+				&schemas.BootProgress{
+					LastState: schemas.SystemHardwareInitializationCompleteBootProgressTypes,
 				},
 			},
 			err: nil,

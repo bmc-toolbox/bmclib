@@ -17,7 +17,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish"
-	"github.com/stmcginnis/gofish/redfish"
+	"github.com/stmcginnis/gofish/schemas"
 )
 
 var (
@@ -270,7 +270,7 @@ func redfishVersionMeetsOrExceeds(version string, major, minor, patch int) bool 
 	return rfVer[2] >= int64(patch)
 }
 
-func (c *Client) GetBootProgress() ([]*redfish.BootProgress, error) {
+func (c *Client) GetBootProgress() ([]*schemas.BootProgress, error) {
 	// The redfish standard adopts the BootProgress object in 1.13.0. Earlier versions of redfish return
 	// json NULL, which gofish turns into a zero-value object of BootProgress. We gate this on the RedfishVersion
 	// to avoid the complexity of interpreting whether a given value is legitimate.
@@ -283,7 +283,7 @@ func (c *Client) GetBootProgress() ([]*redfish.BootProgress, error) {
 		return nil, fmt.Errorf("retrieving redfish systems collection: %w", err)
 	}
 
-	bps := []*redfish.BootProgress{}
+	bps := []*schemas.BootProgress{}
 	for _, sys := range systems {
 		bps = append(bps, &sys.BootProgress)
 	}
@@ -299,8 +299,13 @@ func (c *Client) PatchWithHeaders(ctx context.Context, url string, payload inter
 	return c.client.PatchWithHeaders(url, payload, headers)
 }
 
-func (c *Client) Tasks(ctx context.Context) ([]*redfish.Task, error) {
-	return c.client.Service.Tasks()
+func (c *Client) Tasks(ctx context.Context) ([]*schemas.Task, error) {
+	ts, err := c.client.Service.Tasks()
+	if err != nil {
+		return []*schemas.Task{}, err
+	}
+
+	return ts.Tasks()
 }
 
 func (c *Client) ManagerOdataID(ctx context.Context) (string, error) {

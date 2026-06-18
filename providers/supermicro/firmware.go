@@ -18,6 +18,7 @@ var (
 	// board part numbers
 	//
 	supportedModels = []string{
+		"X11SSL-F",
 		"X11SCM-F",
 		"X11DPH-T",
 		"X11SCH-F",
@@ -46,9 +47,9 @@ func (c *Client) FirmwareUpload(ctx context.Context, component string, file *os.
 		return "", err
 	}
 
-	//	// expect atleast 5 minutes left in the deadline to proceed with the upload
-	d, _ := ctx.Deadline()
-	if time.Until(d) < 5*time.Minute {
+	// expect atleast 5 minutes left in the deadline to proceed with the upload
+	d, set := ctx.Deadline()
+	if set && time.Until(d) < 5*time.Minute {
 		return "", errors.New("remaining context deadline insufficient to perform update: " + time.Until(d).String())
 	}
 

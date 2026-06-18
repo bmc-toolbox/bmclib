@@ -5,23 +5,22 @@ import (
 	"testing"
 
 	"github.com/bmc-toolbox/common"
-	common2 "github.com/stmcginnis/gofish/common"
-	redfish "github.com/stmcginnis/gofish/redfish"
+	"github.com/stmcginnis/gofish"
+	"github.com/stmcginnis/gofish/schemas"
 )
 
 func TestInventoryCollectNetworkPortInfo(t *testing.T) {
-	testAdapter := &redfish.NetworkAdapter{
+	testAdapter := &schemas.NetworkAdapter{
 		Manufacturer: "Acme",
 		Model:        "Anvil 3000",
 	}
-	testNetworkPort := &redfish.NetworkPort{
-		Entity:                     common2.Entity{ID: "NetworkPort-1"},
-		Description:                "NetworkPort One",
+	testNetworkPort := &schemas.NetworkPort{
+		Entity:                     schemas.Entity{ID: "NetworkPort-1"},
 		VendorID:                   "Vendor-ID",
 		PhysicalPortNumber:         "10",
 		LinkStatus:                 "Up",
 		ActiveLinkTechnology:       "Ethernet",
-		CurrentLinkSpeedMbps:       1000,
+		CurrentLinkSpeedMbps:       gofish.ToRef(1000),
 		AssociatedNetworkAddresses: []string{"98:E7:43:00:01:0A"},
 	}
 	testFirmwareVersion := "1.2.3"
@@ -67,8 +66,8 @@ func TestInventoryCollectNetworkPortInfo(t *testing.T) {
 	tests := []struct {
 		name          string
 		nicPort       *common.NICPort
-		adapter       *redfish.NetworkAdapter
-		networkPort   *redfish.NetworkPort
+		adapter       *schemas.NetworkAdapter
+		networkPort   *schemas.NetworkPort
 		firmware      string
 		wantedNicPort *common.NICPort
 	}{
@@ -104,7 +103,7 @@ func TestInventoryCollectNetworkPortInfo(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := Client{}
-			c.collectNetworkPortInfo(tt.nicPort, tt.adapter, tt.networkPort, tt.firmware, []*redfish.SoftwareInventory{})
+			c.collectNetworkPortInfo(tt.nicPort, tt.adapter, tt.networkPort, tt.firmware, []*schemas.SoftwareInventory{})
 			if !reflect.DeepEqual(tt.nicPort, tt.wantedNicPort) {
 				t.Errorf("collectNetworkPortInfo() gotNicPort = %v, want %v", tt.nicPort, tt.wantedNicPort)
 			}
@@ -119,20 +118,19 @@ func TestInventoryCollectEthernetInfo(t *testing.T) {
 	testNicPort := &common.NICPort{
 		ID: testNicPortID,
 	}
-	testUnmatchingEthList := []*redfish.EthernetInterface{
-		{Entity: common2.Entity{ID: "other ID"}},
-		{Entity: common2.Entity{ID: "another one"}},
+	testUnmatchingEthList := []*schemas.EthernetInterface{
+		{Entity: schemas.Entity{ID: "other ID"}},
+		{Entity: schemas.Entity{ID: "another one"}},
 	}
-	testMatchingEth := &redfish.EthernetInterface{
-		Entity:      common2.Entity{ID: testEthernetID},
-		Description: "Ethernet Interface",
-		Status: common2.Status{
+	testMatchingEth := &schemas.EthernetInterface{
+		Entity: schemas.Entity{ID: testEthernetID},
+		Status: schemas.Status{
 			Health: "OK",
 			State:  "Enabled",
 		},
-		SpeedMbps:  10000,
+		SpeedMbps:  gofish.ToRef(10000),
 		AutoNeg:    true,
-		MTUSize:    1500,
+		MTUSize:    gofish.ToRef(1500),
 		MACAddress: "f6:a9:26:e3:e6:32",
 	}
 	testMatchingEthList := append(testUnmatchingEthList, testMatchingEth)
@@ -148,19 +146,19 @@ func TestInventoryCollectEthernetInfo(t *testing.T) {
 		ID:         testMatchingEth.ID,
 		SpeedBits:  10000000000,
 		AutoNeg:    testMatchingEth.AutoNeg,
-		MTUSize:    testMatchingEth.MTUSize,
+		MTUSize:    gofish.Deref(testMatchingEth.MTUSize),
 		MacAddress: testMatchingEth.MACAddress,
 	}
 
 	tests := []struct {
 		name               string
 		nicPort            *common.NICPort
-		ethernetInterfaces []*redfish.EthernetInterface
+		ethernetInterfaces []*schemas.EthernetInterface
 		wantedNicPort      *common.NICPort
 	}{
 		{name: "nil"},
 		{name: "empty", nicPort: testNicPort, wantedNicPort: testNicPort},
-		{name: "empty ethernet list", nicPort: testNicPort, ethernetInterfaces: []*redfish.EthernetInterface{}, wantedNicPort: testNicPort},
+		{name: "empty ethernet list", nicPort: testNicPort, ethernetInterfaces: []*schemas.EthernetInterface{}, wantedNicPort: testNicPort},
 		{name: "unmatching ethernet list", nicPort: testNicPort, ethernetInterfaces: testUnmatchingEthList, wantedNicPort: testNicPort},
 		{
 			name:               "full",

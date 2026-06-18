@@ -13,7 +13,7 @@ import (
 	bmcliberrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	rfw "github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/pkg/errors"
-	"github.com/stmcginnis/gofish/redfish"
+	"github.com/stmcginnis/gofish/schemas"
 )
 
 // bmc client interface implementations methods
@@ -71,7 +71,7 @@ func (c *Conn) FirmwareInstallUploadAndInitiate(ctx context.Context, component s
 }
 
 // returns an error when a bmc firmware install is active
-func (c *Conn) checkQueueability(component string, tasks []*redfish.Task) error {
+func (c *Conn) checkQueueability(component string, tasks []*schemas.Task) error {
 	errTaskActive := errors.New("A firmware job was found active for component: " + component)
 
 	for _, t := range tasks {
