@@ -1,0 +1,10 @@
+{
+    "@odata.type": "#NetworkPort.v1_2_0.NetworkPort",
+    "@odata.id": "/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1/NetworkAdapter/NetworkPorts/1",
+    "Id": "1",
+    "Name": "Port 1",
+    "Status": {"State": "Enabled", "Health": "OK"},
+    "ActiveLinkTechnology": "Ethernet",
+    "AssociatedNetworkAddresses": ["3c:ec:ef:10:20:01"],
+    "CurrentLinkSpeedMbps": 10000
+}

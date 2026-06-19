@@ -127,6 +127,10 @@ func (c *Client) collectNICs(sys *schemas.ComputerSystem, device *common.Device,
 		return err
 	}
 
+	// Fallback: add any EthernetInterfaces not discovered via NetworkInterfaces.
+	// Some adapters (e.g. Supermicro AOC add-on cards) only appear in EthernetInterfaces.
+	discoveredMACs := make(map[string]struct{})
+
 	for _, nic := range nics {
 		// collect network interface adaptor information
 		adapter, err := nic.NetworkAdapter()
@@ -171,6 +175,10 @@ func (c *Client) collectNICs(sys *schemas.ComputerSystem, device *common.Device,
 				c.collectEthernetInfo(nicPort, ethernetInterfaces)
 			}
 			n.NICPorts = append(n.NICPorts, nicPort)
+
+			if nicPort.MacAddress != "" {
+				discoveredMACs[strings.ToLower(nicPort.MacAddress)] = struct{}{}
+			}
 		}
 
 		// include additional firmware attributes from redfish firmware inventory
@@ -183,6 +191,44 @@ func (c *Client) collectNICs(sys *schemas.ComputerSystem, device *common.Device,
 		}
 
 		device.NICs = append(device.NICs, n)
+	}
+	for _, eth := range ethernetInterfaces {
+		mac := strings.ToLower(eth.MACAddress)
+		if mac == "" || mac == "00:00:00:00:00:00" {
+			continue
+		}
+		if _, seen := discoveredMACs[mac]; seen {
+			continue
+		}
+
+		nicPort := &common.NICPort{
+			Common: common.Common{
+				Description: eth.Description,
+				Status: &common.Status{
+					Health: string(eth.Status.Health),
+					State:  string(eth.Status.State),
+				},
+			},
+			ID:         eth.ID,
+			MacAddress: eth.MACAddress,
+			AutoNeg:    eth.AutoNeg,
+			MTUSize:    gofish.Deref(eth.MTUSize),
+		}
+		if eth.SpeedMbps != nil {
+			nicPort.SpeedBits = int64(gofish.Deref(eth.SpeedMbps)) * int64(math.Pow10(6))
+		}
+
+		device.NICs = append(device.NICs, &common.NIC{
+			Common: common.Common{
+				Description: eth.Name,
+				Status: &common.Status{
+					State:  string(eth.Status.State),
+					Health: string(eth.Status.Health),
+				},
+			},
+			ID:       eth.ID,
+			NICPorts: []*common.NICPort{nicPort},
+		})
 	}
 
 	return nil
@@ -244,8 +290,10 @@ func (c *Client) collectEthernetInfo(nicPort *common.NICPort, ethernetInterfaces
 
 	// populate mac address et al. from matching ethernet interface
 	for _, ethInterface := range ethernetInterfaces {
-		// the ethernet interface includes the port, position number and function NIC.Slot.3-1-1
-		if !strings.HasPrefix(ethInterface.ID, nicPort.ID) {
+		// the ethernet interface includes the port, position number and function NIC.Slot.3-1-1;
+		// require an exact match or a "-"-delimited prefix so that port "1" does not
+		// incorrectly absorb EthernetInterface "10" (HasPrefix("10","1") is true).
+		if ethInterface.ID != nicPort.ID && !strings.HasPrefix(ethInterface.ID, nicPort.ID+"-") {
 			continue
 		}
 
