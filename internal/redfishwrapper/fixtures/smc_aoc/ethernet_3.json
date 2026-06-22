@@ -1,0 +1,12 @@
+{
+    "@odata.type": "#EthernetInterface.v1_6_0.EthernetInterface",
+    "@odata.id": "/redfish/v1/Systems/1/EthernetInterfaces/3",
+    "Id": "3",
+    "Name": "AOC LAN 1",
+    "Description": "AOC-S25G-m2S Port 1",
+    "Status": {"State": "Enabled", "Health": "OK"},
+    "MACAddress": "3c:ec:ef:20:30:01",
+    "SpeedMbps": 25000,
+    "AutoNeg": false,
+    "MTUSize": 9000
+}

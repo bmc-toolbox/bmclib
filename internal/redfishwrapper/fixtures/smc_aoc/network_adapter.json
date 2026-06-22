@@ -1,0 +1,20 @@
+{
+    "@odata.type": "#NetworkAdapter.v1_0_0.NetworkAdapter",
+    "@odata.id": "/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1/NetworkAdapter",
+    "Id": "NIC.Integrated.1",
+    "Name": "Onboard LAN Adapter",
+    "Manufacturer": "Acme",
+    "Model": "2-Port 10GbE",
+    "SerialNumber": "SN123456",
+    "Controllers": [
+        {
+            "ControllerCapabilities": {
+                "NetworkPortCount": 2
+            },
+            "FirmwarePackageVersion": "1.2.3"
+        }
+    ],
+    "NetworkPorts": {
+        "@odata.id": "/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1/NetworkAdapter/NetworkPorts"
+    }
+}
