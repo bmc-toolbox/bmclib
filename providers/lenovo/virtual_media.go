@@ -3,6 +3,7 @@ package lenovo
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"sort"
 	"strings"
 
@@ -167,14 +168,18 @@ func (c *Conn) patchVirtualMedia(ctx context.Context, odataID string, payload ma
 func (c *Conn) virtualMediaSlots(ctx context.Context) ([]vmSlot, error) {
 	var collectionURL string
 	if manager, err := c.redfishwrapper.Manager(ctx); err == nil {
-		collectionURL = singleTrailingSlashJoin(manager.ODataID, "VirtualMedia")
+		if u, jerr := url.JoinPath(manager.ODataID, "VirtualMedia"); jerr == nil {
+			collectionURL = u
+		}
 	}
 
 	members, err := c.collectionMembersOrEmpty(collectionURL)
 	if len(members) == 0 {
 		if system, serr := c.redfishwrapper.System(); serr == nil {
-			collectionURL = singleTrailingSlashJoin(system.ODataID, "VirtualMedia")
-			members, err = c.collectionMembersOrEmpty(collectionURL)
+			if u, jerr := url.JoinPath(system.ODataID, "VirtualMedia"); jerr == nil {
+				collectionURL = u
+				members, err = c.collectionMembersOrEmpty(collectionURL)
+			}
 		}
 	}
 	if len(members) == 0 {

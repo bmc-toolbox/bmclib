@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 )
 
 // getJSON GETs a Redfish resource and unmarshals its body into out. It maps
@@ -41,12 +40,6 @@ func (c *Conn) getJSON(url string, out any) error {
 	}
 
 	return nil
-}
-
-// singleTrailingSlashJoin joins a base path and sub-path with exactly one
-// separating slash, trimming any duplicates at the boundary.
-func singleTrailingSlashJoin(base, sub string) string {
-	return strings.TrimRight(base, "/") + "/" + strings.TrimLeft(sub, "/")
 }
 
 // collectionMembers GETs a Redfish collection and returns its member links.

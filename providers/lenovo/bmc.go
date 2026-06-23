@@ -2,6 +2,7 @@ package lenovo
 
 import (
 	"context"
+	"net/url"
 
 	"github.com/bmc-toolbox/bmclib/v2/bmc"
 )
@@ -34,7 +35,10 @@ func (c *Conn) ResetToFactoryDefaults(ctx context.Context, resetType string) err
 		resetType = "ResetAll"
 	}
 
-	target := singleTrailingSlashJoin(manager.ODataID, "Actions/Manager.ResetToDefaults")
+	target, err := url.JoinPath(manager.ODataID, "Actions/Manager.ResetToDefaults")
+	if err != nil {
+		return err
+	}
 	payload := map[string]any{"ResetType": resetType}
 
 	return checkResponse(c.redfishwrapper.PostWithHeaders(ctx, target, payload, nil))

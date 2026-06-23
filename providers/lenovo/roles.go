@@ -2,6 +2,7 @@ package lenovo
 
 import (
 	"context"
+	"net/url"
 )
 
 // RoleInfo describes an XCC account role.
@@ -57,7 +58,10 @@ func (c *Conn) RoleCreate(ctx context.Context, roleID string, privileges []strin
 		return err
 	}
 
-	rolesURL := singleTrailingSlashJoin(service.ODataID, "Roles")
+	rolesURL, err := url.JoinPath(service.ODataID, "Roles")
+	if err != nil {
+		return err
+	}
 	payload := map[string]any{
 		"RoleId":             roleID,
 		"AssignedPrivileges": privileges,
