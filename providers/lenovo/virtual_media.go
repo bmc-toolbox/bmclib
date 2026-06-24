@@ -166,25 +166,33 @@ func (c *Conn) patchVirtualMedia(ctx context.Context, odataID string, payload ma
 // virtualMediaSlots resolves and reads the VirtualMedia collection, trying the
 // Manager path first and falling back to the System path.
 func (c *Conn) virtualMediaSlots(ctx context.Context) ([]vmSlot, error) {
-	var collectionURL string
-	if manager, err := c.redfishwrapper.Manager(ctx); err == nil {
-		if u, jerr := url.JoinPath(manager.ODataID, "VirtualMedia"); jerr == nil {
-			collectionURL = u
-		}
+	manager, err := c.redfishwrapper.Manager(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("resolving manager: %w", err)
 	}
 
-	members, err := c.collectionMembersOrEmpty(collectionURL)
+	collectionURL, err := url.JoinPath(manager.ODataID, "VirtualMedia")
+	if err != nil {
+		return nil, err
+	}
+
+	members, errCollectionMembers := c.collectionMembersOrEmpty(collectionURL)
 	if len(members) == 0 {
-		if system, serr := c.redfishwrapper.System(); serr == nil {
-			if u, jerr := url.JoinPath(system.ODataID, "VirtualMedia"); jerr == nil {
-				collectionURL = u
-				members, err = c.collectionMembersOrEmpty(collectionURL)
-			}
+		system, serr := c.redfishwrapper.System()
+		if serr != nil {
+			return nil, fmt.Errorf("resolving system: %w", serr)
 		}
+
+		collectionURL, err = url.JoinPath(system.ODataID, "VirtualMedia")
+		if err != nil {
+			return nil, err
+		}
+
+		members, errCollectionMembers = c.collectionMembersOrEmpty(collectionURL)
 	}
 	if len(members) == 0 {
-		if err != nil {
-			return nil, fmt.Errorf("listing virtual media: %w", err)
+		if errCollectionMembers != nil {
+			return nil, fmt.Errorf("listing virtual media: %w", errCollectionMembers)
 		}
 		return nil, fmt.Errorf("no virtual media slots found at Manager or System paths")
 	}
