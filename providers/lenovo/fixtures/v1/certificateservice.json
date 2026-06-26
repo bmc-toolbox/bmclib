@@ -1,0 +1,15 @@
+{
+    "@odata.id": "/redfish/v1/CertificateService",
+    "@odata.type": "#CertificateService.v1_0_4.CertificateService",
+    "Id": "CertificateService",
+    "Name": "Certificate Service",
+    "CertificateLocations": {"@odata.id": "/redfish/v1/CertificateService/CertificateLocations"},
+    "Actions": {
+        "#CertificateService.GenerateCSR": {
+            "target": "/redfish/v1/CertificateService/Actions/CertificateService.GenerateCSR"
+        },
+        "#CertificateService.ReplaceCertificate": {
+            "target": "/redfish/v1/CertificateService/Actions/CertificateService.ReplaceCertificate"
+        }
+    }
+}

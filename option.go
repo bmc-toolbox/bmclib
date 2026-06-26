@@ -153,6 +153,32 @@ func WithDellRedfishUseBasicAuth(useBasicAuth bool) Option {
 	}
 }
 
+// WithLenovoPort sets the port for the Lenovo XCC (redfish) provider.
+func WithLenovoPort(port string) Option {
+	return func(args *Client) {
+		args.providerConfig.lenovo.Port = port
+	}
+}
+
+// WithLenovoUseBasicAuth sets HTTP Basic auth (instead of session login) for the
+// Lenovo XCC provider.
+func WithLenovoUseBasicAuth(useBasicAuth bool) Option {
+	return func(args *Client) {
+		args.providerConfig.lenovo.UseBasicAuth = useBasicAuth
+	}
+}
+
+// WithLenovoVersionsNotCompatible sets the list of incompatible redfish versions
+// for the Lenovo XCC provider.
+//
+// With this option set, the bmclib.Registry.FilterForCompatible(ctx) method will
+// not proceed on devices with the given redfish version(s).
+func WithLenovoVersionsNotCompatible(versions []string) Option {
+	return func(args *Client) {
+		args.providerConfig.lenovo.VersionsNotCompatible = append(args.providerConfig.lenovo.VersionsNotCompatible, versions...)
+	}
+}
+
 func WithRPCOpt(opt rpc.Provider) Option {
 	return func(args *Client) {
 		args.providerConfig.rpc = opt

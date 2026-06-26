@@ -1,0 +1,12 @@
+{
+    "@odata.id": "/redfish/v1/Managers/1/SerialInterfaces/1",
+    "@odata.type": "#SerialInterface.v1_1_8.SerialInterface",
+    "Id": "1",
+    "Name": "Serial Interface 1",
+    "InterfaceEnabled": true,
+    "BitRate": "115200",
+    "Parity": "None",
+    "DataBits": "8",
+    "StopBits": "1",
+    "FlowControl": "None"
+}

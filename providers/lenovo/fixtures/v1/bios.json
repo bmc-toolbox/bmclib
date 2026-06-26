@@ -1,0 +1,32 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Bios.Bios",
+    "@odata.id": "/redfish/v1/Systems/1/Bios",
+    "@odata.type": "#Bios.v1_2_0.Bios",
+    "@odata.etag": "\"6c40cc24cc1762f085cb94\"",
+    "Id": "Bios",
+    "Name": "Bios",
+    "Description": "System Bios",
+    "AttributeRegistry": "BiosAttributeRegistry.1.0.0",
+    "@Redfish.Settings": {
+        "SettingsObject": {
+            "@odata.id": "/redfish/v1/Systems/1/Bios/Pending"
+        },
+        "SupportedApplyTimes": ["OnReset"],
+        "@odata.type": "#Settings.v1_3_3.Settings"
+    },
+    "Attributes": {
+        "BootModes_SystemBootMode": "LegacyMode",
+        "Processors_HyperThreading": "Enabled",
+        "Memory_MemorySpeed": "MaximumPerformance",
+        "OperatingModes_ChooseOperatingMode": "Efficiency_FavorPerformance",
+        "SecureBootConfiguration_SecureBootSetting": "Disabled"
+    },
+    "Actions": {
+        "#Bios.ResetBios": {
+            "target": "/redfish/v1/Systems/1/Bios/Actions/Bios.ResetBios"
+        },
+        "#Bios.ChangePassword": {
+            "target": "/redfish/v1/Systems/1/Bios/Actions/Bios.ChangePassword"
+        }
+    }
+}

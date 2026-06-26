@@ -1,0 +1,78 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#ComputerSystem.ComputerSystem",
+    "@odata.id": "/redfish/v1/Systems/1",
+    "@odata.type": "#ComputerSystem.v1_10_0.ComputerSystem",
+    "Id": "1",
+    "Name": "System",
+    "Manufacturer": "Lenovo",
+    "Model": "ThinkSystem SR650",
+    "SKU": "7X06CTO1WW",
+    "SerialNumber": "J100ABCD",
+    "UUID": "92384634-2938-2342-8820-489239905423",
+    "PowerState": "On",
+    "SystemType": "Physical",
+    "BiosVersion": "TEE142M-2.41",
+    "Status": {
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    },
+    "BootProgress": {
+        "LastState": "SystemHardwareInitializationComplete"
+    },
+    "Bios": {
+        "@odata.id": "/redfish/v1/Systems/1/Bios"
+    },
+    "SecureBoot": {
+        "@odata.id": "/redfish/v1/Systems/1/SecureBoot"
+    },
+    "Storage": {
+        "@odata.id": "/redfish/v1/Systems/1/Storage"
+    },
+    "EthernetInterfaces": {
+        "@odata.id": "/redfish/v1/Systems/1/EthernetInterfaces"
+    },
+    "Boot": {
+        "BootSourceOverrideEnabled": "Once",
+        "BootSourceOverrideMode": "Legacy",
+        "BootSourceOverrideTarget": "Hdd",
+        "BootSourceOverrideTarget@Redfish.AllowableValues": [
+            "None",
+            "Pxe",
+            "Cd",
+            "Hdd",
+            "BiosSetup"
+        ],
+        "BootSourceOverrideEnabled@Redfish.AllowableValues": [
+            "Once",
+            "Disabled"
+        ],
+        "UefiTargetBootSourceOverride": null
+    },
+    "Actions": {
+        "#ComputerSystem.Reset": {
+            "target": "/redfish/v1/Systems/1/Actions/ComputerSystem.Reset",
+            "ResetType@Redfish.AllowableValues": [
+                "On",
+                "ForceOff",
+                "GracefulShutdown",
+                "GracefulRestart",
+                "ForceRestart",
+                "Nmi",
+                "ForceOn"
+            ]
+        }
+    },
+    "Links": {
+        "ManagedBy": [
+            {
+                "@odata.id": "/redfish/v1/Managers/1"
+            }
+        ],
+        "Chassis": [
+            {
+                "@odata.id": "/redfish/v1/Chassis/1"
+            }
+        ]
+    }
+}

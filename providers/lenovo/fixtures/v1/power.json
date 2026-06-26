@@ -1,0 +1,50 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Power.Power",
+    "@odata.id": "/redfish/v1/Chassis/1/Power",
+    "@odata.type": "#Power.v1_5_0.Power",
+    "Id": "Power",
+    "Name": "Power",
+    "PowerControl@odata.count": 1,
+    "PowerControl": [
+        {
+            "@odata.id": "/redfish/v1/Chassis/1/Power#/PowerControl/0",
+            "MemberId": "0",
+            "Name": "Server Power Control",
+            "PowerConsumedWatts": 287,
+            "PowerCapacityWatts": 1800,
+            "PowerLimit": {
+                "LimitInWatts": null,
+                "LimitException": "NoAction"
+            },
+            "PowerMetrics": {
+                "IntervalInMin": 1,
+                "MaxConsumedWatts": 320,
+                "MinConsumedWatts": 250,
+                "AverageConsumedWatts": 290
+            }
+        }
+    ],
+    "PowerSupplies@odata.count": 2,
+    "PowerSupplies": [
+        {
+            "@odata.id": "/redfish/v1/Chassis/1/Power#/PowerSupplies/0",
+            "MemberId": "0",
+            "Name": "PSU 1",
+            "PowerCapacityWatts": 900,
+            "Status": {
+                "Health": "OK",
+                "State": "Enabled"
+            }
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/1/Power#/PowerSupplies/1",
+            "MemberId": "1",
+            "Name": "PSU 2",
+            "PowerCapacityWatts": 900,
+            "Status": {
+                "Health": "OK",
+                "State": "Enabled"
+            }
+        }
+    ]
+}

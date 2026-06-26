@@ -1,0 +1,16 @@
+{
+    "@odata.id": "/redfish/v1/Managers/1/NetworkProtocol",
+    "@odata.type": "#ManagerNetworkProtocol.v1_5_0.ManagerNetworkProtocol",
+    "Id": "NetworkProtocol",
+    "Name": "Manager Network Protocol",
+    "HostName": "XCC-SR650",
+    "HTTP":  {"ProtocolEnabled": false, "Port": 80},
+    "HTTPS": {"ProtocolEnabled": true,  "Port": 443},
+    "SSH":   {"ProtocolEnabled": true,  "Port": 22},
+    "IPMI":  {"ProtocolEnabled": true,  "Port": 623},
+    "SNMP":  {"ProtocolEnabled": false, "Port": 161},
+    "NTP":   {"ProtocolEnabled": true,  "Port": 123, "NTPServers": ["pool.ntp.org"]},
+    "KVMIP": {"ProtocolEnabled": true,  "Port": 3900},
+    "VirtualMedia": {"ProtocolEnabled": true, "Port": 3900},
+    "SSDP":  {"ProtocolEnabled": true,  "Port": 1900}
+}

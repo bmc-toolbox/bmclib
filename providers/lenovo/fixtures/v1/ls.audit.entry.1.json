@@ -1,0 +1,11 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#LogEntry.LogEntry",
+    "@odata.id": "/redfish/v1/Managers/1/LogServices/AuditLog/Entries/1",
+    "@odata.type": "#LogEntry.v1_8_0.LogEntry",
+    "Id": "1",
+    "Name": "Audit Entry 1",
+    "Created": "2024-05-01T12:05:00Z",
+    "EntryType": "Oem",
+    "Severity": "OK",
+    "Message": "User USERID logged in from 10.0.0.5."
+}

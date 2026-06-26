@@ -1,0 +1,14 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#License.License",
+    "@odata.id": "/redfish/v1/LicenseService/Licenses/XCC_Advanced",
+    "@odata.type": "#License.v1_1_0.License",
+    "Id": "XCC_Advanced",
+    "Name": "XClarity Controller Advanced",
+    "EntitlementId": "XCC_Advanced",
+    "LicenseType": "Production",
+    "Removable": true,
+    "Status": {
+        "State": "Enabled",
+        "Health": "OK"
+    }
+}

@@ -1,0 +1,15 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#VirtualMediaCollection.VirtualMediaCollection",
+    "@odata.id": "/redfish/v1/Managers/1/VirtualMedia",
+    "@odata.type": "#VirtualMediaCollection.VirtualMediaCollection",
+    "Name": "Virtual Media Collection",
+    "Members@odata.count": 2,
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Managers/1/VirtualMedia/CD"
+        },
+        {
+            "@odata.id": "/redfish/v1/Managers/1/VirtualMedia/Floppy"
+        }
+    ]
+}
