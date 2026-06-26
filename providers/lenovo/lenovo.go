@@ -49,7 +49,6 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
-	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 
@@ -61,6 +60,14 @@ const (
 	ProviderName = "lenovo"
 	// ProviderProtocol is the transport/protocol this provider speaks.
 	ProviderProtocol = "redfish"
+
+	// vendorLenovo is the lower-cased token matched against the device
+	// manufacturer/model during the compatibility check.
+	//
+	// Note: github.com/bmc-toolbox/common does not define a VendorLenovo
+	// constant, so the vendor is detected with a case-insensitive substring
+	// match rather than a typed comparison.
+	vendorLenovo = "lenovo"
 )
 
 // Features is the set of bmclib features this provider implements.
@@ -76,8 +83,14 @@ var Features = registrar.Features{
 	providers.FeatureGetBiosConfiguration,
 	providers.FeatureSetBiosConfiguration,
 	providers.FeatureResetBiosConfiguration,
+	providers.FeatureSecureBoot,
+	providers.FeatureThermalRead,
+	providers.FeaturePowerRead,
+	providers.FeaturePowerCap,
 	// inventory-storage
 	providers.FeatureInventoryRead,
+	providers.FeatureVolumeRead,
+	providers.FeatureVolumeManagement,
 	// firmware-tasks
 	providers.FeatureFirmwareInstall,
 	providers.FeatureFirmwareInstallStatus,
@@ -100,6 +113,22 @@ var Features = registrar.Features{
 	providers.FeatureClearSystemEventLog,
 	// bmc-management
 	providers.FeatureBmcReset,
+	providers.FeatureLicenseManagement,
+	providers.FeatureSecureKeyLifecycle,
+	// network-serial
+	providers.FeatureNetworkInterfaceRead,
+	providers.FeatureNetworkInterfaceSet,
+	providers.FeatureNetworkProtocolRead,
+	providers.FeatureNetworkProtocolSet,
+	providers.FeatureSerialRead,
+	providers.FeatureSerialSet,
+	// events-telemetry
+	providers.FeatureEventSubscription,
+	providers.FeatureTelemetry,
+	// jobs-certs-snmp
+	providers.FeatureJobManagement,
+	providers.FeatureCertificateManagement,
+	providers.FeatureSNMP,
 }
 
 // Conn is a connection to a Lenovo XCC BMC.
@@ -286,16 +315,19 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 }
 
 // deviceIsLenovo returns true when the device manufacturer or model identifies
-// as Lenovo, using a case-insensitive substring match against the manufacturer
-// and model strings reported by the ComputerSystem.
+// as Lenovo.
+//
+// common.VendorLenovo does not exist, so this uses a case-insensitive substring
+// match against the manufacturer and model strings reported by the
+// ComputerSystem.
 func (c *Conn) deviceIsLenovo(ctx context.Context) (bool, error) {
 	vendor, model, err := c.redfishwrapper.DeviceVendorModel(ctx)
 	if err != nil {
 		return false, err
 	}
 
-	if strings.Contains(strings.ToLower(vendor), common.VendorLenovo) ||
-		strings.Contains(strings.ToLower(model), common.VendorLenovo) {
+	if strings.Contains(strings.ToLower(vendor), vendorLenovo) ||
+		strings.Contains(strings.ToLower(model), vendorLenovo) {
 		return true, nil
 	}
 
