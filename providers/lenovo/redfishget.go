@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"path"
+	"strings"
 )
 
 // getJSON GETs a Redfish resource and unmarshals its body into out. It maps
@@ -42,6 +44,19 @@ func (c *Conn) getJSON(url string, out any) error {
 	return nil
 }
 
+// decodeJSONBody reads and unmarshals an already-open HTTP response body into
+// out. The caller is responsible for closing resp.Body.
+func decodeJSONBody(resp *http.Response, out any) error {
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("%w: %v", errFailedToParseResponse, err)
+	}
+	if err := json.Unmarshal(body, out); err != nil {
+		return fmt.Errorf("%w: %v", errFailedToParseResponse, err)
+	}
+	return nil
+}
+
 // collectionMembers GETs a Redfish collection and returns its member links.
 func (c *Conn) collectionMembers(url string) ([]odataID, error) {
 	var coll struct {
@@ -52,4 +67,20 @@ func (c *Conn) collectionMembers(url string) ([]odataID, error) {
 	}
 
 	return coll.Members, nil
+}
+
+// memberIDs GETs a Redfish collection and returns the trailing-segment Id of
+// each member.
+func (c *Conn) memberIDs(url string) ([]string, error) {
+	members, err := c.collectionMembers(url)
+	if err != nil {
+		return nil, err
+	}
+
+	ids := make([]string, 0, len(members))
+	for _, m := range members {
+		ids = append(ids, path.Base(strings.TrimRight(m.ODataID, "/")))
+	}
+
+	return ids, nil
 }
