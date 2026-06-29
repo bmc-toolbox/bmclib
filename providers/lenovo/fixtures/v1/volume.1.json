@@ -1,0 +1,19 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Volume.Volume",
+    "@odata.id": "/redfish/v1/Systems/1/Storage/RAID_Slot1/Volumes/1",
+    "@odata.type": "#Volume.v1_6_2.Volume",
+    "Id": "1",
+    "Name": "Volume 1",
+    "RAIDType": "RAID1",
+    "CapacityBytes": 999653638144,
+    "Encrypted": false,
+    "Status": {
+        "Health": "OK",
+        "State": "Enabled"
+    },
+    "Actions": {
+        "#Volume.Initialize": {
+            "target": "/redfish/v1/Systems/1/Storage/RAID_Slot1/Volumes/1/Actions/Volume.Initialize"
+        }
+    }
+}

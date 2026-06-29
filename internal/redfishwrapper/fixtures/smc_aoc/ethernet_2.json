@@ -1,0 +1,12 @@
+{
+    "@odata.type": "#EthernetInterface.v1_6_0.EthernetInterface",
+    "@odata.id": "/redfish/v1/Systems/1/EthernetInterfaces/2",
+    "Id": "2",
+    "Name": "Onboard LAN 2",
+    "Description": "Onboard Ethernet Interface 2",
+    "Status": {"State": "Enabled", "Health": "OK"},
+    "MACAddress": "3c:ec:ef:10:20:02",
+    "SpeedMbps": 10000,
+    "AutoNeg": true,
+    "MTUSize": 9000
+}

@@ -1,0 +1,17 @@
+{
+    "@odata.id": "/redfish/v1/TelemetryService",
+    "@odata.type": "#TelemetryService.v1_3_1.TelemetryService",
+    "Id": "TelemetryService",
+    "Name": "Telemetry Service",
+    "ServiceEnabled": true,
+    "MaxReports": 10,
+    "MinCollectionInterval": "PT10S",
+    "MetricReports": {"@odata.id": "/redfish/v1/TelemetryService/MetricReports"},
+    "MetricReportDefinitions": {"@odata.id": "/redfish/v1/TelemetryService/MetricReportDefinitions"},
+    "MetricDefinitions": {"@odata.id": "/redfish/v1/TelemetryService/MetricDefinitions"},
+    "Actions": {
+        "#TelemetryService.SubmitTestMetricReport": {
+            "target": "/redfish/v1/TelemetryService/Actions/TelemetryService.SubmitTestMetricReport"
+        }
+    }
+}

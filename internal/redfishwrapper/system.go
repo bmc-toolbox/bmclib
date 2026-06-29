@@ -7,6 +7,7 @@ import (
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 
 	"github.com/pkg/errors"
+	"github.com/stmcginnis/gofish"
 	"github.com/stmcginnis/gofish/schemas"
 )
 
@@ -28,6 +29,18 @@ func (c *Client) UpdateService() (*schemas.UpdateService, error) {
 	}
 
 	return c.client.Service.UpdateService()
+}
+
+// ServiceRoot returns the gofish service root ("/redfish/v1/"). It exposes the
+// service identity (Vendor, Product, RedfishVersion, ...) and resolves the
+// linked resource collections (Systems, Managers, UpdateService, ...) via
+// gofish, so callers need not model the service root or hard-code its URIs.
+func (c *Client) ServiceRoot() (*gofish.Service, error) {
+	if err := c.SessionActive(); err != nil {
+		return nil, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
+	}
+
+	return c.client.Service, nil
 }
 
 // System gets the system matching c.systemName or when c.systemName is not set

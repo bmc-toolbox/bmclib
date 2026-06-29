@@ -1,0 +1,11 @@
+{
+    "@odata.id": "/redfish/v1/Systems/1/EthernetInterfaces/NIC.1",
+    "@odata.type": "#EthernetInterface.v1_6_0.EthernetInterface",
+    "Id": "NIC.1",
+    "Name": "Server NIC 1",
+    "MACAddress": "7C:D3:0A:44:55:66",
+    "InterfaceEnabled": true,
+    "IPv4Addresses": [
+        {"Address": "192.168.10.20", "SubnetMask": "255.255.255.0", "AddressOrigin": "DHCP"}
+    ]
+}

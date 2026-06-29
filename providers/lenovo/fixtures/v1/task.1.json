@@ -1,0 +1,16 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Task.Task",
+    "@odata.id": "/redfish/v1/TaskService/Tasks/1",
+    "@odata.type": "#Task.v1_4_3.Task",
+    "Id": "1",
+    "Name": "Task 1",
+    "TaskState": "Completed",
+    "TaskStatus": "OK",
+    "PercentComplete": 100,
+    "Messages": [
+        {
+            "MessageId": "Update.1.0.UpdateSuccessful",
+            "Message": "Device firmware updated successfully."
+        }
+    ]
+}

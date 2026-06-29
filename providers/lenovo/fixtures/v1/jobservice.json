@@ -1,0 +1,8 @@
+{
+    "@odata.id": "/redfish/v1/JobService",
+    "@odata.type": "#JobService.v1_0_4.JobService",
+    "Id": "JobService",
+    "Name": "Job Service",
+    "ServiceEnabled": true,
+    "Jobs": {"@odata.id": "/redfish/v1/JobService/Jobs"}
+}

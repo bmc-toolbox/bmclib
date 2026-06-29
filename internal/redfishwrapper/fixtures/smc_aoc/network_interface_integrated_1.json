@@ -1,0 +1,10 @@
+{
+    "@odata.type": "#NetworkInterface.v1_1_0.NetworkInterface",
+    "@odata.id": "/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1",
+    "Id": "NIC.Integrated.1",
+    "Name": "Onboard LAN",
+    "Status": {"State": "Enabled", "Health": "OK"},
+    "Links": {
+        "NetworkAdapter": {"@odata.id": "/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1/NetworkAdapter"}
+    }
+}

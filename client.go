@@ -22,6 +22,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/providers/intelamt"
 	"github.com/bmc-toolbox/bmclib/v2/providers/ipmi"
 	"github.com/bmc-toolbox/bmclib/v2/providers/ipmitool"
+	"github.com/bmc-toolbox/bmclib/v2/providers/lenovo"
 	"github.com/bmc-toolbox/bmclib/v2/providers/openbmc"
 	"github.com/bmc-toolbox/bmclib/v2/providers/redfish"
 	"github.com/bmc-toolbox/bmclib/v2/providers/rpc"
@@ -72,6 +73,7 @@ type providerConfig struct {
 	gofish        redfish.Config
 	intelamt      intelamt.Config
 	dell          dell.Config
+	lenovo        lenovo.Config
 	supermicro    supermicro.Config
 	rpc           rpc.Provider
 	openbmc       openbmc.Config
@@ -106,6 +108,10 @@ func NewClient(host, user, pass string, opts ...Option) *Client {
 				Port:       16992,
 			},
 			dell: dell.Config{
+				Port:                  "443",
+				VersionsNotCompatible: []string{},
+			},
+			lenovo: lenovo.Config{
 				Port:                  "443",
 				VersionsNotCompatible: []string{},
 			},
@@ -273,6 +279,22 @@ func (c *Client) registerDellProvider() {
 	c.Registry.Register(dell.ProviderName, redfish.ProviderProtocol, dell.Features, nil, driverGoFishDell)
 }
 
+// register Lenovo XCC gofish provider
+func (c *Client) registerLenovoProvider() {
+	lenovoHTTPClient := *c.httpClient
+	lenovoHTTPClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
+	lenovoOpts := []lenovo.Option{
+		lenovo.WithHTTPClient(&lenovoHTTPClient),
+		lenovo.WithVersionsNotCompatible(c.providerConfig.lenovo.VersionsNotCompatible),
+		lenovo.WithUseBasicAuth(c.providerConfig.lenovo.UseBasicAuth),
+		lenovo.WithPort(c.providerConfig.lenovo.Port),
+		lenovo.WithEtagMatchDisabled(c.providerConfig.lenovo.DisableEtagMatch),
+		lenovo.WithSystemName(c.providerConfig.lenovo.SystemName),
+	}
+	driverLenovo := lenovo.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger, lenovoOpts...)
+	c.Registry.Register(lenovo.ProviderName, lenovo.ProviderProtocol, lenovo.Features, nil, driverLenovo)
+}
+
 // register supermicro vendorapi provider
 func (c *Client) registerSupermicroProvider() {
 	smcHttpClient := *c.httpClient
@@ -341,6 +363,7 @@ func (c *Client) registerProviders() {
 	c.registerGofishProvider()
 	c.registerIntelAMTProvider()
 	c.registerDellProvider()
+	c.registerLenovoProvider()
 	c.registerSupermicroProvider()
 	c.registerOpenBMCProvider()
 }
