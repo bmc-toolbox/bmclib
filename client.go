@@ -20,6 +20,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/providers/dell"
 	"github.com/bmc-toolbox/bmclib/v2/providers/homeassistant"
 	"github.com/bmc-toolbox/bmclib/v2/providers/intelamt"
+	"github.com/bmc-toolbox/bmclib/v2/providers/ipmi"
 	"github.com/bmc-toolbox/bmclib/v2/providers/ipmitool"
 	"github.com/bmc-toolbox/bmclib/v2/providers/lenovo"
 	"github.com/bmc-toolbox/bmclib/v2/providers/openbmc"
@@ -66,6 +67,7 @@ type Auth struct {
 
 // providerConfig contains per provider specific configuration.
 type providerConfig struct {
+	ipmi          ipmi.Config
 	ipmitool      ipmitool.Config
 	asrock        asrockrack.Config
 	gofish        redfish.Config
@@ -88,6 +90,9 @@ func NewClient(host, user, pass string, opts ...Option) *Client {
 		httpClient:             httpclient.Build(),
 		traceprovider:          tracenoop.NewTracerProvider(),
 		providerConfig: providerConfig{
+			ipmi: ipmi.Config{
+				Port: "623",
+			},
 			ipmitool: ipmitool.Config{
 				Port: "623",
 			},
@@ -186,8 +191,26 @@ func (c *Client) registerRPCProvider() error {
 	return nil
 }
 
-// register ipmitool provider
+// register ipmi provider (pure-go, go-ipmi based)
 func (c *Client) registerIPMIProvider() error {
+	ipmiOpts := []ipmi.Option{
+		ipmi.WithLogger(c.Logger),
+		ipmi.WithPort(c.providerConfig.ipmi.Port),
+		ipmi.WithCipherSuite(c.providerConfig.ipmi.CipherSuite),
+	}
+
+	driverIpmi, err := ipmi.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, ipmiOpts...)
+	if err != nil {
+		return err
+	}
+
+	c.Registry.Register(ipmi.ProviderName, ipmi.ProviderProtocol, ipmi.Features, nil, driverIpmi)
+
+	return nil
+}
+
+// register ipmitool provider (ipmitool binary based)
+func (c *Client) registerIpmitoolProvider() error {
 	ipmiOpts := []ipmitool.Option{
 		ipmitool.WithLogger(c.Logger),
 		ipmitool.WithPort(c.providerConfig.ipmitool.Port),
@@ -329,6 +352,10 @@ func (c *Client) registerProviders() {
 	}
 
 	if err := c.registerIPMIProvider(); err != nil {
+		c.Logger.Info("ipmi provider not available", "error", err.Error())
+	}
+
+	if err := c.registerIpmitoolProvider(); err != nil {
 		c.Logger.Info("ipmitool provider not available", "error", err.Error())
 	}
 

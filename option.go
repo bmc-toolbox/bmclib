@@ -55,6 +55,20 @@ func WithPerProviderTimeout(timeout time.Duration) Option {
 	}
 }
 
+// WithIPMICipherSuite sets the cipher suite for the pure-go ipmi provider.
+func WithIPMICipherSuite(cipherSuite string) Option {
+	return func(args *Client) {
+		args.providerConfig.ipmi.CipherSuite = cipherSuite
+	}
+}
+
+// WithIPMIPort sets the port for the pure-go ipmi provider.
+func WithIPMIPort(port string) Option {
+	return func(args *Client) {
+		args.providerConfig.ipmi.Port = port
+	}
+}
+
 func WithIpmitoolCipherSuite(cipherSuite string) Option {
 	return func(args *Client) {
 		args.providerConfig.ipmitool.CipherSuite = cipherSuite

@@ -6,14 +6,15 @@
 
 bmclib v2 is a library to abstract interacting with baseboard management controllers.
 
-## Supported BMC interfaces.
+## Supported BMC interfaces
 
- - [Redfish](https://github.com/bmc-toolbox/bmclib/tree/main/providers/redfish)
- - [IPMItool](https://github.com/bmc-toolbox/bmclib/tree/main/providers/ipmitool)
- - [Intel AMT](https://github.com/bmc-toolbox/bmclib/tree/main/providers/intelamt)
- - [Asrockrack](https://github.com/bmc-toolbox/bmclib/tree/main/providers/asrockrack)
- - [Lenovo XClarity Controller (XCC)](https://github.com/bmc-toolbox/bmclib/tree/main/providers/lenovo)
- - [RPC](providers/rpc/)
+- [Redfish](https://github.com/bmc-toolbox/bmclib/tree/main/providers/redfish)
+- [IPMI](https://github.com/bmc-toolbox/bmclib/tree/main/providers/ipmi) (pure-go, via [go-ipmi](https://github.com/bougou/go-ipmi))
+- [IPMItool](https://github.com/bmc-toolbox/bmclib/tree/main/providers/ipmitool)
+- [Intel AMT](https://github.com/bmc-toolbox/bmclib/tree/main/providers/intelamt)
+- [Asrockrack](https://github.com/bmc-toolbox/bmclib/tree/main/providers/asrockrack)
+- [Lenovo XClarity Controller (XCC)](https://github.com/bmc-toolbox/bmclib/tree/main/providers/lenovo)
+- [RPC](providers/rpc/)
 
 ## Installation
 
