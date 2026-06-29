@@ -482,11 +482,19 @@ func (i *Ipmi) DeactivateSOL(ctx context.Context) (err error) {
 		return fmt.Errorf("failed to connect: %v", err)
 	}
 	defer i.client.Close(ctx)
-	
-	// For go-ipmi, we can use the DeactivateSOL method if available
-	// If not, we can simply ignore this as it's not critical
-	// Many implementations don't provide this capability through go-ipmi
-	i.log.V(3).Info("SOL deactivate requested - not implemented in go-ipmi")
+
+	_, err = i.client.DeactivatePayload(ctx, &ipmi.DeactivatePayloadRequest{
+		PayloadType:     ipmi.PayloadTypeSOL,
+		PayloadInstance: 0,
+	})
+	if err != nil {
+		// 0x80 means SOL was already deactivated; treat as success.
+		var respErr *ipmi.ResponseError
+		if errors.As(err, &respErr) && respErr.CompletionCode() == 0x80 {
+			return nil
+		}
+		return fmt.Errorf("failed to deactivate SOL payload: %w", err)
+	}
 	return nil
 }
 
