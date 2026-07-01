@@ -5,6 +5,7 @@ import (
 	"net/url"
 
 	"github.com/bmc-toolbox/bmclib/v2/bmc"
+	"github.com/stmcginnis/gofish"
 )
 
 const (
@@ -19,32 +20,37 @@ var _ bmc.JobManager = (*Conn)(nil)
 //
 // Implements bmc.JobManager.
 func (c *Conn) JobService(ctx context.Context) (bmc.JobServiceInfo, error) {
-	var doc struct {
-		ServiceEnabled bool `json:"ServiceEnabled"`
-	}
-	if err := c.getJSON(jobServiceURI, &doc); err != nil {
+	js, err := c.redfishwrapper.JobService()
+	if err != nil {
 		return bmc.JobServiceInfo{}, err
 	}
 
-	return bmc.JobServiceInfo{ServiceEnabled: doc.ServiceEnabled}, nil
+	return bmc.JobServiceInfo{ServiceEnabled: js.ServiceEnabled}, nil
 }
 
 // Jobs lists the XCC jobs.
 //
 // Implements bmc.JobManager.
 func (c *Conn) Jobs(ctx context.Context) ([]bmc.JobInfo, error) {
-	members, err := c.collectionMembers(jobsURI)
+	js, err := c.redfishwrapper.JobService()
 	if err != nil {
 		return nil, err
 	}
 
-	out := make([]bmc.JobInfo, 0, len(members))
-	for _, m := range members {
-		job, err := c.jobAt(m.ODataID)
-		if err != nil {
-			return nil, err
-		}
-		out = append(out, job)
+	jobs, err := js.Jobs()
+	if err != nil {
+		return nil, err
+	}
+
+	out := make([]bmc.JobInfo, 0, len(jobs))
+	for _, j := range jobs {
+		out = append(out, bmc.JobInfo{
+			ID:              j.ID,
+			Name:            j.Name,
+			JobState:        string(j.JobState),
+			PercentComplete: int(gofish.Deref(j.PercentComplete)),
+			StartTime:       j.StartTime,
+		})
 	}
 
 	return out, nil

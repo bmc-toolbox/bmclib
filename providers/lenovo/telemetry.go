@@ -5,6 +5,7 @@ import (
 	"net/url"
 
 	"github.com/bmc-toolbox/bmclib/v2/bmc"
+	"github.com/stmcginnis/gofish"
 )
 
 const (
@@ -22,19 +23,15 @@ var _ bmc.TelemetryReader = (*Conn)(nil)
 //
 // Implements bmc.TelemetryReader.
 func (c *Conn) TelemetryService(ctx context.Context) (bmc.TelemetryServiceInfo, error) {
-	var doc struct {
-		ServiceEnabled        bool   `json:"ServiceEnabled"`
-		MaxReports            int    `json:"MaxReports"`
-		MinCollectionInterval string `json:"MinCollectionInterval"`
-	}
-	if err := c.getJSON(telemetryServiceURI, &doc); err != nil {
+	ts, err := c.redfishwrapper.TelemetryService()
+	if err != nil {
 		return bmc.TelemetryServiceInfo{}, err
 	}
 
 	return bmc.TelemetryServiceInfo{
-		ServiceEnabled:        doc.ServiceEnabled,
-		MaxReports:            doc.MaxReports,
-		MinCollectionInterval: doc.MinCollectionInterval,
+		ServiceEnabled:        ts.ServiceEnabled,
+		MaxReports:            int(gofish.Deref(ts.MaxReports)),
+		MinCollectionInterval: ts.MinCollectionInterval,
 	}, nil
 }
 

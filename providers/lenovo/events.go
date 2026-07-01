@@ -23,21 +23,16 @@ var _ bmc.EventSubscriber = (*Conn)(nil)
 //
 // Implements bmc.EventSubscriber.
 func (c *Conn) EventService(ctx context.Context) (bmc.EventServiceInfo, error) {
-	var doc struct {
-		ServiceEnabled               bool   `json:"ServiceEnabled"`
-		DeliveryRetryAttempts        int    `json:"DeliveryRetryAttempts"`
-		DeliveryRetryIntervalSeconds int    `json:"DeliveryRetryIntervalSeconds"`
-		ServerSentEventURI           string `json:"ServerSentEventUri"`
-	}
-	if err := c.getJSON(eventServiceURI, &doc); err != nil {
+	es, err := c.redfishwrapper.EventService()
+	if err != nil {
 		return bmc.EventServiceInfo{}, err
 	}
 
 	return bmc.EventServiceInfo{
-		ServiceEnabled:               doc.ServiceEnabled,
-		DeliveryRetryAttempts:        doc.DeliveryRetryAttempts,
-		DeliveryRetryIntervalSeconds: doc.DeliveryRetryIntervalSeconds,
-		SSEFilterURI:                 doc.ServerSentEventURI,
+		ServiceEnabled:               es.ServiceEnabled,
+		DeliveryRetryAttempts:        es.DeliveryRetryAttempts,
+		DeliveryRetryIntervalSeconds: es.DeliveryRetryIntervalSeconds,
+		SSEFilterURI:                 es.ServerSentEventURI,
 	}, nil
 }
 
@@ -45,27 +40,23 @@ func (c *Conn) EventService(ctx context.Context) (bmc.EventServiceInfo, error) {
 //
 // Implements bmc.EventSubscriber.
 func (c *Conn) EventSubscriptions(ctx context.Context) ([]bmc.EventSubscription, error) {
-	members, err := c.collectionMembers(eventSubscriptionsURI)
+	es, err := c.redfishwrapper.EventService()
 	if err != nil {
 		return nil, err
 	}
 
-	out := make([]bmc.EventSubscription, 0, len(members))
-	for _, m := range members {
-		var sub struct {
-			ID          string `json:"Id"`
-			Destination string `json:"Destination"`
-			Protocol    string `json:"Protocol"`
-			Context     string `json:"Context"`
-		}
-		if err := c.getJSON(m.ODataID, &sub); err != nil {
-			return nil, err
-		}
+	subs, err := es.Subscriptions()
+	if err != nil {
+		return nil, err
+	}
+
+	out := make([]bmc.EventSubscription, 0, len(subs))
+	for _, s := range subs {
 		out = append(out, bmc.EventSubscription{
-			ID:          sub.ID,
-			Destination: sub.Destination,
-			Protocol:    sub.Protocol,
-			Context:     sub.Context,
+			ID:          s.ID,
+			Destination: s.Destination,
+			Protocol:    string(s.Protocol),
+			Context:     s.Context,
 		})
 	}
 
