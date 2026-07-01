@@ -30,7 +30,9 @@ func TestSetSecureBoot(t *testing.T) {
 	ts := newTestServer(t, testServerOpts{})
 	c := ts.openedClient(t)
 
-	if err := c.SetSecureBoot(context.Background(), true); err != nil {
+	// Fixture has SecureBootEnable=true; set false so gofish's diff-based Update
+	// actually PATCHes the changed attribute.
+	if err := c.SetSecureBoot(context.Background(), false); err != nil {
 		t.Fatalf("SetSecureBoot: %v", err)
 	}
 	if !ts.didPatchSecureBoot() {

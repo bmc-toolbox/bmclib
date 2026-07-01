@@ -37,9 +37,14 @@ func (c *Conn) SetSecureBoot(ctx context.Context, enabled bool) error {
 		return err
 	}
 
-	payload := map[string]any{"SecureBootEnable": enabled}
+	// Mutate the field and let gofish PATCH the changed attribute (equivalent to
+	// PATCH {"SecureBootEnable": <enabled>} against sb.ODataID, but type-safe).
+	sb.SecureBootEnable = enabled
+	if err := sb.Update(); err != nil {
+		return fmt.Errorf("setting secure boot enable: %w", err)
+	}
 
-	return checkResponse(c.redfishwrapper.PatchWithHeaders(ctx, sb.ODataID, payload, nil))
+	return nil
 }
 
 // ResetSecureBootKeys resets the Secure Boot key databases via the
