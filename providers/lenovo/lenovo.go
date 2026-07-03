@@ -49,6 +49,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
+	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 
@@ -60,14 +61,6 @@ const (
 	ProviderName = "lenovo"
 	// ProviderProtocol is the transport/protocol this provider speaks.
 	ProviderProtocol = "redfish"
-
-	// vendorLenovo is the lower-cased token matched against the device
-	// manufacturer/model during the compatibility check.
-	//
-	// Note: github.com/bmc-toolbox/common does not define a VendorLenovo
-	// constant, so the vendor is detected with a case-insensitive substring
-	// match rather than a typed comparison.
-	vendorLenovo = "lenovo"
 )
 
 // Features is the set of bmclib features this provider implements.
@@ -315,19 +308,16 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 }
 
 // deviceIsLenovo returns true when the device manufacturer or model identifies
-// as Lenovo.
-//
-// common.VendorLenovo does not exist, so this uses a case-insensitive substring
-// match against the manufacturer and model strings reported by the
-// ComputerSystem.
+// as Lenovo, using a case-insensitive substring match against the manufacturer
+// and model strings reported by the ComputerSystem.
 func (c *Conn) deviceIsLenovo(ctx context.Context) (bool, error) {
 	vendor, model, err := c.redfishwrapper.DeviceVendorModel(ctx)
 	if err != nil {
 		return false, err
 	}
 
-	if strings.Contains(strings.ToLower(vendor), vendorLenovo) ||
-		strings.Contains(strings.ToLower(model), vendorLenovo) {
+	if strings.Contains(strings.ToLower(vendor), common.VendorLenovo) ||
+		strings.Contains(strings.ToLower(model), common.VendorLenovo) {
 		return true, nil
 	}
 
