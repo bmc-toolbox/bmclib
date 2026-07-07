@@ -94,10 +94,12 @@ func toCipherSuiteID(c int) ipmi.CipherSuiteID {
 	return ipmi.CipherSuiteID3
 }
 
+// Open establishes an IPMI LAN+ session to the BMC.
 func (i *Ipmi) Open(ctx context.Context) error {
 	return i.client.Connect(ctx)
 }
 
+// Close tears down the active IPMI session.
 func (i *Ipmi) Close(ctx context.Context) error {
 	return i.client.Close(ctx)
 }
@@ -164,7 +166,7 @@ func (i *Ipmi) PowerResetBmc(ctx context.Context, resetType string) (ok bool, er
 	default:
 		return false, fmt.Errorf("unsupported reset type: %s", resetType)
 	}
-	
+
 	if err != nil {
 		return false, fmt.Errorf("MC reset failed: %v", err)
 	}
@@ -180,7 +182,7 @@ func (i *Ipmi) PowerOn(ctx context.Context) (status bool, err error) {
 	if s {
 		return true, nil
 	}
-	
+
 	_, err = i.client.ChassisControl(ctx, ipmi.ChassisControlPowerUp)
 	if err != nil {
 		return false, fmt.Errorf("chassis control failed: %v", err)
@@ -202,7 +204,7 @@ func (i *Ipmi) PowerOff(ctx context.Context) (status bool, err error) {
 	if on, err := i.IsOn(ctx); err == nil && !on {
 		return true, nil
 	}
-	
+
 	_, err = i.client.ChassisControl(ctx, ipmi.ChassisControlPowerDown)
 	if err != nil {
 		return false, fmt.Errorf("chassis control failed: %v", err)
@@ -212,11 +214,14 @@ func (i *Ipmi) PowerOff(ctx context.Context) (status bool, err error) {
 
 // PowerSoft power off the machine via bmc
 func (i *Ipmi) PowerSoft(ctx context.Context) (status bool, err error) {
-	on, _ := i.IsOn(ctx)
+	on, err := i.IsOn(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "error checking power state")
+	}
 	if !on {
 		return true, nil
 	}
-	
+
 	_, err = i.client.ChassisControl(ctx, ipmi.ChassisControlSoftShutdown)
 	if err != nil {
 		return false, fmt.Errorf("chassis control failed: %v", err)
@@ -254,12 +259,12 @@ func (i *Ipmi) BootDeviceSet(ctx context.Context, bootDevice string, setPersiste
 	default:
 		device = ipmi.BootDeviceSelectorNoOverride
 	}
-	
+
 	biosBootType := ipmi.BIOSBootTypeLegacy
 	if efiBoot {
 		biosBootType = ipmi.BIOSBootTypeEFI
 	}
-	
+
 	err = i.client.SetBootDevice(ctx, device, biosBootType, setPersistent)
 	if err != nil {
 		return false, fmt.Errorf("set boot device failed: %v", err)
@@ -296,7 +301,7 @@ func (i *Ipmi) PowerState(ctx context.Context) (state string, err error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to get chassis status: %v", err)
 	}
-	
+
 	if chassisStatus.PowerIsOn {
 		return "Chassis Power is on", nil
 	}
@@ -313,29 +318,29 @@ func (i *Ipmi) ReadUsers(ctx context.Context) (users []map[string]string, err er
 			// Skip users that don't exist or can't be accessed
 			continue
 		}
-		
+
 		// Get username for this user ID
 		userNameResp, err := i.client.GetUsername(ctx, userID)
 		if err != nil {
 			// Skip users that can't be queried
 			continue
 		}
-		
+
 		if userNameResp.Username == "" {
 			// Skip users without names
 			continue
 		}
-		
+
 		users = append(users, map[string]string{
-			"ID":               fmt.Sprintf("%d", userID),
-			"Name":             userNameResp.Username,
-			"Callin":           fmt.Sprintf("%t", userAccess.CallbackOnly),
-			"Link Auth":        fmt.Sprintf("%t", userAccess.LinkAuthEnabled),
-			"IPMI Msg":         fmt.Sprintf("%t", userAccess.IPMIMessagingEnabled),
+			"ID":                 fmt.Sprintf("%d", userID),
+			"Name":               userNameResp.Username,
+			"Callin":             fmt.Sprintf("%t", userAccess.CallbackOnly),
+			"Link Auth":          fmt.Sprintf("%t", userAccess.LinkAuthEnabled),
+			"IPMI Msg":           fmt.Sprintf("%t", userAccess.IPMIMessagingEnabled),
 			"Channel Priv Limit": fmt.Sprintf("%v", userAccess.MaxPrivLevel),
 		})
 	}
-	
+
 	return users, nil
 }
 
@@ -367,11 +372,11 @@ func (i *Ipmi) GetSystemEventLogRaw(ctx context.Context) (eventlog string, err e
 	if err != nil {
 		return "", fmt.Errorf("failed to get SEL entries: %v", err)
 	}
-	
+
 	// Format SEL entries into the expected raw format for compatibility
 	var lines []string
 	lines = append(lines, "   SEL Record ID          | Date/Time         | Sensor Name      | Event Dir  | Event Data")
-	
+
 	for _, entry := range selEntries {
 		if entry.Standard != nil {
 			timestamp := entry.Standard.Timestamp.Format("01/02/2006 | 15:04:05")
@@ -380,17 +385,17 @@ func (i *Ipmi) GetSystemEventLogRaw(ctx context.Context) (eventlog string, err e
 			if entry.Standard.EventDir == ipmi.EventDirDeassertion {
 				eventDir = "Deasserted"
 			}
-			eventData := fmt.Sprintf("0x%02x 0x%02x 0x%02x", 
+			eventData := fmt.Sprintf("0x%02x 0x%02x 0x%02x",
 				entry.Standard.EventData.EventData1,
 				entry.Standard.EventData.EventData2,
 				entry.Standard.EventData.EventData3)
-			
+
 			line := fmt.Sprintf(" %04x | %s | %-16s | %-10s | %s",
 				entry.RecordID, timestamp, sensorName, eventDir, eventData)
 			lines = append(lines, line)
 		}
 	}
-	
+
 	return strings.Join(lines, "\n"), nil
 }
 

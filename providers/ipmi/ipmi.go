@@ -120,11 +120,10 @@ func (c *Conn) Close(ctx context.Context) (err error) {
 	if !c.open {
 		return nil
 	}
-	if err := c.ipmi.Close(ctx); err != nil {
-		return err
-	}
+	// Clear the open state before closing so a failed Close still allows
+	// callers to retry Open; the underlying session is torn down regardless.
 	c.open = false
-	return nil
+	return c.ipmi.Close(ctx)
 }
 
 // openForCompatible opens the connection if not already open.
