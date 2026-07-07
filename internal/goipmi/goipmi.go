@@ -94,19 +94,16 @@ func toCipherSuiteID(c int) ipmi.CipherSuiteID {
 	return ipmi.CipherSuiteID3
 }
 
-// ensureConnected ensures the IPMI client is connected
-func (i *Ipmi) ensureConnected(ctx context.Context) error {
-	// For go-ipmi, we need to connect before each operation
+func (i *Ipmi) Open(ctx context.Context) error {
 	return i.client.Connect(ctx)
+}
+
+func (i *Ipmi) Close(ctx context.Context) error {
+	return i.client.Close(ctx)
 }
 
 // PowerCycle reboots the machine via bmc
 func (i *Ipmi) PowerCycle(ctx context.Context) (status bool, err error) {
-	if err := i.ensureConnected(ctx); err != nil {
-		return false, fmt.Errorf("failed to connect: %v", err)
-	}
-	defer i.client.Close(ctx)
-	
 	_, err = i.client.ChassisControl(ctx, ipmi.ChassisControlPowerCycle)
 	if err != nil {
 		return false, fmt.Errorf("chassis control failed: %v", err)
@@ -119,11 +116,6 @@ func (i *Ipmi) PowerCycle(ctx context.Context) (status bool, err error) {
 //
 //	Perform an immediate (non-graceful) shutdown, followed by a restart.
 func (i *Ipmi) ForceRestart(ctx context.Context) (status bool, err error) {
-	if err := i.ensureConnected(ctx); err != nil {
-		return false, fmt.Errorf("failed to connect: %v", err)
-	}
-	defer i.client.Close(ctx)
-
 	// Get current power state
 	chassisStatus, err := i.client.GetChassisStatus(ctx)
 	if err != nil {
@@ -146,11 +138,6 @@ func (i *Ipmi) ForceRestart(ctx context.Context) (status bool, err error) {
 
 // PowerReset reboots the machine via bmc
 func (i *Ipmi) PowerReset(ctx context.Context) (status bool, err error) {
-	if err := i.ensureConnected(ctx); err != nil {
-		return false, fmt.Errorf("failed to connect: %v", err)
-	}
-	defer i.client.Close(ctx)
-	
 	_, err = i.client.ChassisControl(ctx, ipmi.ChassisControlHardReset)
 	if err != nil {
 		return false, fmt.Errorf("chassis control failed: %v", err)
@@ -160,11 +147,6 @@ func (i *Ipmi) PowerReset(ctx context.Context) (status bool, err error) {
 
 // PowerCycleBmc reboots the bmc we are connected to
 func (i *Ipmi) PowerCycleBmc(ctx context.Context) (status bool, err error) {
-	if err := i.ensureConnected(ctx); err != nil {
-		return false, fmt.Errorf("failed to connect: %v", err)
-	}
-	defer i.client.Close(ctx)
-	
 	err = i.client.ColdReset(ctx)
 	if err != nil {
 		return false, fmt.Errorf("MC cold reset failed: %v", err)
@@ -174,11 +156,6 @@ func (i *Ipmi) PowerCycleBmc(ctx context.Context) (status bool, err error) {
 
 // PowerResetBmc reboots the bmc we are connected to
 func (i *Ipmi) PowerResetBmc(ctx context.Context, resetType string) (ok bool, err error) {
-	if err := i.ensureConnected(ctx); err != nil {
-		return false, fmt.Errorf("failed to connect: %v", err)
-	}
-	defer i.client.Close(ctx)
-	
 	switch strings.ToLower(resetType) {
 	case "cold":
 		err = i.client.ColdReset(ctx)
@@ -203,11 +180,6 @@ func (i *Ipmi) PowerOn(ctx context.Context) (status bool, err error) {
 	if s {
 		return true, nil
 	}
-
-	if err := i.ensureConnected(ctx); err != nil {
-		return false, fmt.Errorf("failed to connect: %v", err)
-	}
-	defer i.client.Close(ctx)
 	
 	_, err = i.client.ChassisControl(ctx, ipmi.ChassisControlPowerUp)
 	if err != nil {
@@ -218,11 +190,6 @@ func (i *Ipmi) PowerOn(ctx context.Context) (status bool, err error) {
 
 // PowerOnForce power on the machine via bmc even when the machine is already on (Thanks HP!)
 func (i *Ipmi) PowerOnForce(ctx context.Context) (status bool, err error) {
-	if err := i.ensureConnected(ctx); err != nil {
-		return false, fmt.Errorf("failed to connect: %v", err)
-	}
-	defer i.client.Close(ctx)
-	
 	_, err = i.client.ChassisControl(ctx, ipmi.ChassisControlPowerUp)
 	if err != nil {
 		return false, fmt.Errorf("chassis control failed: %v", err)
@@ -235,11 +202,6 @@ func (i *Ipmi) PowerOff(ctx context.Context) (status bool, err error) {
 	if on, err := i.IsOn(ctx); err == nil && !on {
 		return true, nil
 	}
-	
-	if err := i.ensureConnected(ctx); err != nil {
-		return false, fmt.Errorf("failed to connect: %v", err)
-	}
-	defer i.client.Close(ctx)
 	
 	_, err = i.client.ChassisControl(ctx, ipmi.ChassisControlPowerDown)
 	if err != nil {
@@ -254,11 +216,6 @@ func (i *Ipmi) PowerSoft(ctx context.Context) (status bool, err error) {
 	if !on {
 		return true, nil
 	}
-
-	if err := i.ensureConnected(ctx); err != nil {
-		return false, fmt.Errorf("failed to connect: %v", err)
-	}
-	defer i.client.Close(ctx)
 	
 	_, err = i.client.ChassisControl(ctx, ipmi.ChassisControlSoftShutdown)
 	if err != nil {
@@ -269,11 +226,6 @@ func (i *Ipmi) PowerSoft(ctx context.Context) (status bool, err error) {
 
 // PxeOnceEfi makes the machine to boot via pxe once using EFI
 func (i *Ipmi) PxeOnceEfi(ctx context.Context) (status bool, err error) {
-	if err := i.ensureConnected(ctx); err != nil {
-		return false, fmt.Errorf("failed to connect: %v", err)
-	}
-	defer i.client.Close(ctx)
-	
 	err = i.client.SetBootDevice(ctx, ipmi.BootDeviceSelectorForcePXE, ipmi.BIOSBootTypeEFI, false)
 	if err != nil {
 		return false, fmt.Errorf("set boot device failed: %v", err)
@@ -283,11 +235,6 @@ func (i *Ipmi) PxeOnceEfi(ctx context.Context) (status bool, err error) {
 
 // BootDeviceSet sets the next boot device with options
 func (i *Ipmi) BootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
-	if err := i.ensureConnected(ctx); err != nil {
-		return false, fmt.Errorf("failed to connect: %v", err)
-	}
-	defer i.client.Close(ctx)
-	
 	var device ipmi.BootDeviceSelector
 	switch strings.ToLower(bootDevice) {
 	case "pxe":
@@ -322,11 +269,6 @@ func (i *Ipmi) BootDeviceSet(ctx context.Context, bootDevice string, setPersiste
 
 // PxeOnceMbr makes the machine to boot via pxe once using MBR
 func (i *Ipmi) PxeOnceMbr(ctx context.Context) (status bool, err error) {
-	if err := i.ensureConnected(ctx); err != nil {
-		return false, fmt.Errorf("failed to connect: %v", err)
-	}
-	defer i.client.Close(ctx)
-	
 	err = i.client.SetBootDevice(ctx, ipmi.BootDeviceSelectorForcePXE, ipmi.BIOSBootTypeLegacy, false)
 	if err != nil {
 		return false, fmt.Errorf("set boot device failed: %v", err)
@@ -341,11 +283,6 @@ func (i *Ipmi) PxeOnce(ctx context.Context) (status bool, err error) {
 
 // IsOn tells if a machine is currently powered on
 func (i *Ipmi) IsOn(ctx context.Context) (status bool, err error) {
-	if err := i.ensureConnected(ctx); err != nil {
-		return false, fmt.Errorf("failed to connect: %v", err)
-	}
-	defer i.client.Close(ctx)
-	
 	chassisStatus, err := i.client.GetChassisStatus(ctx)
 	if err != nil {
 		return false, fmt.Errorf("failed to get chassis status: %v", err)
@@ -355,11 +292,6 @@ func (i *Ipmi) IsOn(ctx context.Context) (status bool, err error) {
 
 // PowerState returns the current power state of the machine
 func (i *Ipmi) PowerState(ctx context.Context) (state string, err error) {
-	if err := i.ensureConnected(ctx); err != nil {
-		return "", fmt.Errorf("failed to connect: %v", err)
-	}
-	defer i.client.Close(ctx)
-	
 	chassisStatus, err := i.client.GetChassisStatus(ctx)
 	if err != nil {
 		return "", fmt.Errorf("failed to get chassis status: %v", err)
@@ -373,11 +305,6 @@ func (i *Ipmi) PowerState(ctx context.Context) (state string, err error) {
 
 // ReadUsers list all BMC users
 func (i *Ipmi) ReadUsers(ctx context.Context) (users []map[string]string, err error) {
-	if err := i.ensureConnected(ctx); err != nil {
-		return nil, fmt.Errorf("failed to connect: %v", err)
-	}
-	defer i.client.Close(ctx)
-	
 	// Try to get user information for user IDs 1-16 (typical range)
 	// Since GetUsers might not be available, we'll iterate through user IDs
 	for userID := uint8(1); userID <= 16; userID++ {
@@ -414,11 +341,6 @@ func (i *Ipmi) ReadUsers(ctx context.Context) (users []map[string]string, err er
 
 // ClearSystemEventLog clears the system event log
 func (i *Ipmi) ClearSystemEventLog(ctx context.Context) (err error) {
-	if err := i.ensureConnected(ctx); err != nil {
-		return fmt.Errorf("failed to connect: %v", err)
-	}
-	defer i.client.Close(ctx)
-	
 	// Use 0x4321 as the clear operation code (standard IPMI clear operation)
 	_, err = i.client.ClearSEL(ctx, 0x4321)
 	if err != nil {
@@ -440,11 +362,6 @@ func (i *Ipmi) GetSystemEventLog(ctx context.Context) (entries [][]string, err e
 
 // GetSystemEventLogRaw returns the raw SEL output
 func (i *Ipmi) GetSystemEventLogRaw(ctx context.Context) (eventlog string, err error) {
-	if err := i.ensureConnected(ctx); err != nil {
-		return "", fmt.Errorf("failed to connect: %v", err)
-	}
-	defer i.client.Close(ctx)
-	
 	// Get all SEL entries starting from record ID 0
 	selEntries, err := i.client.GetSELEntries(ctx, 0)
 	if err != nil {
@@ -478,11 +395,6 @@ func (i *Ipmi) GetSystemEventLogRaw(ctx context.Context) (eventlog string, err e
 }
 
 func (i *Ipmi) DeactivateSOL(ctx context.Context) (err error) {
-	if err := i.ensureConnected(ctx); err != nil {
-		return fmt.Errorf("failed to connect: %v", err)
-	}
-	defer i.client.Close(ctx)
-
 	_, err = i.client.DeactivatePayload(ctx, &ipmi.DeactivatePayloadRequest{
 		PayloadType:     ipmi.PayloadTypeSOL,
 		PayloadInstance: 0,
@@ -500,11 +412,6 @@ func (i *Ipmi) DeactivateSOL(ctx context.Context) (err error) {
 
 // SendPowerDiag tells the BMC to issue an NMI to the device
 func (i *Ipmi) SendPowerDiag(ctx context.Context) error {
-	if err := i.ensureConnected(ctx); err != nil {
-		return fmt.Errorf("failed to connect: %v", err)
-	}
-	defer i.client.Close(ctx)
-	
 	_, err := i.client.ChassisControl(ctx, ipmi.ChassisControlDiagnosticInterrupt)
 	if err != nil {
 		return errors.Wrap(err, "failed sending power diag")
