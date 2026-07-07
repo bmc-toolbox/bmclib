@@ -126,36 +126,25 @@ func (c *Conn) Close(ctx context.Context) (err error) {
 	return c.ipmi.Close(ctx)
 }
 
-// openForCompatible opens the connection if not already open.
-// Returns true if this call opened it (caller must close it).
-func (c *Conn) openForCompatible(ctx context.Context) (bool, error) {
-	c.openMu.Lock()
-	defer c.openMu.Unlock()
-	if c.open {
-		return false, nil
-	}
-	if err := c.ipmi.Open(ctx); err != nil {
-		return false, err
-	}
-	c.open = true
-	return true, nil
-}
-
 // Compatible tests whether a BMC is compatible with the ipmi provider
 func (c *Conn) Compatible(ctx context.Context) bool {
-	// Since this could be called before or after the Conn is opened,
-	// we want the connection state to be the same before and after the compatibility check.
-	opened, err := c.openForCompatible(ctx)
+	// Use an isolated, throwaway connection so the compatibility check never
+	// affects the session state of the caller's connection.
+	clone, err := c.ipmi.Clone()
 	if err != nil {
 		c.log.V(2).WithValues("provider", c.Name()).
 			Info("warn", bmclibErrs.ErrCompatibilityCheck.Error(), err.Error())
 		return false
 	}
-	if opened {
-		defer c.Close(ctx)
+	probe := &Conn{ipmi: clone, log: c.log}
+	if err := probe.Open(ctx); err != nil {
+		c.log.V(2).WithValues("provider", c.Name()).
+			Info("warn", bmclibErrs.ErrCompatibilityCheck.Error(), err.Error())
+		return false
 	}
+	defer probe.Close(ctx)
 
-	if _, err := c.ipmi.PowerState(ctx); err != nil {
+	if _, err := probe.ipmi.PowerState(ctx); err != nil {
 		c.log.V(2).WithValues("provider", c.Name()).
 			Info("warn", bmclibErrs.ErrCompatibilityCheck.Error(), err.Error())
 		return false

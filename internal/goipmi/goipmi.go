@@ -65,6 +65,29 @@ func New(username, password, host string, port int, opts ...Option) (c *Ipmi, er
 	return c, nil
 }
 
+// Clone returns a copy of the Ipmi with a fresh, unconnected client. It is used
+// to run isolated operations (such as compatibility checks) without touching the
+// session state of the original connection.
+func (i *Ipmi) Clone() (*Ipmi, error) {
+	cl, err := ipmi.NewClient(i.Host, i.Port, i.Username, i.Password)
+	if err != nil {
+		return nil, err
+	}
+	c := &Ipmi{
+		Username:    i.Username,
+		Password:    i.Password,
+		Host:        i.Host,
+		Port:        i.Port,
+		log:         i.log,
+		cipherSuite: i.cipherSuite,
+		client:      cl,
+	}
+	c.client.WithInterface(ipmi.InterfaceLanplus)
+	c.client.WithCipherSuiteID(toCipherSuiteID(c.cipherSuite))
+
+	return c, nil
+}
+
 // parseSystemEventLogRaw parses the raw output of the system event log. Helper
 // function for GetSystemEventLog to make testing the parser easier.
 func parseSystemEventLog(raw string) (entries [][]string) {
