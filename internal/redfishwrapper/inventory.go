@@ -149,6 +149,10 @@ func (c *Client) bmcAttributes(ctx context.Context, device *common.Device, softw
 
 		// include additional firmware attributes from redfish firmware inventory
 		c.firmwareAttributes("", device.BMC.ID, device.BMC.Firmware, softwareInventory)
+
+		// collect the BMC's own management network interface(s), distinct from
+		// the host NICs collected via ComputerSystem in collectNICs.
+		c.collectBMCNIC(manager, device.BMC)
 	}
 
 	if compatible == 0 {

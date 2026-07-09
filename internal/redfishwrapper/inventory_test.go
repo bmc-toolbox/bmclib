@@ -413,3 +413,57 @@ func TestInventoryNICsDisabledDeviceFunctionMAC(t *testing.T) {
 	assert.Equal(t, "00:00:5e:00:53:05", strings.ToLower(device.NICs[0].NICPorts[0].MacAddress),
 		"port MAC should come from AssociatedNetworkAddresses, not be zeroed out by a disabled NetworkDeviceFunction's placeholder MAC")
 }
+
+// TestInventoryCollectBMCNIC verifies that the BMC's own management network
+// interface, exposed under the Manager resource's EthernetInterfaces, is
+// collected into device.BMC.NIC — distinct from the host NICs collected
+// under ComputerSystem. The fixture's MACAddress is the placeholder
+// "00:00:00:00:00:00", so this also exercises the fallback to
+// PermanentMACAddress.
+func TestInventoryCollectBMCNIC(t *testing.T) {
+	mux := http.NewServeMux()
+	for path, fixture := range map[string]string{
+		"/redfish/v1/":          "serviceroot.json",
+		"/redfish/v1/Systems":   "systems.json",
+		"/redfish/v1/Systems/1": "systems_1.json",
+
+		"/redfish/v1/Managers":                        "managers.json",
+		"/redfish/v1/Managers/1":                      "managers_1.json",
+		"/redfish/v1/Managers/1/EthernetInterfaces":   "bmc_nic/ethernet_interfaces.json",
+		"/redfish/v1/Managers/1/EthernetInterfaces/1": "bmc_nic/ethernet_1.json",
+	} {
+		mux.HandleFunc(path, endpointFunc(t, fixture))
+	}
+
+	server := httptest.NewTLSServer(mux)
+	defer server.Close()
+
+	u, err := url.Parse(server.URL)
+	require.NoError(t, err)
+
+	client := NewClient(u.Hostname(), u.Port(), "", "", WithBasicAuthEnabled(true))
+	require.NoError(t, client.Open(context.Background()))
+	defer client.Close(context.Background())
+
+	device, err := client.Inventory(context.Background(), false)
+	require.NoError(t, err)
+	require.NotNil(t, device)
+
+	require.NotNil(t, device.BMC)
+	require.NotNil(t, device.BMC.NIC, "BMC NIC should be populated from Manager EthernetInterfaces")
+
+	require.Len(t, device.BMC.NIC.NICPorts, 1)
+	port := device.BMC.NIC.NICPorts[0]
+	assert.Equal(t, "00:00:5e:00:53:10", port.MacAddress,
+		"MacAddress should fall back to PermanentMACAddress since MACAddress is the placeholder")
+	assert.Equal(t, int64(1_000_000_000), port.SpeedBits)
+	assert.True(t, port.AutoNeg)
+
+	// The host's NICs must remain unaffected by the BMC's own NIC.
+	for _, nic := range device.NICs {
+		for _, p := range nic.NICPorts {
+			assert.NotEqual(t, "00:00:5e:00:53:10", p.MacAddress,
+				"BMC NIC MAC leaked into host NIC inventory")
+		}
+	}
+}
