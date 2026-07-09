@@ -339,6 +339,7 @@ func getFirmwareVersionFromController(controllers []schemas.Controllers, portCou
 func (c *Client) collectBIOS(sys *schemas.ComputerSystem, device *common.Device, softwareInventory []*schemas.SoftwareInventory) (err error) {
 	device.BIOS = &common.BIOS{
 		Common: common.Common{
+			Vendor: common.FormatVendorName(sys.Manufacturer),
 			Firmware: &common.Firmware{
 				Installed: sys.BiosVersion,
 			},

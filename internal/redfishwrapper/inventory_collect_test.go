@@ -173,3 +173,38 @@ func TestInventoryCollectEthernetInfo(t *testing.T) {
 		})
 	}
 }
+
+func TestInventoryCollectBIOS(t *testing.T) {
+	tests := []struct {
+		name       string
+		sys        *schemas.ComputerSystem
+		wantVendor string
+	}{
+		{
+			name:       "vendor populated from system manufacturer",
+			sys:        &schemas.ComputerSystem{Manufacturer: "Supermicro", BiosVersion: "1.4"},
+			wantVendor: "supermicro",
+		},
+		{
+			name:       "no manufacturer",
+			sys:        &schemas.ComputerSystem{BiosVersion: "1.4"},
+			wantVendor: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := Client{}
+			device := common.NewDevice()
+			if err := c.collectBIOS(tt.sys, &device, nil); err != nil {
+				t.Fatalf("collectBIOS() error = %v", err)
+			}
+			if device.BIOS.Vendor != tt.wantVendor {
+				t.Errorf("collectBIOS() Vendor = %q, want %q", device.BIOS.Vendor, tt.wantVendor)
+			}
+			if device.BIOS.Firmware.Installed != tt.sys.BiosVersion {
+				t.Errorf("collectBIOS() Firmware.Installed = %q, want %q", device.BIOS.Firmware.Installed, tt.sys.BiosVersion)
+			}
+		})
+	}
+}
