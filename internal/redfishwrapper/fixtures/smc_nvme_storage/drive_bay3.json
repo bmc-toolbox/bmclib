@@ -1,0 +1,18 @@
+{
+    "@odata.type": "#Drive.v1_11_1.Drive",
+    "@odata.id": "/redfish/v1/Chassis/NVMeSSD.0.Group.0.StorageBackplane/Drives/Disk.Bay.3",
+    "Name": "Disk.Bay.3",
+    "Id": "Disk.Bay.3",
+    "Manufacturer": "KIOXIA",
+    "SerialNumber": "TESTDRIVESERIAL02",
+    "Model": "KIOXIA KCD8XVUG6T40",
+    "Revision": "0105",
+    "CapacityBytes": 6401252745216,
+    "CapableSpeedGbs": 15.75,
+    "MediaType": "SSD",
+    "Protocol": "NVMe",
+    "Status": {
+        "State": "Enabled",
+        "Health": "OK"
+    }
+}

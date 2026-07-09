@@ -241,3 +241,50 @@ func TestInventoryCollectDIMMCapacityNVDIMMFallback(t *testing.T) {
 	assert.Equal(t, int64(8192+8192)*1024*1024, dimm.SizeBytes,
 		"DIMM SizeBytes should fall back to VolatileSizeMiB+NonVolatileSizeMiB (8GiB+8GiB) when CapacityMiB is absent")
 }
+
+// TestInventoryCollectDrivesWithoutCount proves that collectDrives must not
+// gate on Storage.DrivesCount ("Drives@odata.count"). Some implementations
+// embed the "Drives" link array without ever including a count property, so
+// DrivesCount parses to 0 even though real drives are linked — the old code
+// skipped the Storage member entirely and every drive silently disappeared
+// from the inventory.
+func TestInventoryCollectDrivesWithoutCount(t *testing.T) {
+	mux := http.NewServeMux()
+	for path, fixture := range map[string]string{
+		"/redfish/v1/":          "serviceroot.json",
+		"/redfish/v1/Systems":   "systems.json",
+		"/redfish/v1/Systems/1": "systems_1.json",
+
+		"/redfish/v1/Systems/1/Storage":                                            "smc_nvme_storage/storage.json",
+		"/redfish/v1/Systems/1/Storage/NVMeSSD":                                    "smc_nvme_storage/storage_nvmessd.json",
+		"/redfish/v1/Chassis/NVMeSSD.0.Group.0.StorageBackplane/Drives/Disk.Bay.2": "smc_nvme_storage/drive_bay2.json",
+		"/redfish/v1/Chassis/NVMeSSD.0.Group.0.StorageBackplane/Drives/Disk.Bay.3": "smc_nvme_storage/drive_bay3.json",
+	} {
+		mux.HandleFunc(path, endpointFunc(t, fixture))
+	}
+
+	server := httptest.NewTLSServer(mux)
+	defer server.Close()
+
+	u, err := url.Parse(server.URL)
+	require.NoError(t, err)
+
+	client := NewClient(u.Hostname(), u.Port(), "", "", WithBasicAuthEnabled(true))
+	require.NoError(t, client.Open(context.Background()))
+	defer client.Close(context.Background())
+
+	device, err := client.Inventory(context.Background(), false)
+	require.NoError(t, err)
+	require.NotNil(t, device)
+
+	require.Len(t, device.Drives, 2, "expected both drives despite Storage member reporting DrivesCount=0")
+
+	serials := map[string]bool{}
+	for _, d := range device.Drives {
+		serials[d.Serial] = true
+		assert.Equal(t, "KIOXIA KCD8XVUG6T40", d.Model)
+		assert.Equal(t, int64(6401252745216), d.CapacityBytes)
+	}
+	assert.True(t, serials["TESTDRIVESERIAL01"], "Disk.Bay.2 missing from inventory")
+	assert.True(t, serials["TESTDRIVESERIAL02"], "Disk.Bay.3 missing from inventory")
+}
