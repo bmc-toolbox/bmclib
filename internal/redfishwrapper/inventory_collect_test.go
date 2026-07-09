@@ -170,7 +170,7 @@ func TestInventoryCollectEthernetInfo(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := Client{}
-			c.collectEthernetInfo(tt.nicPort, tt.ethernetInterfaces)
+			c.collectEthernetInfo(tt.nicPort, tt.ethernetInterfaces, "")
 		})
 	}
 }

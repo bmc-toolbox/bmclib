@@ -1,0 +1,12 @@
+{
+    "@odata.type": "#NetworkAdapter.v1_0_0.NetworkAdapter",
+    "@odata.id": "/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1/NetworkAdapter",
+    "Id": "NIC.Integrated.1",
+    "Name": "Onboard LAN Adapter",
+    "Manufacturer": "Supermicro",
+    "Model": "OnBoard_NIC",
+    "SerialNumber": "SN-ONBOARD",
+    "NetworkPorts": {
+        "@odata.id": "/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1/NetworkAdapter/NetworkPorts"
+    }
+}

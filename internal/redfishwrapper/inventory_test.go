@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -287,4 +288,128 @@ func TestInventoryCollectDrivesWithoutCount(t *testing.T) {
 	}
 	assert.True(t, serials["TESTDRIVESERIAL01"], "Disk.Bay.2 missing from inventory")
 	assert.True(t, serials["TESTDRIVESERIAL02"], "Disk.Bay.3 missing from inventory")
+}
+
+// TestInventoryNICsAdapterIDCollision proves that collectNICs correctly
+// attributes MAC addresses when two distinct NetworkAdapters expose NetworkPorts
+// with the same local IDs ("1"/"2").
+//
+// Scenario (matching a real Supermicro AS-1114S-WN10RT-EU with an AOC-S25G-m2S
+// add-on card): the onboard NIC and the AOC card both have NetworkPorts locally
+// numbered "1" and "2". collectEthernetInfo's ID-based matching is ambiguous
+// here — the AOC's port "1" exact-matches system-wide EthernetInterface "1",
+// which actually belongs to the onboard NIC, not the AOC. Without the
+// NetworkDeviceFunctions-based authoritative MAC resolution, the AOC's ports
+// silently inherit the onboard NIC's MAC addresses (and vice versa is masked
+// because the onboard port's own AssociatedNetworkAddresses already set the
+// correct value first).
+//
+// This test will FAIL until collectNICs resolves each port's MAC via the
+// adapter's NetworkDeviceFunctions rather than matching by ID alone.
+func TestInventoryNICsAdapterIDCollision(t *testing.T) {
+	mux := http.NewServeMux()
+	for path, fixture := range map[string]string{
+		"/redfish/v1/":          "serviceroot.json",
+		"/redfish/v1/Systems":   "systems.json",
+		"/redfish/v1/Systems/1": "systems_1.json",
+
+		"/redfish/v1/Systems/1/NetworkInterfaces":                  "smc_aoc_id_collision/network_interfaces.json",
+		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1": "smc_aoc_id_collision/network_interface_integrated_1.json",
+		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Slot.1":       "smc_aoc_id_collision/network_interface_slot_1.json",
+
+		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1/NetworkAdapter":                "smc_aoc_id_collision/network_adapter_onboard.json",
+		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1/NetworkAdapter/NetworkPorts":   "smc_aoc_id_collision/network_ports_onboard.json",
+		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1/NetworkAdapter/NetworkPorts/1": "smc_aoc_id_collision/network_port_onboard_1.json",
+		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1/NetworkAdapter/NetworkPorts/2": "smc_aoc_id_collision/network_port_onboard_2.json",
+
+		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Slot.1/NetworkAdapter":                          "smc_aoc_id_collision/network_adapter_aoc.json",
+		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Slot.1/NetworkAdapter/NetworkPorts":             "smc_aoc_id_collision/network_ports_aoc.json",
+		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Slot.1/NetworkAdapter/NetworkPorts/1":           "smc_aoc_id_collision/network_port_aoc_1.json",
+		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Slot.1/NetworkAdapter/NetworkPorts/2":           "smc_aoc_id_collision/network_port_aoc_2.json",
+		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Slot.1/NetworkAdapter/NetworkDeviceFunctions":   "smc_aoc_id_collision/network_device_functions_aoc.json",
+		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Slot.1/NetworkAdapter/NetworkDeviceFunctions/1": "smc_aoc_id_collision/network_device_function_aoc_1.json",
+		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Slot.1/NetworkAdapter/NetworkDeviceFunctions/2": "smc_aoc_id_collision/network_device_function_aoc_2.json",
+
+		"/redfish/v1/Systems/1/EthernetInterfaces":   "smc_aoc_id_collision/ethernet_interfaces.json",
+		"/redfish/v1/Systems/1/EthernetInterfaces/1": "smc_aoc_id_collision/ethernet_1.json",
+		"/redfish/v1/Systems/1/EthernetInterfaces/2": "smc_aoc_id_collision/ethernet_2.json",
+		"/redfish/v1/Systems/1/EthernetInterfaces/3": "smc_aoc_id_collision/ethernet_3.json",
+		"/redfish/v1/Systems/1/EthernetInterfaces/4": "smc_aoc_id_collision/ethernet_4.json",
+	} {
+		mux.HandleFunc(path, endpointFunc(t, fixture))
+	}
+
+	server := httptest.NewTLSServer(mux)
+	defer server.Close()
+
+	u, err := url.Parse(server.URL)
+	require.NoError(t, err)
+
+	client := NewClient(u.Hostname(), u.Port(), "", "", WithBasicAuthEnabled(true))
+	require.NoError(t, client.Open(context.Background()))
+	defer client.Close(context.Background())
+
+	device, err := client.Inventory(context.Background(), false)
+	require.NoError(t, err)
+	require.NotNil(t, device)
+
+	macsByAdapter := make(map[string][]string)
+	for _, nic := range device.NICs {
+		for _, p := range nic.NICPorts {
+			macsByAdapter[nic.ID] = append(macsByAdapter[nic.ID], strings.ToLower(p.MacAddress))
+		}
+	}
+
+	assert.ElementsMatch(t, []string{"00:00:5e:00:53:01", "00:00:5e:00:53:02"}, macsByAdapter["NIC.Integrated.1"],
+		"onboard NIC ports have the wrong MACs")
+	assert.ElementsMatch(t, []string{"00:00:5e:00:53:03", "00:00:5e:00:53:04"}, macsByAdapter["NIC.Slot.1"],
+		"AOC NIC ports have the wrong MACs — likely inherited the onboard NIC's MACs due to a NetworkPort ID collision")
+}
+
+// TestInventoryNICsDisabledDeviceFunctionMAC proves that networkPortMACs does
+// not treat "00:00:00:00:00:00" (a placeholder MAC reported by disabled
+// NetworkDeviceFunctions) as an authoritative value. Every other MAC source in
+// this file already filters this placeholder out (AssociatedNetworkAddresses,
+// the EthernetInterfaces fallback); networkPortMACs must too, since
+// collectEthernetInfo unconditionally overwrites nicPort.MacAddress with the
+// preferred MAC once one is resolved, which would otherwise zero out a real
+// MAC already collected from the port's own AssociatedNetworkAddresses.
+func TestInventoryNICsDisabledDeviceFunctionMAC(t *testing.T) {
+	mux := http.NewServeMux()
+	for path, fixture := range map[string]string{
+		"/redfish/v1/":          "serviceroot.json",
+		"/redfish/v1/Systems":   "systems.json",
+		"/redfish/v1/Systems/1": "systems_1.json",
+
+		"/redfish/v1/Systems/1/NetworkInterfaces":                                                    "smc_aoc_disabled_function/network_interfaces.json",
+		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Slot.1":                                         "smc_aoc_disabled_function/network_interface_slot_1.json",
+		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Slot.1/NetworkAdapter":                          "smc_aoc_disabled_function/network_adapter.json",
+		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Slot.1/NetworkAdapter/NetworkPorts":             "smc_aoc_disabled_function/network_ports.json",
+		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Slot.1/NetworkAdapter/NetworkPorts/1":           "smc_aoc_disabled_function/network_port_1.json",
+		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Slot.1/NetworkAdapter/NetworkDeviceFunctions":   "smc_aoc_disabled_function/network_device_functions.json",
+		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Slot.1/NetworkAdapter/NetworkDeviceFunctions/1": "smc_aoc_disabled_function/network_device_function_1.json",
+
+		"/redfish/v1/Systems/1/EthernetInterfaces": "smc_aoc_disabled_function/ethernet_interfaces.json",
+	} {
+		mux.HandleFunc(path, endpointFunc(t, fixture))
+	}
+
+	server := httptest.NewTLSServer(mux)
+	defer server.Close()
+
+	u, err := url.Parse(server.URL)
+	require.NoError(t, err)
+
+	client := NewClient(u.Hostname(), u.Port(), "", "", WithBasicAuthEnabled(true))
+	require.NoError(t, client.Open(context.Background()))
+	defer client.Close(context.Background())
+
+	device, err := client.Inventory(context.Background(), false)
+	require.NoError(t, err)
+	require.NotNil(t, device)
+
+	require.Len(t, device.NICs, 1)
+	require.Len(t, device.NICs[0].NICPorts, 1)
+	assert.Equal(t, "00:00:5e:00:53:05", strings.ToLower(device.NICs[0].NICPorts[0].MacAddress),
+		"port MAC should come from AssociatedNetworkAddresses, not be zeroed out by a disabled NetworkDeviceFunction's placeholder MAC")
 }

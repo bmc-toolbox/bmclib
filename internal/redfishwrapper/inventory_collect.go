@@ -166,6 +166,13 @@ func (c *Client) collectNICs(sys *schemas.ComputerSystem, device *common.Device,
 
 		portFirmwareVersion := getFirmwareVersionFromController(adapter.Controllers, len(ports))
 
+		// NetworkPort.ID is only unique within its own adapter, so a card with
+		// local port IDs "1"/"2" (e.g. an add-on AOC) collides with an unrelated
+		// onboard NIC that also has ports "1"/"2". Resolve each port's MAC
+		// authoritatively via NetworkDeviceFunctions, which links a specific
+		// port to its function by odata.id rather than by the ambiguous local ID.
+		portMACs := c.networkPortMACs(adapter)
+
 		for _, networkPort := range ports {
 			// populate network ports general data
 			nicPort := &common.NICPort{}
@@ -173,7 +180,7 @@ func (c *Client) collectNICs(sys *schemas.ComputerSystem, device *common.Device,
 
 			if networkPort.ActiveLinkTechnology == schemas.EthernetLinkNetworkTechnology {
 				// ethernet specific data
-				c.collectEthernetInfo(nicPort, ethernetInterfaces)
+				c.collectEthernetInfo(nicPort, ethernetInterfaces, portMACs[networkPort.ODataID])
 			}
 			n.NICPorts = append(n.NICPorts, nicPort)
 
@@ -282,16 +289,63 @@ func (c *Client) collectNetworkPortInfo(
 	}
 }
 
-func (c *Client) collectEthernetInfo(nicPort *common.NICPort, ethernetInterfaces []*schemas.EthernetInterface) {
+// networkPortMACs returns a map of NetworkPort odata.id -> MAC address for the
+// given adapter, resolved via its NetworkDeviceFunctions. This is the
+// authoritative link between a physical port and its MAC address: unlike
+// NetworkPort.ID (only unique within the adapter) or EthernetInterface.ID
+// (system-wide, but on some Redfish implementations arbitrarily numbered),
+// NetworkDeviceFunction.PhysicalPortAssignment resolves to the exact NetworkPort
+// resource, keyed by its unique odata.id.
+func (c *Client) networkPortMACs(adapter *schemas.NetworkAdapter) map[string]string {
+	macs := make(map[string]string)
+	if adapter == nil {
+		return macs
+	}
+
+	functions, err := adapter.NetworkDeviceFunctions()
+	if err != nil {
+		return macs
+	}
+
+	for _, function := range functions {
+		mac := function.Ethernet.MACAddress
+		if mac == "" || mac == "00:00:00:00:00:00" {
+			mac = function.Ethernet.PermanentMACAddress
+		}
+		if mac == "" || mac == "00:00:00:00:00:00" {
+			continue
+		}
+
+		port, err := function.PhysicalPortAssignment()
+		if err != nil || port == nil {
+			continue
+		}
+
+		macs[port.ODataID] = mac
+	}
+
+	return macs
+}
+
+func (c *Client) collectEthernetInfo(nicPort *common.NICPort, ethernetInterfaces []*schemas.EthernetInterface, preferredMAC string) {
 	if nicPort == nil {
 		return
 	}
 	// populate mac address et al. from matching ethernet interface
 	for _, ethInterface := range ethernetInterfaces {
-		// the ethernet interface includes the port, position number and function NIC.Slot.3-1-1;
-		// require an exact match or a "-"-delimited prefix so that port "1" does not
-		// incorrectly absorb EthernetInterface "10" (HasPrefix("10","1") is true).
-		if ethInterface.ID != nicPort.ID && !strings.HasPrefix(ethInterface.ID, nicPort.ID+"-") {
+		if preferredMAC != "" {
+			// preferredMAC was resolved authoritatively via the adapter's
+			// NetworkDeviceFunctions; match on it instead of the ambiguous
+			// NetworkPort/EthernetInterface ID so that add-on cards whose local
+			// port IDs collide with an unrelated adapter's IDs (e.g. both using
+			// "1"/"2") don't inherit that adapter's ethernet attributes.
+			if !strings.EqualFold(ethInterface.MACAddress, preferredMAC) {
+				continue
+			}
+		} else if ethInterface.ID != nicPort.ID && !strings.HasPrefix(ethInterface.ID, nicPort.ID+"-") {
+			// the ethernet interface includes the port, position number and function NIC.Slot.3-1-1;
+			// require an exact match or a "-"-delimited prefix so that port "1" does not
+			// incorrectly absorb EthernetInterface "10" (HasPrefix("10","1") is true).
 			continue
 		}
 
@@ -321,6 +375,12 @@ func (c *Client) collectEthernetInfo(nicPort *common.NICPort, ethernetInterfaces
 		// always override mac address
 		nicPort.MacAddress = ethInterface.MACAddress
 		break // stop at first match
+	}
+
+	// preferredMAC is authoritative even if no EthernetInterface matched it
+	// (e.g. the port isn't enumerated in the EthernetInterfaces collection at all).
+	if preferredMAC != "" {
+		nicPort.MacAddress = preferredMAC
 	}
 }
 

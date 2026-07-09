@@ -1,0 +1,14 @@
+{
+    "@odata.type": "#NetworkDeviceFunction.v1_9_0.NetworkDeviceFunction",
+    "@odata.id": "/redfish/v1/Systems/1/NetworkInterfaces/NIC.Slot.1/NetworkAdapter/NetworkDeviceFunctions/1",
+    "Id": "1",
+    "Name": "Disabled_Function_1",
+    "NetDevFuncType": "Ethernet",
+    "DeviceEnabled": false,
+    "Ethernet": {
+        "MACAddress": "00:00:00:00:00:00"
+    },
+    "Links": {
+        "PhysicalPortAssignment": {"@odata.id": "/redfish/v1/Systems/1/NetworkInterfaces/NIC.Slot.1/NetworkAdapter/NetworkPorts/1"}
+    }
+}
