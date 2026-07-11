@@ -276,7 +276,6 @@ func (c *x12) redfishOdataID(ctx context.Context, component string) (string, err
 	case common.SlugBIOS:
 		// hardcoded since SMCs without the DCMS license will throw license errors
 		return "/redfish/v1/Systems/1/Bios", nil
-		// return c.redfish.SystemsBIOSOdataID(ctx)
 	}
 
 	return "", errUnsupported

@@ -34,7 +34,6 @@ func main() {
 	// Logger configuration
 	l := logrus.New()
 	l.Level = logrus.DebugLevel
-	// l.Level = logrus.TraceLevel
 	logger := logrusr.New(l)
 	logger.V(9)
 

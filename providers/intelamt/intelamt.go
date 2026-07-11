@@ -122,7 +122,7 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 
 // BootDeviceSet sets the next boot device with options
 func (c *Conn) BootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
-	if strings.ToLower(bootDevice) != "pxe" {
+	if !strings.EqualFold(bootDevice, "pxe") {
 		return false, errors.New("only pxe boot device is supported for AMT provider")
 	}
 	if err := c.client.SetPXE(ctx); err != nil {

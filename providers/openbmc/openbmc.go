@@ -132,7 +132,7 @@ func (c *Conn) deviceSupported(ctx context.Context) error {
 		host = "https://" + host
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, host, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, host, http.NoBody)
 	if err != nil {
 		return err
 	}

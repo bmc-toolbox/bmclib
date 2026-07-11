@@ -31,7 +31,7 @@ type vmSlot struct {
 // occupied reports whether the slot currently holds media. Some XCC firmware
 // reports a mounted image via a non-empty Image while Inserted briefly lags (or
 // vice versa), so both are considered.
-func (s vmSlot) occupied() bool {
+func (s *vmSlot) occupied() bool {
 	return s.inserted || strings.TrimSpace(s.image) != ""
 }
 
@@ -228,11 +228,11 @@ func (c *Conn) virtualMediaSlots(ctx context.Context) ([]vmSlot, error) {
 
 // collectionMembersOrEmpty returns a collection's members, or an empty slice
 // (and the error) when the URL is empty or the GET fails.
-func (c *Conn) collectionMembersOrEmpty(url string) ([]odataID, error) {
-	if url == "" {
+func (c *Conn) collectionMembersOrEmpty(collectionURL string) ([]odataID, error) {
+	if collectionURL == "" {
 		return nil, nil
 	}
-	return c.collectionMembers(url)
+	return c.collectionMembers(collectionURL)
 }
 
 // slotsForKind returns the slots whose MediaTypes advertise the requested kind.

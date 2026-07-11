@@ -59,7 +59,8 @@ func (c *Client) taskMessagesAsString(messages []schemas.Message) string {
 	}
 
 	var found []string
-	for _, m := range messages {
+	for i := range messages {
+		m := &messages[i]
 		if m.Message == "" {
 			continue
 		}

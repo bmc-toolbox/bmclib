@@ -89,7 +89,9 @@ func (i *Ipmi) run(ctx context.Context, command []string) (output string, err er
 		ipmiCiphers = []string{i.cipherSuite}
 	}
 	for _, cipherString := range ipmiCiphers {
-		ipmiCmd := append(ipmiArgs, "-C", cipherString)
+		ipmiCmd := make([]string, 0, len(ipmiArgs)+2+len(command))
+		ipmiCmd = append(ipmiCmd, ipmiArgs...)
+		ipmiCmd = append(ipmiCmd, "-C", cipherString)
 		i.log.V(3).Info("ipmitool options", "opts", formatOptions(ipmiCmd))
 		ipmiCmd = append(ipmiCmd, command...)
 		cmd := exec.CommandContext(ctx, i.ipmitool, ipmiCmd...)

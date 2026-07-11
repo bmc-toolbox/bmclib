@@ -49,7 +49,7 @@ func main() {
 		clientOpts = append(clientOpts, bmclib.WithSecureTLS(pool))
 	}
 
-	if len(*incompatibleRedfishVersions) > 0 {
+	if *incompatibleRedfishVersions != "" {
 		// blacklist a redfish version
 		clientOpts = append(
 			clientOpts,

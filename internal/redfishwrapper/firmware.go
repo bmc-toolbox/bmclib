@@ -278,8 +278,8 @@ func (c *Client) firmwareInstallMethodURI() (method installMethod, updateURI str
 	switch {
 	case updateService.MultipartHTTPPushURI != "":
 		return multipartHttpUpload, updateService.MultipartHTTPPushURI, nil
-	case updateService.HTTPPushURI != "": //nolint:staticcheck
-		return unstructuredHttpPush, updateService.HTTPPushURI, nil //nolint:staticcheck
+	case updateService.HTTPPushURI != "": //nolint:staticcheck // HTTPPushURI is deprecated but still required for older Redfish implementations
+		return unstructuredHttpPush, updateService.HTTPPushURI, nil //nolint:staticcheck // HTTPPushURI is deprecated but still required for older Redfish implementations
 	}
 
 	return "", "", errors.Wrap(bmclibErrs.ErrRedfishUpdateService, "unsupported update method")

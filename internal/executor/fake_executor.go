@@ -28,20 +28,6 @@ func NewFakeExecutor(cmd string) Executor {
 // FakeExecute method returns whatever you want it to return
 // Set e.Stdout and e.Stderr to data to be returned
 func (e *FakeExecute) ExecWithContext(_ context.Context) (*Result, error) {
-	// switch e.Cmd {
-	// case "ipmicfg":
-	// 	if e.Args[0] == "-summary" {
-	// 		buf := new(bytes.Buffer)
-
-	// 		_, err := buf.ReadFrom(e.Stdin)
-	// 		if err != nil {
-	// 			return nil, err
-	// 		}
-
-	// 		e.Stdout = buf.Bytes()
-	// 	}
-	// }
-
 	return &Result{Stdout: e.Stdout, Stderr: e.Stderr, ExitCode: 0}, nil
 }
 

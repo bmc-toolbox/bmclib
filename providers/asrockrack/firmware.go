@@ -29,7 +29,7 @@ func (a *ASRockRack) FirmwareInstallSteps(ctx context.Context, component string)
 		return nil, bmclibErrs.NewErrUnsupportedHardware(err.Error())
 	}
 
-	if strings.ToUpper(component) == common.SlugBMC {
+	if strings.EqualFold(component, common.SlugBMC) {
 		return []constants.FirmwareInstallStep{
 			constants.FirmwareInstallStepUpload,
 			constants.FirmwareInstallStepInstallUploaded,

@@ -64,7 +64,7 @@ func componentToTargets(component string) []string {
 	switch {
 	case component == "":
 		return nil
-	case len(component) > 0 && component[0] == '/':
+	case component != "" && component[0] == '/':
 		return []string{component}
 	default:
 		return []string{firmwareInventoryBase + component}

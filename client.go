@@ -268,7 +268,6 @@ func (c *Client) registerIntelAMTProvider() {
 // register Dell gofish provider
 func (c *Client) registerDellProvider() {
 	dellGofishHTTPClient := *c.httpClient
-	// dellGofishHTTPClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
 	dellGofishOpts := []dell.Option{
 		dell.WithHttpClient(&dellGofishHTTPClient),
 		dell.WithVersionsNotCompatible(c.providerConfig.dell.VersionsNotCompatible),
@@ -377,7 +376,7 @@ func (c *Client) GetMetadata() bmc.Metadata {
 
 // setMetadata wraps setting metadata with a mutex for cases where users are
 // making calls to multiple *Client.X functions/methods across goroutines
-func (c *Client) setMetadata(metadata bmc.Metadata) {
+func (c *Client) setMetadata(metadata bmc.Metadata) { //nolint:gocritic // metadata is passed by value; the deferred caller relies on value-copy semantics
 	// a mutex is created with the NewClient func, in the case
 	// where a user doesn't call NewClient we handle by checking if
 	// the mutex is nil

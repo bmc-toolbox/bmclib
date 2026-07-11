@@ -54,8 +54,8 @@ func createUser(ctx context.Context, timeout time.Duration, user, pass, role str
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
 			ctx, cancel := context.WithTimeout(ctx, timeout)
-			defer cancel()
 			ok, createErr := elem.userCreator.UserCreate(ctx, user, pass, role)
+			cancel()
 			if createErr != nil {
 				err = multierror.Append(err, createErr)
 				continue
@@ -110,8 +110,8 @@ func updateUser(ctx context.Context, timeout time.Duration, user, pass, role str
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
 			ctx, cancel := context.WithTimeout(ctx, timeout)
-			defer cancel()
 			ok, UpdateErr := elem.userUpdater.UserUpdate(ctx, user, pass, role)
+			cancel()
 			if UpdateErr != nil {
 				err = multierror.Append(err, UpdateErr)
 				continue
@@ -166,8 +166,8 @@ func deleteUser(ctx context.Context, timeout time.Duration, user string, u []use
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
 			ctx, cancel := context.WithTimeout(ctx, timeout)
-			defer cancel()
 			ok, deleteErr := elem.userDeleter.UserDelete(ctx, user)
+			cancel()
 			if deleteErr != nil {
 				err = multierror.Append(err, deleteErr)
 				continue
@@ -222,8 +222,8 @@ func readUsers(ctx context.Context, timeout time.Duration, u []userProviders) (u
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
 			ctx, cancel := context.WithTimeout(ctx, timeout)
-			defer cancel()
 			users, readErr := elem.userReader.UserRead(ctx)
+			cancel()
 			if readErr != nil {
 				err = multierror.Append(err, readErr)
 				continue

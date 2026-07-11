@@ -38,8 +38,8 @@ func clearSystemEventLog(ctx context.Context, timeout time.Duration, s []systemE
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
 			ctx, cancel := context.WithTimeout(ctx, timeout)
-			defer cancel()
 			selErr := elem.systemEventLogProvider.ClearSystemEventLog(ctx)
+			cancel()
 			if selErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(selErr, "provider: %v", elem.name))
 				continue
@@ -89,9 +89,9 @@ func getSystemEventLog(ctx context.Context, timeout time.Duration, s []systemEve
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
 			ctx, cancel := context.WithTimeout(ctx, timeout)
-			defer cancel()
 
 			sel, selErr := elem.systemEventLogProvider.GetSystemEventLog(ctx)
+			cancel()
 			if selErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(selErr, "provider: %v", elem.name))
 				continue
@@ -142,9 +142,9 @@ func getSystemEventLogRaw(ctx context.Context, timeout time.Duration, s []system
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
 			ctx, cancel := context.WithTimeout(ctx, timeout)
-			defer cancel()
 
 			eventlog, selErr := elem.systemEventLogProvider.GetSystemEventLogRaw(ctx)
+			cancel()
 			if selErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(selErr, "provider: %v", elem.name))
 				continue

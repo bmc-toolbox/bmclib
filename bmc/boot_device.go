@@ -73,8 +73,8 @@ func setBootDevice(ctx context.Context, timeout time.Duration, bootDevice string
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
 			ctx, cancel := context.WithTimeout(ctx, timeout)
-			defer cancel()
 			ok, setErr := elem.bootDeviceSetter.BootDeviceSet(ctx, bootDevice, setPersistent, efiBoot)
+			cancel()
 			if setErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(setErr, "provider: %v", elem.name))
 				metadataLocal.FailedProviderDetail[elem.name] = setErr.Error()

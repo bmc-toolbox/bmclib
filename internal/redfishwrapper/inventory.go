@@ -54,9 +54,9 @@ var (
 )
 
 // TODO: consider removing this
-func (c *Client) compatibleOdataID(OdataID string, knownOdataIDs []string) bool {
+func (c *Client) compatibleOdataID(odataID string, knownOdataIDs []string) bool {
 	for _, url := range knownOdataIDs {
-		if url == OdataID {
+		if url == odataID {
 			return true
 		}
 	}

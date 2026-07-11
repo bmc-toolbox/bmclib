@@ -55,8 +55,8 @@ func setPowerState(ctx context.Context, timeout time.Duration, state string, p [
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
 			ctx, cancel := context.WithTimeout(ctx, timeout)
-			defer cancel()
 			ok, setErr := elem.powerSetter.PowerSet(ctx, state)
+			cancel()
 			if setErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(setErr, "provider: %v", elem.name))
 				metadataLocal.FailedProviderDetail[elem.name] = setErr.Error()
@@ -115,8 +115,8 @@ func getPowerState(ctx context.Context, timeout time.Duration, p []powerProvider
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
 			ctx, cancel := context.WithTimeout(ctx, timeout)
-			defer cancel()
 			state, stateErr := elem.powerStateGetter.PowerStateGet(ctx)
+			cancel()
 			if stateErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(stateErr, "provider: %v", elem.name))
 				metadataLocal.FailedProviderDetail[elem.name] = stateErr.Error()

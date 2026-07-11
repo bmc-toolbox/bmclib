@@ -360,7 +360,7 @@ func (i *Ipmi) ReadUsers(ctx context.Context) (users []map[string]string, err er
 			"Callin":             fmt.Sprintf("%t", userAccess.CallbackOnly),
 			"Link Auth":          fmt.Sprintf("%t", userAccess.LinkAuthEnabled),
 			"IPMI Msg":           fmt.Sprintf("%t", userAccess.IPMIMessagingEnabled),
-			"Channel Priv Limit": fmt.Sprintf("%v", userAccess.MaxPrivLevel),
+			"Channel Priv Limit": userAccess.MaxPrivLevel.String(),
 		})
 	}
 
@@ -401,22 +401,23 @@ func (i *Ipmi) GetSystemEventLogRaw(ctx context.Context) (eventlog string, err e
 	lines = append(lines, "   SEL Record ID          | Date/Time         | Sensor Name      | Event Dir  | Event Data")
 
 	for _, entry := range selEntries {
-		if entry.Standard != nil {
-			timestamp := entry.Standard.Timestamp.Format("01/02/2006 | 15:04:05")
-			sensorName := fmt.Sprintf("Sensor %d", entry.Standard.SensorNumber)
-			eventDir := "Asserted"
-			if entry.Standard.EventDir == ipmi.EventDirDeassertion {
-				eventDir = "Deasserted"
-			}
-			eventData := fmt.Sprintf("0x%02x 0x%02x 0x%02x",
-				entry.Standard.EventData.EventData1,
-				entry.Standard.EventData.EventData2,
-				entry.Standard.EventData.EventData3)
-
-			line := fmt.Sprintf(" %04x | %s | %-16s | %-10s | %s",
-				entry.RecordID, timestamp, sensorName, eventDir, eventData)
-			lines = append(lines, line)
+		if entry.Standard == nil {
+			continue
 		}
+		timestamp := entry.Standard.Timestamp.Format("01/02/2006 | 15:04:05")
+		sensorName := fmt.Sprintf("Sensor %d", entry.Standard.SensorNumber)
+		eventDir := "Asserted"
+		if entry.Standard.EventDir == ipmi.EventDirDeassertion {
+			eventDir = "Deasserted"
+		}
+		eventData := fmt.Sprintf("0x%02x 0x%02x 0x%02x",
+			entry.Standard.EventData.EventData1,
+			entry.Standard.EventData.EventData2,
+			entry.Standard.EventData.EventData3)
+
+		line := fmt.Sprintf(" %04x | %s | %-16s | %-10s | %s",
+			entry.RecordID, timestamp, sensorName, eventDir, eventData)
+		lines = append(lines, line)
 	}
 
 	return strings.Join(lines, "\n"), nil
