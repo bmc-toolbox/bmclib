@@ -41,13 +41,13 @@ func (c *x11) queryDeviceModel(ctx context.Context) (string, error) {
 	model, err := c.deviceModelFromFruInfo(ctx)
 	if err != nil {
 		// Identify BoardID from Redfish since fru info failed to return the information
-		model, err2 := c.deviceModelFromBoardID(ctx)
+		boardModel, err2 := c.deviceModelFromBoardID(ctx)
 		if err2 != nil {
 			return "", errors.Wrap(err, err2.Error())
 		}
 
-		c.model = model
-		return model, nil
+		c.model = boardModel
+		return boardModel, nil
 	}
 
 	c.model = model

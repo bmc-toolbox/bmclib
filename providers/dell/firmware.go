@@ -209,25 +209,25 @@ type Dell struct {
 }
 
 func convFirmwareTaskOem(oemdata json.RawMessage) (oem, error) {
-	oem := oem{}
+	taskOem := oem{}
 
 	errTaskOem := errors.New("error in Task Oem data: " + string(oemdata))
 
 	if len(oemdata) == 0 || string(oemdata) == `{}` {
-		return oem, errors.Wrap(errTaskOem, "empty oem data")
+		return taskOem, errors.Wrap(errTaskOem, "empty oem data")
 	}
 
-	if err := json.Unmarshal(oemdata, &oem); err != nil {
-		return oem, errors.Wrap(errTaskOem, "failed to unmarshal: "+err.Error())
+	if err := json.Unmarshal(oemdata, &taskOem); err != nil {
+		return taskOem, errors.Wrap(errTaskOem, "failed to unmarshal: "+err.Error())
 	}
 
-	if oem.Description == "" || oem.JobState == "" {
-		return oem, errors.Wrap(errTaskOem, "invalid oem data")
+	if taskOem.Description == "" || taskOem.JobState == "" {
+		return taskOem, errors.Wrap(errTaskOem, "invalid oem data")
 	}
 
-	if oem.JobType != "FirmwareUpdate" {
-		return oem, errors.Wrap(errTaskOem, "unexpected job type: "+oem.JobType)
+	if taskOem.JobType != "FirmwareUpdate" {
+		return taskOem, errors.Wrap(errTaskOem, "unexpected job type: "+taskOem.JobType)
 	}
 
-	return oem, nil
+	return taskOem, nil
 }

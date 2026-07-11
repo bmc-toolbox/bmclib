@@ -52,7 +52,7 @@ func (c *Client) FirmwareUpload(ctx context.Context, updateFile *os.File, params
 		return "", errors.Wrap(errUpdateParams, err.Error())
 	}
 
-	installMethod, installURI, err := c.firmwareInstallMethodURI()
+	method, installURI, err := c.firmwareInstallMethodURI()
 	if err != nil {
 		return "", errors.Wrap(bmclibErrs.ErrFirmwareUpload, err.Error())
 	}
@@ -71,7 +71,7 @@ func (c *Client) FirmwareUpload(ctx context.Context, updateFile *os.File, params
 
 	var resp *http.Response
 
-	switch installMethod {
+	switch method {
 	case multipartHttpUpload:
 		var uploadErr error
 		resp, uploadErr = c.multipartHTTPUpload(installURI, updateFile, parameters)
@@ -87,7 +87,7 @@ func (c *Client) FirmwareUpload(ctx context.Context, updateFile *os.File, params
 		}
 
 	default:
-		return "", errors.Wrap(bmclibErrs.ErrFirmwareUpload, "unsupported install method: "+string(installMethod))
+		return "", errors.Wrap(bmclibErrs.ErrFirmwareUpload, "unsupported install method: "+string(method))
 	}
 
 	response, err := io.ReadAll(resp.Body)

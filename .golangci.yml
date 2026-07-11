@@ -29,7 +29,6 @@ linters:
     govet:
       enable:
         - fieldalignment
-        - shadow
     misspell:
       locale: US
   exclusions:
