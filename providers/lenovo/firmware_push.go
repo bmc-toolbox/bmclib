@@ -91,7 +91,7 @@ func (c *Conn) claimUpdateService(ctx context.Context, targets []string) error {
 		payload["HttpPushUriTargets"] = targets
 	}
 
-	return checkResponse(c.redfishwrapper.PatchWithHeaders(ctx, updateServicePath, payload, nil))
+	return checkResponse(c.redfishwrapper.PatchWithHeaders(ctx, updateServicePath, payload, nil)) //nolint:bodyclose // checkResponse closes the response body
 }
 
 // releaseUpdateService releases the claim taken by claimUpdateService by setting
@@ -103,7 +103,7 @@ func (c *Conn) releaseUpdateService(ctx context.Context, clearTargets bool) erro
 		payload["HttpPushUriTargets"] = []string{}
 	}
 
-	return checkResponse(c.redfishwrapper.PatchWithHeaders(ctx, updateServicePath, payload, nil))
+	return checkResponse(c.redfishwrapper.PatchWithHeaders(ctx, updateServicePath, payload, nil)) //nolint:bodyclose // checkResponse closes the response body
 }
 
 // pushFirmware runs the XCC push protocol: claim the service, push the image

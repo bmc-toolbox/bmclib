@@ -181,7 +181,6 @@ func (c *Client) chassisAttributes(ctx context.Context, device *common.Device, f
 		if err != nil && failOnError {
 			return err
 		}
-
 	}
 
 	err = c.collectCPLDs(device, softwareInventory)

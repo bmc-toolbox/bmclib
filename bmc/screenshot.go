@@ -39,7 +39,6 @@ func screenshot(ctx context.Context, generic []screenshotGetterProvider) (image 
 			if vErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				continue
-
 			}
 			metadataLocal.SuccessfulProvider = elem.name
 			return image, fileType, metadataLocal, nil

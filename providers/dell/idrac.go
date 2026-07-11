@@ -270,6 +270,7 @@ func (c *Conn) Screenshot(ctx context.Context) (image []byte, fileType string, e
 	if err != nil {
 		return nil, "", errors.Wrap(bmclibErrs.ErrScreenshot, err.Error())
 	}
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

@@ -67,5 +67,5 @@ func (c *Conn) RoleCreate(ctx context.Context, roleID string, privileges []strin
 		"AssignedPrivileges": privileges,
 	}
 
-	return checkResponse(c.redfishwrapper.PostWithHeaders(ctx, rolesURL, payload, nil))
+	return checkResponse(c.redfishwrapper.PostWithHeaders(ctx, rolesURL, payload, nil)) //nolint:bodyclose // checkResponse closes the response body
 }

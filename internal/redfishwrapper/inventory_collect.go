@@ -78,7 +78,6 @@ func (c *Client) collectPSUs(ch *schemas.Chassis, device *common.Device, softwar
 		c.firmwareAttributes(common.SlugPSU, psu.ID, p.Firmware, softwareInventory)
 
 		device.PSUs = append(device.PSUs, p)
-
 	}
 	return nil
 }
@@ -403,9 +402,7 @@ func (c *Client) collectDrives(sys *schemas.ComputerSystem, device *common.Devic
 			c.firmwareAttributes("Disk", drive.ID, d.Firmware, softwareInventory)
 
 			device.Drives = append(device.Drives, d)
-
 		}
-
 	}
 
 	return nil

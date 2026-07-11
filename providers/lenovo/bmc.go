@@ -41,7 +41,7 @@ func (c *Conn) ResetToFactoryDefaults(ctx context.Context, resetType string) err
 	}
 	payload := map[string]any{"ResetType": resetType}
 
-	return checkResponse(c.redfishwrapper.PostWithHeaders(ctx, target, payload, nil))
+	return checkResponse(c.redfishwrapper.PostWithHeaders(ctx, target, payload, nil)) //nolint:bodyclose // checkResponse closes the response body
 }
 
 // UpdateManager PATCHes Manager properties (e.g. the OEM time zone and other
@@ -54,5 +54,5 @@ func (c *Conn) UpdateManager(ctx context.Context, properties map[string]any) err
 		return err
 	}
 
-	return checkResponse(c.redfishwrapper.PatchWithHeaders(ctx, manager.ODataID, properties, nil))
+	return checkResponse(c.redfishwrapper.PatchWithHeaders(ctx, manager.ODataID, properties, nil)) //nolint:bodyclose // checkResponse closes the response body
 }

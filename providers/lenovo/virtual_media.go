@@ -160,7 +160,7 @@ func (c *Conn) ejectVirtualMedia(ctx context.Context, candidates []vmSlot) (bool
 
 // patchVirtualMedia PATCHes a VirtualMedia resource and maps the response.
 func (c *Conn) patchVirtualMedia(ctx context.Context, odataID string, payload map[string]any) error {
-	return checkResponse(c.redfishwrapper.PatchWithHeaders(ctx, odataID, payload, nil))
+	return checkResponse(c.redfishwrapper.PatchWithHeaders(ctx, odataID, payload, nil)) //nolint:bodyclose // checkResponse closes the response body
 }
 
 // virtualMediaSlots resolves and reads the VirtualMedia collection, trying the
