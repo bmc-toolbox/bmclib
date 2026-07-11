@@ -532,9 +532,7 @@ func (c *serviceClient) supportsFirmwareInstall(model string) error {
 	return errors.Wrap(ErrModelUnsupported, "firmware install not supported for: "+model)
 }
 
-func (c *serviceClient) query(ctx context.Context, endpoint, method string, payload io.Reader, headers map[string]string, contentLength int64) ([]byte, int, error) {
-	var body []byte
-	var err error
+func (c *serviceClient) query(ctx context.Context, endpoint, method string, payload io.Reader, headers map[string]string, contentLength int64) (body []byte, statusCode int, err error) {
 	var req *http.Request
 
 	host := c.host

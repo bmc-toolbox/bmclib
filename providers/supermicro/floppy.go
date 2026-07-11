@@ -36,6 +36,7 @@ func (c *Client) floppyImageMounted(ctx context.Context) (bool, error) {
 	return false, nil
 }
 
+// MountFloppyImage uploads and mounts a floppy image on the BMC.
 func (c *Client) MountFloppyImage(ctx context.Context, image io.Reader) error {
 	mounted, err := c.floppyImageMounted(ctx)
 	if err != nil {

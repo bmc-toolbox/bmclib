@@ -64,6 +64,7 @@ func (c *Client) compatibleOdataID(odataID string, knownOdataIDs []string) bool 
 	return false
 }
 
+// Inventory collects hardware inventory and firmware information for the device.
 func (c *Client) Inventory(ctx context.Context, failOnError bool) (device *common.Device, err error) {
 	updateService, err := c.UpdateService()
 	if err != nil && failOnError {

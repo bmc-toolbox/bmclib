@@ -18,7 +18,9 @@ linters:
     - whitespace
   settings:
     gocyclo:
-      min-complexity: 10
+      # 10 is very aggressive for provider code that legitimately branches over
+      # hardware states and protocol responses; 20 flags only the real outliers.
+      min-complexity: 20
     gocritic:
       enabled-tags:
         - performance

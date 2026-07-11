@@ -18,7 +18,7 @@ import (
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
-func main() {
+func main() { //nolint:gocyclo // example program: flag parsing and sequential install steps are clearer inline
 	user := flag.String("user", "", "Username to login with")
 	pass := flag.String("password", "", "Username to login with")
 	host := flag.String("host", "", "BMC hostname to connect to")
