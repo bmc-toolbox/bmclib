@@ -44,7 +44,6 @@ type biosPOSTCode struct {
 
 // component is part of a payload returned by the inventory info endpoint
 type component struct {
-	DeviceID                int    `json:"device_id"`
 	DeviceName              string `json:"device_name"`
 	DeviceType              string `json:"device_type"`
 	ProductManufacturerName string `json:"product_manufacturer_name"`
@@ -54,47 +53,48 @@ type component struct {
 	ProductSerialNumber     string `json:"product_serial_number"`
 	ProductAssetTag         string `json:"product_asset_tag"`
 	ProductExtra            string `json:"product_extra"`
+	DeviceID                int    `json:"device_id"`
 }
 
 // fru is part of a payload returned by the fru info endpoint
 type fru struct {
-	Component      string
-	Version        int    `json:"version"`
-	Length         int    `json:"length"`
-	Language       int    `json:"language"`
+	AssetTag       string `json:"asset_tag"`
 	Manufacturer   string `json:"manufacturer"`
 	ProductName    string `json:"product_name"`
 	PartNumber     string `json:"part_number"`
 	ProductVersion string `json:"product_version"`
 	SerialNumber   string `json:"serial_number"`
-	AssetTag       string `json:"asset_tag"`
+	Component      string
 	FruFileID      string `json:"fru_file_id"`
 	Type           string `json:"type"`
 	CustomFields   string `json:"custom_fields"`
+	Version        int    `json:"version"`
+	Length         int    `json:"length"`
+	Language       int    `json:"language"`
 }
 
 // sensor is part of the payload returned by the sensors endpoint
 type sensor struct {
-	ID                            int     `json:"id"`
-	SensorNumber                  int     `json:"sensor_number"`
-	Name                          string  `json:"name"`
-	OwnerID                       int     `json:"owner_id"`
-	OwnerLun                      int     `json:"owner_lun"`
-	RawReading                    float64 `json:"raw_reading"`
 	Type                          string  `json:"type"`
+	Unit                          string  `json:"unit"`
+	Name                          string  `json:"name"`
+	DiscreteState                 int     `json:"discrete_state"`
+	LowerNonRecoverableThreshold  float64 `json:"lower_non_recoverable_threshold"`
+	RawReading                    float64 `json:"raw_reading"`
+	OwnerID                       int     `json:"owner_id"`
 	TypeNumber                    int     `json:"type_number"`
 	Reading                       float64 `json:"reading"`
 	SensorState                   int     `json:"sensor_state"`
-	DiscreteState                 int     `json:"discrete_state"`
+	ID                            int     `json:"id"`
 	SettableReadableThreshMask    int     `json:"settable_readable_threshMask"`
-	LowerNonRecoverableThreshold  float64 `json:"lower_non_recoverable_threshold"`
+	OwnerLun                      int     `json:"owner_lun"`
 	LowerCriticalThreshold        float64 `json:"lower_critical_threshold"`
 	LowerNonCriticalThreshold     float64 `json:"lower_non_critical_threshold"`
 	HigherNonCriticalThreshold    float64 `json:"higher_non_critical_threshold"`
 	HigherCriticalThreshold       float64 `json:"higher_critical_threshold"`
 	HigherNonRecoverableThreshold float64 `json:"higher_non_recoverable_threshold"`
 	Accessible                    int     `json:"accessible"`
-	Unit                          string  `json:"unit"`
+	SensorNumber                  int     `json:"sensor_number"`
 }
 
 // Payload to preseve config when updating the BMC firmware
@@ -109,9 +109,9 @@ type preserveConfig struct {
 // { "id": 1, "action": "Flashing...", "progress": "12% done         ", "state": 0 }
 // { "id": 1, "action": "Flashing...", "progress": "100% done", "state": 0 }
 type upgradeProgress struct {
-	ID       int    `json:"id,omitempty"`
 	Action   string `json:"action,omitempty"`
 	Progress string `json:"progress,omitempty"`
+	ID       int    `json:"id,omitempty"`
 	State    int    `json:"state,omitempty"`
 }
 

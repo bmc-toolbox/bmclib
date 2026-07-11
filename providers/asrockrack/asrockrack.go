@@ -49,22 +49,22 @@ var Features = registrar.Features{
 
 // ASRockRack holds the status and properties of a connection to a asrockrack bmc
 type ASRockRack struct {
+	loginSession         *loginSession
+	httpClient           *http.Client
+	log                  logr.Logger
 	ip                   string
 	username             string
 	password             string
 	deviceModel          string
-	loginSession         *loginSession
-	httpClient           *http.Client
-	resetRequired        bool // Indicates if the BMC requires a reset
-	skipLogout           bool // A Close() / httpsLogout() request is ignored if the BMC was just flashed - since the sessions are terminated either way
-	log                  logr.Logger
 	httpClientSetupFuncs []func(*http.Client)
+	resetRequired        bool
+	skipLogout           bool
 }
 
 // Config holds the optional configuration for an ASRockRack connection.
 type Config struct {
-	Port       string
 	HTTPClient *http.Client
+	Port       string
 }
 
 // ASRockOption is a type that can configure an *ASRockRack

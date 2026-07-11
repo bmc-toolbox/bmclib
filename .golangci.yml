@@ -26,9 +26,11 @@ linters:
         - experimental
       disabled-checks:
         - wrapperFunc
-    govet:
-      enable:
-        - fieldalignment
+    # govet runs its default analyzers. fieldalignment is intentionally left
+    # disabled: it is a non-default micro-optimisation that trades struct field
+    # grouping/readability for a few padding bytes. The hot inventory-path
+    # structs (e.g. the asrockrack sensor/fru/component payloads) are kept
+    # field-aligned by hand where it actually matters.
     misspell:
       locale: US
   exclusions:
