@@ -54,7 +54,7 @@ var (
 
 // Config holds the optional configuration values for a Dell iDRAC connection.
 type Config struct {
-	HTTPClient            *http.Client
+	HttpClient            *http.Client //nolint:revive // exported field kept for backwards compatibility
 	Port                  string
 	VersionsNotCompatible []string
 	RootCAs               *x509.CertPool
@@ -64,10 +64,10 @@ type Config struct {
 // Option for setting optional Client values
 type Option func(*Config)
 
-// WithHTTPClient sets the http client used for the connection.
-func WithHTTPClient(httpClient *http.Client) Option {
+// WithHttpClient sets the http client used for the connection.
+func WithHttpClient(httpClient *http.Client) Option { //nolint:revive // exported option kept for backwards compatibility
 	return func(c *Config) {
-		c.HTTPClient = httpClient
+		c.HttpClient = httpClient
 	}
 }
 
@@ -108,7 +108,7 @@ type Conn struct {
 // New returns connection with a redfish client initialized
 func New(host, user, pass string, log logr.Logger, opts ...Option) *Conn {
 	defaultConfig := &Config{
-		HTTPClient:            httpclient.Build(),
+		HttpClient:            httpclient.Build(),
 		Port:                  "443",
 		VersionsNotCompatible: []string{},
 	}
@@ -118,7 +118,7 @@ func New(host, user, pass string, log logr.Logger, opts ...Option) *Conn {
 	}
 
 	rfOpts := []redfishwrapper.Option{
-		redfishwrapper.WithHTTPClient(defaultConfig.HTTPClient),
+		redfishwrapper.WithHTTPClient(defaultConfig.HttpClient),
 		redfishwrapper.WithVersionsNotCompatible(defaultConfig.VersionsNotCompatible),
 		redfishwrapper.WithBasicAuthEnabled(defaultConfig.UseBasicAuth),
 	}

@@ -242,7 +242,7 @@ func (c *Client) registerGofishProvider() {
 	gfHTTPClient := *c.httpClient
 	gfHTTPClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
 	gofishOpts := []redfish.Option{
-		redfish.WithHTTPClient(&gfHTTPClient),
+		redfish.WithHttpClient(&gfHTTPClient),
 		redfish.WithVersionsNotCompatible(c.providerConfig.gofish.VersionsNotCompatible),
 		redfish.WithUseBasicAuth(c.providerConfig.gofish.UseBasicAuth),
 		redfish.WithPort(c.providerConfig.gofish.Port),
@@ -269,7 +269,7 @@ func (c *Client) registerIntelAMTProvider() {
 func (c *Client) registerDellProvider() {
 	dellGofishHTTPClient := *c.httpClient
 	dellGofishOpts := []dell.Option{
-		dell.WithHTTPClient(&dellGofishHTTPClient),
+		dell.WithHttpClient(&dellGofishHTTPClient),
 		dell.WithVersionsNotCompatible(c.providerConfig.dell.VersionsNotCompatible),
 		dell.WithUseBasicAuth(c.providerConfig.dell.UseBasicAuth),
 		dell.WithPort(c.providerConfig.dell.Port),
@@ -303,7 +303,7 @@ func (c *Client) registerSupermicroProvider() {
 		c.Auth.User,
 		c.Auth.Pass,
 		c.Logger,
-		supermicro.WithHTTPClient(&smcHTTPClient),
+		supermicro.WithHttpClient(&smcHTTPClient),
 		supermicro.WithPort(c.providerConfig.supermicro.Port),
 	)
 
@@ -318,7 +318,7 @@ func (c *Client) registerOpenBMCProvider() {
 		c.Auth.User,
 		c.Auth.Pass,
 		c.Logger,
-		openbmc.WithHTTPClient(&httpClient),
+		openbmc.WithHttpClient(&httpClient),
 		openbmc.WithPort(c.providerConfig.openbmc.Port),
 	)
 

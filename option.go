@@ -94,7 +94,7 @@ func WithIpmitoolPath(path string) Option {
 // WithAsrockrackHTTPClient sets the HTTP client used by the asrockrack provider.
 func WithAsrockrackHTTPClient(httpClient *http.Client) Option {
 	return func(args *Client) {
-		args.providerConfig.asrock.HTTPClient = httpClient
+		args.providerConfig.asrock.HttpClient = httpClient
 	}
 }
 
@@ -108,7 +108,7 @@ func WithAsrockrackPort(port string) Option {
 // WithRedfishHTTPClient sets the HTTP client used by the redfish (gofish) provider.
 func WithRedfishHTTPClient(httpClient *http.Client) Option {
 	return func(args *Client) {
-		args.providerConfig.gofish.HTTPClient = httpClient
+		args.providerConfig.gofish.HttpClient = httpClient
 	}
 }
 

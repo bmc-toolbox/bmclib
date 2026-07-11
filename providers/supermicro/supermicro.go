@@ -78,7 +78,7 @@ var Features = registrar.Features{
 
 // Config holds the optional configuration values for a Supermicro client.
 type Config struct {
-	HTTPClient           *http.Client
+	HttpClient           *http.Client //nolint:revive // exported field kept for backwards compatibility
 	Port                 string
 	httpClientSetupFuncs []func(*http.Client)
 }
@@ -86,10 +86,10 @@ type Config struct {
 // Option for setting optional Client values
 type Option func(*Config)
 
-// WithHTTPClient sets the http client used for the connection.
-func WithHTTPClient(httpClient *http.Client) Option {
+// WithHttpClient sets the http client used for the connection.
+func WithHttpClient(httpClient *http.Client) Option { //nolint:revive // exported option kept for backwards compatibility
 	return func(c *Config) {
-		c.HTTPClient = httpClient
+		c.HttpClient = httpClient
 	}
 }
 

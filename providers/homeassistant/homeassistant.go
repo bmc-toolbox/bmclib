@@ -34,8 +34,8 @@ var Features = registrar.Features{
 
 // Config holds the configuration for the HomeAssistant provider.
 type Config struct {
-	APIURL                     string
-	APIToken                   string
+	ApiUrl                     string //nolint:revive // exported field kept for backwards compatibility
+	ApiToken                   string //nolint:revive // exported field kept for backwards compatibility
 	SwitchEntityID             string
 	PowerOperationDelaySeconds uint32
 	HTTPClient                 *http.Client
@@ -52,8 +52,8 @@ type EntityStateResponse struct {
 // New returns a new Config containing all the defaults for the HomeAssistant provider.
 func New(apiURL, apiToken string) *Config {
 	return &Config{
-		APIURL:     apiURL,
-		APIToken:   apiToken,
+		ApiUrl:     apiURL,
+		ApiToken:   apiToken,
 		HTTPClient: httpclient.Build(),
 		Logger:     logr.Discard(),
 	}
@@ -80,7 +80,7 @@ func (p *Config) Open(ctx context.Context) error {
 }
 
 func (p *Config) haGetEntityState(ctx context.Context, haEntityID string) (EntityStateResponse, error) {
-	stateURL, err := url.JoinPath(p.APIURL, "api", "states", haEntityID)
+	stateURL, err := url.JoinPath(p.ApiUrl, "api", "states", haEntityID)
 	if err != nil {
 		return EntityStateResponse{}, err
 	}
@@ -90,7 +90,7 @@ func (p *Config) haGetEntityState(ctx context.Context, haEntityID string) (Entit
 	if err != nil {
 		return EntityStateResponse{}, err
 	}
-	req.Header.Set("Authorization", "Bearer "+p.APIToken)
+	req.Header.Set("Authorization", "Bearer "+p.ApiToken)
 	req.Header.Set("Accept-Encoding", "application/json")
 
 	resp, err := p.HTTPClient.Do(req)
@@ -162,7 +162,7 @@ func (p *Config) PowerSet(ctx context.Context, state string) (ok bool, err error
 		return false, fmt.Errorf("invalid power state: %s", state)
 	}
 
-	serviceURL, err := url.JoinPath(p.APIURL, "api", "services", "switch", service)
+	serviceURL, err := url.JoinPath(p.ApiUrl, "api", "services", "switch", service)
 	if err != nil {
 		return false, err
 	}
@@ -179,7 +179,7 @@ func (p *Config) PowerSet(ctx context.Context, state string) (ok bool, err error
 	if err != nil {
 		return false, err
 	}
-	req.Header.Set("Authorization", "Bearer "+p.APIToken)
+	req.Header.Set("Authorization", "Bearer "+p.ApiToken)
 	req.Header.Set("Accept-Encoding", "application/json")
 	req.Header.Set("Content-Type", "application/json")
 

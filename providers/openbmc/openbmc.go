@@ -43,7 +43,7 @@ var (
 
 // Config holds the optional configuration for an openbmc connection.
 type Config struct {
-	HTTPClient            *http.Client
+	HttpClient            *http.Client //nolint:revive // exported field kept for backwards compatibility
 	Port                  string
 	VersionsNotCompatible []string
 	RootCAs               *x509.CertPool
@@ -53,10 +53,10 @@ type Config struct {
 // Option for setting optional Client values
 type Option func(*Config)
 
-// WithHTTPClient sets the HTTP client used by the provider.
-func WithHTTPClient(httpClient *http.Client) Option {
+// WithHttpClient sets the HTTP client used by the provider.
+func WithHttpClient(httpClient *http.Client) Option { //nolint:revive // exported option kept for backwards compatibility
 	return func(c *Config) {
-		c.HTTPClient = httpClient
+		c.HttpClient = httpClient
 	}
 }
 
@@ -92,7 +92,7 @@ type Conn struct {
 // New returns connection with a redfish client initialized
 func New(host, user, pass string, log logr.Logger, opts ...Option) *Conn {
 	defaultConfig := &Config{
-		HTTPClient:            httpclient.Build(),
+		HttpClient:            httpclient.Build(),
 		Port:                  "443",
 		VersionsNotCompatible: []string{},
 	}
@@ -102,7 +102,7 @@ func New(host, user, pass string, log logr.Logger, opts ...Option) *Conn {
 	}
 
 	rfOpts := []redfishwrapper.Option{
-		redfishwrapper.WithHTTPClient(defaultConfig.HTTPClient),
+		redfishwrapper.WithHTTPClient(defaultConfig.HttpClient),
 		redfishwrapper.WithBasicAuthEnabled(defaultConfig.UseBasicAuth),
 		redfishwrapper.WithEtagMatchDisabled(true),
 	}
@@ -113,7 +113,7 @@ func New(host, user, pass string, log logr.Logger, opts ...Option) *Conn {
 
 	return &Conn{
 		host:           host,
-		httpClient:     defaultConfig.HTTPClient,
+		httpClient:     defaultConfig.HttpClient,
 		Log:            log,
 		redfishwrapper: redfishwrapper.NewClient(host, defaultConfig.Port, user, pass, rfOpts...),
 	}

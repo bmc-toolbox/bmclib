@@ -24,12 +24,12 @@ const (
 	// ProviderProtocol for the provider implementation
 	ProviderProtocol = "vendorapi"
 
-	// E3C256D4IDNL is a supported ASRockRack board model.
-	E3C256D4IDNL = "E3C256D4ID-NL"
-	// E3C246D4IDNL is a supported ASRockRack board model.
-	E3C246D4IDNL = "E3C246D4ID-NL"
-	// E3C246D4INL is a supported ASRockRack board model.
-	E3C246D4INL = "E3C246D4I-NL"
+	// E3C256D4ID_NL is a supported ASRockRack board model.
+	E3C256D4ID_NL = "E3C256D4ID-NL" //nolint:revive // exported const kept for backwards compatibility
+	// E3C246D4ID_NL is a supported ASRockRack board model.
+	E3C246D4ID_NL = "E3C246D4ID-NL" //nolint:revive // exported const kept for backwards compatibility
+	// E3C246D4I_NL is a supported ASRockRack board model.
+	E3C246D4I_NL = "E3C246D4I-NL" //nolint:revive // exported const kept for backwards compatibility
 )
 
 // Features implemented by asrockrack https
@@ -63,7 +63,7 @@ type ASRockRack struct {
 
 // Config holds the optional configuration for an ASRockRack connection.
 type Config struct {
-	HTTPClient *http.Client
+	HttpClient *http.Client //nolint:revive // exported field kept for backwards compatibility
 	Port       string
 }
 
@@ -128,9 +128,9 @@ func (a *ASRockRack) Open(ctx context.Context) (err error) {
 
 func (a *ASRockRack) supported(ctx context.Context) error {
 	supported := []string{
-		E3C256D4IDNL,
-		E3C246D4IDNL,
-		E3C246D4INL,
+		E3C256D4ID_NL,
+		E3C246D4ID_NL,
+		E3C246D4I_NL,
 	}
 
 	if a.deviceModel == "" {
