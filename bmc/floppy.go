@@ -83,7 +83,7 @@ func MountFloppyImageFromInterfaces(ctx context.Context, image io.Reader, p []in
 	return mountFloppyImage(ctx, image, providers)
 }
 
-// FloppyImageMounter defines methods to unmount a floppy image
+// FloppyImageUnmounter defines methods to unmount a floppy image
 type FloppyImageUnmounter interface {
 	UnmountFloppyImage(ctx context.Context) (err error)
 }
@@ -124,7 +124,7 @@ func unmountFloppyImage(ctx context.Context, p []floppyImageUnmounterProvider) (
 	return metadataLocal, multierror.Append(err, errors.New("failed to unmount floppy image"))
 }
 
-// MountFloppyImageFromInterfaces identifies implementations of the FloppyImageUnmounter interface and passes the found implementations to the unmountFloppyImage() wrapper
+// UnmountFloppyImageFromInterfaces identifies implementations of the FloppyImageUnmounter interface and passes the found implementations to the unmountFloppyImage() wrapper
 func UnmountFloppyImageFromInterfaces(ctx context.Context, p []interface{}) (metadata Metadata, err error) {
 	providers := make([]floppyImageUnmounterProvider, 0)
 	for _, elem := range p {

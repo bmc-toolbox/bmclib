@@ -144,6 +144,7 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (bo
 	return false, fmt.Errorf("not a supported media type: %s. supported media types: %v", kind, supportedMediaTypes)
 }
 
+// InsertedVirtualMedia returns the IDs of virtual media slots that currently have media inserted.
 func (c *Client) InsertedVirtualMedia(ctx context.Context) ([]string, error) {
 	virtualMedia, err := c.getVirtualMedia(ctx)
 	if err != nil {

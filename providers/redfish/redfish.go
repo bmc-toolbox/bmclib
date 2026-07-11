@@ -49,6 +49,7 @@ type Conn struct {
 	Log                  logr.Logger
 }
 
+// Config holds the optional configuration values for a Redfish connection.
 type Config struct {
 	HTTPClient *http.Client
 	Port       string
@@ -67,36 +68,42 @@ type Config struct {
 // Option for setting optional Client values
 type Option func(*Config)
 
-func WithHttpClient(httpClient *http.Client) Option {
+// WithHTTPClient sets the http client used for the connection.
+func WithHTTPClient(httpClient *http.Client) Option {
 	return func(c *Config) {
 		c.HTTPClient = httpClient
 	}
 }
 
+// WithPort sets the port used for the connection.
 func WithPort(port string) Option {
 	return func(c *Config) {
 		c.Port = port
 	}
 }
 
+// WithVersionsNotCompatible sets the list of Redfish versions considered incompatible.
 func WithVersionsNotCompatible(versionsNotCompatible []string) Option {
 	return func(c *Config) {
 		c.VersionsNotCompatible = versionsNotCompatible
 	}
 }
 
+// WithRootCAs sets the root CA certificate pool used to verify the connection.
 func WithRootCAs(rootCAs *x509.CertPool) Option {
 	return func(c *Config) {
 		c.RootCAs = rootCAs
 	}
 }
 
+// WithUseBasicAuth enables HTTP basic authentication for the connection.
 func WithUseBasicAuth(useBasicAuth bool) Option {
 	return func(c *Config) {
 		c.UseBasicAuth = useBasicAuth
 	}
 }
 
+// WithSystemName sets the name of the system to operate on.
 func WithSystemName(name string) Option {
 	return func(c *Config) {
 		c.SystemName = name

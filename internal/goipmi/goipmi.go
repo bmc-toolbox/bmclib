@@ -27,6 +27,7 @@ type Ipmi struct {
 // Option for setting optional Ipmi values
 type Option func(*Ipmi)
 
+// WithCipherSuite sets the IPMI cipher suite when the value is a valid suite ID (0-19).
 func WithCipherSuite(cipherSuite string) Option {
 	return func(i *Ipmi) {
 		cipherID, err := strconv.Atoi(cipherSuite)
@@ -36,6 +37,7 @@ func WithCipherSuite(cipherSuite string) Option {
 	}
 }
 
+// WithLogger sets the logger used by the Ipmi instance.
 func WithLogger(log logr.Logger) Option {
 	return func(i *Ipmi) {
 		i.log = log
@@ -424,6 +426,7 @@ func (i *Ipmi) GetSystemEventLogRaw(ctx context.Context) (eventlog string, err e
 	return strings.Join(lines, "\n"), nil
 }
 
+// DeactivateSOL deactivates any active SOL payload, treating an already-deactivated payload as success.
 func (i *Ipmi) DeactivateSOL(ctx context.Context) (err error) {
 	_, err = i.client.DeactivatePayload(ctx, &ipmi.DeactivatePayloadRequest{
 		PayloadType:     ipmi.PayloadTypeSOL,

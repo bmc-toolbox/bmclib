@@ -29,6 +29,7 @@ func newMetadata() Metadata {
 	}
 }
 
+// RegisterSpanAttributes sets the metadata fields as attributes on the given trace span.
 func (m *Metadata) RegisterSpanAttributes(host string, span trace.Span) {
 	span.SetAttributes(attribute.String("host", host))
 

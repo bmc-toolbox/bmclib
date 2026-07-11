@@ -21,8 +21,10 @@ import (
 )
 
 var (
+	// ErrFirmwareInstallMode is returned when setting the BMC into firmware install mode fails.
 	ErrFirmwareInstallMode = errors.New("firmware install mode error")
-	ErrMultipartForm       = errors.New("multipart form error")
+	// ErrMultipartForm is returned when building the multipart form payload fails.
+	ErrMultipartForm = errors.New("multipart form error")
 )
 
 func (c *x11) firmwareUploadBMC(ctx context.Context, reader io.Reader) error {

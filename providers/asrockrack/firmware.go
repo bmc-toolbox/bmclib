@@ -23,7 +23,7 @@ const (
 	versionStrEmpty    = 2
 )
 
-// bmc client interface implementations methods
+// FirmwareInstallSteps returns the ordered steps required to install firmware for the given component.
 func (a *ASRockRack) FirmwareInstallSteps(ctx context.Context, component string) ([]constants.FirmwareInstallStep, error) {
 	if err := a.supported(ctx); err != nil {
 		return nil, bmclibErrs.NewErrUnsupportedHardware(err.Error())
@@ -42,6 +42,7 @@ func (a *ASRockRack) FirmwareInstallSteps(ctx context.Context, component string)
 	return nil, errors.Wrap(bmclibErrs.ErrFirmwareUpload, "component unsupported: "+component)
 }
 
+// FirmwareUpload uploads the firmware image for the given component to the BMC.
 func (a *ASRockRack) FirmwareUpload(ctx context.Context, component string, file *os.File) (taskID string, err error) {
 	switch strings.ToUpper(component) {
 	case common.SlugBIOS:
@@ -132,6 +133,7 @@ func (a *ASRockRack) firmwareUploadBIOS(ctx context.Context, file *os.File) erro
 	return nil
 }
 
+// FirmwareInstallUploaded initiates the install of a previously uploaded firmware image for the given component.
 func (a *ASRockRack) FirmwareInstallUploaded(ctx context.Context, component, uploadTaskID string) (installTaskID string, err error) {
 	switch strings.ToUpper(component) {
 	case common.SlugBIOS:

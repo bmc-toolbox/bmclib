@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// System Event Log Services for related services
+// SystemEventLog provides access to a host's System Event Log (SEL) services.
 type SystemEventLog interface {
 	ClearSystemEventLog(ctx context.Context) (err error)
 	GetSystemEventLog(ctx context.Context) (entries [][]string, err error)
@@ -21,6 +21,7 @@ type systemEventLogProviders struct {
 	systemEventLogProvider SystemEventLog
 }
 
+// SystemEventLogEntries holds System Event Log entries as rows of string columns.
 type SystemEventLogEntries [][]string
 
 func clearSystemEventLog(ctx context.Context, timeout time.Duration, s []systemEventLogProviders) (metadata Metadata, err error) {
@@ -52,6 +53,7 @@ func clearSystemEventLog(ctx context.Context, timeout time.Duration, s []systemE
 	return metadataLocal, multierror.Append(err, errors.New("failed to reset System Event Log"))
 }
 
+// ClearSystemEventLogFromInterfaces identifies implementations of the SystemEventLog interface and clears the System Event Log using the first successful provider.
 func ClearSystemEventLogFromInterfaces(ctx context.Context, timeout time.Duration, generic []interface{}) (metadata Metadata, err error) {
 	selServices := make([]systemEventLogProviders, 0)
 	for _, elem := range generic {
@@ -105,6 +107,7 @@ func getSystemEventLog(ctx context.Context, timeout time.Duration, s []systemEve
 	return nil, metadataLocal, multierror.Append(err, errors.New("failed to get System Event Log"))
 }
 
+// GetSystemEventLogFromInterfaces identifies implementations of the SystemEventLog interface and returns the System Event Log entries from the first successful provider.
 func GetSystemEventLogFromInterfaces(ctx context.Context, timeout time.Duration, generic []interface{}) (sel SystemEventLogEntries, metadata Metadata, err error) {
 	selServices := make([]systemEventLogProviders, 0)
 	for _, elem := range generic {
@@ -158,6 +161,7 @@ func getSystemEventLogRaw(ctx context.Context, timeout time.Duration, s []system
 	return eventlog, metadataLocal, multierror.Append(err, errors.New("failed to get System Event Log"))
 }
 
+// GetSystemEventLogRawFromInterfaces identifies implementations of the SystemEventLog interface and returns the raw System Event Log from the first successful provider.
 func GetSystemEventLogRawFromInterfaces(ctx context.Context, timeout time.Duration, generic []interface{}) (eventlog string, metadata Metadata, err error) {
 	selServices := make([]systemEventLogProviders, 0)
 	for _, elem := range generic {

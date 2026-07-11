@@ -14,6 +14,7 @@ import (
 
 var errUnexpectedTaskState = errors.New("unexpected task state")
 
+// Task returns the redfish task matching taskID, or ErrTaskNotFound if none matches.
 func (c *Client) Task(ctx context.Context, taskID string) (*schemas.Task, error) {
 	tasks, err := c.Tasks(ctx)
 	if err != nil {
@@ -31,6 +32,7 @@ func (c *Client) Task(ctx context.Context, taskID string) (*schemas.Task, error)
 	return nil, bmclibErrs.ErrTaskNotFound
 }
 
+// TaskStatus returns the converted task state and a human readable status string for the given taskID.
 func (c *Client) TaskStatus(ctx context.Context, taskID string) (constants.TaskState, string, error) {
 	task, err := c.Task(ctx, taskID)
 	if err != nil {
@@ -71,6 +73,7 @@ func (c *Client) taskMessagesAsString(messages []schemas.Message) string {
 	return strings.Join(found, ",")
 }
 
+// ConvertTaskState maps a redfish task state string to a bmclib TaskState constant.
 func (c *Client) ConvertTaskState(state string) constants.TaskState {
 	switch strings.ToLower(state) {
 	case "starting", "downloading", "downloaded", "scheduling":
@@ -90,6 +93,7 @@ func (c *Client) ConvertTaskState(state string) constants.TaskState {
 	}
 }
 
+// TaskStateActive reports whether the given task state indicates the task is still in progress.
 func (c *Client) TaskStateActive(state constants.TaskState) (bool, error) {
 	switch state {
 	case constants.Initializing, constants.Running, constants.Queued:

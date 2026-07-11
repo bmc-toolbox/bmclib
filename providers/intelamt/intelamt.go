@@ -46,24 +46,28 @@ type Conn struct {
 // Option for setting optional Client values
 type Option func(*Config)
 
+// WithPort sets the port number used to connect to the BMC.
 func WithPort(port uint32) Option {
 	return func(c *Config) {
 		c.Port = port
 	}
 }
 
+// WithHostScheme sets the host scheme ("http" or "https") used to connect to the BMC.
 func WithHostScheme(hostScheme string) Option {
 	return func(c *Config) {
 		c.HostScheme = hostScheme
 	}
 }
 
+// WithLogger sets the logger used by the provider.
 func WithLogger(logger logr.Logger) Option {
 	return func(c *Config) {
 		c.Logger = logger
 	}
 }
 
+// Config holds the configuration for an Intel AMT connection.
 type Config struct {
 	// HostScheme should be either "http" or "https".
 	HostScheme string

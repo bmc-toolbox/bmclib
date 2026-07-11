@@ -127,6 +127,7 @@ func (c *Client) MountFloppyImage(ctx context.Context, image io.Reader) error {
 	return nil
 }
 
+// UnmountFloppyImage unmounts a floppy image currently mounted on the BMC.
 func (c *Client) UnmountFloppyImage(ctx context.Context) error {
 	mounted, err := c.floppyImageMounted(ctx)
 	if err != nil {

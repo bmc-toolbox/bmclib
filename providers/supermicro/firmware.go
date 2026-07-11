@@ -34,7 +34,7 @@ var (
 	errUploadTaskIDExpected = errors.New("expected an firmware upload taskID")
 )
 
-// bmc client interface implementations methods
+// FirmwareInstallSteps returns the ordered steps required to install firmware on the given component.
 func (c *Client) FirmwareInstallSteps(ctx context.Context, component string) ([]constants.FirmwareInstallStep, error) {
 	if err := c.serviceClient.supportsFirmwareInstall(c.bmc.deviceModel()); err != nil {
 		return nil, err
@@ -43,6 +43,7 @@ func (c *Client) FirmwareInstallSteps(ctx context.Context, component string) ([]
 	return c.bmc.firmwareInstallSteps(component)
 }
 
+// FirmwareUpload uploads the firmware image for the given component and returns the upload task ID.
 func (c *Client) FirmwareUpload(ctx context.Context, component string, file *os.File) (taskID string, err error) {
 	if err := c.serviceClient.supportsFirmwareInstall(c.bmc.deviceModel()); err != nil {
 		return "", err
@@ -57,6 +58,7 @@ func (c *Client) FirmwareUpload(ctx context.Context, component string, file *os.
 	return c.bmc.firmwareUpload(ctx, component, file)
 }
 
+// FirmwareInstallUploaded initiates installation of a previously uploaded firmware image and returns the install task ID.
 func (c *Client) FirmwareInstallUploaded(ctx context.Context, component, uploadTaskID string) (installTaskID string, err error) {
 	if err := c.serviceClient.supportsFirmwareInstall(c.bmc.deviceModel()); err != nil {
 		return "", err

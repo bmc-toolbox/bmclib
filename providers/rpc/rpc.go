@@ -78,6 +78,7 @@ type Provider struct {
 	listenerURL *url.URL
 }
 
+// Opts are the options used to configure the rpc provider.
 type Opts struct {
 	// Request is the options used to create the rpc HTTP request.
 	Request RequestOpts
@@ -89,6 +90,7 @@ type Opts struct {
 	Experimental Experimental
 }
 
+// RequestOpts are the options used to create the rpc HTTP request.
 type RequestOpts struct {
 	// HTTPContentType is the content type to use for the rpc request notification.
 	HTTPContentType string
@@ -102,6 +104,7 @@ type RequestOpts struct {
 	TimestampHeader string
 }
 
+// SignatureOpts are the options used for adding an HMAC signature to an HTTP request.
 type SignatureOpts struct {
 	// HeaderName is the header name that should contain the signature(s). Example: X-BMCLIB-Signature
 	HeaderName string
@@ -115,6 +118,7 @@ type SignatureOpts struct {
 	IncludedPayloadHeaders []string
 }
 
+// HMACOpts are the options used to create an HMAC signature.
 type HMACOpts struct {
 	// Hashes is a map of algorithms to a slice of hash.Hash (these are the hashed secrets). The slice is used to support multiple secrets.
 	Hashes map[Algorithm][]hash.Hash
@@ -124,6 +128,7 @@ type HMACOpts struct {
 	Secrets Secrets
 }
 
+// Experimental holds experimental options for the rpc provider.
 type Experimental struct {
 	// CustomRequestPayload must be in json.
 	CustomRequestPayload []byte

@@ -188,11 +188,13 @@ func stateFinalized(s schemas.TaskState) bool {
 	return slices.Contains(finalized, s)
 }
 
+// Supermicro holds the BIOS and BMC firmware install parameters for a Supermicro device.
 type Supermicro struct {
 	BIOS map[string]bool `json:"BIOS,omitempty"`
 	BMC  map[string]bool `json:"BMC,omitempty"`
 }
 
+// OEM is the Redfish OEM section wrapping Supermicro firmware install parameters.
 type OEM struct {
 	Supermicro `json:"Supermicro"`
 }

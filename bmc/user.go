@@ -71,7 +71,7 @@ func createUser(ctx context.Context, timeout time.Duration, user, pass, role str
 	return ok, metadataLocal, multierror.Append(err, errors.New("failed to create user"))
 }
 
-// CreateUsersFromInterfaces identifies implementations of the UserCreator interface and passes them to the createUser() wrapper method.
+// CreateUserFromInterfaces identifies implementations of the UserCreator interface and passes them to the createUser() wrapper method.
 func CreateUserFromInterfaces(ctx context.Context, timeout time.Duration, user, pass, role string, generic []interface{}) (ok bool, metadata Metadata, err error) {
 	userCreators := make([]userProviders, 0)
 	for _, elem := range generic {
@@ -127,7 +127,7 @@ func updateUser(ctx context.Context, timeout time.Duration, user, pass, role str
 	return ok, metadataLocal, multierror.Append(err, errors.New("failed to update user"))
 }
 
-// UpdateUsersFromInterfaces identifies implementations of the UserUpdater interface and passes them to the updateUser() wrapper method.
+// UpdateUserFromInterfaces identifies implementations of the UserUpdater interface and passes them to the updateUser() wrapper method.
 func UpdateUserFromInterfaces(ctx context.Context, timeout time.Duration, user, pass, role string, generic []interface{}) (ok bool, metadata Metadata, err error) {
 	userUpdaters := make([]userProviders, 0)
 	for _, elem := range generic {
@@ -183,7 +183,7 @@ func deleteUser(ctx context.Context, timeout time.Duration, user string, u []use
 	return ok, metadataLocal, multierror.Append(err, errors.New("failed to delete user"))
 }
 
-// DeleteUsersFromInterfaces identifies implementations of the UserDeleter interface and passes them to the deleteUser() wrapper method.
+// DeleteUserFromInterfaces identifies implementations of the UserDeleter interface and passes them to the deleteUser() wrapper method.
 func DeleteUserFromInterfaces(ctx context.Context, timeout time.Duration, user string, generic []interface{}) (ok bool, metadata Metadata, err error) {
 	userDeleters := make([]userProviders, 0)
 	for _, elem := range generic {

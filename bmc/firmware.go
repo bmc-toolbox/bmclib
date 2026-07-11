@@ -95,9 +95,9 @@ func FirmwareInstallFromInterfaces(ctx context.Context, component, operationAppl
 	return firmwareInstall(ctx, component, operationApplyTime, forceInstall, reader, implementations)
 }
 
-// Note: this interface is to be deprecated in favour of a more generic FirmwareTaskVerifier.
+// FirmwareInstallVerifier defines an interface to check firmware install status.
 //
-// FirmwareInstallVerifier defines an interface to check firmware install status
+// Note: this interface is to be deprecated in favor of a more generic FirmwareTaskVerifier.
 type FirmwareInstallVerifier interface {
 	// FirmwareInstallStatus returns the status of the firmware install process.
 	//
@@ -337,6 +337,7 @@ func FirmwareInstallerUploadedFromInterfaces(ctx context.Context, component, upl
 	return firmwareInstallUploaded(ctx, component, uploadTaskID, implementations)
 }
 
+// FirmwareInstallStepsGetter provides the ordered steps required to install firmware on a component.
 type FirmwareInstallStepsGetter interface {
 	FirmwareInstallSteps(ctx context.Context, component string) ([]constants.FirmwareInstallStep, error)
 }
@@ -407,6 +408,7 @@ func firmwareInstallSteps(ctx context.Context, component string, generic []firmw
 	return steps, metadata, multierror.Append(err, errors.New("failure in FirmwareInstallSteps"))
 }
 
+// FirmwareUploader provides uploading a firmware image for a component to the BMC.
 type FirmwareUploader interface {
 	FirmwareUpload(ctx context.Context, component string, file *os.File) (uploadVerifyTaskID string, err error)
 }
@@ -417,7 +419,7 @@ type firmwareUploaderProvider struct {
 	FirmwareUploader
 }
 
-// FirmwareUploaderFromInterfaces identifies implementations of the FirmwareUploader interface and passes the found implementations to the firmwareUpload() wrapper.
+// FirmwareUploadFromInterfaces identifies implementations of the FirmwareUploader interface and passes the found implementations to the firmwareUpload() wrapper.
 func FirmwareUploadFromInterfaces(ctx context.Context, component string, file *os.File, generic []interface{}) (taskID string, metadata Metadata, err error) {
 	metadata = newMetadata()
 

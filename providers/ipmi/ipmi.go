@@ -44,6 +44,7 @@ type Conn struct {
 	open   bool
 }
 
+// Config holds the optional configuration for an ipmi connection.
 type Config struct {
 	CipherSuite string
 	Log         logr.Logger
@@ -53,24 +54,28 @@ type Config struct {
 // Option for setting optional Client values
 type Option func(*Config)
 
+// WithLogger sets the logger used by the provider.
 func WithLogger(log logr.Logger) Option {
 	return func(c *Config) {
 		c.Log = log
 	}
 }
 
+// WithPort sets the port used to connect to the BMC.
 func WithPort(port string) Option {
 	return func(c *Config) {
 		c.Port = port
 	}
 }
 
+// WithCipherSuite sets the IPMI cipher suite used for the connection.
 func WithCipherSuite(cipherSuite string) Option {
 	return func(c *Config) {
 		c.CipherSuite = cipherSuite
 	}
 }
 
+// New returns a new ipmi connection.
 func New(host, user, pass string, opts ...Option) (*Conn, error) {
 	defaultConfig := &Config{
 		Port: "623",
@@ -152,6 +157,7 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 	return true
 }
 
+// Name returns the name of this provider.
 func (c *Conn) Name() string {
 	return ProviderName
 }
@@ -206,14 +212,17 @@ func (c *Conn) PowerSet(ctx context.Context, state string) (ok bool, err error) 
 	return ok, err
 }
 
+// ClearSystemEventLog clears the BMC System Event Log (SEL).
 func (c *Conn) ClearSystemEventLog(ctx context.Context) (err error) {
 	return c.ipmi.ClearSystemEventLog(ctx)
 }
 
+// GetSystemEventLog returns the BMC System Event Log (SEL) entries.
 func (c *Conn) GetSystemEventLog(ctx context.Context) (entries [][]string, err error) {
 	return c.ipmi.GetSystemEventLog(ctx)
 }
 
+// GetSystemEventLogRaw returns the raw BMC System Event Log (SEL).
 func (c *Conn) GetSystemEventLogRaw(ctx context.Context) (eventlog string, err error) {
 	return c.ipmi.GetSystemEventLogRaw(ctx)
 }

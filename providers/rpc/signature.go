@@ -11,6 +11,7 @@ import (
 	"strings"
 )
 
+// Hashes maps a signature algorithm to a slice of hashed secrets.
 type Hashes map[Algorithm][]hash.Hash
 
 // createSignaturePayload a signature payload is created by appending header values to the request body.

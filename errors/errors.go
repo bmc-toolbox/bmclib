@@ -129,6 +129,7 @@ var (
 	ErrBMCUpdating = errors.New("a BMC firmware update is in progress")
 )
 
+// ErrUnsupportedHardware is returned when an operation is attempted on unsupported hardware.
 type ErrUnsupportedHardware struct {
 	msg string
 }
@@ -137,6 +138,7 @@ func (e *ErrUnsupportedHardware) Error() string {
 	return fmt.Sprintf("Hardware not supported: %s", e.msg)
 }
 
+// NewErrUnsupportedHardware returns an ErrUnsupportedHardware with the given message.
 func NewErrUnsupportedHardware(s string) error {
 	return &ErrUnsupportedHardware{s}
 }

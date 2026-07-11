@@ -10,12 +10,18 @@ import (
 )
 
 var (
+	// ErrNoUserSlotsAvailable is returned when there are no free user account slots.
 	ErrNoUserSlotsAvailable = errors.New("no user account slots available")
-	ErrUserNotPresent       = errors.New("account with username was not found")
-	ErrUserPassParams       = errors.New("user and pass parameters required")
-	ErrUserExists           = errors.New("user exists")
-	ErrInvalidUserRole      = errors.New("invalid user role")
-	ValidRoles              = []string{"Administrator", "Operator", "ReadOnly", "None"}
+	// ErrUserNotPresent is returned when an account with the given username is not found.
+	ErrUserNotPresent = errors.New("account with username was not found")
+	// ErrUserPassParams is returned when the user and pass parameters are missing.
+	ErrUserPassParams = errors.New("user and pass parameters required")
+	// ErrUserExists is returned when the user account already exists.
+	ErrUserExists = errors.New("user exists")
+	// ErrInvalidUserRole is returned when the requested user role is not valid.
+	ErrInvalidUserRole = errors.New("invalid user role")
+	// ValidRoles lists the user roles accepted by the provider.
+	ValidRoles = []string{"Administrator", "Operator", "ReadOnly", "None"}
 )
 
 // UserRead returns a list of enabled user accounts

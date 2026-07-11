@@ -32,6 +32,7 @@ var Features = registrar.Features{
 	providers.FeatureBootDeviceSet, // no-op
 }
 
+// Config holds the configuration for the HomeAssistant provider.
 type Config struct {
 	APIURL                     string
 	APIToken                   string
@@ -41,6 +42,7 @@ type Config struct {
 	Logger                     logr.Logger
 }
 
+// EntityStateResponse holds the state details of a HomeAssistant entity.
 type EntityStateResponse struct {
 	EntityID     string
 	FriendlyName string

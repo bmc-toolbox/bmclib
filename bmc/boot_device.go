@@ -9,8 +9,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+// BootDeviceType identifies a device a host can boot from.
 type BootDeviceType string
 
+// BootDeviceType values enumerate the supported boot devices.
 const (
 	BootDeviceTypeBIOS        BootDeviceType = "bios"
 	BootDeviceTypeCDROM       BootDeviceType = "cdrom"
@@ -48,6 +50,7 @@ type bootOverrideProvider struct {
 	bootOverrideGetter BootDeviceOverrideGetter
 }
 
+// BootDeviceOverride describes a one-time or persistent boot device override.
 type BootDeviceOverride struct {
 	IsPersistent bool
 	IsEFIBoot    bool

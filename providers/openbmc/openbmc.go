@@ -41,6 +41,7 @@ var (
 	errNotOpenBMCDevice = errors.New("not an OpenBMC device")
 )
 
+// Config holds the optional configuration for an openbmc connection.
 type Config struct {
 	HTTPClient            *http.Client
 	Port                  string
@@ -52,24 +53,28 @@ type Config struct {
 // Option for setting optional Client values
 type Option func(*Config)
 
-func WithHttpClient(httpClient *http.Client) Option {
+// WithHTTPClient sets the HTTP client used by the provider.
+func WithHTTPClient(httpClient *http.Client) Option {
 	return func(c *Config) {
 		c.HTTPClient = httpClient
 	}
 }
 
+// WithPort sets the port used to connect to the BMC.
 func WithPort(port string) Option {
 	return func(c *Config) {
 		c.Port = port
 	}
 }
 
+// WithRootCAs sets the root CA certificate pool used to verify TLS connections.
 func WithRootCAs(rootCAs *x509.CertPool) Option {
 	return func(c *Config) {
 		c.RootCAs = rootCAs
 	}
 }
 
+// WithUseBasicAuth configures whether basic authentication is used for the connection.
 func WithUseBasicAuth(useBasicAuth bool) Option {
 	return func(c *Config) {
 		c.UseBasicAuth = useBasicAuth

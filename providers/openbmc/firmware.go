@@ -18,7 +18,7 @@ import (
 	rfw "github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 )
 
-// bmc client interface implementations methods
+// FirmwareInstallSteps returns the ordered steps required to install firmware for the given component.
 func (c *Conn) FirmwareInstallSteps(ctx context.Context, component string) ([]constants.FirmwareInstallStep, error) {
 	if err := c.deviceSupported(ctx); err != nil {
 		return nil, err
@@ -41,6 +41,7 @@ func (c *Conn) FirmwareInstallSteps(ctx context.Context, component string) ([]co
 	}
 }
 
+// FirmwareInstallUploadAndInitiate uploads the firmware image for the given component and initiates its install.
 func (c *Conn) FirmwareInstallUploadAndInitiate(ctx context.Context, component string, file *os.File) (taskID string, err error) {
 	if err := c.deviceSupported(ctx); err != nil {
 		return "", errNotOpenBMCDevice

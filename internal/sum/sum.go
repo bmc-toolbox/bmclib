@@ -30,18 +30,21 @@ type Sum struct {
 // Option for setting optional Client values
 type Option func(*Sum)
 
+// WithSumPath sets the path to the sum binary.
 func WithSumPath(sumPath string) Option {
 	return func(c *Sum) {
 		c.SumPath = sumPath
 	}
 }
 
+// WithLogger sets the logger used by the Sum instance.
 func WithLogger(log logr.Logger) Option {
 	return func(c *Sum) {
 		c.Log = log
 	}
 }
 
+// New returns a new Sum client, locating the sum binary if a path was not provided.
 func New(host, user, pass string, opts ...Option) (*Sum, error) {
 	sum := &Sum{
 		Host:     host,
@@ -105,15 +108,18 @@ func (c *Sum) run(ctx context.Context, command string, additionalArgs ...string)
 	return string(result.Stdout), err
 }
 
+// GetCurrentBiosCfg returns the current BIOS configuration as reported by sum.
 func (c *Sum) GetCurrentBiosCfg(ctx context.Context) (output string, err error) {
 	return c.run(ctx, "GetCurrentBiosCfg")
 }
 
+// LoadDefaultBiosCfg resets the BIOS configuration to its default values.
 func (c *Sum) LoadDefaultBiosCfg(ctx context.Context) (err error) {
 	_, err = c.run(ctx, "LoadDefaultBiosCfg")
 	return err
 }
 
+// ChangeBiosCfg applies the BIOS configuration from cfgFile, optionally rebooting afterwards.
 func (c *Sum) ChangeBiosCfg(ctx context.Context, cfgFile string, reboot bool) (err error) {
 	args := []string{"--file", cfgFile}
 
@@ -222,6 +228,7 @@ func applyBiosSetting(vcm config.VendorConfigManager, k, v string) error {
 	return nil
 }
 
+// SetBiosConfigurationFromFile applies the BIOS configuration contained in cfg.
 func (c *Sum) SetBiosConfigurationFromFile(ctx context.Context, cfg string) (err error) {
 	// Open tmp file to hold cfg
 	inputConfigTmpFile, err := os.CreateTemp("", "bmclib")

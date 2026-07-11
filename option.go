@@ -70,42 +70,49 @@ func WithIPMIPort(port string) Option {
 	}
 }
 
+// WithIpmitoolCipherSuite sets the IPMI cipher suite used by the ipmitool provider.
 func WithIpmitoolCipherSuite(cipherSuite string) Option {
 	return func(args *Client) {
 		args.providerConfig.ipmitool.CipherSuite = cipherSuite
 	}
 }
 
+// WithIpmitoolPort sets the port used by the ipmitool provider.
 func WithIpmitoolPort(port string) Option {
 	return func(args *Client) {
 		args.providerConfig.ipmitool.Port = port
 	}
 }
 
+// WithIpmitoolPath sets the path to the ipmitool binary used by the ipmitool provider.
 func WithIpmitoolPath(path string) Option {
 	return func(args *Client) {
 		args.providerConfig.ipmitool.IpmitoolPath = path
 	}
 }
 
+// WithAsrockrackHTTPClient sets the HTTP client used by the asrockrack provider.
 func WithAsrockrackHTTPClient(httpClient *http.Client) Option {
 	return func(args *Client) {
 		args.providerConfig.asrock.HTTPClient = httpClient
 	}
 }
 
+// WithAsrockrackPort sets the port used by the asrockrack provider.
 func WithAsrockrackPort(port string) Option {
 	return func(args *Client) {
 		args.providerConfig.asrock.Port = port
 	}
 }
 
+// WithRedfishHTTPClient sets the HTTP client used by the redfish (gofish) provider.
 func WithRedfishHTTPClient(httpClient *http.Client) Option {
 	return func(args *Client) {
 		args.providerConfig.gofish.HTTPClient = httpClient
 	}
 }
 
+// WithRedfishPort sets the port used by the redfish (gofish) provider.
 func WithRedfishPort(port string) Option {
 	return func(args *Client) {
 		args.providerConfig.gofish.Port = port
@@ -122,30 +129,35 @@ func WithRedfishVersionsNotCompatible(versions []string) Option {
 	}
 }
 
+// WithRedfishUseBasicAuth sets HTTP Basic auth (instead of session login) for the redfish provider.
 func WithRedfishUseBasicAuth(useBasicAuth bool) Option {
 	return func(args *Client) {
 		args.providerConfig.gofish.UseBasicAuth = useBasicAuth
 	}
 }
 
+// WithRedfishEtagMatchDisabled disables use of ETag matching by the redfish provider.
 func WithRedfishEtagMatchDisabled(d bool) Option {
 	return func(args *Client) {
 		args.providerConfig.gofish.DisableEtagMatch = d
 	}
 }
 
+// WithRedfishSystemName sets the redfish system name targeted by the redfish provider.
 func WithRedfishSystemName(name string) Option {
 	return func(args *Client) {
 		args.providerConfig.gofish.SystemName = name
 	}
 }
 
+// WithIntelAMTHostScheme sets the host scheme (http/https) used by the Intel AMT provider.
 func WithIntelAMTHostScheme(hostScheme string) Option {
 	return func(args *Client) {
 		args.providerConfig.intelamt.HostScheme = hostScheme
 	}
 }
 
+// WithIntelAMTPort sets the port used by the Intel AMT provider.
 func WithIntelAMTPort(port uint32) Option {
 	return func(args *Client) {
 		args.providerConfig.intelamt.Port = port
@@ -162,6 +174,7 @@ func WithDellRedfishVersionsNotCompatible(versions []string) Option {
 	}
 }
 
+// WithDellRedfishUseBasicAuth sets HTTP Basic auth (instead of session login) for the Dell redfish provider.
 func WithDellRedfishUseBasicAuth(useBasicAuth bool) Option {
 	return func(args *Client) {
 		args.providerConfig.dell.UseBasicAuth = useBasicAuth
@@ -194,13 +207,15 @@ func WithLenovoVersionsNotCompatible(versions []string) Option {
 	}
 }
 
-func WithRPCOpt(opt rpc.Provider) Option {
+// WithRPCOpt configures the rpc provider.
+func WithRPCOpt(opt rpc.Provider) Option { //nolint:gocritic // functional options take their config by value by convention
 	return func(args *Client) {
 		args.providerConfig.rpc = opt
 	}
 }
 
-func WithHomeAssistantOpt(opt homeassistant.Config) Option {
+// WithHomeAssistantOpt configures the Home Assistant provider.
+func WithHomeAssistantOpt(opt homeassistant.Config) Option { //nolint:gocritic // functional options take their config by value by convention
 	return func(args *Client) {
 		args.providerConfig.homeassistant = opt
 	}

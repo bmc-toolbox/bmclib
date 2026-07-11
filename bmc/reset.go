@@ -12,7 +12,7 @@ import (
 // BMCResetter for resetting a BMC.
 // resetType: "warm" resets the management console without rebooting the BMC
 // resetType: "cold" reboots the BMC
-type BMCResetter interface {
+type BMCResetter interface { //nolint:revive // renaming BMCResetter would break the public API
 	BmcReset(ctx context.Context, resetType string) (ok bool, err error)
 }
 

@@ -52,6 +52,7 @@ var (
 	errManufacturerUnknown = errors.New("error identifying device manufacturer")
 )
 
+// Config holds the optional configuration values for a Dell iDRAC connection.
 type Config struct {
 	HTTPClient            *http.Client
 	Port                  string
@@ -63,30 +64,35 @@ type Config struct {
 // Option for setting optional Client values
 type Option func(*Config)
 
-func WithHttpClient(httpClient *http.Client) Option {
+// WithHTTPClient sets the http client used for the connection.
+func WithHTTPClient(httpClient *http.Client) Option {
 	return func(c *Config) {
 		c.HTTPClient = httpClient
 	}
 }
 
+// WithPort sets the port used for the connection.
 func WithPort(port string) Option {
 	return func(c *Config) {
 		c.Port = port
 	}
 }
 
+// WithVersionsNotCompatible sets the list of Redfish versions considered incompatible.
 func WithVersionsNotCompatible(versionsNotCompatible []string) Option {
 	return func(c *Config) {
 		c.VersionsNotCompatible = versionsNotCompatible
 	}
 }
 
+// WithRootCAs sets the root CA certificate pool used to verify the connection.
 func WithRootCAs(rootCAs *x509.CertPool) Option {
 	return func(c *Config) {
 		c.RootCAs = rootCAs
 	}
 }
 
+// WithUseBasicAuth enables HTTP basic authentication for the connection.
 func WithUseBasicAuth(useBasicAuth bool) Option {
 	return func(c *Config) {
 		c.UseBasicAuth = useBasicAuth
@@ -257,6 +263,7 @@ func (c *Conn) deviceManufacturer(ctx context.Context) (vendor string, err error
 	return "", errManufacturerUnknown
 }
 
+// Screenshot captures a screenshot of the server console and returns the image bytes and file type.
 func (c *Conn) Screenshot(ctx context.Context) (image []byte, fileType string, err error) {
 	fileType = "png"
 

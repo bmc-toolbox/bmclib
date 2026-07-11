@@ -2,12 +2,13 @@
 package constants
 
 type (
-	// Redfish operation apply time parameter
+	// OperationApplyTime is the Redfish operation apply time parameter.
 	OperationApplyTime string
 
 	// The FirmwareInstallStep identifies each phase of a firmware install process.
 	FirmwareInstallStep string
 
+	// TaskState identifies the state of a firmware install or BMC task.
 	TaskState string
 )
 
@@ -28,15 +29,16 @@ const (
 	Cloudline = "Cloudline"
 	// Quanta is the contant to identify Quanta hardware
 	Quanta = "Quanta"
-	// Quanta is the contant to identify Intel hardware
+	// Intel is the constant to identify Intel hardware
 	Intel = "Intel"
 
 	// Redfish firmware apply at constants
-	// FirmwareApplyImmediate sets the firmware to be installed immediately after upload
+
+	// Immediate sets the firmware to be installed immediately after upload
 	Immediate OperationApplyTime = "Immediate"
-	// FirmwareApplyOnReset sets the firmware to be install on device power cycle/reset
+	// OnReset sets the firmware to be install on device power cycle/reset
 	OnReset OperationApplyTime = "OnReset"
-	// FirmwareOnStartUpdateRequest sets the firmware install to begin after the start request has been sent.
+	// OnStartUpdateRequest sets the firmware install to begin after the start request has been sent.
 	OnStartUpdateRequest OperationApplyTime = "OnStartUpdateRequest"
 
 	// TODO: rename FirmwareInstall* task status names to FirmwareTaskState and declare a type.
@@ -49,37 +51,45 @@ const (
 	// FirmwareInstallInitializing indicates the device is performing init actions to install the update
 	// this covers the redfish states - 'starting', 'downloading'
 	// no action is required from the callers part in this state
-	FirmwareInstallInitializing           = "initializing"
-	Initializing                TaskState = "initializing"
+	FirmwareInstallInitializing = "initializing"
+	// Initializing is the TaskState equivalent of FirmwareInstallInitializing.
+	Initializing TaskState = "initializing"
 
 	// FirmwareInstallQueued indicates the device has queued the update, but has not started the update task yet
 	// this covers the redfish states - 'pending', 'new'
 	// no action is required from the callers part in this state
-	FirmwareInstallQueued           = "queued"
-	Queued                TaskState = "queued"
+	FirmwareInstallQueued = "queued"
+	// Queued is the TaskState equivalent of FirmwareInstallQueued.
+	Queued TaskState = "queued"
 
-	// FirmwareInstallRunner indicates the device is installing the update
+	// FirmwareInstallRunning indicates the device is installing the update
 	// this covers the redfish states - 'running', 'stopping', 'cancelling'
 	// no action is required from the callers part in this state
-	FirmwareInstallRunning           = "running"
-	Running                TaskState = "running"
+	FirmwareInstallRunning = "running"
+	// Running is the TaskState equivalent of FirmwareInstallRunning.
+	Running TaskState = "running"
 
 	// FirmwareInstallComplete indicates the device completed the firmware install
 	// this covers the redfish state - 'complete'
-	FirmwareInstallComplete           = "complete"
-	Complete                TaskState = "complete"
+	FirmwareInstallComplete = "complete"
+	// Complete is the TaskState equivalent of FirmwareInstallComplete.
+	Complete TaskState = "complete"
 
 	// FirmwareInstallFailed indicates the firmware install failed
 	// this covers the redfish states - 'interrupted', 'killed', 'exception', 'cancelled', 'suspended'
-	FirmwareInstallFailed           = "failed"
-	Failed                TaskState = "failed"
+	FirmwareInstallFailed = "failed"
+	// Failed is the TaskState equivalent of FirmwareInstallFailed.
+	Failed TaskState = "failed"
 
 	// FirmwareInstallPowerCycleHost indicates the firmware install requires a host power cycle
-	FirmwareInstallPowerCycleHost           = "powercycle-host"
-	PowerCycleHost                TaskState = "powercycle-host"
+	FirmwareInstallPowerCycleHost = "powercycle-host"
+	// PowerCycleHost is the TaskState equivalent of FirmwareInstallPowerCycleHost.
+	PowerCycleHost TaskState = "powercycle-host"
 
-	FirmwareInstallUnknown           = "unknown"
-	Unknown                TaskState = "unknown"
+	// FirmwareInstallUnknown indicates the firmware install state could not be determined.
+	FirmwareInstallUnknown = "unknown"
+	// Unknown is the TaskState equivalent of FirmwareInstallUnknown.
+	Unknown TaskState = "unknown"
 
 	// FirmwareInstallStepUploadInitiateInstall identifies the step to upload _and_ initialize the firmware install.
 	// as part of the same call.
@@ -106,11 +116,14 @@ const (
 	// FirmwareInstallStepResetBMCOnInstallFailure indicates the BMC requires a reset if an install fails.
 	FirmwareInstallStepResetBMCOnInstallFailure FirmwareInstallStep = "reset-bmc-on-install-failure"
 
-	// device BIOS/UEFI POST code bmclib identifiers
+	// POSTStateBootINIT identifies the boot init/PXE device BIOS/UEFI POST state.
 	POSTStateBootINIT = "boot-init/pxe"
-	POSTStateUEFI     = "uefi"
-	POSTStateOS       = "grub/os"
-	POSTCodeUnknown   = "unknown"
+	// POSTStateUEFI identifies the UEFI BIOS/UEFI POST state.
+	POSTStateUEFI = "uefi"
+	// POSTStateOS identifies the grub/OS BIOS/UEFI POST state.
+	POSTStateOS = "grub/os"
+	// POSTCodeUnknown identifies an unknown BIOS/UEFI POST state.
+	POSTCodeUnknown = "unknown"
 )
 
 // ListSupportedVendors  returns a list of supported vendors

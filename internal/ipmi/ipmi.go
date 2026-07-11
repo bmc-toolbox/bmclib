@@ -27,18 +27,21 @@ type Ipmi struct {
 // Option for setting optional Ipmi values
 type Option func(*Ipmi)
 
+// WithIpmitoolPath sets the path to the ipmitool binary.
 func WithIpmitoolPath(path string) Option {
 	return func(i *Ipmi) {
 		i.ipmitool = path
 	}
 }
 
+// WithCipherSuite sets the IPMI cipher suite.
 func WithCipherSuite(cipherSuite string) Option {
 	return func(i *Ipmi) {
 		i.cipherSuite = cipherSuite
 	}
 }
 
+// WithLogger sets the logger used by the Ipmi instance.
 func WithLogger(log logr.Logger) Option {
 	return func(i *Ipmi) {
 		i.log = log
@@ -434,6 +437,7 @@ func (i *Ipmi) GetSystemEventLogRaw(ctx context.Context) (eventlog string, err e
 	return output, nil
 }
 
+// DeactivateSOL deactivates any active SOL session, treating an already-deactivated payload as success.
 func (i *Ipmi) DeactivateSOL(ctx context.Context) (err error) {
 	out, err := i.run(ctx, []string{"sol", "deactivate"})
 	// Don't treat this as a failure (we just want to ensure there

@@ -39,6 +39,7 @@ var (
 	errTaskIDFromRespBody = errors.New("failed to identify firmware install taskID from response body")
 )
 
+// RedfishUpdateServiceParameters holds the parameters sent to the redfish UpdateService when installing firmware.
 type RedfishUpdateServiceParameters struct {
 	Targets            []string                     `json:"Targets"`
 	OperationApplyTime constants.OperationApplyTime `json:"@Redfish.OperationApplyTime"`
@@ -167,6 +168,7 @@ func (c *Client) StartUpdateForUploadedFirmware(ctx context.Context) (taskID str
 	return taskIDFromResponseBody(response)
 }
 
+// TaskAccepted represents the response body returned when a firmware update task has been accepted.
 type TaskAccepted struct {
 	Accepted struct {
 		Code                string `json:"code"`

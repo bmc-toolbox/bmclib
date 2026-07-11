@@ -24,9 +24,12 @@ const (
 	// ProviderProtocol for the provider implementation
 	ProviderProtocol = "vendorapi"
 
+	// E3C256D4IDNL is a supported ASRockRack board model.
 	E3C256D4IDNL = "E3C256D4ID-NL"
+	// E3C246D4IDNL is a supported ASRockRack board model.
 	E3C246D4IDNL = "E3C246D4ID-NL"
-	E3C246D4INL  = "E3C246D4I-NL"
+	// E3C246D4INL is a supported ASRockRack board model.
+	E3C246D4INL = "E3C246D4I-NL"
 )
 
 // Features implemented by asrockrack https
@@ -58,6 +61,7 @@ type ASRockRack struct {
 	httpClientSetupFuncs []func(*http.Client)
 }
 
+// Config holds the optional configuration for an ASRockRack connection.
 type Config struct {
 	Port       string
 	HTTPClient *http.Client
@@ -108,6 +112,7 @@ func NewWithOptions(ip, username, password string, log logr.Logger, opts ...ASRo
 	return r
 }
 
+// Name returns the name of this provider.
 func (a *ASRockRack) Name() string {
 	return ProviderName
 }
@@ -167,6 +172,7 @@ func (a *ASRockRack) CheckCredentials(ctx context.Context) (err error) {
 	return a.httpsLogin(ctx)
 }
 
+// PostCode returns the BIOS/UEFI post code status and value.
 func (a *ASRockRack) PostCode(ctx context.Context) (status string, code int, err error) {
 	postInfo, err := a.postCodeInfo(ctx)
 	if err != nil {

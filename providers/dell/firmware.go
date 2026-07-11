@@ -19,7 +19,7 @@ import (
 	rfw "github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 )
 
-// bmc client interface implementations methods
+// FirmwareInstallSteps returns the ordered steps required to install firmware on the given component.
 func (c *Conn) FirmwareInstallSteps(ctx context.Context, component string) ([]constants.FirmwareInstallStep, error) {
 	if err := c.deviceSupported(ctx); err != nil {
 		return nil, bmcliberrs.NewErrUnsupportedHardware(err.Error())
@@ -31,6 +31,7 @@ func (c *Conn) FirmwareInstallSteps(ctx context.Context, component string) ([]co
 	}, nil
 }
 
+// FirmwareInstallUploadAndInitiate uploads the firmware image and initiates its installation, returning the task ID.
 func (c *Conn) FirmwareInstallUploadAndInitiate(ctx context.Context, component string, file *os.File) (taskID string, err error) {
 	if err := c.deviceSupported(ctx); err != nil {
 		return "", bmcliberrs.NewErrUnsupportedHardware(err.Error())
@@ -192,6 +193,7 @@ type oem struct {
 	Dell `json:"Dell"`
 }
 
+// Dell holds the Dell OEM section of a Redfish task response.
 type Dell struct {
 	OdataType         string        `json:"@odata.type"`
 	CompletionTime    interface{}   `json:"CompletionTime"`

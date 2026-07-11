@@ -22,8 +22,10 @@ import (
 )
 
 var (
+	// ErrManagerID is returned when the Manager Odata ID cannot be identified.
 	ErrManagerID = errors.New("error identifying Manager Odata ID")
-	ErrBIOSID    = errors.New("error identifying System BIOS Odata ID")
+	// ErrBIOSID is returned when the System BIOS Odata ID cannot be identified.
+	ErrBIOSID = errors.New("error identifying System BIOS Odata ID")
 )
 
 // Client is a redfishwrapper client which wraps the gofish client.
@@ -92,6 +94,7 @@ func WithLogger(l *logr.Logger) Option {
 	}
 }
 
+// WithSystemName sets the name of the system to operate on.
 func WithSystemName(name string) Option {
 	return func(c *Client) {
 		c.systemName = name
@@ -197,12 +200,12 @@ func (c *Client) SessionActive() error {
 	return nil
 }
 
-// Overrides the HTTP client timeout
+// SetHTTPClientTimeout overrides the HTTP client timeout.
 func (c *Client) SetHTTPClientTimeout(t time.Duration) {
 	c.client.HTTPClient.Timeout = t
 }
 
-// retrieve the current HTTP client timeout
+// HTTPClientTimeout returns the current HTTP client timeout.
 func (c *Client) HTTPClientTimeout() time.Duration {
 	return c.client.HTTPClient.Timeout
 }
@@ -216,10 +219,12 @@ func (c *Client) RunRawRequestWithHeaders(method, url string, payloadBuffer io.R
 	return c.client.RunRawRequestWithHeaders(method, url, payloadBuffer, contentType, customHeaders)
 }
 
+// Delete issues an HTTP DELETE request to the given URL.
 func (c *Client) Delete(url string) (*http.Response, error) {
 	return c.client.Delete(url)
 }
 
+// Get issues an HTTP GET request to the given URL.
 func (c *Client) Get(url string) (*http.Response, error) {
 	return c.client.Get(url)
 }
@@ -271,6 +276,7 @@ func redfishVersionMeetsOrExceeds(version string, major, minor, patch int) bool 
 	return rfVer[2] >= int64(patch)
 }
 
+// GetBootProgress returns the boot progress for each system, requiring redfish version 1.13.0 or newer.
 func (c *Client) GetBootProgress() ([]*schemas.BootProgress, error) {
 	// The redfish standard adopts the BootProgress object in 1.13.0. Earlier versions of redfish return
 	// json NULL, which gofish turns into a zero-value object of BootProgress. We gate this on the RedfishVersion
@@ -292,14 +298,17 @@ func (c *Client) GetBootProgress() ([]*schemas.BootProgress, error) {
 	return bps, nil
 }
 
+// PostWithHeaders issues an HTTP POST request with the given payload and custom headers.
 func (c *Client) PostWithHeaders(ctx context.Context, url string, payload interface{}, headers map[string]string) (*http.Response, error) {
 	return c.client.PostWithHeaders(url, payload, headers)
 }
 
+// PatchWithHeaders issues an HTTP PATCH request with the given payload and custom headers.
 func (c *Client) PatchWithHeaders(ctx context.Context, url string, payload interface{}, headers map[string]string) (*http.Response, error) {
 	return c.client.PatchWithHeaders(url, payload, headers)
 }
 
+// Tasks returns the tasks currently tracked by the redfish task service.
 func (c *Client) Tasks(ctx context.Context) ([]*schemas.Task, error) {
 	ts, err := c.client.Service.Tasks()
 	if err != nil {
@@ -309,6 +318,7 @@ func (c *Client) Tasks(ctx context.Context) ([]*schemas.Task, error) {
 	return ts.Tasks()
 }
 
+// ManagerOdataID returns the Odata ID of the first available Manager.
 func (c *Client) ManagerOdataID(ctx context.Context) (string, error) {
 	managers, err := c.client.Service.Managers()
 	if err != nil {
@@ -324,6 +334,7 @@ func (c *Client) ManagerOdataID(ctx context.Context) (string, error) {
 	return "", ErrManagerID
 }
 
+// SystemsBIOSOdataID returns the Odata ID of the first system's BIOS.
 func (c *Client) SystemsBIOSOdataID(ctx context.Context) (string, error) {
 	systems, err := c.client.Service.Systems()
 	if err != nil {

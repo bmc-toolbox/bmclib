@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	// Supported Chassis Odata IDs
+	// KnownChassisOdataIDs lists the Chassis Odata IDs known to be supported.
 	KnownChassisOdataIDs = []string{
 		// Dells
 		"/redfish/v1/Chassis/Enclosure.Internal.0-1",

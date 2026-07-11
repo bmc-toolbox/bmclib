@@ -76,6 +76,7 @@ var Features = registrar.Features{
 //   - bmc firmware install
 //   - floppy image mount
 
+// Config holds the optional configuration values for a Supermicro client.
 type Config struct {
 	HTTPClient           *http.Client
 	Port                 string
@@ -85,7 +86,8 @@ type Config struct {
 // Option for setting optional Client values
 type Option func(*Config)
 
-func WithHttpClient(httpClient *http.Client) Option {
+// WithHTTPClient sets the http client used for the connection.
+func WithHTTPClient(httpClient *http.Client) Option {
 	return func(c *Config) {
 		c.HTTPClient = httpClient
 	}
@@ -98,13 +100,14 @@ func WithSecureTLS(rootCAs *x509.CertPool) Option {
 	}
 }
 
+// WithPort sets the port used for the connection.
 func WithPort(port string) Option {
 	return func(c *Config) {
 		c.Port = port
 	}
 }
 
-// Connection details
+// Client is a Supermicro BMC connection.
 type Client struct {
 	serviceClient *serviceClient
 	bmc           bmcQueryor
@@ -125,7 +128,7 @@ type bmcQueryor interface {
 	bootComplete() (bool, error)
 }
 
-// New returns connection with a Supermicro client initialized
+// NewClient returns a connection with a Supermicro client initialized.
 func NewClient(host, user, pass string, log logr.Logger, opts ...Option) *Client {
 	defaultConfig := &Config{
 		Port: "443",
@@ -400,6 +403,7 @@ func (c *Client) Name() string {
 	return ProviderName
 }
 
+// Screenshot captures a screenshot of the server console and returns the image bytes and file type.
 func (c *Client) Screenshot(ctx context.Context) (image []byte, fileType string, err error) {
 	fileType = "jpg"
 

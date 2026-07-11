@@ -53,7 +53,7 @@ func postCode(ctx context.Context, generic []postCodeGetterProvider) (status str
 	return status, code, metadataLocal, multierror.Append(err, errors.New("failure to get device POST code"))
 }
 
-// GetPostCodeFromInterfaces identifies implementations of the PostCodeGetter interface and passes the found implementations to the postCode() wrapper method.
+// GetPostCodeInterfaces identifies implementations of the PostCodeGetter interface and passes the found implementations to the postCode() wrapper method.
 func GetPostCodeInterfaces(ctx context.Context, generic []interface{}) (status string, code int, metadata Metadata, err error) {
 	implementations := make([]postCodeGetterProvider, 0)
 	for _, elem := range generic {

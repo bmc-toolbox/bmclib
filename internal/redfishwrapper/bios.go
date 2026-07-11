@@ -8,6 +8,7 @@ import (
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
+// GetBiosConfiguration returns the current BIOS configuration attributes for the system.
 func (c *Client) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]string, err error) {
 	sys, err := c.System()
 	if err != nil {
@@ -35,6 +36,7 @@ func (c *Client) GetBiosConfiguration(ctx context.Context) (biosConfig map[strin
 	return biosConfig, nil
 }
 
+// SetBiosConfiguration applies the given BIOS configuration attributes, to take effect on the next reset.
 func (c *Client) SetBiosConfiguration(ctx context.Context, biosConfig map[string]string) (err error) {
 	sys, err := c.System()
 	if err != nil {
@@ -60,6 +62,7 @@ func (c *Client) SetBiosConfiguration(ctx context.Context, biosConfig map[string
 	return bios.UpdateBiosAttributesApplyAt(settingsAttributes, schemas.OnResetSettingsApplyTime)
 }
 
+// ResetBiosConfiguration resets the BIOS configuration to its default values.
 func (c *Client) ResetBiosConfiguration(ctx context.Context) (err error) {
 	sys, err := c.System()
 	if err != nil {
