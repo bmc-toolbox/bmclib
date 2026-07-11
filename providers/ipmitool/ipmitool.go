@@ -1,3 +1,4 @@
+// Package ipmitool implements a bmclib provider backed by the ipmitool utility.
 package ipmitool
 
 import (

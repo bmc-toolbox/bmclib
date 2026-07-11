@@ -1,3 +1,4 @@
+// Package openbmc implements a bmclib provider for OpenBMC-based BMCs.
 package openbmc
 
 import (

@@ -41,6 +41,12 @@ linters:
       - linters:
           - staticcheck
         text: "ST1016"
+      # revive's unused-parameter is noisy: interface-satisfying methods often
+      # have fixed signatures with params they don't use, and renaming them to
+      # _ loses the self-documenting name. Disable it.
+      - linters:
+          - revive
+        text: "unused-parameter"
       # Relax noisy linters for test files; test code favours readability and
       # table-driven structs over micro-optimisation and strict error handling.
       - path: _test\.go

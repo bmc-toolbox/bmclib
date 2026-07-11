@@ -1,3 +1,4 @@
+// Package httpclient builds preconfigured HTTP clients for bmclib providers.
 package httpclient
 
 import (

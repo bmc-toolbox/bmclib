@@ -1,3 +1,4 @@
+// Package supermicro implements a bmclib provider for Supermicro BMCs.
 package supermicro
 
 import (
@@ -76,7 +77,7 @@ var Features = registrar.Features{
 //   - floppy image mount
 
 type Config struct {
-	HttpClient           *http.Client
+	HTTPClient           *http.Client
 	Port                 string
 	httpClientSetupFuncs []func(*http.Client)
 }
@@ -86,7 +87,7 @@ type Option func(*Config)
 
 func WithHttpClient(httpClient *http.Client) Option {
 	return func(c *Config) {
-		c.HttpClient = httpClient
+		c.HTTPClient = httpClient
 	}
 }
 

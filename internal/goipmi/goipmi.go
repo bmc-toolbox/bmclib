@@ -1,3 +1,4 @@
+// Package goipmi implements a native Go IPMI client.
 package goipmi
 
 import (
@@ -28,9 +29,9 @@ type Option func(*Ipmi)
 
 func WithCipherSuite(cipherSuite string) Option {
 	return func(i *Ipmi) {
-		cipherId, err := strconv.Atoi(cipherSuite)
-		if err == nil && (0 <= cipherId && cipherId <= 19) {
-			i.cipherSuite = cipherId
+		cipherID, err := strconv.Atoi(cipherSuite)
+		if err == nil && (0 <= cipherID && cipherID <= 19) {
+			i.cipherSuite = cipherID
 		}
 	}
 }

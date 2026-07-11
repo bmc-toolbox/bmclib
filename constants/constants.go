@@ -1,3 +1,4 @@
+// Package constants defines shared constants used across bmclib.
 package constants
 
 type (

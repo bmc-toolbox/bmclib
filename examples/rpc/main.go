@@ -1,3 +1,4 @@
+// Package main provides an example of using the bmclib rpc provider.
 package main
 
 import (

@@ -33,8 +33,8 @@ var Features = registrar.Features{
 }
 
 type Config struct {
-	ApiUrl                     string
-	ApiToken                   string
+	APIURL                     string
+	APIToken                   string
 	SwitchEntityID             string
 	PowerOperationDelaySeconds uint32
 	HTTPClient                 *http.Client
@@ -48,10 +48,10 @@ type EntityStateResponse struct {
 }
 
 // New returns a new Config containing all the defaults for the HomeAssistant provider.
-func New(apiUrl, apiToken string) *Config {
+func New(apiURL, apiToken string) *Config {
 	return &Config{
-		ApiUrl:     apiUrl,
-		ApiToken:   apiToken,
+		APIURL:     apiURL,
+		APIToken:   apiToken,
 		HTTPClient: httpclient.Build(),
 		Logger:     logr.Discard(),
 	}
@@ -77,18 +77,18 @@ func (p *Config) Open(ctx context.Context) error {
 	return nil
 }
 
-func (p *Config) haGetEntityState(ctx context.Context, haEntityId string) (EntityStateResponse, error) {
-	stateUrl, err := url.JoinPath(p.ApiUrl, "api", "states", haEntityId)
+func (p *Config) haGetEntityState(ctx context.Context, haEntityID string) (EntityStateResponse, error) {
+	stateURL, err := url.JoinPath(p.APIURL, "api", "states", haEntityID)
 	if err != nil {
 		return EntityStateResponse{}, err
 	}
-	p.Logger.Info("Testing connection to Home Assistant API", "url", stateUrl)
+	p.Logger.Info("Testing connection to Home Assistant API", "url", stateURL)
 
-	req, err := http.NewRequestWithContext(ctx, "GET", stateUrl, http.NoBody)
+	req, err := http.NewRequestWithContext(ctx, "GET", stateURL, http.NoBody)
 	if err != nil {
 		return EntityStateResponse{}, err
 	}
-	req.Header.Set("Authorization", "Bearer "+p.ApiToken)
+	req.Header.Set("Authorization", "Bearer "+p.APIToken)
 	req.Header.Set("Accept-Encoding", "application/json")
 
 	resp, err := p.HTTPClient.Do(req)
@@ -107,7 +107,7 @@ func (p *Config) haGetEntityState(ctx context.Context, haEntityId string) (Entit
 	if _, err := io.CopyN(respBuf, resp.Body, resp.ContentLength); err != nil {
 		return EntityStateResponse{}, fmt.Errorf("failed to read response body: %w", err)
 	}
-	p.Logger.Info("Successfully connected to Home Assistant API", "entity", haEntityId, "statusCode", resp.StatusCode, "respBuf", respBuf)
+	p.Logger.Info("Successfully connected to Home Assistant API", "entity", haEntityID, "statusCode", resp.StatusCode, "respBuf", respBuf)
 
 	// Deserialize into a temp struct
 	stateResponse := struct {
@@ -160,11 +160,11 @@ func (p *Config) PowerSet(ctx context.Context, state string) (ok bool, err error
 		return false, fmt.Errorf("invalid power state: %s", state)
 	}
 
-	serviceUrl, err := url.JoinPath(p.ApiUrl, "api", "services", "switch", service)
+	serviceURL, err := url.JoinPath(p.APIURL, "api", "services", "switch", service)
 	if err != nil {
 		return false, err
 	}
-	p.Logger.Info("Setting Home Assistant entity power state", "url", serviceUrl, "entity", p.SwitchEntityID, "desiredState", state)
+	p.Logger.Info("Setting Home Assistant entity power state", "url", serviceURL, "entity", p.SwitchEntityID, "desiredState", state)
 	reqBodyMap := map[string]interface{}{
 		"entity_id": p.SwitchEntityID,
 	}
@@ -173,11 +173,11 @@ func (p *Config) PowerSet(ctx context.Context, state string) (ok bool, err error
 		return false, fmt.Errorf("failed to marshal request body: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", serviceUrl, bytes.NewBuffer(reqBodyBytes))
+	req, err := http.NewRequestWithContext(ctx, "POST", serviceURL, bytes.NewBuffer(reqBodyBytes))
 	if err != nil {
 		return false, err
 	}
-	req.Header.Set("Authorization", "Bearer "+p.ApiToken)
+	req.Header.Set("Authorization", "Bearer "+p.APIToken)
 	req.Header.Set("Accept-Encoding", "application/json")
 	req.Header.Set("Content-Type", "application/json")
 

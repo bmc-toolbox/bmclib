@@ -90,7 +90,7 @@ func WithIpmitoolPath(path string) Option {
 
 func WithAsrockrackHTTPClient(httpClient *http.Client) Option {
 	return func(args *Client) {
-		args.providerConfig.asrock.HttpClient = httpClient
+		args.providerConfig.asrock.HTTPClient = httpClient
 	}
 }
 
@@ -102,7 +102,7 @@ func WithAsrockrackPort(port string) Option {
 
 func WithRedfishHTTPClient(httpClient *http.Client) Option {
 	return func(args *Client) {
-		args.providerConfig.gofish.HttpClient = httpClient
+		args.providerConfig.gofish.HTTPClient = httpClient
 	}
 }
 

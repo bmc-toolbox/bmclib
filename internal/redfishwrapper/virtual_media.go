@@ -97,7 +97,7 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (bo
 			// Attempt to eject media. If it fails, record the error but continue to attempt insertion,
 			// as some BMCs might allow insert even if eject fails or auto-replace media.
 			if _, err := vm.EjectMedia(); err != nil {
-				slotErrors = append(slotErrors, fmt.Errorf("%s: eject before insert failed: %w. Attempting insert anyway.", vm.ODataID, err))
+				slotErrors = append(slotErrors, fmt.Errorf("%s: eject before insert failed: %w; attempting insert anyway", vm.ODataID, err))
 			}
 		}
 

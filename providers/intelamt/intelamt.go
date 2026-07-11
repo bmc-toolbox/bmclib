@@ -1,3 +1,4 @@
+// Package intelamt implements a bmclib provider for Intel AMT managed devices.
 package intelamt
 
 import (

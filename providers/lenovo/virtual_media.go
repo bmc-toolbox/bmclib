@@ -116,17 +116,17 @@ func (c *Conn) insertVirtualMedia(ctx context.Context, candidates []vmSlot, medi
 			payload["TransferProtocolType"] = proto
 		}
 
-		if err := c.patchVirtualMedia(ctx, s.odataID, payload); err == nil {
+		err := c.patchVirtualMedia(ctx, s.odataID, payload)
+		if err == nil {
 			return true, nil
-		} else {
-			// Retry with a minimal payload — some XCC firmware rejects the
-			// Inserted/WriteProtected/TransferProtocolType properties.
-			minimal := map[string]any{"Image": mediaURL, "Inserted": true}
-			if err2 := c.patchVirtualMedia(ctx, s.odataID, minimal); err2 == nil {
-				return true, nil
-			}
-			slotErrs = append(slotErrs, fmt.Sprintf("%s: %v", s.odataID, err))
 		}
+		// Retry with a minimal payload — some XCC firmware rejects the
+		// Inserted/WriteProtected/TransferProtocolType properties.
+		minimal := map[string]any{"Image": mediaURL, "Inserted": true}
+		if err2 := c.patchVirtualMedia(ctx, s.odataID, minimal); err2 == nil {
+			return true, nil
+		}
+		slotErrs = append(slotErrs, fmt.Sprintf("%s: %v", s.odataID, err))
 	}
 
 	return false, fmt.Errorf("failed to insert virtual media into any matching slot:\n%s", strings.Join(slotErrs, "\n"))
@@ -265,7 +265,7 @@ func rankSlots(slots []vmSlot) {
 		case strings.Contains(id, "rdoc"):
 			sc += 0
 		default:
-			sc += 1
+			sc++
 		}
 		return sc
 	}

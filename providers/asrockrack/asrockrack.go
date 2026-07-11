@@ -1,3 +1,4 @@
+// Package asrockrack implements a bmclib provider for ASRock Rack BMCs.
 package asrockrack
 
 import (
@@ -23,9 +24,9 @@ const (
 	// ProviderProtocol for the provider implementation
 	ProviderProtocol = "vendorapi"
 
-	E3C256D4ID_NL = "E3C256D4ID-NL"
-	E3C246D4ID_NL = "E3C246D4ID-NL"
-	E3C246D4I_NL  = "E3C246D4I-NL"
+	E3C256D4IDNL = "E3C256D4ID-NL"
+	E3C246D4IDNL = "E3C246D4ID-NL"
+	E3C246D4INL  = "E3C246D4I-NL"
 )
 
 // Features implemented by asrockrack https
@@ -59,7 +60,7 @@ type ASRockRack struct {
 
 type Config struct {
 	Port       string
-	HttpClient *http.Client
+	HTTPClient *http.Client
 }
 
 // ASRockOption is a type that can configure an *ASRockRack
@@ -122,9 +123,9 @@ func (a *ASRockRack) Open(ctx context.Context) (err error) {
 
 func (a *ASRockRack) supported(ctx context.Context) error {
 	supported := []string{
-		E3C256D4ID_NL,
-		E3C246D4ID_NL,
-		E3C246D4I_NL,
+		E3C256D4IDNL,
+		E3C246D4IDNL,
+		E3C246D4INL,
 	}
 
 	if a.deviceModel == "" {

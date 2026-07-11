@@ -198,12 +198,12 @@ func (c *Client) SessionActive() error {
 }
 
 // Overrides the HTTP client timeout
-func (c *Client) SetHttpClientTimeout(t time.Duration) {
+func (c *Client) SetHTTPClientTimeout(t time.Duration) {
 	c.client.HTTPClient.Timeout = t
 }
 
 // retrieve the current HTTP client timeout
-func (c *Client) HttpClientTimeout() time.Duration {
+func (c *Client) HTTPClientTimeout() time.Duration {
 	return c.client.HTTPClient.Timeout
 }
 

@@ -1,3 +1,4 @@
+// Package providers defines feature flags and helpers shared by bmclib providers.
 package providers
 
 import "github.com/jacobweinstock/registrar"

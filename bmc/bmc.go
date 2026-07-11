@@ -1,3 +1,5 @@
+// Package bmc provides interfaces and helpers for interacting with Baseboard
+// Management Controllers across the bmclib providers.
 package bmc
 
 import (

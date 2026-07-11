@@ -29,7 +29,7 @@ func (r *connTester1) Close(ctx context.Context) (err error) {
 	return nil
 }
 
-func (p *connTester1) Name() string {
+func (r *connTester1) Name() string {
 	return "test provider"
 }
 
@@ -44,7 +44,7 @@ func (r *connTester2) Close(ctx context.Context) (err error) {
 	return nil
 }
 
-func (p *connTester2) Name() string {
+func (r *connTester2) Name() string {
 	return "test provider 2"
 }
 

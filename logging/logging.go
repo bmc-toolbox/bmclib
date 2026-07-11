@@ -1,3 +1,4 @@
+// Package logging provides logging helpers for bmclib.
 package logging
 
 import (

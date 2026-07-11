@@ -25,8 +25,8 @@ import (
 type installMethod string
 
 const (
-	unstructuredHttpPush installMethod = "unstructuredHttpPush"
-	multipartHttpUpload  installMethod = "multipartUpload"
+	unstructuredHTTPPush installMethod = "unstructuredHTTPPush"
+	multipartHTTPUpload  installMethod = "multipartUpload"
 )
 
 // the URI for starting a firmware update via StartUpdate is defined in the Redfish Resource and
@@ -36,7 +36,7 @@ var startUpdateURI = "/redfish/v1/UpdateService/Actions/UpdateService.StartUpdat
 var (
 	errMultiPartPayload   = errors.New("error preparing multipart payload")
 	errUpdateParams       = errors.New("error in redfish UpdateParameters payload")
-	errTaskIdFromRespBody = errors.New("failed to identify firmware install taskID from response body")
+	errTaskIDFromRespBody = errors.New("failed to identify firmware install taskID from response body")
 )
 
 type RedfishUpdateServiceParameters struct {
@@ -61,27 +61,27 @@ func (c *Client) FirmwareUpload(ctx context.Context, updateFile *os.File, params
 	// since the context timeout is set at Open() and is at a lower value than required for this operation.
 	//
 	// record the http client timeout to be restored when this method returns
-	httpClientTimeout := c.HttpClientTimeout()
+	httpClientTimeout := c.HTTPClientTimeout()
 	defer func() {
-		c.SetHttpClientTimeout(httpClientTimeout)
+		c.SetHTTPClientTimeout(httpClientTimeout)
 	}()
 
 	ctxDeadline, _ := ctx.Deadline()
-	c.SetHttpClientTimeout(time.Until(ctxDeadline))
+	c.SetHTTPClientTimeout(time.Until(ctxDeadline))
 
 	var resp *http.Response
 
 	switch method {
-	case multipartHttpUpload:
+	case multipartHTTPUpload:
 		var uploadErr error
 		resp, uploadErr = c.multipartHTTPUpload(installURI, updateFile, parameters)
 		if uploadErr != nil {
 			return "", errors.Wrap(bmclibErrs.ErrFirmwareUpload, uploadErr.Error())
 		}
 
-	case unstructuredHttpPush:
+	case unstructuredHTTPPush:
 		var uploadErr error
-		resp, uploadErr = c.unstructuredHttpUpload(installURI, updateFile)
+		resp, uploadErr = c.unstructuredHTTPUpload(installURI, updateFile)
 		if uploadErr != nil {
 			return "", errors.Wrap(bmclibErrs.ErrFirmwareUpload, uploadErr.Error())
 		}
@@ -185,7 +185,7 @@ type TaskAccepted struct {
 func taskIDFromResponseBody(resp []byte) (taskID string, err error) {
 	a := &TaskAccepted{}
 	if err = json.Unmarshal(resp, a); err != nil {
-		return "", errors.Wrap(errTaskIdFromRespBody, err.Error())
+		return "", errors.Wrap(errTaskIDFromRespBody, err.Error())
 	}
 
 	var taskURI string
@@ -202,12 +202,12 @@ func taskIDFromResponseBody(resp []byte) (taskID string, err error) {
 	}
 
 	if taskURI == "" {
-		return "", errors.Wrap(errTaskIdFromRespBody, "TaskService/Tasks/<id> URI not identified")
+		return "", errors.Wrap(errTaskIDFromRespBody, "TaskService/Tasks/<id> URI not identified")
 	}
 
 	tokens := strings.Split(taskURI, "/")
 	if len(tokens) == 0 {
-		return "", errors.Wrap(errTaskIdFromRespBody, "invalid/unsupported task URI: "+taskURI)
+		return "", errors.Wrap(errTaskIDFromRespBody, "invalid/unsupported task URI: "+taskURI)
 	}
 
 	return tokens[len(tokens)-1], nil
@@ -251,7 +251,7 @@ func (c *Client) multipartHTTPUpload(url string, update *os.File, params []byte)
 	return c.runRequestWithMultipartPayload(url, payload)
 }
 
-func (c *Client) unstructuredHttpUpload(url string, update io.Reader) (*http.Response, error) {
+func (c *Client) unstructuredHTTPUpload(url string, update io.Reader) (*http.Response, error) {
 	if url == "" {
 		return nil, fmt.Errorf("unable to execute request, no target provided")
 	}
@@ -277,9 +277,9 @@ func (c *Client) firmwareInstallMethodURI() (method installMethod, updateURI str
 
 	switch {
 	case updateService.MultipartHTTPPushURI != "":
-		return multipartHttpUpload, updateService.MultipartHTTPPushURI, nil
+		return multipartHTTPUpload, updateService.MultipartHTTPPushURI, nil
 	case updateService.HTTPPushURI != "": //nolint:staticcheck // HTTPPushURI is deprecated but still required for older Redfish implementations
-		return unstructuredHttpPush, updateService.HTTPPushURI, nil //nolint:staticcheck // HTTPPushURI is deprecated but still required for older Redfish implementations
+		return unstructuredHTTPPush, updateService.HTTPPushURI, nil //nolint:staticcheck // HTTPPushURI is deprecated but still required for older Redfish implementations
 	}
 
 	return "", "", errors.Wrap(bmclibErrs.ErrRedfishUpdateService, "unsupported update method")
@@ -311,7 +311,7 @@ type pipeReaderFakeSeeker struct {
 
 // Seek impelements the io.Seeker interface only to panic if called
 func (p pipeReaderFakeSeeker) Seek(offset int64, whence int) (int64, error) {
-	return 0, errors.New("Seek() not implemented for fake pipe reader seeker.")
+	return 0, errors.New("seek not implemented for fake pipe reader seeker")
 }
 
 // multipartPayloadSize prepares a temporary multipart form to determine the form size

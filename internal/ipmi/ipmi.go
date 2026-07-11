@@ -1,3 +1,4 @@
+// Package ipmi wraps the ipmitool command-line utility.
 package ipmi
 
 import (

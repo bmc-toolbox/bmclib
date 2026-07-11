@@ -1,3 +1,4 @@
+// Package main provides an example of resetting a BMC using bmclib.
 package main
 
 import (

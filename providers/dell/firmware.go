@@ -1,3 +1,4 @@
+// Package dell implements a bmclib provider for Dell iDRAC BMCs.
 package dell
 
 import (

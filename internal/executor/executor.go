@@ -1,3 +1,4 @@
+// Package executor provides helpers for running external commands.
 package executor
 
 import (

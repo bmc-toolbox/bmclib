@@ -1,3 +1,4 @@
+// Package redfish implements a bmclib provider for Redfish-based BMCs.
 package redfish
 
 import (
@@ -49,7 +50,7 @@ type Conn struct {
 }
 
 type Config struct {
-	HttpClient *http.Client
+	HTTPClient *http.Client
 	Port       string
 	// VersionsNotCompatible	is the list of incompatible redfish versions.
 	//
@@ -68,7 +69,7 @@ type Option func(*Config)
 
 func WithHttpClient(httpClient *http.Client) Option {
 	return func(c *Config) {
-		c.HttpClient = httpClient
+		c.HTTPClient = httpClient
 	}
 }
 
@@ -114,7 +115,7 @@ func WithEtagMatchDisabled(d bool) Option {
 // New returns connection with a redfish client initialized
 func New(host, user, pass string, log logr.Logger, opts ...Option) *Conn {
 	defaultConfig := &Config{
-		HttpClient:            httpclient.Build(),
+		HTTPClient:            httpclient.Build(),
 		Port:                  "443",
 		VersionsNotCompatible: []string{},
 	}
@@ -123,7 +124,7 @@ func New(host, user, pass string, log logr.Logger, opts ...Option) *Conn {
 	}
 
 	rfOpts := []redfishwrapper.Option{
-		redfishwrapper.WithHTTPClient(defaultConfig.HttpClient),
+		redfishwrapper.WithHTTPClient(defaultConfig.HTTPClient),
 		redfishwrapper.WithVersionsNotCompatible(defaultConfig.VersionsNotCompatible),
 		redfishwrapper.WithEtagMatchDisabled(defaultConfig.DisableEtagMatch),
 		redfishwrapper.WithBasicAuthEnabled(defaultConfig.UseBasicAuth),

@@ -1,3 +1,4 @@
+// Package errors defines the error types and sentinel errors used across bmclib.
 package errors
 
 import (

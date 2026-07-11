@@ -1,3 +1,4 @@
+// Package sum wraps the Supermicro Update Manager (SUM) utility.
 package sum
 
 // SUM is Supermicro Update Manager

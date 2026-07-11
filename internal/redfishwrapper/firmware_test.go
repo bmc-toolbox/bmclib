@@ -143,7 +143,7 @@ func TestFirmwareInstallMethodURI(t *testing.T) {
 				"/redfish/v1/Managers/1":    endpointFunc(t, "managers_1.json"),
 				"/redfish/v1/UpdateService": endpointFunc(t, "updateservice_with_multipart.json"),
 			},
-			expectInstallMethod: multipartHttpUpload,
+			expectInstallMethod: multipartHTTPUpload,
 			expectUpdateURI:     "/redfish/v1/UpdateService/MultipartUpload",
 			err:                 nil,
 		},
@@ -155,7 +155,7 @@ func TestFirmwareInstallMethodURI(t *testing.T) {
 				"/redfish/v1/Managers/1":    endpointFunc(t, "managers_1.json"),
 				"/redfish/v1/UpdateService": endpointFunc(t, "updateservice_with_httppushuri.json"),
 			},
-			expectInstallMethod: unstructuredHttpPush,
+			expectInstallMethod: unstructuredHTTPPush,
 			expectUpdateURI:     "/redfish/v1/UpdateService/update",
 			err:                 nil,
 		},
@@ -230,13 +230,13 @@ func TestTaskIDFromResponseBody(t *testing.T) {
 			name:        "failure case",
 			body:        mustReadFile(t, "updateservice_unexpected_response.json"),
 			expectedID:  "",
-			expectedErr: errTaskIdFromRespBody,
+			expectedErr: errTaskIDFromRespBody,
 		},
 		{
 			name:        "failure case - invalid json",
 			body:        []byte(`<html><head>crappy bmc is crappy<head/></html>`),
 			expectedID:  "",
-			expectedErr: errTaskIdFromRespBody,
+			expectedErr: errTaskIDFromRespBody,
 		},
 	}
 
