@@ -14,9 +14,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/goleak"
+
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 func TestRunRequestWithMultipartPayload(t *testing.T) {
@@ -25,7 +26,7 @@ func TestRunRequestWithMultipartPayload(t *testing.T) {
 	// init things
 	tmpdir := t.TempDir()
 	binPath := filepath.Join(tmpdir, "test.bin")
-	err := os.WriteFile(binPath, []byte(`HELLOWORLD`), 0600)
+	err := os.WriteFile(binPath, []byte(`HELLOWORLD`), 0o600)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -343,7 +344,6 @@ func TestUpdateParametersFormField(t *testing.T) {
 			// Validate the created multipart form content
 			err = writer.Close()
 			assert.NoError(t, err)
-
 		})
 	}
 }
@@ -358,14 +358,13 @@ func TestMultipartPayloadSize(t *testing.T) {
 		"foobar",
 		struct{}{},
 	})
-
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	tmpdir := t.TempDir()
 	binPath := filepath.Join(tmpdir, "test.bin")
-	err = os.WriteFile(binPath, []byte(`HELLOWORLD`), 0600)
+	err = os.WriteFile(binPath, []byte(`HELLOWORLD`), 0o600)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -15,7 +15,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	// Start the test consumer
-	go testConsumer(ctx)
+	go func() { _ = testConsumer(ctx) }()
 	time.Sleep(100 * time.Millisecond)
 
 	log := logging.ZeroLogger("info")
@@ -46,7 +46,7 @@ func main() {
 	if err := c.Open(ctx); err != nil {
 		panic(err)
 	}
-	defer c.Close(ctx)
+	defer func() { _ = c.Close(ctx) }()
 
 	state, err := c.GetPowerState(ctx)
 	if err != nil {
@@ -89,7 +89,7 @@ func testConsumer(ctx context.Context) error {
 			w.WriteHeader(http.StatusNotFound)
 		}
 		b, _ := json.Marshal(rp)
-		w.Write(b)
+		_, _ = w.Write(b)
 	})
 
 	return http.ListenAndServe(":8800", nil)

@@ -20,7 +20,7 @@ const (
 )
 
 // updateServiceDoc is a partial model of the XCC UpdateService used to drive the
-// firmware push protocol. Only the fields the protocol needs are modelled.
+// firmware push protocol. Only the fields the protocol needs are modeled.
 type updateServiceDoc struct {
 	ServiceEnabled         bool   `json:"ServiceEnabled"`
 	HTTPPushURI            string `json:"HttpPushUri"`
@@ -34,7 +34,7 @@ func (c *Conn) readUpdateService(ctx context.Context) (*updateServiceDoc, error)
 	if err != nil {
 		return nil, fmt.Errorf("reading XCC update service: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
 		return nil, parseRedfishError(resp)

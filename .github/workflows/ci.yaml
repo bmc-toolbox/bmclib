@@ -16,10 +16,10 @@ jobs:
       with:
         go-version-file: go.mod
     - name: Run golangci-lint
-      uses: golangci/golangci-lint-action@v3
+      uses: golangci/golangci-lint-action@v8
       with:
         args: -v --config .golangci.yml --timeout=5m
-        version: latest
+        version: v2.12.2
     - name: make all-checks
       run: make all-checks
   test:

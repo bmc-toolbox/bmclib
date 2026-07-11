@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"io"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
+
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 // FloppyImageMounter defines methods to upload a floppy image
@@ -77,7 +78,6 @@ func MountFloppyImageFromInterfaces(ctx context.Context, image io.Reader, p []in
 				"no FloppyImageMounter implementations found",
 			),
 		)
-
 	}
 
 	return mountFloppyImage(ctx, image, providers)

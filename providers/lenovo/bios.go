@@ -3,8 +3,9 @@ package lenovo
 import (
 	"context"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/stmcginnis/gofish/schemas"
+
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 // GetBiosConfiguration returns the current BIOS attributes as a key/value map,

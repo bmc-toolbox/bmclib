@@ -6,9 +6,10 @@ import (
 	"strings"
 	"time"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish/schemas"
+
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 // PowerSet sets the power state of a server

@@ -3,9 +3,10 @@ package redfish
 import (
 	"context"
 
-	"github.com/bmc-toolbox/bmclib/v2/internal"
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish/schemas"
+
+	"github.com/bmc-toolbox/bmclib/v2/internal"
 )
 
 var (

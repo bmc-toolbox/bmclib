@@ -10,13 +10,14 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
-	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 	"github.com/pkg/errors"
+
+	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
+	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
+	"github.com/bmc-toolbox/bmclib/v2/providers"
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
@@ -180,7 +181,7 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 
 		return false
 	}
-	defer c.Close(ctx)
+	defer func() { _ = c.Close(ctx) }()
 
 	if !c.redfishwrapper.VersionCompatible() {
 		c.Log.V(2).WithValues(

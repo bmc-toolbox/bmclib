@@ -1,3 +1,4 @@
+// Package homeassistant implements a bmclib provider for Home Assistant-managed devices.
 package homeassistant
 
 import (
@@ -10,10 +11,11 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
+
+	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
+	"github.com/bmc-toolbox/bmclib/v2/providers"
 )
 
 const (
@@ -46,7 +48,7 @@ type EntityStateResponse struct {
 }
 
 // New returns a new Config containing all the defaults for the HomeAssistant provider.
-func New(apiUrl string, apiToken string) *Config {
+func New(apiUrl, apiToken string) *Config {
 	return &Config{
 		ApiUrl:     apiUrl,
 		ApiToken:   apiToken,
@@ -82,7 +84,7 @@ func (p *Config) haGetEntityState(ctx context.Context, haEntityId string) (Entit
 	}
 	p.Logger.Info("Testing connection to Home Assistant API", "url", stateUrl)
 
-	req, err := http.NewRequestWithContext(ctx, "GET", stateUrl, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", stateUrl, http.NoBody)
 	if err != nil {
 		return EntityStateResponse{}, err
 	}
@@ -93,7 +95,7 @@ func (p *Config) haGetEntityState(ctx context.Context, haEntityId string) (Entit
 	if err != nil {
 		return EntityStateResponse{}, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return EntityStateResponse{}, fmt.Errorf("failed to connect to Home Assistant API, status code: %d", resp.StatusCode)
@@ -149,11 +151,12 @@ func (p *Config) PowerSet(ctx context.Context, state string) (ok bool, err error
 	// Send a POST request to the Home Assistant API to toggle the switch entity
 
 	var service string
-	if state == "on" {
+	switch state {
+	case "on":
 		service = "turn_on"
-	} else if state == "off" {
+	case "off":
 		service = "turn_off"
-	} else {
+	default:
 		return false, fmt.Errorf("invalid power state: %s", state)
 	}
 
@@ -182,7 +185,7 @@ func (p *Config) PowerSet(ctx context.Context, state string) (ok bool, err error
 	if err != nil {
 		return false, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusAccepted {
 		return false, fmt.Errorf("failed to set power state, status code: %d", resp.StatusCode)

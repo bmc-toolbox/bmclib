@@ -5,10 +5,11 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/iamt"
 	"github.com/jacobweinstock/registrar"
+
+	"github.com/bmc-toolbox/bmclib/v2/providers"
 )
 
 const (
@@ -18,14 +19,12 @@ const (
 	ProviderProtocol = "AMT"
 )
 
-var (
-	// Features implemented by the AMT provider
-	Features = registrar.Features{
-		providers.FeaturePowerSet,
-		providers.FeaturePowerState,
-		providers.FeatureBootDeviceSet,
-	}
-)
+// Features implemented by the AMT provider
+var Features = registrar.Features{
+	providers.FeaturePowerSet,
+	providers.FeaturePowerState,
+	providers.FeatureBootDeviceSet,
+}
 
 // iamtClient interface allows us to mock the client for testing
 type iamtClient interface {
@@ -73,7 +72,7 @@ type Config struct {
 }
 
 // New creates a new AMT connection
-func New(host string, user string, pass string, opts ...Option) *Conn {
+func New(host, user, pass string, opts ...Option) *Conn {
 	defaultClient := &Config{
 		HostScheme: "http",
 		Port:       16992,

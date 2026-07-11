@@ -1,3 +1,4 @@
+// Package ipmi implements a BMC client using native IPMI over LAN.
 package ipmi
 
 import (
@@ -7,11 +8,12 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/go-logr/logr"
+	"github.com/jacobweinstock/registrar"
+
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/bmc-toolbox/bmclib/v2/internal/goipmi"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
-	"github.com/go-logr/logr"
-	"github.com/jacobweinstock/registrar"
 )
 
 const (
@@ -21,20 +23,18 @@ const (
 	ProviderProtocol = "ipmi"
 )
 
-var (
-	// Features implemented by the ipmi provider
-	Features = registrar.Features{
-		providers.FeaturePowerSet,
-		providers.FeaturePowerState,
-		providers.FeatureUserRead,
-		providers.FeatureBmcReset,
-		providers.FeatureBootDeviceSet,
-		providers.FeatureClearSystemEventLog,
-		providers.FeatureGetSystemEventLog,
-		providers.FeatureGetSystemEventLogRaw,
-		providers.FeatureDeactivateSOL,
-	}
-)
+// Features implemented by the ipmi provider
+var Features = registrar.Features{
+	providers.FeaturePowerSet,
+	providers.FeaturePowerState,
+	providers.FeatureUserRead,
+	providers.FeatureBmcReset,
+	providers.FeatureBootDeviceSet,
+	providers.FeatureClearSystemEventLog,
+	providers.FeatureGetSystemEventLog,
+	providers.FeatureGetSystemEventLogRaw,
+	providers.FeatureDeactivateSOL,
+}
 
 // Conn for IPMI connection details
 type Conn struct {
@@ -142,7 +142,7 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 			Info("warn", bmclibErrs.ErrCompatibilityCheck.Error(), err.Error())
 		return false
 	}
-	defer probe.Close(ctx)
+	defer func() { _ = probe.Close(ctx) }()
 
 	if _, err := probe.ipmi.PowerState(ctx); err != nil {
 		c.log.V(2).WithValues("provider", c.Name()).

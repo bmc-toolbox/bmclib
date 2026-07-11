@@ -25,16 +25,16 @@ import (
 func TestInventoryNICsHasPrefixIDCollision(t *testing.T) {
 	mux := http.NewServeMux()
 	for path, fixture := range map[string]string{
-		"/redfish/v1/":      "serviceroot.json",
+		"/redfish/v1/":          "serviceroot.json",
 		"/redfish/v1/Systems":   "systems.json",
 		"/redfish/v1/Systems/1": "systems_1.json",
 
-		"/redfish/v1/Systems/1/NetworkInterfaces":                                                        "smc_aoc/network_interfaces.json",
-		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1":                                      "smc_aoc/network_interface_integrated_1.json",
-		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1/NetworkAdapter":                       "smc_aoc/network_adapter.json",
-		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1/NetworkAdapter/NetworkPorts":          "smc_aoc/network_ports.json",
-		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1/NetworkAdapter/NetworkPorts/1":        "smc_aoc/network_port_1.json",
-		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1/NetworkAdapter/NetworkPorts/2":        "smc_aoc/network_port_2.json",
+		"/redfish/v1/Systems/1/NetworkInterfaces":                                                "smc_aoc/network_interfaces.json",
+		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1":                               "smc_aoc/network_interface_integrated_1.json",
+		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1/NetworkAdapter":                "smc_aoc/network_adapter.json",
+		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1/NetworkAdapter/NetworkPorts":   "smc_aoc/network_ports.json",
+		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1/NetworkAdapter/NetworkPorts/1": "smc_aoc/network_port_1.json",
+		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1/NetworkAdapter/NetworkPorts/2": "smc_aoc/network_port_2.json",
 
 		// EthernetInterfaces returned in order [10, 1, 2] — AOC "10" is first,
 		// causing HasPrefix("10","1") to fire before the correct match on "1".
@@ -104,13 +104,13 @@ func TestInventoryNICsWithAOCFallback(t *testing.T) {
 	mux := http.NewServeMux()
 	for path, fixture := range map[string]string{
 		// gofish bootstrap
-		"/redfish/v1/":      "serviceroot.json",
+		"/redfish/v1/":          "serviceroot.json",
 		"/redfish/v1/Systems":   "systems.json",
 		"/redfish/v1/Systems/1": "systems_1.json",
 		// NetworkInterfaces hierarchy
-		"/redfish/v1/Systems/1/NetworkInterfaces":                                         "smc_aoc/network_interfaces.json",
-		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1":                       "smc_aoc/network_interface_integrated_1.json",
-		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1/NetworkAdapter":        "smc_aoc/network_adapter.json",
+		"/redfish/v1/Systems/1/NetworkInterfaces":                                                "smc_aoc/network_interfaces.json",
+		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1":                               "smc_aoc/network_interface_integrated_1.json",
+		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1/NetworkAdapter":                "smc_aoc/network_adapter.json",
 		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1/NetworkAdapter/NetworkPorts":   "smc_aoc/network_ports.json",
 		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1/NetworkAdapter/NetworkPorts/1": "smc_aoc/network_port_1.json",
 		"/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1/NetworkAdapter/NetworkPorts/2": "smc_aoc/network_port_2.json",

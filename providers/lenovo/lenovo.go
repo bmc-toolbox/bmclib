@@ -5,13 +5,13 @@
 // Schema Bundle 2021.4) with a number of Lenovo OEM extensions. This provider
 // is built on top of the shared gofish-backed [redfishwrapper.Client] — the
 // same foundation used by the generic redfish and the vendor supermicro
-// providers — and layers XCC-specific behaviour (the firmware push protocol,
+// providers — and layers XCC-specific behavior (the firmware push protocol,
 // OEM payload fields and registries, vendor compatibility gating) on top in
 // dedicated files.
 //
 // # XCC conventions
 //
-// The following XCC behaviours are relevant throughout the provider and are
+// The following XCC behaviors are relevant throughout the provider and are
 // documented here once:
 //
 //   - Authentication: XCC supports both HTTP Basic authentication and Redfish
@@ -46,12 +46,13 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
-	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
+
+	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
+	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
+	"github.com/bmc-toolbox/bmclib/v2/providers"
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
@@ -105,7 +106,7 @@ var Features = registrar.Features{
 // Conn is a connection to a Lenovo XCC BMC.
 //
 // It wraps a [redfishwrapper.Client]; capability methods delegate to the
-// wrapper for standard Redfish behaviour and drop to raw requests only for XCC
+// wrapper for standard Redfish behavior and drop to raw requests only for XCC
 // OEM operations.
 type Conn struct {
 	redfishwrapper *redfishwrapper.Client
@@ -265,7 +266,7 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 
 		return false
 	}
-	defer c.Close(ctx)
+	defer func() { _ = c.Close(ctx) }()
 
 	if !c.redfishwrapper.VersionCompatible() {
 		c.Log.V(2).WithValues("provider", c.Name()).

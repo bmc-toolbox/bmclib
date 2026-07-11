@@ -5,17 +5,17 @@ import (
 	"crypto/x509"
 	"errors"
 	"flag"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/bombsimon/logrusr/v2"
+	"github.com/sirupsen/logrus"
+
 	bmclib "github.com/bmc-toolbox/bmclib/v2"
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
-	"github.com/bombsimon/logrusr/v2"
-	"github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -54,7 +54,7 @@ func main() {
 		var pool *x509.CertPool
 		if *certPoolPath != "" {
 			pool = x509.NewCertPool()
-			data, err := ioutil.ReadFile(*certPoolPath)
+			data, err := os.ReadFile(*certPoolPath)
 			if err != nil {
 				l.Fatal(err)
 			}
@@ -70,14 +70,14 @@ func main() {
 		l.Fatal(err, "bmc login failed")
 	}
 
-	defer cl.Close(ctx)
+	defer func() { _ = cl.Close(ctx) }()
 
 	// open file handle
 	fh, err := os.Open(*firmwarePath)
 	if err != nil {
 		l.Fatal(err)
 	}
-	defer fh.Close()
+	defer func() { _ = fh.Close() }()
 
 	taskID, err := cl.FirmwareInstall(ctx, *component, string(constants.OnReset), true, fh)
 	if err != nil {
@@ -110,7 +110,7 @@ func main() {
 				continue
 			}
 
-			log.Fatal(err)
+			log.Fatal(err) //nolint:gocritic // example code; deferred close on fatal exit is acceptable
 		}
 
 		switch state {

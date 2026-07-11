@@ -29,11 +29,9 @@ const (
 	multipartHttpUpload  installMethod = "multipartUpload"
 )
 
-var (
-	// the URI for starting a firmware update via StartUpdate is defined in the Redfish Resource and
-	// Schema Guide (2024.1)
-	startUpdateURI = "/redfish/v1/UpdateService/Actions/UpdateService.StartUpdate"
-)
+// the URI for starting a firmware update via StartUpdate is defined in the Redfish Resource and
+// Schema Guide (2024.1)
+var startUpdateURI = "/redfish/v1/UpdateService/Actions/UpdateService.StartUpdate"
 
 var (
 	errMultiPartPayload   = errors.New("error preparing multipart payload")
@@ -97,7 +95,7 @@ func (c *Client) FirmwareUpload(ctx context.Context, updateFile *os.File, params
 		return "", errors.Wrap(bmclibErrs.ErrFirmwareUpload, err.Error())
 	}
 
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusAccepted {
 		return "", errors.Wrap(
@@ -108,7 +106,7 @@ func (c *Client) FirmwareUpload(ctx context.Context, updateFile *os.File, params
 
 	// The response contains a location header pointing to the task URI
 	// Location: /redfish/v1/TaskService/Tasks/JID_467696020275
-	var location = resp.Header.Get("Location")
+	location := resp.Header.Get("Location")
 	if strings.Contains(location, "/TaskService/Tasks/") {
 		return taskIDFromLocationHeader(location)
 	}
@@ -146,13 +144,13 @@ func (c *Client) StartUpdateForUploadedFirmware(ctx context.Context) (taskID str
 		return "", errors.Wrap(err, "error reading redfish start update response body")
 	}
 
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusAccepted {
 		return "", errors.Wrap(errStartUpdate, "unexpected status code returned: "+resp.Status)
 	}
 
-	var location = resp.Header.Get("Location")
+	location := resp.Header.Get("Location")
 	if strings.Contains(location, "/TaskService/Tasks/") {
 		return taskIDFromLocationHeader(location)
 	}
@@ -263,7 +261,6 @@ func (c *Client) unstructuredHttpUpload(url string, update io.Reader) (*http.Res
 	payloadReadSeeker := bytes.NewReader(b)
 
 	return c.RunRawRequestWithHeaders(http.MethodPost, url, payloadReadSeeker, "application/octet-stream", nil)
-
 }
 
 // firmwareUpdateMethodURI returns the updateMethod and URI
@@ -400,7 +397,7 @@ func (c *Client) runRequestWithMultipartPayload(url string, payload *multipartPa
 
 	// setup pipe
 	pipeReader, pipeWriter := io.Pipe()
-	defer pipeReader.Close()
+	defer func() { _ = pipeReader.Close() }()
 
 	// initiate a mulitpart writer
 	form := multipart.NewWriter(pipeWriter)
@@ -414,7 +411,7 @@ func (c *Client) runRequestWithMultipartPayload(url string, payload *multipartPa
 			}
 		}()
 
-		defer pipeWriter.Close()
+		defer func() { _ = pipeWriter.Close() }()
 
 		// Add UpdateParameters part
 		parametersPart, err := updateParametersFormField("UpdateParameters", form)
@@ -445,7 +442,7 @@ func (c *Client) runRequestWithMultipartPayload(url string, payload *multipartPa
 		}
 
 		// add terminating boundary to multipart form
-		form.Close()
+		_ = form.Close()
 	}()
 
 	// pipeReader wrapped as a io.ReadSeeker to satisfy the gofish method signature

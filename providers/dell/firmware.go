@@ -9,12 +9,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/v2/constants"
-	bmcliberrs "github.com/bmc-toolbox/bmclib/v2/errors"
-	rfw "github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/bmc-toolbox/common"
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish/schemas"
+
+	"github.com/bmc-toolbox/bmclib/v2/constants"
+	bmcliberrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	rfw "github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 )
 
 // bmc client interface implementations methods
@@ -74,21 +75,22 @@ func (c *Conn) checkQueueability(component string, tasks []*schemas.Task) error 
 	}
 
 	for _, t := range tasks {
-		if t.Name == taskNameMap[strings.ToUpper(component)] {
-			// taskInfo returned in error if any.
-			taskInfo := fmt.Sprintf("id: %s, state: %s, status: %s", t.ID, t.TaskState, t.TaskStatus)
+		if t.Name != taskNameMap[strings.ToUpper(component)] {
+			continue
+		}
+		// taskInfo returned in error if any.
+		taskInfo := fmt.Sprintf("id: %s, state: %s, status: %s", t.ID, t.TaskState, t.TaskStatus)
 
-			// convert redfish task state to bmclib state
-			convstate := c.redfishwrapper.ConvertTaskState(string(t.TaskState))
-			// check if task is active based on converted state
-			active, err := c.redfishwrapper.TaskStateActive(convstate)
-			if err != nil {
-				return errors.Wrap(err, taskInfo)
-			}
+		// convert redfish task state to bmclib state
+		convstate := c.redfishwrapper.ConvertTaskState(string(t.TaskState))
+		// check if task is active based on converted state
+		active, err := c.redfishwrapper.TaskStateActive(convstate)
+		if err != nil {
+			return errors.Wrap(err, taskInfo)
+		}
 
-			if active {
-				return errors.Wrap(errTaskActive, taskInfo)
-			}
+		if active {
+			return errors.Wrap(errTaskActive, taskInfo)
 		}
 	}
 
@@ -142,15 +144,15 @@ func (c *Conn) statusFromTaskOem(taskID string, oem json.RawMessage) (constants.
 		return "", "", err
 	}
 
-	s := strings.ToLower(data.Dell.JobState)
+	s := strings.ToLower(data.JobState)
 	state := c.redfishwrapper.ConvertTaskState(s)
 
 	status := fmt.Sprintf(
 		"id: %s, state: %s, status: %s, progress: %d%%",
 		taskID,
-		data.Dell.JobState,
-		data.Dell.Message,
-		data.Dell.PercentComplete,
+		data.JobState,
+		data.Message,
+		data.PercentComplete,
 	)
 
 	return state, status, nil
@@ -169,7 +171,7 @@ func (c *Conn) job(jobID string) (*Dell, error) {
 		return nil, errors.Wrap(errLookup, "unexpected status code: "+resp.Status)
 	}
 
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -219,12 +221,12 @@ func convFirmwareTaskOem(oemdata json.RawMessage) (oem, error) {
 		return oem, errors.Wrap(errTaskOem, "failed to unmarshal: "+err.Error())
 	}
 
-	if oem.Dell.Description == "" || oem.Dell.JobState == "" {
+	if oem.Description == "" || oem.JobState == "" {
 		return oem, errors.Wrap(errTaskOem, "invalid oem data")
 	}
 
-	if oem.Dell.JobType != "FirmwareUpdate" {
-		return oem, errors.Wrap(errTaskOem, "unexpected job type: "+oem.Dell.JobType)
+	if oem.JobType != "FirmwareUpdate" {
+		return oem, errors.Wrap(errTaskOem, "unexpected job type: "+oem.JobType)
 	}
 
 	return oem, nil

@@ -1,5 +1,5 @@
 /*
-status is an example commmand that utilizes the 'v1' bmclib interface methods
+status is an example command that utilizes the 'v1' bmclib interface methods
 to capture a screenshot.
 
 	$ go run ./examples/v1/status/main.go -h

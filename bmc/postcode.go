@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
+
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 // PostCodeGetter defines methods to retrieve device BIOS/UEFI POST code

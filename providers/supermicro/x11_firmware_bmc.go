@@ -88,7 +88,6 @@ func (c *x11) setBMCFirmwareInstallMode(ctx context.Context) error {
 	default:
 		return errors.Wrap(ErrFirmwareInstallMode, "set firmware install mode returned unexpected response body")
 	}
-
 }
 
 // -----------------------------212212001131894333502018521064
@@ -162,7 +161,9 @@ func (c *x11) uploadBMCFirmware(ctx context.Context, fwReader io.Reader) error {
 			return err
 		}
 	}
-	payloadWriter.Close()
+	if err := payloadWriter.Close(); err != nil {
+		return errors.Wrap(ErrMultipartForm, err.Error())
+	}
 
 	resp, statusCode, err := c.query(
 		ctx,
@@ -172,7 +173,6 @@ func (c *x11) uploadBMCFirmware(ctx context.Context, fwReader io.Reader) error {
 		map[string]string{"Content-Type": payloadWriter.FormDataContentType()},
 		0,
 	)
-
 	if err != nil {
 		return errors.Wrap(ErrMultipartForm, err.Error())
 	}

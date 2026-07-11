@@ -1,5 +1,5 @@
 /*
-status is an example commmand that utilizes the 'v1' bmclib interface methods
+status is an example command that utilizes the 'v1' bmclib interface methods
 to gather the BMC version, power state, and bios version from a BMC using the
 redfish driver.
 

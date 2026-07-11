@@ -45,7 +45,7 @@ func WithLogger(log logr.Logger) Option {
 }
 
 // New returns a new ipmi instance
-func New(username string, password string, host string, opts ...Option) (ipmi *Ipmi, err error) {
+func New(username, password, host string, opts ...Option) (ipmi *Ipmi, err error) {
 	ipmi = &Ipmi{
 		Username: username,
 		Password: password,
@@ -73,7 +73,7 @@ func New(username string, password string, host string, opts ...Option) (ipmi *I
 
 func (i *Ipmi) run(ctx context.Context, command []string) (output string, err error) {
 	var out []byte
-	var ipmiCiphers = []string{"3", "17"}
+	ipmiCiphers := []string{"3", "17"}
 	ipmiArgs := []string{"-I", "lanplus", "-U", i.Username, "-E", "-N", "5"}
 
 	if strings.Contains(i.Host, ":") {

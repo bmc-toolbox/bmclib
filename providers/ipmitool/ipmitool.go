@@ -5,11 +5,12 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/go-logr/logr"
+	"github.com/jacobweinstock/registrar"
+
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/bmc-toolbox/bmclib/v2/internal/ipmi"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
-	"github.com/go-logr/logr"
-	"github.com/jacobweinstock/registrar"
 )
 
 const (
@@ -19,20 +20,18 @@ const (
 	ProviderProtocol = "ipmi"
 )
 
-var (
-	// Features implemented by ipmitool
-	Features = registrar.Features{
-		providers.FeaturePowerSet,
-		providers.FeaturePowerState,
-		providers.FeatureUserRead,
-		providers.FeatureBmcReset,
-		providers.FeatureBootDeviceSet,
-		providers.FeatureClearSystemEventLog,
-		providers.FeatureGetSystemEventLog,
-		providers.FeatureGetSystemEventLogRaw,
-		providers.FeatureDeactivateSOL,
-	}
-)
+// Features implemented by ipmitool
+var Features = registrar.Features{
+	providers.FeaturePowerSet,
+	providers.FeaturePowerState,
+	providers.FeatureUserRead,
+	providers.FeatureBmcReset,
+	providers.FeatureBootDeviceSet,
+	providers.FeatureClearSystemEventLog,
+	providers.FeatureGetSystemEventLog,
+	providers.FeatureGetSystemEventLogRaw,
+	providers.FeatureDeactivateSOL,
+}
 
 // Conn for Ipmitool connection details
 type Conn struct {
@@ -123,7 +122,7 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 
 		return false
 	}
-	defer c.Close(ctx)
+	defer func() { _ = c.Close(ctx) }()
 
 	_, err = c.ipmitool.PowerState(ctx)
 	if err != nil {

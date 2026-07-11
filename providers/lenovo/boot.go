@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/bmc-toolbox/bmclib/v2/bmc"
 	"github.com/stmcginnis/gofish/schemas"
+
+	"github.com/bmc-toolbox/bmclib/v2/bmc"
 )
 
 // BootDeviceSet sets the next boot device by writing the ComputerSystem Boot

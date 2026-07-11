@@ -93,7 +93,8 @@ func (e *FakeExecute) SetExitCode(i int) {
 }
 
 func (e *FakeExecute) GetCmd() string {
-	cmd := []string{e.Cmd}
+	cmd := make([]string, 0, 1+len(e.Args))
+	cmd = append(cmd, e.Cmd)
 	cmd = append(cmd, e.Args...)
 
 	return strings.Join(cmd, " ")

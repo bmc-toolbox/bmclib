@@ -13,6 +13,13 @@ import (
 	"time"
 
 	"dario.cat/mergo"
+	"github.com/bmc-toolbox/common"
+	"github.com/go-logr/logr"
+	"github.com/jacobweinstock/registrar"
+	"go.opentelemetry.io/otel/attribute"
+	oteltrace "go.opentelemetry.io/otel/trace"
+	tracenoop "go.opentelemetry.io/otel/trace/noop"
+
 	"github.com/bmc-toolbox/bmclib/v2/bmc"
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
@@ -27,12 +34,6 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/providers/redfish"
 	"github.com/bmc-toolbox/bmclib/v2/providers/rpc"
 	"github.com/bmc-toolbox/bmclib/v2/providers/supermicro"
-	"github.com/bmc-toolbox/common"
-	"github.com/go-logr/logr"
-	"github.com/jacobweinstock/registrar"
-	"go.opentelemetry.io/otel/attribute"
-	oteltrace "go.opentelemetry.io/otel/trace"
-	tracenoop "go.opentelemetry.io/otel/trace/noop"
 )
 
 const (
@@ -230,18 +231,18 @@ func (c *Client) registerIpmitoolProvider() error {
 
 // register ASRR vendorapi provider
 func (c *Client) registerASRRProvider() {
-	asrHttpClient := *c.httpClient
-	asrHttpClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
-	driverAsrockrack := asrockrack.NewWithOptions(c.Auth.Host+":"+c.providerConfig.asrock.Port, c.Auth.User, c.Auth.Pass, c.Logger, asrockrack.WithHTTPClient(&asrHttpClient))
+	asrHTTPClient := *c.httpClient
+	asrHTTPClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
+	driverAsrockrack := asrockrack.NewWithOptions(c.Auth.Host+":"+c.providerConfig.asrock.Port, c.Auth.User, c.Auth.Pass, c.Logger, asrockrack.WithHTTPClient(&asrHTTPClient))
 	c.Registry.Register(asrockrack.ProviderName, asrockrack.ProviderProtocol, asrockrack.Features, nil, driverAsrockrack)
 }
 
 // register gofish provider
 func (c *Client) registerGofishProvider() {
-	gfHttpClient := *c.httpClient
-	gfHttpClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
+	gfHTTPClient := *c.httpClient
+	gfHTTPClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
 	gofishOpts := []redfish.Option{
-		redfish.WithHttpClient(&gfHttpClient),
+		redfish.WithHttpClient(&gfHTTPClient),
 		redfish.WithVersionsNotCompatible(c.providerConfig.gofish.VersionsNotCompatible),
 		redfish.WithUseBasicAuth(c.providerConfig.gofish.UseBasicAuth),
 		redfish.WithPort(c.providerConfig.gofish.Port),
@@ -255,7 +256,6 @@ func (c *Client) registerGofishProvider() {
 
 // register Intel AMT provider
 func (c *Client) registerIntelAMTProvider() {
-
 	iamtOpts := []intelamt.Option{
 		intelamt.WithLogger(c.Logger),
 		intelamt.WithHostScheme(c.providerConfig.intelamt.HostScheme),
@@ -267,10 +267,10 @@ func (c *Client) registerIntelAMTProvider() {
 
 // register Dell gofish provider
 func (c *Client) registerDellProvider() {
-	dellGofishHttpClient := *c.httpClient
-	//dellGofishHttpClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
+	dellGofishHTTPClient := *c.httpClient
+	// dellGofishHTTPClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
 	dellGofishOpts := []dell.Option{
-		dell.WithHttpClient(&dellGofishHttpClient),
+		dell.WithHttpClient(&dellGofishHTTPClient),
 		dell.WithVersionsNotCompatible(c.providerConfig.dell.VersionsNotCompatible),
 		dell.WithUseBasicAuth(c.providerConfig.dell.UseBasicAuth),
 		dell.WithPort(c.providerConfig.dell.Port),
@@ -297,14 +297,14 @@ func (c *Client) registerLenovoProvider() {
 
 // register supermicro vendorapi provider
 func (c *Client) registerSupermicroProvider() {
-	smcHttpClient := *c.httpClient
-	smcHttpClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
+	smcHTTPClient := *c.httpClient
+	smcHTTPClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
 	driverSupermicro := supermicro.NewClient(
 		c.Auth.Host,
 		c.Auth.User,
 		c.Auth.Pass,
 		c.Logger,
-		supermicro.WithHttpClient(&smcHttpClient),
+		supermicro.WithHttpClient(&smcHTTPClient),
 		supermicro.WithPort(c.providerConfig.supermicro.Port),
 	)
 
@@ -336,7 +336,6 @@ func (c *Client) registerProviders() {
 			return
 		}
 		c.Logger.Info("failed to register homeassistant provider, falling back to registering all other providers", "error", err.Error())
-
 	}
 
 	// register the rpc provider
@@ -453,7 +452,6 @@ func (c *Client) Open(ctx context.Context) error {
 
 // Close pass through to library function
 func (c *Client) Close(ctx context.Context) (err error) {
-
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "Close")
 	defer span.End()
 
@@ -583,7 +581,7 @@ func (c *Client) SetBootDevice(ctx context.Context, bootDevice string, setPersis
 // server. Specifically, the method ejects any currently attached virtual media, and then if
 // mediaURL isn't empty, attaches a virtual media device of type kind whose contents are
 // streamed from the indicated URL.
-func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL string) (ok bool, err error) {
+func (c *Client) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (ok bool, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetVirtualMedia")
 	defer span.End()
 
@@ -670,7 +668,7 @@ func (c *Client) ResetBiosConfiguration(ctx context.Context) (err error) {
 }
 
 // FirmwareInstall pass through library function to upload firmware and install firmware
-func (c *Client) FirmwareInstall(ctx context.Context, component string, operationApplyTime string, forceInstall bool, reader io.Reader) (taskID string, err error) {
+func (c *Client) FirmwareInstall(ctx context.Context, component, operationApplyTime string, forceInstall bool, reader io.Reader) (taskID string, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "FirmwareInstall")
 	defer span.End()
 
@@ -693,7 +691,6 @@ func (c *Client) FirmwareInstallStatus(ctx context.Context, installVersion, comp
 	metadata.RegisterSpanAttributes(c.Auth.Host, span)
 
 	return status, err
-
 }
 
 // PostCodeGetter pass through library function to return the BIOS/UEFI POST code

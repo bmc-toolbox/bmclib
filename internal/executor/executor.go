@@ -44,7 +44,8 @@ type Result struct {
 
 // GetCmd returns the command with args as a string
 func (e *Execute) GetCmd() string {
-	cmd := []string{e.Cmd}
+	cmd := make([]string, 0, 1+len(e.Args))
+	cmd = append(cmd, e.Cmd)
 	cmd = append(cmd, e.Args...)
 
 	return strings.Join(cmd, " ")

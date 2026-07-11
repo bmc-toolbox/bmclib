@@ -33,7 +33,7 @@ const (
 	// Redfish firmware apply at constants
 	// FirmwareApplyImmediate sets the firmware to be installed immediately after upload
 	Immediate OperationApplyTime = "Immediate"
-	//FirmwareApplyOnReset sets the firmware to be install on device power cycle/reset
+	// FirmwareApplyOnReset sets the firmware to be install on device power cycle/reset
 	OnReset OperationApplyTime = "OnReset"
 	// FirmwareOnStartUpdateRequest sets the firmware install to begin after the start request has been sent.
 	OnStartUpdateRequest OperationApplyTime = "OnStartUpdateRequest"

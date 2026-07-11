@@ -11,9 +11,10 @@ import (
 	"strings"
 	"time"
 
-	bmclib "github.com/bmc-toolbox/bmclib/v2"
 	"github.com/bombsimon/logrusr/v2"
 	"github.com/sirupsen/logrus"
+
+	bmclib "github.com/bmc-toolbox/bmclib/v2"
 )
 
 func main() {
@@ -61,10 +62,10 @@ func main() {
 
 	err := cl.Open(ctx)
 	if err != nil {
-		log.Fatal(err, "bmc login failed")
+		log.Fatal(err, "bmc login failed") //nolint:gocritic // example code; deferred cancel on fatal exit is acceptable
 	}
 
-	defer cl.Close(ctx)
+	defer func() { _ = cl.Close(ctx) }()
 
 	inv, err := cl.Inventory(ctx)
 	if err != nil {

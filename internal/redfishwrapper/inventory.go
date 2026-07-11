@@ -4,8 +4,9 @@ import (
 	"context"
 	"strings"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/pkg/errors"
+
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 
 	"github.com/bmc-toolbox/common"
 	"github.com/stmcginnis/gofish/schemas"
@@ -193,7 +194,6 @@ func (c *Client) chassisAttributes(ctx context.Context, device *common.Device, f
 	}
 
 	return nil
-
 }
 
 func (c *Client) systemAttributes(device *common.Device, failOnError bool, softwareInventory []*schemas.SoftwareInventory) (err error) {
@@ -260,7 +260,6 @@ func (c *Client) firmwareAttributes(slug, id string, firmwareObj *common.Firmwar
 		// include previously installed firmware attributes
 		if strings.HasPrefix(inv.ID, "Previous") {
 			if strings.Contains(inv.ID, id) || strings.EqualFold(slug, inv.Name) {
-
 				if firmwareObj == nil {
 					firmwareObj = &common.Firmware{}
 				}
@@ -279,7 +278,6 @@ func (c *Client) firmwareAttributes(slug, id string, firmwareObj *common.Firmwar
 		// update firmwareObj with installed firmware attributes
 		if strings.HasPrefix(inv.ID, "Installed") {
 			if strings.Contains(inv.ID, id) || strings.EqualFold(slug, inv.Name) {
-
 				if firmwareObj == nil {
 					firmwareObj = &common.Firmware{}
 				}

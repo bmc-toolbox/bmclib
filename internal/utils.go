@@ -1,3 +1,4 @@
+// Package internal provides shared utilities used across bmclib providers.
 package internal
 
 import (

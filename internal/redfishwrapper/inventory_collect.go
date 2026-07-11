@@ -165,7 +165,6 @@ func (c *Client) collectNICs(sys *schemas.ComputerSystem, device *common.Device,
 		portFirmwareVersion := getFirmwareVersionFromController(adapter.Controllers, len(ports))
 
 		for _, networkPort := range ports {
-
 			// populate network ports general data
 			nicPort := &common.NICPort{}
 			c.collectNetworkPortInfo(nicPort, adapter, networkPort, portFirmwareVersion, softwareInventory)
@@ -241,14 +240,12 @@ func (c *Client) collectNetworkPortInfo(
 	firmware string,
 	softwareInventory []*schemas.SoftwareInventory,
 ) {
-
 	if adapter != nil {
 		nicPort.Vendor = adapter.Manufacturer
 		nicPort.Model = adapter.Model
 	}
 
 	if networkPort != nil {
-
 		nicPort.Description = networkPort.Description
 		nicPort.PCIVendorID = networkPort.VendorID
 		nicPort.Status = &common.Status{
@@ -287,7 +284,6 @@ func (c *Client) collectEthernetInfo(nicPort *common.NICPort, ethernetInterfaces
 	if nicPort == nil {
 		return
 	}
-
 	// populate mac address et al. from matching ethernet interface
 	for _, ethInterface := range ethernetInterfaces {
 		// the ethernet interface includes the port, position number and function NIC.Slot.3-1-1;
@@ -317,7 +313,6 @@ func (c *Client) collectEthernetInfo(nicPort *common.NICPort, ethernetInterfaces
 		if ethInterface.SpeedMbps != nil {
 			nicPort.SpeedBits = int64(gofish.Deref(ethInterface.SpeedMbps)) * int64(math.Pow10(6))
 		}
-
 		nicPort.AutoNeg = ethInterface.AutoNeg
 		nicPort.MTUSize = gofish.Deref(ethInterface.MTUSize)
 
@@ -533,7 +528,6 @@ func (c *Client) collectDIMMs(sys *schemas.ComputerSystem, device *common.Device
 
 // collecCPLDs populates the device with CPLD component attributes
 func (c *Client) collectCPLDs(device *common.Device, softwareInventory []*schemas.SoftwareInventory) (err error) {
-
 	cpld := &common.CPLD{
 		Common: common.Common{
 			Vendor:   common.FormatVendorName(device.Vendor),

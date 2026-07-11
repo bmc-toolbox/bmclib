@@ -16,19 +16,19 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bmc-toolbox/common"
+	"github.com/stmcginnis/gofish/schemas"
+
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/bmc-toolbox/bmclib/v2/internal/sum"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
-	"github.com/bmc-toolbox/common"
-	"github.com/stmcginnis/gofish/schemas"
 
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 	"github.com/pkg/errors"
 
-	bmclibconsts "github.com/bmc-toolbox/bmclib/v2/constants"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
@@ -39,27 +39,25 @@ const (
 	ProviderProtocol = "vendorapi"
 )
 
-var (
-	// Features implemented
-	Features = registrar.Features{
-		providers.FeatureScreenshot,
-		providers.FeatureMountFloppyImage,
-		providers.FeatureUnmountFloppyImage,
-		providers.FeatureFirmwareUpload,
-		providers.FeatureFirmwareInstallUploaded,
-		providers.FeatureFirmwareTaskStatus,
-		providers.FeatureFirmwareInstallSteps,
-		providers.FeatureInventoryRead,
-		providers.FeaturePowerSet,
-		providers.FeaturePowerState,
-		providers.FeatureBmcReset,
-		providers.FeatureGetBiosConfiguration,
-		providers.FeatureSetBiosConfiguration,
-		providers.FeatureSetBiosConfigurationFromFile,
-		providers.FeatureResetBiosConfiguration,
-		providers.FeatureBootProgress,
-	}
-)
+// Features implemented
+var Features = registrar.Features{
+	providers.FeatureScreenshot,
+	providers.FeatureMountFloppyImage,
+	providers.FeatureUnmountFloppyImage,
+	providers.FeatureFirmwareUpload,
+	providers.FeatureFirmwareInstallUploaded,
+	providers.FeatureFirmwareTaskStatus,
+	providers.FeatureFirmwareInstallSteps,
+	providers.FeatureInventoryRead,
+	providers.FeaturePowerSet,
+	providers.FeaturePowerState,
+	providers.FeatureBmcReset,
+	providers.FeatureGetBiosConfiguration,
+	providers.FeatureSetBiosConfiguration,
+	providers.FeatureSetBiosConfigurationFromFile,
+	providers.FeatureResetBiosConfiguration,
+	providers.FeatureBootProgress,
+}
 
 // supports
 //
@@ -356,7 +354,7 @@ func parseToken(body []byte) string {
 		return ""
 	}
 
-	re, err := regexp.Compile(fmt.Sprintf(`"%s", "(?P<token>.*)"`, key))
+	re, err := regexp.Compile(fmt.Sprintf(`%q, "(?P<token>.*)"`, key))
 	if err != nil {
 		return ""
 	}
@@ -584,12 +582,11 @@ func (c *serviceClient) query(ctx context.Context, endpoint, method string, payl
 		if cookie.Name == "SID" && cookie.Value != "" {
 			req.AddCookie(cookie)
 		}
-
 	}
 
 	var reqDump []byte
 
-	if os.Getenv(bmclibconsts.EnvEnableDebug) == "true" {
+	if os.Getenv(constants.EnvEnableDebug) == "true" {
 		reqDump, _ = httputil.DumpRequestOut(req, true)
 	}
 
@@ -600,7 +597,7 @@ func (c *serviceClient) query(ctx context.Context, endpoint, method string, payl
 
 	// cookies are visible after the request has been made, so we dump the request and cookies here
 	// https://github.com/golang/go/issues/22745
-	if os.Getenv(bmclibconsts.EnvEnableDebug) == "true" {
+	if os.Getenv(constants.EnvEnableDebug) == "true" {
 		fmt.Println(string(reqDump))
 
 		for _, v := range req.Cookies() {
@@ -610,7 +607,7 @@ func (c *serviceClient) query(ctx context.Context, endpoint, method string, payl
 	}
 
 	// debug dump response
-	if os.Getenv(bmclibconsts.EnvEnableDebug) == "true" {
+	if os.Getenv(constants.EnvEnableDebug) == "true" {
 		respDump, _ := httputil.DumpResponse(resp, true)
 
 		fmt.Println(string(respDump))
@@ -621,7 +618,7 @@ func (c *serviceClient) query(ctx context.Context, endpoint, method string, payl
 		return body, 0, err
 	}
 
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	return body, resp.StatusCode, nil
 }
@@ -634,7 +631,6 @@ func hostIP(hostURL string) (string, error) {
 
 	if strings.Contains(hostURLParsed.Host, ":") {
 		return strings.Split(hostURLParsed.Host, ":")[0], nil
-
 	}
 
 	return hostURLParsed.Host, nil

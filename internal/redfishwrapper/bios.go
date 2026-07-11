@@ -3,8 +3,9 @@ package redfishwrapper
 import (
 	"context"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/stmcginnis/gofish/schemas"
+
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 func (c *Client) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]string, err error) {

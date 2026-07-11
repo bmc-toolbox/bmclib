@@ -6,12 +6,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/v2/providers/homeassistant"
-	"github.com/bmc-toolbox/bmclib/v2/providers/rpc"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 	oteltrace "go.opentelemetry.io/otel/trace"
+
+	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
+	"github.com/bmc-toolbox/bmclib/v2/providers/homeassistant"
+	"github.com/bmc-toolbox/bmclib/v2/providers/rpc"
 )
 
 // Option for setting optional Client values

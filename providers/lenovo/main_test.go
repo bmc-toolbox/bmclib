@@ -544,7 +544,7 @@ func newTestServer(t *testing.T, opts testServerOpts) *testServer {
 	//
 	// GETs are served from fixtures. Writes (PATCH/POST/PUT/DELETE) on a known
 	// resource are accepted with 204 and recorded, so tests can assert that a
-	// mutation was issued without modelling full write semantics.
+	// mutation was issued without modeling full write semantics.
 	mux.HandleFunc("/redfish/v1/", func(w http.ResponseWriter, r *http.Request) {
 		file, ok := routes[r.URL.Path]
 		if !ok {

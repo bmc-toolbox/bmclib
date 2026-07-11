@@ -3,10 +3,11 @@ package redfishwrapper
 import (
 	"context"
 
-	"github.com/bmc-toolbox/bmclib/v2/bmc"
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish/schemas"
+
+	"github.com/bmc-toolbox/bmclib/v2/bmc"
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 type bootDeviceMapping struct {

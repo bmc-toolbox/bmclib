@@ -8,13 +8,14 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
-	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 	"github.com/pkg/errors"
+
+	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
+	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
+	"github.com/bmc-toolbox/bmclib/v2/providers"
 )
 
 const (
@@ -40,7 +41,7 @@ var (
 )
 
 type Config struct {
-	HttpClient            *http.Client
+	HTTPClient            *http.Client
 	Port                  string
 	VersionsNotCompatible []string
 	RootCAs               *x509.CertPool
@@ -52,7 +53,7 @@ type Option func(*Config)
 
 func WithHttpClient(httpClient *http.Client) Option {
 	return func(c *Config) {
-		c.HttpClient = httpClient
+		c.HTTPClient = httpClient
 	}
 }
 
@@ -85,7 +86,7 @@ type Conn struct {
 // New returns connection with a redfish client initialized
 func New(host, user, pass string, log logr.Logger, opts ...Option) *Conn {
 	defaultConfig := &Config{
-		HttpClient:            httpclient.Build(),
+		HTTPClient:            httpclient.Build(),
 		Port:                  "443",
 		VersionsNotCompatible: []string{},
 	}
@@ -95,7 +96,7 @@ func New(host, user, pass string, log logr.Logger, opts ...Option) *Conn {
 	}
 
 	rfOpts := []redfishwrapper.Option{
-		redfishwrapper.WithHTTPClient(defaultConfig.HttpClient),
+		redfishwrapper.WithHTTPClient(defaultConfig.HTTPClient),
 		redfishwrapper.WithBasicAuthEnabled(defaultConfig.UseBasicAuth),
 		redfishwrapper.WithEtagMatchDisabled(true),
 	}
@@ -106,7 +107,7 @@ func New(host, user, pass string, log logr.Logger, opts ...Option) *Conn {
 
 	return &Conn{
 		host:           host,
-		httpClient:     defaultConfig.HttpClient,
+		httpClient:     defaultConfig.HTTPClient,
 		Log:            log,
 		redfishwrapper: redfishwrapper.NewClient(host, defaultConfig.Port, user, pass, rfOpts...),
 	}
@@ -126,7 +127,7 @@ func (c *Conn) Open(ctx context.Context) (err error) {
 }
 
 func (c *Conn) deviceSupported(ctx context.Context) error {
-	var host = c.host
+	host := c.host
 	if !strings.HasPrefix(host, "https://") && !strings.HasPrefix(host, "http://") {
 		host = "https://" + host
 	}
@@ -141,7 +142,7 @@ func (c *Conn) deviceSupported(ctx context.Context) error {
 		return err
 	}
 
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {

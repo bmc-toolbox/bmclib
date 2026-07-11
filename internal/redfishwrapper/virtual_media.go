@@ -43,7 +43,7 @@ func (c *Client) getVirtualMedia(ctx context.Context) ([]*schemas.VirtualMedia, 
 // SetVirtualMedia sets virtual media on the system. If mediaURL is empty,
 // matching media may be ejected. When multiple matching virtual media slots
 // exist, each slot is tried in order until one succeeds.
-func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL string) (bool, error) {
+func (c *Client) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (bool, error) {
 	var mediaKind schemas.VirtualMediaType
 
 	switch kind {

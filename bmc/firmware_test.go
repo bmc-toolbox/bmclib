@@ -7,11 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/v2/constants"
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/bmc-toolbox/common"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/bmc-toolbox/bmclib/v2/constants"
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 type firmwareInstallTester struct {
@@ -68,6 +69,7 @@ func TestFirmwareInstall(t *testing.T) {
 		})
 	}
 }
+
 func TestFirmwareInstallFromInterfaces(t *testing.T) {
 	testCases := []struct {
 		testName          string

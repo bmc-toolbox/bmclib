@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
+
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 type BiosConfigurationGetter interface {
@@ -55,7 +56,6 @@ Loop:
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				err = multierror.Append(err, vErr)
 				continue
-
 			}
 			metadata.SuccessfulProvider = elem.name
 			return biosConfig, metadata, nil
@@ -83,7 +83,6 @@ Loop:
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				err = multierror.Append(err, vErr)
 				continue
-
 			}
 			metadata.SuccessfulProvider = elem.name
 			return metadata, nil
@@ -111,7 +110,6 @@ Loop:
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				err = multierror.Append(err, vErr)
 				continue
-
 			}
 			metadata.SuccessfulProvider = elem.name
 			return metadata, nil
@@ -139,7 +137,6 @@ Loop:
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				err = multierror.Append(err, vErr)
 				continue
-
 			}
 			metadata.SuccessfulProvider = elem.name
 			return metadata, nil

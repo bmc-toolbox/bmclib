@@ -8,13 +8,14 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/bmc-toolbox/bmclib/v2/constants"
-	brrs "github.com/bmc-toolbox/bmclib/v2/errors"
-	rfw "github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish/schemas"
+
+	"github.com/bmc-toolbox/bmclib/v2/constants"
+	brrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	rfw "github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 )
 
 type x12 struct {
@@ -53,9 +54,7 @@ func (c *x12) queryDeviceModel(ctx context.Context) (string, error) {
 	return c.model, nil
 }
 
-var (
-	errUploadTaskIDEmpty = errors.New("firmware upload request returned empty firmware upload verify TaskID")
-)
+var errUploadTaskIDEmpty = errors.New("firmware upload request returned empty firmware upload verify TaskID")
 
 func (c *x12) supportsInstall(component string) error {
 	errComponentNotSupported := fmt.Errorf("component %s on device %s not supported", component, c.model)
@@ -83,7 +82,7 @@ func (c *x12) firmwareInstallSteps(component string) ([]constants.FirmwareInstal
 
 // upload firmware
 func (c *x12) firmwareUpload(ctx context.Context, component string, file *os.File) (taskID string, err error) {
-	if err = c.supportsInstall(component); err != nil {
+	if err := c.supportsInstall(component); err != nil {
 		return "", err
 	}
 
@@ -247,9 +246,9 @@ func (c *x12) redfishParameters(component, targetODataID string) (*rfw.RedfishUp
 
 	switch strings.ToUpper(component) {
 	case common.SlugBIOS:
-		oem.Supermicro.BIOS = biosInstallParams
+		oem.BIOS = biosInstallParams
 	case common.SlugBMC:
-		oem.Supermicro.BMC = c.bmcFwInstallParams()
+		oem.BMC = c.bmcFwInstallParams()
 	default:
 		return nil, errUnsupported
 	}
@@ -277,14 +276,14 @@ func (c *x12) redfishOdataID(ctx context.Context, component string) (string, err
 	case common.SlugBIOS:
 		// hardcoded since SMCs without the DCMS license will throw license errors
 		return "/redfish/v1/Systems/1/Bios", nil
-		//return c.redfish.SystemsBIOSOdataID(ctx)
+		// return c.redfish.SystemsBIOSOdataID(ctx)
 	}
 
 	return "", errUnsupported
 }
 
 func (c *x12) firmwareInstallUploaded(ctx context.Context, component, uploadTaskID string) (installTaskID string, err error) {
-	if err = c.supportsInstall(component); err != nil {
+	if err := c.supportsInstall(component); err != nil {
 		return "", err
 	}
 

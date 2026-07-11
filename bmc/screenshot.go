@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
+
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 // ScreenshotGetter interface provides methods to query for a BMC screen capture.

@@ -5,15 +5,14 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bmc-toolbox/bmclib/v2/constants"
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish/schemas"
+
+	"github.com/bmc-toolbox/bmclib/v2/constants"
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
-var (
-	errUnexpectedTaskState = errors.New("unexpected task state")
-)
+var errUnexpectedTaskState = errors.New("unexpected task state")
 
 func (c *Client) Task(ctx context.Context, taskID string) (*schemas.Task, error) {
 	tasks, err := c.Tasks(ctx)
@@ -75,13 +74,13 @@ func (c *Client) ConvertTaskState(state string) constants.TaskState {
 	switch strings.ToLower(state) {
 	case "starting", "downloading", "downloaded", "scheduling":
 		return constants.Initializing
-	case "running", "stopping", "cancelling":
+	case "running", "stopping", "cancelling": //nolint:misspell // Redfish API uses British spelling
 		return constants.Running
 	case "pending", "new":
 		return constants.Queued
 	case "scheduled":
 		return constants.PowerCycleHost
-	case "interrupted", "killed", "exception", "cancelled", "suspended", "failed":
+	case "interrupted", "killed", "exception", "cancelled", "suspended", "failed": //nolint:misspell // Redfish API uses British spelling
 		return constants.Failed
 	case "completed":
 		return constants.Complete

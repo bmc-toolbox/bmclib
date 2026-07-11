@@ -3,8 +3,9 @@ package lenovo
 import (
 	"context"
 
-	"github.com/bmc-toolbox/bmclib/v2/bmc"
 	"github.com/pkg/errors"
+
+	"github.com/bmc-toolbox/bmclib/v2/bmc"
 )
 
 // compile-time assertions that the provider implements the user interfaces.

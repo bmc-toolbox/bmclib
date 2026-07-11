@@ -7,13 +7,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/v2/constants"
 	"github.com/bmc-toolbox/common"
+
+	"github.com/bmc-toolbox/bmclib/v2/constants"
+
+	"github.com/pkg/errors"
+	"github.com/stmcginnis/gofish/schemas"
 
 	bmcliberrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	rfw "github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
-	"github.com/pkg/errors"
-	"github.com/stmcginnis/gofish/schemas"
 )
 
 // bmc client interface implementations methods
@@ -95,6 +97,6 @@ func (c *Conn) checkQueueability(component string, tasks []*schemas.Task) error 
 }
 
 // FirmwareTaskStatus returns the status of a firmware related task queued on the BMC.
-func (c *Conn) FirmwareTaskStatus(ctx context.Context, kind constants.FirmwareInstallStep, component, taskID, installVersion string) (state constants.TaskState, status string, err error) {
+func (c *Conn) FirmwareTaskStatus(ctx context.Context, _ constants.FirmwareInstallStep, component, taskID, installVersion string) (state constants.TaskState, status string, err error) {
 	return c.redfishwrapper.TaskStatus(ctx, taskID)
 }

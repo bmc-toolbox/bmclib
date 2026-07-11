@@ -12,10 +12,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
+
+	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
+	"github.com/bmc-toolbox/bmclib/v2/providers"
 )
 
 const (
@@ -131,7 +132,7 @@ type Experimental struct {
 }
 
 // New returns a new Config containing all the defaults for the rpc provider.
-func New(consumerURL string, host string, secrets Secrets) *Provider {
+func New(consumerURL, host string, secrets Secrets) *Provider {
 	// defaults
 	c := &Provider{
 		Host:        host,
@@ -325,7 +326,7 @@ func (p *Provider) process(ctx context.Context, rp RequestPayload) (ResponsePayl
 		p.Logger.Error(err, "failed to send rpc notification", kvs...)
 		return ResponsePayload{}, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// handle the response
 	if resp.ContentLength > maxContentLenAllowed || resp.ContentLength < 0 {
@@ -345,8 +346,7 @@ func (p *Provider) process(ctx context.Context, rp RequestPayload) (ResponsePayl
 
 // Transformer implements the mergo interfaces for merging custom types.
 func (p *Provider) Transformer(typ reflect.Type) func(dst, src reflect.Value) error {
-	switch typ {
-	case reflect.TypeOf(logr.Logger{}):
+	if typ == reflect.TypeOf(logr.Logger{}) {
 		return func(dst, src reflect.Value) error {
 			if dst.CanSet() {
 				isZero := dst.MethodByName("GetSink")

@@ -11,9 +11,10 @@ import (
 	"net/http/httputil"
 	"os"
 
+	"github.com/bmc-toolbox/common"
+
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	brrs "github.com/bmc-toolbox/bmclib/v2/errors"
-	"github.com/bmc-toolbox/common"
 )
 
 // API session setup response payload
@@ -127,15 +128,13 @@ type biosUpdateAction struct {
 	Action int `json:"action"`
 }
 
-var (
-	knownPOSTCodes = map[int]string{
-		160: constants.POSTStateOS,
-		2:   constants.POSTStateBootINIT, // no differentiation between BIOS init and PXE boot
-		144: constants.POSTStateUEFI,
-		154: constants.POSTStateUEFI,
-		178: constants.POSTStateUEFI,
-	}
-)
+var knownPOSTCodes = map[int]string{
+	160: constants.POSTStateOS,
+	2:   constants.POSTStateBootINIT, // no differentiation between BIOS init and PXE boot
+	144: constants.POSTStateUEFI,
+	154: constants.POSTStateUEFI,
+	178: constants.POSTStateUEFI,
+}
 
 func (a *ASRockRack) listUsers(ctx context.Context) ([]*UserAccount, error) {
 	resp, statusCode, err := a.queryHTTPS(ctx, "api/settings/users", "GET", nil, nil, 0)
@@ -190,8 +189,7 @@ func (a *ASRockRack) setFlashMode(ctx context.Context) error {
 
 	pConfig := &preserveConfig{}
 	// preserve config is needed by e3c256d4i
-	switch device.Model {
-	case E3C256D4ID_NL:
+	if device.Model == E3C256D4ID_NL {
 		pConfig = &preserveConfig{PreserveConfig: 1}
 	}
 
@@ -241,14 +239,14 @@ func (a *ASRockRack) uploadFirmware(ctx context.Context, endpoint string, file *
 
 	// setup pipe
 	pipeReader, pipeWriter := io.Pipe()
-	defer pipeReader.Close()
+	defer func() { _ = pipeReader.Close() }()
 
 	// initiate a mulitpart writer
 	form := multipart.NewWriter(pipeWriter)
 
 	errCh := make(chan error, 1)
 	go func() {
-		defer pipeWriter.Close()
+		defer func() { _ = pipeWriter.Close() }()
 
 		// create form part
 		part, err := form.CreateFormFile(fieldName, fileName)
@@ -590,9 +588,7 @@ func (a *ASRockRack) httpsLogout(ctx context.Context) error {
 // queryHTTPS run the HTTPS query passing in the required headers
 // the / suffix should be excluded from the URLendpoint
 // returns - response body, http status code, error if any
-func (a *ASRockRack) queryHTTPS(ctx context.Context, endpoint, method string, payload io.Reader, headers map[string]string, contentLength int64) ([]byte, int, error) {
-	var body []byte
-	var err error
+func (a *ASRockRack) queryHTTPS(ctx context.Context, endpoint, method string, payload io.Reader, headers map[string]string, contentLength int64) (responseBody []byte, statusCode int, err error) {
 	var req *http.Request
 
 	URL := fmt.Sprintf("https://%s/%s", a.ip, endpoint)
@@ -622,7 +618,7 @@ func (a *ASRockRack) queryHTTPS(ctx context.Context, endpoint, method string, pa
 
 	resp, err := a.httpClient.Do(req)
 	if err != nil {
-		return body, 0, err
+		return responseBody, 0, err
 	}
 
 	// debug dump response
@@ -631,12 +627,12 @@ func (a *ASRockRack) queryHTTPS(ctx context.Context, endpoint, method string, pa
 		a.log.V(3).Info("trace", "responseDump", string(respDump))
 	}
 
-	body, err = io.ReadAll(resp.Body)
+	responseBody, err = io.ReadAll(resp.Body)
 	if err != nil {
-		return body, 0, err
+		return responseBody, 0, err
 	}
 
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
-	return body, resp.StatusCode, nil
+	return responseBody, resp.StatusCode, nil
 }

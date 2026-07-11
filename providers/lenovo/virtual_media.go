@@ -55,7 +55,7 @@ func ejectPayload() map[string]any {
 // by their advertised MediaTypes, preferring free, remote-capable slots — so a
 // remote ISO lands in a "Remote" slot rather than an upload-only "RDOC" slot.
 // Implements bmc.VirtualMediaSetter.
-func (c *Conn) SetVirtualMedia(ctx context.Context, kind string, mediaURL string) (ok bool, err error) {
+func (c *Conn) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (ok bool, err error) {
 	if !validVirtualMediaKinds[kind] {
 		return false, fmt.Errorf("invalid virtual media kind %q (want CD|DVD|Floppy|USBStick)", kind)
 	}

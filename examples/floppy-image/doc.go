@@ -1,5 +1,5 @@
 /*
-inventory is an example commmand that utilizes the 'v1' bmclib interface
+inventory is an example command that utilizes the 'v1' bmclib interface
 methods to upload and mount, unmount a floppy image.
 
 	    # mount image

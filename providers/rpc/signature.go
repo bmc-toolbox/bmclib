@@ -19,7 +19,6 @@ func createSignaturePayload(body []byte, h http.Header) []byte {
 	// add headers to signature payload, no space between values.
 	for _, val := range h {
 		body = append(body, []byte(strings.Join(val, ""))...)
-
 	}
 
 	return body
@@ -60,7 +59,7 @@ func (a Algorithm) ToShort() Algorithm {
 
 // NewSHA256 returns a map of SHA256 HMACs from the given secrets.
 func NewSHA256(secret ...string) Hashes {
-	var hsh []hash.Hash
+	hsh := make([]hash.Hash, 0, len(secret))
 	for _, s := range secret {
 		hsh = append(hsh, hmac.New(sha256.New, []byte(s)))
 	}
@@ -69,7 +68,7 @@ func NewSHA256(secret ...string) Hashes {
 
 // NewSHA512 returns a map of SHA512 HMACs from the given secrets.
 func NewSHA512(secret ...string) Hashes {
-	var hsh []hash.Hash
+	hsh := make([]hash.Hash, 0, len(secret))
 	for _, s := range secret {
 		hsh = append(hsh, hmac.New(sha512.New, []byte(s)))
 	}
