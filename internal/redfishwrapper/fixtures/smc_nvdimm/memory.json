@@ -1,0 +1,11 @@
+{
+    "@odata.type": "#MemoryCollection.MemoryCollection",
+    "@odata.id": "/redfish/v1/Systems/1/Memory",
+    "Name": "Memory Collection",
+    "Members@odata.count": 1,
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Systems/1/Memory/DIMM1"
+        }
+    ]
+}
