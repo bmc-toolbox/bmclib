@@ -1,0 +1,19 @@
+{
+    "@odata.type": "#Memory.v1_11_0.Memory",
+    "@odata.id": "/redfish/v1/Systems/1/Memory/DIMM1",
+    "Id": "DIMM1",
+    "Name": "DIMM1",
+    "Description": "DIMM1",
+    "Manufacturer": "TESTVENDOR",
+    "SerialNumber": "TESTNVDIMMSERIAL01",
+    "PartNumber": "TEST-NVDIMM-16GB",
+    "MemoryType": "NVDIMM_N",
+    "MemoryDeviceType": "DDR4",
+    "VolatileSizeMiB": 8192,
+    "NonVolatileSizeMiB": 8192,
+    "OperatingSpeedMhz": 2666,
+    "Status": {
+        "State": "Enabled",
+        "Health": "OK"
+    }
+}

@@ -508,6 +508,17 @@ func (c *Client) collectDIMMs(sys *schemas.ComputerSystem, device *common.Device
 	}
 
 	for _, dimm := range dimms {
+		// CapacityMiB is the overall module capacity and should be populated for
+		// ordinary (volatile-only) DIMMs. VolatileSizeMiB/NonVolatileSizeMiB only
+		// apply to memory with a volatile/non-volatile split (e.g. NVDIMM); fall
+		// back to their sum when CapacityMiB is absent, rather than using
+		// VolatileSizeMiB alone, which is 0 for plain DRAM on some platforms and
+		// silently produced a zero SizeBytes.
+		sizeMiB := gofish.Deref(dimm.CapacityMiB)
+		if sizeMiB == 0 {
+			sizeMiB = gofish.Deref(dimm.VolatileSizeMiB) + gofish.Deref(dimm.NonVolatileSizeMiB)
+		}
+
 		device.Memory = append(device.Memory, &common.Memory{
 			Common: common.Common{
 				Description: dimm.Description,
@@ -522,7 +533,7 @@ func (c *Client) collectDIMMs(sys *schemas.ComputerSystem, device *common.Device
 
 			Slot:         dimm.ID,
 			Type:         string(dimm.MemoryType),
-			SizeBytes:    int64(gofish.Deref(dimm.VolatileSizeMiB) * 1024 * 1024),
+			SizeBytes:    int64(sizeMiB) * 1024 * 1024,
 			FormFactor:   "",
 			PartNumber:   dimm.PartNumber,
 			ClockSpeedHz: int64(gofish.Deref(dimm.OperatingSpeedMhz) * 1000 * 1000),

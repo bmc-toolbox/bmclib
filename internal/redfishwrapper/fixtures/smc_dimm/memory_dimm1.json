@@ -1,0 +1,18 @@
+{
+    "@odata.type": "#Memory.v1_11_0.Memory",
+    "@odata.id": "/redfish/v1/Systems/1/Memory/DIMM1",
+    "Id": "DIMM1",
+    "Name": "DIMM1",
+    "Description": "DIMM1",
+    "Manufacturer": "Samsung",
+    "SerialNumber": "TESTDIMMSERIAL01",
+    "PartNumber": "M393A8G40CB4-CWE",
+    "MemoryType": "DRAM",
+    "MemoryDeviceType": "DDR4",
+    "CapacityMiB": 65536,
+    "OperatingSpeedMhz": 3200,
+    "Status": {
+        "State": "Enabled",
+        "Health": "OK"
+    }
+}

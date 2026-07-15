@@ -18,9 +18,9 @@ queue_rules:
       - label!=do-not-merge
       - label=ready-to-merge
     merge_method: merge
-    commit_message_template: |
-      {{ title }} (#{{ number }})
-
+    commit_message_format:
+      title: pr-title
+      body: empty
 pull_request_rules:
   - name: refactored queue action rule
     conditions: []
