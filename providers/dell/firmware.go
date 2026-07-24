@@ -1,3 +1,4 @@
+// Package dell implements a bmclib provider for Dell iDRAC BMCs.
 package dell
 
 import (
@@ -9,15 +10,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/v2/constants"
-	bmcliberrs "github.com/bmc-toolbox/bmclib/v2/errors"
-	rfw "github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/bmc-toolbox/common"
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish/schemas"
+
+	"github.com/bmc-toolbox/bmclib/v2/constants"
+	bmcliberrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	rfw "github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 )
 
-// bmc client interface implementations methods
+// FirmwareInstallSteps returns the ordered steps required to install firmware on the given component.
 func (c *Conn) FirmwareInstallSteps(ctx context.Context, component string) ([]constants.FirmwareInstallStep, error) {
 	if err := c.deviceSupported(ctx); err != nil {
 		return nil, bmcliberrs.NewErrUnsupportedHardware(err.Error())
@@ -29,6 +31,7 @@ func (c *Conn) FirmwareInstallSteps(ctx context.Context, component string) ([]co
 	}, nil
 }
 
+// FirmwareInstallUploadAndInitiate uploads the firmware image and initiates its installation, returning the task ID.
 func (c *Conn) FirmwareInstallUploadAndInitiate(ctx context.Context, component string, file *os.File) (taskID string, err error) {
 	if err := c.deviceSupported(ctx); err != nil {
 		return "", bmcliberrs.NewErrUnsupportedHardware(err.Error())
@@ -74,21 +77,22 @@ func (c *Conn) checkQueueability(component string, tasks []*schemas.Task) error 
 	}
 
 	for _, t := range tasks {
-		if t.Name == taskNameMap[strings.ToUpper(component)] {
-			// taskInfo returned in error if any.
-			taskInfo := fmt.Sprintf("id: %s, state: %s, status: %s", t.ID, t.TaskState, t.TaskStatus)
+		if t.Name != taskNameMap[strings.ToUpper(component)] {
+			continue
+		}
+		// taskInfo returned in error if any.
+		taskInfo := fmt.Sprintf("id: %s, state: %s, status: %s", t.ID, t.TaskState, t.TaskStatus)
 
-			// convert redfish task state to bmclib state
-			convstate := c.redfishwrapper.ConvertTaskState(string(t.TaskState))
-			// check if task is active based on converted state
-			active, err := c.redfishwrapper.TaskStateActive(convstate)
-			if err != nil {
-				return errors.Wrap(err, taskInfo)
-			}
+		// convert redfish task state to bmclib state
+		convstate := c.redfishwrapper.ConvertTaskState(string(t.TaskState))
+		// check if task is active based on converted state
+		active, err := c.redfishwrapper.TaskStateActive(convstate)
+		if err != nil {
+			return errors.Wrap(err, taskInfo)
+		}
 
-			if active {
-				return errors.Wrap(errTaskActive, taskInfo)
-			}
+		if active {
+			return errors.Wrap(errTaskActive, taskInfo)
 		}
 	}
 
@@ -142,15 +146,15 @@ func (c *Conn) statusFromTaskOem(taskID string, oem json.RawMessage) (constants.
 		return "", "", err
 	}
 
-	s := strings.ToLower(data.Dell.JobState)
+	s := strings.ToLower(data.JobState)
 	state := c.redfishwrapper.ConvertTaskState(s)
 
 	status := fmt.Sprintf(
 		"id: %s, state: %s, status: %s, progress: %d%%",
 		taskID,
-		data.Dell.JobState,
-		data.Dell.Message,
-		data.Dell.PercentComplete,
+		data.JobState,
+		data.Message,
+		data.PercentComplete,
 	)
 
 	return state, status, nil
@@ -169,7 +173,7 @@ func (c *Conn) job(jobID string) (*Dell, error) {
 		return nil, errors.Wrap(errLookup, "unexpected status code: "+resp.Status)
 	}
 
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -189,6 +193,7 @@ type oem struct {
 	Dell `json:"Dell"`
 }
 
+// Dell holds the Dell OEM section of a Redfish task response.
 type Dell struct {
 	OdataType         string        `json:"@odata.type"`
 	CompletionTime    interface{}   `json:"CompletionTime"`
@@ -207,25 +212,25 @@ type Dell struct {
 }
 
 func convFirmwareTaskOem(oemdata json.RawMessage) (oem, error) {
-	oem := oem{}
+	taskOem := oem{}
 
 	errTaskOem := errors.New("error in Task Oem data: " + string(oemdata))
 
 	if len(oemdata) == 0 || string(oemdata) == `{}` {
-		return oem, errors.Wrap(errTaskOem, "empty oem data")
+		return taskOem, errors.Wrap(errTaskOem, "empty oem data")
 	}
 
-	if err := json.Unmarshal(oemdata, &oem); err != nil {
-		return oem, errors.Wrap(errTaskOem, "failed to unmarshal: "+err.Error())
+	if err := json.Unmarshal(oemdata, &taskOem); err != nil {
+		return taskOem, errors.Wrap(errTaskOem, "failed to unmarshal: "+err.Error())
 	}
 
-	if oem.Dell.Description == "" || oem.Dell.JobState == "" {
-		return oem, errors.Wrap(errTaskOem, "invalid oem data")
+	if taskOem.Description == "" || taskOem.JobState == "" {
+		return taskOem, errors.Wrap(errTaskOem, "invalid oem data")
 	}
 
-	if oem.Dell.JobType != "FirmwareUpdate" {
-		return oem, errors.Wrap(errTaskOem, "unexpected job type: "+oem.Dell.JobType)
+	if taskOem.JobType != "FirmwareUpdate" {
+		return taskOem, errors.Wrap(errTaskOem, "unexpected job type: "+taskOem.JobType)
 	}
 
-	return oem, nil
+	return taskOem, nil
 }

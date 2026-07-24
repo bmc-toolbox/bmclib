@@ -14,9 +14,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/goleak"
+
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 func TestRunRequestWithMultipartPayload(t *testing.T) {
@@ -25,7 +26,7 @@ func TestRunRequestWithMultipartPayload(t *testing.T) {
 	// init things
 	tmpdir := t.TempDir()
 	binPath := filepath.Join(tmpdir, "test.bin")
-	err := os.WriteFile(binPath, []byte(`HELLOWORLD`), 0600)
+	err := os.WriteFile(binPath, []byte(`HELLOWORLD`), 0o600)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -142,7 +143,7 @@ func TestFirmwareInstallMethodURI(t *testing.T) {
 				"/redfish/v1/Managers/1":    endpointFunc(t, "managers_1.json"),
 				"/redfish/v1/UpdateService": endpointFunc(t, "updateservice_with_multipart.json"),
 			},
-			expectInstallMethod: multipartHttpUpload,
+			expectInstallMethod: multipartHTTPUpload,
 			expectUpdateURI:     "/redfish/v1/UpdateService/MultipartUpload",
 			err:                 nil,
 		},
@@ -154,7 +155,7 @@ func TestFirmwareInstallMethodURI(t *testing.T) {
 				"/redfish/v1/Managers/1":    endpointFunc(t, "managers_1.json"),
 				"/redfish/v1/UpdateService": endpointFunc(t, "updateservice_with_httppushuri.json"),
 			},
-			expectInstallMethod: unstructuredHttpPush,
+			expectInstallMethod: unstructuredHTTPPush,
 			expectUpdateURI:     "/redfish/v1/UpdateService/update",
 			err:                 nil,
 		},
@@ -229,13 +230,13 @@ func TestTaskIDFromResponseBody(t *testing.T) {
 			name:        "failure case",
 			body:        mustReadFile(t, "updateservice_unexpected_response.json"),
 			expectedID:  "",
-			expectedErr: errTaskIdFromRespBody,
+			expectedErr: errTaskIDFromRespBody,
 		},
 		{
 			name:        "failure case - invalid json",
 			body:        []byte(`<html><head>crappy bmc is crappy<head/></html>`),
 			expectedID:  "",
-			expectedErr: errTaskIdFromRespBody,
+			expectedErr: errTaskIDFromRespBody,
 		},
 	}
 
@@ -343,7 +344,6 @@ func TestUpdateParametersFormField(t *testing.T) {
 			// Validate the created multipart form content
 			err = writer.Close()
 			assert.NoError(t, err)
-
 		})
 	}
 }
@@ -358,14 +358,13 @@ func TestMultipartPayloadSize(t *testing.T) {
 		"foobar",
 		struct{}{},
 	})
-
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	tmpdir := t.TempDir()
 	binPath := filepath.Join(tmpdir, "test.bin")
-	err = os.WriteFile(binPath, []byte(`HELLOWORLD`), 0600)
+	err = os.WriteFile(binPath, []byte(`HELLOWORLD`), 0o600)
 	if err != nil {
 		t.Fatal(err)
 	}

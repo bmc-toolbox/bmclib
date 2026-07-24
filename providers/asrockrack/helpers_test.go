@@ -47,6 +47,7 @@ func TestInventoryInfo(t *testing.T) {
 	assert.Equal(t, "CPU", inventory[0].DeviceType)
 	assert.Equal(t, "Storage device", inventory[5].DeviceType)
 }
+
 func Test_fruInfo(t *testing.T) {
 	err := aClient.httpsLogin(context.TODO())
 	if err != nil {

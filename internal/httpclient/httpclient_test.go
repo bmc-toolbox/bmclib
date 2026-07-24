@@ -1,6 +1,7 @@
 package httpclient
 
 import (
+	"context"
 	"crypto/x509"
 	"fmt"
 	"net/http"
@@ -52,7 +53,7 @@ func TestBuildWithOptions(t *testing.T) {
 				opts = append(opts, SecureTLSOption(tc.withCertPool(server.Certificate())))
 			}
 			client := Build(opts...)
-			req, _ := http.NewRequest(http.MethodGet, server.URL, nil)
+			req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, server.URL, nil)
 
 			_, err := client.Do(req)
 			if tc.wantErr {

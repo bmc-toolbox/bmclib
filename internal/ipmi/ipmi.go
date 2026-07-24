@@ -1,3 +1,4 @@
+// Package ipmi wraps the ipmitool command-line utility.
 package ipmi
 
 import (
@@ -26,18 +27,21 @@ type Ipmi struct {
 // Option for setting optional Ipmi values
 type Option func(*Ipmi)
 
+// WithIpmitoolPath sets the path to the ipmitool binary.
 func WithIpmitoolPath(path string) Option {
 	return func(i *Ipmi) {
 		i.ipmitool = path
 	}
 }
 
+// WithCipherSuite sets the IPMI cipher suite.
 func WithCipherSuite(cipherSuite string) Option {
 	return func(i *Ipmi) {
 		i.cipherSuite = cipherSuite
 	}
 }
 
+// WithLogger sets the logger used by the Ipmi instance.
 func WithLogger(log logr.Logger) Option {
 	return func(i *Ipmi) {
 		i.log = log
@@ -45,7 +49,7 @@ func WithLogger(log logr.Logger) Option {
 }
 
 // New returns a new ipmi instance
-func New(username string, password string, host string, opts ...Option) (ipmi *Ipmi, err error) {
+func New(username, password, host string, opts ...Option) (ipmi *Ipmi, err error) {
 	ipmi = &Ipmi{
 		Username: username,
 		Password: password,
@@ -73,7 +77,7 @@ func New(username string, password string, host string, opts ...Option) (ipmi *I
 
 func (i *Ipmi) run(ctx context.Context, command []string) (output string, err error) {
 	var out []byte
-	var ipmiCiphers = []string{"3", "17"}
+	ipmiCiphers := []string{"3", "17"}
 	ipmiArgs := []string{"-I", "lanplus", "-U", i.Username, "-E", "-N", "5"}
 
 	if strings.Contains(i.Host, ":") {
@@ -89,7 +93,9 @@ func (i *Ipmi) run(ctx context.Context, command []string) (output string, err er
 		ipmiCiphers = []string{i.cipherSuite}
 	}
 	for _, cipherString := range ipmiCiphers {
-		ipmiCmd := append(ipmiArgs, "-C", cipherString)
+		ipmiCmd := make([]string, 0, len(ipmiArgs)+2+len(command))
+		ipmiCmd = append(ipmiCmd, ipmiArgs...)
+		ipmiCmd = append(ipmiCmd, "-C", cipherString)
 		i.log.V(3).Info("ipmitool options", "opts", formatOptions(ipmiCmd))
 		ipmiCmd = append(ipmiCmd, command...)
 		cmd := exec.CommandContext(ctx, i.ipmitool, ipmiCmd...)
@@ -431,6 +437,7 @@ func (i *Ipmi) GetSystemEventLogRaw(ctx context.Context) (eventlog string, err e
 	return output, nil
 }
 
+// DeactivateSOL deactivates any active SOL session, treating an already-deactivated payload as success.
 func (i *Ipmi) DeactivateSOL(ctx context.Context) (err error) {
 	out, err := i.run(ctx, []string{"sol", "deactivate"})
 	// Don't treat this as a failure (we just want to ensure there

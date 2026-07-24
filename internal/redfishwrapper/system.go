@@ -99,6 +99,7 @@ func (c *Client) Manager(ctx context.Context) (*schemas.Manager, error) {
 	return nil, fmt.Errorf("no matching redfish manager found for system: %s", c.systemName)
 }
 
+// Managers returns the manager instances managed by this service.
 func (c *Client) Managers(ctx context.Context) ([]*schemas.Manager, error) {
 	if err := c.SessionActive(); err != nil {
 		return nil, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())

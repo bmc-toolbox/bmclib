@@ -8,9 +8,10 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 )
 
 func Test_setComponentUpdateMisc(t *testing.T) {

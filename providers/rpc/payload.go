@@ -2,14 +2,20 @@ package rpc
 
 import "fmt"
 
+// Method is the RPC method name invoked against the ConsumerURL.
 type Method string
 
 const (
-	BootDeviceMethod   Method = "setBootDevice"
-	PowerSetMethod     Method = "setPowerState"
-	PowerGetMethod     Method = "getPowerState"
+	// BootDeviceMethod sets the next boot device.
+	BootDeviceMethod Method = "setBootDevice"
+	// PowerSetMethod sets the power state.
+	PowerSetMethod Method = "setPowerState"
+	// PowerGetMethod gets the power state.
+	PowerGetMethod Method = "getPowerState"
+	// VirtualMediaMethod sets virtual media.
 	VirtualMediaMethod Method = "setVirtualMedia"
-	PingMethod         Method = "ping"
+	// PingMethod pings the ConsumerURL.
+	PingMethod Method = "ping"
 )
 
 // RequestPayload is the payload sent to the ConsumerURL.
@@ -32,7 +38,7 @@ type PowerSetParams struct {
 	State string `json:"state"`
 }
 
-// PowerGetParams are the parameters options used when getting the power state.
+// VirtualMediaParams are the parameters options used when setting virtual media.
 type VirtualMediaParams struct {
 	MediaURL string `json:"mediaUrl"`
 	Kind     string `json:"kind"`
@@ -49,15 +55,19 @@ type ResponsePayload struct {
 	Error  *ResponseError `json:"error,omitempty"`
 }
 
+// ResponseError describes an error returned in a ResponsePayload.
 type ResponseError struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
 }
 
+// PowerGetResult is the power state returned by a getPowerState response.
 type PowerGetResult string
 
 const (
-	PoweredOn  PowerGetResult = "on"
+	// PoweredOn indicates the host is powered on.
+	PoweredOn PowerGetResult = "on"
+	// PoweredOff indicates the host is powered off.
 	PoweredOff PowerGetResult = "off"
 )
 

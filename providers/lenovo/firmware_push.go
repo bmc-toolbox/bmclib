@@ -20,7 +20,7 @@ const (
 )
 
 // updateServiceDoc is a partial model of the XCC UpdateService used to drive the
-// firmware push protocol. Only the fields the protocol needs are modelled.
+// firmware push protocol. Only the fields the protocol needs are modeled.
 type updateServiceDoc struct {
 	ServiceEnabled         bool   `json:"ServiceEnabled"`
 	HTTPPushURI            string `json:"HttpPushUri"`
@@ -34,7 +34,7 @@ func (c *Conn) readUpdateService(ctx context.Context) (*updateServiceDoc, error)
 	if err != nil {
 		return nil, fmt.Errorf("reading XCC update service: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
 		return nil, parseRedfishError(resp)
@@ -64,7 +64,7 @@ func componentToTargets(component string) []string {
 	switch {
 	case component == "":
 		return nil
-	case len(component) > 0 && component[0] == '/':
+	case component != "" && component[0] == '/':
 		return []string{component}
 	default:
 		return []string{firmwareInventoryBase + component}
@@ -91,7 +91,7 @@ func (c *Conn) claimUpdateService(ctx context.Context, targets []string) error {
 		payload["HttpPushUriTargets"] = targets
 	}
 
-	return checkResponse(c.redfishwrapper.PatchWithHeaders(ctx, updateServicePath, payload, nil))
+	return checkResponse(c.redfishwrapper.PatchWithHeaders(ctx, updateServicePath, payload, nil)) //nolint:bodyclose // checkResponse closes the response body
 }
 
 // releaseUpdateService releases the claim taken by claimUpdateService by setting
@@ -103,7 +103,7 @@ func (c *Conn) releaseUpdateService(ctx context.Context, clearTargets bool) erro
 		payload["HttpPushUriTargets"] = []string{}
 	}
 
-	return checkResponse(c.redfishwrapper.PatchWithHeaders(ctx, updateServicePath, payload, nil))
+	return checkResponse(c.redfishwrapper.PatchWithHeaders(ctx, updateServicePath, payload, nil)) //nolint:bodyclose // checkResponse closes the response body
 }
 
 // pushFirmware runs the XCC push protocol: claim the service, push the image

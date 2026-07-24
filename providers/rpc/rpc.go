@@ -12,10 +12,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
+
+	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
+	"github.com/bmc-toolbox/bmclib/v2/providers"
 )
 
 const (
@@ -77,6 +78,7 @@ type Provider struct {
 	listenerURL *url.URL
 }
 
+// Opts are the options used to configure the rpc provider.
 type Opts struct {
 	// Request is the options used to create the rpc HTTP request.
 	Request RequestOpts
@@ -88,6 +90,7 @@ type Opts struct {
 	Experimental Experimental
 }
 
+// RequestOpts are the options used to create the rpc HTTP request.
 type RequestOpts struct {
 	// HTTPContentType is the content type to use for the rpc request notification.
 	HTTPContentType string
@@ -101,6 +104,7 @@ type RequestOpts struct {
 	TimestampHeader string
 }
 
+// SignatureOpts are the options used for adding an HMAC signature to an HTTP request.
 type SignatureOpts struct {
 	// HeaderName is the header name that should contain the signature(s). Example: X-BMCLIB-Signature
 	HeaderName string
@@ -114,6 +118,7 @@ type SignatureOpts struct {
 	IncludedPayloadHeaders []string
 }
 
+// HMACOpts are the options used to create an HMAC signature.
 type HMACOpts struct {
 	// Hashes is a map of algorithms to a slice of hash.Hash (these are the hashed secrets). The slice is used to support multiple secrets.
 	Hashes map[Algorithm][]hash.Hash
@@ -123,6 +128,7 @@ type HMACOpts struct {
 	Secrets Secrets
 }
 
+// Experimental holds experimental options for the rpc provider.
 type Experimental struct {
 	// CustomRequestPayload must be in json.
 	CustomRequestPayload []byte
@@ -131,7 +137,7 @@ type Experimental struct {
 }
 
 // New returns a new Config containing all the defaults for the rpc provider.
-func New(consumerURL string, host string, secrets Secrets) *Provider {
+func New(consumerURL, host string, secrets Secrets) *Provider {
 	// defaults
 	c := &Provider{
 		Host:        host,
@@ -325,7 +331,7 @@ func (p *Provider) process(ctx context.Context, rp RequestPayload) (ResponsePayl
 		p.Logger.Error(err, "failed to send rpc notification", kvs...)
 		return ResponsePayload{}, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// handle the response
 	if resp.ContentLength > maxContentLenAllowed || resp.ContentLength < 0 {
@@ -345,8 +351,7 @@ func (p *Provider) process(ctx context.Context, rp RequestPayload) (ResponsePayl
 
 // Transformer implements the mergo interfaces for merging custom types.
 func (p *Provider) Transformer(typ reflect.Type) func(dst, src reflect.Value) error {
-	switch typ {
-	case reflect.TypeOf(logr.Logger{}):
+	if typ == reflect.TypeOf(logr.Logger{}) {
 		return func(dst, src reflect.Value) error {
 			if dst.CanSet() {
 				isZero := dst.MethodByName("GetSink")

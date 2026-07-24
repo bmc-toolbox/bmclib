@@ -18,7 +18,7 @@ type RoleInfo struct {
 
 // Roles returns the XCC account roles and their assigned privileges.
 //
-// This is an XCC-specific provider method (roles are not modelled by a
+// This is an XCC-specific provider method (roles are not modeled by a
 // bmc.Feature interface).
 func (c *Conn) Roles(ctx context.Context) ([]RoleInfo, error) {
 	service, err := c.redfishwrapper.AccountService()
@@ -67,5 +67,5 @@ func (c *Conn) RoleCreate(ctx context.Context, roleID string, privileges []strin
 		"AssignedPrivileges": privileges,
 	}
 
-	return checkResponse(c.redfishwrapper.PostWithHeaders(ctx, rolesURL, payload, nil))
+	return checkResponse(c.redfishwrapper.PostWithHeaders(ctx, rolesURL, payload, nil)) //nolint:bodyclose // checkResponse closes the response body
 }

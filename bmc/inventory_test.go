@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/v2/errors"
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/bmc-toolbox/common"
 	"github.com/stretchr/testify/assert"
+
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 type inventoryGetterTester struct {
@@ -34,7 +34,7 @@ func TestInventory(t *testing.T) {
 		providersAttempted int
 	}{
 		{"success with metadata", &common.Device{Common: common.Common{Vendor: "foo"}}, nil, 5 * time.Second, "foo", 1},
-		{"failure with metadata", nil, errors.ErrNon200Response, 5 * time.Second, "foo", 1},
+		{"failure with metadata", nil, bmclibErrs.ErrNon200Response, 5 * time.Second, "foo", 1},
 		{"failure with context timeout", nil, context.DeadlineExceeded, 1 * time.Nanosecond, "foo", 1},
 	}
 

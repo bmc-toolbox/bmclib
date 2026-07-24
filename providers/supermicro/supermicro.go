@@ -1,3 +1,4 @@
+// Package supermicro implements a bmclib provider for Supermicro BMCs.
 package supermicro
 
 import (
@@ -16,19 +17,19 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bmc-toolbox/common"
+	"github.com/stmcginnis/gofish/schemas"
+
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
 	"github.com/bmc-toolbox/bmclib/v2/internal/sum"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
-	"github.com/bmc-toolbox/common"
-	"github.com/stmcginnis/gofish/schemas"
 
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 	"github.com/pkg/errors"
 
-	bmclibconsts "github.com/bmc-toolbox/bmclib/v2/constants"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
@@ -39,27 +40,25 @@ const (
 	ProviderProtocol = "vendorapi"
 )
 
-var (
-	// Features implemented
-	Features = registrar.Features{
-		providers.FeatureScreenshot,
-		providers.FeatureMountFloppyImage,
-		providers.FeatureUnmountFloppyImage,
-		providers.FeatureFirmwareUpload,
-		providers.FeatureFirmwareInstallUploaded,
-		providers.FeatureFirmwareTaskStatus,
-		providers.FeatureFirmwareInstallSteps,
-		providers.FeatureInventoryRead,
-		providers.FeaturePowerSet,
-		providers.FeaturePowerState,
-		providers.FeatureBmcReset,
-		providers.FeatureGetBiosConfiguration,
-		providers.FeatureSetBiosConfiguration,
-		providers.FeatureSetBiosConfigurationFromFile,
-		providers.FeatureResetBiosConfiguration,
-		providers.FeatureBootProgress,
-	}
-)
+// Features implemented
+var Features = registrar.Features{
+	providers.FeatureScreenshot,
+	providers.FeatureMountFloppyImage,
+	providers.FeatureUnmountFloppyImage,
+	providers.FeatureFirmwareUpload,
+	providers.FeatureFirmwareInstallUploaded,
+	providers.FeatureFirmwareTaskStatus,
+	providers.FeatureFirmwareInstallSteps,
+	providers.FeatureInventoryRead,
+	providers.FeaturePowerSet,
+	providers.FeaturePowerState,
+	providers.FeatureBmcReset,
+	providers.FeatureGetBiosConfiguration,
+	providers.FeatureSetBiosConfiguration,
+	providers.FeatureSetBiosConfigurationFromFile,
+	providers.FeatureResetBiosConfiguration,
+	providers.FeatureBootProgress,
+}
 
 // supports
 //
@@ -77,8 +76,9 @@ var (
 //   - bmc firmware install
 //   - floppy image mount
 
+// Config holds the optional configuration values for a Supermicro client.
 type Config struct {
-	HttpClient           *http.Client
+	HttpClient           *http.Client //nolint:revive // exported field kept for backwards compatibility
 	Port                 string
 	httpClientSetupFuncs []func(*http.Client)
 }
@@ -86,7 +86,8 @@ type Config struct {
 // Option for setting optional Client values
 type Option func(*Config)
 
-func WithHttpClient(httpClient *http.Client) Option {
+// WithHttpClient sets the http client used for the connection.
+func WithHttpClient(httpClient *http.Client) Option { //nolint:revive // exported option kept for backwards compatibility
 	return func(c *Config) {
 		c.HttpClient = httpClient
 	}
@@ -99,13 +100,14 @@ func WithSecureTLS(rootCAs *x509.CertPool) Option {
 	}
 }
 
+// WithPort sets the port used for the connection.
 func WithPort(port string) Option {
 	return func(c *Config) {
 		c.Port = port
 	}
 }
 
-// Connection details
+// Client is a Supermicro BMC connection.
 type Client struct {
 	serviceClient *serviceClient
 	bmc           bmcQueryor
@@ -126,7 +128,7 @@ type bmcQueryor interface {
 	bootComplete() (bool, error)
 }
 
-// New returns connection with a Supermicro client initialized
+// NewClient returns a connection with a Supermicro client initialized.
 func NewClient(host, user, pass string, log logr.Logger, opts ...Option) *Client {
 	defaultConfig := &Config{
 		Port: "443",
@@ -356,7 +358,7 @@ func parseToken(body []byte) string {
 		return ""
 	}
 
-	re, err := regexp.Compile(fmt.Sprintf(`"%s", "(?P<token>.*)"`, key))
+	re, err := regexp.Compile(fmt.Sprintf(`%q, "(?P<token>.*)"`, key))
 	if err != nil {
 		return ""
 	}
@@ -401,6 +403,7 @@ func (c *Client) Name() string {
 	return ProviderName
 }
 
+// Screenshot captures a screenshot of the server console and returns the image bytes and file type.
 func (c *Client) Screenshot(ctx context.Context) (image []byte, fileType string, err error) {
 	fileType = "jpg"
 
@@ -529,9 +532,7 @@ func (c *serviceClient) supportsFirmwareInstall(model string) error {
 	return errors.Wrap(ErrModelUnsupported, "firmware install not supported for: "+model)
 }
 
-func (c *serviceClient) query(ctx context.Context, endpoint, method string, payload io.Reader, headers map[string]string, contentLength int64) ([]byte, int, error) {
-	var body []byte
-	var err error
+func (c *serviceClient) query(ctx context.Context, endpoint, method string, payload io.Reader, headers map[string]string, contentLength int64) (body []byte, statusCode int, err error) {
 	var req *http.Request
 
 	host := c.host
@@ -584,12 +585,11 @@ func (c *serviceClient) query(ctx context.Context, endpoint, method string, payl
 		if cookie.Name == "SID" && cookie.Value != "" {
 			req.AddCookie(cookie)
 		}
-
 	}
 
 	var reqDump []byte
 
-	if os.Getenv(bmclibconsts.EnvEnableDebug) == "true" {
+	if os.Getenv(constants.EnvEnableDebug) == "true" {
 		reqDump, _ = httputil.DumpRequestOut(req, true)
 	}
 
@@ -600,7 +600,7 @@ func (c *serviceClient) query(ctx context.Context, endpoint, method string, payl
 
 	// cookies are visible after the request has been made, so we dump the request and cookies here
 	// https://github.com/golang/go/issues/22745
-	if os.Getenv(bmclibconsts.EnvEnableDebug) == "true" {
+	if os.Getenv(constants.EnvEnableDebug) == "true" {
 		fmt.Println(string(reqDump))
 
 		for _, v := range req.Cookies() {
@@ -610,7 +610,7 @@ func (c *serviceClient) query(ctx context.Context, endpoint, method string, payl
 	}
 
 	// debug dump response
-	if os.Getenv(bmclibconsts.EnvEnableDebug) == "true" {
+	if os.Getenv(constants.EnvEnableDebug) == "true" {
 		respDump, _ := httputil.DumpResponse(resp, true)
 
 		fmt.Println(string(respDump))
@@ -621,7 +621,7 @@ func (c *serviceClient) query(ctx context.Context, endpoint, method string, payl
 		return body, 0, err
 	}
 
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	return body, resp.StatusCode, nil
 }
@@ -634,7 +634,6 @@ func hostIP(hostURL string) (string, error) {
 
 	if strings.Contains(hostURLParsed.Host, ":") {
 		return strings.Split(hostURLParsed.Host, ":")[0], nil
-
 	}
 
 	return hostURLParsed.Host, nil

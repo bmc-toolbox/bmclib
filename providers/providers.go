@@ -1,3 +1,4 @@
+// Package providers defines feature flags and helpers shared by bmclib providers.
 package providers
 
 import "github.com/jacobweinstock/registrar"
@@ -21,7 +22,7 @@ const (
 	FeatureBmcReset registrar.Feature = "bmcreset"
 	// FeatureBootDeviceSet means an implementation the next boot device
 	FeatureBootDeviceSet registrar.Feature = "bootdeviceset"
-	// FeaturesVirtualMedia means an implementation can manage virtual media devices
+	// FeatureVirtualMedia means an implementation can manage virtual media devices
 	FeatureVirtualMedia registrar.Feature = "virtualmedia"
 	// FeatureMountFloppyImage means an implementation uploads a floppy image for mounting as virtual media.
 	//
@@ -32,7 +33,7 @@ const (
 	// FeatureFirmwareInstall means an implementation that initiates the firmware install process
 	// FeatureFirmwareInstall means an implementation that uploads _and_ initiates the firmware install process
 	FeatureFirmwareInstall registrar.Feature = "firmwareinstall"
-	// FeatureFirmwareInstallSatus means an implementation that returns the firmware install status
+	// FeatureFirmwareInstallStatus means an implementation that returns the firmware install status
 	FeatureFirmwareInstallStatus registrar.Feature = "firmwareinstallstatus"
 	// FeatureInventoryRead means an implementation that returns the hardware and firmware inventory
 	FeatureInventoryRead registrar.Feature = "inventoryread"

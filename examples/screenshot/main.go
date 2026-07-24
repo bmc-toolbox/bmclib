@@ -5,14 +5,14 @@ import (
 	"crypto/x509"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/v2"
-	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/bombsimon/logrusr/v2"
 	"github.com/sirupsen/logrus"
+
+	"github.com/bmc-toolbox/bmclib/v2"
+	"github.com/bmc-toolbox/bmclib/v2/providers"
 )
 
 func main() {
@@ -41,7 +41,7 @@ func main() {
 		var pool *x509.CertPool
 		if *certPoolFile != "" {
 			pool = x509.NewCertPool()
-			data, err := ioutil.ReadFile(*certPoolFile)
+			data, err := os.ReadFile(*certPoolFile)
 			if err != nil {
 				l.Fatal(err)
 			}
@@ -63,7 +63,7 @@ func main() {
 
 		return
 	}
-	defer cl.Close(ctx)
+	defer func() { _ = cl.Close(ctx) }()
 
 	image, fileType, err := cl.Screenshot(ctx)
 	if err != nil {
@@ -73,14 +73,14 @@ func main() {
 	}
 
 	filename := fmt.Sprintf("screenshot." + fileType)
-	fh, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0600)
+	fh, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0o600)
 	if err != nil {
 		l.WithError(err).Error()
 
 		return
 	}
 
-	defer fh.Close()
+	defer func() { _ = fh.Close() }()
 
 	_, err = fh.Write(image)
 	if err != nil {

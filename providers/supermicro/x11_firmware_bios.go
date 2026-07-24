@@ -14,9 +14,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
-	"github.com/pkg/errors"
 )
 
 func (c *x11) firmwareUploadBIOS(ctx context.Context, reader io.Reader) error {
@@ -85,7 +86,6 @@ func (c *x11) checkComponentUpdateMisc(ctx context.Context, stage string) error 
 	// When SYSOFF=1 the system requires a power cycle
 	default:
 		return errors.New("unknown stage: " + stage)
-
 	}
 
 	headers := map[string]string{
@@ -119,7 +119,6 @@ func (c *x11) checkComponentUpdateMisc(ctx context.Context, stage string) error 
 }
 
 func (c *x11) setBIOSFirmwareInstallMode(ctx context.Context) error {
-
 	payload := []byte(`op=BIOS_UPLOAD.XML&r=(0,0)&_=`)
 
 	headers := map[string]string{
@@ -159,7 +158,6 @@ func (c *x11) setBIOSFirmwareInstallMode(ctx context.Context) error {
 	default:
 		return unexpectedResponseErr(payload, body, status)
 	}
-
 }
 
 func (c *x11) setBiosUpdateStart(ctx context.Context) error {
@@ -251,7 +249,9 @@ func (c *x11) uploadBIOSFirmware(ctx context.Context, fwReader io.Reader) error 
 			return err
 		}
 	}
-	payloadWriter.Close()
+	if err := payloadWriter.Close(); err != nil {
+		return errors.Wrap(ErrMultipartForm, err.Error())
+	}
 
 	resp, statusCode, err := c.query(
 		ctx,
@@ -261,7 +261,6 @@ func (c *x11) uploadBIOSFirmware(ctx context.Context, fwReader io.Reader) error 
 		map[string]string{"Content-Type": payloadWriter.FormDataContentType()},
 		0,
 	)
-
 	if err != nil {
 		return errors.Wrap(ErrMultipartForm, err.Error())
 	}

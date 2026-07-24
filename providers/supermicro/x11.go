@@ -10,13 +10,14 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/bmc-toolbox/bmclib/v2/constants"
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish/oem/smc"
 	"github.com/stmcginnis/gofish/schemas"
+
+	"github.com/bmc-toolbox/bmclib/v2/constants"
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 type x11 struct {
@@ -40,13 +41,13 @@ func (c *x11) queryDeviceModel(ctx context.Context) (string, error) {
 	model, err := c.deviceModelFromFruInfo(ctx)
 	if err != nil {
 		// Identify BoardID from Redfish since fru info failed to return the information
-		model, err2 := c.deviceModelFromBoardID(ctx)
+		boardModel, err2 := c.deviceModelFromBoardID(ctx)
 		if err2 != nil {
 			return "", errors.Wrap(err, err2.Error())
 		}
 
-		c.model = model
-		return model, nil
+		c.model = boardModel
+		return boardModel, nil
 	}
 
 	c.model = model

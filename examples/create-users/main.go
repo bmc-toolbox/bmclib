@@ -6,13 +6,13 @@ import (
 	"encoding/csv"
 	"flag"
 	"io"
-	"io/ioutil"
 	"os"
 	"time"
 
-	bmclib "github.com/bmc-toolbox/bmclib/v2"
 	"github.com/bombsimon/logrusr/v2"
 	"github.com/sirupsen/logrus"
+
+	bmclib "github.com/bmc-toolbox/bmclib/v2"
 )
 
 func main() {
@@ -39,7 +39,7 @@ func main() {
 		var pool *x509.CertPool
 		if *certPoolFile != "" {
 			pool = x509.NewCertPool()
-			data, err := ioutil.ReadFile(*certPoolFile)
+			data, err := os.ReadFile(*certPoolFile)
 			if err != nil {
 				l.Fatal(err)
 			}
@@ -59,13 +59,13 @@ func main() {
 	if err != nil {
 		l.WithError(err).Fatal(err, "BMC login failed")
 	}
-	defer cl.Close(ctx)
+	defer func() { _ = cl.Close(ctx) }()
 
 	fh, err := os.Open(*userCSV)
 	if err != nil {
 		l.WithError(err).WithField("file", *userCSV).Fatal()
 	}
-	defer fh.Close()
+	defer func() { _ = fh.Close() }()
 	reader := csv.NewReader(fh)
 	i := 0
 	for {
@@ -95,5 +95,4 @@ func main() {
 	}
 
 	l.WithField("count", i).Info("created users")
-
 }

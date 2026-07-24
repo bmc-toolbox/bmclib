@@ -1,3 +1,4 @@
+// Package sum wraps the Supermicro Update Manager (SUM) utility.
 package sum
 
 // SUM is Supermicro Update Manager
@@ -29,18 +30,21 @@ type Sum struct {
 // Option for setting optional Client values
 type Option func(*Sum)
 
+// WithSumPath sets the path to the sum binary.
 func WithSumPath(sumPath string) Option {
 	return func(c *Sum) {
 		c.SumPath = sumPath
 	}
 }
 
+// WithLogger sets the logger used by the Sum instance.
 func WithLogger(log logr.Logger) Option {
 	return func(c *Sum) {
 		c.Log = log
 	}
 }
 
+// New returns a new Sum client, locating the sum binary if a path was not provided.
 func New(host, user, pass string, opts ...Option) (*Sum, error) {
 	sum := &Sum{
 		Host:     host,
@@ -83,19 +87,20 @@ func (c *Sum) Close(ctx context.Context) (err error) {
 	return nil
 }
 
-func (s *Sum) run(ctx context.Context, command string, additionalArgs ...string) (output string, err error) {
+func (c *Sum) run(ctx context.Context, command string, additionalArgs ...string) (output string, err error) {
 	// TODO(splaspood) use a tmp file here (as sum supports) to read the password
-	sumArgs := []string{"-i", s.Host, "-u", s.Username, "-p", s.Password, "-c", command}
+	sumArgs := make([]string, 0, 8+len(additionalArgs))
+	sumArgs = append(sumArgs, "-i", c.Host, "-u", c.Username, "-p", c.Password, "-c", command)
 	sumArgs = append(sumArgs, additionalArgs...)
 
-	s.Log.V(9).WithValues(
+	c.Log.V(9).WithValues(
 		"sumArgs",
 		sumArgs,
 	).Info("Calling sum")
 
-	s.Executor.SetArgs(sumArgs)
+	c.Executor.SetArgs(sumArgs)
 
-	result, err := s.Executor.ExecWithContext(ctx)
+	result, err := c.Executor.ExecWithContext(ctx)
 	if err != nil {
 		return string(result.Stderr), err
 	}
@@ -103,30 +108,33 @@ func (s *Sum) run(ctx context.Context, command string, additionalArgs ...string)
 	return string(result.Stdout), err
 }
 
-func (s *Sum) GetCurrentBiosCfg(ctx context.Context) (output string, err error) {
-	return s.run(ctx, "GetCurrentBiosCfg")
+// GetCurrentBiosCfg returns the current BIOS configuration as reported by sum.
+func (c *Sum) GetCurrentBiosCfg(ctx context.Context) (output string, err error) {
+	return c.run(ctx, "GetCurrentBiosCfg")
 }
 
-func (s *Sum) LoadDefaultBiosCfg(ctx context.Context) (err error) {
-	_, err = s.run(ctx, "LoadDefaultBiosCfg")
+// LoadDefaultBiosCfg resets the BIOS configuration to its default values.
+func (c *Sum) LoadDefaultBiosCfg(ctx context.Context) (err error) {
+	_, err = c.run(ctx, "LoadDefaultBiosCfg")
 	return err
 }
 
-func (s *Sum) ChangeBiosCfg(ctx context.Context, cfgFile string, reboot bool) (err error) {
+// ChangeBiosCfg applies the BIOS configuration from cfgFile, optionally rebooting afterwards.
+func (c *Sum) ChangeBiosCfg(ctx context.Context, cfgFile string, reboot bool) (err error) {
 	args := []string{"--file", cfgFile}
 
 	if reboot {
 		args = append(args, "--reboot")
 	}
 
-	_, err = s.run(ctx, "ChangeBiosCfg", args...)
+	_, err = c.run(ctx, "ChangeBiosCfg", args...)
 
 	return err
 }
 
 // GetBiosConfiguration return bios configuration
-func (s *Sum) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]string, err error) {
-	biosText, err := s.GetCurrentBiosCfg(ctx)
+func (c *Sum) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]string, err error) {
+	biosText, err := c.GetCurrentBiosCfg(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -151,78 +159,15 @@ func (s *Sum) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]s
 }
 
 // SetBiosConfiguration set bios configuration
-func (s *Sum) SetBiosConfiguration(ctx context.Context, biosConfig map[string]string) (err error) {
+func (c *Sum) SetBiosConfiguration(ctx context.Context, biosConfig map[string]string) (err error) {
 	vcm, err := config.NewVendorConfigManager("xml", common.VendorSupermicro, map[string]string{})
 	if err != nil {
 		return err
 	}
 
 	for k, v := range biosConfig {
-		switch {
-		case k == "boot_mode":
-			if err = vcm.BootMode(v); err != nil {
-				return err
-			}
-		case k == "boot_order":
-			if err = vcm.BootOrder(v); err != nil {
-				return err
-			}
-		case k == "intel_sgx":
-			if err = vcm.IntelSGX(v); err != nil {
-				return err
-			}
-		case k == "secure_boot":
-			switch v {
-			case "Enabled":
-				if err = vcm.SecureBoot(true); err != nil {
-					return err
-				}
-			case "Disabled":
-				if err = vcm.SecureBoot(false); err != nil {
-					return err
-				}
-			}
-		case k == "tpm":
-			switch v {
-			case "Enabled":
-				if err = vcm.TPM(true); err != nil {
-					return err
-				}
-			case "Disabled":
-				if err = vcm.TPM(false); err != nil {
-					return err
-				}
-			}
-		case k == "smt":
-			switch v {
-			case "Enabled":
-				if err = vcm.SMT(true); err != nil {
-					return err
-				}
-			case "Disabled":
-				if err = vcm.SMT(false); err != nil {
-					return err
-				}
-			}
-		case k == "sr_iov":
-			switch v {
-			case "Enabled":
-				if err = vcm.SRIOV(true); err != nil {
-					return err
-				}
-			case "Disabled":
-				if err = vcm.SRIOV(false); err != nil {
-					return err
-				}
-			}
-		case strings.HasPrefix(k, "raw:"):
-			// k = raw:Menu1,SubMenu1,SubMenuMenu1,SettingName
-			pathStr := strings.TrimPrefix(k, "raw:")
-			path := strings.Split(pathStr, ",")
-			name := path[len(path)-1]
-			path = path[:len(path)-1]
-
-			vcm.Raw(name, v, path)
+		if err := applyBiosSetting(vcm, k, v); err != nil {
+			return err
 		}
 	}
 
@@ -231,17 +176,67 @@ func (s *Sum) SetBiosConfiguration(ctx context.Context, biosConfig map[string]st
 		return err
 	}
 
-	return s.SetBiosConfigurationFromFile(ctx, xmlData)
+	return c.SetBiosConfigurationFromFile(ctx, xmlData)
 }
 
-func (s *Sum) SetBiosConfigurationFromFile(ctx context.Context, cfg string) (err error) {
+// applyBiosSetting applies a single bios key/value to the vendor config manager.
+func applyBiosSetting(vcm config.VendorConfigManager, k, v string) error {
+	boolFor := func(v string) (bool, bool) {
+		switch v {
+		case "Enabled":
+			return true, true
+		case "Disabled":
+			return false, true
+		default:
+			return false, false
+		}
+	}
+
+	switch {
+	case k == "boot_mode":
+		return vcm.BootMode(v)
+	case k == "boot_order":
+		return vcm.BootOrder(v)
+	case k == "intel_sgx":
+		return vcm.IntelSGX(v)
+	case k == "secure_boot":
+		if b, ok := boolFor(v); ok {
+			return vcm.SecureBoot(b)
+		}
+	case k == "tpm":
+		if b, ok := boolFor(v); ok {
+			return vcm.TPM(b)
+		}
+	case k == "smt":
+		if b, ok := boolFor(v); ok {
+			return vcm.SMT(b)
+		}
+	case k == "sr_iov":
+		if b, ok := boolFor(v); ok {
+			return vcm.SRIOV(b)
+		}
+	case strings.HasPrefix(k, "raw:"):
+		// k = raw:Menu1,SubMenu1,SubMenuMenu1,SettingName
+		pathStr := strings.TrimPrefix(k, "raw:")
+		path := strings.Split(pathStr, ",")
+		name := path[len(path)-1]
+		path = path[:len(path)-1]
+
+		vcm.Raw(name, v, path)
+	}
+
+	return nil
+}
+
+// SetBiosConfigurationFromFile applies the BIOS configuration contained in cfg.
+func (c *Sum) SetBiosConfigurationFromFile(ctx context.Context, cfg string) (err error) {
 	// Open tmp file to hold cfg
 	inputConfigTmpFile, err := os.CreateTemp("", "bmclib")
 	if err != nil {
 		return err
 	}
 
-	defer os.Remove(inputConfigTmpFile.Name())
+	defer func() { _ = os.Remove(inputConfigTmpFile.Name()) }()
 
 	_, err = inputConfigTmpFile.WriteString(cfg)
 	if err != nil {
@@ -253,10 +248,10 @@ func (s *Sum) SetBiosConfigurationFromFile(ctx context.Context, cfg string) (err
 		return err
 	}
 
-	return s.ChangeBiosCfg(ctx, inputConfigTmpFile.Name(), true)
+	return c.ChangeBiosCfg(ctx, inputConfigTmpFile.Name(), true)
 }
 
 // ResetBiosConfiguration reset bios configuration
-func (s *Sum) ResetBiosConfiguration(ctx context.Context) (err error) {
-	return s.LoadDefaultBiosCfg(ctx)
+func (c *Sum) ResetBiosConfiguration(ctx context.Context) (err error) {
+	return c.LoadDefaultBiosCfg(ctx)
 }

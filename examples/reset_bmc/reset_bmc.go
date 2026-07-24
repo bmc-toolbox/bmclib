@@ -1,3 +1,4 @@
+// Package main provides an example of resetting a BMC using bmclib.
 package main
 
 import (
@@ -6,9 +7,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/v2"
 	"github.com/bombsimon/logrusr/v2"
 	"github.com/sirupsen/logrus"
+
+	"github.com/bmc-toolbox/bmclib/v2"
 )
 
 func main() {
@@ -25,11 +27,11 @@ func main() {
 	logger := logrusr.New(l)
 
 	if host == "" || user == "" || pass == "" {
-		log.Fatal("required host/user/pass parameters not defined")
+		log.Fatal("required host/user/pass parameters not defined") //nolint:gocritic // example code; deferred cancel on fatal exit is acceptable
 	}
 
-	os.Setenv("DEBUG_BMCLIB", "true")
-	defer os.Unsetenv("DEBUG_BMCLIB")
+	_ = os.Setenv("DEBUG_BMCLIB", "true")
+	defer func() { _ = os.Unsetenv("DEBUG_BMCLIB") }()
 
 	cl := bmclib.NewClient(host, user, pass, bmclib.WithLogger(logger))
 
@@ -38,11 +40,10 @@ func main() {
 		log.Fatal(err, "bmc login failed")
 	}
 
-	defer cl.Close(ctx)
+	defer func() { _ = cl.Close(ctx) }()
 
 	_, err = cl.ResetBMC(ctx, "GracefulRestart")
 	if err != nil {
 		l.Error(err)
 	}
-
 }

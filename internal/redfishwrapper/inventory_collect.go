@@ -53,7 +53,8 @@ func (c *Client) collectPSUs(ch *schemas.Chassis, device *common.Device, softwar
 		return nil
 	}
 
-	for _, psu := range power.PowerSupplies {
+	for i := range power.PowerSupplies {
+		psu := &power.PowerSupplies[i]
 		p := &common.PSU{
 			Common: common.Common{
 				Description: psu.Name,
@@ -78,14 +79,15 @@ func (c *Client) collectPSUs(ch *schemas.Chassis, device *common.Device, softwar
 		c.firmwareAttributes(common.SlugPSU, psu.ID, p.Firmware, softwareInventory)
 
 		device.PSUs = append(device.PSUs, p)
-
 	}
 	return nil
 }
 
 // collectTPMs collects Trusted Platform Module component information
 func (c *Client) collectTPMs(sys *schemas.ComputerSystem, device *common.Device, softwareInventory []*schemas.SoftwareInventory) (err error) {
-	for _, module := range sys.TrustedModules { //nolint:staticcheck
+	modules := sys.TrustedModules //nolint:staticcheck // TrustedModules is deprecated but still read for backward compatibility
+	for i := range modules {
+		module := &modules[i]
 		tpm := &common.TPM{
 			Common: common.Common{
 				Firmware: &common.Firmware{
@@ -165,7 +167,6 @@ func (c *Client) collectNICs(sys *schemas.ComputerSystem, device *common.Device,
 		portFirmwareVersion := getFirmwareVersionFromController(adapter.Controllers, len(ports))
 
 		for _, networkPort := range ports {
-
 			// populate network ports general data
 			nicPort := &common.NICPort{}
 			c.collectNetworkPortInfo(nicPort, adapter, networkPort, portFirmwareVersion, softwareInventory)
@@ -183,7 +184,7 @@ func (c *Client) collectNICs(sys *schemas.ComputerSystem, device *common.Device,
 
 		// include additional firmware attributes from redfish firmware inventory
 		c.firmwareAttributes(common.SlugNIC, n.ID, n.Firmware, softwareInventory)
-		if len(portFirmwareVersion) > 0 {
+		if portFirmwareVersion != "" {
 			if n.Firmware == nil {
 				n.Firmware = &common.Firmware{}
 			}
@@ -241,14 +242,12 @@ func (c *Client) collectNetworkPortInfo(
 	firmware string,
 	softwareInventory []*schemas.SoftwareInventory,
 ) {
-
 	if adapter != nil {
 		nicPort.Vendor = adapter.Manufacturer
 		nicPort.Model = adapter.Model
 	}
 
 	if networkPort != nil {
-
 		nicPort.Description = networkPort.Description
 		nicPort.PCIVendorID = networkPort.VendorID
 		nicPort.Status = &common.Status{
@@ -266,7 +265,7 @@ func (c *Client) collectNetworkPortInfo(
 
 		if len(networkPort.AssociatedNetworkAddresses) > 0 {
 			for _, macAddress := range networkPort.AssociatedNetworkAddresses {
-				if len(macAddress) > 0 && macAddress != "00:00:00:00:00:00" {
+				if macAddress != "" && macAddress != "00:00:00:00:00:00" {
 					nicPort.MacAddress = macAddress // first valid value only
 					break
 				}
@@ -275,7 +274,7 @@ func (c *Client) collectNetworkPortInfo(
 
 		c.firmwareAttributes(common.SlugNIC, networkPort.ID, nicPort.Firmware, softwareInventory)
 	}
-	if len(firmware) > 0 {
+	if firmware != "" {
 		if nicPort.Firmware == nil {
 			nicPort.Firmware = &common.Firmware{}
 		}
@@ -287,7 +286,6 @@ func (c *Client) collectEthernetInfo(nicPort *common.NICPort, ethernetInterfaces
 	if nicPort == nil {
 		return
 	}
-
 	// populate mac address et al. from matching ethernet interface
 	for _, ethInterface := range ethernetInterfaces {
 		// the ethernet interface includes the port, position number and function NIC.Slot.3-1-1;
@@ -298,7 +296,7 @@ func (c *Client) collectEthernetInfo(nicPort *common.NICPort, ethernetInterfaces
 		}
 
 		// override values only if needed
-		if len(ethInterface.Description) > 0 {
+		if ethInterface.Description != "" {
 			nicPort.Description = ethInterface.Description
 		}
 		if len(ethInterface.Status.Health) > 0 {
@@ -317,7 +315,6 @@ func (c *Client) collectEthernetInfo(nicPort *common.NICPort, ethernetInterfaces
 		if ethInterface.SpeedMbps != nil {
 			nicPort.SpeedBits = int64(gofish.Deref(ethInterface.SpeedMbps)) * int64(math.Pow10(6))
 		}
-
 		nicPort.AutoNeg = ethInterface.AutoNeg
 		nicPort.MTUSize = gofish.Deref(ethInterface.MTUSize)
 
@@ -328,7 +325,8 @@ func (c *Client) collectEthernetInfo(nicPort *common.NICPort, ethernetInterfaces
 }
 
 func getFirmwareVersionFromController(controllers []schemas.Controllers, portCount int) string {
-	for _, controller := range controllers {
+	for i := range controllers {
+		controller := &controllers[i]
 		if gofish.Deref(controller.ControllerCapabilities.NetworkPortCount) == portCount {
 			return controller.FirmwarePackageVersion
 		}
@@ -409,9 +407,7 @@ func (c *Client) collectDrives(sys *schemas.ComputerSystem, device *common.Devic
 			c.firmwareAttributes("Disk", drive.ID, d.Firmware, softwareInventory)
 
 			device.Drives = append(device.Drives, d)
-
 		}
-
 	}
 
 	return nil
@@ -425,7 +421,9 @@ func (c *Client) collectStorageControllers(sys *schemas.ComputerSystem, device *
 	}
 
 	for _, member := range storage {
-		for _, controller := range member.StorageControllers { //nolint:staticcheck
+		controllers := member.StorageControllers //nolint:staticcheck // StorageControllers is deprecated but still read for backward compatibility
+		for i := range controllers {
+			controller := &controllers[i]
 
 			cs := &common.StorageController{
 				Common: common.Common{
@@ -545,7 +543,6 @@ func (c *Client) collectDIMMs(sys *schemas.ComputerSystem, device *common.Device
 
 // collecCPLDs populates the device with CPLD component attributes
 func (c *Client) collectCPLDs(device *common.Device, softwareInventory []*schemas.SoftwareInventory) (err error) {
-
 	cpld := &common.CPLD{
 		Common: common.Common{
 			Vendor:   common.FormatVendorName(device.Vendor),

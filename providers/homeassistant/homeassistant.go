@@ -1,3 +1,4 @@
+// Package homeassistant implements a bmclib provider for Home Assistant-managed devices.
 package homeassistant
 
 import (
@@ -10,10 +11,11 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
+
+	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
+	"github.com/bmc-toolbox/bmclib/v2/providers"
 )
 
 const (
@@ -30,15 +32,17 @@ var Features = registrar.Features{
 	providers.FeatureBootDeviceSet, // no-op
 }
 
+// Config holds the configuration for the HomeAssistant provider.
 type Config struct {
-	ApiUrl                     string
-	ApiToken                   string
+	ApiUrl                     string //nolint:revive // exported field kept for backwards compatibility
+	ApiToken                   string //nolint:revive // exported field kept for backwards compatibility
 	SwitchEntityID             string
 	PowerOperationDelaySeconds uint32
 	HTTPClient                 *http.Client
 	Logger                     logr.Logger
 }
 
+// EntityStateResponse holds the state details of a HomeAssistant entity.
 type EntityStateResponse struct {
 	EntityID     string
 	FriendlyName string
@@ -46,9 +50,9 @@ type EntityStateResponse struct {
 }
 
 // New returns a new Config containing all the defaults for the HomeAssistant provider.
-func New(apiUrl string, apiToken string) *Config {
+func New(apiURL, apiToken string) *Config {
 	return &Config{
-		ApiUrl:     apiUrl,
+		ApiUrl:     apiURL,
 		ApiToken:   apiToken,
 		HTTPClient: httpclient.Build(),
 		Logger:     logr.Discard(),
@@ -75,14 +79,14 @@ func (p *Config) Open(ctx context.Context) error {
 	return nil
 }
 
-func (p *Config) haGetEntityState(ctx context.Context, haEntityId string) (EntityStateResponse, error) {
-	stateUrl, err := url.JoinPath(p.ApiUrl, "api", "states", haEntityId)
+func (p *Config) haGetEntityState(ctx context.Context, haEntityID string) (EntityStateResponse, error) {
+	stateURL, err := url.JoinPath(p.ApiUrl, "api", "states", haEntityID)
 	if err != nil {
 		return EntityStateResponse{}, err
 	}
-	p.Logger.Info("Testing connection to Home Assistant API", "url", stateUrl)
+	p.Logger.Info("Testing connection to Home Assistant API", "url", stateURL)
 
-	req, err := http.NewRequestWithContext(ctx, "GET", stateUrl, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", stateURL, http.NoBody)
 	if err != nil {
 		return EntityStateResponse{}, err
 	}
@@ -93,7 +97,7 @@ func (p *Config) haGetEntityState(ctx context.Context, haEntityId string) (Entit
 	if err != nil {
 		return EntityStateResponse{}, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return EntityStateResponse{}, fmt.Errorf("failed to connect to Home Assistant API, status code: %d", resp.StatusCode)
@@ -105,7 +109,7 @@ func (p *Config) haGetEntityState(ctx context.Context, haEntityId string) (Entit
 	if _, err := io.CopyN(respBuf, resp.Body, resp.ContentLength); err != nil {
 		return EntityStateResponse{}, fmt.Errorf("failed to read response body: %w", err)
 	}
-	p.Logger.Info("Successfully connected to Home Assistant API", "entity", haEntityId, "statusCode", resp.StatusCode, "respBuf", respBuf)
+	p.Logger.Info("Successfully connected to Home Assistant API", "entity", haEntityID, "statusCode", resp.StatusCode, "respBuf", respBuf)
 
 	// Deserialize into a temp struct
 	stateResponse := struct {
@@ -149,19 +153,20 @@ func (p *Config) PowerSet(ctx context.Context, state string) (ok bool, err error
 	// Send a POST request to the Home Assistant API to toggle the switch entity
 
 	var service string
-	if state == "on" {
+	switch state {
+	case "on":
 		service = "turn_on"
-	} else if state == "off" {
+	case "off":
 		service = "turn_off"
-	} else {
+	default:
 		return false, fmt.Errorf("invalid power state: %s", state)
 	}
 
-	serviceUrl, err := url.JoinPath(p.ApiUrl, "api", "services", "switch", service)
+	serviceURL, err := url.JoinPath(p.ApiUrl, "api", "services", "switch", service)
 	if err != nil {
 		return false, err
 	}
-	p.Logger.Info("Setting Home Assistant entity power state", "url", serviceUrl, "entity", p.SwitchEntityID, "desiredState", state)
+	p.Logger.Info("Setting Home Assistant entity power state", "url", serviceURL, "entity", p.SwitchEntityID, "desiredState", state)
 	reqBodyMap := map[string]interface{}{
 		"entity_id": p.SwitchEntityID,
 	}
@@ -170,7 +175,7 @@ func (p *Config) PowerSet(ctx context.Context, state string) (ok bool, err error
 		return false, fmt.Errorf("failed to marshal request body: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", serviceUrl, bytes.NewBuffer(reqBodyBytes))
+	req, err := http.NewRequestWithContext(ctx, "POST", serviceURL, bytes.NewBuffer(reqBodyBytes))
 	if err != nil {
 		return false, err
 	}
@@ -182,7 +187,7 @@ func (p *Config) PowerSet(ctx context.Context, state string) (ok bool, err error
 	if err != nil {
 		return false, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusAccepted {
 		return false, fmt.Errorf("failed to set power state, status code: %d", resp.StatusCode)

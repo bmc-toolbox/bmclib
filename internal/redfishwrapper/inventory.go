@@ -4,15 +4,16 @@ import (
 	"context"
 	"strings"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/pkg/errors"
+
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 
 	"github.com/bmc-toolbox/common"
 	"github.com/stmcginnis/gofish/schemas"
 )
 
 var (
-	// Supported Chassis Odata IDs
+	// KnownChassisOdataIDs lists the Chassis Odata IDs known to be supported.
 	KnownChassisOdataIDs = []string{
 		// Dells
 		"/redfish/v1/Chassis/Enclosure.Internal.0-1",
@@ -53,9 +54,9 @@ var (
 )
 
 // TODO: consider removing this
-func (c *Client) compatibleOdataID(OdataID string, knownOdataIDs []string) bool {
+func (c *Client) compatibleOdataID(odataID string, knownOdataIDs []string) bool {
 	for _, url := range knownOdataIDs {
-		if url == OdataID {
+		if url == odataID {
 			return true
 		}
 	}
@@ -63,6 +64,7 @@ func (c *Client) compatibleOdataID(OdataID string, knownOdataIDs []string) bool 
 	return false
 }
 
+// Inventory collects hardware inventory and firmware information for the device.
 func (c *Client) Inventory(ctx context.Context, failOnError bool) (device *common.Device, err error) {
 	updateService, err := c.UpdateService()
 	if err != nil && failOnError {
@@ -180,7 +182,6 @@ func (c *Client) chassisAttributes(ctx context.Context, device *common.Device, f
 		if err != nil && failOnError {
 			return err
 		}
-
 	}
 
 	err = c.collectCPLDs(device, softwareInventory)
@@ -193,7 +194,6 @@ func (c *Client) chassisAttributes(ctx context.Context, device *common.Device, f
 	}
 
 	return nil
-
 }
 
 func (c *Client) systemAttributes(device *common.Device, failOnError bool, softwareInventory []*schemas.SoftwareInventory) (err error) {
@@ -260,7 +260,6 @@ func (c *Client) firmwareAttributes(slug, id string, firmwareObj *common.Firmwar
 		// include previously installed firmware attributes
 		if strings.HasPrefix(inv.ID, "Previous") {
 			if strings.Contains(inv.ID, id) || strings.EqualFold(slug, inv.Name) {
-
 				if firmwareObj == nil {
 					firmwareObj = &common.Firmware{}
 				}
@@ -279,7 +278,6 @@ func (c *Client) firmwareAttributes(slug, id string, firmwareObj *common.Firmwar
 		// update firmwareObj with installed firmware attributes
 		if strings.HasPrefix(inv.ID, "Installed") {
 			if strings.Contains(inv.ID, id) || strings.EqualFold(slug, inv.Name) {
-
 				if firmwareObj == nil {
 					firmwareObj = &common.Firmware{}
 				}

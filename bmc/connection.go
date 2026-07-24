@@ -40,7 +40,7 @@ func OpenConnectionFromInterfaces(ctx context.Context, timeout time.Duration, pr
 	}
 
 	// Create a context with the specified timeout. This is done for backward compatibility but
-	// we should consider removing the timeout parameter alltogether given the context will
+	// we should consider removing the timeout parameter altogether given the context will
 	// container the timeout.
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()

@@ -5,9 +5,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
-	"github.com/stretchr/testify/assert"
 )
 
 type postCodeGetterTester struct {

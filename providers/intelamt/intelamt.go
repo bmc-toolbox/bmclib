@@ -1,3 +1,4 @@
+// Package intelamt implements a bmclib provider for Intel AMT managed devices.
 package intelamt
 
 import (
@@ -5,10 +6,11 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/iamt"
 	"github.com/jacobweinstock/registrar"
+
+	"github.com/bmc-toolbox/bmclib/v2/providers"
 )
 
 const (
@@ -18,14 +20,12 @@ const (
 	ProviderProtocol = "AMT"
 )
 
-var (
-	// Features implemented by the AMT provider
-	Features = registrar.Features{
-		providers.FeaturePowerSet,
-		providers.FeaturePowerState,
-		providers.FeatureBootDeviceSet,
-	}
-)
+// Features implemented by the AMT provider
+var Features = registrar.Features{
+	providers.FeaturePowerSet,
+	providers.FeaturePowerState,
+	providers.FeatureBootDeviceSet,
+}
 
 // iamtClient interface allows us to mock the client for testing
 type iamtClient interface {
@@ -46,24 +46,28 @@ type Conn struct {
 // Option for setting optional Client values
 type Option func(*Config)
 
+// WithPort sets the port number used to connect to the BMC.
 func WithPort(port uint32) Option {
 	return func(c *Config) {
 		c.Port = port
 	}
 }
 
+// WithHostScheme sets the host scheme ("http" or "https") used to connect to the BMC.
 func WithHostScheme(hostScheme string) Option {
 	return func(c *Config) {
 		c.HostScheme = hostScheme
 	}
 }
 
+// WithLogger sets the logger used by the provider.
 func WithLogger(logger logr.Logger) Option {
 	return func(c *Config) {
 		c.Logger = logger
 	}
 }
 
+// Config holds the configuration for an Intel AMT connection.
 type Config struct {
 	// HostScheme should be either "http" or "https".
 	HostScheme string
@@ -73,7 +77,7 @@ type Config struct {
 }
 
 // New creates a new AMT connection
-func New(host string, user string, pass string, opts ...Option) *Conn {
+func New(host, user, pass string, opts ...Option) *Conn {
 	defaultClient := &Config{
 		HostScheme: "http",
 		Port:       16992,
@@ -123,7 +127,7 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 
 // BootDeviceSet sets the next boot device with options
 func (c *Conn) BootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
-	if strings.ToLower(bootDevice) != "pxe" {
+	if !strings.EqualFold(bootDevice, "pxe") {
 		return false, errors.New("only pxe boot device is supported for AMT provider")
 	}
 	if err := c.client.SetPXE(ctx); err != nil {

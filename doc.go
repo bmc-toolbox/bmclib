@@ -6,5 +6,4 @@ Package bmclib abstracts interacting with Baseboard Management controllers.
 
 see the examples directory for usage.
 */
-
 package bmclib

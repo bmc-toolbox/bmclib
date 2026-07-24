@@ -15,11 +15,6 @@ jobs:
       uses: actions/setup-go@v3
       with:
         go-version-file: go.mod
-    - name: Run golangci-lint
-      uses: golangci/golangci-lint-action@v3
-      with:
-        args: -v --config .golangci.yml --timeout=5m
-        version: latest
     - name: make all-checks
       run: make all-checks
   test:

@@ -15,9 +15,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var (
-	errFloppyImageMounted = errors.New("floppy image is currently mounted")
-)
+var errFloppyImageMounted = errors.New("floppy image is currently mounted")
 
 func (c *Client) floppyImageMounted(ctx context.Context) (bool, error) {
 	if err := c.serviceClient.redfishSession(ctx); err != nil {
@@ -38,6 +36,7 @@ func (c *Client) floppyImageMounted(ctx context.Context) (bool, error) {
 	return false, nil
 }
 
+// MountFloppyImage uploads and mounts a floppy image on the BMC.
 func (c *Client) MountFloppyImage(ctx context.Context, image io.Reader) error {
 	mounted, err := c.floppyImageMounted(ctx)
 	if err != nil {
@@ -106,7 +105,9 @@ func (c *Client) MountFloppyImage(ctx context.Context, image io.Reader) error {
 			return err
 		}
 	}
-	payloadWriter.Close()
+	if err := payloadWriter.Close(); err != nil {
+		return errors.Wrap(ErrMultipartForm, err.Error())
+	}
 
 	resp, statusCode, err := c.serviceClient.query(
 		ctx,
@@ -116,7 +117,6 @@ func (c *Client) MountFloppyImage(ctx context.Context, image io.Reader) error {
 		map[string]string{"Content-Type": payloadWriter.FormDataContentType()},
 		0,
 	)
-
 	if err != nil {
 		return errors.Wrap(ErrMultipartForm, err.Error())
 	}
@@ -128,6 +128,7 @@ func (c *Client) MountFloppyImage(ctx context.Context, image io.Reader) error {
 	return nil
 }
 
+// UnmountFloppyImage unmounts a floppy image currently mounted on the BMC.
 func (c *Client) UnmountFloppyImage(ctx context.Context) error {
 	mounted, err := c.floppyImageMounted(ctx)
 	if err != nil {
@@ -146,7 +147,6 @@ func (c *Client) UnmountFloppyImage(ctx context.Context) error {
 		nil,
 		0,
 	)
-
 	if err != nil {
 		return err
 	}

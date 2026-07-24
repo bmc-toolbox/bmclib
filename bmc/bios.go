@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
+
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
+// BiosConfigurationGetter provides retrieval of a host's BIOS configuration.
 type BiosConfigurationGetter interface {
 	GetBiosConfiguration(ctx context.Context) (biosConfig map[string]string, err error)
 }
@@ -18,6 +20,8 @@ type biosConfigurationGetterProvider struct {
 	BiosConfigurationGetter
 }
 
+// BiosConfigurationSetter provides applying a host's BIOS configuration,
+// either from a map of settings or from a configuration file.
 type BiosConfigurationSetter interface {
 	SetBiosConfiguration(ctx context.Context, biosConfig map[string]string) (err error)
 	SetBiosConfigurationFromFile(ctx context.Context, cfg string) (err error)
@@ -28,6 +32,7 @@ type biosConfigurationSetterProvider struct {
 	BiosConfigurationSetter
 }
 
+// BiosConfigurationResetter provides resetting a host's BIOS configuration to defaults.
 type BiosConfigurationResetter interface {
 	ResetBiosConfiguration(ctx context.Context) (err error)
 }
@@ -55,7 +60,6 @@ Loop:
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				err = multierror.Append(err, vErr)
 				continue
-
 			}
 			metadata.SuccessfulProvider = elem.name
 			return biosConfig, metadata, nil
@@ -83,7 +87,6 @@ Loop:
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				err = multierror.Append(err, vErr)
 				continue
-
 			}
 			metadata.SuccessfulProvider = elem.name
 			return metadata, nil
@@ -111,7 +114,6 @@ Loop:
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				err = multierror.Append(err, vErr)
 				continue
-
 			}
 			metadata.SuccessfulProvider = elem.name
 			return metadata, nil
@@ -139,7 +141,6 @@ Loop:
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				err = multierror.Append(err, vErr)
 				continue
-
 			}
 			metadata.SuccessfulProvider = elem.name
 			return metadata, nil
@@ -149,6 +150,8 @@ Loop:
 	return metadata, multierror.Append(err, errors.New("failure to reset bios configuration"))
 }
 
+// GetBiosConfigurationInterfaces retrieves the BIOS configuration using the first
+// successful BiosConfigurationGetter implementation found in generic.
 func GetBiosConfigurationInterfaces(ctx context.Context, generic []interface{}) (biosConfig map[string]string, metadata Metadata, err error) {
 	implementations := make([]biosConfigurationGetterProvider, 0)
 	for _, elem := range generic {
@@ -178,6 +181,8 @@ func GetBiosConfigurationInterfaces(ctx context.Context, generic []interface{}) 
 	return biosConfiguration(ctx, implementations)
 }
 
+// SetBiosConfigurationInterfaces applies the BIOS configuration using the first
+// successful BiosConfigurationSetter implementation found in generic.
 func SetBiosConfigurationInterfaces(ctx context.Context, generic []interface{}, biosConfig map[string]string) (metadata Metadata, err error) {
 	implementations := make([]biosConfigurationSetterProvider, 0)
 	for _, elem := range generic {
@@ -207,6 +212,8 @@ func SetBiosConfigurationInterfaces(ctx context.Context, generic []interface{}, 
 	return setBiosConfiguration(ctx, implementations, biosConfig)
 }
 
+// SetBiosConfigurationFromFileInterfaces applies the BIOS configuration from a file
+// using the first successful BiosConfigurationSetter implementation found in generic.
 func SetBiosConfigurationFromFileInterfaces(ctx context.Context, generic []interface{}, cfg string) (metadata Metadata, err error) {
 	implementations := make([]biosConfigurationSetterProvider, 0)
 	for _, elem := range generic {
@@ -236,6 +243,8 @@ func SetBiosConfigurationFromFileInterfaces(ctx context.Context, generic []inter
 	return setBiosConfigurationFromFile(ctx, implementations, cfg)
 }
 
+// ResetBiosConfigurationInterfaces resets the BIOS configuration using the first
+// successful BiosConfigurationResetter implementation found in generic.
 func ResetBiosConfigurationInterfaces(ctx context.Context, generic []interface{}) (metadata Metadata, err error) {
 	implementations := make([]biosConfigurationResetterProvider, 0)
 	for _, elem := range generic {

@@ -10,7 +10,7 @@ import (
 
 // VirtualMediaSetter controls the virtual media attached to a machine
 type VirtualMediaSetter interface {
-	SetVirtualMedia(ctx context.Context, kind string, mediaURL string) (ok bool, err error)
+	SetVirtualMedia(ctx context.Context, kind, mediaURL string) (ok bool, err error)
 }
 
 // VirtualMediaProviders is an internal struct to correlate an implementation/provider and its name
@@ -20,7 +20,7 @@ type virtualMediaProviders struct {
 }
 
 // setVirtualMedia sets the virtual media.
-func setVirtualMedia(ctx context.Context, kind string, mediaURL string, b []virtualMediaProviders) (ok bool, metadata Metadata, err error) {
+func setVirtualMedia(ctx context.Context, kind, mediaURL string, b []virtualMediaProviders) (ok bool, metadata Metadata, err error) {
 	var metadataLocal Metadata
 
 	for _, elem := range b {
@@ -51,7 +51,7 @@ func setVirtualMedia(ctx context.Context, kind string, mediaURL string, b []virt
 }
 
 // SetVirtualMediaFromInterfaces identifies implementations of the virtualMediaSetter interface and passes the found implementations to the setVirtualMedia() wrapper
-func SetVirtualMediaFromInterfaces(ctx context.Context, kind string, mediaURL string, generic []interface{}) (ok bool, metadata Metadata, err error) {
+func SetVirtualMediaFromInterfaces(ctx context.Context, kind, mediaURL string, generic []interface{}) (ok bool, metadata Metadata, err error) {
 	bdSetters := make([]virtualMediaProviders, 0)
 	for _, elem := range generic {
 		if elem == nil {

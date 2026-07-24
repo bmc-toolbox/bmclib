@@ -1,3 +1,4 @@
+// Package executor provides helpers for running external commands.
 package executor
 
 import (
@@ -21,11 +22,12 @@ type Executor interface {
 	SetStdout([]byte)
 }
 
+// NewExecutor returns an Executor that runs the given command with binary checking enabled.
 func NewExecutor(cmd string) Executor {
 	return &Execute{Cmd: cmd, CheckBin: true}
 }
 
-// An execute instace
+// Execute holds the command, arguments and environment for a command execution.
 type Execute struct {
 	Cmd      string
 	Args     []string
@@ -35,7 +37,7 @@ type Execute struct {
 	Quiet    bool
 }
 
-// The result of a command execution
+// Result holds the stdout, stderr and exit code of a command execution.
 type Result struct {
 	Stdout   []byte
 	Stderr   []byte
@@ -44,7 +46,8 @@ type Result struct {
 
 // GetCmd returns the command with args as a string
 func (e *Execute) GetCmd() string {
-	cmd := []string{e.Cmd}
+	cmd := make([]string, 0, 1+len(e.Args))
+	cmd = append(cmd, e.Cmd)
 	cmd = append(cmd, e.Args...)
 
 	return strings.Join(cmd, " ")

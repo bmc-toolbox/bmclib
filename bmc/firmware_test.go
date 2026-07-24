@@ -7,11 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/v2/constants"
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/bmc-toolbox/common"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/bmc-toolbox/bmclib/v2/constants"
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 type firmwareInstallTester struct {
@@ -23,7 +24,7 @@ func (f *firmwareInstallTester) FirmwareInstall(ctx context.Context, component, 
 	return f.returnTaskID, f.returnError
 }
 
-func (r *firmwareInstallTester) Name() string {
+func (f *firmwareInstallTester) Name() string {
 	return "foo"
 }
 
@@ -68,6 +69,7 @@ func TestFirmwareInstall(t *testing.T) {
 		})
 	}
 }
+
 func TestFirmwareInstallFromInterfaces(t *testing.T) {
 	testCases := []struct {
 		testName          string
@@ -119,7 +121,7 @@ func (f *firmwareInstallStatusTester) FirmwareInstallStatus(ctx context.Context,
 	return f.returnStatus, f.returnError
 }
 
-func (r *firmwareInstallStatusTester) Name() string {
+func (f *firmwareInstallStatusTester) Name() string {
 	return "foo"
 }
 
@@ -214,7 +216,7 @@ func (f *firmwareInstallUploadAndInitiateTester) FirmwareInstallUploadAndInitiat
 	return f.returnTaskID, f.returnError
 }
 
-func (r *firmwareInstallUploadAndInitiateTester) Name() string {
+func (f *firmwareInstallUploadAndInitiateTester) Name() string {
 	return "foo"
 }
 
@@ -307,7 +309,7 @@ func (f *firmwareInstallUploadTester) FirmwareInstallUploaded(ctx context.Contex
 	return f.TaskID, f.Err
 }
 
-func (r *firmwareInstallUploadTester) Name() string {
+func (f *firmwareInstallUploadTester) Name() string {
 	return "foo"
 }
 
@@ -402,7 +404,7 @@ func (f *firmwareUploadTester) FirmwareUpload(ctx context.Context, component str
 	return f.returnTaskID, f.returnError
 }
 
-func (r *firmwareUploadTester) Name() string {
+func (f *firmwareUploadTester) Name() string {
 	return "foo"
 }
 
@@ -508,7 +510,7 @@ func (f *firmwareInstallStepsTester) FirmwareInstallSteps(ctx context.Context, c
 	return f.returnSteps, f.returnError
 }
 
-func (r *firmwareInstallStepsTester) Name() string {
+func (f *firmwareInstallStepsTester) Name() string {
 	return "foo"
 }
 
@@ -561,7 +563,7 @@ func (f *firmwareTaskStatusTester) FirmwareTaskStatus(ctx context.Context, kind 
 	return f.returnState, f.returnStatus, f.returnError
 }
 
-func (r *firmwareTaskStatusTester) Name() string {
+func (f *firmwareTaskStatusTester) Name() string {
 	return "foo"
 }
 

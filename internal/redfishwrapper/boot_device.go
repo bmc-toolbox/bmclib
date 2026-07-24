@@ -3,10 +3,11 @@ package redfishwrapper
 import (
 	"context"
 
-	"github.com/bmc-toolbox/bmclib/v2/bmc"
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish/schemas"
+
+	"github.com/bmc-toolbox/bmclib/v2/bmc"
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 type bootDeviceMapping struct {
@@ -124,7 +125,7 @@ func (c *Client) SystemBootDeviceSet(_ context.Context, bootDevice string, setPe
 		secondTry := schemas.Boot{}
 		secondTry.BootSourceOverrideTarget = boot.BootSourceOverrideTarget
 		secondTry.BootSourceOverrideEnabled = boot.BootSourceOverrideEnabled
-		if err = system.SetBoot(&secondTry); err != nil {
+		if err := system.SetBoot(&secondTry); err != nil {
 			return false, err
 		}
 	}

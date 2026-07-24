@@ -1,3 +1,4 @@
+// Package helper provides miscellaneous helper utilities used across bmclib.
 package helper
 
 import (

@@ -10,9 +10,10 @@ import (
 	"strings"
 	"time"
 
+	logrusr "github.com/bombsimon/logrusr/v2"
+
 	bmclib "github.com/bmc-toolbox/bmclib/v2"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
-	logrusr "github.com/bombsimon/logrusr/v2"
 
 	"github.com/sirupsen/logrus"
 )
@@ -33,7 +34,6 @@ func main() {
 	// Logger configuration
 	l := logrus.New()
 	l.Level = logrus.DebugLevel
-	// l.Level = logrus.TraceLevel
 	logger := logrusr.New(l)
 	logger.V(9)
 
@@ -52,7 +52,7 @@ func main() {
 		l.Fatal(err, "bmc login failed")
 	}
 
-	defer client.Close(ctx)
+	defer func() { _ = client.Close(ctx) }()
 
 	// Operating mode selection
 	switch strings.ToLower(*mode) {
@@ -73,7 +73,7 @@ func main() {
 				l.Fatal(err)
 			}
 
-			defer jsonFile.Close()
+			defer func() { _ = jsonFile.Close() }()
 
 			jsonData, _ := io.ReadAll(jsonFile)
 

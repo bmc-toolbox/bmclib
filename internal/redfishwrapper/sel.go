@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish/schemas"
+
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 // ClearSystemEventLog clears all of the LogServices logs

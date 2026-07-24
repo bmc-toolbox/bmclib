@@ -8,12 +8,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/v2"
 	"github.com/go-logr/logr"
+
+	"github.com/bmc-toolbox/bmclib/v2"
 )
 
 func main() {
-
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
 
@@ -28,7 +28,7 @@ func main() {
 	if *user == "" || *pass == "" || *host == "" {
 		fmt.Fprintln(os.Stderr, "user, password, and host are required")
 		flag.PrintDefaults()
-		os.Exit(1)
+		os.Exit(1) //nolint:gocritic // example code; deferred cancel on early exit is acceptable
 	}
 
 	if *eject && *isoURL != "" {
@@ -51,7 +51,7 @@ func main() {
 	if err := cl.Open(ctx); err != nil {
 		panic(err)
 	}
-	defer cl.Close(ctx)
+	defer func() { _ = cl.Close(ctx) }()
 
 	mediaURL := *isoURL
 	operation := "mount"

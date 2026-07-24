@@ -36,8 +36,8 @@ func deactivateSOL(ctx context.Context, timeout time.Duration, b []deactivatorPr
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
 			ctx, cancel := context.WithTimeout(ctx, timeout)
-			defer cancel()
 			newErr := elem.solDeactivator.DeactivateSOL(ctx)
+			cancel()
 			if newErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(newErr, "provider: %v", elem.name))
 				continue

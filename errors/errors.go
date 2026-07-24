@@ -1,3 +1,4 @@
+// Package errors defines the error types and sentinel errors used across bmclib.
 package errors
 
 import (
@@ -15,7 +16,7 @@ var (
 	// ErrNotAuthenticated is returned when the session is not active.
 	ErrNotAuthenticated = errors.New("not authenticated")
 
-	// ErrNon200Response is returned when bmclib recieves an unexpected non-200 status code for a query
+	// ErrNon200Response is returned when bmclib receives an unexpected non-200 status code for a query
 	ErrNon200Response = errors.New("non-200 response returned for the endpoint")
 
 	// ErrNotImplemented is returned for not implemented methods called
@@ -112,7 +113,7 @@ var (
 	ErrBMCColdResetRequired = errors.New("BMC cold reset required")
 
 	// ErrHostPowercycleRequired is returned when a host powercycle is required.
-	ErrHostPowercycleRequired = errors.New("Host power cycle required")
+	ErrHostPowercycleRequired = errors.New("host power cycle required")
 
 	// ErrSessionExpired is returned when the BMC session is not valid
 	// the receiver can then choose to request a new session.
@@ -128,6 +129,7 @@ var (
 	ErrBMCUpdating = errors.New("a BMC firmware update is in progress")
 )
 
+// ErrUnsupportedHardware is returned when an operation is attempted on unsupported hardware.
 type ErrUnsupportedHardware struct {
 	msg string
 }
@@ -136,6 +138,7 @@ func (e *ErrUnsupportedHardware) Error() string {
 	return fmt.Sprintf("Hardware not supported: %s", e.msg)
 }
 
+// NewErrUnsupportedHardware returns an ErrUnsupportedHardware with the given message.
 func NewErrUnsupportedHardware(s string) error {
 	return &ErrUnsupportedHardware{s}
 }

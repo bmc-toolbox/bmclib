@@ -13,6 +13,13 @@ import (
 	"time"
 
 	"dario.cat/mergo"
+	"github.com/bmc-toolbox/common"
+	"github.com/go-logr/logr"
+	"github.com/jacobweinstock/registrar"
+	"go.opentelemetry.io/otel/attribute"
+	oteltrace "go.opentelemetry.io/otel/trace"
+	tracenoop "go.opentelemetry.io/otel/trace/noop"
+
 	"github.com/bmc-toolbox/bmclib/v2/bmc"
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
@@ -27,12 +34,6 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/providers/redfish"
 	"github.com/bmc-toolbox/bmclib/v2/providers/rpc"
 	"github.com/bmc-toolbox/bmclib/v2/providers/supermicro"
-	"github.com/bmc-toolbox/common"
-	"github.com/go-logr/logr"
-	"github.com/jacobweinstock/registrar"
-	"go.opentelemetry.io/otel/attribute"
-	oteltrace "go.opentelemetry.io/otel/trace"
-	tracenoop "go.opentelemetry.io/otel/trace/noop"
 )
 
 const (
@@ -230,18 +231,18 @@ func (c *Client) registerIpmitoolProvider() error {
 
 // register ASRR vendorapi provider
 func (c *Client) registerASRRProvider() {
-	asrHttpClient := *c.httpClient
-	asrHttpClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
-	driverAsrockrack := asrockrack.NewWithOptions(c.Auth.Host+":"+c.providerConfig.asrock.Port, c.Auth.User, c.Auth.Pass, c.Logger, asrockrack.WithHTTPClient(&asrHttpClient))
+	asrHTTPClient := *c.httpClient
+	asrHTTPClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
+	driverAsrockrack := asrockrack.NewWithOptions(c.Auth.Host+":"+c.providerConfig.asrock.Port, c.Auth.User, c.Auth.Pass, c.Logger, asrockrack.WithHTTPClient(&asrHTTPClient))
 	c.Registry.Register(asrockrack.ProviderName, asrockrack.ProviderProtocol, asrockrack.Features, nil, driverAsrockrack)
 }
 
 // register gofish provider
 func (c *Client) registerGofishProvider() {
-	gfHttpClient := *c.httpClient
-	gfHttpClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
+	gfHTTPClient := *c.httpClient
+	gfHTTPClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
 	gofishOpts := []redfish.Option{
-		redfish.WithHttpClient(&gfHttpClient),
+		redfish.WithHttpClient(&gfHTTPClient),
 		redfish.WithVersionsNotCompatible(c.providerConfig.gofish.VersionsNotCompatible),
 		redfish.WithUseBasicAuth(c.providerConfig.gofish.UseBasicAuth),
 		redfish.WithPort(c.providerConfig.gofish.Port),
@@ -255,7 +256,6 @@ func (c *Client) registerGofishProvider() {
 
 // register Intel AMT provider
 func (c *Client) registerIntelAMTProvider() {
-
 	iamtOpts := []intelamt.Option{
 		intelamt.WithLogger(c.Logger),
 		intelamt.WithHostScheme(c.providerConfig.intelamt.HostScheme),
@@ -267,10 +267,9 @@ func (c *Client) registerIntelAMTProvider() {
 
 // register Dell gofish provider
 func (c *Client) registerDellProvider() {
-	dellGofishHttpClient := *c.httpClient
-	//dellGofishHttpClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
+	dellGofishHTTPClient := *c.httpClient
 	dellGofishOpts := []dell.Option{
-		dell.WithHttpClient(&dellGofishHttpClient),
+		dell.WithHttpClient(&dellGofishHTTPClient),
 		dell.WithVersionsNotCompatible(c.providerConfig.dell.VersionsNotCompatible),
 		dell.WithUseBasicAuth(c.providerConfig.dell.UseBasicAuth),
 		dell.WithPort(c.providerConfig.dell.Port),
@@ -297,14 +296,14 @@ func (c *Client) registerLenovoProvider() {
 
 // register supermicro vendorapi provider
 func (c *Client) registerSupermicroProvider() {
-	smcHttpClient := *c.httpClient
-	smcHttpClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
+	smcHTTPClient := *c.httpClient
+	smcHTTPClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
 	driverSupermicro := supermicro.NewClient(
 		c.Auth.Host,
 		c.Auth.User,
 		c.Auth.Pass,
 		c.Logger,
-		supermicro.WithHttpClient(&smcHttpClient),
+		supermicro.WithHttpClient(&smcHTTPClient),
 		supermicro.WithPort(c.providerConfig.supermicro.Port),
 	)
 
@@ -336,7 +335,6 @@ func (c *Client) registerProviders() {
 			return
 		}
 		c.Logger.Info("failed to register homeassistant provider, falling back to registering all other providers", "error", err.Error())
-
 	}
 
 	// register the rpc provider
@@ -378,7 +376,7 @@ func (c *Client) GetMetadata() bmc.Metadata {
 
 // setMetadata wraps setting metadata with a mutex for cases where users are
 // making calls to multiple *Client.X functions/methods across goroutines
-func (c *Client) setMetadata(metadata bmc.Metadata) {
+func (c *Client) setMetadata(metadata bmc.Metadata) { //nolint:gocritic // metadata is passed by value; the deferred caller relies on value-copy semantics
 	// a mutex is created with the NewClient func, in the case
 	// where a user doesn't call NewClient we handle by checking if
 	// the mutex is nil
@@ -399,7 +397,8 @@ func (c *Client) registry() *registrar.Registry {
 	return c.Registry
 }
 
-func (c *Client) RegisterSpanAttributes(m bmc.Metadata, span oteltrace.Span) {
+// RegisterSpanAttributes sets host and provider metadata as attributes on the given trace span.
+func (c *Client) RegisterSpanAttributes(m bmc.Metadata, span oteltrace.Span) { //nolint:gocritic // metadata is passed by value to match the bmc.Metadata API
 	span.SetAttributes(attribute.String("host", c.Auth.Host))
 
 	span.SetAttributes(attribute.String("successful-provider", m.SuccessfulProvider))
@@ -453,7 +452,6 @@ func (c *Client) Open(ctx context.Context) error {
 
 // Close pass through to library function
 func (c *Client) Close(ctx context.Context) (err error) {
-
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "Close")
 	defer span.End()
 
@@ -583,7 +581,7 @@ func (c *Client) SetBootDevice(ctx context.Context, bootDevice string, setPersis
 // server. Specifically, the method ejects any currently attached virtual media, and then if
 // mediaURL isn't empty, attaches a virtual media device of type kind whose contents are
 // streamed from the indicated URL.
-func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL string) (ok bool, err error) {
+func (c *Client) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (ok bool, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetVirtualMedia")
 	defer span.End()
 
@@ -625,6 +623,7 @@ func (c *Client) Inventory(ctx context.Context) (device *common.Device, err erro
 	return device, err
 }
 
+// GetBiosConfiguration returns the BIOS configuration of the host as a map of setting names to values.
 func (c *Client) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]string, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "GetBiosConfiguration")
 	defer span.End()
@@ -636,6 +635,7 @@ func (c *Client) GetBiosConfiguration(ctx context.Context) (biosConfig map[strin
 	return biosConfig, err
 }
 
+// SetBiosConfiguration applies the given BIOS configuration on the host.
 func (c *Client) SetBiosConfiguration(ctx context.Context, biosConfig map[string]string) (err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetBiosConfiguration")
 	defer span.End()
@@ -647,6 +647,7 @@ func (c *Client) SetBiosConfiguration(ctx context.Context, biosConfig map[string
 	return err
 }
 
+// SetBiosConfigurationFromFile applies the BIOS configuration from the given config file contents on the host.
 func (c *Client) SetBiosConfigurationFromFile(ctx context.Context, cfg string) (err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetBiosConfigurationFromFile")
 	defer span.End()
@@ -658,6 +659,7 @@ func (c *Client) SetBiosConfigurationFromFile(ctx context.Context, cfg string) (
 	return err
 }
 
+// ResetBiosConfiguration resets the host's BIOS configuration to its defaults.
 func (c *Client) ResetBiosConfiguration(ctx context.Context) (err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "ResetBiosConfiguration")
 	defer span.End()
@@ -670,7 +672,7 @@ func (c *Client) ResetBiosConfiguration(ctx context.Context) (err error) {
 }
 
 // FirmwareInstall pass through library function to upload firmware and install firmware
-func (c *Client) FirmwareInstall(ctx context.Context, component string, operationApplyTime string, forceInstall bool, reader io.Reader) (taskID string, err error) {
+func (c *Client) FirmwareInstall(ctx context.Context, component, operationApplyTime string, forceInstall bool, reader io.Reader) (taskID string, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "FirmwareInstall")
 	defer span.End()
 
@@ -681,9 +683,9 @@ func (c *Client) FirmwareInstall(ctx context.Context, component string, operatio
 	return taskID, err
 }
 
-// Note: this interface is to be deprecated in favour of a more generic FirmwareTaskStatus.
-//
 // FirmwareInstallStatus pass through library function to check firmware install status
+//
+// Note: this interface is to be deprecated in favor of a more generic FirmwareTaskStatus.
 func (c *Client) FirmwareInstallStatus(ctx context.Context, installVersion, component, taskID string) (status string, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "FirmwareInstallStatus")
 	defer span.End()
@@ -693,10 +695,9 @@ func (c *Client) FirmwareInstallStatus(ctx context.Context, installVersion, comp
 	metadata.RegisterSpanAttributes(c.Auth.Host, span)
 
 	return status, err
-
 }
 
-// PostCodeGetter pass through library function to return the BIOS/UEFI POST code
+// PostCode pass through library function to return the BIOS/UEFI POST code
 func (c *Client) PostCode(ctx context.Context) (status string, code int, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "PostCode")
 	defer span.End()
@@ -708,6 +709,7 @@ func (c *Client) PostCode(ctx context.Context) (status string, code int, err err
 	return status, code, err
 }
 
+// Screenshot captures and returns a screenshot of the host's console along with its image file type.
 func (c *Client) Screenshot(ctx context.Context) (image []byte, fileType string, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "Screenshot")
 	defer span.End()
@@ -719,6 +721,7 @@ func (c *Client) Screenshot(ctx context.Context) (image []byte, fileType string,
 	return image, fileType, err
 }
 
+// ClearSystemEventLog clears the host's System Event Log (SEL).
 func (c *Client) ClearSystemEventLog(ctx context.Context) (err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "ClearSystemEventLog")
 	defer span.End()
@@ -730,6 +733,7 @@ func (c *Client) ClearSystemEventLog(ctx context.Context) (err error) {
 	return err
 }
 
+// MountFloppyImage mounts the given floppy image on the host.
 func (c *Client) MountFloppyImage(ctx context.Context, image io.Reader) (err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "MountFloppyImage")
 	defer span.End()
@@ -741,6 +745,7 @@ func (c *Client) MountFloppyImage(ctx context.Context, image io.Reader) (err err
 	return err
 }
 
+// UnmountFloppyImage unmounts a previously mounted floppy image from the host.
 func (c *Client) UnmountFloppyImage(ctx context.Context) (err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "UnmountFloppyImage")
 	defer span.End()
@@ -800,6 +805,7 @@ func (c *Client) FirmwareInstallUploaded(ctx context.Context, component, uploadV
 	return installTaskID, err
 }
 
+// FirmwareInstallUploadAndInitiate uploads the firmware from file and initiates its install, returning a task ID to track progress.
 func (c *Client) FirmwareInstallUploadAndInitiate(ctx context.Context, component string, file *os.File) (taskID string, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "FirmwareInstallUploadAndInitiate")
 	defer span.End()

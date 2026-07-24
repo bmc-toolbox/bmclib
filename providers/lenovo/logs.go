@@ -22,7 +22,7 @@ const (
 //
 // Entries are returned as rows of [id, created, severity, message]. A descriptive
 // error is returned when no log service with the given id is present. This is an
-// XCC-specific provider method (the additional log types are not modelled by a
+// XCC-specific provider method (the additional log types are not modeled by a
 // bmc.Feature interface).
 func (c *Conn) EventLog(ctx context.Context, logServiceID string) ([][]string, error) {
 	managers, err := c.redfishwrapper.Managers(ctx)

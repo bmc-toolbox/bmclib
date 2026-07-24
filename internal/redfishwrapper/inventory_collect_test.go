@@ -109,7 +109,6 @@ func TestInventoryCollectNetworkPortInfo(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestInventoryCollectEthernetInfo(t *testing.T) {
@@ -118,10 +117,11 @@ func TestInventoryCollectEthernetInfo(t *testing.T) {
 	testNicPort := &common.NICPort{
 		ID: testNicPortID,
 	}
-	testUnmatchingEthList := []*schemas.EthernetInterface{
-		{Entity: schemas.Entity{ID: "other ID"}},
-		{Entity: schemas.Entity{ID: "another one"}},
-	}
+	testUnmatchingEthList := make([]*schemas.EthernetInterface, 0, 3)
+	testUnmatchingEthList = append(testUnmatchingEthList,
+		&schemas.EthernetInterface{Entity: schemas.Entity{ID: "other ID"}},
+		&schemas.EthernetInterface{Entity: schemas.Entity{ID: "another one"}},
+	)
 	testMatchingEth := &schemas.EthernetInterface{
 		Entity: schemas.Entity{ID: testEthernetID},
 		Status: schemas.Status{
@@ -164,7 +164,8 @@ func TestInventoryCollectEthernetInfo(t *testing.T) {
 			name:               "full",
 			nicPort:            testNicPort,
 			ethernetInterfaces: testMatchingEthList,
-			wantedNicPort:      wNicPortFull},
+			wantedNicPort:      wNicPortFull,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

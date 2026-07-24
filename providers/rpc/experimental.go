@@ -8,7 +8,7 @@ import (
 // embedPayload will embed the RequestPayload into the given JSON object at the dot path notation location ("object.data").
 func (p *RequestPayload) embedPayload(rawJSON []byte, dotPath string) ([]byte, error) {
 	if rawJSON == nil {
-		return rawJSON, nil
+		return nil, nil
 	}
 	jdata2, err := yaml.YAMLToJSON(rawJSON)
 	if err != nil {

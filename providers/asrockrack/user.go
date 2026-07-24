@@ -11,38 +11,36 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/internal"
 )
 
-var (
-	// TODO: standardize these across Redfish, IPMI, Vendor GUI
-	validRoles = []string{"Administrator", "Operator", "User"}
-)
+// TODO: standardize these across Redfish, IPMI, Vendor GUI
+var validRoles = []string{"Administrator", "Operator", "User"}
 
 // UserAccount is a ASRR BMC user account struct
 type UserAccount struct {
-	ID                           int    `json:"id"`
-	Name                         string `json:"name"`
-	Access                       int    `json:"access"`
+	SSHKey                       string `json:"ssh_key"`
+	PasswordSize                 string `json:"password_size"`
+	EmailID                      string `json:"email_id"`
 	AccessByChannel              string `json:"accessByChannel,omitempty"`
-	Kvm                          int    `json:"kvm"`
-	Vmedia                       int    `json:"vmedia"`
+	EmailFormat                  string `json:"email_format"`
+	SNMPAuthenticationProtocol   string `json:"snmp_authentication_protocol"`
 	NetworkPrivilege             string `json:"network_privilege"`
-	FixedUserCount               int    `json:"fixed_user_count"`
-	OEMProprietaryLevelPrivilege int    `json:"OEMProprietary_level_Privilege"`
+	Password                     string `json:"password"`
+	ConfirmPassword              string `json:"confirm_password"`
 	Privilege                    string `json:"privilege,omitempty"`
 	PrivilegeByChannel           string `json:"privilegeByChannel,omitempty"`
 	PrivilegeLimitSerial         string `json:"privilege_limit_serial"`
-	SSHKey                       string `json:"ssh_key"`
-	CreationTime                 int    `json:"creation_time"`
-	Changepassword               int    `json:"changepassword"`
+	Name                         string `json:"name"`
+	SNMPAccess                   string `json:"snmp_access"`
+	FixedUserCount               int    `json:"fixed_user_count"`
 	UserOperation                int    `json:"UserOperation"`
-	Password                     string `json:"password"`
-	ConfirmPassword              string `json:"confirm_password"`
-	PasswordSize                 string `json:"password_size"`
+	ID                           int    `json:"id"`
+	OEMProprietaryLevelPrivilege int    `json:"OEMProprietary_level_Privilege"`
+	Changepassword               int    `json:"changepassword"`
 	PrevSNMP                     int    `json:"prev_snmp"`
 	SNMP                         int    `json:"snmp"`
-	SNMPAccess                   string `json:"snmp_access"`
-	SNMPAuthenticationProtocol   string `json:"snmp_authentication_protocol"`
-	EmailFormat                  string `json:"email_format"`
-	EmailID                      string `json:"email_id"`
+	CreationTime                 int    `json:"creation_time"`
+	Vmedia                       int    `json:"vmedia"`
+	Kvm                          int    `json:"kvm"`
+	Access                       int    `json:"access"`
 }
 
 // UserRead returns a list of enabled user accounts

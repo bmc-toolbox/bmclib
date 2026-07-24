@@ -1,3 +1,4 @@
+// Package redfish implements a bmclib provider for Redfish-based BMCs.
 package redfish
 
 import (
@@ -5,12 +6,13 @@ import (
 	"crypto/x509"
 	"net/http"
 
-	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
-	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
+
+	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
+	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
+	"github.com/bmc-toolbox/bmclib/v2/providers"
 
 	"github.com/bmc-toolbox/bmclib/v2/bmc"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
@@ -23,24 +25,22 @@ const (
 	ProviderProtocol = "redfish"
 )
 
-var (
-	// Features implemented by gofish
-	Features = registrar.Features{
-		providers.FeaturePowerSet,
-		providers.FeaturePowerState,
-		providers.FeatureUserCreate,
-		providers.FeatureUserUpdate,
-		providers.FeatureUserDelete,
-		providers.FeatureBootDeviceSet,
-		providers.FeatureVirtualMedia,
-		providers.FeatureInventoryRead,
-		providers.FeatureBmcReset,
-		providers.FeatureClearSystemEventLog,
-		providers.FeatureGetBiosConfiguration,
-		providers.FeatureSetBiosConfiguration,
-		providers.FeatureResetBiosConfiguration,
-	}
-)
+// Features implemented by gofish
+var Features = registrar.Features{
+	providers.FeaturePowerSet,
+	providers.FeaturePowerState,
+	providers.FeatureUserCreate,
+	providers.FeatureUserUpdate,
+	providers.FeatureUserDelete,
+	providers.FeatureBootDeviceSet,
+	providers.FeatureVirtualMedia,
+	providers.FeatureInventoryRead,
+	providers.FeatureBmcReset,
+	providers.FeatureClearSystemEventLog,
+	providers.FeatureGetBiosConfiguration,
+	providers.FeatureSetBiosConfiguration,
+	providers.FeatureResetBiosConfiguration,
+}
 
 // Conn details for redfish client
 type Conn struct {
@@ -49,8 +49,9 @@ type Conn struct {
 	Log                  logr.Logger
 }
 
+// Config holds the optional configuration values for a Redfish connection.
 type Config struct {
-	HttpClient *http.Client
+	HttpClient *http.Client //nolint:revive // exported field kept for backwards compatibility
 	Port       string
 	// VersionsNotCompatible	is the list of incompatible redfish versions.
 	//
@@ -67,36 +68,42 @@ type Config struct {
 // Option for setting optional Client values
 type Option func(*Config)
 
-func WithHttpClient(httpClient *http.Client) Option {
+// WithHttpClient sets the http client used for the connection.
+func WithHttpClient(httpClient *http.Client) Option { //nolint:revive // exported option kept for backwards compatibility
 	return func(c *Config) {
 		c.HttpClient = httpClient
 	}
 }
 
+// WithPort sets the port used for the connection.
 func WithPort(port string) Option {
 	return func(c *Config) {
 		c.Port = port
 	}
 }
 
+// WithVersionsNotCompatible sets the list of Redfish versions considered incompatible.
 func WithVersionsNotCompatible(versionsNotCompatible []string) Option {
 	return func(c *Config) {
 		c.VersionsNotCompatible = versionsNotCompatible
 	}
 }
 
+// WithRootCAs sets the root CA certificate pool used to verify the connection.
 func WithRootCAs(rootCAs *x509.CertPool) Option {
 	return func(c *Config) {
 		c.RootCAs = rootCAs
 	}
 }
 
+// WithUseBasicAuth enables HTTP basic authentication for the connection.
 func WithUseBasicAuth(useBasicAuth bool) Option {
 	return func(c *Config) {
 		c.UseBasicAuth = useBasicAuth
 	}
 }
 
+// WithSystemName sets the name of the system to operate on.
 func WithSystemName(name string) Option {
 	return func(c *Config) {
 		c.SystemName = name
@@ -168,7 +175,7 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 
 		return false
 	}
-	defer c.Close(ctx)
+	defer func() { _ = c.Close(ctx) }()
 
 	if !c.redfishwrapper.VersionCompatible() {
 		c.Log.V(2).WithValues(
@@ -216,7 +223,7 @@ func (c *Conn) BootDeviceOverrideGet(ctx context.Context) (bmc.BootDeviceOverrid
 }
 
 // SetVirtualMedia sets the virtual media
-func (c *Conn) SetVirtualMedia(ctx context.Context, kind string, mediaURL string) (ok bool, err error) {
+func (c *Conn) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (ok bool, err error) {
 	return c.redfishwrapper.SetVirtualMedia(ctx, kind, mediaURL)
 }
 

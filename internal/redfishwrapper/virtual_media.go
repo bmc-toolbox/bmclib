@@ -43,7 +43,7 @@ func (c *Client) getVirtualMedia(ctx context.Context) ([]*schemas.VirtualMedia, 
 // SetVirtualMedia sets virtual media on the system. If mediaURL is empty,
 // matching media may be ejected. When multiple matching virtual media slots
 // exist, each slot is tried in order until one succeeds.
-func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL string) (bool, error) {
+func (c *Client) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (bool, error) {
 	var mediaKind schemas.VirtualMediaType
 
 	switch kind {
@@ -97,7 +97,7 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL stri
 			// Attempt to eject media. If it fails, record the error but continue to attempt insertion,
 			// as some BMCs might allow insert even if eject fails or auto-replace media.
 			if _, err := vm.EjectMedia(); err != nil {
-				slotErrors = append(slotErrors, fmt.Errorf("%s: eject before insert failed: %w. Attempting insert anyway.", vm.ODataID, err))
+				slotErrors = append(slotErrors, fmt.Errorf("%s: eject before insert failed: %w; attempting insert anyway", vm.ODataID, err))
 			}
 		}
 
@@ -144,6 +144,7 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind string, mediaURL stri
 	return false, fmt.Errorf("not a supported media type: %s. supported media types: %v", kind, supportedMediaTypes)
 }
 
+// InsertedVirtualMedia returns the IDs of virtual media slots that currently have media inserted.
 func (c *Client) InsertedVirtualMedia(ctx context.Context) ([]string, error) {
 	virtualMedia, err := c.getVirtualMedia(ctx)
 	if err != nil {

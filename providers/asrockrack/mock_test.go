@@ -35,9 +35,11 @@ var (
 )
 
 // setup test BMC
-var server *httptest.Server
-var bmcURL *url.URL
-var fwUpgradeState *testFwUpgradeState
+var (
+	server         *httptest.Server
+	bmcURL         *url.URL
+	fwUpgradeState *testFwUpgradeState
+)
 
 type testFwUpgradeState struct {
 	FlashModeSet     bool
@@ -294,7 +296,7 @@ func session(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		// login to BMC
 		b, _ := io.ReadAll(r.Body)
-		if string(b) == string(loginPayload) {
+		if bytes.Equal(b, loginPayload) {
 			// login request needs to be of the right content-typ
 			if r.Header.Get("Content-Type") != "application/x-www-form-urlencoded" {
 				w.WriteHeader(http.StatusBadRequest)

@@ -1,3 +1,4 @@
+// Package goipmi implements a native Go IPMI client.
 package goipmi
 
 import (
@@ -26,15 +27,17 @@ type Ipmi struct {
 // Option for setting optional Ipmi values
 type Option func(*Ipmi)
 
+// WithCipherSuite sets the IPMI cipher suite when the value is a valid suite ID (0-19).
 func WithCipherSuite(cipherSuite string) Option {
 	return func(i *Ipmi) {
-		cipherId, err := strconv.Atoi(cipherSuite)
-		if err == nil && (0 <= cipherId && cipherId <= 19) {
-			i.cipherSuite = cipherId
+		cipherID, err := strconv.Atoi(cipherSuite)
+		if err == nil && (0 <= cipherID && cipherID <= 19) {
+			i.cipherSuite = cipherID
 		}
 	}
 }
 
+// WithLogger sets the logger used by the Ipmi instance.
 func WithLogger(log logr.Logger) Option {
 	return func(i *Ipmi) {
 		i.log = log
@@ -360,7 +363,7 @@ func (i *Ipmi) ReadUsers(ctx context.Context) (users []map[string]string, err er
 			"Callin":             fmt.Sprintf("%t", userAccess.CallbackOnly),
 			"Link Auth":          fmt.Sprintf("%t", userAccess.LinkAuthEnabled),
 			"IPMI Msg":           fmt.Sprintf("%t", userAccess.IPMIMessagingEnabled),
-			"Channel Priv Limit": fmt.Sprintf("%v", userAccess.MaxPrivLevel),
+			"Channel Priv Limit": userAccess.MaxPrivLevel.String(),
 		})
 	}
 
@@ -401,27 +404,29 @@ func (i *Ipmi) GetSystemEventLogRaw(ctx context.Context) (eventlog string, err e
 	lines = append(lines, "   SEL Record ID          | Date/Time         | Sensor Name      | Event Dir  | Event Data")
 
 	for _, entry := range selEntries {
-		if entry.Standard != nil {
-			timestamp := entry.Standard.Timestamp.Format("01/02/2006 | 15:04:05")
-			sensorName := fmt.Sprintf("Sensor %d", entry.Standard.SensorNumber)
-			eventDir := "Asserted"
-			if entry.Standard.EventDir == ipmi.EventDirDeassertion {
-				eventDir = "Deasserted"
-			}
-			eventData := fmt.Sprintf("0x%02x 0x%02x 0x%02x",
-				entry.Standard.EventData.EventData1,
-				entry.Standard.EventData.EventData2,
-				entry.Standard.EventData.EventData3)
-
-			line := fmt.Sprintf(" %04x | %s | %-16s | %-10s | %s",
-				entry.RecordID, timestamp, sensorName, eventDir, eventData)
-			lines = append(lines, line)
+		if entry.Standard == nil {
+			continue
 		}
+		timestamp := entry.Standard.Timestamp.Format("01/02/2006 | 15:04:05")
+		sensorName := fmt.Sprintf("Sensor %d", entry.Standard.SensorNumber)
+		eventDir := "Asserted"
+		if entry.Standard.EventDir == ipmi.EventDirDeassertion {
+			eventDir = "Deasserted"
+		}
+		eventData := fmt.Sprintf("0x%02x 0x%02x 0x%02x",
+			entry.Standard.EventData.EventData1,
+			entry.Standard.EventData.EventData2,
+			entry.Standard.EventData.EventData3)
+
+		line := fmt.Sprintf(" %04x | %s | %-16s | %-10s | %s",
+			entry.RecordID, timestamp, sensorName, eventDir, eventData)
+		lines = append(lines, line)
 	}
 
 	return strings.Join(lines, "\n"), nil
 }
 
+// DeactivateSOL deactivates any active SOL payload, treating an already-deactivated payload as success.
 func (i *Ipmi) DeactivateSOL(ctx context.Context) (err error) {
 	_, err = i.client.DeactivatePayload(ctx, &ipmi.DeactivatePayloadRequest{
 		PayloadType:     ipmi.PayloadTypeSOL,

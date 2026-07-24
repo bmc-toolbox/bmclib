@@ -1,3 +1,4 @@
+// Package main provides an example of using bmclib with the Home Assistant provider.
 package main
 
 import (
@@ -18,7 +19,7 @@ func main() {
 	log := logging.ZeroLogger("info")
 	opts := []bmclib.Option{
 		bmclib.WithLogger(log),
-		//bmclib.WithPerProviderTimeout(5 * time.Second),
+		// bmclib.WithPerProviderTimeout(5 * time.Second),
 		bmclib.WithHomeAssistantOpt(homeassistant.Config{
 			SwitchEntityID:             "switch.shellypstripg4_98a3167b747c_switch_0",
 			PowerOperationDelaySeconds: 2,
@@ -31,7 +32,7 @@ func main() {
 	if err := c.Open(ctx); err != nil {
 		panic(err)
 	}
-	defer c.Close(ctx)
+	defer func() { _ = c.Close(ctx) }()
 
 	ok3, err := c.SetBootDevice(ctx, "pxe", false, false)
 	if err != nil {

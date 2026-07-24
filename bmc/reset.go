@@ -12,7 +12,7 @@ import (
 // BMCResetter for resetting a BMC.
 // resetType: "warm" resets the management console without rebooting the BMC
 // resetType: "cold" reboots the BMC
-type BMCResetter interface {
+type BMCResetter interface { //nolint:revive // renaming BMCResetter would break the public API
 	BmcReset(ctx context.Context, resetType string) (ok bool, err error)
 }
 
@@ -38,8 +38,8 @@ func resetBMC(ctx context.Context, timeout time.Duration, resetType string, b []
 		default:
 			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
 			ctx, cancel := context.WithTimeout(ctx, timeout)
-			defer cancel()
 			ok, setErr := elem.bmcResetter.BmcReset(ctx, resetType)
+			cancel()
 			if setErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(setErr, "provider: %v", elem.name))
 				continue

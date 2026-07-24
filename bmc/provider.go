@@ -14,8 +14,7 @@ func getProviderName(provider interface{}) string {
 	if provider == nil {
 		return ""
 	}
-	switch p := provider.(type) {
-	case Provider:
+	if p, ok := provider.(Provider); ok {
 		return p.Name()
 	}
 	return fmt.Sprintf("%T", provider)

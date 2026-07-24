@@ -13,10 +13,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/bmc-toolbox/bmclib/v2/constants"
-	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/bmc-toolbox/bmclib/v2/constants"
+	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 )
 
 func TestX11SetBMCFirmwareInstallMode(t *testing.T) {
@@ -173,7 +174,7 @@ func TestX11UploadBMCFirmware(t *testing.T) {
 			if tc.fwFilename != "" {
 				tmpdir := t.TempDir()
 				binPath := filepath.Join(tmpdir, tc.fwFilename)
-				err := os.WriteFile(binPath, []byte(tc.fwFileContents), 0600)
+				err := os.WriteFile(binPath, []byte(tc.fwFileContents), 0o600)
 				if err != nil {
 					t.Fatal(err)
 				}

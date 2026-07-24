@@ -9,10 +9,11 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/bmc-toolbox/common"
+
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/bmc-toolbox/bmclib/v2/internal"
-	"github.com/bmc-toolbox/common"
 )
 
 const (
@@ -22,14 +23,13 @@ const (
 	versionStrEmpty    = 2
 )
 
-// bmc client interface implementations methods
+// FirmwareInstallSteps returns the ordered steps required to install firmware for the given component.
 func (a *ASRockRack) FirmwareInstallSteps(ctx context.Context, component string) ([]constants.FirmwareInstallStep, error) {
 	if err := a.supported(ctx); err != nil {
 		return nil, bmclibErrs.NewErrUnsupportedHardware(err.Error())
 	}
 
-	switch strings.ToUpper(component) {
-	case common.SlugBMC:
+	if strings.EqualFold(component, common.SlugBMC) {
 		return []constants.FirmwareInstallStep{
 			constants.FirmwareInstallStepUpload,
 			constants.FirmwareInstallStepInstallUploaded,
@@ -42,6 +42,7 @@ func (a *ASRockRack) FirmwareInstallSteps(ctx context.Context, component string)
 	return nil, errors.Wrap(bmclibErrs.ErrFirmwareUpload, "component unsupported: "+component)
 }
 
+// FirmwareUpload uploads the firmware image for the given component to the BMC.
 func (a *ASRockRack) FirmwareUpload(ctx context.Context, component string, file *os.File) (taskID string, err error) {
 	switch strings.ToUpper(component) {
 	case common.SlugBIOS:
@@ -51,7 +52,6 @@ func (a *ASRockRack) FirmwareUpload(ctx context.Context, component string, file 
 	}
 
 	return "", errors.Wrap(bmclibErrs.ErrFirmwareUpload, "component unsupported: "+component)
-
 }
 
 func (a *ASRockRack) firmwareUploadBMC(ctx context.Context, file *os.File) error {
@@ -133,6 +133,7 @@ func (a *ASRockRack) firmwareUploadBIOS(ctx context.Context, file *os.File) erro
 	return nil
 }
 
+// FirmwareInstallUploaded initiates the install of a previously uploaded firmware image for the given component.
 func (a *ASRockRack) FirmwareInstallUploaded(ctx context.Context, component, uploadTaskID string) (installTaskID string, err error) {
 	switch strings.ToUpper(component) {
 	case common.SlugBIOS:
@@ -186,7 +187,7 @@ func (a *ASRockRack) FirmwareTaskStatus(ctx context.Context, kind constants.Firm
 }
 
 // firmwareUpdateBIOSStatus returns the BIOS firmware install status
-func (a *ASRockRack) firmwareUpdateStatus(ctx context.Context, component string, installVersion string) (state constants.TaskState, status string, err error) {
+func (a *ASRockRack) firmwareUpdateStatus(ctx context.Context, component, installVersion string) (state constants.TaskState, status string, err error) {
 	var endpoint string
 	component = strings.ToUpper(component)
 	switch component {

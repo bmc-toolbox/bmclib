@@ -10,13 +10,14 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
-	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 	"github.com/pkg/errors"
+
+	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
+	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
+	"github.com/bmc-toolbox/bmclib/v2/providers"
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
@@ -51,8 +52,9 @@ var (
 	errManufacturerUnknown = errors.New("error identifying device manufacturer")
 )
 
+// Config holds the optional configuration values for a Dell iDRAC connection.
 type Config struct {
-	HttpClient            *http.Client
+	HttpClient            *http.Client //nolint:revive // exported field kept for backwards compatibility
 	Port                  string
 	VersionsNotCompatible []string
 	RootCAs               *x509.CertPool
@@ -62,30 +64,35 @@ type Config struct {
 // Option for setting optional Client values
 type Option func(*Config)
 
-func WithHttpClient(httpClient *http.Client) Option {
+// WithHttpClient sets the http client used for the connection.
+func WithHttpClient(httpClient *http.Client) Option { //nolint:revive // exported option kept for backwards compatibility
 	return func(c *Config) {
 		c.HttpClient = httpClient
 	}
 }
 
+// WithPort sets the port used for the connection.
 func WithPort(port string) Option {
 	return func(c *Config) {
 		c.Port = port
 	}
 }
 
+// WithVersionsNotCompatible sets the list of Redfish versions considered incompatible.
 func WithVersionsNotCompatible(versionsNotCompatible []string) Option {
 	return func(c *Config) {
 		c.VersionsNotCompatible = versionsNotCompatible
 	}
 }
 
+// WithRootCAs sets the root CA certificate pool used to verify the connection.
 func WithRootCAs(rootCAs *x509.CertPool) Option {
 	return func(c *Config) {
 		c.RootCAs = rootCAs
 	}
 }
 
+// WithUseBasicAuth enables HTTP basic authentication for the connection.
 func WithUseBasicAuth(useBasicAuth bool) Option {
 	return func(c *Config) {
 		c.UseBasicAuth = useBasicAuth
@@ -180,7 +187,7 @@ func (c *Conn) Compatible(ctx context.Context) bool {
 
 		return false
 	}
-	defer c.Close(ctx)
+	defer func() { _ = c.Close(ctx) }()
 
 	if !c.redfishwrapper.VersionCompatible() {
 		c.Log.V(2).WithValues(
@@ -256,6 +263,7 @@ func (c *Conn) deviceManufacturer(ctx context.Context) (vendor string, err error
 	return "", errManufacturerUnknown
 }
 
+// Screenshot captures a screenshot of the server console and returns the image bytes and file type.
 func (c *Conn) Screenshot(ctx context.Context) (image []byte, fileType string, err error) {
 	fileType = "png"
 
@@ -269,6 +277,7 @@ func (c *Conn) Screenshot(ctx context.Context) (image []byte, fileType string, e
 	if err != nil {
 		return nil, "", errors.Wrap(bmclibErrs.ErrScreenshot, err.Error())
 	}
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

@@ -4,12 +4,13 @@ import (
 	"context"
 	"crypto/x509"
 	"flag"
-	"io/ioutil"
+	"os"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/v2"
 	"github.com/bombsimon/logrusr/v2"
 	"github.com/sirupsen/logrus"
+
+	"github.com/bmc-toolbox/bmclib/v2"
 )
 
 func main() {
@@ -37,7 +38,7 @@ func main() {
 		var pool *x509.CertPool
 		if *certPoolFile != "" {
 			pool = x509.NewCertPool()
-			data, err := ioutil.ReadFile(*certPoolFile)
+			data, err := os.ReadFile(*certPoolFile)
 			if err != nil {
 				l.Fatal(err)
 			}
@@ -57,7 +58,7 @@ func main() {
 	if err != nil {
 		l.WithError(err).Fatal(err, "BMC login failed")
 	}
-	defer cl.Close(ctx)
+	defer func() { _ = cl.Close(ctx) }()
 
 	state, err := cl.GetPowerState(ctx)
 	if err != nil {

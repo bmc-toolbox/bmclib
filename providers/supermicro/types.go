@@ -1,5 +1,6 @@
 package supermicro
 
+// IPMI is the root element of a Supermicro IPMI XML response.
 type IPMI struct {
 	FruInfo *FruInfo `xml:"FRU_INFO,omitempty"`
 }

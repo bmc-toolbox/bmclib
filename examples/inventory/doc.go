@@ -1,5 +1,5 @@
 /*
-inventory is an example commmand that utilizes the 'v1' bmclib interface
+inventory is an example command that utilizes the 'v1' bmclib interface
 methods to gather inventory from a BMC using the redfish driver.
 
 	$ go run ./examples/v1/inventory/main.go -h

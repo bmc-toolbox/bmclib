@@ -5,10 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bmc-toolbox/bmclib/v2/logging"
 	"github.com/google/go-cmp/cmp"
 	"github.com/jacobweinstock/registrar"
 	"gopkg.in/go-playground/assert.v1"
+
+	"github.com/bmc-toolbox/bmclib/v2/logging"
 )
 
 func TestBMC(t *testing.T) {
@@ -144,7 +145,7 @@ func TestDefaultTimeout(t *testing.T) {
 	}{
 		"no per provider timeout": {
 			ctx:  context.Background(),
-			want: func(n int) time.Duration { return 30 * time.Second },
+			want: func(_ int) time.Duration { return 30 * time.Second },
 		},
 		"with per provider timeout": {
 			ctx: func() context.Context {
@@ -188,15 +189,15 @@ func (t *testProvider) Name() string {
 	return "tester"
 }
 
-func (t *testProvider) Open(ctx context.Context) error {
+func (t *testProvider) Open(_ context.Context) error {
 	return t.Err
 }
 
-func (t *testProvider) Close(ctx context.Context) error {
+func (t *testProvider) Close(_ context.Context) error {
 	return t.Err
 }
 
-func (t *testProvider) PowerStateGet(ctx context.Context) (string, error) {
+func (t *testProvider) PowerStateGet(_ context.Context) (string, error) {
 	return t.Powerstate, t.Err
 }
 
@@ -209,7 +210,7 @@ func (t *testProvider) BootDeviceSet(ctx context.Context, bootDevice string, set
 }
 
 func registryNames(r []*registrar.Driver) []string {
-	var names []string
+	names := make([]string, 0, len(r))
 	for _, d := range r {
 		names = append(names, d.Name)
 	}

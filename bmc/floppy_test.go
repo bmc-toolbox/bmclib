@@ -6,8 +6,9 @@ import (
 	"testing"
 	"time"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/stretchr/testify/assert"
+
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 type mountFloppyImageTester struct {

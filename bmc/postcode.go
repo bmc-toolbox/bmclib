@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
+
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 // PostCodeGetter defines methods to retrieve device BIOS/UEFI POST code
@@ -43,7 +44,6 @@ func postCode(ctx context.Context, generic []postCodeGetterProvider) (status str
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				err = multierror.Append(err, vErr)
 				continue
-
 			}
 			metadataLocal.SuccessfulProvider = elem.name
 			return status, code, metadataLocal, nil
@@ -53,7 +53,7 @@ func postCode(ctx context.Context, generic []postCodeGetterProvider) (status str
 	return status, code, metadataLocal, multierror.Append(err, errors.New("failure to get device POST code"))
 }
 
-// GetPostCodeFromInterfaces identifies implementations of the PostCodeGetter interface and passes the found implementations to the postCode() wrapper method.
+// GetPostCodeInterfaces identifies implementations of the PostCodeGetter interface and passes the found implementations to the postCode() wrapper method.
 func GetPostCodeInterfaces(ctx context.Context, generic []interface{}) (status string, code int, metadata Metadata, err error) {
 	implementations := make([]postCodeGetterProvider, 0)
 	for _, elem := range generic {

@@ -1,3 +1,4 @@
+// Package asrockrack implements a bmclib provider for ASRock Rack BMCs.
 package asrockrack
 
 import (
@@ -7,13 +8,14 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/bmc-toolbox/bmclib/v2/constants"
-	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 	"github.com/pkg/errors"
+
+	"github.com/bmc-toolbox/bmclib/v2/constants"
+	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
+	"github.com/bmc-toolbox/bmclib/v2/providers"
 )
 
 const (
@@ -22,45 +24,47 @@ const (
 	// ProviderProtocol for the provider implementation
 	ProviderProtocol = "vendorapi"
 
-	E3C256D4ID_NL = "E3C256D4ID-NL"
-	E3C246D4ID_NL = "E3C246D4ID-NL"
-	E3C246D4I_NL  = "E3C246D4I-NL"
+	// E3C256D4ID_NL is a supported ASRockRack board model.
+	E3C256D4ID_NL = "E3C256D4ID-NL" //nolint:revive // exported const kept for backwards compatibility
+	// E3C246D4ID_NL is a supported ASRockRack board model.
+	E3C246D4ID_NL = "E3C246D4ID-NL" //nolint:revive // exported const kept for backwards compatibility
+	// E3C246D4I_NL is a supported ASRockRack board model.
+	E3C246D4I_NL = "E3C246D4I-NL" //nolint:revive // exported const kept for backwards compatibility
 )
 
-var (
-	// Features implemented by asrockrack https
-	Features = registrar.Features{
-		providers.FeaturePostCodeRead,
-		providers.FeatureBmcReset,
-		providers.FeatureUserCreate,
-		providers.FeatureUserUpdate,
-		providers.FeatureFirmwareUpload,
-		providers.FeatureFirmwareInstallUploaded,
-		providers.FeatureFirmwareTaskStatus,
-		providers.FeatureFirmwareInstallSteps,
-		providers.FeatureInventoryRead,
-		providers.FeaturePowerSet,
-		providers.FeaturePowerState,
-	}
-)
+// Features implemented by asrockrack https
+var Features = registrar.Features{
+	providers.FeaturePostCodeRead,
+	providers.FeatureBmcReset,
+	providers.FeatureUserCreate,
+	providers.FeatureUserUpdate,
+	providers.FeatureFirmwareUpload,
+	providers.FeatureFirmwareInstallUploaded,
+	providers.FeatureFirmwareTaskStatus,
+	providers.FeatureFirmwareInstallSteps,
+	providers.FeatureInventoryRead,
+	providers.FeaturePowerSet,
+	providers.FeaturePowerState,
+}
 
 // ASRockRack holds the status and properties of a connection to a asrockrack bmc
 type ASRockRack struct {
+	loginSession         *loginSession
+	httpClient           *http.Client
+	log                  logr.Logger
 	ip                   string
 	username             string
 	password             string
 	deviceModel          string
-	loginSession         *loginSession
-	httpClient           *http.Client
-	resetRequired        bool // Indicates if the BMC requires a reset
-	skipLogout           bool // A Close() / httpsLogout() request is ignored if the BMC was just flashed - since the sessions are terminated either way
-	log                  logr.Logger
 	httpClientSetupFuncs []func(*http.Client)
+	resetRequired        bool
+	skipLogout           bool
 }
 
+// Config holds the optional configuration for an ASRockRack connection.
 type Config struct {
+	HttpClient *http.Client //nolint:revive // exported field kept for backwards compatibility
 	Port       string
-	HttpClient *http.Client
 }
 
 // ASRockOption is a type that can configure an *ASRockRack
@@ -82,12 +86,12 @@ func WithHTTPClient(c *http.Client) ASRockOption {
 }
 
 // New returns a new ASRockRack instance ready to be used
-func New(ip string, username string, password string, log logr.Logger) *ASRockRack {
+func New(ip, username, password string, log logr.Logger) *ASRockRack {
 	return NewWithOptions(ip, username, password, log)
 }
 
 // NewWithOptions returns a new ASRockRack instance with options ready to be used
-func NewWithOptions(ip string, username string, password string, log logr.Logger, opts ...ASRockOption) *ASRockRack {
+func NewWithOptions(ip, username, password string, log logr.Logger, opts ...ASRockOption) *ASRockRack {
 	r := &ASRockRack{
 		ip:           ip,
 		username:     username,
@@ -108,6 +112,7 @@ func NewWithOptions(ip string, username string, password string, log logr.Logger
 	return r
 }
 
+// Name returns the name of this provider.
 func (a *ASRockRack) Name() string {
 	return ProviderName
 }
@@ -167,6 +172,7 @@ func (a *ASRockRack) CheckCredentials(ctx context.Context) (err error) {
 	return a.httpsLogin(ctx)
 }
 
+// PostCode returns the BIOS/UEFI post code status and value.
 func (a *ASRockRack) PostCode(ctx context.Context) (status string, code int, err error) {
 	postInfo, err := a.postCodeInfo(ctx)
 	if err != nil {

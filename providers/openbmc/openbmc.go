@@ -1,3 +1,4 @@
+// Package openbmc implements a bmclib provider for OpenBMC-based BMCs.
 package openbmc
 
 import (
@@ -8,13 +9,14 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
-	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
-	"github.com/bmc-toolbox/bmclib/v2/providers"
 	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 	"github.com/pkg/errors"
+
+	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
+	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
+	"github.com/bmc-toolbox/bmclib/v2/providers"
 )
 
 const (
@@ -39,8 +41,9 @@ var (
 	errNotOpenBMCDevice = errors.New("not an OpenBMC device")
 )
 
+// Config holds the optional configuration for an openbmc connection.
 type Config struct {
-	HttpClient            *http.Client
+	HttpClient            *http.Client //nolint:revive // exported field kept for backwards compatibility
 	Port                  string
 	VersionsNotCompatible []string
 	RootCAs               *x509.CertPool
@@ -50,24 +53,28 @@ type Config struct {
 // Option for setting optional Client values
 type Option func(*Config)
 
-func WithHttpClient(httpClient *http.Client) Option {
+// WithHttpClient sets the HTTP client used by the provider.
+func WithHttpClient(httpClient *http.Client) Option { //nolint:revive // exported option kept for backwards compatibility
 	return func(c *Config) {
 		c.HttpClient = httpClient
 	}
 }
 
+// WithPort sets the port used to connect to the BMC.
 func WithPort(port string) Option {
 	return func(c *Config) {
 		c.Port = port
 	}
 }
 
+// WithRootCAs sets the root CA certificate pool used to verify TLS connections.
 func WithRootCAs(rootCAs *x509.CertPool) Option {
 	return func(c *Config) {
 		c.RootCAs = rootCAs
 	}
 }
 
+// WithUseBasicAuth configures whether basic authentication is used for the connection.
 func WithUseBasicAuth(useBasicAuth bool) Option {
 	return func(c *Config) {
 		c.UseBasicAuth = useBasicAuth
@@ -126,12 +133,12 @@ func (c *Conn) Open(ctx context.Context) (err error) {
 }
 
 func (c *Conn) deviceSupported(ctx context.Context) error {
-	var host = c.host
+	host := c.host
 	if !strings.HasPrefix(host, "https://") && !strings.HasPrefix(host, "http://") {
 		host = "https://" + host
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, host, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, host, http.NoBody)
 	if err != nil {
 		return err
 	}
@@ -141,7 +148,7 @@ func (c *Conn) deviceSupported(ctx context.Context) error {
 		return err
 	}
 
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {

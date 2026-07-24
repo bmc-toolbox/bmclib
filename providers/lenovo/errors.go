@@ -45,7 +45,7 @@ func checkResponse(resp *http.Response, err error) error {
 	if resp == nil {
 		return errFailedToParseResponse
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
 		return parseRedfishError(resp)
@@ -85,7 +85,7 @@ func parseRedfishError(resp *http.Response) error {
 }
 
 // redfishErrorDetail extracts a human-readable detail string from a Redfish
-// error body. It returns an empty string when the body is not a recognisable
+// error body. It returns an empty string when the body is not a recognizable
 // Redfish error envelope.
 func redfishErrorDetail(body []byte) string {
 	var re redfishError

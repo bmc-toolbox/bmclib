@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 )
 
+// NMISender provides sending a non-maskable interrupt (NMI) to a host.
 type NMISender interface {
 	SendNMI(ctx context.Context) error
 }

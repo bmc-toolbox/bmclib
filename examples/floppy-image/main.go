@@ -8,9 +8,10 @@ import (
 	"os"
 	"time"
 
-	bmclib "github.com/bmc-toolbox/bmclib/v2"
 	"github.com/bombsimon/logrusr/v2"
 	"github.com/sirupsen/logrus"
+
+	bmclib "github.com/bmc-toolbox/bmclib/v2"
 )
 
 func main() {
@@ -50,10 +51,10 @@ func main() {
 	cl := bmclib.NewClient(*host, *user, *pass, clientOpts...)
 	err := cl.Open(ctx)
 	if err != nil {
-		log.Fatal(err, "bmc login failed")
+		log.Fatal(err, "bmc login failed") //nolint:gocritic // example code; deferred cancel on fatal exit is acceptable
 	}
 
-	defer cl.Close(ctx)
+	defer func() { _ = cl.Close(ctx) }()
 
 	if *unmountImage {
 		if err := cl.UnmountFloppyImage(ctx); err != nil {
@@ -68,7 +69,7 @@ func main() {
 	if err != nil {
 		l.Fatal(err)
 	}
-	defer fh.Close()
+	defer func() { _ = fh.Close() }()
 
 	err = cl.MountFloppyImage(ctx, fh)
 	if err != nil {

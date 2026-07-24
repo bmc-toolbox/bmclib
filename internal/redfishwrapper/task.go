@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bmc-toolbox/bmclib/v2/constants"
-	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish/schemas"
+
+	"github.com/bmc-toolbox/bmclib/v2/constants"
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
-var (
-	errUnexpectedTaskState = errors.New("unexpected task state")
-)
+var errUnexpectedTaskState = errors.New("unexpected task state")
 
+// Task returns the redfish task matching taskID, or ErrTaskNotFound if none matches.
 func (c *Client) Task(ctx context.Context, taskID string) (*schemas.Task, error) {
 	tasks, err := c.Tasks(ctx)
 	if err != nil {
@@ -32,6 +32,7 @@ func (c *Client) Task(ctx context.Context, taskID string) (*schemas.Task, error)
 	return nil, bmclibErrs.ErrTaskNotFound
 }
 
+// TaskStatus returns the converted task state and a human readable status string for the given taskID.
 func (c *Client) TaskStatus(ctx context.Context, taskID string) (constants.TaskState, string, error) {
 	task, err := c.Task(ctx, taskID)
 	if err != nil {
@@ -60,7 +61,8 @@ func (c *Client) taskMessagesAsString(messages []schemas.Message) string {
 	}
 
 	var found []string
-	for _, m := range messages {
+	for i := range messages {
+		m := &messages[i]
 		if m.Message == "" {
 			continue
 		}
@@ -71,17 +73,18 @@ func (c *Client) taskMessagesAsString(messages []schemas.Message) string {
 	return strings.Join(found, ",")
 }
 
+// ConvertTaskState maps a redfish task state string to a bmclib TaskState constant.
 func (c *Client) ConvertTaskState(state string) constants.TaskState {
 	switch strings.ToLower(state) {
 	case "starting", "downloading", "downloaded", "scheduling":
 		return constants.Initializing
-	case "running", "stopping", "cancelling":
+	case "running", "stopping", "cancelling": //nolint:misspell // Redfish API uses British spelling
 		return constants.Running
 	case "pending", "new":
 		return constants.Queued
 	case "scheduled":
 		return constants.PowerCycleHost
-	case "interrupted", "killed", "exception", "cancelled", "suspended", "failed":
+	case "interrupted", "killed", "exception", "cancelled", "suspended", "failed": //nolint:misspell // Redfish API uses British spelling
 		return constants.Failed
 	case "completed":
 		return constants.Complete
@@ -90,6 +93,7 @@ func (c *Client) ConvertTaskState(state string) constants.TaskState {
 	}
 }
 
+// TaskStateActive reports whether the given task state indicates the task is still in progress.
 func (c *Client) TaskStateActive(state constants.TaskState) (bool, error) {
 	switch state {
 	case constants.Initializing, constants.Running, constants.Queued:

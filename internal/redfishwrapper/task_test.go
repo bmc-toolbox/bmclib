@@ -7,9 +7,10 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestConvertTaskState(t *testing.T) {
@@ -24,14 +25,14 @@ func TestConvertTaskState(t *testing.T) {
 		{"scheduling state", "scheduling", constants.Initializing},
 		{"running state", "running", constants.Running},
 		{"stopping state", "stopping", constants.Running},
-		{"cancelling state", "cancelling", constants.Running},
+		{"cancelling state", "cancelling", constants.Running}, //nolint:misspell // Redfish API uses British spelling
 		{"pending state", "pending", constants.Queued},
 		{"new state", "new", constants.Queued},
 		{"scheduled state", "scheduled", constants.PowerCycleHost},
 		{"interrupted state", "interrupted", constants.Failed},
 		{"killed state", "killed", constants.Failed},
 		{"exception state", "exception", constants.Failed},
-		{"cancelled state", "cancelled", constants.Failed},
+		{"cancelled state", "cancelled", constants.Failed}, //nolint:misspell // Redfish API uses British spelling
 		{"suspended state", "suspended", constants.Failed},
 		{"failed state", "failed", constants.Failed},
 		{"completed state", "completed", constants.Complete},
@@ -277,7 +278,7 @@ func TestTask(t *testing.T) {
 
 			ctx := context.Background()
 
-			//os.Setenv("DEBUG_BMCLIB", "true")
+			// os.Setenv("DEBUG_BMCLIB", "true")
 			client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "", WithBasicAuthEnabled(true))
 
 			err = client.Open(ctx)

@@ -31,7 +31,7 @@ type vmSlot struct {
 // occupied reports whether the slot currently holds media. Some XCC firmware
 // reports a mounted image via a non-empty Image while Inserted briefly lags (or
 // vice versa), so both are considered.
-func (s vmSlot) occupied() bool {
+func (s *vmSlot) occupied() bool {
 	return s.inserted || strings.TrimSpace(s.image) != ""
 }
 
@@ -55,7 +55,7 @@ func ejectPayload() map[string]any {
 // by their advertised MediaTypes, preferring free, remote-capable slots — so a
 // remote ISO lands in a "Remote" slot rather than an upload-only "RDOC" slot.
 // Implements bmc.VirtualMediaSetter.
-func (c *Conn) SetVirtualMedia(ctx context.Context, kind string, mediaURL string) (ok bool, err error) {
+func (c *Conn) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (ok bool, err error) {
 	if !validVirtualMediaKinds[kind] {
 		return false, fmt.Errorf("invalid virtual media kind %q (want CD|DVD|Floppy|USBStick)", kind)
 	}
@@ -116,17 +116,17 @@ func (c *Conn) insertVirtualMedia(ctx context.Context, candidates []vmSlot, medi
 			payload["TransferProtocolType"] = proto
 		}
 
-		if err := c.patchVirtualMedia(ctx, s.odataID, payload); err == nil {
+		err := c.patchVirtualMedia(ctx, s.odataID, payload)
+		if err == nil {
 			return true, nil
-		} else {
-			// Retry with a minimal payload — some XCC firmware rejects the
-			// Inserted/WriteProtected/TransferProtocolType properties.
-			minimal := map[string]any{"Image": mediaURL, "Inserted": true}
-			if err2 := c.patchVirtualMedia(ctx, s.odataID, minimal); err2 == nil {
-				return true, nil
-			}
-			slotErrs = append(slotErrs, fmt.Sprintf("%s: %v", s.odataID, err))
 		}
+		// Retry with a minimal payload — some XCC firmware rejects the
+		// Inserted/WriteProtected/TransferProtocolType properties.
+		minimal := map[string]any{"Image": mediaURL, "Inserted": true}
+		if err2 := c.patchVirtualMedia(ctx, s.odataID, minimal); err2 == nil {
+			return true, nil
+		}
+		slotErrs = append(slotErrs, fmt.Sprintf("%s: %v", s.odataID, err))
 	}
 
 	return false, fmt.Errorf("failed to insert virtual media into any matching slot:\n%s", strings.Join(slotErrs, "\n"))
@@ -160,7 +160,7 @@ func (c *Conn) ejectVirtualMedia(ctx context.Context, candidates []vmSlot) (bool
 
 // patchVirtualMedia PATCHes a VirtualMedia resource and maps the response.
 func (c *Conn) patchVirtualMedia(ctx context.Context, odataID string, payload map[string]any) error {
-	return checkResponse(c.redfishwrapper.PatchWithHeaders(ctx, odataID, payload, nil))
+	return checkResponse(c.redfishwrapper.PatchWithHeaders(ctx, odataID, payload, nil)) //nolint:bodyclose // checkResponse closes the response body
 }
 
 // virtualMediaSlots resolves and reads the VirtualMedia collection, trying the
@@ -228,11 +228,11 @@ func (c *Conn) virtualMediaSlots(ctx context.Context) ([]vmSlot, error) {
 
 // collectionMembersOrEmpty returns a collection's members, or an empty slice
 // (and the error) when the URL is empty or the GET fails.
-func (c *Conn) collectionMembersOrEmpty(url string) ([]odataID, error) {
-	if url == "" {
+func (c *Conn) collectionMembersOrEmpty(collectionURL string) ([]odataID, error) {
+	if collectionURL == "" {
 		return nil, nil
 	}
-	return c.collectionMembers(url)
+	return c.collectionMembers(collectionURL)
 }
 
 // slotsForKind returns the slots whose MediaTypes advertise the requested kind.
@@ -265,7 +265,7 @@ func rankSlots(slots []vmSlot) {
 		case strings.Contains(id, "rdoc"):
 			sc += 0
 		default:
-			sc += 1
+			sc++
 		}
 		return sc
 	}
