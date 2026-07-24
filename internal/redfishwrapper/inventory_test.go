@@ -164,3 +164,80 @@ func TestInventoryNICsWithAOCFallback(t *testing.T) {
 		}
 	}
 }
+
+// TestInventoryCollectDIMMCapacity proves that collectDIMMs must use
+// CapacityMiB — the overall module capacity — rather than VolatileSizeMiB.
+// VolatileSizeMiB/NonVolatileSizeMiB only apply to memory with a
+// volatile/non-volatile split (e.g. NVDIMM); on ordinary DRAM DIMMs (the vast
+// majority of servers), VolatileSizeMiB is 0 even though CapacityMiB is
+// correctly populated, so using it alone silently produces SizeBytes=0 for
+// every normal DIMM.
+func TestInventoryCollectDIMMCapacity(t *testing.T) {
+	mux := http.NewServeMux()
+	for path, fixture := range map[string]string{
+		"/redfish/v1/":                       "serviceroot.json",
+		"/redfish/v1/Systems":                "systems.json",
+		"/redfish/v1/Systems/1":              "systems_1.json",
+		"/redfish/v1/Systems/1/Memory":       "smc_dimm/memory.json",
+		"/redfish/v1/Systems/1/Memory/DIMM1": "smc_dimm/memory_dimm1.json",
+	} {
+		mux.HandleFunc(path, endpointFunc(t, fixture))
+	}
+
+	server := httptest.NewTLSServer(mux)
+	defer server.Close()
+
+	u, err := url.Parse(server.URL)
+	require.NoError(t, err)
+
+	client := NewClient(u.Hostname(), u.Port(), "", "", WithBasicAuthEnabled(true))
+	require.NoError(t, client.Open(context.Background()))
+	defer client.Close(context.Background())
+
+	device, err := client.Inventory(context.Background(), false)
+	require.NoError(t, err)
+	require.NotNil(t, device)
+
+	require.Len(t, device.Memory, 1, "expected exactly one DIMM in inventory")
+	dimm := device.Memory[0]
+	assert.Equal(t, "TESTDIMMSERIAL01", dimm.Serial)
+	assert.Equal(t, int64(65536)*1024*1024, dimm.SizeBytes,
+		"DIMM SizeBytes should come from CapacityMiB (64GiB), not VolatileSizeMiB (0 for ordinary DRAM)")
+}
+
+// TestInventoryCollectDIMMCapacityNVDIMMFallback proves that collectDIMMs
+// still falls back to VolatileSizeMiB+NonVolatileSizeMiB when CapacityMiB is
+// absent — the original use case those fields exist for (an NVDIMM's
+// volatile/non-volatile split).
+func TestInventoryCollectDIMMCapacityNVDIMMFallback(t *testing.T) {
+	mux := http.NewServeMux()
+	for path, fixture := range map[string]string{
+		"/redfish/v1/":                       "serviceroot.json",
+		"/redfish/v1/Systems":                "systems.json",
+		"/redfish/v1/Systems/1":              "systems_1.json",
+		"/redfish/v1/Systems/1/Memory":       "smc_nvdimm/memory.json",
+		"/redfish/v1/Systems/1/Memory/DIMM1": "smc_nvdimm/memory_dimm1.json",
+	} {
+		mux.HandleFunc(path, endpointFunc(t, fixture))
+	}
+
+	server := httptest.NewTLSServer(mux)
+	defer server.Close()
+
+	u, err := url.Parse(server.URL)
+	require.NoError(t, err)
+
+	client := NewClient(u.Hostname(), u.Port(), "", "", WithBasicAuthEnabled(true))
+	require.NoError(t, client.Open(context.Background()))
+	defer client.Close(context.Background())
+
+	device, err := client.Inventory(context.Background(), false)
+	require.NoError(t, err)
+	require.NotNil(t, device)
+
+	require.Len(t, device.Memory, 1, "expected exactly one DIMM in inventory")
+	dimm := device.Memory[0]
+	assert.Equal(t, "TESTNVDIMMSERIAL01", dimm.Serial)
+	assert.Equal(t, int64(8192+8192)*1024*1024, dimm.SizeBytes,
+		"DIMM SizeBytes should fall back to VolatileSizeMiB+NonVolatileSizeMiB (8GiB+8GiB) when CapacityMiB is absent")
+}
