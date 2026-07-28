@@ -178,6 +178,11 @@ func (c *Client) chassisAttributes(ctx context.Context, device *common.Device, f
 			return err
 		}
 
+		err = c.collectMainboard(ch, device, softwareInventory)
+		if err != nil && failOnError {
+			return err
+		}
+
 		err = c.collectPSUs(ch, device, softwareInventory)
 		if err != nil && failOnError {
 			return err
