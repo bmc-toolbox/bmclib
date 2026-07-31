@@ -367,10 +367,13 @@ func (c *Client) collectDrives(sys *schemas.ComputerSystem, device *common.Devic
 	}
 
 	for _, member := range storage {
-		if member.DrivesCount == 0 {
-			continue
-		}
-
+		// DrivesCount comes from the optional "Drives@odata.count" property.
+		// Some implementations populate the "Drives" link array without ever
+		// including a count property, which gofish reports as DrivesCount==0
+		// even though real drives are linked. member.Drives() reads the
+		// underlying link list directly and safely returns an empty slice
+		// when there's genuinely nothing there, so skip the DrivesCount gate
+		// entirely rather than short-circuiting on a field that may be unset.
 		drives, err := member.Drives()
 		if err != nil {
 			return err

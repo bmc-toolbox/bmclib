@@ -1,0 +1,32 @@
+{
+    "@odata.type": "#Storage.v1_9_0.Storage",
+    "@odata.id": "/redfish/v1/Systems/1/Storage/NVMeSSD",
+    "Id": "NVMeSSD",
+    "Name": "NVMe Storage System",
+    "StorageControllers": [
+        {
+            "@odata.id": "/redfish/v1/Systems/1/Storage/NVMeSSD#/StorageControllers/0",
+            "MemberId": "0",
+            "FirmwareVersion": "0D",
+            "Status": {
+                "State": "Enabled",
+                "Health": "OK"
+            },
+            "SupportedControllerProtocols": ["PCIe"],
+            "SupportedDeviceProtocols": ["NVMe"]
+        }
+    ],
+    "Drives": [
+        {
+            "@odata.id": "/redfish/v1/Chassis/NVMeSSD.0.Group.0.StorageBackplane/Drives/Disk.Bay.2"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/NVMeSSD.0.Group.0.StorageBackplane/Drives/Disk.Bay.3"
+        }
+    ],
+    "Description": "NVMe SSD",
+    "Status": {
+        "State": "Enabled",
+        "Health": "OK"
+    }
+}
