@@ -4,7 +4,6 @@ package redfish
 import (
 	"context"
 	"crypto/x509"
-	"encoding/json"
 	"net/http"
 
 	"github.com/bmc-toolbox/common"
@@ -230,46 +229,7 @@ func (c *Conn) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (ok b
 
 // Inventory collects hardware inventory and install firmware information
 func (c *Conn) Inventory(ctx context.Context) (device *common.Device, err error) {
-	device, err = c.redfishwrapper.Inventory(ctx, c.failInventoryOnError)
-	if err != nil {
-		return device, err
-	}
-
-	// This generic provider may be serving a Supermicro BMC, so apply the
-	// same vendor OEM enrichment providers/supermicro does.
-	populateMainboardSerial(ctx, c.redfishwrapper, device)
-
-	return device, nil
-}
-
-// populateMainboardSerial fills in device.Mainboard.Serial from the Chassis
-// resource's Supermicro OEM extension: Chassis.SerialNumber is the case
-// serial, while the board's own serial is only available under
-// Oem.Supermicro.BoardSerialNumber.
-func populateMainboardSerial(ctx context.Context, rf *redfishwrapper.Client, device *common.Device) {
-	if rf == nil || device == nil || device.Mainboard == nil || device.Mainboard.Serial != "" {
-		return
-	}
-
-	chassis, err := rf.Chassis(ctx)
-	if err != nil {
-		return
-	}
-
-	for _, ch := range chassis {
-		if ch.ID != device.Mainboard.PhysicalID || len(ch.OEM) == 0 {
-			continue
-		}
-
-		var v struct {
-			Supermicro struct{ BoardSerialNumber string }
-		}
-		if json.Unmarshal(ch.OEM, &v) == nil {
-			device.Mainboard.Serial = v.Supermicro.BoardSerialNumber
-		}
-
-		return
-	}
+	return c.redfishwrapper.Inventory(ctx, c.failInventoryOnError)
 }
 
 // GetBiosConfiguration return bios configuration
