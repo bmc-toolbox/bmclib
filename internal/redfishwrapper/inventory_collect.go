@@ -42,6 +42,46 @@ func (c *Client) collectEnclosure(ch *schemas.Chassis, device *common.Device, so
 	return nil
 }
 
+// collectMainboard collects motherboard information.
+//
+// Some vendors (e.g. Supermicro) don't expose a dedicated motherboard
+// resource: the Chassis resource's Model is the board's own model, while
+// PartNumber/SerialNumber describe the case rather than the board itself.
+// Vendor-specific providers may fill in additional Mainboard attributes
+// (e.g. the board's own serial number) after Inventory returns.
+//
+// chassisAttributes calls this once per compatible Chassis member, and some
+// vendors (e.g. Dell) have more than one compatible Chassis ID. device.Mainboard
+// is a single field, not a slice, so only populate it from the first chassis
+// that provides a model — don't let an unrelated chassis (e.g. a drive
+// enclosure/backplane with its own Model set) silently overwrite it later.
+func (c *Client) collectMainboard(ch *schemas.Chassis, device *common.Device, softwareInventory []*schemas.SoftwareInventory) (err error) {
+	if ch == nil || ch.Model == "" || (device.Mainboard != nil && device.Mainboard.Model != "") {
+		return nil
+	}
+
+	m := &common.Mainboard{
+		Common: common.Common{
+			Vendor: common.FormatVendorName(ch.Manufacturer),
+			Model:  ch.Model,
+			Status: &common.Status{
+				Health: string(ch.Status.Health),
+				State:  string(ch.Status.State),
+			},
+			Firmware: &common.Firmware{},
+		},
+
+		PhysicalID: ch.ID,
+	}
+
+	// include additional firmware attributes from redfish firmware inventory
+	c.firmwareAttributes(common.SlugMainboard, "", m.Firmware, softwareInventory)
+
+	device.Mainboard = m
+
+	return nil
+}
+
 // collectPSUs collects Power Supply Unit component information
 func (c *Client) collectPSUs(ch *schemas.Chassis, device *common.Device, softwareInventory []*schemas.SoftwareInventory) (err error) {
 	power, err := ch.Power()

@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -269,7 +270,44 @@ func (c *Client) Inventory(ctx context.Context) (device *common.Device, err erro
 		return nil, errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
 	}
 
-	return c.serviceClient.redfish.Inventory(ctx, false)
+	device, err = c.serviceClient.redfish.Inventory(ctx, false)
+	if err != nil {
+		return device, err
+	}
+
+	populateMainboardSerial(ctx, c.serviceClient.redfish, device)
+
+	return device, nil
+}
+
+// populateMainboardSerial fills in device.Mainboard.Serial from the Chassis
+// resource's Supermicro OEM extension: Chassis.SerialNumber is the case
+// serial, while the board's own serial is only available under
+// Oem.Supermicro.BoardSerialNumber.
+func populateMainboardSerial(ctx context.Context, rf *redfishwrapper.Client, device *common.Device) {
+	if rf == nil || device == nil || device.Mainboard == nil || device.Mainboard.Serial != "" {
+		return
+	}
+
+	chassis, err := rf.Chassis(ctx)
+	if err != nil {
+		return
+	}
+
+	for _, ch := range chassis {
+		if ch.ID != device.Mainboard.PhysicalID || len(ch.OEM) == 0 {
+			continue
+		}
+
+		var v struct {
+			Supermicro struct{ BoardSerialNumber string }
+		}
+		if json.Unmarshal(ch.OEM, &v) == nil {
+			device.Mainboard.Serial = v.Supermicro.BoardSerialNumber
+		}
+
+		return
+	}
 }
 
 // GetBiosConfiguration return bios configuration
