@@ -1,0 +1,10 @@
+{
+    "@odata.type": "#NetworkInterfaceCollection.NetworkInterfaceCollection",
+    "@odata.id": "/redfish/v1/Systems/1/NetworkInterfaces",
+    "Name": "Network Interface Collection",
+    "Members@odata.count": 2,
+    "Members": [
+        {"@odata.id": "/redfish/v1/Systems/1/NetworkInterfaces/NIC.Integrated.1"},
+        {"@odata.id": "/redfish/v1/Systems/1/NetworkInterfaces/NIC.Slot.1"}
+    ]
+}

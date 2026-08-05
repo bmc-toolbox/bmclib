@@ -1,0 +1,15 @@
+{
+    "@odata.type": "#NetworkAdapter.v1_0_0.NetworkAdapter",
+    "@odata.id": "/redfish/v1/Systems/1/NetworkInterfaces/NIC.Slot.1/NetworkAdapter",
+    "Id": "NIC.Slot.1",
+    "Name": "Add-on Adapter",
+    "Manufacturer": "TESTVENDOR",
+    "Model": "TEST-AOC",
+    "SerialNumber": "TESTAOCSERIAL02",
+    "NetworkPorts": {
+        "@odata.id": "/redfish/v1/Systems/1/NetworkInterfaces/NIC.Slot.1/NetworkAdapter/NetworkPorts"
+    },
+    "NetworkDeviceFunctions": {
+        "@odata.id": "/redfish/v1/Systems/1/NetworkInterfaces/NIC.Slot.1/NetworkAdapter/NetworkDeviceFunctions"
+    }
+}

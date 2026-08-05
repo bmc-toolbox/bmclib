@@ -1,0 +1,12 @@
+{
+    "@odata.type": "#EthernetInterface.v1_6_0.EthernetInterface",
+    "@odata.id": "/redfish/v1/Systems/1/EthernetInterfaces/1",
+    "Id": "1",
+    "Name": "OnBoard_NIC1",
+    "Description": "Onboard NIC Port 1",
+    "Status": {"State": "Enabled", "Health": "OK"},
+    "MACAddress": "00:00:5e:00:53:01",
+    "SpeedMbps": 1000,
+    "AutoNeg": true,
+    "MTUSize": 1500
+}

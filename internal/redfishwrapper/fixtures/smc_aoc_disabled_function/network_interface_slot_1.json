@@ -1,0 +1,10 @@
+{
+    "@odata.type": "#NetworkInterface.v1_1_0.NetworkInterface",
+    "@odata.id": "/redfish/v1/Systems/1/NetworkInterfaces/NIC.Slot.1",
+    "Id": "NIC.Slot.1",
+    "Name": "Add-on NIC",
+    "Status": {"State": "Enabled", "Health": "OK"},
+    "Links": {
+        "NetworkAdapter": {"@odata.id": "/redfish/v1/Systems/1/NetworkInterfaces/NIC.Slot.1/NetworkAdapter"}
+    }
+}
