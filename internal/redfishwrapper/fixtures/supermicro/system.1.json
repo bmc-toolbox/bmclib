@@ -1,0 +1,203 @@
+{
+    "@odata.type": "#ComputerSystem.v1_25_0.ComputerSystem",
+    "@odata.id": "/redfish/v1/Systems/1",
+    "Id": "1",
+    "Name": "System",
+    "Description": "Description of server",
+    "Status": {
+        "State": "Enabled",
+        "Health": "OK"
+    },
+    "SerialNumber": "E518845X6600399",
+    "PartNumber": "AS -1015CS-TNR-EU",
+    "AssetTag": null,
+    "IndicatorLED": "Off",
+    "LocationIndicatorActive": false,
+    "SystemType": "Physical",
+    "BiosVersion": "BIOS Date: 01/06/2026 Ver 3.8",
+    "Manufacturer": "Supermicro",
+    "Model": "AS -1015CS-TNR-EU",
+    "SKU": "091715D9",
+    "UUID": "FFD3B400-00DE-11F1-8000-905A088166A9",
+    "ProcessorSummary": {
+        "Count": 1,
+        "Model": "AMD Zen processor family",
+        "Status": {
+            "State": "Enabled",
+            "Health": "OK",
+            "HealthRollup": "OK"
+        },
+        "Metrics": {
+            "@odata.id": "/redfish/v1/Systems/1/ProcessorSummary/ProcessorMetrics"
+        }
+    },
+    "MemorySummary": {
+        "TotalSystemMemoryGiB": 64,
+        "MemoryMirroring": "System",
+        "Status": {
+            "State": "Enabled",
+            "Health": "OK",
+            "HealthRollup": "OK"
+        },
+        "Metrics": {
+            "@odata.id": "/redfish/v1/Systems/1/MemorySummary/MemoryMetrics"
+        }
+    },
+    "PowerState": "On",
+    "PowerOnDelaySeconds": 5,
+    "PowerOnDelaySeconds@Redfish.AllowableNumbers": [
+        "5:254:1"
+    ],
+    "PowerOffDelaySeconds": 5,
+    "PowerOffDelaySeconds@Redfish.AllowableNumbers": [
+        "5:254:1"
+    ],
+    "PowerCycleDelaySeconds": 5,
+    "PowerCycleDelaySeconds@Redfish.AllowableNumbers": [
+        "5:254:1"
+    ],
+    "Boot": {
+        "AutomaticRetryConfig": "Disabled",
+        "BootSourceOverrideEnabled": "Disabled",
+        "BootSourceOverrideMode": "Legacy",
+        "BootSourceOverrideTarget": "Pxe",
+        "BootSourceOverrideTarget@Redfish.AllowableValues": [
+            "None",
+            "Pxe",
+            "Floppy",
+            "Cd",
+            "Usb",
+            "Hdd",
+            "BiosSetup",
+            "Floppy",
+            "UsbCd",
+            "Diags",
+            "UefiBootNext"
+        ],
+        "Certificates": {
+            "@odata.id": "/redfish/v1/Systems/1/Boot/Certificates"
+        },
+        "BootOptions": {
+            "@odata.id": "/redfish/v1/Systems/1/BootOptions"
+        },
+        "BootNext": null,
+        "BootOrder": [
+            "Boot0008",
+            "Boot0002",
+            "Boot0003",
+            "Boot0004",
+            "Boot0005",
+            "Boot0006",
+            "Boot0007",
+            "Boot0001"
+        ]
+    },
+    "GraphicalConsole": {
+        "ServiceEnabled": true,
+        "Port": 5900,
+        "MaxConcurrentSessions": 4,
+        "ConnectTypesSupported": [
+            "KVMIP"
+        ]
+    },
+    "SerialConsole": {
+        "MaxConcurrentSessions": 1,
+        "SSH": {
+            "ServiceEnabled": true,
+            "Port": 22,
+            "SharedWithManagerCLI": true,
+            "ConsoleEntryCommand": "cd system1/sol1; start",
+            "HotKeySequenceDisplay": "press <Enter>, <Esc>, and then <T> to terminate session"
+        },
+        "IPMI": {
+            "HotKeySequenceDisplay": "Press ~.  - terminate connection",
+            "ServiceEnabled": true,
+            "Port": 623
+        }
+    },
+    "VirtualMediaConfig": {
+        "ServiceEnabled": true,
+        "Port": 623
+    },
+    "BootProgress": {
+        "OemLastState": null,
+        "LastState": "SystemHardwareInitializationComplete",
+        "LastStateTime": "2026-08-06T09:53:38Z"
+    },
+    "IPMIHostInterface": {
+        "ServiceEnabled": true
+    },
+    "Processors": {
+        "@odata.id": "/redfish/v1/Systems/1/Processors"
+    },
+    "Memory": {
+        "@odata.id": "/redfish/v1/Systems/1/Memory"
+    },
+    "EthernetInterfaces": {
+        "@odata.id": "/redfish/v1/Systems/1/EthernetInterfaces"
+    },
+    "NetworkInterfaces": {
+        "@odata.id": "/redfish/v1/Systems/1/NetworkInterfaces"
+    },
+    "Storage": {
+        "@odata.id": "/redfish/v1/Systems/1/Storage"
+    },
+    "LogServices": {
+        "@odata.id": "/redfish/v1/Systems/1/LogServices"
+    },
+    "SecureBoot": {
+        "@odata.id": "/redfish/v1/Systems/1/SecureBoot"
+    },
+    "Bios": {
+        "@odata.id": "/redfish/v1/Systems/1/Bios"
+    },
+    "VirtualMedia": {
+        "@odata.id": "/redfish/v1/Managers/1/VirtualMedia"
+    },
+    "Links": {
+        "Chassis": [
+            {
+                "@odata.id": "/redfish/v1/Chassis/1"
+            }
+        ],
+        "ManagedBy": [
+            {
+                "@odata.id": "/redfish/v1/Managers/1"
+            }
+        ],
+        "PoweredBy": [
+            {
+                "@odata.id": "/redfish/v1/Chassis/1/PowerSubsystem/PowerSupplies/1"
+            },
+            {
+                "@odata.id": "/redfish/v1/Chassis/1/PowerSubsystem/PowerSupplies/2"
+            }
+        ]
+    },
+    "Actions": {
+        "Oem": {},
+        "#ComputerSystem.Reset": {
+            "target": "/redfish/v1/Systems/1/Actions/ComputerSystem.Reset",
+            "@Redfish.ActionInfo": "/redfish/v1/Systems/1/ResetActionInfo",
+            "ResetType@Redfish.AllowableValues": [
+                "On",
+                "ForceOff",
+                "GracefulShutdown",
+                "GracefulRestart",
+                "ForceRestart",
+                "Nmi",
+                "ForceOn",
+                "PowerCycle"
+            ]
+        }
+    },
+    "Oem": {
+        "Supermicro": {
+            "FixedBootOrder": {
+                "@odata.id": "/redfish/v1/Systems/1/Oem/Supermicro/FixedBootOrder"
+            },
+            "@odata.type": "#SmcSystemExtensions.v1_0_0.System"
+        }
+    },
+    "@odata.etag": "\"f38af8c401c8b53eba3df547b6bfac59\""
+}

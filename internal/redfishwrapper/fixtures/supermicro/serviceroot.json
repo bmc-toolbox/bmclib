@@ -1,0 +1,87 @@
+{
+    "@odata.type": "#ServiceRoot.v1_19_0.ServiceRoot",
+    "@odata.id": "/redfish/v1",
+    "Id": "ServiceRoot",
+    "Name": "Root Service",
+    "RedfishVersion": "1.22.2",
+    "UUID": "00000000-0000-0000-0000-905A088166A9",
+    "Vendor": "Supermicro",
+    "Systems": {
+        "@odata.id": "/redfish/v1/Systems"
+    },
+    "Fabrics": {
+        "@odata.id": "/redfish/v1/Fabrics"
+    },
+    "Chassis": {
+        "@odata.id": "/redfish/v1/Chassis"
+    },
+    "Managers": {
+        "@odata.id": "/redfish/v1/Managers"
+    },
+    "Tasks": {
+        "@odata.id": "/redfish/v1/TaskService"
+    },
+    "SessionService": {
+        "@odata.id": "/redfish/v1/SessionService"
+    },
+    "LicenseService": {
+        "@odata.id": "/redfish/v1/LicenseService"
+    },
+    "AccountService": {
+        "@odata.id": "/redfish/v1/AccountService"
+    },
+    "EventService": {
+        "@odata.id": "/redfish/v1/EventService"
+    },
+    "UpdateService": {
+        "@odata.id": "/redfish/v1/UpdateService"
+    },
+    "CertificateService": {
+        "@odata.id": "/redfish/v1/CertificateService"
+    },
+    "Registries": {
+        "@odata.id": "/redfish/v1/Registries"
+    },
+    "JsonSchemas": {
+        "@odata.id": "/redfish/v1/JsonSchemas"
+    },
+    "ComponentIntegrity": {
+        "@odata.id": "/redfish/v1/ComponentIntegrity"
+    },
+    "TelemetryService": {
+        "@odata.id": "/redfish/v1/TelemetryService"
+    },
+    "Product": null,
+    "ServiceIdentification": "E518845X6600399",
+    "Links": {
+        "Sessions": {
+            "@odata.id": "/redfish/v1/SessionService/Sessions"
+        }
+    },
+    "Oem": {
+        "Supermicro": {
+            "DumpService": {
+                "@odata.id": "/redfish/v1/Oem/Supermicro/DumpService"
+            }
+        }
+    },
+    "ProtocolFeaturesSupported": {
+        "FilterQuery": true,
+        "SelectQuery": true,
+        "ExcerptQuery": false,
+        "OnlyMemberQuery": false,
+        "DeepOperations": {
+            "DeepPATCH": false,
+            "DeepPOST": false,
+            "MaxLevels": 1
+        },
+        "ExpandQuery": {
+            "Links": true,
+            "NoLinks": true,
+            "ExpandAll": true,
+            "Levels": true,
+            "MaxLevels": 2
+        }
+    },
+    "@odata.etag": "\"8a205e72f3c0ffaf49fb7f1b86b6ed63\""
+}

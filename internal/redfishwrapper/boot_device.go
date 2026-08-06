@@ -117,6 +117,7 @@ func (c *Client) SystemBootDeviceSet(_ context.Context, bootDevice string, setPe
 		boot.BootSourceOverrideMode = rf.LegacyBootSourceOverrideMode
 	}
 
+	sent := boot
 	if err = system.SetBoot(boot); err != nil {
 		// Some redfish implementations don't like all the fields we're setting so we
 		// try again here with a minimal set of fields. This has shown to work with the
@@ -127,6 +128,43 @@ func (c *Client) SystemBootDeviceSet(_ context.Context, bootDevice string, setPe
 		if err = system.SetBoot(secondTry); err != nil {
 			return false, err
 		}
+		sent = secondTry
+	}
+
+	// Some redfish implementations (confirmed on a Supermicro
+	// AS-1015CS-TNR-EU, AMI-based) respond 200 OK to this PATCH but
+	// silently store a different BootSourceOverrideMode/Enabled than what
+	// was requested - BootSourceOverrideTarget is the only field guaranteed
+	// to have actually stuck. Re-fetch and compare against what we actually
+	// sent (not `boot`, since the fallback path above only sends Target
+	// and Enabled - deliberately omitting Mode - and would otherwise be
+	// unfairly flagged as a mismatch here) so a caller relying on ok=true
+	// can trust the override will actually be honored at boot, rather than
+	// just that the BMC accepted the request.
+	updated, err := c.System()
+	if err != nil {
+		return false, errors.WithMessage(err, "verifying boot device set")
+	}
+
+	if updated.Boot.BootSourceOverrideTarget != sent.BootSourceOverrideTarget {
+		return false, errors.Errorf(
+			"boot device set was not applied: requested override target %q, BMC now has %q",
+			sent.BootSourceOverrideTarget, updated.Boot.BootSourceOverrideTarget,
+		)
+	}
+
+	if updated.Boot.BootSourceOverrideEnabled != sent.BootSourceOverrideEnabled {
+		return false, errors.Errorf(
+			"boot device set was not applied: requested override enabled state %q, BMC now has %q",
+			sent.BootSourceOverrideEnabled, updated.Boot.BootSourceOverrideEnabled,
+		)
+	}
+
+	if sent.BootSourceOverrideMode != "" && updated.Boot.BootSourceOverrideMode != sent.BootSourceOverrideMode {
+		return false, errors.Errorf(
+			"boot device set was not applied: requested boot mode %q, BMC now has %q",
+			sent.BootSourceOverrideMode, updated.Boot.BootSourceOverrideMode,
+		)
 	}
 
 	return true, nil
