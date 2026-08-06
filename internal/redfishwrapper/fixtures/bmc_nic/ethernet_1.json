@@ -1,0 +1,14 @@
+{
+    "@odata.type": "#EthernetInterface.v1_6_0.EthernetInterface",
+    "@odata.id": "/redfish/v1/Managers/1/EthernetInterfaces/1",
+    "Id": "1",
+    "Name": "Manager Ethernet Interface",
+    "Description": "Management Network Interface",
+    "Status": {"State": "Enabled", "Health": "OK"},
+    "MACAddress": "00:00:00:00:00:00",
+    "PermanentMACAddress": "00:00:5e:00:53:10",
+    "SpeedMbps": 1000,
+    "AutoNeg": true,
+    "MTUSize": 1500,
+    "LinkStatus": "LinkUp"
+}

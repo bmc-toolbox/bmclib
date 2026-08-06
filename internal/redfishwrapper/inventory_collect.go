@@ -282,6 +282,63 @@ func (c *Client) collectNICs(sys *schemas.ComputerSystem, device *common.Device,
 	return nil
 }
 
+// collectBMCNIC collects the BMC's own management network interface(s),
+// exposed under the Manager resource's EthernetInterfaces — distinct from
+// the host's NICs, which live under ComputerSystem and are collected by
+// collectNICs. Best-effort: the BMC's own NIC is enrichment data, not core
+// inventory, so a missing link or a fetch failure is silently a no-op
+// rather than failing the whole Inventory() call.
+func (c *Client) collectBMCNIC(manager *schemas.Manager, bmc *common.BMC) {
+	if manager == nil || bmc == nil {
+		return
+	}
+
+	interfaces, err := manager.EthernetInterfaces()
+	if err != nil {
+		return
+	}
+
+	var ports []*common.NICPort
+	for _, eth := range interfaces {
+		mac := eth.MACAddress
+		if mac == "" || mac == "00:00:00:00:00:00" {
+			mac = eth.PermanentMACAddress
+		}
+		if mac == "" || mac == "00:00:00:00:00:00" {
+			continue
+		}
+
+		port := &common.NICPort{
+			Common: common.Common{
+				Description: eth.Description,
+				Status: &common.Status{
+					Health: string(eth.Status.Health),
+					State:  string(eth.Status.State),
+				},
+			},
+			ID:         eth.ID,
+			MacAddress: mac,
+			AutoNeg:    eth.AutoNeg,
+			LinkStatus: string(eth.LinkStatus),
+			MTUSize:    gofish.Deref(eth.MTUSize),
+		}
+		if eth.SpeedMbps != nil {
+			port.SpeedBits = int64(gofish.Deref(eth.SpeedMbps)) * int64(math.Pow10(6))
+		}
+
+		ports = append(ports, port)
+	}
+
+	if len(ports) == 0 {
+		return
+	}
+
+	bmc.NIC = &common.NIC{
+		ID:       manager.ID,
+		NICPorts: ports,
+	}
+}
+
 func (c *Client) collectNetworkPortInfo(
 	nicPort *common.NICPort,
 	adapter *schemas.NetworkAdapter,
