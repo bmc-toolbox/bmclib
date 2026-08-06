@@ -692,6 +692,48 @@ func (ts *testServer) didPatchBios() bool {
 	return ts.biosPatched
 }
 
+func (ts *testServer) didPatchSecureBoot() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.secureBootPatched
+}
+
+func (ts *testServer) didResetSecureBootKeys() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.secureBootKeysReset
+}
+
+func (ts *testServer) didPatchPower() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.powerPatched
+}
+
+func (ts *testServer) didCreateVolume() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.volumeCreated
+}
+
+func (ts *testServer) didInitializeVolume() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.volumeInitialized
+}
+
+func (ts *testServer) didUpdateVolume() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.volumeUpdated
+}
+
+func (ts *testServer) didDeleteVolume() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.volumeDeleted
+}
+
 func (ts *testServer) didClaimBusy() bool {
 	ts.mu.Lock()
 	defer ts.mu.Unlock()
@@ -780,4 +822,112 @@ func (ts *testServer) didFactoryReset() bool {
 	ts.mu.Lock()
 	defer ts.mu.Unlock()
 	return ts.factoryReset
+}
+
+func (ts *testServer) didInstallLicense() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.licenseInstalled
+}
+
+func (ts *testServer) didDeleteLicense() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.licenseDeleted
+}
+
+func (ts *testServer) didPatchSKLM() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.sklmPatched
+}
+
+func (ts *testServer) didPatchBMCEth() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.bmcEthPatched
+}
+
+func (ts *testServer) didPatchHostIface() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.hostIfacePatched
+}
+
+func (ts *testServer) didPatchNetProto() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.netProtoPatched
+}
+
+func (ts *testServer) didPatchSerial() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.serialPatched
+}
+
+func (ts *testServer) didCreateSubscription() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.subscriptionCreated
+}
+
+func (ts *testServer) didDeleteSubscription() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.subscriptionDeleted
+}
+
+func (ts *testServer) didSubmitTestEvent() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.testEventSubmitted
+}
+
+func (ts *testServer) didPatchEventService() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.eventServicePatched
+}
+
+func (ts *testServer) didSubmitTestMetric() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.testMetricSubmitted
+}
+
+func (ts *testServer) didUpdateJobSchedule() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.jobScheduleUpdated
+}
+
+func (ts *testServer) didGenerateCSR() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.csrGenerated
+}
+
+func (ts *testServer) didReplaceCertificate() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.certReplaced
+}
+
+func (ts *testServer) didRekeyCertificate() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.certRekeyed
+}
+
+func (ts *testServer) didRenewCertificate() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.certRenewed
+}
+
+func (ts *testServer) didPatchSNMP() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.snmpPatched
 }
