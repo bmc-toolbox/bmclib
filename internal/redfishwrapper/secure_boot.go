@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/stmcginnis/gofish/schemas"
+
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 // GetSecureBoot returns whether UEFI Secure Boot is currently enabled for the system.
@@ -14,7 +16,7 @@ func (c *Client) GetSecureBoot(ctx context.Context) (enabled bool, err error) {
 	}
 
 	if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
-		return false, nil
+		return false, bmclibErrs.ErrRedfishSystemOdataID
 	}
 
 	secureBoot, err := sys.SecureBoot()
@@ -34,7 +36,7 @@ func (c *Client) SetSecureBoot(ctx context.Context, enable bool) (err error) {
 	}
 
 	if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
-		return nil
+		return bmclibErrs.ErrRedfishSystemOdataID
 	}
 
 	secureBoot, err := sys.SecureBoot()
@@ -56,7 +58,7 @@ func (c *Client) ResetSecureBootKeys(ctx context.Context, resetType string) (err
 	}
 
 	if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
-		return nil
+		return bmclibErrs.ErrRedfishSystemOdataID
 	}
 
 	secureBoot, err := sys.SecureBoot()
