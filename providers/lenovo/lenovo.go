@@ -77,6 +77,9 @@ var Features = registrar.Features{
 	providers.FeatureGetBiosConfiguration,
 	providers.FeatureSetBiosConfiguration,
 	providers.FeatureResetBiosConfiguration,
+	providers.FeatureGetSecureBoot,
+	providers.FeatureSetSecureBoot,
+	providers.FeatureResetSecureBootKeys,
 	// inventory-storage
 	providers.FeatureInventoryRead,
 	// firmware-tasks

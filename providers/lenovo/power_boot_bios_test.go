@@ -195,3 +195,44 @@ func TestResetBiosConfiguration(t *testing.T) {
 		t.Fatal("expected the Bios.ResetBios action to be posted")
 	}
 }
+
+// Requirement: Secure Boot state read.
+func TestGetSecureBoot(t *testing.T) {
+	ts := newTestServer(t, testServerOpts{})
+	c := ts.openedClient(t)
+
+	enabled, err := c.GetSecureBoot(context.Background())
+	if err != nil {
+		t.Fatalf("GetSecureBoot: %v", err)
+	}
+	// The fixture reports SecureBootEnable true.
+	if !enabled {
+		t.Fatalf("GetSecureBoot = %v, want %v", enabled, true)
+	}
+}
+
+// Requirement: Secure Boot enable/disable.
+func TestSetSecureBoot(t *testing.T) {
+	ts := newTestServer(t, testServerOpts{})
+	c := ts.openedClient(t)
+
+	if err := c.SetSecureBoot(context.Background(), false); err != nil {
+		t.Fatalf("SetSecureBoot: %v", err)
+	}
+	if !ts.didPatchSecureBoot() {
+		t.Fatal("expected the SecureBoot resource to be PATCHed")
+	}
+}
+
+// Requirement: Secure Boot key database reset.
+func TestResetSecureBootKeys(t *testing.T) {
+	ts := newTestServer(t, testServerOpts{})
+	c := ts.openedClient(t)
+
+	if err := c.ResetSecureBootKeys(context.Background(), "ResetAllKeysToDefault"); err != nil {
+		t.Fatalf("ResetSecureBootKeys: %v", err)
+	}
+	if !ts.didResetSecureBootKeys() {
+		t.Fatal("expected the SecureBoot.ResetKeys action to be posted")
+	}
+}

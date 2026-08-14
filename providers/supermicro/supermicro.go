@@ -60,6 +60,9 @@ var Features = registrar.Features{
 	providers.FeatureSetBiosConfigurationFromFile,
 	providers.FeatureResetBiosConfiguration,
 	providers.FeatureBootProgress,
+	providers.FeatureGetSecureBoot,
+	providers.FeatureSetSecureBoot,
+	providers.FeatureResetSecureBootKeys,
 }
 
 // supports
@@ -683,6 +686,33 @@ func hostIP(hostURL string) (string, error) {
 	}
 
 	return hostURLParsed.Host, nil
+}
+
+// GetSecureBoot returns whether UEFI Secure Boot is currently enabled
+func (c *Client) GetSecureBoot(ctx context.Context) (enabled bool, err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return false, errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.GetSecureBoot(ctx)
+}
+
+// SetSecureBoot enables or disables UEFI Secure Boot
+func (c *Client) SetSecureBoot(ctx context.Context, enable bool) (err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.SetSecureBoot(ctx, enable)
+}
+
+// ResetSecureBootKeys resets the UEFI Secure Boot key databases
+func (c *Client) ResetSecureBootKeys(ctx context.Context, resetType string) (err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.ResetSecureBootKeys(ctx, resetType)
 }
 
 // SendNMI tells the BMC to issue an NMI to the device

@@ -79,4 +79,13 @@ const (
 
 	// FeatureBootProgress indicates that the implementation supports reading the BootProgress from the BMC
 	FeatureBootProgress registrar.Feature = "bootprogress"
+
+	// FeatureGetSecureBoot means an implementation that can report whether UEFI Secure Boot is enabled
+	FeatureGetSecureBoot registrar.Feature = "getsecureboot"
+
+	// FeatureSetSecureBoot means an implementation that can enable/disable UEFI Secure Boot
+	FeatureSetSecureBoot registrar.Feature = "setsecureboot"
+
+	// FeatureResetSecureBootKeys means an implementation that can reset the UEFI Secure Boot key databases
+	FeatureResetSecureBootKeys registrar.Feature = "resetsecurebootkeys"
 )

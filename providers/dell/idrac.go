@@ -48,6 +48,9 @@ var (
 		providers.FeatureGetBiosConfiguration,
 		providers.FeatureSetBiosConfiguration,
 		providers.FeatureResetBiosConfiguration,
+		providers.FeatureGetSecureBoot,
+		providers.FeatureSetSecureBoot,
+		providers.FeatureResetSecureBootKeys,
 	}
 
 	errManufacturerUnknown = errors.New("error identifying device manufacturer")
@@ -249,6 +252,21 @@ func (c *Conn) SetBiosConfiguration(ctx context.Context, biosConfig map[string]s
 // ResetBiosConfiguration resets the BIOS configuration settings back to 'factory defaults' via the BMC
 func (c *Conn) ResetBiosConfiguration(ctx context.Context) (err error) {
 	return c.redfishwrapper.ResetBiosConfiguration(ctx)
+}
+
+// GetSecureBoot returns whether UEFI Secure Boot is currently enabled
+func (c *Conn) GetSecureBoot(ctx context.Context) (enabled bool, err error) {
+	return c.redfishwrapper.GetSecureBoot(ctx)
+}
+
+// SetSecureBoot enables or disables UEFI Secure Boot
+func (c *Conn) SetSecureBoot(ctx context.Context, enable bool) (err error) {
+	return c.redfishwrapper.SetSecureBoot(ctx, enable)
+}
+
+// ResetSecureBootKeys resets the UEFI Secure Boot key databases
+func (c *Conn) ResetSecureBootKeys(ctx context.Context, resetType string) (err error) {
+	return c.redfishwrapper.ResetSecureBootKeys(ctx, resetType)
 }
 
 // SendNMI tells the BMC to issue an NMI to the device

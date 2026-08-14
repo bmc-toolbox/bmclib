@@ -680,6 +680,18 @@ func (ts *testServer) didResetBios() bool {
 	return ts.biosReset
 }
 
+func (ts *testServer) didPatchSecureBoot() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.secureBootPatched
+}
+
+func (ts *testServer) didResetSecureBootKeys() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.secureBootKeysReset
+}
+
 func (ts *testServer) didPatchSystem() bool {
 	ts.mu.Lock()
 	defer ts.mu.Unlock()
