@@ -20,16 +20,30 @@ type biosConfigurationGetterProvider struct {
 	BiosConfigurationGetter
 }
 
-// BiosConfigurationSetter provides applying a host's BIOS configuration,
-// either from a map of settings or from a configuration file.
+// BiosConfigurationSetter provides applying a host's BIOS configuration from a
+// map of settings.
 type BiosConfigurationSetter interface {
 	SetBiosConfiguration(ctx context.Context, biosConfig map[string]string) (err error)
-	SetBiosConfigurationFromFile(ctx context.Context, cfg string) (err error)
 }
 
 type biosConfigurationSetterProvider struct {
 	name string
 	BiosConfigurationSetter
+}
+
+// BiosConfigurationFileSetter provides applying a host's BIOS configuration from
+// a vendor-specific configuration file (e.g. a whole-config export/import blob).
+// Split from BiosConfigurationSetter because most Redfish-generic providers only
+// support the map-based SetBiosConfiguration path and have no file-import
+// equivalent, so requiring both on one interface made those providers fail to
+// satisfy BiosConfigurationSetter at all.
+type BiosConfigurationFileSetter interface {
+	SetBiosConfigurationFromFile(ctx context.Context, cfg string) (err error)
+}
+
+type biosConfigurationFileSetterProvider struct {
+	name string
+	BiosConfigurationFileSetter
 }
 
 // BiosConfigurationResetter provides resetting a host's BIOS configuration to defaults.
@@ -96,11 +110,11 @@ Loop:
 	return metadata, multierror.Append(err, errors.New("failure to set bios configuration"))
 }
 
-func setBiosConfigurationFromFile(ctx context.Context, generic []biosConfigurationSetterProvider, cfg string) (metadata Metadata, err error) {
+func setBiosConfigurationFromFile(ctx context.Context, generic []biosConfigurationFileSetterProvider, cfg string) (metadata Metadata, err error) {
 	metadata = newMetadata()
 Loop:
 	for _, elem := range generic {
-		if elem.BiosConfigurationSetter == nil {
+		if elem.BiosConfigurationFileSetter == nil {
 			continue
 		}
 		select {
@@ -213,20 +227,20 @@ func SetBiosConfigurationInterfaces(ctx context.Context, generic []interface{}, 
 }
 
 // SetBiosConfigurationFromFileInterfaces applies the BIOS configuration from a file
-// using the first successful BiosConfigurationSetter implementation found in generic.
+// using the first successful BiosConfigurationFileSetter implementation found in generic.
 func SetBiosConfigurationFromFileInterfaces(ctx context.Context, generic []interface{}, cfg string) (metadata Metadata, err error) {
-	implementations := make([]biosConfigurationSetterProvider, 0)
+	implementations := make([]biosConfigurationFileSetterProvider, 0)
 	for _, elem := range generic {
 		if elem == nil {
 			continue
 		}
-		temp := biosConfigurationSetterProvider{name: getProviderName(elem)}
+		temp := biosConfigurationFileSetterProvider{name: getProviderName(elem)}
 		switch p := elem.(type) {
-		case BiosConfigurationSetter:
-			temp.BiosConfigurationSetter = p
+		case BiosConfigurationFileSetter:
+			temp.BiosConfigurationFileSetter = p
 			implementations = append(implementations, temp)
 		default:
-			e := fmt.Sprintf("not a BiosConfigurationSetterFromFile implementation: %T", p)
+			e := fmt.Sprintf("not a BiosConfigurationFileSetter implementation: %T", p)
 			err = multierror.Append(err, errors.New(e))
 		}
 	}
@@ -235,7 +249,7 @@ func SetBiosConfigurationFromFileInterfaces(ctx context.Context, generic []inter
 			err,
 			errors.Wrap(
 				bmclibErrs.ErrProviderImplementation,
-				("no BiosConfigurationSetterFromFile implementations found"),
+				("no BiosConfigurationFileSetter implementations found"),
 			),
 		)
 	}

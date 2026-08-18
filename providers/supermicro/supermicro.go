@@ -21,6 +21,7 @@ import (
 	"github.com/bmc-toolbox/common"
 	"github.com/stmcginnis/gofish/schemas"
 
+	"github.com/bmc-toolbox/bmclib/v2/bmc"
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/internal/redfishwrapper"
@@ -107,6 +108,13 @@ func WithPort(port string) Option {
 		c.Port = port
 	}
 }
+
+// compile-time assertions that the provider implements the BIOS configuration interfaces.
+var (
+	_ bmc.BiosConfigurationGetter     = (*Client)(nil)
+	_ bmc.BiosConfigurationSetter     = (*Client)(nil)
+	_ bmc.BiosConfigurationFileSetter = (*Client)(nil)
+)
 
 // Client is a Supermicro BMC connection.
 type Client struct {
