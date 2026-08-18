@@ -2,11 +2,38 @@ package redfishwrapper
 
 import (
 	"context"
+	"errors"
+	"strings"
 
 	"github.com/stmcginnis/gofish/schemas"
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
+
+// rejectsSettingsApplyTime reports whether err is a Redfish error indicating
+// the BMC doesn't recognize the @Redfish.SettingsApplyTime property at all.
+// Some BMCs don't declare @Redfish.Settings.SupportedApplyTimes on their Bios
+// resource and reject the property outright rather than ignoring it.
+func rejectsSettingsApplyTime(err error) bool {
+	var redfishErr *schemas.Error
+	if !errors.As(err, &redfishErr) {
+		return false
+	}
+
+	for i := range redfishErr.ExtendedInfos {
+		info := &redfishErr.ExtendedInfos[i]
+		if info.MessageID != "Base.1.10.PropertyUnknown" {
+			continue
+		}
+		for _, prop := range info.RelatedProperties {
+			if strings.Contains(prop, "SettingsApplyTime") {
+				return true
+			}
+		}
+	}
+
+	return false
+}
 
 // GetBiosConfiguration returns the current BIOS configuration attributes for the system.
 func (c *Client) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]string, err error) {
@@ -59,7 +86,16 @@ func (c *Client) SetBiosConfiguration(ctx context.Context, biosConfig map[string
 	}
 
 	// TODO(jwb) We should handle passing different apply times here
-	return bios.UpdateBiosAttributesApplyAt(settingsAttributes, schemas.OnResetSettingsApplyTime)
+	err = bios.UpdateBiosAttributesApplyAt(settingsAttributes, schemas.OnResetSettingsApplyTime)
+	if err != nil && rejectsSettingsApplyTime(err) {
+		// This BMC's Bios resource doesn't declare @Redfish.Settings.SupportedApplyTimes
+		// at all and rejects the @Redfish.SettingsApplyTime property outright, rather than
+		// ignoring it. Retry without an apply-time hint - the settings still go through the
+		// resource's separate Settings URI (@Redfish.Settings.SettingsObject), which by
+		// Redfish convention means they're staged rather than applied immediately.
+		return bios.UpdateBiosAttributes(settingsAttributes)
+	}
+	return err
 }
 
 // ResetBiosConfiguration resets the BIOS configuration to its default values.
