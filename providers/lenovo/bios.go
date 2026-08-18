@@ -5,7 +5,14 @@ import (
 
 	"github.com/stmcginnis/gofish/schemas"
 
+	"github.com/bmc-toolbox/bmclib/v2/bmc"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+)
+
+// compile-time assertions that the provider implements the BIOS configuration interfaces.
+var (
+	_ bmc.BiosConfigurationGetter = (*Conn)(nil)
+	_ bmc.BiosConfigurationSetter = (*Conn)(nil)
 )
 
 // GetBiosConfiguration returns the current BIOS attributes as a key/value map,

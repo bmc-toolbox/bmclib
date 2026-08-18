@@ -42,6 +42,12 @@ var Features = registrar.Features{
 	providers.FeatureResetBiosConfiguration,
 }
 
+// compile-time assertions that the provider implements the BIOS configuration interfaces.
+var (
+	_ bmc.BiosConfigurationGetter = (*Conn)(nil)
+	_ bmc.BiosConfigurationSetter = (*Conn)(nil)
+)
+
 // Conn details for redfish client
 type Conn struct {
 	redfishwrapper       *redfishwrapper.Client
