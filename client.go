@@ -671,6 +671,43 @@ func (c *Client) ResetBiosConfiguration(ctx context.Context) (err error) {
 	return err
 }
 
+// GetSecureBoot returns whether UEFI Secure Boot is currently enabled.
+func (c *Client) GetSecureBoot(ctx context.Context) (enabled bool, err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "GetSecureBoot")
+	defer span.End()
+
+	enabled, metadata, err := bmc.GetSecureBootStateFromInterfaces(ctx, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return enabled, err
+}
+
+// SetSecureBoot enables or disables UEFI Secure Boot.
+func (c *Client) SetSecureBoot(ctx context.Context, enable bool) (err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetSecureBoot")
+	defer span.End()
+
+	metadata, err := bmc.SetSecureBootFromInterfaces(ctx, c.registry().GetDriverInterfaces(), enable)
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return err
+}
+
+// ResetSecureBootKeys resets the UEFI Secure Boot key databases. resetType is one
+// of ResetAllKeysToDefault, DeleteAllKeys, or DeletePK.
+func (c *Client) ResetSecureBootKeys(ctx context.Context, resetType string) (err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "ResetSecureBootKeys")
+	defer span.End()
+
+	metadata, err := bmc.ResetSecureBootKeysFromInterfaces(ctx, c.registry().GetDriverInterfaces(), resetType)
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return err
+}
+
 // FirmwareInstall pass through library function to upload firmware and install firmware
 func (c *Client) FirmwareInstall(ctx context.Context, component, operationApplyTime string, forceInstall bool, reader io.Reader) (taskID string, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "FirmwareInstall")
