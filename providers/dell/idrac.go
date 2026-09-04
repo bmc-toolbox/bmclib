@@ -40,6 +40,7 @@ var (
 		providers.FeatureScreenshot,
 		providers.FeaturePowerState,
 		providers.FeaturePowerSet,
+		providers.FeatureBootDeviceSet,
 		providers.FeatureFirmwareInstallSteps,
 		providers.FeatureFirmwareUploadInitiateInstall,
 		providers.FeatureFirmwareTaskStatus,
