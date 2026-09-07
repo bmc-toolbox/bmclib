@@ -34,6 +34,7 @@ var Features = registrar.Features{
 	providers.FeatureUserDelete,
 	providers.FeatureBootDeviceSet,
 	providers.FeatureVirtualMedia,
+	providers.FeatureSetHTTPBootURI,
 	providers.FeatureInventoryRead,
 	providers.FeatureBmcReset,
 	providers.FeatureClearSystemEventLog,
@@ -51,6 +52,7 @@ var Features = registrar.Features{
 var (
 	_ bmc.BiosConfigurationGetter = (*Conn)(nil)
 	_ bmc.BiosConfigurationSetter = (*Conn)(nil)
+	_ bmc.HTTPBootURISetter       = (*Conn)(nil)
 )
 
 // Conn details for redfish client
@@ -236,6 +238,11 @@ func (c *Conn) BootDeviceOverrideGet(ctx context.Context) (bmc.BootDeviceOverrid
 // SetVirtualMedia sets the virtual media
 func (c *Conn) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (ok bool, err error) {
 	return c.redfishwrapper.SetVirtualMedia(ctx, kind, mediaURL)
+}
+
+// SetHTTPBootURI sets the URI UEFI HTTP Boot fetches its boot image from
+func (c *Conn) SetHTTPBootURI(ctx context.Context, uri string) (ok bool, err error) {
+	return c.redfishwrapper.SetHTTPBootURI(ctx, uri)
 }
 
 // Inventory collects hardware inventory and install firmware information
