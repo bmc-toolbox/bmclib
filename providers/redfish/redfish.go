@@ -35,6 +35,7 @@ var Features = registrar.Features{
 	providers.FeatureBootDeviceSet,
 	providers.FeatureVirtualMedia,
 	providers.FeatureSetHTTPBootURI,
+	providers.FeatureSetNetworkBootEnabled,
 	providers.FeatureInventoryRead,
 	providers.FeatureBmcReset,
 	providers.FeatureClearSystemEventLog,
@@ -50,9 +51,10 @@ var Features = registrar.Features{
 
 // compile-time assertions that the provider implements the BIOS configuration interfaces.
 var (
-	_ bmc.BiosConfigurationGetter = (*Conn)(nil)
-	_ bmc.BiosConfigurationSetter = (*Conn)(nil)
-	_ bmc.HTTPBootURISetter       = (*Conn)(nil)
+	_ bmc.BiosConfigurationGetter  = (*Conn)(nil)
+	_ bmc.BiosConfigurationSetter  = (*Conn)(nil)
+	_ bmc.HTTPBootURISetter        = (*Conn)(nil)
+	_ bmc.NetworkBootEnabledSetter = (*Conn)(nil)
 )
 
 // Conn details for redfish client
@@ -243,6 +245,11 @@ func (c *Conn) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (ok b
 // SetHTTPBootURI sets the URI UEFI HTTP Boot fetches its boot image from
 func (c *Conn) SetHTTPBootURI(ctx context.Context, uri string) (ok bool, err error) {
 	return c.redfishwrapper.SetHTTPBootURI(ctx, uri)
+}
+
+// SetNetworkBootEnabled enables/disables UEFI HTTP Boot and/or legacy PXE boot capability
+func (c *Conn) SetNetworkBootEnabled(ctx context.Context, httpEnabled, pxeEnabled *bool) (ok bool, err error) {
+	return c.redfishwrapper.SetNetworkBootEnabled(ctx, httpEnabled, pxeEnabled)
 }
 
 // Inventory collects hardware inventory and install firmware information
