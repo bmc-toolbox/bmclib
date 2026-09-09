@@ -98,4 +98,7 @@ const (
 
 	// FeatureImportSecureBootCertificate means an implementation that can enroll a certificate into a single UEFI Secure Boot key database
 	FeatureImportSecureBootCertificate registrar.Feature = "importsecurebootcertificate"
+
+	// FeatureSetSecureBootKeyManagement means an implementation that can enable/disable acceptance of custom UEFI Secure Boot keys
+	FeatureSetSecureBootKeyManagement registrar.Feature = "setsecurebootkeymanagement"
 )
