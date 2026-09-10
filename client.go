@@ -592,6 +592,18 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (ok
 	return ok, err
 }
 
+// SetHTTPBootURI sets the URI UEFI HTTP Boot fetches its boot image from.
+func (c *Client) SetHTTPBootURI(ctx context.Context, uri string) (ok bool, err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetHTTPBootURI")
+	defer span.End()
+
+	ok, metadata, err := bmc.SetHTTPBootURIFromInterfaces(ctx, uri, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return ok, err
+}
+
 // ResetBMC pass through to library function
 func (c *Client) ResetBMC(ctx context.Context, resetType string) (ok bool, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "ResetBMC")
