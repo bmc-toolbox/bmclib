@@ -23,7 +23,7 @@ func (c *Client) SetHTTPBootURI(_ context.Context, uri string) (ok bool, err err
 		return false, err
 	}
 
-	boot := schemas.Boot{HTTPBootURI: uri}
+	boot := schemas.Boot{HTTPBootURI: &uri}
 	if err := system.SetBoot(&boot); err != nil {
 		return false, err
 	}
