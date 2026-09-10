@@ -52,3 +52,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+// TODO: drop once stmcginnis/gofish#570 merges and a release containing
+// Bios.UpdateBiosAttributesExact is tagged; then bump the require above instead.
+replace github.com/stmcginnis/gofish => github.com/mcanevet/gofish v0.25.1-0.20260910131025-c6f56923c825
