@@ -318,6 +318,20 @@ func (c *Client) Tasks(ctx context.Context) ([]*schemas.Task, error) {
 	return ts.Tasks()
 }
 
+// Jobs returns the jobs currently tracked by the redfish job service. Not every BMC exposes a
+// JobService - callers should treat an error here as "no jobs to inspect", not a hard failure.
+func (c *Client) Jobs(ctx context.Context) ([]*schemas.Job, error) {
+	js, err := c.client.Service.JobService()
+	if err != nil {
+		return nil, err
+	}
+	if js == nil {
+		return nil, errors.New("BMC has no JobService")
+	}
+
+	return js.Jobs()
+}
+
 // ManagerOdataID returns the Odata ID of the first available Manager.
 func (c *Client) ManagerOdataID(ctx context.Context) (string, error) {
 	managers, err := c.client.Service.Managers()

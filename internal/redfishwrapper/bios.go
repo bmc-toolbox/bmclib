@@ -98,6 +98,38 @@ func (c *Client) SetBiosConfiguration(ctx context.Context, biosConfig map[string
 	return err
 }
 
+// ApplyBiosAttributesExact applies the given, already-typed BIOS attributes exactly as given, to
+// take effect on the next reset: every key is always included in the underlying PATCH,
+// regardless of whether its value already matches the resource's currently reported state (see
+// gofish's Bios.UpdateBiosAttributesExactApplyAt). It differs from SetBiosConfiguration in two
+// ways - accepting attribute values as their native JSON type (bool, number, string) rather than
+// bmclib's string-typed public API, and never silently omitting a requested attribute - both
+// needed by a caller resubmitting a previously read pending/staged attribute set after
+// recovering from a vendor-specific conflict, where an omitted or stringified attribute would
+// corrupt what actually ends up staged.
+func (c *Client) ApplyBiosAttributesExact(ctx context.Context, attrs schemas.SettingsAttributes) error {
+	sys, err := c.System()
+	if err != nil {
+		return err
+	}
+
+	if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
+		return nil
+	}
+
+	bios, err := sys.Bios()
+	if err != nil {
+		return err
+	}
+
+	// TODO(jwb) We should handle passing different apply times here
+	err = bios.UpdateBiosAttributesExactApplyAt(attrs, schemas.OnResetSettingsApplyTime)
+	if err != nil && rejectsSettingsApplyTime(err) {
+		return bios.UpdateBiosAttributesExact(attrs)
+	}
+	return err
+}
+
 // ResetBiosConfiguration resets the BIOS configuration to its default values.
 func (c *Client) ResetBiosConfiguration(ctx context.Context) (err error) {
 	sys, err := c.System()
