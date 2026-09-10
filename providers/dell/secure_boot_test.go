@@ -104,6 +104,11 @@ func TestSetSecureBootKeyManagement_EnableFromStandard(t *testing.T) {
 	assert.Contains(t, patchedBody, secureBootPolicyCustom)
 }
 
+// TestSetSecureBootKeyManagement_EnableAlreadyCustom verifies the write happens even when the
+// currently-applied value already matches what's requested: currently-applied state can match
+// while a different value is genuinely pending from an earlier call in the same boot cycle (see
+// the doc comment on SetSecureBootKeyManagement), so skipping based on it alone would silently
+// leave a stale pending value in place.
 func TestSetSecureBootKeyManagement_EnableAlreadyCustom(t *testing.T) {
 	var settingsPatched bool
 
@@ -119,16 +124,62 @@ func TestSetSecureBootKeyManagement_EnableAlreadyCustom(t *testing.T) {
 		_, _ = fmt.Fprintf(w, biosWithSecureBootPolicy, secureBootPolicyCustom)
 	})
 	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/Bios/Settings", func(w http.ResponseWriter, r *http.Request) {
-		settingsPatched = true
-		w.WriteHeader(http.StatusOK)
+		switch r.Method {
+		case http.MethodGet:
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(`{}`))
+		case http.MethodPatch:
+			settingsPatched = true
+			w.WriteHeader(http.StatusOK)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
 	})
 
 	client := newSecureBootTestConn(t, mux)
 
 	rebootRequired, err := client.SetSecureBootKeyManagement(context.Background(), true)
 	require.NoError(t, err)
-	assert.False(t, rebootRequired)
-	assert.False(t, settingsPatched, "no BIOS settings job should be scheduled when already Custom")
+	assert.True(t, rebootRequired)
+	assert.True(t, settingsPatched, "expected the write to happen even though currently-applied state already matches")
+}
+
+// TestSetSecureBootKeyManagement_DisableAlreadyStandard mirrors
+// TestSetSecureBootKeyManagement_EnableAlreadyCustom in the other direction: the bug is
+// symmetric, so both currently-applied values need the same always-write behavior.
+func TestSetSecureBootKeyManagement_DisableAlreadyStandard(t *testing.T) {
+	var settingsPatched bool
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/redfish/v1/", endpointFunc("/serviceroot.json"))
+	mux.HandleFunc("/redfish/v1/Systems", endpointFunc("/systems.json"))
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1", endpointFunc("/systems_embedded.1.json"))
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/Bios", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		_, _ = fmt.Fprintf(w, biosWithSecureBootPolicy, secureBootPolicyStandard)
+	})
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/Bios/Settings", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(`{}`))
+		case http.MethodPatch:
+			settingsPatched = true
+			w.WriteHeader(http.StatusOK)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
+
+	client := newSecureBootTestConn(t, mux)
+
+	rebootRequired, err := client.SetSecureBootKeyManagement(context.Background(), false)
+	require.NoError(t, err)
+	assert.True(t, rebootRequired)
+	assert.True(t, settingsPatched, "expected the write to happen even though currently-applied state already matches")
 }
 
 func TestSetSecureBootKeyManagement_Disable(t *testing.T) {

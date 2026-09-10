@@ -19,17 +19,15 @@ const (
 // SetSecureBootKeyManagement sets the SecureBootPolicy BIOS attribute to
 // Custom or Standard.
 //
-// The currently *applied* value is read first, and a request matching it returns early without
-// writing. This only helps when nothing has touched SecureBootPolicy since the last reboot:
-// applied state doesn't change until then no matter how many times this is called in between, so
-// back-to-back calls in the same boot cycle still write every time regardless of this check.
-//
-// Known limitation: because the check reads applied state, not pending state, it cannot tell a
-// genuinely-already-satisfied request apart from one where a *different* value is already staged
-// as pending from an earlier, unrelated call in the same boot cycle - in that case this returns
-// early and leaves the stale pending value in place instead of correcting it. The write, when
-// attempted, is staged into the Bios/Settings resource and only takes effect on the next POST, so
-// a successful change always reports rebootRequired true.
+// The attribute is read first only to reject platforms that don't expose it at all - not to
+// skip the write when the currently *applied* value already matches what's requested.
+// Currently-applied state can match while a different value is genuinely *pending* from an
+// earlier call in the same boot cycle (e.g. a stale pending PATCH left staged by an interrupted,
+// unrelated caller); confirmed live, skipping the write in that case silently left
+// SecureBootPolicy staged as Standard despite a request to set it to Custom, on the same class
+// of bug UpdateBiosAttributesExact was written to fix in gofish. The write is staged into the
+// Bios/Settings resource and only takes effect on the next POST, so a successful call always
+// reports rebootRequired true.
 //
 // Implements bmc.SecureBootKeyManagementSetter.
 func (c *Conn) SetSecureBootKeyManagement(ctx context.Context, enable bool) (rebootRequired bool, err error) {
@@ -38,8 +36,7 @@ func (c *Conn) SetSecureBootKeyManagement(ctx context.Context, enable bool) (reb
 		return false, err
 	}
 
-	current, ok := biosConfig[secureBootPolicyAttribute]
-	if !ok {
+	if _, ok := biosConfig[secureBootPolicyAttribute]; !ok {
 		return false, bmclibErrs.NewErrUnsupportedHardware(
 			secureBootPolicyAttribute + " BIOS attribute not present: platform has no out-of-band Secure Boot key management control",
 		)
@@ -48,10 +45,6 @@ func (c *Conn) SetSecureBootKeyManagement(ctx context.Context, enable bool) (reb
 	want := secureBootPolicyStandard
 	if enable {
 		want = secureBootPolicyCustom
-	}
-
-	if current == want {
-		return false, nil
 	}
 
 	if err := c.redfishwrapper.SetBiosConfiguration(ctx, map[string]string{secureBootPolicyAttribute: want}); err != nil {
