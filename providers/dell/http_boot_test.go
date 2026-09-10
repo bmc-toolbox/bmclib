@@ -26,7 +26,7 @@ func TestSetHTTPBootURI(t *testing.T) {
 	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/Bios", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			_, _ = w.Write([]byte(`{"@odata.id":"/redfish/v1/Systems/System.Embedded.1/Bios","Attributes":{}}`))
+			_, _ = w.Write([]byte(`{"@odata.id":"/redfish/v1/Systems/System.Embedded.1/Bios","Id":"Bios","Attributes":{},"@Redfish.Settings":{"SettingsObject":{"@odata.id":"/redfish/v1/Systems/System.Embedded.1/Bios"}}}`))
 		case http.MethodPatch:
 			patched = true
 			body, err := io.ReadAll(r.Body)
