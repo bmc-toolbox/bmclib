@@ -604,6 +604,18 @@ func (c *Client) SetHTTPBootURI(ctx context.Context, uri string) (ok bool, err e
 	return ok, err
 }
 
+// SetHTTPBootTLSMode sets the TLS authentication mode UEFI HTTP Boot uses to connect to the HTTP boot server.
+func (c *Client) SetHTTPBootTLSMode(ctx context.Context, mode bmc.HTTPBootTLSMode) (ok bool, err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetHTTPBootTLSMode")
+	defer span.End()
+
+	ok, metadata, err := bmc.SetHTTPBootTLSModeFromInterfaces(ctx, mode, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return ok, err
+}
+
 // ResetBMC pass through to library function
 func (c *Client) ResetBMC(ctx context.Context, resetType string) (ok bool, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "ResetBMC")
