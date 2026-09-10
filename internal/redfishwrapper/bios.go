@@ -98,6 +98,35 @@ func (c *Client) SetBiosConfiguration(ctx context.Context, biosConfig map[string
 	return err
 }
 
+// ApplyBiosAttributes applies the given, already-typed BIOS attributes, to take effect on the
+// next reset. It differs from SetBiosConfiguration only in accepting attribute values as their
+// native JSON type (bool, number, string) rather than bmclib's string-typed public API - needed
+// by a caller resubmitting a previously read pending/staged attribute set after recovering from
+// a vendor-specific conflict, where a stringified attribute could corrupt what actually ends up
+// staged (a BIOS attribute registry is typically strict about types).
+func (c *Client) ApplyBiosAttributes(ctx context.Context, attrs schemas.SettingsAttributes) error {
+	sys, err := c.System()
+	if err != nil {
+		return err
+	}
+
+	if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
+		return nil
+	}
+
+	bios, err := sys.Bios()
+	if err != nil {
+		return err
+	}
+
+	// TODO(jwb) We should handle passing different apply times here
+	err = bios.UpdateBiosAttributesApplyAt(attrs, schemas.OnResetSettingsApplyTime)
+	if err != nil && rejectsSettingsApplyTime(err) {
+		return bios.UpdateBiosAttributes(attrs)
+	}
+	return err
+}
+
 // ResetBiosConfiguration resets the BIOS configuration to its default values.
 func (c *Client) ResetBiosConfiguration(ctx context.Context) (err error) {
 	sys, err := c.System()
