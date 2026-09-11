@@ -10,8 +10,8 @@ import (
 // slots (HttpDev1..HttpDev4), each bound to a NIC FQDD via HttpDevNInterface - unlike
 // Supermicro/AMI Aptio's single global attribute. There is no field in bmc.NetworkBootConfig to
 // select a NIC, so this always targets slot 1, the primary boot device slot - confirmed live on
-// a PowerEdge R6715 (io18-kwdtpstorzur1-03, iDRAC firmware 1.5.3) where HttpDev1Interface is
-// already bound to the same NIC as PxeDev1Interface.
+// a PowerEdge R6715 (iDRAC firmware 1.5.3) where HttpDev1Interface is already bound to the same
+// NIC as PxeDev1Interface.
 const httpBootDeviceIndex = 1
 
 // SetHTTPBootURI sets the URI UEFI HTTP Boot fetches its boot image from.
