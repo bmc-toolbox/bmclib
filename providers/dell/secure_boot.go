@@ -30,21 +30,16 @@ const (
 //
 // PATCHing the SecureBoot BIOS Setup attribute via SetBiosConfiguration instead removes that
 // specific order-dependent asymmetry: SetSecureBoot now fails the same way, in either order, as
-// every other Dell BIOS-attribute setter in this package.
-//
-// It does NOT remove the underlying constraint, and callers relying on this fix for anything
-// more should know that: SetBiosConfiguration always requests "@Redfish.SettingsApplyTime":
-// "OnReset" (required for iDRAC to ever actually apply a Bios/Settings write - confirmed
-// independently by other Redfish client projects hitting this same iDRAC requirement), and
-// asserting that on a PATCH is itself what creates the one job iDRAC allows at a time - a bare,
-// ApplyTime-less Bios/Settings PATCH creates no job at all and merely soft-stages, confirmed via
-// the same JobService/Jobs snapshots. So SetSecureBoot, SetSecureBootKeyManagement,
-// SetNetworkBootEnabled, SetHTTPBootURI, and SetHTTPBootTLSMode still conflict with
-// IDRAC.2.14.SYS011 pairwise, in either order, if called separately within the same boot cycle -
-// this fix makes that symmetric and consistent across all of them, it doesn't eliminate it. A
-// caller needing more than one of these changes in one maintenance window must still either
-// batch them into a single SetBiosConfiguration call (confirmed live to merge cleanly even with
-// @Redfish.SettingsApplyTime present) or handle/retry the conflict itself.
+// every other Dell BIOS-attribute setter in this package - and, like every one of them, that
+// failure is transparently recovered from by recoveringRedfishClient (see
+// bios_settings_recovery.go) rather than surfaced to the caller. SetBiosConfiguration always
+// requests "@Redfish.SettingsApplyTime": "OnReset" (required for iDRAC to ever actually apply a
+// Bios/Settings write - confirmed independently by other Redfish client projects hitting this
+// same iDRAC requirement), and asserting that on a PATCH is itself what creates the one job
+// iDRAC allows at a time, which is why two separate Dell BIOS-attribute calls in the same boot
+// cycle would otherwise conflict on the second one regardless of which two they are. Routing
+// SetSecureBoot through the same Bios/Settings mechanism as everything else means that recovery
+// only ever has to reason about one job-creation trigger, not two.
 //
 // The write is staged into the Bios/Settings resource and only takes effect on the next POST.
 //
