@@ -19,21 +19,32 @@ const (
 // resource's SecureBootEnable property, this PATCHes Dell's own SecureBoot BIOS Setup attribute
 // via SetBiosConfiguration.
 //
-// iDRAC exposes both and keeps them in sync, but only the BIOS Setup attribute fits Dell's BIOS
-// staging model. Multiple Bios/Settings attribute PATCHes stack into one pending job fine,
-// regardless of order (confirmed live, repeatedly, on a PowerEdge R6715, iDRAC firmware
-// 1.20.80.51). The one exception: a PATCH to the SecureBoot resource seals that pending job
-// against any further Bios/Settings PATCH - confirmed on the same box with a same-attributes,
-// order-only-swapped A/B: Bios/Settings then the resource merges cleanly; the resource then
-// Bios/Settings fails with IDRAC.2.14.SYS011. (A single earlier observation, on a different
-// R6715 at iDRAC firmware 1.5.3, first flagged the resource PATCH as the point of failure but
-// wasn't a controlled A/B.)
+// The ComputerSystem SecureBoot resource has an order-dependent bug on this box: PATCHing it
+// unconditionally creates a real, exclusive BIOS Configuration Job immediately (confirmed live
+// via JobService/Jobs snapshots - no @Redfish.SettingsApplyTime needed or even accepted on that
+// resource). If that PATCH runs before another Bios/Settings write in the same maintenance
+// window, the later write fails with IDRAC.2.14.SYS011, naming the attribute it was trying to
+// set even though that attribute was never touched before. The reverse order merges cleanly,
+// only because no job yet exists when the resource PATCH runs (confirmed with a same-box,
+// same-attributes, order-only-swapped A/B, on a PowerEdge R6715, iDRAC firmware 1.20.80.51).
 //
-// That makes SetSecureBoot the one call in this package that can break an otherwise-safe
-// sequence of BIOS-affecting writes, purely because of which resource it targets. PATCHing the
-// SecureBoot BIOS Setup attribute directly via SetBiosConfiguration instead removes that
-// asymmetry: every Dell BIOS-backed feature here now goes through the same resource and stacks
-// freely with the others, in either order.
+// PATCHing the SecureBoot BIOS Setup attribute via SetBiosConfiguration instead removes that
+// specific order-dependent asymmetry: SetSecureBoot now fails the same way, in either order, as
+// every other Dell BIOS-attribute setter in this package.
+//
+// It does NOT remove the underlying constraint, and callers relying on this fix for anything
+// more should know that: SetBiosConfiguration always requests "@Redfish.SettingsApplyTime":
+// "OnReset" (required for iDRAC to ever actually apply a Bios/Settings write - confirmed
+// independently by other Redfish client projects hitting this same iDRAC requirement), and
+// asserting that on a PATCH is itself what creates the one job iDRAC allows at a time - a bare,
+// ApplyTime-less Bios/Settings PATCH creates no job at all and merely soft-stages, confirmed via
+// the same JobService/Jobs snapshots. So SetSecureBoot, SetSecureBootKeyManagement,
+// SetNetworkBootEnabled, SetHTTPBootURI, and SetHTTPBootTLSMode still conflict with
+// IDRAC.2.14.SYS011 pairwise, in either order, if called separately within the same boot cycle -
+// this fix makes that symmetric and consistent across all of them, it doesn't eliminate it. A
+// caller needing more than one of these changes in one maintenance window must still either
+// batch them into a single SetBiosConfiguration call (confirmed live to merge cleanly even with
+// @Redfish.SettingsApplyTime present) or handle/retry the conflict itself.
 //
 // The write is staged into the Bios/Settings resource and only takes effect on the next POST.
 //
