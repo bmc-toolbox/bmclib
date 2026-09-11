@@ -26,6 +26,8 @@ const (
 	FeatureVirtualMedia registrar.Feature = "virtualmedia"
 	// FeatureSetHTTPBootURI means an implementation can set the URI UEFI HTTP Boot fetches its boot image from
 	FeatureSetHTTPBootURI registrar.Feature = "sethttpbooturi"
+	// FeatureSetHTTPBootTLSMode means an implementation can set UEFI HTTP Boot's TLS authentication mode
+	FeatureSetHTTPBootTLSMode registrar.Feature = "sethttpboottlsmode"
 	// FeatureMountFloppyImage means an implementation uploads a floppy image for mounting as virtual media.
 	//
 	// note: This is differs from FeatureVirtualMedia which is limited to accepting a URL to download the image from.
