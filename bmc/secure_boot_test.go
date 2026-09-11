@@ -69,6 +69,19 @@ func (m *mockSecureBootCertificateImporter) Name() string {
 	return "mock"
 }
 
+type mockSecureBootKeyManagementSetter struct {
+	rebootRequired bool
+	err            error
+}
+
+func (m *mockSecureBootKeyManagementSetter) SetSecureBootKeyManagement(ctx context.Context, _ bool) (bool, error) {
+	return m.rebootRequired, m.err
+}
+
+func (m *mockSecureBootKeyManagementSetter) Name() string {
+	return "mock"
+}
+
 func TestGetSecureBootStateFromInterfaces(t *testing.T) {
 	testCases := []struct {
 		name            string
@@ -269,6 +282,50 @@ func TestImportSecureBootCertificateFromInterfaces(t *testing.T) {
 			} else {
 				assert.ErrorContains(t, err, tt.errMsg)
 			}
+		})
+	}
+}
+
+func TestSetSecureBootKeyManagementFromInterfaces(t *testing.T) {
+	testCases := []struct {
+		name                   string
+		generic                []interface{}
+		errMsg                 string
+		expectedRebootRequired bool
+	}{
+		{
+			name:                   "success, reboot required",
+			generic:                []interface{}{&mockSecureBootKeyManagementSetter{rebootRequired: true}},
+			expectedRebootRequired: true,
+		},
+		{
+			name:    "not an implementation",
+			generic: []interface{}{&mockSecureBootStateGetter{}},
+			errMsg:  "no SecureBootKeyManagementSetter implementations found",
+		},
+		{
+			name:    "no implementations",
+			generic: []interface{}{},
+			errMsg:  "no SecureBootKeyManagementSetter implementations found",
+		},
+		{
+			name:    "error from enabler",
+			generic: []interface{}{&mockSecureBootKeyManagementSetter{err: errors.New("foobar")}},
+			errMsg:  "foobar",
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			rebootRequired, _, err := SetSecureBootKeyManagementFromInterfaces(context.Background(), tt.generic, true)
+
+			if tt.errMsg == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.ErrorContains(t, err, tt.errMsg)
+			}
+
+			assert.Equal(t, tt.expectedRebootRequired, rebootRequired)
 		})
 	}
 }

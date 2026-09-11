@@ -745,6 +745,20 @@ func (c *Client) ImportSecureBootCertificate(ctx context.Context, database bmc.S
 	return err
 }
 
+// SetSecureBootKeyManagement enables or disables the platform's out-of-band acceptance
+// of custom UEFI Secure Boot keys. rebootRequired reports that the change is staged and
+// takes effect only after a power cycle.
+func (c *Client) SetSecureBootKeyManagement(ctx context.Context, enable bool) (rebootRequired bool, err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetSecureBootKeyManagement")
+	defer span.End()
+
+	rebootRequired, metadata, err := bmc.SetSecureBootKeyManagementFromInterfaces(ctx, c.registry().GetDriverInterfaces(), enable)
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return rebootRequired, err
+}
+
 // FirmwareInstall pass through library function to upload firmware and install firmware
 func (c *Client) FirmwareInstall(ctx context.Context, component, operationApplyTime string, forceInstall bool, reader io.Reader) (taskID string, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "FirmwareInstall")
