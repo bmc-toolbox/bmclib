@@ -6,11 +6,13 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/stmcginnis/gofish/schemas"
 	"github.com/stretchr/testify/assert"
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 )
 
 func TestWithVersionsNotCompatible(t *testing.T) {
@@ -340,4 +342,75 @@ func TestGetBootProgress(t *testing.T) {
 			assert.ElementsMatch(t, tc.expect, got)
 		})
 	}
+}
+
+func TestOpenRestoresHTTPClientTimeout(t *testing.T) {
+	// Open bounds the connect by the ctx deadline via the HTTP client's Timeout,
+	// because gofish ignores per-call contexts. That deadline must not outlive
+	// Open: the same client serves every later call on the connection, and a
+	// connect deadline is typically much shorter than a slow-but-valid operation.
+	mux := http.NewServeMux()
+	mux.HandleFunc("/redfish/v1/", endpointFunc(t, "serviceroot.json"))
+	mux.HandleFunc("/redfish/v1/Systems", endpointFunc(t, "systems.json"))
+	mux.HandleFunc("/redfish/v1/Managers", endpointFunc(t, "managers.json"))
+
+	server := httptest.NewTLSServer(mux)
+	defer server.Close()
+
+	parsedURL, err := url.Parse(server.URL)
+	assert.NoError(t, err)
+
+	httpClient := httpclient.Build()
+	configured := httpClient.Timeout
+	assert.NotZero(t, configured, "test needs a non-zero configured timeout to be meaningful")
+
+	client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "", WithHTTPClient(httpClient))
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	assert.NoError(t, client.Open(ctx))
+	defer client.Close(ctx)
+
+	assert.Equal(t, configured, httpClient.Timeout)
+}
+
+func TestOpenBoundsConnectByContext(t *testing.T) {
+	// Complements TestOpenRestoresHTTPClientTimeout: that test proves the configured
+	// timeout isn't left mutated after Open returns, but a no-op fix (never touching
+	// HTTPClient.Timeout at all) would pass it just as trivially. This test proves the
+	// other half - that Open actually still bounds the connect by the shorter ctx
+	// deadline, not by the client's much longer configured timeout - by giving the
+	// server a response delay in between the two and asserting Open fails around the
+	// short ctx deadline rather than hanging until the long configured one.
+	const ctxDeadline = 100 * time.Millisecond
+	const serverDelay = 500 * time.Millisecond
+	const configuredTimeout = 10 * time.Second
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/redfish/v1/", func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(serverDelay)
+		endpointFunc(t, "serviceroot.json")(w, r)
+	})
+
+	server := httptest.NewTLSServer(mux)
+	defer server.Close()
+
+	parsedURL, err := url.Parse(server.URL)
+	assert.NoError(t, err)
+
+	httpClient := httpclient.Build()
+	httpClient.Timeout = configuredTimeout
+
+	client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "", WithHTTPClient(httpClient))
+
+	ctx, cancel := context.WithTimeout(context.Background(), ctxDeadline)
+	defer cancel()
+
+	start := time.Now()
+	err = client.Open(ctx)
+	elapsed := time.Since(start)
+
+	assert.Error(t, err, "expected the connect to fail once it outlives the ctx deadline")
+	assert.Less(t, elapsed, serverDelay, "expected Open to fail before the server even responds, bounded by ctx rather than by the much longer configured timeout")
 }
