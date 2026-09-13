@@ -118,7 +118,10 @@ var (
 
 // Conn details for redfish client
 type Conn struct {
-	redfishwrapper *redfishwrapper.Client
+	// redfishwrapper wraps the generic redfishwrapper.Client so that BIOS Setup attribute
+	// writes recover from iDRAC's one-pending-job-at-a-time limit - see
+	// recoveringRedfishClient. Every other redfishwrapper.Client method is promoted unchanged.
+	redfishwrapper *recoveringRedfishClient
 	Log            logr.Logger
 }
 
@@ -145,8 +148,10 @@ func New(host, user, pass string, log logr.Logger, opts ...Option) *Conn {
 	}
 
 	return &Conn{
-		Log:            log,
-		redfishwrapper: redfishwrapper.NewClient(host, defaultConfig.Port, user, pass, rfOpts...),
+		Log: log,
+		redfishwrapper: &recoveringRedfishClient{
+			Client: redfishwrapper.NewClient(host, defaultConfig.Port, user, pass, rfOpts...),
+		},
 	}
 }
 
