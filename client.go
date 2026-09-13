@@ -604,6 +604,18 @@ func (c *Client) SetHTTPBootURI(ctx context.Context, uri string) (ok bool, err e
 	return ok, err
 }
 
+// SetNetworkBootEnabled enables/disables UEFI HTTP Boot and/or legacy PXE boot capability.
+func (c *Client) SetNetworkBootEnabled(ctx context.Context, httpEnabled, pxeEnabled *bool) (ok bool, err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetNetworkBootEnabled")
+	defer span.End()
+
+	ok, metadata, err := bmc.SetNetworkBootEnabledFromInterfaces(ctx, httpEnabled, pxeEnabled, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return ok, err
+}
+
 // ResetBMC pass through to library function
 func (c *Client) ResetBMC(ctx context.Context, resetType string) (ok bool, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "ResetBMC")
