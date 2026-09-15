@@ -56,7 +56,7 @@ var (
 		providers.FeatureResetSecureBootKeys,
 		providers.FeatureResetSecureBootDatabaseKeys,
 		providers.FeatureImportSecureBootCertificate,
-		providers.FeatureSetSecureBootKeyManagement,
+		providers.FeatureAllowCustomSecureBootKeys,
 	}
 
 	errManufacturerUnknown = errors.New("error identifying device manufacturer")
@@ -111,11 +111,11 @@ func WithUseBasicAuth(useBasicAuth bool) Option {
 
 // compile-time assertions that the provider implements these interfaces.
 var (
-	_ bmc.BiosConfigurationGetter       = (*Conn)(nil)
-	_ bmc.BiosConfigurationSetter       = (*Conn)(nil)
-	_ bmc.HTTPBootURISetter             = (*Conn)(nil)
-	_ bmc.NetworkBootEnabledSetter      = (*Conn)(nil)
-	_ bmc.SecureBootKeyManagementSetter = (*Conn)(nil)
+	_ bmc.BiosConfigurationGetter     = (*Conn)(nil)
+	_ bmc.BiosConfigurationSetter     = (*Conn)(nil)
+	_ bmc.HTTPBootURISetter           = (*Conn)(nil)
+	_ bmc.NetworkBootEnabledSetter    = (*Conn)(nil)
+	_ bmc.CustomSecureBootKeysAllower = (*Conn)(nil)
 )
 
 // Conn details for redfish client

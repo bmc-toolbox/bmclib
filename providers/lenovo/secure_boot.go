@@ -41,7 +41,7 @@ func (c *Conn) ResetSecureBootDatabaseKeys(ctx context.Context, database bmc.Sec
 // SecureBootConfiguration.SecureBootPolicy BIOS attribute is already
 // "Custom Policy" - Lenovo's direct analog of Dell's SecureBootPolicy
 // (Standard/Custom). Unlike Dell, this provider does not implement
-// bmc.SecureBootKeyManagementSetter to flip that attribute out-of-band,
+// bmc.CustomSecureBootKeysAllower to flip that attribute out-of-band,
 // because it is unconfirmed whether SecureBootPolicy is reachable through
 // the generic /Bios attribute PATCH this package's Get/SetBiosConfiguration
 // use, or requires Lenovo's proprietary OneCLI/XCC transport instead. See

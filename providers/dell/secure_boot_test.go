@@ -65,7 +65,7 @@ func newSecureBootTestConn(t *testing.T, mux *http.ServeMux) *Conn {
 	return client
 }
 
-func TestSetSecureBootKeyManagement_EnableFromStandard(t *testing.T) {
+func TestAllowCustomSecureBootKeys_EnableFromStandard(t *testing.T) {
 	var settingsPatched bool
 	var patchedBody string
 
@@ -97,14 +97,14 @@ func TestSetSecureBootKeyManagement_EnableFromStandard(t *testing.T) {
 
 	client := newSecureBootTestConn(t, mux)
 
-	rebootRequired, err := client.SetSecureBootKeyManagement(context.Background(), true)
+	rebootRequired, err := client.AllowCustomSecureBootKeys(context.Background(), true)
 	require.NoError(t, err)
 	assert.True(t, rebootRequired)
 	assert.True(t, settingsPatched, "expected a BIOS settings job to be scheduled")
 	assert.Contains(t, patchedBody, secureBootPolicyCustom)
 }
 
-func TestSetSecureBootKeyManagement_EnableAlreadyCustom(t *testing.T) {
+func TestAllowCustomSecureBootKeys_EnableAlreadyCustom(t *testing.T) {
 	var settingsPatched bool
 
 	mux := http.NewServeMux()
@@ -125,13 +125,13 @@ func TestSetSecureBootKeyManagement_EnableAlreadyCustom(t *testing.T) {
 
 	client := newSecureBootTestConn(t, mux)
 
-	rebootRequired, err := client.SetSecureBootKeyManagement(context.Background(), true)
+	rebootRequired, err := client.AllowCustomSecureBootKeys(context.Background(), true)
 	require.NoError(t, err)
 	assert.False(t, rebootRequired)
 	assert.False(t, settingsPatched, "no BIOS settings job should be scheduled when already Custom")
 }
 
-func TestSetSecureBootKeyManagement_Disable(t *testing.T) {
+func TestAllowCustomSecureBootKeys_Disable(t *testing.T) {
 	var settingsPatched bool
 	var patchedBody string
 
@@ -163,14 +163,14 @@ func TestSetSecureBootKeyManagement_Disable(t *testing.T) {
 
 	client := newSecureBootTestConn(t, mux)
 
-	rebootRequired, err := client.SetSecureBootKeyManagement(context.Background(), false)
+	rebootRequired, err := client.AllowCustomSecureBootKeys(context.Background(), false)
 	require.NoError(t, err)
 	assert.True(t, rebootRequired)
 	assert.True(t, settingsPatched, "expected a BIOS settings job to be scheduled")
 	assert.Contains(t, patchedBody, secureBootPolicyStandard)
 }
 
-func TestSetSecureBootKeyManagement_AttributeAbsent(t *testing.T) {
+func TestAllowCustomSecureBootKeys_AttributeAbsent(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/redfish/v1/", endpointFunc("/serviceroot.json"))
 	mux.HandleFunc("/redfish/v1/Systems", endpointFunc("/systems.json"))
@@ -185,7 +185,7 @@ func TestSetSecureBootKeyManagement_AttributeAbsent(t *testing.T) {
 
 	client := newSecureBootTestConn(t, mux)
 
-	rebootRequired, err := client.SetSecureBootKeyManagement(context.Background(), true)
+	rebootRequired, err := client.AllowCustomSecureBootKeys(context.Background(), true)
 	require.Error(t, err)
 	assert.False(t, rebootRequired)
 

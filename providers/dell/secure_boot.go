@@ -16,7 +16,7 @@ const (
 	secureBootPolicyStandard  = "Standard"
 )
 
-// SetSecureBootKeyManagement sets the SecureBootPolicy BIOS attribute to
+// AllowCustomSecureBootKeys sets the SecureBootPolicy BIOS attribute to
 // Custom or Standard.
 //
 // The currently *applied* value is read first, and a request matching it returns early without
@@ -31,8 +31,8 @@ const (
 // attempted, is staged into the Bios/Settings resource and only takes effect on the next POST, so
 // a successful change always reports rebootRequired true.
 //
-// Implements bmc.SecureBootKeyManagementSetter.
-func (c *Conn) SetSecureBootKeyManagement(ctx context.Context, enable bool) (rebootRequired bool, err error) {
+// Implements bmc.CustomSecureBootKeysAllower.
+func (c *Conn) AllowCustomSecureBootKeys(ctx context.Context, enable bool) (rebootRequired bool, err error) {
 	biosConfig, err := c.redfishwrapper.GetBiosConfiguration(ctx)
 	if err != nil {
 		return false, err

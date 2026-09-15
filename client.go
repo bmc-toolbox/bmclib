@@ -757,14 +757,14 @@ func (c *Client) ImportSecureBootCertificate(ctx context.Context, database bmc.S
 	return err
 }
 
-// SetSecureBootKeyManagement enables or disables the platform's out-of-band acceptance
+// AllowCustomSecureBootKeys enables or disables the platform's out-of-band acceptance
 // of custom UEFI Secure Boot keys. rebootRequired reports that the change is staged and
 // takes effect only after a power cycle.
-func (c *Client) SetSecureBootKeyManagement(ctx context.Context, enable bool) (rebootRequired bool, err error) {
-	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetSecureBootKeyManagement")
+func (c *Client) AllowCustomSecureBootKeys(ctx context.Context, enable bool) (rebootRequired bool, err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "AllowCustomSecureBootKeys")
 	defer span.End()
 
-	rebootRequired, metadata, err := bmc.SetSecureBootKeyManagementFromInterfaces(ctx, c.registry().GetDriverInterfaces(), enable)
+	rebootRequired, metadata, err := bmc.AllowCustomSecureBootKeysFromInterfaces(ctx, c.registry().GetDriverInterfaces(), enable)
 	c.setMetadata(metadata)
 	metadata.RegisterSpanAttributes(c.Auth.Host, span)
 

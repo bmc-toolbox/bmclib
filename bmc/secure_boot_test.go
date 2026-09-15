@@ -69,16 +69,16 @@ func (m *mockSecureBootCertificateImporter) Name() string {
 	return "mock"
 }
 
-type mockSecureBootKeyManagementSetter struct {
+type mockCustomSecureBootKeysAllower struct {
 	rebootRequired bool
 	err            error
 }
 
-func (m *mockSecureBootKeyManagementSetter) SetSecureBootKeyManagement(ctx context.Context, _ bool) (bool, error) {
+func (m *mockCustomSecureBootKeysAllower) AllowCustomSecureBootKeys(ctx context.Context, _ bool) (bool, error) {
 	return m.rebootRequired, m.err
 }
 
-func (m *mockSecureBootKeyManagementSetter) Name() string {
+func (m *mockCustomSecureBootKeysAllower) Name() string {
 	return "mock"
 }
 
@@ -286,7 +286,7 @@ func TestImportSecureBootCertificateFromInterfaces(t *testing.T) {
 	}
 }
 
-func TestSetSecureBootKeyManagementFromInterfaces(t *testing.T) {
+func TestAllowCustomSecureBootKeysFromInterfaces(t *testing.T) {
 	testCases := []struct {
 		name                   string
 		generic                []interface{}
@@ -295,29 +295,29 @@ func TestSetSecureBootKeyManagementFromInterfaces(t *testing.T) {
 	}{
 		{
 			name:                   "success, reboot required",
-			generic:                []interface{}{&mockSecureBootKeyManagementSetter{rebootRequired: true}},
+			generic:                []interface{}{&mockCustomSecureBootKeysAllower{rebootRequired: true}},
 			expectedRebootRequired: true,
 		},
 		{
 			name:    "not an implementation",
 			generic: []interface{}{&mockSecureBootStateGetter{}},
-			errMsg:  "no SecureBootKeyManagementSetter implementations found",
+			errMsg:  "no CustomSecureBootKeysAllower implementations found",
 		},
 		{
 			name:    "no implementations",
 			generic: []interface{}{},
-			errMsg:  "no SecureBootKeyManagementSetter implementations found",
+			errMsg:  "no CustomSecureBootKeysAllower implementations found",
 		},
 		{
 			name:    "error from enabler",
-			generic: []interface{}{&mockSecureBootKeyManagementSetter{err: errors.New("foobar")}},
+			generic: []interface{}{&mockCustomSecureBootKeysAllower{err: errors.New("foobar")}},
 			errMsg:  "foobar",
 		},
 	}
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			rebootRequired, _, err := SetSecureBootKeyManagementFromInterfaces(context.Background(), tt.generic, true)
+			rebootRequired, _, err := AllowCustomSecureBootKeysFromInterfaces(context.Background(), tt.generic, true)
 
 			if tt.errMsg == "" {
 				assert.NoError(t, err)
