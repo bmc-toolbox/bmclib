@@ -152,8 +152,26 @@ func (c *Client) Open(ctx context.Context) error {
 		config.DumpWriter = os.Stdout
 	}
 
+	// gofish stores a single context at construction and ignores the context passed to
+	// individual calls, so bounding the connect below by ctx requires setting the HTTP
+	// client's own Timeout. That must not be done on config.HTTPClient itself: gofish.Connect
+	// stores this exact pointer into the resulting APIClient and reuses it for every later call
+	// on this connection, and WithHTTPClient lets a caller share one *http.Client across
+	// multiple bmclib connections - mutating its Timeout in place would race with a concurrent
+	// Open on another connection sharing that same client. Use a private shallow copy instead:
+	// Transport (and so the underlying connection pool) is still shared, but Timeout becomes
+	// independent, and nothing outside this call ever observes it.
+	//
+	// The copy's Timeout is restored before Open returns, since gofish.Connect's stored pointer
+	// makes this copy - not the original - what every subsequent call on this connection uses:
+	// ctx bounds only this Open, and a connect deadline is routinely far shorter than the
+	// slowest legitimate later operation (a Dell BIOS attribute write takes ~10s).
 	if tm := getTimeout(ctx); tm != 0 {
-		config.HTTPClient.Timeout = tm
+		bounded := *config.HTTPClient
+		restore := bounded.Timeout
+		bounded.Timeout = tm
+		config.HTTPClient = &bounded
+		defer func() { bounded.Timeout = restore }()
 	}
 	var err error
 	c.client, err = gofish.Connect(config)
