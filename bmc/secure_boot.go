@@ -94,6 +94,31 @@ type secureBootCertificateImporterProvider struct {
 	SecureBootCertificateImporter
 }
 
+// CustomSecureBootKeysAllower controls whether the platform will accept
+// custom UEFI Secure Boot keys, as opposed to using only the key set the
+// firmware shipped with. Vendors expose this differently (a BIOS attribute on
+// some platforms, a setup-menu-only setting on others, and not at all on
+// platforms that never gate enrollment).
+//
+// Implementations MUST NOT alter the contents of any Secure Boot key database
+// as a side effect. Callers rely on this to sequence a key-store reset and
+// this call independently. A platform whose equivalent setting is coupled to
+// key-store initialization cannot satisfy this contract and MUST NOT
+// implement this interface.
+//
+// Implementations MUST be idempotent.
+//
+// rebootRequired reports that the change is staged and will not be in effect
+// until the host has been power cycled.
+type CustomSecureBootKeysAllower interface {
+	AllowCustomSecureBootKeys(ctx context.Context, enable bool) (rebootRequired bool, err error)
+}
+
+type customSecureBootKeysAllowerProvider struct {
+	name string
+	CustomSecureBootKeysAllower
+}
+
 func secureBootState(ctx context.Context, generic []secureBootStateGetterProvider) (enabled bool, metadata Metadata, err error) {
 	metadata = newMetadata()
 Loop:
@@ -222,6 +247,32 @@ Loop:
 	}
 
 	return metadata, multierror.Append(err, errors.New("failure to import secure boot certificate"))
+}
+
+func allowCustomSecureBootKeys(ctx context.Context, generic []customSecureBootKeysAllowerProvider, enable bool) (rebootRequired bool, metadata Metadata, err error) {
+	metadata = newMetadata()
+Loop:
+	for _, elem := range generic {
+		if elem.CustomSecureBootKeysAllower == nil {
+			continue
+		}
+		select {
+		case <-ctx.Done():
+			err = multierror.Append(err, ctx.Err())
+			break Loop
+		default:
+			metadata.ProvidersAttempted = append(metadata.ProvidersAttempted, elem.name)
+			rebootRequired, vErr := elem.AllowCustomSecureBootKeys(ctx, enable)
+			if vErr != nil {
+				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
+				continue
+			}
+			metadata.SuccessfulProvider = elem.name
+			return rebootRequired, metadata, nil
+		}
+	}
+
+	return rebootRequired, metadata, multierror.Append(err, errors.New("failure to set secure boot key management"))
 }
 
 // GetSecureBootStateFromInterfaces returns whether UEFI Secure Boot is enabled using
@@ -379,4 +430,36 @@ func ImportSecureBootCertificateFromInterfaces(ctx context.Context, generic []in
 	}
 
 	return importSecureBootCertificate(ctx, implementations, database, certificatePEM)
+}
+
+// AllowCustomSecureBootKeysFromInterfaces enables/disables acceptance of custom UEFI
+// Secure Boot keys using the first successful CustomSecureBootKeysAllower
+// implementation found in generic.
+func AllowCustomSecureBootKeysFromInterfaces(ctx context.Context, generic []interface{}, enable bool) (rebootRequired bool, metadata Metadata, err error) {
+	implementations := make([]customSecureBootKeysAllowerProvider, 0)
+	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
+		temp := customSecureBootKeysAllowerProvider{name: getProviderName(elem)}
+		switch p := elem.(type) {
+		case CustomSecureBootKeysAllower:
+			temp.CustomSecureBootKeysAllower = p
+			implementations = append(implementations, temp)
+		default:
+			e := fmt.Sprintf("not a CustomSecureBootKeysAllower implementation: %T", p)
+			err = multierror.Append(err, errors.New(e))
+		}
+	}
+	if len(implementations) == 0 {
+		return rebootRequired, metadata, multierror.Append(
+			err,
+			errors.Wrap(
+				bmclibErrs.ErrProviderImplementation,
+				("no CustomSecureBootKeysAllower implementations found"),
+			),
+		)
+	}
+
+	return allowCustomSecureBootKeys(ctx, implementations, enable)
 }
