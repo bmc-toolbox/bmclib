@@ -75,10 +75,11 @@ const (
 // unconditionally creates a real, exclusive BIOS Configuration Job immediately (confirmed live
 // via JobService/Jobs snapshots - no @Redfish.SettingsApplyTime needed or even accepted on that
 // resource). If that PATCH runs before another Bios/Settings write in the same maintenance
-// window, the later write fails with IDRAC.2.14.SYS011, naming the attribute it was trying to
-// set even though that attribute was never touched before. The reverse order merges cleanly,
-// only because no job yet exists when the resource PATCH runs (confirmed with a same-box,
-// same-attributes, order-only-swapped A/B, on a PowerEdge R6715, iDRAC firmware 1.20.80.51).
+// window, the later write fails with the same pending-settings conflict, naming the attribute it
+// was trying to set even though that attribute was never touched before. The reverse order
+// merges cleanly, only because no job yet exists when the resource PATCH runs (confirmed with a
+// same-box, same-attributes, order-only-swapped A/B, on a PowerEdge R6715,
+// iDRAC firmware 1.20.80.51).
 //
 // PATCHing the SecureBoot BIOS Setup attribute via SetBiosConfiguration instead removes that
 // specific order-dependent asymmetry: SetSecureBoot now fails the same way, in either order, as
