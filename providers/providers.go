@@ -28,6 +28,8 @@ const (
 	FeatureSetHTTPBootURI registrar.Feature = "sethttpbooturi"
 	// FeatureSetNetworkBootEnabled means an implementation can enable/disable UEFI HTTP Boot and/or legacy PXE boot capability
 	FeatureSetNetworkBootEnabled registrar.Feature = "setnetworkbootenabled"
+	// FeatureSetHTTPBootTLSMode means an implementation can set UEFI HTTP Boot's TLS authentication mode
+	FeatureSetHTTPBootTLSMode registrar.Feature = "sethttpboottlsmode"
 	// FeatureMountFloppyImage means an implementation uploads a floppy image for mounting as virtual media.
 	//
 	// note: This is differs from FeatureVirtualMedia which is limited to accepting a URL to download the image from.
