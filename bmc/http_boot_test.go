@@ -117,3 +117,111 @@ func TestSetHTTPBootURIFromInterfaces(t *testing.T) {
 		})
 	}
 }
+
+type httpBootTLSModeTester struct {
+	MakeNotOK    bool
+	MakeErrorOut bool
+}
+
+func (r *httpBootTLSModeTester) SetHTTPBootTLSMode(ctx context.Context, mode HTTPBootTLSMode) (ok bool, err error) {
+	if r.MakeErrorOut {
+		return ok, errors.New("setting http boot tls mode failed")
+	}
+	if r.MakeNotOK {
+		return false, nil
+	}
+	return true, nil
+}
+
+func (r *httpBootTLSModeTester) Name() string {
+	return "test provider"
+}
+
+func TestSetHTTPBootTLSMode(t *testing.T) {
+	testCases := map[string]struct {
+		mode         HTTPBootTLSMode
+		makeErrorOut bool
+		makeNotOk    bool
+		want         bool
+		err          error
+		ctxTimeout   time.Duration
+	}{
+		"success":               {mode: HTTPBootTLSModeNone, want: true},
+		"not ok return":         {mode: HTTPBootTLSModeNone, want: false, makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider, failed to set http boot tls mode"), errors.New("failed to set http boot tls mode")}}},
+		"error":                 {mode: HTTPBootTLSModeNone, want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider: setting http boot tls mode failed"), errors.New("failed to set http boot tls mode")}}},
+		"error context timeout": {mode: HTTPBootTLSModeNone, want: false, makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded")}}, ctxTimeout: time.Nanosecond * 1},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			testImplementation := httpBootTLSModeTester{MakeErrorOut: tc.makeErrorOut, MakeNotOK: tc.makeNotOk}
+			expectedResult := tc.want
+			if tc.ctxTimeout == 0 {
+				tc.ctxTimeout = time.Second * 3
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
+			defer cancel()
+			result, _, err := setHTTPBootTLSMode(ctx, tc.mode, []httpBootTLSModeProviders{{"test provider", &testImplementation}})
+			if err != nil {
+				diff := cmp.Diff(err.Error(), tc.err.Error())
+				if diff != "" {
+					t.Fatal(diff)
+				}
+			} else {
+				diff := cmp.Diff(result, expectedResult)
+				if diff != "" {
+					t.Fatal(diff)
+				}
+			}
+		})
+	}
+}
+
+func TestSetHTTPBootTLSModeFromInterfaces(t *testing.T) {
+	testCases := map[string]struct {
+		mode              HTTPBootTLSMode
+		err               error
+		badImplementation bool
+		want              bool
+		withName          bool
+	}{
+		"success":                  {mode: HTTPBootTLSModeNone, want: true},
+		"success with metadata":    {mode: HTTPBootTLSModeNone, want: true, withName: true},
+		"no implementations found": {mode: HTTPBootTLSModeNone, want: false, badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a HTTPBootTLSModeSetter implementation: *struct {}"), errors.New("no HTTPBootTLSModeSetter implementations found")}}},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			var generic []interface{}
+			if tc.badImplementation {
+				badImplementation := struct{}{}
+				generic = []interface{}{&badImplementation}
+			} else {
+				testImplementation := httpBootTLSModeTester{}
+				generic = []interface{}{&testImplementation}
+			}
+			expectedResult := tc.want
+			result, metadata, err := SetHTTPBootTLSModeFromInterfaces(context.Background(), tc.mode, generic)
+			if err != nil {
+				if tc.err != nil {
+					diff := cmp.Diff(err.Error(), tc.err.Error())
+					if diff != "" {
+						t.Fatal(diff)
+					}
+				} else {
+					t.Fatal(err)
+				}
+			} else {
+				diff := cmp.Diff(result, expectedResult)
+				if diff != "" {
+					t.Fatal(diff)
+				}
+			}
+			if tc.withName {
+				if diff := cmp.Diff(metadata.SuccessfulProvider, "test provider"); diff != "" {
+					t.Fatal(diff)
+				}
+			}
+		})
+	}
+}
