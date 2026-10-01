@@ -23,16 +23,23 @@ const (
 // and legacy PXE are separate capabilities that can be on or off in any combination. NetworkStack
 // and BootModeSelect are prerequisites shared by both protocols, so they're only asserted on the
 // enabled side of each set — disabling one protocol must not turn off the network stack the
-// other protocol may still depend on.
+// other protocol may still depend on. Not every BIOS carries every prerequisite, so the ones
+// listed in optionalWhenAbsent are left out of the PATCH when the BIOS doesn't have them.
 var networkBootFingerprintTables = []struct {
-	fingerprint  string // attribute name unique enough to identify this BIOS/vendor
-	httpEnabled  map[string]string
-	httpDisabled map[string]string
-	pxeEnabled   map[string]string
-	pxeDisabled  map[string]string
+	fingerprint string // attribute name unique enough to identify this BIOS/vendor
+	// optionalWhenAbsent names attributes of the enable sets that are dropped from the PATCH when
+	// the BIOS doesn't list them: a BMC rejects an unknown attribute with a 400 that fails the
+	// whole request (Supermicro AS-1015CS-TNR-EU has no BootModeSelect). The protocol switches
+	// themselves are never optional.
+	optionalWhenAbsent []string
+	httpEnabled        map[string]string
+	httpDisabled       map[string]string
+	pxeEnabled         map[string]string
+	pxeDisabled        map[string]string
 }{
 	{
-		fingerprint: "IPv4HTTPSupport", // Supermicro H12SSW-NTR / AMI Aptio, confirmed live
+		fingerprint:        "IPv4HTTPSupport", // Supermicro H12SSW-NTR / AMI Aptio, confirmed live
+		optionalWhenAbsent: []string{"NetworkStack", "BootModeSelect"},
 		httpEnabled: map[string]string{
 			"NetworkStack":    attrEnabled,
 			"BootModeSelect":  attrUEFI,
@@ -97,6 +104,11 @@ func networkBootAttributes(httpEnabled, pxeEnabled *bool, current map[string]str
 		}
 		if pxeEnabled != nil {
 			mergeNetworkBootAttrs(attrs, pickNetworkBootAttrs(*pxeEnabled, t.pxeEnabled, t.pxeDisabled))
+		}
+		for _, name := range t.optionalWhenAbsent {
+			if _, ok := current[name]; !ok {
+				delete(attrs, name)
+			}
 		}
 		return attrs, nil
 	}
