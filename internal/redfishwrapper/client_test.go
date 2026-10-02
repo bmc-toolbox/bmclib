@@ -10,6 +10,7 @@ import (
 
 	"github.com/stmcginnis/gofish/schemas"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
@@ -413,4 +414,184 @@ func TestOpenBoundsConnectByContext(t *testing.T) {
 
 	assert.Error(t, err, "expected the connect to fail once it outlives the ctx deadline")
 	assert.Less(t, elapsed, serverDelay, "expected Open to fail before the server even responds, bounded by ctx rather than by the much longer configured timeout")
+}
+
+func TestJobs(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/redfish/v1/", endpointFunc(t, "/dell/serviceroot.json"))
+	mux.HandleFunc("/redfish/v1/JobService", func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`{"Jobs": {"@odata.id": "/redfish/v1/JobService/Jobs"}}`))
+	})
+	mux.HandleFunc("/redfish/v1/JobService/Jobs", func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`{"Members": [{"@odata.id": "/redfish/v1/JobService/Jobs/JID_1"}], "Members@odata.count": 1}`))
+	})
+	mux.HandleFunc("/redfish/v1/JobService/Jobs/JID_1", func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`{"Id": "JID_1", "@odata.id": "/redfish/v1/JobService/Jobs/JID_1", "Name": "ConfigBIOS:BIOS.Setup.1-1", "JobState": "Scheduled"}`))
+	})
+
+	server := httptest.NewTLSServer(mux)
+	defer server.Close()
+
+	parsedURL, err := url.Parse(server.URL)
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "", WithBasicAuthEnabled(true))
+	require.NoError(t, client.Open(ctx))
+	defer client.Close(ctx)
+
+	jobs, err := client.Jobs(ctx)
+	require.NoError(t, err)
+	require.Len(t, jobs, 1)
+	assert.Equal(t, "JID_1", jobs[0].ID)
+	assert.Equal(t, "ConfigBIOS:BIOS.Setup.1-1", jobs[0].Name)
+	assert.Equal(t, "Scheduled", string(jobs[0].JobState))
+}
+
+func TestJobsWithoutJobService(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/redfish/v1/", endpointFunc(t, "/dell/serviceroot.json"))
+	mux.HandleFunc("/redfish/v1/JobService", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	server := httptest.NewTLSServer(mux)
+	defer server.Close()
+
+	parsedURL, err := url.Parse(server.URL)
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "", WithBasicAuthEnabled(true))
+	require.NoError(t, client.Open(ctx))
+	defer client.Close(ctx)
+
+	_, err = client.Jobs(ctx)
+	assert.Error(t, err)
+}
+
+// jobServiceMux serves a JobService with one job. If expand is true the collection answers
+// $expand with the members inline, and reading the job on its own then fails the test; otherwise
+// the collection answers with links only, whatever it was asked for.
+func jobServiceMux(t *testing.T, expand bool) *http.ServeMux {
+	t.Helper()
+
+	const job = `{"Id": "JID_1", "@odata.id": "/redfish/v1/JobService/Jobs/JID_1", "Name": "ConfigBIOS:BIOS.Setup.1-1", "JobState": "Scheduled"}`
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/redfish/v1/", endpointFunc(t, "/dell/serviceroot.json"))
+	mux.HandleFunc("/redfish/v1/JobService", func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`{"Jobs": {"@odata.id": "/redfish/v1/JobService/Jobs"}}`))
+	})
+	mux.HandleFunc("/redfish/v1/JobService/Jobs", func(w http.ResponseWriter, r *http.Request) {
+		if expand && r.URL.Query().Has("$expand") {
+			_, _ = w.Write([]byte(`{"Members": [` + job + `], "Members@odata.count": 1}`))
+			return
+		}
+		if r.URL.Query().Has("$expand") && !expand {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		_, _ = w.Write([]byte(`{"Members": [{"@odata.id": "/redfish/v1/JobService/Jobs/JID_1"}], "Members@odata.count": 1}`))
+	})
+	mux.HandleFunc("/redfish/v1/JobService/Jobs/JID_1", func(w http.ResponseWriter, r *http.Request) {
+		if expand {
+			t.Error("job read on its own although the collection was returned expanded")
+		}
+		_, _ = w.Write([]byte(job))
+	})
+
+	return mux
+}
+
+func TestJobsReadsTheExpandedCollectionInOneRequest(t *testing.T) {
+	server := httptest.NewTLSServer(jobServiceMux(t, true))
+	defer server.Close()
+
+	parsedURL, err := url.Parse(server.URL)
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "", WithBasicAuthEnabled(true))
+	require.NoError(t, client.Open(ctx))
+	defer client.Close(ctx)
+
+	jobs, err := client.Jobs(ctx)
+	require.NoError(t, err)
+	require.Len(t, jobs, 1)
+	assert.Equal(t, "JID_1", jobs[0].ID)
+	assert.Equal(t, "ConfigBIOS:BIOS.Setup.1-1", jobs[0].Name)
+	assert.Equal(t, "Scheduled", string(jobs[0].JobState))
+	assert.Equal(t, "/redfish/v1/JobService/Jobs/JID_1", jobs[0].ODataID, "expected the job's own URI, needed to act on it")
+}
+
+func TestJobsFallsBackToReadingEachJobWhenExpandIsRefused(t *testing.T) {
+	server := httptest.NewTLSServer(jobServiceMux(t, false))
+	defer server.Close()
+
+	parsedURL, err := url.Parse(server.URL)
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "", WithBasicAuthEnabled(true))
+	require.NoError(t, client.Open(ctx))
+	defer client.Close(ctx)
+
+	jobs, err := client.Jobs(ctx)
+	require.NoError(t, err)
+	require.Len(t, jobs, 1)
+	assert.Equal(t, "JID_1", jobs[0].ID)
+}
+
+// TestJobsFallsBackWhenTheExpandedCollectionIsIncomplete: an expanded answer that is paginated,
+// reports more members than it holds, or has a member that cannot be acted on must not be taken
+// at face value, since a job missing from it would go unnoticed.
+func TestJobsFallsBackWhenTheExpandedCollectionIsIncomplete(t *testing.T) {
+	const job = `{"Id": "JID_1", "@odata.id": "/redfish/v1/JobService/Jobs/JID_1", "Name": "ConfigBIOS:BIOS.Setup.1-1", "JobState": "Scheduled"}`
+
+	tests := map[string]string{
+		"next link":          `{"Members": [` + job + `], "Members@odata.count": 1, "Members@odata.nextLink": "/redfish/v1/JobService/Jobs?$skip=1"}`,
+		"count mismatch":     `{"Members": [` + job + `], "Members@odata.count": 2}`,
+		"member without uri": `{"Members": [{"Id": "JID_1", "Name": "ConfigBIOS:BIOS.Setup.1-1", "JobState": "Scheduled"}], "Members@odata.count": 1}`,
+	}
+
+	for name, expanded := range tests {
+		t.Run(name, func(t *testing.T) {
+			var readOnOwn bool
+
+			mux := http.NewServeMux()
+			mux.HandleFunc("/redfish/v1/", endpointFunc(t, "/dell/serviceroot.json"))
+			mux.HandleFunc("/redfish/v1/JobService", func(w http.ResponseWriter, r *http.Request) {
+				_, _ = w.Write([]byte(`{"Jobs": {"@odata.id": "/redfish/v1/JobService/Jobs"}}`))
+			})
+			mux.HandleFunc("/redfish/v1/JobService/Jobs", func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Query().Has("$expand") {
+					_, _ = w.Write([]byte(expanded))
+					return
+				}
+				_, _ = w.Write([]byte(`{"Members": [{"@odata.id": "/redfish/v1/JobService/Jobs/JID_1"}], "Members@odata.count": 1}`))
+			})
+			mux.HandleFunc("/redfish/v1/JobService/Jobs/JID_1", func(w http.ResponseWriter, r *http.Request) {
+				readOnOwn = true
+				_, _ = w.Write([]byte(job))
+			})
+
+			server := httptest.NewTLSServer(mux)
+			defer server.Close()
+
+			parsedURL, err := url.Parse(server.URL)
+			require.NoError(t, err)
+
+			ctx := context.Background()
+			client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "", WithBasicAuthEnabled(true))
+			require.NoError(t, client.Open(ctx))
+			defer client.Close(ctx)
+
+			jobs, err := client.Jobs(ctx)
+			require.NoError(t, err)
+			require.Len(t, jobs, 1)
+			assert.Equal(t, "/redfish/v1/JobService/Jobs/JID_1", jobs[0].ODataID)
+			assert.True(t, readOnOwn, "expected the jobs to be read one by one instead")
+		})
+	}
 }
