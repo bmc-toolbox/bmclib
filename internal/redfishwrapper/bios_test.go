@@ -12,6 +12,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stmcginnis/gofish/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -256,4 +257,53 @@ func TestSetBiosConfiguration_WritesAttributeAlreadyMatchingAppliedState(t *test
 
 	require.Len(t, patchBodies, 1, "expected the write to be sent, not diffed away against applied state")
 	assert.Contains(t, patchBodies[0], `"BootModeSelect":"UEFI"`)
+}
+
+// TestApplyBiosAttributes_KeepsNativeValueTypes: unlike SetBiosConfiguration, which sends every
+// value as a string, ApplyBiosAttributes sends bool and number values as such, so a strict
+// attribute registry accepts them.
+func TestApplyBiosAttributes_KeepsNativeValueTypes(t *testing.T) {
+	var patched map[string]any
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/redfish/v1/", endpointFunc(t, "/dell/serviceroot.json"))
+	mux.HandleFunc("/redfish/v1/Systems", endpointFunc(t, "/dell/systems.json"))
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1", endpointFunc(t, "/dell/system.embedded.1.json"))
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/Bios", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			_, _ = w.Write([]byte(biosWithoutSettingsApplyTimes))
+		case http.MethodPatch:
+			body, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			require.NoError(t, json.Unmarshal(body, &patched))
+			w.WriteHeader(http.StatusNoContent)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
+
+	server := httptest.NewTLSServer(mux)
+	defer server.Close()
+
+	parsedURL, err := url.Parse(server.URL)
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "", WithBasicAuthEnabled(true))
+	require.NoError(t, client.Open(ctx))
+	defer client.Close(ctx)
+
+	err = client.ApplyBiosAttributes(ctx, schemas.SettingsAttributes{
+		"Flag":  true,
+		"Count": json.Number("42"),
+		"Name":  "x",
+	})
+	require.NoError(t, err)
+
+	attrs, ok := patched["Attributes"].(map[string]any)
+	require.True(t, ok, "expected an Attributes object in the PATCH body, got %v", patched)
+	assert.Equal(t, true, attrs["Flag"])
+	assert.Equal(t, float64(42), attrs["Count"])
+	assert.Equal(t, "x", attrs["Name"])
 }
