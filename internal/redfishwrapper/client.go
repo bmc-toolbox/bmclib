@@ -3,6 +3,7 @@ package redfishwrapper
 import (
 	"context"
 	"crypto/x509"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -334,6 +335,75 @@ func (c *Client) Tasks(ctx context.Context) ([]*schemas.Task, error) {
 	}
 
 	return ts.Tasks()
+}
+
+// Jobs returns the jobs currently tracked by the redfish job service. It returns an error if the
+// BMC has no JobService.
+//
+// The collection is requested expanded, which a BMC that supports $expand answers in one request.
+// Reading it job by job takes one request per job, and a used iDRAC holds well over a hundred of
+// them. A BMC that does not expand leaves the members as links, and each is then read on its own.
+func (c *Client) Jobs(ctx context.Context) ([]*schemas.Job, error) {
+	js, err := c.client.Service.JobService()
+	if err != nil {
+		return nil, err
+	}
+	if js == nil {
+		return nil, errors.New("BMC has no JobService")
+	}
+
+	if jobs, ok := c.expandedJobs(js); ok {
+		return jobs, nil
+	}
+
+	return js.Jobs()
+}
+
+// expandedJobs reads the job collection with $expand. It reports false if the BMC did not return
+// every member expanded, so that the caller can read the jobs one by one instead.
+func (c *Client) expandedJobs(js *schemas.JobService) ([]*schemas.Job, bool) {
+	var service struct {
+		Jobs struct {
+			ODataID string `json:"@odata.id"`
+		} `json:"Jobs"`
+	}
+	if json.Unmarshal(js.RawData, &service) != nil || service.Jobs.ODataID == "" {
+		return nil, false
+	}
+
+	resp, err := c.Get(service.Jobs.ODataID + "?$expand=*($levels=1)")
+	if err != nil {
+		return nil, false
+	}
+	defer func() { _ = resp.Body.Close() }()
+	if resp.StatusCode != http.StatusOK {
+		return nil, false
+	}
+
+	var collection struct {
+		Members  []json.RawMessage `json:"Members"`
+		Count    int               `json:"Members@odata.count"`
+		NextLink string            `json:"Members@odata.nextLink"`
+	}
+	if json.NewDecoder(resp.Body).Decode(&collection) != nil {
+		return nil, false
+	}
+
+	// A paginated collection, or one that reports more members than it returned, is incomplete.
+	if collection.NextLink != "" || (collection.Count != 0 && collection.Count != len(collection.Members)) {
+		return nil, false
+	}
+
+	jobs := make([]*schemas.Job, 0, len(collection.Members))
+	for _, member := range collection.Members {
+		var job schemas.Job
+		if json.Unmarshal(member, &job) != nil || job.JobState == "" || job.ODataID == "" {
+			return nil, false
+		}
+		jobs = append(jobs, &job)
+	}
+
+	return jobs, true
 }
 
 // ManagerOdataID returns the Odata ID of the first available Manager.
