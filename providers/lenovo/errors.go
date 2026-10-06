@@ -1,6 +1,7 @@
 package lenovo
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -122,4 +123,38 @@ func redfishErrorDetail(body []byte) string {
 	default:
 		return ""
 	}
+}
+
+// postChecked POSTs payload to uri and reduces the response to an error: nil on
+// a 2xx status, the parsed Redfish error otherwise. The body is always closed.
+func (c *Conn) postChecked(ctx context.Context, uri string, payload any) error {
+	resp, err := c.redfishwrapper.PostWithHeaders(ctx, uri, payload, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	return checkResponse(resp, nil)
+}
+
+// patchChecked is postChecked for PATCH.
+func (c *Conn) patchChecked(ctx context.Context, uri string, payload any) error {
+	resp, err := c.redfishwrapper.PatchWithHeaders(ctx, uri, payload, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	return checkResponse(resp, nil)
+}
+
+// deleteChecked DELETEs uri and reduces the response the same way.
+func (c *Conn) deleteChecked(uri string) error {
+	resp, err := c.redfishwrapper.Delete(uri)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	return checkResponse(resp, nil)
 }
