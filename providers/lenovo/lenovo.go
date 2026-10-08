@@ -82,6 +82,8 @@ var Features = registrar.Features{
 	providers.FeatureResetSecureBootKeys,
 	providers.FeatureResetSecureBootDatabaseKeys,
 	providers.FeatureImportSecureBootCertificate,
+	providers.FeatureGetPowerMetrics,
+	providers.FeatureSetPowerCap,
 	// inventory-storage
 	providers.FeatureInventoryRead,
 	// firmware-tasks

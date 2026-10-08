@@ -686,6 +686,12 @@ func (ts *testServer) didPatchSecureBoot() bool {
 	return ts.secureBootPatched
 }
 
+func (ts *testServer) didPatchPower() bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.powerPatched
+}
+
 func (ts *testServer) didResetSecureBootKeys() bool {
 	ts.mu.Lock()
 	defer ts.mu.Unlock()
