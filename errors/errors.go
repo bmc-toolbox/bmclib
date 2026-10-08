@@ -128,6 +128,12 @@ var (
 	// ErrBMCUpdating is returned when the BMC is going through an update and will not serve other queries.
 	ErrBMCUpdating = errors.New("a BMC firmware update is in progress")
 
+	// ErrPowerControlNotFound is returned when no chassis exposes a Power resource with PowerControl
+	ErrPowerControlNotFound = errors.New("no chassis exposes a Power resource with PowerControl")
+
+	// ErrPowerCapSet is returned when the BMC rejects a power cap update
+	ErrPowerCapSet = errors.New("failed to set power cap")
+
 	// ErrSecureBootDatabaseNotFound is returned when the requested UEFI Secure Boot key database
 	// (db, KEK, PK, dbx, ...) is not present in the SecureBootDatabases collection reported by the BMC.
 	ErrSecureBootDatabaseNotFound = errors.New("secure boot key database not found")

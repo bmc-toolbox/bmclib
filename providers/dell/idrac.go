@@ -58,6 +58,8 @@ var (
 		providers.FeatureResetSecureBootDatabaseKeys,
 		providers.FeatureImportSecureBootCertificate,
 		providers.FeatureAllowCustomSecureBootKeys,
+		providers.FeatureGetPowerMetrics,
+		providers.FeatureSetPowerCap,
 	}
 
 	errManufacturerUnknown = errors.New("error identifying device manufacturer")
@@ -288,6 +290,16 @@ func (c *Conn) ResetSecureBootDatabaseKeys(ctx context.Context, database bmc.Sec
 // ImportSecureBootCertificate enrolls a certificate into a single UEFI Secure Boot key database
 func (c *Conn) ImportSecureBootCertificate(ctx context.Context, database bmc.SecureBootDatabase, certificatePEM string) (err error) {
 	return c.redfishwrapper.ImportSecureBootCertificate(ctx, database, certificatePEM)
+}
+
+// GetPowerMetrics returns the chassis power readings and the configured power cap
+func (c *Conn) GetPowerMetrics(ctx context.Context) (metrics bmc.PowerMetrics, err error) {
+	return c.redfishwrapper.GetPowerMetrics(ctx)
+}
+
+// SetPowerCap sets the chassis power cap in watts; a nil limitWatts clears the cap
+func (c *Conn) SetPowerCap(ctx context.Context, limitWatts *float64) (err error) {
+	return c.redfishwrapper.SetPowerCap(ctx, limitWatts)
 }
 
 // SendNMI tells the BMC to issue an NMI to the device
