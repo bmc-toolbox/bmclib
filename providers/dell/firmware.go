@@ -161,19 +161,24 @@ func (c *Conn) statusFromTaskOem(taskID string, oem json.RawMessage) (constants.
 }
 
 func (c *Conn) job(jobID string) (*Dell, error) {
+	return c.redfishwrapper.dellJob(jobID)
+}
+
+// dellJob reads Dell's OEM resource for a job, which, unlike the standard JobService resource,
+// reports JobType and ActualRunningStartTime on every iDRAC generation.
+func (c *recoveringRedfishClient) dellJob(jobID string) (*Dell, error) {
 	errLookup := errors.New("error querying dell job: " + jobID)
 
 	endpoint := "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/Jobs/" + jobID
-	resp, err := c.redfishwrapper.Get(endpoint)
+	resp, err := c.Get(endpoint)
 	if err != nil {
 		return nil, errors.Wrap(errLookup, err.Error())
 	}
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, errors.Wrap(errLookup, "unexpected status code: "+resp.Status)
 	}
-
-	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -209,6 +214,9 @@ type Dell struct {
 	PercentComplete   int           `json:"PercentComplete"`
 	StartTime         string        `json:"StartTime"`
 	TargetSettingsURI interface{}   `json:"TargetSettingsURI"`
+	// ActualRunningStartTime is set once iDRAC actually starts executing the job (e.g. applying a
+	// BIOS config job during POST on the next reset), as opposed to merely holding it scheduled.
+	ActualRunningStartTime string `json:"ActualRunningStartTime"`
 }
 
 func convFirmwareTaskOem(oemdata json.RawMessage) (oem, error) {

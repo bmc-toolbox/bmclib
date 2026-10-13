@@ -3,6 +3,7 @@ package redfishwrapper
 import (
 	"context"
 	"crypto/x509"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -334,6 +335,87 @@ func (c *Client) Tasks(ctx context.Context) ([]*schemas.Task, error) {
 	}
 
 	return ts.Tasks()
+}
+
+// Jobs returns the jobs currently tracked by the redfish job service. It returns an error if the
+// BMC has no JobService.
+//
+// The collection is requested expanded, which a BMC that supports $expand answers in one request.
+// Reading it job by job takes one request per job, and a used iDRAC holds well over a hundred of
+// them. A BMC that does not expand leaves the members as links, and each is then read on its own.
+func (c *Client) Jobs(ctx context.Context) ([]*schemas.Job, error) {
+	js, err := c.client.Service.JobService()
+	if err != nil {
+		return nil, err
+	}
+	if js == nil {
+		return nil, errors.New("BMC has no JobService")
+	}
+
+	jobs, expandErr := c.expandedJobs(js)
+	if expandErr == nil {
+		return jobs, nil
+	}
+
+	jobs, err = js.Jobs()
+	if err != nil {
+		return nil, fmt.Errorf("%w (reading the expanded job collection also failed: %v)", err, expandErr)
+	}
+
+	return jobs, nil
+}
+
+// expandedJobs reads the job collection with $expand. It returns an error if that fails or if the
+// BMC did not return every member expanded, so that the caller can read the jobs one by one instead.
+func (c *Client) expandedJobs(js *schemas.JobService) ([]*schemas.Job, error) {
+	var service struct {
+		Jobs struct {
+			ODataID string `json:"@odata.id"`
+		} `json:"Jobs"`
+	}
+	if err := json.Unmarshal(js.RawData, &service); err != nil {
+		return nil, fmt.Errorf("unable to unmarshal job service object: %w", err)
+	}
+	if service.Jobs.ODataID == "" {
+		return nil, errors.New("job service has no Jobs collection")
+	}
+
+	resp, err := c.Get(service.Jobs.ODataID + "?$expand=*($levels=1)")
+	if err != nil {
+		return nil, fmt.Errorf("unable to read expanded job collection: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("expanded job collection request returned status %d", resp.StatusCode)
+	}
+
+	var collection struct {
+		Members  []json.RawMessage `json:"Members"`
+		Count    int               `json:"Members@odata.count"`
+		NextLink string            `json:"Members@odata.nextLink"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&collection); err != nil {
+		return nil, fmt.Errorf("unable to unmarshal expanded job collection: %w", err)
+	}
+
+	// A paginated collection, or one that reports more members than it returned, is incomplete.
+	if collection.NextLink != "" || (collection.Count != 0 && collection.Count != len(collection.Members)) {
+		return nil, errors.New("expanded job collection is incomplete")
+	}
+
+	jobs := make([]*schemas.Job, 0, len(collection.Members))
+	for _, member := range collection.Members {
+		var job schemas.Job
+		if err := json.Unmarshal(member, &job); err != nil {
+			return nil, fmt.Errorf("unable to unmarshal expanded job: %w", err)
+		}
+		if job.JobState == "" || job.ODataID == "" {
+			return nil, errors.New("expanded job member is missing JobState or @odata.id")
+		}
+		jobs = append(jobs, &job)
+	}
+
+	return jobs, nil
 }
 
 // ManagerOdataID returns the Odata ID of the first available Manager.
