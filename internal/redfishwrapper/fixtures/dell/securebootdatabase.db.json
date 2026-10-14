@@ -1,0 +1,16 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#SecureBootDatabase.SecureBootDatabase",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/SecureBoot/SecureBootDatabases/db",
+    "@odata.type": "#SecureBootDatabase.v1_0_3.SecureBootDatabase",
+    "Id": "db",
+    "DatabaseId": "db",
+    "Name": "UEFI db",
+    "Certificates": {
+        "@odata.id": "/redfish/v1/Systems/System.Embedded.1/SecureBoot/SecureBootDatabases/db/Certificates"
+    },
+    "Actions": {
+        "#SecureBootDatabase.ResetKeys": {
+            "target": "/redfish/v1/Systems/System.Embedded.1/SecureBoot/SecureBootDatabases/db/Actions/SecureBootDatabase.ResetKeys"
+        }
+    }
+}

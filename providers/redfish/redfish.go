@@ -34,6 +34,8 @@ var Features = registrar.Features{
 	providers.FeatureUserDelete,
 	providers.FeatureBootDeviceSet,
 	providers.FeatureVirtualMedia,
+	providers.FeatureSetHTTPBootURI,
+	providers.FeatureSetNetworkBootEnabled,
 	providers.FeatureInventoryRead,
 	providers.FeatureBmcReset,
 	providers.FeatureClearSystemEventLog,
@@ -43,12 +45,16 @@ var Features = registrar.Features{
 	providers.FeatureGetSecureBoot,
 	providers.FeatureSetSecureBoot,
 	providers.FeatureResetSecureBootKeys,
+	providers.FeatureResetSecureBootDatabaseKeys,
+	providers.FeatureImportSecureBootCertificate,
 }
 
 // compile-time assertions that the provider implements the BIOS configuration interfaces.
 var (
-	_ bmc.BiosConfigurationGetter = (*Conn)(nil)
-	_ bmc.BiosConfigurationSetter = (*Conn)(nil)
+	_ bmc.BiosConfigurationGetter  = (*Conn)(nil)
+	_ bmc.BiosConfigurationSetter  = (*Conn)(nil)
+	_ bmc.HTTPBootURISetter        = (*Conn)(nil)
+	_ bmc.NetworkBootEnabledSetter = (*Conn)(nil)
 )
 
 // Conn details for redfish client
@@ -236,6 +242,16 @@ func (c *Conn) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (ok b
 	return c.redfishwrapper.SetVirtualMedia(ctx, kind, mediaURL)
 }
 
+// SetHTTPBootURI sets the URI UEFI HTTP Boot fetches its boot image from
+func (c *Conn) SetHTTPBootURI(ctx context.Context, uri string) (ok bool, err error) {
+	return c.redfishwrapper.SetHTTPBootURI(ctx, uri)
+}
+
+// SetNetworkBootEnabled enables/disables UEFI HTTP Boot and/or legacy PXE boot capability
+func (c *Conn) SetNetworkBootEnabled(ctx context.Context, httpEnabled, pxeEnabled *bool) (ok bool, err error) {
+	return c.redfishwrapper.SetNetworkBootEnabled(ctx, httpEnabled, pxeEnabled)
+}
+
 // Inventory collects hardware inventory and install firmware information
 func (c *Conn) Inventory(ctx context.Context) (device *common.Device, err error) {
 	return c.redfishwrapper.Inventory(ctx, c.failInventoryOnError)
@@ -267,8 +283,18 @@ func (c *Conn) SetSecureBoot(ctx context.Context, enable bool) (err error) {
 }
 
 // ResetSecureBootKeys resets the UEFI Secure Boot key databases
-func (c *Conn) ResetSecureBootKeys(ctx context.Context, resetType string) (err error) {
+func (c *Conn) ResetSecureBootKeys(ctx context.Context, resetType bmc.ResetSecureBootKeysType) (err error) {
 	return c.redfishwrapper.ResetSecureBootKeys(ctx, resetType)
+}
+
+// ResetSecureBootDatabaseKeys resets a single UEFI Secure Boot key database
+func (c *Conn) ResetSecureBootDatabaseKeys(ctx context.Context, database bmc.SecureBootDatabase, resetType bmc.ResetSecureBootDatabaseKeysType) (err error) {
+	return c.redfishwrapper.ResetSecureBootDatabaseKeys(ctx, database, resetType)
+}
+
+// ImportSecureBootCertificate enrolls a certificate into a single UEFI Secure Boot key database
+func (c *Conn) ImportSecureBootCertificate(ctx context.Context, database bmc.SecureBootDatabase, certificatePEM string) (err error) {
+	return c.redfishwrapper.ImportSecureBootCertificate(ctx, database, certificatePEM)
 }
 
 // SendNMI tells the BMC to issue an NMI to the device

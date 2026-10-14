@@ -592,6 +592,42 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (ok
 	return ok, err
 }
 
+// SetHTTPBootURI sets the URI UEFI HTTP Boot fetches its boot image from.
+func (c *Client) SetHTTPBootURI(ctx context.Context, uri string) (ok bool, err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetHTTPBootURI")
+	defer span.End()
+
+	ok, metadata, err := bmc.SetHTTPBootURIFromInterfaces(ctx, uri, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return ok, err
+}
+
+// SetNetworkBootEnabled enables/disables UEFI HTTP Boot and/or legacy PXE boot capability.
+func (c *Client) SetNetworkBootEnabled(ctx context.Context, httpEnabled, pxeEnabled *bool) (ok bool, err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetNetworkBootEnabled")
+	defer span.End()
+
+	ok, metadata, err := bmc.SetNetworkBootEnabledFromInterfaces(ctx, httpEnabled, pxeEnabled, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return ok, err
+}
+
+// SetHTTPBootTLSMode sets the TLS authentication mode UEFI HTTP Boot uses to connect to the HTTP boot server.
+func (c *Client) SetHTTPBootTLSMode(ctx context.Context, mode bmc.HTTPBootTLSMode) (ok bool, err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetHTTPBootTLSMode")
+	defer span.End()
+
+	ok, metadata, err := bmc.SetHTTPBootTLSModeFromInterfaces(ctx, mode, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return ok, err
+}
+
 // ResetBMC pass through to library function
 func (c *Client) ResetBMC(ctx context.Context, resetType string) (ok bool, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "ResetBMC")
@@ -695,9 +731,8 @@ func (c *Client) SetSecureBoot(ctx context.Context, enable bool) (err error) {
 	return err
 }
 
-// ResetSecureBootKeys resets the UEFI Secure Boot key databases. resetType is one
-// of ResetAllKeysToDefault, DeleteAllKeys, or DeletePK.
-func (c *Client) ResetSecureBootKeys(ctx context.Context, resetType string) (err error) {
+// ResetSecureBootKeys resets the UEFI Secure Boot key databases.
+func (c *Client) ResetSecureBootKeys(ctx context.Context, resetType bmc.ResetSecureBootKeysType) (err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "ResetSecureBootKeys")
 	defer span.End()
 
@@ -706,6 +741,46 @@ func (c *Client) ResetSecureBootKeys(ctx context.Context, resetType string) (err
 	metadata.RegisterSpanAttributes(c.Auth.Host, span)
 
 	return err
+}
+
+// ResetSecureBootDatabaseKeys resets a single UEFI Secure Boot key database,
+// leaving every other database - including PK - untouched.
+func (c *Client) ResetSecureBootDatabaseKeys(ctx context.Context, database bmc.SecureBootDatabase, resetType bmc.ResetSecureBootDatabaseKeysType) (err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "ResetSecureBootDatabaseKeys")
+	defer span.End()
+
+	metadata, err := bmc.ResetSecureBootDatabaseKeysFromInterfaces(ctx, c.registry().GetDriverInterfaces(), database, resetType)
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return err
+}
+
+// ImportSecureBootCertificate enrolls a PEM-encoded certificate into a single
+// UEFI Secure Boot key database without disturbing any certificate already present.
+func (c *Client) ImportSecureBootCertificate(ctx context.Context, database bmc.SecureBootDatabase, certificatePEM string) (err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "ImportSecureBootCertificate")
+	defer span.End()
+
+	metadata, err := bmc.ImportSecureBootCertificateFromInterfaces(ctx, c.registry().GetDriverInterfaces(), database, certificatePEM)
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return err
+}
+
+// AllowCustomSecureBootKeys enables or disables the platform's out-of-band acceptance
+// of custom UEFI Secure Boot keys. rebootRequired reports that the change is staged and
+// takes effect only after a power cycle.
+func (c *Client) AllowCustomSecureBootKeys(ctx context.Context, enable bool) (rebootRequired bool, err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "AllowCustomSecureBootKeys")
+	defer span.End()
+
+	rebootRequired, metadata, err := bmc.AllowCustomSecureBootKeysFromInterfaces(ctx, c.registry().GetDriverInterfaces(), enable)
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return rebootRequired, err
 }
 
 // FirmwareInstall pass through library function to upload firmware and install firmware

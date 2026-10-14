@@ -7,6 +7,9 @@
     "SecureBootEnable": true,
     "SecureBootCurrentBoot": "Disabled",
     "SecureBootMode": "SetupMode",
+    "SecureBootDatabases": {
+        "@odata.id": "/redfish/v1/Systems/System.Embedded.1/SecureBoot/SecureBootDatabases"
+    },
     "Actions": {
         "#SecureBoot.ResetKeys": {
             "target": "/redfish/v1/Systems/System.Embedded.1/SecureBoot/Actions/SecureBoot.ResetKeys",

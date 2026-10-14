@@ -3,6 +3,8 @@ package lenovo
 import (
 	"context"
 	"testing"
+
+	"github.com/bmc-toolbox/bmclib/v2/bmc"
 )
 
 // Requirement: Power state read.
@@ -229,7 +231,7 @@ func TestResetSecureBootKeys(t *testing.T) {
 	ts := newTestServer(t, testServerOpts{})
 	c := ts.openedClient(t)
 
-	if err := c.ResetSecureBootKeys(context.Background(), "ResetAllKeysToDefault"); err != nil {
+	if err := c.ResetSecureBootKeys(context.Background(), bmc.ResetSecureBootKeysTypeResetAllKeysToDefault); err != nil {
 		t.Fatalf("ResetSecureBootKeys: %v", err)
 	}
 	if !ts.didResetSecureBootKeys() {

@@ -9,6 +9,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/bmc-toolbox/bmclib/v2/bmc"
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 func newDellSecureBootClient(t *testing.T, mux *http.ServeMux) *Client {
@@ -80,7 +83,62 @@ func TestResetSecureBootKeys(t *testing.T) {
 	})
 	client := newDellSecureBootClient(t, mux)
 
-	err := client.ResetSecureBootKeys(context.Background(), "ResetAllKeysToDefault")
+	err := client.ResetSecureBootKeys(context.Background(), bmc.ResetSecureBootKeysTypeResetAllKeysToDefault)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, resetAttempts, "expected ResetSecureBootKeys to POST to the ResetKeys action once")
+}
+
+func TestResetSecureBootDatabaseKeys(t *testing.T) {
+	var resetAttempts int
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/SecureBoot", endpointFunc(t, "dell/secureboot.json"))
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/SecureBoot/SecureBootDatabases", endpointFunc(t, "dell/securebootdatabase_collection.json"))
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/SecureBoot/SecureBootDatabases/db", endpointFunc(t, "dell/securebootdatabase.db.json"))
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/SecureBoot/SecureBootDatabases/db/Actions/SecureBootDatabase.ResetKeys", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		resetAttempts++
+		w.WriteHeader(http.StatusNoContent)
+	})
+	client := newDellSecureBootClient(t, mux)
+
+	err := client.ResetSecureBootDatabaseKeys(context.Background(), bmc.SecureBootDatabaseDB, bmc.ResetSecureBootDatabaseKeysTypeResetAllKeysToDefault)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, resetAttempts, "expected ResetSecureBootDatabaseKeys to POST to the database's ResetKeys action once")
+}
+
+func TestResetSecureBootDatabaseKeysNotFound(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/SecureBoot", endpointFunc(t, "dell/secureboot.json"))
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/SecureBoot/SecureBootDatabases", endpointFunc(t, "dell/securebootdatabase_collection.json"))
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/SecureBoot/SecureBootDatabases/db", endpointFunc(t, "dell/securebootdatabase.db.json"))
+	client := newDellSecureBootClient(t, mux)
+
+	err := client.ResetSecureBootDatabaseKeys(context.Background(), bmc.SecureBootDatabaseKEK, bmc.ResetSecureBootDatabaseKeysTypeResetAllKeysToDefault)
+	assert.ErrorIs(t, err, bmclibErrs.ErrSecureBootDatabaseNotFound)
+}
+
+func TestImportSecureBootCertificate(t *testing.T) {
+	var importAttempts int
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/SecureBoot", endpointFunc(t, "dell/secureboot.json"))
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/SecureBoot/SecureBootDatabases", endpointFunc(t, "dell/securebootdatabase_collection.json"))
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/SecureBoot/SecureBootDatabases/db", endpointFunc(t, "dell/securebootdatabase.db.json"))
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/SecureBoot/SecureBootDatabases/db/Certificates", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		importAttempts++
+		w.WriteHeader(http.StatusNoContent)
+	})
+	client := newDellSecureBootClient(t, mux)
+
+	err := client.ImportSecureBootCertificate(context.Background(), bmc.SecureBootDatabaseDB, "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----")
+	assert.NoError(t, err)
+	assert.Equal(t, 1, importAttempts, "expected ImportSecureBootCertificate to POST to the database's Certificates collection once")
 }

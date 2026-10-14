@@ -24,6 +24,12 @@ const (
 	FeatureBootDeviceSet registrar.Feature = "bootdeviceset"
 	// FeatureVirtualMedia means an implementation can manage virtual media devices
 	FeatureVirtualMedia registrar.Feature = "virtualmedia"
+	// FeatureSetHTTPBootURI means an implementation can set the URI UEFI HTTP Boot fetches its boot image from
+	FeatureSetHTTPBootURI registrar.Feature = "sethttpbooturi"
+	// FeatureSetNetworkBootEnabled means an implementation can enable/disable UEFI HTTP Boot and/or legacy PXE boot capability
+	FeatureSetNetworkBootEnabled registrar.Feature = "setnetworkbootenabled"
+	// FeatureSetHTTPBootTLSMode means an implementation can set UEFI HTTP Boot's TLS authentication mode
+	FeatureSetHTTPBootTLSMode registrar.Feature = "sethttpboottlsmode"
 	// FeatureMountFloppyImage means an implementation uploads a floppy image for mounting as virtual media.
 	//
 	// note: This is differs from FeatureVirtualMedia which is limited to accepting a URL to download the image from.
@@ -88,4 +94,13 @@ const (
 
 	// FeatureResetSecureBootKeys means an implementation that can reset the UEFI Secure Boot key databases
 	FeatureResetSecureBootKeys registrar.Feature = "resetsecurebootkeys"
+
+	// FeatureResetSecureBootDatabaseKeys means an implementation that can reset a single UEFI Secure Boot key database
+	FeatureResetSecureBootDatabaseKeys registrar.Feature = "resetsecurebootdatabasekeys"
+
+	// FeatureImportSecureBootCertificate means an implementation that can enroll a certificate into a single UEFI Secure Boot key database
+	FeatureImportSecureBootCertificate registrar.Feature = "importsecurebootcertificate"
+
+	// FeatureAllowCustomSecureBootKeys means an implementation that can enable/disable acceptance of custom UEFI Secure Boot keys
+	FeatureAllowCustomSecureBootKeys registrar.Feature = "allowcustomsecurebootkeys"
 )

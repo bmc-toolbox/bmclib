@@ -187,3 +187,73 @@ func TestSetBiosConfiguration_ApplyTimeRejectedWithoutFallbackTrigger(t *testing
 	err = client.SetBiosConfiguration(ctx, map[string]string{"BootModeSelect": "Legacy"})
 	assert.ErrorContains(t, err, "PropertyValueNotInList")
 }
+
+// TestSetBiosConfiguration_WritesAttributeAlreadyMatchingAppliedState guards the property that
+// every requested attribute reaches the PATCH even when its value already equals what the
+// resource currently reports.
+//
+// BIOS attribute writes are staged and only take effect on the next reset, so a caller that
+// stages a change and then revises it before that reset is necessarily asking to write a value
+// equal to the still-applied one. Diffing requested attributes against applied state - which is
+// what gofish's Bios.UpdateBiosAttributesApplyAt does - turns that into a no-op that reports
+// success, leaving the superseded value staged to commit at the reset.
+//
+// Here BootModeSelect is already "UEFI" as applied, while "Legacy" sits staged from a previous
+// call; writing "UEFI" back has to actually be sent, or the stale "Legacy" wins.
+func TestSetBiosConfiguration_WritesAttributeAlreadyMatchingAppliedState(t *testing.T) {
+	var patchBodies []string
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/redfish/v1/", endpointFunc(t, "/dell/serviceroot.json"))
+	mux.HandleFunc("/redfish/v1/Systems", endpointFunc(t, "/dell/systems.json"))
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1", endpointFunc(t, "/dell/system.embedded.1.json"))
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/Bios", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			_, _ = w.Write([]byte(`{
+				"@odata.type": "#Bios.v1_2_3.Bios",
+				"@odata.id": "/redfish/v1/Systems/System.Embedded.1/Bios",
+				"Id": "Bios",
+				"Name": "BIOS Configuration",
+				"AttributeRegistry": "BiosAttributeRegistryU32.v1_0_0",
+				"Attributes": {"BootModeSelect": "UEFI"},
+				"@Redfish.Settings": {
+					"SettingsObject": {"@odata.id": "/redfish/v1/Systems/System.Embedded.1/Bios/Settings"},
+					"SupportedApplyTimes": ["OnReset"]
+				}
+			}`))
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
+	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/Bios/Settings", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			// A previous, not-yet-committed call staged the value the caller is now revising.
+			_, _ = w.Write([]byte(`{"Attributes": {"BootModeSelect": "Legacy"}}`))
+		case http.MethodPatch:
+			body, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			patchBodies = append(patchBodies, string(body))
+			w.WriteHeader(http.StatusNoContent)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
+
+	server := httptest.NewTLSServer(mux)
+	defer server.Close()
+
+	parsedURL, err := url.Parse(server.URL)
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "", WithBasicAuthEnabled(true))
+	require.NoError(t, client.Open(ctx))
+	defer client.Close(ctx)
+
+	require.NoError(t, client.SetBiosConfiguration(ctx, map[string]string{"BootModeSelect": "UEFI"}))
+
+	require.Len(t, patchBodies, 1, "expected the write to be sent, not diffed away against applied state")
+	assert.Contains(t, patchBodies[0], `"BootModeSelect":"UEFI"`)
+}

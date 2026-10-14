@@ -1,0 +1,12 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#SecureBootDatabaseCollection.SecureBootDatabaseCollection",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/SecureBoot/SecureBootDatabases",
+    "@odata.type": "#SecureBootDatabaseCollection.SecureBootDatabaseCollection",
+    "Name": "UEFI Secure Boot Database Collection",
+    "Members@odata.count": 1,
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/SecureBoot/SecureBootDatabases/db"
+        }
+    ]
+}

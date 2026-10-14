@@ -10,6 +10,36 @@ import (
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
+// ResetSecureBootKeysType identifies the type of Secure Boot key reset to perform.
+type ResetSecureBootKeysType string
+
+// ResetSecureBootKeysType constants enumerate the supported reset types for the whole Secure Boot subsystem.
+const (
+	ResetSecureBootKeysTypeResetAllKeysToDefault ResetSecureBootKeysType = "ResetAllKeysToDefault"
+	ResetSecureBootKeysTypeDeleteAllKeys         ResetSecureBootKeysType = "DeleteAllKeys"
+	ResetSecureBootKeysTypeDeletePK              ResetSecureBootKeysType = "DeletePK"
+)
+
+// ResetSecureBootDatabaseKeysType identifies the type of per-database Secure Boot key reset to perform.
+type ResetSecureBootDatabaseKeysType string
+
+// ResetSecureBootDatabaseKeysType constants enumerate the supported reset types for a single Secure Boot database.
+const (
+	ResetSecureBootDatabaseKeysTypeResetAllKeysToDefault ResetSecureBootDatabaseKeysType = "ResetAllKeysToDefault"
+	ResetSecureBootDatabaseKeysTypeDeleteAllKeys         ResetSecureBootDatabaseKeysType = "DeleteAllKeys"
+)
+
+// SecureBootDatabase identifies a UEFI Secure Boot key database.
+type SecureBootDatabase string
+
+// SecureBootDatabase constants enumerate the supported Secure Boot key databases.
+const (
+	SecureBootDatabaseDB  SecureBootDatabase = "db"
+	SecureBootDatabaseKEK SecureBootDatabase = "KEK"
+	SecureBootDatabasePK  SecureBootDatabase = "PK"
+	SecureBootDatabaseDBX SecureBootDatabase = "dbx"
+)
+
 // SecureBootStateGetter provides retrieval of whether UEFI Secure Boot is enabled.
 type SecureBootStateGetter interface {
 	GetSecureBoot(ctx context.Context) (enabled bool, err error)
@@ -32,12 +62,61 @@ type secureBootSetterProvider struct {
 
 // SecureBootKeysResetter provides resetting the UEFI Secure Boot key databases.
 type SecureBootKeysResetter interface {
-	ResetSecureBootKeys(ctx context.Context, resetType string) (err error)
+	ResetSecureBootKeys(ctx context.Context, resetType ResetSecureBootKeysType) (err error)
 }
 
 type secureBootKeysResetterProvider struct {
 	name string
 	SecureBootKeysResetter
+}
+
+// SecureBootDatabaseKeysResetter provides resetting a single UEFI Secure Boot key
+// database (e.g. "db", "KEK"), leaving every other database - including PK -
+// untouched.
+type SecureBootDatabaseKeysResetter interface {
+	ResetSecureBootDatabaseKeys(ctx context.Context, database SecureBootDatabase, resetType ResetSecureBootDatabaseKeysType) (err error)
+}
+
+type secureBootDatabaseKeysResetterProvider struct {
+	name string
+	SecureBootDatabaseKeysResetter
+}
+
+// SecureBootCertificateImporter provides enrolling a certificate into a single
+// UEFI Secure Boot key database (e.g. "db", "KEK") without disturbing any
+// certificate already present.
+type SecureBootCertificateImporter interface {
+	ImportSecureBootCertificate(ctx context.Context, database SecureBootDatabase, certificatePEM string) (err error)
+}
+
+type secureBootCertificateImporterProvider struct {
+	name string
+	SecureBootCertificateImporter
+}
+
+// CustomSecureBootKeysAllower controls whether the platform will accept
+// custom UEFI Secure Boot keys, as opposed to using only the key set the
+// firmware shipped with. Vendors expose this differently (a BIOS attribute on
+// some platforms, a setup-menu-only setting on others, and not at all on
+// platforms that never gate enrollment).
+//
+// Implementations MUST NOT alter the contents of any Secure Boot key database
+// as a side effect. Callers rely on this to sequence a key-store reset and
+// this call independently. A platform whose equivalent setting is coupled to
+// key-store initialization cannot satisfy this contract and MUST NOT
+// implement this interface.
+//
+// Implementations MUST be idempotent.
+//
+// rebootRequired reports that the change is staged and will not be in effect
+// until the host has been power cycled.
+type CustomSecureBootKeysAllower interface {
+	AllowCustomSecureBootKeys(ctx context.Context, enable bool) (rebootRequired bool, err error)
+}
+
+type customSecureBootKeysAllowerProvider struct {
+	name string
+	CustomSecureBootKeysAllower
 }
 
 func secureBootState(ctx context.Context, generic []secureBootStateGetterProvider) (enabled bool, metadata Metadata, err error) {
@@ -92,7 +171,7 @@ Loop:
 	return metadata, multierror.Append(err, errors.New("failure to set secure boot state"))
 }
 
-func resetSecureBootKeys(ctx context.Context, generic []secureBootKeysResetterProvider, resetType string) (metadata Metadata, err error) {
+func resetSecureBootKeys(ctx context.Context, generic []secureBootKeysResetterProvider, resetType ResetSecureBootKeysType) (metadata Metadata, err error) {
 	metadata = newMetadata()
 Loop:
 	for _, elem := range generic {
@@ -116,6 +195,84 @@ Loop:
 	}
 
 	return metadata, multierror.Append(err, errors.New("failure to reset secure boot keys"))
+}
+
+func resetSecureBootDatabaseKeys(ctx context.Context, generic []secureBootDatabaseKeysResetterProvider, database SecureBootDatabase, resetType ResetSecureBootDatabaseKeysType) (metadata Metadata, err error) {
+	metadata = newMetadata()
+Loop:
+	for _, elem := range generic {
+		if elem.SecureBootDatabaseKeysResetter == nil {
+			continue
+		}
+		select {
+		case <-ctx.Done():
+			err = multierror.Append(err, ctx.Err())
+			break Loop
+		default:
+			metadata.ProvidersAttempted = append(metadata.ProvidersAttempted, elem.name)
+			vErr := elem.ResetSecureBootDatabaseKeys(ctx, database, resetType)
+			if vErr != nil {
+				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
+				continue
+			}
+			metadata.SuccessfulProvider = elem.name
+			return metadata, nil
+		}
+	}
+
+	return metadata, multierror.Append(err, errors.New("failure to reset secure boot database keys"))
+}
+
+func importSecureBootCertificate(ctx context.Context, generic []secureBootCertificateImporterProvider, database SecureBootDatabase, certificatePEM string) (metadata Metadata, err error) {
+	metadata = newMetadata()
+Loop:
+	for _, elem := range generic {
+		if elem.SecureBootCertificateImporter == nil {
+			continue
+		}
+		select {
+		case <-ctx.Done():
+			err = multierror.Append(err, ctx.Err())
+			break Loop
+		default:
+			metadata.ProvidersAttempted = append(metadata.ProvidersAttempted, elem.name)
+			vErr := elem.ImportSecureBootCertificate(ctx, database, certificatePEM)
+			if vErr != nil {
+				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
+				continue
+			}
+			metadata.SuccessfulProvider = elem.name
+			return metadata, nil
+		}
+	}
+
+	return metadata, multierror.Append(err, errors.New("failure to import secure boot certificate"))
+}
+
+func allowCustomSecureBootKeys(ctx context.Context, generic []customSecureBootKeysAllowerProvider, enable bool) (rebootRequired bool, metadata Metadata, err error) {
+	metadata = newMetadata()
+Loop:
+	for _, elem := range generic {
+		if elem.CustomSecureBootKeysAllower == nil {
+			continue
+		}
+		select {
+		case <-ctx.Done():
+			err = multierror.Append(err, ctx.Err())
+			break Loop
+		default:
+			metadata.ProvidersAttempted = append(metadata.ProvidersAttempted, elem.name)
+			rebootRequired, vErr := elem.AllowCustomSecureBootKeys(ctx, enable)
+			if vErr != nil {
+				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
+				continue
+			}
+			metadata.SuccessfulProvider = elem.name
+			return rebootRequired, metadata, nil
+		}
+	}
+
+	return rebootRequired, metadata, multierror.Append(err, errors.New("failure to set secure boot key management"))
 }
 
 // GetSecureBootStateFromInterfaces returns whether UEFI Secure Boot is enabled using
@@ -182,7 +339,7 @@ func SetSecureBootFromInterfaces(ctx context.Context, generic []interface{}, ena
 
 // ResetSecureBootKeysFromInterfaces resets the UEFI Secure Boot key databases using
 // the first successful SecureBootKeysResetter implementation found in generic.
-func ResetSecureBootKeysFromInterfaces(ctx context.Context, generic []interface{}, resetType string) (metadata Metadata, err error) {
+func ResetSecureBootKeysFromInterfaces(ctx context.Context, generic []interface{}, resetType ResetSecureBootKeysType) (metadata Metadata, err error) {
 	implementations := make([]secureBootKeysResetterProvider, 0)
 	for _, elem := range generic {
 		if elem == nil {
@@ -209,4 +366,100 @@ func ResetSecureBootKeysFromInterfaces(ctx context.Context, generic []interface{
 	}
 
 	return resetSecureBootKeys(ctx, implementations, resetType)
+}
+
+// ResetSecureBootDatabaseKeysFromInterfaces resets a single UEFI Secure Boot key
+// database using the first successful SecureBootDatabaseKeysResetter
+// implementation found in generic.
+func ResetSecureBootDatabaseKeysFromInterfaces(ctx context.Context, generic []interface{}, database SecureBootDatabase, resetType ResetSecureBootDatabaseKeysType) (metadata Metadata, err error) {
+	implementations := make([]secureBootDatabaseKeysResetterProvider, 0)
+	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
+		temp := secureBootDatabaseKeysResetterProvider{name: getProviderName(elem)}
+		switch p := elem.(type) {
+		case SecureBootDatabaseKeysResetter:
+			temp.SecureBootDatabaseKeysResetter = p
+			implementations = append(implementations, temp)
+		default:
+			e := fmt.Sprintf("not a SecureBootDatabaseKeysResetter implementation: %T", p)
+			err = multierror.Append(err, errors.New(e))
+		}
+	}
+	if len(implementations) == 0 {
+		return metadata, multierror.Append(
+			err,
+			errors.Wrap(
+				bmclibErrs.ErrProviderImplementation,
+				("no SecureBootDatabaseKeysResetter implementations found"),
+			),
+		)
+	}
+
+	return resetSecureBootDatabaseKeys(ctx, implementations, database, resetType)
+}
+
+// ImportSecureBootCertificateFromInterfaces enrolls a certificate into a single
+// UEFI Secure Boot key database using the first successful
+// SecureBootCertificateImporter implementation found in generic.
+func ImportSecureBootCertificateFromInterfaces(ctx context.Context, generic []interface{}, database SecureBootDatabase, certificatePEM string) (metadata Metadata, err error) {
+	implementations := make([]secureBootCertificateImporterProvider, 0)
+	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
+		temp := secureBootCertificateImporterProvider{name: getProviderName(elem)}
+		switch p := elem.(type) {
+		case SecureBootCertificateImporter:
+			temp.SecureBootCertificateImporter = p
+			implementations = append(implementations, temp)
+		default:
+			e := fmt.Sprintf("not a SecureBootCertificateImporter implementation: %T", p)
+			err = multierror.Append(err, errors.New(e))
+		}
+	}
+	if len(implementations) == 0 {
+		return metadata, multierror.Append(
+			err,
+			errors.Wrap(
+				bmclibErrs.ErrProviderImplementation,
+				("no SecureBootCertificateImporter implementations found"),
+			),
+		)
+	}
+
+	return importSecureBootCertificate(ctx, implementations, database, certificatePEM)
+}
+
+// AllowCustomSecureBootKeysFromInterfaces enables/disables acceptance of custom UEFI
+// Secure Boot keys using the first successful CustomSecureBootKeysAllower
+// implementation found in generic.
+func AllowCustomSecureBootKeysFromInterfaces(ctx context.Context, generic []interface{}, enable bool) (rebootRequired bool, metadata Metadata, err error) {
+	implementations := make([]customSecureBootKeysAllowerProvider, 0)
+	for _, elem := range generic {
+		if elem == nil {
+			continue
+		}
+		temp := customSecureBootKeysAllowerProvider{name: getProviderName(elem)}
+		switch p := elem.(type) {
+		case CustomSecureBootKeysAllower:
+			temp.CustomSecureBootKeysAllower = p
+			implementations = append(implementations, temp)
+		default:
+			e := fmt.Sprintf("not a CustomSecureBootKeysAllower implementation: %T", p)
+			err = multierror.Append(err, errors.New(e))
+		}
+	}
+	if len(implementations) == 0 {
+		return rebootRequired, metadata, multierror.Append(
+			err,
+			errors.Wrap(
+				bmclibErrs.ErrProviderImplementation,
+				("no CustomSecureBootKeysAllower implementations found"),
+			),
+		)
+	}
+
+	return allowCustomSecureBootKeys(ctx, implementations, enable)
 }
