@@ -31,6 +31,62 @@ func (c *Client) UpdateService() (*schemas.UpdateService, error) {
 	return c.client.Service.UpdateService()
 }
 
+// Systems returns the collection of ComputerSystem objects from the service
+// root. Providers use this to reach system-scoped resources (SecureBoot,
+// Storage, ...) via gofish rather than hard-coding URIs.
+func (c *Client) Systems() ([]*schemas.ComputerSystem, error) {
+	if err := c.SessionActive(); err != nil {
+		return nil, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
+	}
+
+	return c.client.Service.Systems()
+}
+
+// CertificateService gets the Redfish CertificateService.
+func (c *Client) CertificateService() (*schemas.CertificateService, error) {
+	if err := c.SessionActive(); err != nil {
+		return nil, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
+	}
+
+	return c.client.Service.CertificateService()
+}
+
+// JobService gets the Redfish JobService.
+func (c *Client) JobService() (*schemas.JobService, error) {
+	if err := c.SessionActive(); err != nil {
+		return nil, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
+	}
+
+	return c.client.Service.JobService()
+}
+
+// EventService gets the Redfish EventService.
+func (c *Client) EventService() (*schemas.EventService, error) {
+	if err := c.SessionActive(); err != nil {
+		return nil, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
+	}
+
+	return c.client.Service.EventService()
+}
+
+// LicenseService gets the Redfish LicenseService.
+func (c *Client) LicenseService() (*schemas.LicenseService, error) {
+	if err := c.SessionActive(); err != nil {
+		return nil, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
+	}
+
+	return c.client.Service.LicenseService()
+}
+
+// TelemetryService gets the Redfish TelemetryService.
+func (c *Client) TelemetryService() (*schemas.TelemetryService, error) {
+	if err := c.SessionActive(); err != nil {
+		return nil, errors.Wrap(bmclibErrs.ErrNotAuthenticated, err.Error())
+	}
+
+	return c.client.Service.TelemetryService()
+}
+
 // ServiceRoot returns the gofish service root ("/redfish/v1/"). It exposes the
 // service identity (Vendor, Product, RedfishVersion, ...) and resolves the
 // linked resource collections (Systems, Managers, UpdateService, ...) via

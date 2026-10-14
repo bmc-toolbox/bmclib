@@ -103,4 +103,58 @@ const (
 
 	// FeatureAllowCustomSecureBootKeys means an implementation that can enable/disable acceptance of custom UEFI Secure Boot keys
 	FeatureAllowCustomSecureBootKeys registrar.Feature = "allowcustomsecurebootkeys"
+
+	// FeatureThermalRead means an implementation can read thermal sensors (temperatures, fans)
+	FeatureThermalRead registrar.Feature = "thermalread"
+
+	// FeaturePowerRead means an implementation can read power metrics (consumed watts, power supplies)
+	FeaturePowerRead registrar.Feature = "powerread"
+
+	// FeaturePowerCap means an implementation can set a chassis power limit (power capping)
+	FeaturePowerCap registrar.Feature = "powercap"
+
+	// FeatureVolumeRead means an implementation can read storage controllers and volumes
+	FeatureVolumeRead registrar.Feature = "volumeread"
+
+	// FeatureVolumeManagement means an implementation can create/initialize/update/delete storage volumes
+	FeatureVolumeManagement registrar.Feature = "volumemanagement"
+
+	// FeatureLicenseManagement means an implementation can read/install/delete BMC licenses
+	FeatureLicenseManagement registrar.Feature = "licensemanagement"
+
+	// FeatureSecureKeyLifecycle means an implementation can read/configure the Secure Key Lifecycle service
+	FeatureSecureKeyLifecycle registrar.Feature = "securekeylifecycle"
+
+	// FeatureNetworkInterfaceRead means an implementation can read BMC/server ethernet interfaces
+	FeatureNetworkInterfaceRead registrar.Feature = "networkinterfaceread"
+
+	// FeatureNetworkInterfaceSet means an implementation can configure BMC ethernet/host interfaces
+	FeatureNetworkInterfaceSet registrar.Feature = "networkinterfaceset"
+
+	// FeatureNetworkProtocolRead means an implementation can read manager network protocols
+	FeatureNetworkProtocolRead registrar.Feature = "networkprotocolread"
+
+	// FeatureNetworkProtocolSet means an implementation can configure manager network protocols
+	FeatureNetworkProtocolSet registrar.Feature = "networkprotocolset"
+
+	// FeatureSerialRead means an implementation can read BMC serial interfaces
+	FeatureSerialRead registrar.Feature = "serialread"
+
+	// FeatureSerialSet means an implementation can configure BMC serial interfaces
+	FeatureSerialSet registrar.Feature = "serialset"
+
+	// FeatureEventSubscription means an implementation can read the event service and manage event subscriptions
+	FeatureEventSubscription registrar.Feature = "eventsubscription"
+
+	// FeatureTelemetry means an implementation can read telemetry metric reports and definitions
+	FeatureTelemetry registrar.Feature = "telemetry"
+
+	// FeatureJobManagement means an implementation can read jobs and update job schedules
+	FeatureJobManagement registrar.Feature = "jobmanagement"
+
+	// FeatureCertificateManagement means an implementation can manage BMC certificates
+	FeatureCertificateManagement registrar.Feature = "certificatemanagement"
+
+	// FeatureSNMP means an implementation can read and configure SNMP traps
+	FeatureSNMP registrar.Feature = "snmp"
 )

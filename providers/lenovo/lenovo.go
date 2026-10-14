@@ -82,8 +82,13 @@ var Features = registrar.Features{
 	providers.FeatureResetSecureBootKeys,
 	providers.FeatureResetSecureBootDatabaseKeys,
 	providers.FeatureImportSecureBootCertificate,
+	providers.FeatureThermalRead,
+	providers.FeaturePowerRead,
+	providers.FeaturePowerCap,
 	// inventory-storage
 	providers.FeatureInventoryRead,
+	providers.FeatureVolumeRead,
+	providers.FeatureVolumeManagement,
 	// firmware-tasks
 	providers.FeatureFirmwareInstall,
 	providers.FeatureFirmwareInstallStatus,
@@ -106,6 +111,22 @@ var Features = registrar.Features{
 	providers.FeatureClearSystemEventLog,
 	// bmc-management
 	providers.FeatureBmcReset,
+	providers.FeatureLicenseManagement,
+	providers.FeatureSecureKeyLifecycle,
+	// network-serial
+	providers.FeatureNetworkInterfaceRead,
+	providers.FeatureNetworkInterfaceSet,
+	providers.FeatureNetworkProtocolRead,
+	providers.FeatureNetworkProtocolSet,
+	providers.FeatureSerialRead,
+	providers.FeatureSerialSet,
+	// events-telemetry
+	providers.FeatureEventSubscription,
+	providers.FeatureTelemetry,
+	// jobs-certs-snmp
+	providers.FeatureJobManagement,
+	providers.FeatureCertificateManagement,
+	providers.FeatureSNMP,
 }
 
 // Conn is a connection to a Lenovo XCC BMC.
