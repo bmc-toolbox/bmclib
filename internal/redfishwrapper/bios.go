@@ -65,15 +65,22 @@ func (c *Client) GetBiosConfiguration(ctx context.Context) (biosConfig map[strin
 
 // SetBiosConfiguration applies the given BIOS configuration attributes, to take effect on the next reset.
 func (c *Client) SetBiosConfiguration(ctx context.Context, biosConfig map[string]string) (err error) {
+	attrs := make(schemas.SettingsAttributes, len(biosConfig))
+	for attr, value := range biosConfig {
+		attrs[attr] = value
+	}
+
+	return c.ApplyBiosAttributes(ctx, attrs)
+}
+
+// ApplyBiosAttributes applies the given BIOS attributes, to take effect on the next reset. It is
+// SetBiosConfiguration for callers that hold attribute values in their native JSON type (bool,
+// number, string) rather than as strings, such as a caller resubmitting attributes it read back
+// from the BMC, where stringifying a value could be rejected by a strict attribute registry.
+func (c *Client) ApplyBiosAttributes(ctx context.Context, attrs schemas.SettingsAttributes) error {
 	sys, err := c.System()
 	if err != nil {
 		return err
-	}
-
-	settingsAttributes := make(schemas.SettingsAttributes)
-
-	for attr, value := range biosConfig {
-		settingsAttributes[attr] = value
 	}
 
 	if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
@@ -86,14 +93,14 @@ func (c *Client) SetBiosConfiguration(ctx context.Context, biosConfig map[string
 	}
 
 	// TODO(jwb) We should handle passing different apply times here
-	err = bios.UpdateBiosAttributesApplyAt(settingsAttributes, schemas.OnResetSettingsApplyTime)
+	err = bios.UpdateBiosAttributesApplyAt(attrs, schemas.OnResetSettingsApplyTime)
 	if err != nil && rejectsSettingsApplyTime(err) {
 		// This BMC's Bios resource doesn't declare @Redfish.Settings.SupportedApplyTimes
 		// at all and rejects the @Redfish.SettingsApplyTime property outright, rather than
 		// ignoring it. Retry without an apply-time hint - the settings still go through the
 		// resource's separate Settings URI (@Redfish.Settings.SettingsObject), which by
 		// Redfish convention means they're staged rather than applied immediately.
-		return bios.UpdateBiosAttributes(settingsAttributes)
+		return bios.UpdateBiosAttributes(attrs)
 	}
 	return err
 }
