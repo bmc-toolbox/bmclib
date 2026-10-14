@@ -10,8 +10,8 @@ import (
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
-// PowerMetrics holds the chassis power readings and the configured power cap.
-type PowerMetrics struct {
+// ChassisPowerMetrics holds the chassis power readings and the configured power cap.
+type ChassisPowerMetrics struct {
 	// ConsumedWatts is the power currently drawn by the chassis.
 	ConsumedWatts float64
 	// CapacityWatts is the total power capacity available to the chassis.
@@ -20,32 +20,32 @@ type PowerMetrics struct {
 	LimitInWatts *float64
 }
 
-// PowerMetricsGetter provides retrieval of the chassis power readings and power cap.
-type PowerMetricsGetter interface {
-	GetPowerMetrics(ctx context.Context) (metrics PowerMetrics, err error)
+// ChassisPowerMetricsGetter provides retrieval of the chassis power readings and power cap.
+type ChassisPowerMetricsGetter interface {
+	GetChassisPowerMetrics(ctx context.Context) (metrics ChassisPowerMetrics, err error)
 }
 
-type powerMetricsGetterProvider struct {
+type chassisPowerMetricsGetterProvider struct {
 	name string
-	PowerMetricsGetter
+	ChassisPowerMetricsGetter
 }
 
-// PowerCapSetter provides setting the chassis power cap. A nil limitWatts clears
+// ChassisPowerCapSetter provides setting the chassis power cap. A nil limitWatts clears
 // the cap.
-type PowerCapSetter interface {
-	SetPowerCap(ctx context.Context, limitWatts *float64) (err error)
+type ChassisPowerCapSetter interface {
+	SetChassisPowerCap(ctx context.Context, limitWatts *float64) (err error)
 }
 
-type powerCapSetterProvider struct {
+type chassisPowerCapSetterProvider struct {
 	name string
-	PowerCapSetter
+	ChassisPowerCapSetter
 }
 
-func getPowerMetrics(ctx context.Context, generic []powerMetricsGetterProvider) (metrics PowerMetrics, metadata Metadata, err error) {
+func getChassisPowerMetrics(ctx context.Context, generic []chassisPowerMetricsGetterProvider) (metrics ChassisPowerMetrics, metadata Metadata, err error) {
 	metadata = newMetadata()
 Loop:
 	for _, elem := range generic {
-		if elem.PowerMetricsGetter == nil {
+		if elem.ChassisPowerMetricsGetter == nil {
 			continue
 		}
 		select {
@@ -54,7 +54,7 @@ Loop:
 			break Loop
 		default:
 			metadata.ProvidersAttempted = append(metadata.ProvidersAttempted, elem.name)
-			metrics, vErr := elem.GetPowerMetrics(ctx)
+			metrics, vErr := elem.GetChassisPowerMetrics(ctx)
 			if vErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				continue
@@ -64,14 +64,14 @@ Loop:
 		}
 	}
 
-	return metrics, metadata, multierror.Append(err, errors.New("failure to get power metrics"))
+	return metrics, metadata, multierror.Append(err, errors.New("failure to get chassis power metrics"))
 }
 
-func setPowerCap(ctx context.Context, generic []powerCapSetterProvider, limitWatts *float64) (metadata Metadata, err error) {
+func setChassisPowerCap(ctx context.Context, generic []chassisPowerCapSetterProvider, limitWatts *float64) (metadata Metadata, err error) {
 	metadata = newMetadata()
 Loop:
 	for _, elem := range generic {
-		if elem.PowerCapSetter == nil {
+		if elem.ChassisPowerCapSetter == nil {
 			continue
 		}
 		select {
@@ -80,7 +80,7 @@ Loop:
 			break Loop
 		default:
 			metadata.ProvidersAttempted = append(metadata.ProvidersAttempted, elem.name)
-			vErr := elem.SetPowerCap(ctx, limitWatts)
+			vErr := elem.SetChassisPowerCap(ctx, limitWatts)
 			if vErr != nil {
 				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
 				continue
@@ -90,24 +90,24 @@ Loop:
 		}
 	}
 
-	return metadata, multierror.Append(err, errors.New("failure to set power cap"))
+	return metadata, multierror.Append(err, errors.New("failure to set chassis power cap"))
 }
 
-// GetPowerMetricsFromInterfaces identifies implementations of the PowerMetricsGetter
-// interface and passes them to the getPowerMetrics() wrapper.
-func GetPowerMetricsFromInterfaces(ctx context.Context, generic []interface{}) (metrics PowerMetrics, metadata Metadata, err error) {
-	implementations := make([]powerMetricsGetterProvider, 0)
+// GetChassisPowerMetricsFromInterfaces identifies implementations of the ChassisPowerMetricsGetter
+// interface and passes them to the getChassisPowerMetrics() wrapper.
+func GetChassisPowerMetricsFromInterfaces(ctx context.Context, generic []interface{}) (metrics ChassisPowerMetrics, metadata Metadata, err error) {
+	implementations := make([]chassisPowerMetricsGetterProvider, 0)
 	for _, elem := range generic {
 		if elem == nil {
 			continue
 		}
-		temp := powerMetricsGetterProvider{name: getProviderName(elem)}
+		temp := chassisPowerMetricsGetterProvider{name: getProviderName(elem)}
 		switch p := elem.(type) {
-		case PowerMetricsGetter:
-			temp.PowerMetricsGetter = p
+		case ChassisPowerMetricsGetter:
+			temp.ChassisPowerMetricsGetter = p
 			implementations = append(implementations, temp)
 		default:
-			e := fmt.Sprintf("not a PowerMetricsGetter implementation: %T", p)
+			e := fmt.Sprintf("not a ChassisPowerMetricsGetter implementation: %T", p)
 			err = multierror.Append(err, errors.New(e))
 		}
 	}
@@ -116,29 +116,29 @@ func GetPowerMetricsFromInterfaces(ctx context.Context, generic []interface{}) (
 			err,
 			errors.Wrap(
 				bmclibErrs.ErrProviderImplementation,
-				"no PowerMetricsGetter implementations found",
+				"no ChassisPowerMetricsGetter implementations found",
 			),
 		)
 	}
 
-	return getPowerMetrics(ctx, implementations)
+	return getChassisPowerMetrics(ctx, implementations)
 }
 
-// SetPowerCapFromInterfaces identifies implementations of the PowerCapSetter
-// interface and passes them to the setPowerCap() wrapper.
-func SetPowerCapFromInterfaces(ctx context.Context, generic []interface{}, limitWatts *float64) (metadata Metadata, err error) {
-	implementations := make([]powerCapSetterProvider, 0)
+// SetChassisPowerCapFromInterfaces identifies implementations of the ChassisPowerCapSetter
+// interface and passes them to the setChassisPowerCap() wrapper.
+func SetChassisPowerCapFromInterfaces(ctx context.Context, generic []interface{}, limitWatts *float64) (metadata Metadata, err error) {
+	implementations := make([]chassisPowerCapSetterProvider, 0)
 	for _, elem := range generic {
 		if elem == nil {
 			continue
 		}
-		temp := powerCapSetterProvider{name: getProviderName(elem)}
+		temp := chassisPowerCapSetterProvider{name: getProviderName(elem)}
 		switch p := elem.(type) {
-		case PowerCapSetter:
-			temp.PowerCapSetter = p
+		case ChassisPowerCapSetter:
+			temp.ChassisPowerCapSetter = p
 			implementations = append(implementations, temp)
 		default:
-			e := fmt.Sprintf("not a PowerCapSetter implementation: %T", p)
+			e := fmt.Sprintf("not a ChassisPowerCapSetter implementation: %T", p)
 			err = multierror.Append(err, errors.New(e))
 		}
 	}
@@ -147,10 +147,10 @@ func SetPowerCapFromInterfaces(ctx context.Context, generic []interface{}, limit
 			err,
 			errors.Wrap(
 				bmclibErrs.ErrProviderImplementation,
-				"no PowerCapSetter implementations found",
+				"no ChassisPowerCapSetter implementations found",
 			),
 		)
 	}
 
-	return setPowerCap(ctx, implementations, limitWatts)
+	return setChassisPowerCap(ctx, implementations, limitWatts)
 }

@@ -240,13 +240,13 @@ func TestResetSecureBootKeys(t *testing.T) {
 }
 
 // Requirement: Power metrics read.
-func TestGetPowerMetrics(t *testing.T) {
+func TestGetChassisPowerMetrics(t *testing.T) {
 	ts := newTestServer(t, testServerOpts{})
 	c := ts.openedClient(t)
 
-	metrics, err := c.GetPowerMetrics(context.Background())
+	metrics, err := c.GetChassisPowerMetrics(context.Background())
 	if err != nil {
-		t.Fatalf("GetPowerMetrics: %v", err)
+		t.Fatalf("GetChassisPowerMetrics: %v", err)
 	}
 	// The fixture reports 287 W consumed, 1800 W capacity and no cap.
 	if metrics.ConsumedWatts != 287 {
@@ -261,20 +261,20 @@ func TestGetPowerMetrics(t *testing.T) {
 }
 
 // Requirement: Power cap set and clear.
-func TestSetPowerCap(t *testing.T) {
+func TestSetChassisPowerCap(t *testing.T) {
 	ts := newTestServer(t, testServerOpts{})
 	c := ts.openedClient(t)
 
 	limit := 1200.0
-	if err := c.SetPowerCap(context.Background(), &limit); err != nil {
-		t.Fatalf("SetPowerCap: %v", err)
+	if err := c.SetChassisPowerCap(context.Background(), &limit); err != nil {
+		t.Fatalf("SetChassisPowerCap: %v", err)
 	}
 	if !ts.didPatchPower() {
 		t.Fatal("expected the Power resource to be PATCHed")
 	}
 
 	// A nil limit clears the cap and must PATCH successfully as well.
-	if err := c.SetPowerCap(context.Background(), nil); err != nil {
-		t.Fatalf("SetPowerCap(nil): %v", err)
+	if err := c.SetChassisPowerCap(context.Background(), nil); err != nil {
+		t.Fatalf("SetChassisPowerCap(nil): %v", err)
 	}
 }

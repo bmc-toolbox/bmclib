@@ -9,11 +9,11 @@ import (
 )
 
 type mockPowerMetricsGetter struct {
-	metrics PowerMetrics
+	metrics ChassisPowerMetrics
 	err     error
 }
 
-func (m *mockPowerMetricsGetter) GetPowerMetrics(ctx context.Context) (PowerMetrics, error) {
+func (m *mockPowerMetricsGetter) GetChassisPowerMetrics(ctx context.Context) (ChassisPowerMetrics, error) {
 	return m.metrics, m.err
 }
 
@@ -25,7 +25,7 @@ type mockPowerCapSetter struct {
 	err error
 }
 
-func (m *mockPowerCapSetter) SetPowerCap(ctx context.Context, _ *float64) error {
+func (m *mockPowerCapSetter) SetChassisPowerCap(ctx context.Context, _ *float64) error {
 	return m.err
 }
 
@@ -33,28 +33,28 @@ func (m *mockPowerCapSetter) Name() string {
 	return "mock"
 }
 
-func TestGetPowerMetricsFromInterfaces(t *testing.T) {
+func TestGetChassisPowerMetricsFromInterfaces(t *testing.T) {
 	limit := 800.0
 	testCases := []struct {
 		name            string
 		generic         []interface{}
 		errMsg          string
-		expectedMetrics PowerMetrics
+		expectedMetrics ChassisPowerMetrics
 	}{
 		{
 			name:            "success",
-			generic:         []interface{}{&mockPowerMetricsGetter{metrics: PowerMetrics{ConsumedWatts: 234, CapacityWatts: 1400, LimitInWatts: &limit}}},
-			expectedMetrics: PowerMetrics{ConsumedWatts: 234, CapacityWatts: 1400, LimitInWatts: &limit},
+			generic:         []interface{}{&mockPowerMetricsGetter{metrics: ChassisPowerMetrics{ConsumedWatts: 234, CapacityWatts: 1400, LimitInWatts: &limit}}},
+			expectedMetrics: ChassisPowerMetrics{ConsumedWatts: 234, CapacityWatts: 1400, LimitInWatts: &limit},
 		},
 		{
 			name:    "not an implementation",
 			generic: []interface{}{"foo"},
-			errMsg:  "no PowerMetricsGetter implementations found",
+			errMsg:  "no ChassisPowerMetricsGetter implementations found",
 		},
 		{
 			name:    "no implementations",
 			generic: []interface{}{},
-			errMsg:  "no PowerMetricsGetter implementations found",
+			errMsg:  "no ChassisPowerMetricsGetter implementations found",
 		},
 		{
 			name:    "error from getter",
@@ -65,7 +65,7 @@ func TestGetPowerMetricsFromInterfaces(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			metrics, _, err := GetPowerMetricsFromInterfaces(context.Background(), tt.generic)
+			metrics, _, err := GetChassisPowerMetricsFromInterfaces(context.Background(), tt.generic)
 
 			if tt.errMsg == "" {
 				assert.NoError(t, err)
@@ -78,7 +78,7 @@ func TestGetPowerMetricsFromInterfaces(t *testing.T) {
 	}
 }
 
-func TestSetPowerCapFromInterfaces(t *testing.T) {
+func TestSetChassisPowerCapFromInterfaces(t *testing.T) {
 	limit := 800.0
 	testCases := []struct {
 		name    string
@@ -98,12 +98,12 @@ func TestSetPowerCapFromInterfaces(t *testing.T) {
 		{
 			name:    "not an implementation",
 			generic: []interface{}{"foo"},
-			errMsg:  "no PowerCapSetter implementations found",
+			errMsg:  "no ChassisPowerCapSetter implementations found",
 		},
 		{
 			name:    "no implementations",
 			generic: []interface{}{},
-			errMsg:  "no PowerCapSetter implementations found",
+			errMsg:  "no ChassisPowerCapSetter implementations found",
 		},
 		{
 			name:    "error from setter",
@@ -115,7 +115,7 @@ func TestSetPowerCapFromInterfaces(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := SetPowerCapFromInterfaces(context.Background(), tt.generic, tt.limit)
+			_, err := SetChassisPowerCapFromInterfaces(context.Background(), tt.generic, tt.limit)
 
 			if tt.errMsg == "" {
 				assert.NoError(t, err)

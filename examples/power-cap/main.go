@@ -44,8 +44,8 @@ func main() {
 
 	// Filter to providers that support power cap operations
 	client.Registry.Drivers = client.Registry.Supports(
-		providers.FeatureGetPowerMetrics,
-		providers.FeatureSetPowerCap,
+		providers.FeatureGetChassisPowerMetrics,
+		providers.FeatureSetChassisPowerCap,
 	)
 
 	err := client.Open(ctx)
@@ -59,7 +59,7 @@ func main() {
 	switch strings.ToLower(*mode) {
 	case "get":
 		// Read the current power readings and cap
-		metrics, err := client.GetPowerMetrics(ctx)
+		metrics, err := client.GetChassisPowerMetrics(ctx)
 		if err != nil {
 			l.Fatal(err)
 		}
@@ -77,7 +77,7 @@ func main() {
 			l.Fatal("set mode requires a positive -limit in watts")
 		}
 
-		err := client.SetPowerCap(ctx, limit)
+		err := client.SetChassisPowerCap(ctx, limit)
 		if err != nil {
 			l.Fatal(err)
 		}
@@ -86,7 +86,7 @@ func main() {
 
 	case "clear":
 		// Clear the power cap (nil limit disables capping)
-		err := client.SetPowerCap(ctx, nil)
+		err := client.SetChassisPowerCap(ctx, nil)
 		if err != nil {
 			l.Fatal(err)
 		}

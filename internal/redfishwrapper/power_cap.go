@@ -35,9 +35,9 @@ func (c *Client) powerControl(ctx context.Context) (*schemas.Power, error) {
 	return nil, bmclibErrs.ErrPowerControlNotFound
 }
 
-// GetPowerMetrics returns the chassis power readings and the configured power cap
+// GetChassisPowerMetrics returns the chassis power readings and the configured power cap
 // from PowerControl[0] of the first chassis exposing a Power resource.
-func (c *Client) GetPowerMetrics(ctx context.Context) (metrics bmc.PowerMetrics, err error) {
+func (c *Client) GetChassisPowerMetrics(ctx context.Context) (metrics bmc.ChassisPowerMetrics, err error) {
 	power, err := c.powerControl(ctx)
 	if err != nil {
 		return metrics, err
@@ -58,11 +58,11 @@ func (c *Client) GetPowerMetrics(ctx context.Context) (metrics bmc.PowerMetrics,
 	return metrics, nil
 }
 
-// SetPowerCap sets the chassis power cap by PATCHing
+// SetChassisPowerCap sets the chassis power cap by PATCHing
 // PowerControl[0].PowerLimit.LimitInWatts on the Power resource. A nil limitWatts
 // clears the cap (LimitInWatts: null). gofish exposes no Update() on the Power
 // resource, hence the explicit PATCH.
-func (c *Client) SetPowerCap(ctx context.Context, limitWatts *float64) (err error) {
+func (c *Client) SetChassisPowerCap(ctx context.Context, limitWatts *float64) (err error) {
 	power, err := c.powerControl(ctx)
 	if err != nil {
 		return err

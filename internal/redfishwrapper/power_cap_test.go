@@ -64,19 +64,19 @@ func dellPowerHandler(t *testing.T, patches *[]powerPatch) http.HandlerFunc {
 	}
 }
 
-func TestGetPowerMetrics(t *testing.T) {
+func TestGetChassisPowerMetrics(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/redfish/v1/Chassis/System.Embedded.1/Power", endpointFunc(t, "dell/power.json"))
 	client := newDellPowerClient(t, mux)
 
-	metrics, err := client.GetPowerMetrics(context.Background())
+	metrics, err := client.GetChassisPowerMetrics(context.Background())
 	require.NoError(t, err)
 	assert.Equal(t, float64(234), metrics.ConsumedWatts)
 	assert.Equal(t, float64(1400), metrics.CapacityWatts)
 	assert.Nil(t, metrics.LimitInWatts, "fixture reports LimitInWatts null, expected no cap")
 }
 
-func TestSetPowerCap(t *testing.T) {
+func TestSetChassisPowerCap(t *testing.T) {
 	var patches []powerPatch
 
 	mux := http.NewServeMux()
@@ -84,29 +84,29 @@ func TestSetPowerCap(t *testing.T) {
 	client := newDellPowerClient(t, mux)
 
 	limit := 800.0
-	require.NoError(t, client.SetPowerCap(context.Background(), &limit))
+	require.NoError(t, client.SetChassisPowerCap(context.Background(), &limit))
 
-	require.Len(t, patches, 1, "expected SetPowerCap to PATCH the Power resource once")
+	require.Len(t, patches, 1, "expected SetChassisPowerCap to PATCH the Power resource once")
 	require.Len(t, patches[0].PowerControl, 1)
 	require.NotNil(t, patches[0].PowerControl[0].PowerLimit.LimitInWatts)
 	assert.Equal(t, limit, *patches[0].PowerControl[0].PowerLimit.LimitInWatts)
 }
 
-func TestSetPowerCapClear(t *testing.T) {
+func TestSetChassisPowerCapClear(t *testing.T) {
 	var patches []powerPatch
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/redfish/v1/Chassis/System.Embedded.1/Power", dellPowerHandler(t, &patches))
 	client := newDellPowerClient(t, mux)
 
-	require.NoError(t, client.SetPowerCap(context.Background(), nil))
+	require.NoError(t, client.SetChassisPowerCap(context.Background(), nil))
 
-	require.Len(t, patches, 1, "expected SetPowerCap(nil) to PATCH the Power resource once")
+	require.Len(t, patches, 1, "expected SetChassisPowerCap(nil) to PATCH the Power resource once")
 	require.Len(t, patches[0].PowerControl, 1)
 	assert.Nil(t, patches[0].PowerControl[0].PowerLimit.LimitInWatts, "expected LimitInWatts: null to clear the cap")
 }
 
-func TestSetPowerCapRejected(t *testing.T) {
+func TestSetChassisPowerCapRejected(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/redfish/v1/Chassis/System.Embedded.1/Power", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
@@ -122,7 +122,7 @@ func TestSetPowerCapRejected(t *testing.T) {
 	client := newDellPowerClient(t, mux)
 
 	limit := 1.0
-	err := client.SetPowerCap(context.Background(), &limit)
+	err := client.SetChassisPowerCap(context.Background(), &limit)
 	assert.ErrorIs(t, err, bmclibErrs.ErrPowerCapSet)
 	assert.ErrorContains(t, err, "LimitInWatts out of range")
 }
@@ -134,9 +134,9 @@ func TestPowerControlNotFound(t *testing.T) {
 	})
 	client := newDellPowerClient(t, mux)
 
-	_, err := client.GetPowerMetrics(context.Background())
+	_, err := client.GetChassisPowerMetrics(context.Background())
 	assert.ErrorIs(t, err, bmclibErrs.ErrPowerControlNotFound)
 
-	err = client.SetPowerCap(context.Background(), nil)
+	err = client.SetChassisPowerCap(context.Background(), nil)
 	assert.ErrorIs(t, err, bmclibErrs.ErrPowerControlNotFound)
 }
