@@ -26,6 +26,13 @@ const (
 	BootDeviceTypeUSB         BootDeviceType = "usb"
 	BootDeviceTypeUtil        BootDeviceType = "utilities"
 	BootDeviceUefiHTTP        BootDeviceType = "uefi_http"
+	// BootDeviceTypeUSBCDROM is the BMC's virtual (remote) CD/DVD, i.e. the device
+	// that virtual media ISOs are attached to. It maps to IPMI boot device selector
+	// 8 ("force boot from remote CD/DVD") and to the Supermicro Redfish
+	// BootSourceOverrideTarget "UsbCd". It is distinct from BootDeviceTypeCDROM
+	// (selector 5 / Redfish "Cd"), which some BMCs resolve to the host's physical
+	// optical drive only.
+	BootDeviceTypeUSBCDROM BootDeviceType = "usb_cdrom"
 )
 
 // BootDeviceSetter sets the next boot device for a machine
