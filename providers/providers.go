@@ -103,4 +103,10 @@ const (
 
 	// FeatureAllowCustomSecureBootKeys means an implementation that can enable/disable acceptance of custom UEFI Secure Boot keys
 	FeatureAllowCustomSecureBootKeys registrar.Feature = "allowcustomsecurebootkeys"
+
+	// FeatureGetChassisPowerMetrics means an implementation that can read chassis power readings and the configured power cap
+	FeatureGetChassisPowerMetrics registrar.Feature = "getchassispowermetrics"
+
+	// FeatureSetChassisPowerCap means an implementation that can set or clear the chassis power cap
+	FeatureSetChassisPowerCap registrar.Feature = "setchassispowercap"
 )

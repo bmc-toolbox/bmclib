@@ -47,14 +47,18 @@ var Features = registrar.Features{
 	providers.FeatureResetSecureBootKeys,
 	providers.FeatureResetSecureBootDatabaseKeys,
 	providers.FeatureImportSecureBootCertificate,
+	providers.FeatureGetChassisPowerMetrics,
+	providers.FeatureSetChassisPowerCap,
 }
 
-// compile-time assertions that the provider implements the BIOS configuration interfaces.
+// compile-time assertions that the provider implements the BIOS configuration and power cap interfaces.
 var (
-	_ bmc.BiosConfigurationGetter  = (*Conn)(nil)
-	_ bmc.BiosConfigurationSetter  = (*Conn)(nil)
-	_ bmc.HTTPBootURISetter        = (*Conn)(nil)
-	_ bmc.NetworkBootEnabledSetter = (*Conn)(nil)
+	_ bmc.BiosConfigurationGetter   = (*Conn)(nil)
+	_ bmc.BiosConfigurationSetter   = (*Conn)(nil)
+	_ bmc.HTTPBootURISetter         = (*Conn)(nil)
+	_ bmc.NetworkBootEnabledSetter  = (*Conn)(nil)
+	_ bmc.ChassisPowerMetricsGetter = (*Conn)(nil)
+	_ bmc.ChassisPowerCapSetter     = (*Conn)(nil)
 )
 
 // Conn details for redfish client
@@ -295,6 +299,16 @@ func (c *Conn) ResetSecureBootDatabaseKeys(ctx context.Context, database bmc.Sec
 // ImportSecureBootCertificate enrolls a certificate into a single UEFI Secure Boot key database
 func (c *Conn) ImportSecureBootCertificate(ctx context.Context, database bmc.SecureBootDatabase, certificatePEM string) (err error) {
 	return c.redfishwrapper.ImportSecureBootCertificate(ctx, database, certificatePEM)
+}
+
+// GetChassisPowerMetrics returns the chassis power readings and the configured power cap
+func (c *Conn) GetChassisPowerMetrics(ctx context.Context) (metrics bmc.ChassisPowerMetrics, err error) {
+	return c.redfishwrapper.GetChassisPowerMetrics(ctx)
+}
+
+// SetChassisPowerCap sets the chassis power cap in watts; a nil limitWatts clears the cap
+func (c *Conn) SetChassisPowerCap(ctx context.Context, limitWatts *float64) (err error) {
+	return c.redfishwrapper.SetChassisPowerCap(ctx, limitWatts)
 }
 
 // SendNMI tells the BMC to issue an NMI to the device

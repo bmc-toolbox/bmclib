@@ -783,6 +783,30 @@ func (c *Client) AllowCustomSecureBootKeys(ctx context.Context, enable bool) (re
 	return rebootRequired, err
 }
 
+// GetChassisPowerMetrics returns the chassis power readings and the configured power cap.
+func (c *Client) GetChassisPowerMetrics(ctx context.Context) (metrics bmc.ChassisPowerMetrics, err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "GetChassisPowerMetrics")
+	defer span.End()
+
+	metrics, metadata, err := bmc.GetChassisPowerMetricsFromInterfaces(ctx, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return metrics, err
+}
+
+// SetChassisPowerCap sets the chassis power cap in watts. A nil limitWatts clears the cap.
+func (c *Client) SetChassisPowerCap(ctx context.Context, limitWatts *float64) (err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetChassisPowerCap")
+	defer span.End()
+
+	metadata, err := bmc.SetChassisPowerCapFromInterfaces(ctx, c.registry().GetDriverInterfaces(), limitWatts)
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return err
+}
+
 // FirmwareInstall pass through library function to upload firmware and install firmware
 func (c *Client) FirmwareInstall(ctx context.Context, component, operationApplyTime string, forceInstall bool, reader io.Reader) (taskID string, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "FirmwareInstall")

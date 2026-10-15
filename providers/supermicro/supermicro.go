@@ -67,6 +67,8 @@ var Features = registrar.Features{
 	providers.FeatureImportSecureBootCertificate,
 	providers.FeatureSetHTTPBootURI,
 	providers.FeatureSetNetworkBootEnabled,
+	providers.FeatureGetChassisPowerMetrics,
+	providers.FeatureSetChassisPowerCap,
 }
 
 // supports
@@ -755,6 +757,24 @@ func (c *Client) ImportSecureBootCertificate(ctx context.Context, database bmc.S
 	}
 
 	return c.serviceClient.redfish.ImportSecureBootCertificate(ctx, database, certificatePEM)
+}
+
+// GetChassisPowerMetrics returns the chassis power readings and the configured power cap
+func (c *Client) GetChassisPowerMetrics(ctx context.Context) (metrics bmc.ChassisPowerMetrics, err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return metrics, errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.GetChassisPowerMetrics(ctx)
+}
+
+// SetChassisPowerCap sets the chassis power cap in watts; a nil limitWatts clears the cap
+func (c *Client) SetChassisPowerCap(ctx context.Context, limitWatts *float64) (err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.SetChassisPowerCap(ctx, limitWatts)
 }
 
 // SendNMI tells the BMC to issue an NMI to the device
