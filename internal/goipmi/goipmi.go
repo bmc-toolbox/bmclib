@@ -266,24 +266,9 @@ func (i *Ipmi) PxeOnceEfi(ctx context.Context) (status bool, err error) {
 
 // BootDeviceSet sets the next boot device with options
 func (i *Ipmi) BootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
-	var device ipmi.BootDeviceSelector
-	switch strings.ToLower(bootDevice) {
-	case "pxe":
-		device = ipmi.BootDeviceSelectorForcePXE
-	case "disk", "hd":
-		device = ipmi.BootDeviceSelectorForceHardDrive
-	case "safe":
-		device = ipmi.BootDeviceSelectorForceHardDriveSafe
-	case "diag":
-		device = ipmi.BootDeviceSelectorForceDiagnosticPartition
-	case "cdrom", "cd":
-		device = ipmi.BootDeviceSelectorForceCDROM
-	case "bios", "setup":
-		device = ipmi.BootDeviceSelectorForceBIOSSetup
-	case "floppy":
-		device = ipmi.BootDeviceSelectorForceFloppy
-	default:
-		device = ipmi.BootDeviceSelectorNoOverride
+	device, err := bootDeviceSelector(bootDevice)
+	if err != nil {
+		return false, err
 	}
 
 	biosBootType := ipmi.BIOSBootTypeLegacy
@@ -296,6 +281,34 @@ func (i *Ipmi) BootDeviceSet(ctx context.Context, bootDevice string, setPersiste
 		return false, fmt.Errorf("set boot device failed: %v", err)
 	}
 	return true, nil
+}
+
+// bootDeviceSelector maps a bmclib boot device name to an IPMI boot device selector.
+// Unsupported names return an error rather than "no override" so that callers
+// don't report success for a boot device that was never set.
+func bootDeviceSelector(bootDevice string) (ipmi.BootDeviceSelector, error) {
+	switch strings.ToLower(bootDevice) {
+	case "none":
+		return ipmi.BootDeviceSelectorNoOverride, nil
+	case "pxe":
+		return ipmi.BootDeviceSelectorForcePXE, nil
+	case "disk", "hd":
+		return ipmi.BootDeviceSelectorForceHardDrive, nil
+	case "safe":
+		return ipmi.BootDeviceSelectorForceHardDriveSafe, nil
+	case "diag":
+		return ipmi.BootDeviceSelectorForceDiagnosticPartition, nil
+	case "cdrom", "cd":
+		return ipmi.BootDeviceSelectorForceCDROM, nil
+	case "bios", "setup":
+		return ipmi.BootDeviceSelectorForceBIOSSetup, nil
+	case "floppy":
+		return ipmi.BootDeviceSelectorForceFloppy, nil
+	case "usb_cdrom":
+		return ipmi.BootDeviceSelectorForceRemoteCDROM, nil
+	default:
+		return 0, fmt.Errorf("unsupported boot device: %q", bootDevice)
+	}
 }
 
 // PxeOnceMbr makes the machine to boot via pxe once using MBR
