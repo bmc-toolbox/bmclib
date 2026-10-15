@@ -134,6 +134,9 @@ var (
 	// ErrPowerCapSet is returned when the BMC rejects a power cap update
 	ErrPowerCapSet = errors.New("failed to set power cap")
 
+	// ErrThermalNotFound is returned when no chassis exposes a Thermal resource with temperatures or fans
+	ErrThermalNotFound = errors.New("no chassis exposes a Thermal resource with temperatures or fans")
+
 	// ErrSecureBootDatabaseNotFound is returned when the requested UEFI Secure Boot key database
 	// (db, KEK, PK, dbx, ...) is not present in the SecureBootDatabases collection reported by the BMC.
 	ErrSecureBootDatabaseNotFound = errors.New("secure boot key database not found")
