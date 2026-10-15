@@ -55,3 +55,29 @@ func (c *Conn) AllowCustomSecureBootKeys(ctx context.Context, enable bool) (rebo
 
 	return true, nil
 }
+
+// secureBootAttribute is Dell's BIOS Setup attribute for the Secure Boot toggle, with its two values.
+const (
+	secureBootAttribute = "SecureBoot"
+	secureBootEnabled   = "Enabled"
+	secureBootDisabled  = "Disabled"
+)
+
+// SetSecureBoot enables or disables UEFI Secure Boot.
+//
+// It writes the SecureBoot BIOS attribute through SetBiosConfiguration rather than PATCHing the
+// ComputerSystem SecureBoot resource: that PATCH creates iDRAC's single BIOS configuration job
+// outside the pending-job handling of SetBiosConfiguration, so a Bios/Settings write made after
+// it in the same boot cycle would be rejected.
+//
+// The write is staged and takes effect on the next POST.
+//
+// Implements bmc.SecureBootSetter.
+func (c *Conn) SetSecureBoot(ctx context.Context, enable bool) (err error) {
+	want := secureBootDisabled
+	if enable {
+		want = secureBootEnabled
+	}
+
+	return c.redfishwrapper.SetBiosConfiguration(ctx, map[string]string{secureBootAttribute: want})
+}
