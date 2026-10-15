@@ -60,6 +60,7 @@ var (
 		providers.FeatureAllowCustomSecureBootKeys,
 		providers.FeatureGetChassisPowerMetrics,
 		providers.FeatureSetChassisPowerCap,
+		providers.FeatureGetChassisThermal,
 	}
 
 	errManufacturerUnknown = errors.New("error identifying device manufacturer")
@@ -301,6 +302,11 @@ func (c *Conn) GetChassisPowerMetrics(ctx context.Context) (metrics bmc.ChassisP
 // SetChassisPowerCap sets the chassis power cap in watts; a nil limitWatts clears the cap
 func (c *Conn) SetChassisPowerCap(ctx context.Context, limitWatts *float64) (err error) {
 	return c.redfishwrapper.SetChassisPowerCap(ctx, limitWatts)
+}
+
+// GetChassisThermal returns the chassis temperature sensor and fan readings
+func (c *Conn) GetChassisThermal(ctx context.Context) (thermal bmc.ChassisThermal, err error) {
+	return c.redfishwrapper.GetChassisThermal(ctx)
 }
 
 // SendNMI tells the BMC to issue an NMI to the device
