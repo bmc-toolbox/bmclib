@@ -292,6 +292,11 @@ func (i *Ipmi) PxeOnceEfi(ctx context.Context) (status bool, err error) {
 
 // BootDeviceSet sets the next boot device with options
 func (i *Ipmi) BootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
+	// "chassis bootdev" has no keyword for this selector, so set the boot flags directly.
+	if strings.EqualFold(bootDevice, "usb_cdrom") {
+		return i.bootFlagsSet(ctx, bootDeviceSelectorRemoteCDROM, setPersistent, efiBoot)
+	}
+
 	var atLeastOneOptionSelected bool
 	ipmiCmd := []string{"chassis", "bootdev", strings.ToLower(bootDevice)}
 	var opts []string
@@ -318,6 +323,37 @@ func (i *Ipmi) BootDeviceSet(ctx context.Context, bootDevice string, setPersiste
 		return true, err
 	}
 	return false, fmt.Errorf("%v: %v", err, output)
+}
+
+// bootDeviceSelectorRemoteCDROM is IPMI boot device selector 8, "force boot from remote CD/DVD".
+const bootDeviceSelectorRemoteCDROM byte = 0x08
+
+// bootFlagsRawCmd builds an ipmitool raw Set System Boot Options (NetFn 0x00, cmd 0x08)
+// command that writes the boot flags parameter (5) for the given boot device selector.
+// See IPMI v2.0 spec, table 28-14.
+func bootFlagsRawCmd(selector byte, setPersistent, efiBoot bool) []string {
+	flags := byte(0x80) // boot flags valid
+	if setPersistent {
+		flags |= 0x40
+	}
+	if efiBoot {
+		flags |= 0x20
+	}
+	return []string{
+		"raw", "0x00", "0x08", "0x05",
+		fmt.Sprintf("0x%02x", flags),
+		fmt.Sprintf("0x%02x", (selector&0x0f)<<2),
+		"0x00", "0x00", "0x00",
+	}
+}
+
+// bootFlagsSet sets the next boot device using a raw boot flags write.
+func (i *Ipmi) bootFlagsSet(ctx context.Context, selector byte, setPersistent, efiBoot bool) (ok bool, err error) {
+	output, err := i.run(ctx, bootFlagsRawCmd(selector, setPersistent, efiBoot))
+	if err != nil {
+		return false, fmt.Errorf("%v: %v", err, output)
+	}
+	return true, nil
 }
 
 // PxeOnceMbr makes the machine to boot via pxe once using MBR
