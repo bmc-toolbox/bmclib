@@ -84,6 +84,7 @@ var Features = registrar.Features{
 	providers.FeatureImportSecureBootCertificate,
 	providers.FeatureGetChassisPowerMetrics,
 	providers.FeatureSetChassisPowerCap,
+	providers.FeatureGetChassisThermal,
 	// inventory-storage
 	providers.FeatureInventoryRead,
 	// firmware-tasks
