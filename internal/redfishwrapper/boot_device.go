@@ -99,7 +99,14 @@ func (c *Client) SystemBootDeviceSet(_ context.Context, bootDevice string, setPe
 		return false, err
 	}
 
-	boot := system.Boot
+	// Built from zero rather than copied from system.Boot so the PATCH carries only
+	// writable properties that we've changed. This is inline with proper PATCH behavior.
+	//
+	// Also, while copying includes field values as they are currently set,
+	// it also means that read-only fields are also sent. This causes Redfish to reject the PATCH.
+	// For example, the read-only BootSourceOverrideTarget@Redfish.AllowableValues annotation,
+	// which Supermicro rejects with Base.1.10.PropertyUnknown.
+	boot := schemas.Boot{}
 
 	boot.BootSourceOverrideTarget, err = bootDeviceStringToTarget(bootDevice)
 	if err != nil {
