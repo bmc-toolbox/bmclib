@@ -10,7 +10,10 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 
-	"github.com/bougou/go-ipmi"
+	"github.com/bougou/go-ipmi/pkg/client"
+	"github.com/bougou/go-ipmi/pkg/command/chassis"
+	"github.com/bougou/go-ipmi/pkg/command/transport"
+	"github.com/bougou/go-ipmi/pkg/types"
 )
 
 // Ipmi holds the data for an ipmi connection
@@ -19,7 +22,7 @@ type Ipmi struct {
 	Password    string
 	Host        string
 	Port        int
-	client      *ipmi.Client
+	client      *client.Client
 	cipherSuite int
 	log         logr.Logger
 }
@@ -46,7 +49,7 @@ func WithLogger(log logr.Logger) Option {
 
 // New returns a new ipmi instance
 func New(username, password, host string, port int, opts ...Option) (c *Ipmi, err error) {
-	cl, err := ipmi.NewClient(host, port, username, password)
+	cl, err := client.NewClient(host, port, username, password)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +65,7 @@ func New(username, password, host string, port int, opts ...Option) (c *Ipmi, er
 	for _, opt := range opts {
 		opt(c)
 	}
-	c.client.WithInterface(ipmi.InterfaceLanplus)
+	c.client.WithInterface(client.InterfaceLanplus)
 	c.client.WithCipherSuiteID(toCipherSuiteID(c.cipherSuite))
 
 	return c, nil
@@ -72,7 +75,7 @@ func New(username, password, host string, port int, opts ...Option) (c *Ipmi, er
 // to run isolated operations (such as compatibility checks) without touching the
 // session state of the original connection.
 func (i *Ipmi) Clone() (*Ipmi, error) {
-	cl, err := ipmi.NewClient(i.Host, i.Port, i.Username, i.Password)
+	cl, err := client.NewClient(i.Host, i.Port, i.Username, i.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +88,7 @@ func (i *Ipmi) Clone() (*Ipmi, error) {
 		cipherSuite: i.cipherSuite,
 		client:      cl,
 	}
-	c.client.WithInterface(ipmi.InterfaceLanplus)
+	c.client.WithInterface(client.InterfaceLanplus)
 	c.client.WithCipherSuiteID(toCipherSuiteID(c.cipherSuite))
 
 	return c, nil
@@ -113,11 +116,11 @@ func parseSystemEventLog(raw string) (entries [][]string) {
 	return entries
 }
 
-func toCipherSuiteID(c int) ipmi.CipherSuiteID {
+func toCipherSuiteID(c int) types.CipherSuiteID {
 	if c >= 0 && c <= 19 {
-		return ipmi.CipherSuiteID(c)
+		return types.CipherSuiteID(c)
 	}
-	return ipmi.CipherSuiteID3
+	return types.CipherSuiteID3
 }
 
 // Open establishes an IPMI LAN+ session to the BMC.
@@ -132,7 +135,7 @@ func (i *Ipmi) Close(ctx context.Context) error {
 
 // PowerCycle reboots the machine via bmc
 func (i *Ipmi) PowerCycle(ctx context.Context) (status bool, err error) {
-	_, err = i.client.ChassisControl(ctx, ipmi.ChassisControlPowerCycle)
+	_, err = i.client.ChassisControl(ctx, chassis.ChassisControlPowerCycle)
 	if err != nil {
 		return false, fmt.Errorf("chassis control failed: %v", err)
 	}
@@ -152,10 +155,10 @@ func (i *Ipmi) ForceRestart(ctx context.Context) (status bool, err error) {
 
 	if chassisStatus.PowerIsOn {
 		// System is on, do a power cycle
-		_, err = i.client.ChassisControl(ctx, ipmi.ChassisControlPowerCycle)
+		_, err = i.client.ChassisControl(ctx, chassis.ChassisControlPowerCycle)
 	} else {
 		// System is off, just power on
-		_, err = i.client.ChassisControl(ctx, ipmi.ChassisControlPowerUp)
+		_, err = i.client.ChassisControl(ctx, chassis.ChassisControlPowerUp)
 	}
 
 	if err != nil {
@@ -166,7 +169,7 @@ func (i *Ipmi) ForceRestart(ctx context.Context) (status bool, err error) {
 
 // PowerReset reboots the machine via bmc
 func (i *Ipmi) PowerReset(ctx context.Context) (status bool, err error) {
-	_, err = i.client.ChassisControl(ctx, ipmi.ChassisControlHardReset)
+	_, err = i.client.ChassisControl(ctx, chassis.ChassisControlHardReset)
 	if err != nil {
 		return false, fmt.Errorf("chassis control failed: %v", err)
 	}
@@ -209,7 +212,7 @@ func (i *Ipmi) PowerOn(ctx context.Context) (status bool, err error) {
 		return true, nil
 	}
 
-	_, err = i.client.ChassisControl(ctx, ipmi.ChassisControlPowerUp)
+	_, err = i.client.ChassisControl(ctx, chassis.ChassisControlPowerUp)
 	if err != nil {
 		return false, fmt.Errorf("chassis control failed: %v", err)
 	}
@@ -218,7 +221,7 @@ func (i *Ipmi) PowerOn(ctx context.Context) (status bool, err error) {
 
 // PowerOnForce power on the machine via bmc even when the machine is already on (Thanks HP!)
 func (i *Ipmi) PowerOnForce(ctx context.Context) (status bool, err error) {
-	_, err = i.client.ChassisControl(ctx, ipmi.ChassisControlPowerUp)
+	_, err = i.client.ChassisControl(ctx, chassis.ChassisControlPowerUp)
 	if err != nil {
 		return false, fmt.Errorf("chassis control failed: %v", err)
 	}
@@ -231,7 +234,7 @@ func (i *Ipmi) PowerOff(ctx context.Context) (status bool, err error) {
 		return true, nil
 	}
 
-	_, err = i.client.ChassisControl(ctx, ipmi.ChassisControlPowerDown)
+	_, err = i.client.ChassisControl(ctx, chassis.ChassisControlPowerDown)
 	if err != nil {
 		return false, fmt.Errorf("chassis control failed: %v", err)
 	}
@@ -248,7 +251,7 @@ func (i *Ipmi) PowerSoft(ctx context.Context) (status bool, err error) {
 		return true, nil
 	}
 
-	_, err = i.client.ChassisControl(ctx, ipmi.ChassisControlSoftShutdown)
+	_, err = i.client.ChassisControl(ctx, chassis.ChassisControlSoftShutdown)
 	if err != nil {
 		return false, fmt.Errorf("chassis control failed: %v", err)
 	}
@@ -257,7 +260,7 @@ func (i *Ipmi) PowerSoft(ctx context.Context) (status bool, err error) {
 
 // PxeOnceEfi makes the machine to boot via pxe once using EFI
 func (i *Ipmi) PxeOnceEfi(ctx context.Context) (status bool, err error) {
-	err = i.client.SetBootDevice(ctx, ipmi.BootDeviceSelectorForcePXE, ipmi.BIOSBootTypeEFI, false)
+	err = i.client.SetBootDevice(ctx, types.BootDeviceSelectorForcePXE, types.BIOSBootTypeEFI, false)
 	if err != nil {
 		return false, fmt.Errorf("set boot device failed: %v", err)
 	}
@@ -266,29 +269,29 @@ func (i *Ipmi) PxeOnceEfi(ctx context.Context) (status bool, err error) {
 
 // BootDeviceSet sets the next boot device with options
 func (i *Ipmi) BootDeviceSet(ctx context.Context, bootDevice string, setPersistent, efiBoot bool) (ok bool, err error) {
-	var device ipmi.BootDeviceSelector
+	var device types.BootDeviceSelector
 	switch strings.ToLower(bootDevice) {
 	case "pxe":
-		device = ipmi.BootDeviceSelectorForcePXE
+		device = types.BootDeviceSelectorForcePXE
 	case "disk", "hd":
-		device = ipmi.BootDeviceSelectorForceHardDrive
+		device = types.BootDeviceSelectorForceHardDrive
 	case "safe":
-		device = ipmi.BootDeviceSelectorForceHardDriveSafe
+		device = types.BootDeviceSelectorForceHardDriveSafe
 	case "diag":
-		device = ipmi.BootDeviceSelectorForceDiagnosticPartition
+		device = types.BootDeviceSelectorForceDiagnosticPartition
 	case "cdrom", "cd":
-		device = ipmi.BootDeviceSelectorForceCDROM
+		device = types.BootDeviceSelectorForceCDROM
 	case "bios", "setup":
-		device = ipmi.BootDeviceSelectorForceBIOSSetup
+		device = types.BootDeviceSelectorForceBIOSSetup
 	case "floppy":
-		device = ipmi.BootDeviceSelectorForceFloppy
+		device = types.BootDeviceSelectorForceFloppy
 	default:
-		device = ipmi.BootDeviceSelectorNoOverride
+		device = types.BootDeviceSelectorNoOverride
 	}
 
-	biosBootType := ipmi.BIOSBootTypeLegacy
+	biosBootType := types.BIOSBootTypeLegacy
 	if efiBoot {
-		biosBootType = ipmi.BIOSBootTypeEFI
+		biosBootType = types.BIOSBootTypeEFI
 	}
 
 	err = i.client.SetBootDevice(ctx, device, biosBootType, setPersistent)
@@ -300,7 +303,7 @@ func (i *Ipmi) BootDeviceSet(ctx context.Context, bootDevice string, setPersiste
 
 // PxeOnceMbr makes the machine to boot via pxe once using MBR
 func (i *Ipmi) PxeOnceMbr(ctx context.Context) (status bool, err error) {
-	err = i.client.SetBootDevice(ctx, ipmi.BootDeviceSelectorForcePXE, ipmi.BIOSBootTypeLegacy, false)
+	err = i.client.SetBootDevice(ctx, types.BootDeviceSelectorForcePXE, types.BIOSBootTypeLegacy, false)
 	if err != nil {
 		return false, fmt.Errorf("set boot device failed: %v", err)
 	}
@@ -410,7 +413,7 @@ func (i *Ipmi) GetSystemEventLogRaw(ctx context.Context) (eventlog string, err e
 		timestamp := entry.Standard.Timestamp.Format("01/02/2006 | 15:04:05")
 		sensorName := fmt.Sprintf("Sensor %d", entry.Standard.SensorNumber)
 		eventDir := "Asserted"
-		if entry.Standard.EventDir == ipmi.EventDirDeassertion {
+		if entry.Standard.EventDir == types.EventDirDeassertion {
 			eventDir = "Deasserted"
 		}
 		eventData := fmt.Sprintf("0x%02x 0x%02x 0x%02x",
@@ -428,13 +431,13 @@ func (i *Ipmi) GetSystemEventLogRaw(ctx context.Context) (eventlog string, err e
 
 // DeactivateSOL deactivates any active SOL payload, treating an already-deactivated payload as success.
 func (i *Ipmi) DeactivateSOL(ctx context.Context) (err error) {
-	_, err = i.client.DeactivatePayload(ctx, &ipmi.DeactivatePayloadRequest{
-		PayloadType:     ipmi.PayloadTypeSOL,
+	_, err = i.client.DeactivatePayload(ctx, &transport.DeactivatePayloadRequest{
+		PayloadType:     types.PayloadTypeSOL,
 		PayloadInstance: 0,
 	})
 	if err != nil {
 		// 0x80 means SOL was already deactivated; treat as success.
-		var respErr *ipmi.ResponseError
+		var respErr *types.ResponseError
 		if errors.As(err, &respErr) && respErr.CompletionCode() == 0x80 {
 			return nil
 		}
@@ -445,7 +448,7 @@ func (i *Ipmi) DeactivateSOL(ctx context.Context) (err error) {
 
 // SendPowerDiag tells the BMC to issue an NMI to the device
 func (i *Ipmi) SendPowerDiag(ctx context.Context) error {
-	_, err := i.client.ChassisControl(ctx, ipmi.ChassisControlDiagnosticInterrupt)
+	_, err := i.client.ChassisControl(ctx, chassis.ChassisControlDiagnosticInterrupt)
 	if err != nil {
 		return errors.Wrap(err, "failed sending power diag")
 	}

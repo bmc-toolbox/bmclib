@@ -1,13 +1,13 @@
 module github.com/bmc-toolbox/bmclib/v2
 
-go 1.23.0
+go 1.24.0
 
 require (
 	dario.cat/mergo v1.0.1
 	github.com/Jeffail/gabs/v2 v2.7.0
 	github.com/bmc-toolbox/common v0.0.1
 	github.com/bombsimon/logrusr/v2 v2.0.1
-	github.com/bougou/go-ipmi v0.8.3
+	github.com/bougou/go-ipmi v0.9.1
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-logr/logr v1.4.2
 	github.com/go-logr/zerologr v1.2.3
@@ -32,6 +32,7 @@ require (
 	github.com/VictorLowther/soap v0.0.0-20150314151524-8e36fca84b22 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.15.0 // indirect
+	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/google/uuid v1.1.2 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/kr/pretty v0.3.0 // indirect

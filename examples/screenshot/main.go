@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/x509"
 	"flag"
-	"fmt"
 	"os"
 	"time"
 
@@ -72,7 +71,7 @@ func main() {
 		return
 	}
 
-	filename := fmt.Sprintf("screenshot." + fileType)
+	filename := "screenshot." + fileType
 	fh, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0o600)
 	if err != nil {
 		l.WithError(err).Error()
