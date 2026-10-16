@@ -278,3 +278,29 @@ func TestSetChassisPowerCap(t *testing.T) {
 		t.Fatalf("SetChassisPowerCap(nil): %v", err)
 	}
 }
+
+// Requirement: Thermal readings.
+func TestGetChassisThermal(t *testing.T) {
+	ts := newTestServer(t, testServerOpts{})
+	c := ts.openedClient(t)
+
+	thermal, err := c.GetChassisThermal(context.Background())
+	if err != nil {
+		t.Fatalf("GetChassisThermal: %v", err)
+	}
+	// The fixture reports one temperature sensor (Ambient Temp, 23 °C) and one fan (6840 RPM).
+	if len(thermal.Temperatures) != 1 {
+		t.Fatalf("got %d temperatures, want 1", len(thermal.Temperatures))
+	}
+	temp := thermal.Temperatures[0]
+	if temp.Name != "Ambient Temp" || temp.ReadingCelsius == nil || *temp.ReadingCelsius != 23 {
+		t.Errorf("unexpected temperature: %+v", temp)
+	}
+	if len(thermal.Fans) != 1 {
+		t.Fatalf("got %d fans, want 1", len(thermal.Fans))
+	}
+	fan := thermal.Fans[0]
+	if fan.Name != "Fan 1 Tach" || fan.Reading == nil || *fan.Reading != 6840 || fan.ReadingUnits != "RPM" {
+		t.Errorf("unexpected fan: %+v", fan)
+	}
+}

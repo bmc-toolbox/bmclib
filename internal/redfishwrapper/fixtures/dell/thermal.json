@@ -1,0 +1,64 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Thermal.Thermal",
+    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Thermal",
+    "@odata.type": "#Thermal.v1_7_0.Thermal",
+    "Description": "Represents the properties for Temperature and Cooling",
+    "Fans": [
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Thermal#/Fans/0",
+            "FanName": "System Board Fan1A",
+            "MemberId": "0x17||Fan.Embedded.1A",
+            "Name": "System Board Fan1A",
+            "PhysicalContext": "SystemBoard",
+            "Reading": 5880,
+            "ReadingUnits": "RPM",
+            "Status": {
+                "Health": "OK",
+                "State": "Enabled"
+            }
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Thermal#/Fans/1",
+            "FanName": "System Board Fan1B",
+            "MemberId": "0x17||Fan.Embedded.1B",
+            "Name": "System Board Fan1B",
+            "PhysicalContext": "SystemBoard",
+            "Reading": 5640,
+            "ReadingUnits": "RPM",
+            "Status": {
+                "Health": "OK",
+                "State": "Enabled"
+            }
+        }
+    ],
+    "Fans@odata.count": 2,
+    "Id": "Thermal",
+    "Name": "Thermal",
+    "Temperatures": [
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Thermal#/Temperatures/0",
+            "MemberId": "iDRAC.Embedded.1#CPU1Temp",
+            "Name": "CPU1 Temp",
+            "PhysicalContext": "CPU",
+            "ReadingCelsius": 45,
+            "Status": {
+                "Health": "OK",
+                "State": "Enabled"
+            },
+            "UpperThresholdCritical": 101,
+            "UpperThresholdNonCritical": 96
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Thermal#/Temperatures/1",
+            "MemberId": "iDRAC.Embedded.1#CPU2Temp",
+            "Name": "CPU2 Temp",
+            "PhysicalContext": "CPU",
+            "ReadingCelsius": null,
+            "Status": {
+                "Health": null,
+                "State": "Absent"
+            }
+        }
+    ],
+    "Temperatures@odata.count": 2
+}
