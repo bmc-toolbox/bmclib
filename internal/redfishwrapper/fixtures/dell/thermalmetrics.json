@@ -1,0 +1,29 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#ThermalMetrics.ThermalMetrics",
+    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/ThermalSubsystem/ThermalMetrics",
+    "@odata.type": "#ThermalMetrics.v1_0_1.ThermalMetrics",
+    "Description": "The ThermalMetrics schema contains the thermal metrics of a chassis.",
+    "Id": "ThermalMetrics",
+    "Name": "Thermal Metrics",
+    "TemperatureReadingsCelsius": [
+        {
+            "DataSourceUri": "/redfish/v1/Chassis/System.Embedded.1/Sensors/TemperatureSensor_iDRAC.Embedded.1_CPU1Temp",
+            "DeviceName": "CPU1 Temp",
+            "PhysicalContext": "CPU",
+            "Reading": 45
+        },
+        {
+            "DataSourceUri": "/redfish/v1/Chassis/System.Embedded.1/Sensors/TemperatureSensor_iDRAC.Embedded.1_SystemBoardInletTemp",
+            "DeviceName": "Inlet Temp",
+            "PhysicalContext": "Intake",
+            "Reading": 23
+        }
+    ],
+    "TemperatureReadingsCelsius@odata.count": 2,
+    "TemperatureSummaryCelsius": {
+        "Ambient": {
+            "DataSourceUri": "/redfish/v1/Chassis/System.Embedded.1/Sensors/TemperatureSensor_iDRAC.Embedded.1_SystemBoardInletTemp",
+            "Reading": 23
+        }
+    }
+}

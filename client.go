@@ -807,6 +807,30 @@ func (c *Client) SetChassisPowerCap(ctx context.Context, limitWatts *float64) (e
 	return err
 }
 
+// GetChassisFanSpeeds returns the chassis fan readings.
+func (c *Client) GetChassisFanSpeeds(ctx context.Context) (fans []bmc.ChassisFan, err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "GetChassisFanSpeeds")
+	defer span.End()
+
+	fans, metadata, err := bmc.GetChassisFanSpeedsFromInterfaces(ctx, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return fans, err
+}
+
+// GetChassisTemperatures returns the chassis temperature sensor readings.
+func (c *Client) GetChassisTemperatures(ctx context.Context) (temperatures []bmc.ChassisTemperature, err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "GetChassisTemperatures")
+	defer span.End()
+
+	temperatures, metadata, err := bmc.GetChassisTemperaturesFromInterfaces(ctx, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return temperatures, err
+}
+
 // FirmwareInstall pass through library function to upload firmware and install firmware
 func (c *Client) FirmwareInstall(ctx context.Context, component, operationApplyTime string, forceInstall bool, reader io.Reader) (taskID string, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "FirmwareInstall")

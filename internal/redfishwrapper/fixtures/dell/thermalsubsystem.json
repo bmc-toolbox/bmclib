@@ -1,0 +1,18 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#ThermalSubsystem.ThermalSubsystem",
+    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/ThermalSubsystem",
+    "@odata.type": "#ThermalSubsystem.v1_0_0.ThermalSubsystem",
+    "Description": "The ThermalSubsystem schema contains the definition for the thermal subsystem of a chassis.",
+    "Fans": {
+        "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/ThermalSubsystem/Fans"
+    },
+    "Id": "ThermalSubsystem",
+    "Name": "Thermal Subsystem for Chassis",
+    "Status": {
+        "Health": "OK",
+        "State": "Enabled"
+    },
+    "ThermalMetrics": {
+        "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/ThermalSubsystem/ThermalMetrics"
+    }
+}
