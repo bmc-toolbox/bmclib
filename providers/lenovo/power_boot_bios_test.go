@@ -278,3 +278,40 @@ func TestSetChassisPowerCap(t *testing.T) {
 		t.Fatalf("SetChassisPowerCap(nil): %v", err)
 	}
 }
+
+// Requirement: Thermal readings.
+func TestGetChassisFanSpeeds(t *testing.T) {
+	ts := newTestServer(t, testServerOpts{})
+	c := ts.openedClient(t)
+
+	// chassis.1.json links only the deprecated Thermal resource: one fan (Fan 1 Tach, 6840 RPM).
+	fans, err := c.GetChassisFanSpeeds(context.Background())
+	if err != nil {
+		t.Fatalf("GetChassisFanSpeeds: %v", err)
+	}
+	if len(fans) != 1 {
+		t.Fatalf("got %d fans, want 1", len(fans))
+	}
+	fan := fans[0]
+	if fan.Name != "Fan 1 Tach" || fan.SpeedRPM == nil || *fan.SpeedRPM != 6840 || fan.SpeedPercent != nil {
+		t.Errorf("unexpected fan: %+v", fan)
+	}
+}
+
+func TestGetChassisTemperatures(t *testing.T) {
+	ts := newTestServer(t, testServerOpts{})
+	c := ts.openedClient(t)
+
+	// chassis.1.json links only the deprecated Thermal resource: one sensor (Ambient Temp, 23 °C).
+	temperatures, err := c.GetChassisTemperatures(context.Background())
+	if err != nil {
+		t.Fatalf("GetChassisTemperatures: %v", err)
+	}
+	if len(temperatures) != 1 {
+		t.Fatalf("got %d temperatures, want 1", len(temperatures))
+	}
+	temp := temperatures[0]
+	if temp.Name != "Ambient Temp" || temp.ReadingCelsius == nil || *temp.ReadingCelsius != 23 {
+		t.Errorf("unexpected temperature: %+v", temp)
+	}
+}
