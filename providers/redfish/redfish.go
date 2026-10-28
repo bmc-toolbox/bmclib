@@ -49,9 +49,11 @@ var Features = registrar.Features{
 	providers.FeatureImportSecureBootCertificate,
 	providers.FeatureGetChassisPowerMetrics,
 	providers.FeatureSetChassisPowerCap,
+	providers.FeatureGetChassisFanSpeeds,
+	providers.FeatureGetChassisTemperatures,
 }
 
-// compile-time assertions that the provider implements the BIOS configuration and power cap interfaces.
+// compile-time assertions that the provider implements the BIOS configuration, power cap and thermal interfaces.
 var (
 	_ bmc.BiosConfigurationGetter   = (*Conn)(nil)
 	_ bmc.BiosConfigurationSetter   = (*Conn)(nil)
@@ -59,6 +61,8 @@ var (
 	_ bmc.NetworkBootEnabledSetter  = (*Conn)(nil)
 	_ bmc.ChassisPowerMetricsGetter = (*Conn)(nil)
 	_ bmc.ChassisPowerCapSetter     = (*Conn)(nil)
+	_ bmc.ChassisFanSpeedsGetter    = (*Conn)(nil)
+	_ bmc.ChassisTemperaturesGetter = (*Conn)(nil)
 )
 
 // Conn details for redfish client
@@ -309,6 +313,16 @@ func (c *Conn) GetChassisPowerMetrics(ctx context.Context) (metrics bmc.ChassisP
 // SetChassisPowerCap sets the chassis power cap in watts; a nil limitWatts clears the cap
 func (c *Conn) SetChassisPowerCap(ctx context.Context, limitWatts *float64) (err error) {
 	return c.redfishwrapper.SetChassisPowerCap(ctx, limitWatts)
+}
+
+// GetChassisFanSpeeds returns the chassis fan readings
+func (c *Conn) GetChassisFanSpeeds(ctx context.Context) (fans []bmc.ChassisFan, err error) {
+	return c.redfishwrapper.GetChassisFanSpeeds(ctx)
+}
+
+// GetChassisTemperatures returns the chassis temperature sensor readings
+func (c *Conn) GetChassisTemperatures(ctx context.Context) (temperatures []bmc.ChassisTemperature, err error) {
+	return c.redfishwrapper.GetChassisTemperatures(ctx)
 }
 
 // SendNMI tells the BMC to issue an NMI to the device
