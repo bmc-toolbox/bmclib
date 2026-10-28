@@ -69,6 +69,8 @@ var Features = registrar.Features{
 	providers.FeatureSetNetworkBootEnabled,
 	providers.FeatureGetChassisPowerMetrics,
 	providers.FeatureSetChassisPowerCap,
+	providers.FeatureGetChassisFanSpeeds,
+	providers.FeatureGetChassisTemperatures,
 }
 
 // supports
@@ -775,6 +777,24 @@ func (c *Client) SetChassisPowerCap(ctx context.Context, limitWatts *float64) (e
 	}
 
 	return c.serviceClient.redfish.SetChassisPowerCap(ctx, limitWatts)
+}
+
+// GetChassisFanSpeeds returns the chassis fan readings
+func (c *Client) GetChassisFanSpeeds(ctx context.Context) (fans []bmc.ChassisFan, err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return nil, errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.GetChassisFanSpeeds(ctx)
+}
+
+// GetChassisTemperatures returns the chassis temperature sensor readings
+func (c *Client) GetChassisTemperatures(ctx context.Context) (temperatures []bmc.ChassisTemperature, err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return nil, errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.GetChassisTemperatures(ctx)
 }
 
 // SendNMI tells the BMC to issue an NMI to the device
