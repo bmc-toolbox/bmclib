@@ -1,0 +1,33 @@
+{
+  "@odata.id": "/redfish/v1/Systems/Self",
+  "@odata.type": "#ComputerSystem.v1_17_0.ComputerSystem",
+  "Actions": {
+    "#ComputerSystem.Reset": {
+      "@Redfish.ActionInfo": "/redfish/v1/Systems/Self/ResetActionInfo",
+      "target": "/redfish/v1/Systems/Self/Actions/ComputerSystem.Reset"
+    }
+  },
+  "Id": "Self",
+  "Links": {
+    "Chassis": [
+      {
+        "@odata.id": "/redfish/v1/Chassis/Self"
+      }
+    ],
+    "ManagedBy": [
+      {
+        "@odata.id": "/redfish/v1/Managers/BMC"
+      }
+    ]
+  },
+  "Manufacturer": "COMPAL",
+  "Model": "SGX30-2",
+  "Name": "System",
+  "PowerRestorePolicy": "AlwaysOn",
+  "PowerState": "On",
+  "Status": {
+    "Health": "OK",
+    "HealthRollup": "OK",
+    "State": "Enabled"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "@odata.id": "/redfish/v1/Systems/Self/ResetActionInfo",
+  "@odata.type": "#ActionInfo.v1_1_2.ActionInfo",
+  "Id": "ResetAction",
+  "Name": "ResetAction",
+  "Parameters": [
+    {
+      "AllowableValues": [
+        "ForceOff",
+        "ForceRestart",
+        "FullPowerCycle",
+        "GracefulRestart",
+        "GracefulShutdown",
+        "On",
+        "PowerCycle"
+      ],
+      "DataType": "String",
+      "Name": "ResetType",
+      "Required": true
+    }
+  ]
+}
