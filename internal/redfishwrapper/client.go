@@ -36,6 +36,7 @@ type Client struct {
 	user                  string
 	pass                  string
 	systemName            string
+	systemSelector        func([]*schemas.ComputerSystem) (*schemas.ComputerSystem, error)
 	basicAuth             bool
 	disableEtagMatch      bool
 	versionsNotCompatible []string // a slice of redfish versions to ignore as incompatible
@@ -99,6 +100,13 @@ func WithLogger(l *logr.Logger) Option {
 func WithSystemName(name string) Option {
 	return func(c *Client) {
 		c.systemName = name
+	}
+}
+
+// WithSystemSelector sets a function that picks the system to operate on.
+func WithSystemSelector(selector func([]*schemas.ComputerSystem) (*schemas.ComputerSystem, error)) Option {
+	return func(c *Client) {
+		c.systemSelector = selector
 	}
 }
 
