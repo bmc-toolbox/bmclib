@@ -1,0 +1,21 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Job.Job",
+    "@odata.id": "/redfish/v1/JobService/Jobs/JID_123456789012",
+    "@odata.type": "#Job.v1_1_0.Job",
+    "Description": "Job Instance",
+    "EndTime": "",
+    "Id": "JID_123456789012",
+    "JobState": "Pending",
+    "JobStatus": "OK",
+    "Messages": [
+        {
+            "Message": "Task successfully scheduled.",
+            "MessageArgs": [],
+            "MessageId": "IDRAC.2.9.JCP001",
+            "Severity": "Informational"
+        }
+    ],
+    "Name": "Configure: BIOS.Setup.1-1",
+    "PercentComplete": 0,
+    "StartTime": "TIME_NOW"
+}

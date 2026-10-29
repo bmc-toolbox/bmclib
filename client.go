@@ -831,6 +831,30 @@ func (c *Client) GetChassisTemperatures(ctx context.Context) (temperatures []bmc
 	return temperatures, err
 }
 
+// GetTasks returns the BMC task collection (TaskService/Tasks).
+func (c *Client) GetTasks(ctx context.Context) (tasks []bmc.Task, err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "GetTasks")
+	defer span.End()
+
+	tasks, metadata, err := bmc.GetTasksFromInterfaces(ctx, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return tasks, err
+}
+
+// GetJobs returns the BMC job collection (JobService/Jobs).
+func (c *Client) GetJobs(ctx context.Context) (jobs []bmc.Job, err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "GetJobs")
+	defer span.End()
+
+	jobs, metadata, err := bmc.GetJobsFromInterfaces(ctx, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return jobs, err
+}
+
 // FirmwareInstall pass through library function to upload firmware and install firmware
 func (c *Client) FirmwareInstall(ctx context.Context, component, operationApplyTime string, forceInstall bool, reader io.Reader) (taskID string, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "FirmwareInstall")
