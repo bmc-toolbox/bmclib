@@ -51,18 +51,24 @@ var Features = registrar.Features{
 	providers.FeatureSetChassisPowerCap,
 	providers.FeatureGetChassisFanSpeeds,
 	providers.FeatureGetChassisTemperatures,
+	providers.FeatureGetManagerHTTPSCertificates,
+	providers.FeatureGenerateManagerHTTPSCSR,
+	providers.FeatureReplaceManagerHTTPSCertificate,
 }
 
-// compile-time assertions that the provider implements the BIOS configuration, power cap and thermal interfaces.
+// compile-time assertions that the provider implements the BIOS configuration, power cap, thermal and certificate interfaces.
 var (
-	_ bmc.BiosConfigurationGetter   = (*Conn)(nil)
-	_ bmc.BiosConfigurationSetter   = (*Conn)(nil)
-	_ bmc.HTTPBootURISetter         = (*Conn)(nil)
-	_ bmc.NetworkBootEnabledSetter  = (*Conn)(nil)
-	_ bmc.ChassisPowerMetricsGetter = (*Conn)(nil)
-	_ bmc.ChassisPowerCapSetter     = (*Conn)(nil)
-	_ bmc.ChassisFanSpeedsGetter    = (*Conn)(nil)
-	_ bmc.ChassisTemperaturesGetter = (*Conn)(nil)
+	_ bmc.BiosConfigurationGetter         = (*Conn)(nil)
+	_ bmc.BiosConfigurationSetter         = (*Conn)(nil)
+	_ bmc.HTTPBootURISetter               = (*Conn)(nil)
+	_ bmc.NetworkBootEnabledSetter        = (*Conn)(nil)
+	_ bmc.ChassisPowerMetricsGetter       = (*Conn)(nil)
+	_ bmc.ChassisPowerCapSetter           = (*Conn)(nil)
+	_ bmc.ChassisFanSpeedsGetter          = (*Conn)(nil)
+	_ bmc.ChassisTemperaturesGetter       = (*Conn)(nil)
+	_ bmc.ManagerHTTPSCertificatesGetter  = (*Conn)(nil)
+	_ bmc.ManagerHTTPSCSRGenerator        = (*Conn)(nil)
+	_ bmc.ManagerHTTPSCertificateReplacer = (*Conn)(nil)
 )
 
 // Conn details for redfish client
@@ -328,4 +334,19 @@ func (c *Conn) GetChassisTemperatures(ctx context.Context) (temperatures []bmc.C
 // SendNMI tells the BMC to issue an NMI to the device
 func (c *Conn) SendNMI(ctx context.Context) error {
 	return c.redfishwrapper.SendNMI(ctx)
+}
+
+// GetManagerHTTPSCertificates returns the certificates installed for the manager HTTPS endpoint
+func (c *Conn) GetManagerHTTPSCertificates(ctx context.Context) (certificates []bmc.Certificate, err error) {
+	return c.redfishwrapper.GetManagerHTTPSCertificates(ctx)
+}
+
+// GenerateManagerHTTPSCSR generates a certificate signing request for the manager HTTPS endpoint
+func (c *Conn) GenerateManagerHTTPSCSR(ctx context.Context, req *bmc.CSRRequest) (csrPEM string, err error) {
+	return c.redfishwrapper.GenerateManagerHTTPSCSR(ctx, req)
+}
+
+// ReplaceManagerHTTPSCertificate replaces the certificate installed for the manager HTTPS endpoint
+func (c *Conn) ReplaceManagerHTTPSCertificate(ctx context.Context, certificatePEM string) (err error) {
+	return c.redfishwrapper.ReplaceManagerHTTPSCertificate(ctx, certificatePEM)
 }
