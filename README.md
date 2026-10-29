@@ -14,6 +14,7 @@ bmclib v2 is a library to abstract interacting with baseboard management control
 - [Intel AMT](https://github.com/bmc-toolbox/bmclib/tree/main/providers/intelamt)
 - [Asrockrack](https://github.com/bmc-toolbox/bmclib/tree/main/providers/asrockrack)
 - [Lenovo XClarity Controller (XCC)](https://github.com/bmc-toolbox/bmclib/tree/main/providers/lenovo)
+- [Compal](https://github.com/bmc-toolbox/bmclib/tree/main/providers/compal)
 - [RPC](providers/rpc/)
 
 ## Installation
