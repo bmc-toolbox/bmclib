@@ -1,0 +1,17 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Fan.Fan",
+    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/ThermalSubsystem/Fans/1",
+    "@odata.type": "#Fan.v1_3_0.Fan",
+    "Description": "Fan 1B on the system board",
+    "HotPluggable": false,
+    "Id": "1",
+    "Name": "System Board Fan1B",
+    "PhysicalContext": "SystemBoard",
+    "SpeedPercent": {
+        "DataSourceUri": "/redfish/v1/Chassis/System.Embedded.1/Sensors/FanSensor_0x17_Fan.Embedded.1B"
+    },
+    "Status": {
+        "Health": "Critical",
+        "State": "Absent"
+    }
+}

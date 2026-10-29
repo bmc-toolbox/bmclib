@@ -20,5 +20,8 @@
     },
     "Thermal": {
         "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Thermal"
+    },
+    "ThermalSubsystem": {
+        "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/ThermalSubsystem"
     }
 }

@@ -109,4 +109,10 @@ const (
 
 	// FeatureSetChassisPowerCap means an implementation that can set or clear the chassis power cap
 	FeatureSetChassisPowerCap registrar.Feature = "setchassispowercap"
+
+	// FeatureGetChassisFanSpeeds means an implementation that can read chassis fan speeds
+	FeatureGetChassisFanSpeeds registrar.Feature = "getchassisfanspeeds"
+
+	// FeatureGetChassisTemperatures means an implementation that can read chassis temperature sensors
+	FeatureGetChassisTemperatures registrar.Feature = "getchassistemperatures"
 )
