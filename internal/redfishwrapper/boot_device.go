@@ -10,6 +10,11 @@ import (
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
+// usbCdBootSource is a non-standard BootSourceOverrideTarget used by Supermicro
+// for the BMC's virtual CD/DVD. It is not part of the DMTF BootSource enum, so
+// gofish does not define it.
+const usbCdBootSource schemas.BootSource = "UsbCd"
+
 type bootDeviceMapping struct {
 	BootDeviceType bmc.BootDeviceType
 	RedFishTarget  schemas.BootSource
@@ -63,6 +68,10 @@ var bootDeviceTypeMappings = []bootDeviceMapping{
 	{
 		BootDeviceType: bmc.BootDeviceUefiHTTP,
 		RedFishTarget:  schemas.UefiHTTPBootSource,
+	},
+	{
+		BootDeviceType: bmc.BootDeviceTypeUSBCDROM,
+		RedFishTarget:  usbCdBootSource,
 	},
 }
 
