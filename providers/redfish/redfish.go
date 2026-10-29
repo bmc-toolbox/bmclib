@@ -51,9 +51,11 @@ var Features = registrar.Features{
 	providers.FeatureSetChassisPowerCap,
 	providers.FeatureGetChassisFanSpeeds,
 	providers.FeatureGetChassisTemperatures,
+	providers.FeatureGetTasks,
+	providers.FeatureGetJobs,
 }
 
-// compile-time assertions that the provider implements the BIOS configuration, power cap and thermal interfaces.
+// compile-time assertions that the provider implements the BIOS configuration, power cap, thermal, task and job interfaces.
 var (
 	_ bmc.BiosConfigurationGetter   = (*Conn)(nil)
 	_ bmc.BiosConfigurationSetter   = (*Conn)(nil)
@@ -63,6 +65,8 @@ var (
 	_ bmc.ChassisPowerCapSetter     = (*Conn)(nil)
 	_ bmc.ChassisFanSpeedsGetter    = (*Conn)(nil)
 	_ bmc.ChassisTemperaturesGetter = (*Conn)(nil)
+	_ bmc.TasksGetter               = (*Conn)(nil)
+	_ bmc.JobsGetter                = (*Conn)(nil)
 )
 
 // Conn details for redfish client
@@ -328,4 +332,14 @@ func (c *Conn) GetChassisTemperatures(ctx context.Context) (temperatures []bmc.C
 // SendNMI tells the BMC to issue an NMI to the device
 func (c *Conn) SendNMI(ctx context.Context) error {
 	return c.redfishwrapper.SendNMI(ctx)
+}
+
+// GetTasks returns the BMC task collection
+func (c *Conn) GetTasks(ctx context.Context) (tasks []bmc.Task, err error) {
+	return c.redfishwrapper.GetTasks(ctx)
+}
+
+// GetJobs returns the BMC job collection
+func (c *Conn) GetJobs(ctx context.Context) (jobs []bmc.Job, err error) {
+	return c.redfishwrapper.GetJobs(ctx)
 }

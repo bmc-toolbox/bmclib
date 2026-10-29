@@ -115,4 +115,10 @@ const (
 
 	// FeatureGetChassisTemperatures means an implementation that can read chassis temperature sensors
 	FeatureGetChassisTemperatures registrar.Feature = "getchassistemperatures"
+
+	// FeatureGetTasks means an implementation that can list the BMC task collection (TaskService/Tasks)
+	FeatureGetTasks registrar.Feature = "gettasks"
+
+	// FeatureGetJobs means an implementation that can list the BMC job collection (JobService/Jobs)
+	FeatureGetJobs registrar.Feature = "getjobs"
 )

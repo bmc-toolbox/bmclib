@@ -140,6 +140,12 @@ var (
 	// ErrChassisTemperaturesNotFound is returned when no chassis exposes temperature sensors through ThermalSubsystem or Thermal
 	ErrChassisTemperaturesNotFound = errors.New("no chassis exposes temperature sensors through ThermalSubsystem or Thermal")
 
+	// ErrTaskServiceNotFound is returned when the BMC service root has no TaskService
+	ErrTaskServiceNotFound = errors.New("BMC has no TaskService")
+
+	// ErrJobServiceNotFound is returned when the BMC service root has no JobService
+	ErrJobServiceNotFound = errors.New("BMC has no JobService")
+
 	// ErrSecureBootDatabaseNotFound is returned when the requested UEFI Secure Boot key database
 	// (db, KEK, PK, dbx, ...) is not present in the SecureBootDatabases collection reported by the BMC.
 	ErrSecureBootDatabaseNotFound = errors.New("secure boot key database not found")

@@ -2,13 +2,16 @@ package redfishwrapper
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
+	"github.com/bmc-toolbox/bmclib/v2/bmc"
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
@@ -300,4 +303,64 @@ func TestTask(t *testing.T) {
 			client.Close(context.Background())
 		})
 	}
+}
+
+func TestGetTasks(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/redfish/v1/", endpointFunc(t, "serviceroot.json"))
+	mux.HandleFunc("/redfish/v1/Systems", endpointFunc(t, "systems.json"))
+	mux.HandleFunc("/redfish/v1/TaskService", endpointFunc(t, "taskservice.json"))
+	mux.HandleFunc("/redfish/v1/TaskService/Tasks", endpointFunc(t, "tasks.json"))
+	mux.HandleFunc("/redfish/v1/TaskService/Tasks/1", endpointFunc(t, "tasks/tasks_1_running.json"))
+	mux.HandleFunc("/redfish/v1/TaskService/Tasks/2", endpointFunc(t, "tasks/tasks_2.json"))
+
+	server := httptest.NewTLSServer(mux)
+	t.Cleanup(server.Close)
+	parsedURL, err := url.Parse(server.URL)
+	require.NoError(t, err)
+	client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "", WithBasicAuthEnabled(true))
+	require.NoError(t, client.Open(context.Background()))
+	t.Cleanup(func() { _ = client.Close(context.Background()) })
+
+	tasks, err := client.GetTasks(context.Background())
+	require.NoError(t, err)
+	require.Len(t, tasks, 2)
+
+	percent := 100
+	assert.Equal(t, bmc.Task{
+		ID:              "1",
+		Name:            "BIOS Verify",
+		TaskState:       "Running",
+		TaskStatus:      "OK",
+		State:           constants.Running,
+		PercentComplete: &percent,
+		StartTime:       "2023-11-06T12:04:16+00:00",
+		EndTime:         "2023-11-06T12:05:31+00:00",
+	}, tasks[0], "empty fixture messages must be dropped")
+	assert.Equal(t, "2", tasks[1].ID)
+	assert.Equal(t, constants.Complete, tasks[1].State)
+}
+
+func TestGetTasksNoTaskService(t *testing.T) {
+	mux := http.NewServeMux()
+	// A service root without TaskService.
+	mux.HandleFunc("/redfish/v1/", func(w http.ResponseWriter, _ *http.Request) {
+		var root map[string]any
+		require.NoError(t, json.Unmarshal(mustReadFile(t, "serviceroot.json"), &root))
+		delete(root, "Tasks")
+		delete(root, "TaskService")
+		_ = json.NewEncoder(w).Encode(root)
+	})
+	mux.HandleFunc("/redfish/v1/Systems", endpointFunc(t, "systems.json"))
+
+	server := httptest.NewTLSServer(mux)
+	t.Cleanup(server.Close)
+	parsedURL, err := url.Parse(server.URL)
+	require.NoError(t, err)
+	client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "", WithBasicAuthEnabled(true))
+	require.NoError(t, client.Open(context.Background()))
+	t.Cleanup(func() { _ = client.Close(context.Background()) })
+
+	_, err = client.GetTasks(context.Background())
+	assert.ErrorIs(t, err, bmclibErrs.ErrTaskServiceNotFound)
 }
