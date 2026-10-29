@@ -86,6 +86,9 @@ var Features = registrar.Features{
 	providers.FeatureSetChassisPowerCap,
 	providers.FeatureGetChassisFanSpeeds,
 	providers.FeatureGetChassisTemperatures,
+	// tasks-jobs
+	providers.FeatureGetTasks,
+	providers.FeatureGetJobs,
 	// inventory-storage
 	providers.FeatureInventoryRead,
 	// firmware-tasks
