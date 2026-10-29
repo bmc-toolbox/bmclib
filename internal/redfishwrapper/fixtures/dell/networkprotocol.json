@@ -1,0 +1,33 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#ManagerNetworkProtocol.ManagerNetworkProtocol",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/NetworkProtocol",
+    "@odata.type": "#ManagerNetworkProtocol.v1_6_0.ManagerNetworkProtocol",
+    "Id": "NetworkProtocol",
+    "Name": "Manager Network Protocol",
+    "Description": "Network Protocol Details",
+    "HostName": "idrac-7XK9Q33",
+    "HTTPS": {
+        "Certificates": {
+            "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/NetworkProtocol/HTTPS/Certificates"
+        },
+        "Port": 443,
+        "ProtocolEnabled": true
+    },
+    "IPMI": {
+        "Port": 623,
+        "ProtocolEnabled": true
+    },
+    "NTP": {
+        "NTPServers": [],
+        "Port": 123,
+        "ProtocolEnabled": false
+    },
+    "SSH": {
+        "Port": 22,
+        "ProtocolEnabled": true
+    },
+    "Status": {
+        "Health": "OK",
+        "State": "Enabled"
+    }
+}

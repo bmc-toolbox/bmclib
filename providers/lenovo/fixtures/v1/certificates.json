@@ -1,0 +1,11 @@
+{
+  "@odata.id": "/redfish/v1/Managers/1/NetworkProtocol/HTTPS/Certificates",
+  "@odata.type": "#CertificateCollection.CertificateCollection",
+  "Name": "HTTPS Certificates",
+  "Members": [
+    {
+      "@odata.id": "/redfish/v1/Managers/1/NetworkProtocol/HTTPS/Certificates/1"
+    }
+  ],
+  "Members@odata.count": 1
+}
