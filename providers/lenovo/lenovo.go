@@ -90,6 +90,9 @@ var Features = registrar.Features{
 	providers.FeatureGetManagerHTTPSCertificates,
 	providers.FeatureGenerateManagerHTTPSCSR,
 	providers.FeatureReplaceManagerHTTPSCertificate,
+	// tasks-jobs
+	providers.FeatureGetTasks,
+	providers.FeatureGetJobs,
 	// inventory-storage
 	providers.FeatureInventoryRead,
 	// firmware-tasks
