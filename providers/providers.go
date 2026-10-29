@@ -124,4 +124,9 @@ const (
 
 	// FeatureReplaceManagerHTTPSCertificate means an implementation that can replace the certificate installed for the manager HTTPS endpoint
 	FeatureReplaceManagerHTTPSCertificate registrar.Feature = "replacemanagerhttpscertificate"
+	// FeatureGetTasks means an implementation that can list the BMC task collection (TaskService/Tasks)
+	FeatureGetTasks registrar.Feature = "gettasks"
+
+	// FeatureGetJobs means an implementation that can list the BMC job collection (JobService/Jobs)
+	FeatureGetJobs registrar.Feature = "getjobs"
 )
