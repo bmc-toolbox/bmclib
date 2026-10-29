@@ -71,6 +71,8 @@ var Features = registrar.Features{
 	providers.FeatureSetChassisPowerCap,
 	providers.FeatureGetChassisFanSpeeds,
 	providers.FeatureGetChassisTemperatures,
+	providers.FeatureGetTasks,
+	providers.FeatureGetJobs,
 }
 
 // supports
@@ -810,4 +812,22 @@ func (c *Client) GetBootProgress() (*schemas.BootProgress, error) {
 // BootComplete checks if this system has reached the last state for boot
 func (c *Client) BootComplete() (bool, error) {
 	return c.bmc.bootComplete()
+}
+
+// GetTasks returns the BMC task collection
+func (c *Client) GetTasks(ctx context.Context) (tasks []bmc.Task, err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return nil, errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.GetTasks(ctx)
+}
+
+// GetJobs returns the BMC job collection
+func (c *Client) GetJobs(ctx context.Context) (jobs []bmc.Job, err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return nil, errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.GetJobs(ctx)
 }
