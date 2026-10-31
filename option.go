@@ -207,6 +207,32 @@ func WithLenovoVersionsNotCompatible(versions []string) Option {
 	}
 }
 
+// WithCompalPort sets the port for the Compal (redfish) provider.
+func WithCompalPort(port string) Option {
+	return func(args *Client) {
+		args.providerConfig.compal.Port = port
+	}
+}
+
+// WithCompalUseBasicAuth sets HTTP Basic auth (instead of session login) for the
+// Compal provider.
+func WithCompalUseBasicAuth(useBasicAuth bool) Option {
+	return func(args *Client) {
+		args.providerConfig.compal.UseBasicAuth = useBasicAuth
+	}
+}
+
+// WithCompalVersionsNotCompatible sets the list of incompatible redfish versions
+// for the Compal provider.
+//
+// With this option set, the bmclib.Registry.FilterForCompatible(ctx) method will
+// not proceed on devices with the given redfish version(s).
+func WithCompalVersionsNotCompatible(versions []string) Option {
+	return func(args *Client) {
+		args.providerConfig.compal.VersionsNotCompatible = append(args.providerConfig.compal.VersionsNotCompatible, versions...)
+	}
+}
+
 // WithRPCOpt configures the rpc provider.
 func WithRPCOpt(opt rpc.Provider) Option { //nolint:gocritic // functional options take their config by value by convention
 	return func(args *Client) {
