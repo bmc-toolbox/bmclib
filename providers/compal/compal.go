@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
 	"github.com/jacobweinstock/registrar"
 	"github.com/stmcginnis/gofish/schemas"
@@ -25,8 +26,6 @@ const (
 	ProviderName = "compal"
 	// ProviderProtocol is the transport/protocol this provider speaks.
 	ProviderProtocol = "redfish"
-
-	vendor = "compal"
 )
 
 // Features is the set of bmclib features this provider implements.
@@ -130,7 +129,7 @@ func hostSystem(systems []*schemas.ComputerSystem) (*schemas.ComputerSystem, err
 	}
 
 	host := resettable[0]
-	if !strings.Contains(strings.ToLower(host.Manufacturer), vendor) {
+	if !strings.Contains(strings.ToLower(host.Manufacturer), common.VendorCompal) {
 		return nil, fmt.Errorf("system %q is made by %q, not Compal", host.ID, host.Manufacturer)
 	}
 
