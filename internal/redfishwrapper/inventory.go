@@ -55,8 +55,9 @@ var (
 
 // TODO: consider removing this
 func (c *Client) compatibleOdataID(odataID string, knownOdataIDs []string) bool {
+	odataID = strings.TrimRight(odataID, "/")
 	for _, url := range knownOdataIDs {
-		if url == odataID {
+		if strings.TrimRight(url, "/") == odataID {
 			return true
 		}
 	}
