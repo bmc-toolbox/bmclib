@@ -115,4 +115,13 @@ const (
 
 	// FeatureGetChassisTemperatures means an implementation that can read chassis temperature sensors
 	FeatureGetChassisTemperatures registrar.Feature = "getchassistemperatures"
+
+	// FeatureGetManagerHTTPSCertificates means an implementation that can list the certificates installed for the manager HTTPS endpoint
+	FeatureGetManagerHTTPSCertificates registrar.Feature = "getmanagerhttpscertificates"
+
+	// FeatureGenerateManagerHTTPSCSR means an implementation that can generate a certificate signing request for the manager HTTPS endpoint
+	FeatureGenerateManagerHTTPSCSR registrar.Feature = "generatemanagerhttpscsr"
+
+	// FeatureReplaceManagerHTTPSCertificate means an implementation that can replace the certificate installed for the manager HTTPS endpoint
+	FeatureReplaceManagerHTTPSCertificate registrar.Feature = "replacemanagerhttpscertificate"
 )

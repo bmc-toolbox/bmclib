@@ -1,0 +1,43 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Certificate.Certificate",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/NetworkProtocol/HTTPS/Certificates/SecurityCertificate.1",
+    "@odata.type": "#Certificate.v1_2_1.Certificate",
+    "Actions": {
+        "#Certificate.Rekey": {
+            "target": "/redfish/v1/Managers/iDRAC.Embedded.1/NetworkProtocol/HTTPS/Certificates/SecurityCertificate.1/Actions/Certificate.Rekey"
+        },
+        "#Certificate.Renew": {
+            "target": "/redfish/v1/Managers/iDRAC.Embedded.1/NetworkProtocol/HTTPS/Certificates/SecurityCertificate.1/Actions/Certificate.Renew"
+        }
+    },
+    "CertificateString": "-----BEGIN CERTIFICATE-----\nMIIEEzCCAvugAwIBAgIUczKxUTTDnjIX\n-----END CERTIFICATE-----\n",
+    "CertificateType": "PEM",
+    "Description": "HTTPS server certificate",
+    "Id": "SecurityCertificate.1",
+    "Issuer": {
+        "City": "Round Rock",
+        "CommonName": "Example Root CA",
+        "Country": "US",
+        "Email": "pki@example.com",
+        "Organization": "Example Corp",
+        "OrganizationalUnit": "PKI",
+        "State": "Texas"
+    },
+    "KeyUsage": [
+        "KeyEncipherment",
+        "DigitalSignature"
+    ],
+    "Name": "HTTPS Certificate",
+    "SerialNumber": "7332B15134C39E3217",
+    "Subject": {
+        "City": "Round Rock",
+        "CommonName": "idrac-7XK9Q33.example.com",
+        "Country": "US",
+        "Email": "bmc@example.com",
+        "Organization": "Example Corp",
+        "OrganizationalUnit": "Datacenter",
+        "State": "Texas"
+    },
+    "ValidNotAfter": "2031-04-14T15:40:38+00:00",
+    "ValidNotBefore": "2021-04-16T15:40:38+00:00"
+}

@@ -831,6 +831,44 @@ func (c *Client) GetChassisTemperatures(ctx context.Context) (temperatures []bmc
 	return temperatures, err
 }
 
+// GetManagerHTTPSCertificates returns the certificates installed for the manager HTTPS endpoint.
+func (c *Client) GetManagerHTTPSCertificates(ctx context.Context) (certificates []bmc.Certificate, err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "GetManagerHTTPSCertificates")
+	defer span.End()
+
+	certificates, metadata, err := bmc.GetManagerHTTPSCertificatesFromInterfaces(ctx, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return certificates, err
+}
+
+// GenerateManagerHTTPSCSR generates a certificate signing request for the manager HTTPS endpoint
+// and returns it PEM-encoded; the BMC keeps the private key.
+func (c *Client) GenerateManagerHTTPSCSR(ctx context.Context, req *bmc.CSRRequest) (csrPEM string, err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "GenerateManagerHTTPSCSR")
+	defer span.End()
+
+	csrPEM, metadata, err := bmc.GenerateManagerHTTPSCSRFromInterfaces(ctx, req, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return csrPEM, err
+}
+
+// ReplaceManagerHTTPSCertificate replaces the certificate installed for the manager HTTPS endpoint
+// with the given PEM-encoded certificate.
+func (c *Client) ReplaceManagerHTTPSCertificate(ctx context.Context, certificatePEM string) (err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "ReplaceManagerHTTPSCertificate")
+	defer span.End()
+
+	metadata, err := bmc.ReplaceManagerHTTPSCertificateFromInterfaces(ctx, certificatePEM, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return err
+}
+
 // FirmwareInstall pass through library function to upload firmware and install firmware
 func (c *Client) FirmwareInstall(ctx context.Context, component, operationApplyTime string, forceInstall bool, reader io.Reader) (taskID string, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "FirmwareInstall")

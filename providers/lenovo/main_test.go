@@ -114,8 +114,11 @@ type testServer struct {
 	// csrGenerated/certReplaced/certRekeyed/certRenewed record certificate actions.
 	csrGenerated bool
 	certReplaced bool
-	certRekeyed  bool
-	certRenewed  bool
+	// csrPayload/replacePayload hold the bodies posted to the certificate actions.
+	csrPayload     map[string]any
+	replacePayload map[string]any
+	certRekeyed    bool
+	certRenewed    bool
 	// snmpPatched records a PATCH of the OEM SNMP resource.
 	snmpPatched bool
 }
@@ -218,6 +221,7 @@ func newTestServer(t *testing.T, opts testServerOpts) *testServer {
 		"/redfish/v1/JobService/Jobs/Restart":                            "job.restart.json",
 		"/redfish/v1/CertificateService":                                 "certificateservice.json",
 		"/redfish/v1/CertificateService/CertificateLocations":            "certificatelocations.json",
+		"/redfish/v1/Managers/1/NetworkProtocol/HTTPS/Certificates":      "certificates.json",
 		"/redfish/v1/Managers/1/NetworkProtocol/HTTPS/Certificates/1":    "certificate.1.json",
 		"/redfish/v1/Managers/1/NetworkProtocol/Oem/Lenovo/SNMP":         "snmp.json",
 	}
@@ -433,18 +437,22 @@ func newTestServer(t *testing.T, opts testServerOpts) *testServer {
 
 	// CertificateService actions.
 	mux.HandleFunc("/redfish/v1/CertificateService/Actions/CertificateService.GenerateCSR", func(w http.ResponseWriter, r *http.Request) {
-		_, _ = io.Copy(io.Discard, r.Body)
+		var payload map[string]any
+		_ = json.NewDecoder(r.Body).Decode(&payload)
 		ts.mu.Lock()
 		ts.csrGenerated = true
+		ts.csrPayload = payload
 		ts.mu.Unlock()
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{"CSRString":"-----BEGIN CERTIFICATE REQUEST-----\nMIICFDCC\n-----END CERTIFICATE REQUEST-----"}`))
 	})
 	mux.HandleFunc("/redfish/v1/CertificateService/Actions/CertificateService.ReplaceCertificate", func(w http.ResponseWriter, r *http.Request) {
-		_, _ = io.Copy(io.Discard, r.Body)
+		var payload map[string]any
+		_ = json.NewDecoder(r.Body).Decode(&payload)
 		ts.mu.Lock()
 		ts.certReplaced = true
+		ts.replacePayload = payload
 		ts.mu.Unlock()
 		w.WriteHeader(http.StatusNoContent)
 	})

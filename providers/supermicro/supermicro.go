@@ -71,6 +71,9 @@ var Features = registrar.Features{
 	providers.FeatureSetChassisPowerCap,
 	providers.FeatureGetChassisFanSpeeds,
 	providers.FeatureGetChassisTemperatures,
+	providers.FeatureGetManagerHTTPSCertificates,
+	providers.FeatureGenerateManagerHTTPSCSR,
+	providers.FeatureReplaceManagerHTTPSCertificate,
 }
 
 // supports
@@ -810,4 +813,31 @@ func (c *Client) GetBootProgress() (*schemas.BootProgress, error) {
 // BootComplete checks if this system has reached the last state for boot
 func (c *Client) BootComplete() (bool, error) {
 	return c.bmc.bootComplete()
+}
+
+// GetManagerHTTPSCertificates returns the certificates installed for the manager HTTPS endpoint
+func (c *Client) GetManagerHTTPSCertificates(ctx context.Context) (certificates []bmc.Certificate, err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return nil, errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.GetManagerHTTPSCertificates(ctx)
+}
+
+// GenerateManagerHTTPSCSR generates a certificate signing request for the manager HTTPS endpoint
+func (c *Client) GenerateManagerHTTPSCSR(ctx context.Context, req *bmc.CSRRequest) (csrPEM string, err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return "", errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.GenerateManagerHTTPSCSR(ctx, req)
+}
+
+// ReplaceManagerHTTPSCertificate replaces the certificate installed for the manager HTTPS endpoint
+func (c *Client) ReplaceManagerHTTPSCertificate(ctx context.Context, certificatePEM string) (err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.ReplaceManagerHTTPSCertificate(ctx, certificatePEM)
 }

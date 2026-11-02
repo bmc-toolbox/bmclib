@@ -1,0 +1,13 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#CertificateCollection.CertificateCollection",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/NetworkProtocol/HTTPS/Certificates",
+    "@odata.type": "#CertificateCollection.CertificateCollection",
+    "Description": "Collection of Certificates for HTTPS",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/NetworkProtocol/HTTPS/Certificates/SecurityCertificate.1"
+        }
+    ],
+    "Members@odata.count": 1,
+    "Name": "HTTPS Certificates"
+}

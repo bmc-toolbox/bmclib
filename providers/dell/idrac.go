@@ -62,6 +62,9 @@ var (
 		providers.FeatureSetChassisPowerCap,
 		providers.FeatureGetChassisFanSpeeds,
 		providers.FeatureGetChassisTemperatures,
+		providers.FeatureGetManagerHTTPSCertificates,
+		providers.FeatureGenerateManagerHTTPSCSR,
+		providers.FeatureReplaceManagerHTTPSCertificate,
 	}
 
 	errManufacturerUnknown = errors.New("error identifying device manufacturer")
@@ -376,4 +379,19 @@ func (c *Conn) Screenshot(ctx context.Context) (image []byte, fileType string, e
 	}
 
 	return image, fileType, nil
+}
+
+// GetManagerHTTPSCertificates returns the certificates installed for the manager HTTPS endpoint
+func (c *Conn) GetManagerHTTPSCertificates(ctx context.Context) (certificates []bmc.Certificate, err error) {
+	return c.redfishwrapper.GetManagerHTTPSCertificates(ctx)
+}
+
+// GenerateManagerHTTPSCSR generates a certificate signing request for the manager HTTPS endpoint
+func (c *Conn) GenerateManagerHTTPSCSR(ctx context.Context, req *bmc.CSRRequest) (csrPEM string, err error) {
+	return c.redfishwrapper.GenerateManagerHTTPSCSR(ctx, req)
+}
+
+// ReplaceManagerHTTPSCertificate replaces the certificate installed for the manager HTTPS endpoint
+func (c *Conn) ReplaceManagerHTTPSCertificate(ctx context.Context, certificatePEM string) (err error) {
+	return c.redfishwrapper.ReplaceManagerHTTPSCertificate(ctx, certificatePEM)
 }

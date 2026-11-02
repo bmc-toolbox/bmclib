@@ -140,6 +140,12 @@ var (
 	// ErrChassisTemperaturesNotFound is returned when no chassis exposes temperature sensors through ThermalSubsystem or Thermal
 	ErrChassisTemperaturesNotFound = errors.New("no chassis exposes temperature sensors through ThermalSubsystem or Thermal")
 
+	// ErrManagerHTTPSCertificatesNotFound is returned when no manager exposes an HTTPS certificate collection
+	ErrManagerHTTPSCertificatesNotFound = errors.New("no manager exposes an HTTPS certificate collection")
+
+	// ErrCertificateServiceNotFound is returned when the BMC service root has no CertificateService
+	ErrCertificateServiceNotFound = errors.New("BMC has no CertificateService")
+
 	// ErrSecureBootDatabaseNotFound is returned when the requested UEFI Secure Boot key database
 	// (db, KEK, PK, dbx, ...) is not present in the SecureBootDatabases collection reported by the BMC.
 	ErrSecureBootDatabaseNotFound = errors.New("secure boot key database not found")
