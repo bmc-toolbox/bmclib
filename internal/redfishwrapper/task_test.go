@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -334,8 +335,8 @@ func TestGetTasks(t *testing.T) {
 		TaskStatus:      "OK",
 		State:           constants.Running,
 		PercentComplete: &percent,
-		StartTime:       "2023-11-06T12:04:16+00:00",
-		EndTime:         "2023-11-06T12:05:31+00:00",
+		StartTime:       mustParseTimestamp(t, "2023-11-06T12:04:16+00:00"),
+		EndTime:         mustParseTimestamp(t, "2023-11-06T12:05:31+00:00"),
 	}, tasks[0], "empty fixture messages must be dropped")
 	assert.Equal(t, "2", tasks[1].ID)
 	assert.Equal(t, constants.Complete, tasks[1].State)
@@ -363,4 +364,39 @@ func TestGetTasksNoTaskService(t *testing.T) {
 
 	_, err = client.GetTasks(context.Background())
 	assert.ErrorIs(t, err, bmclibErrs.ErrTaskServiceNotFound)
+}
+
+// mustParseTimestamp parses an RFC 3339 timestamp the way GetTasks does, so the expected value
+// carries the same location as the parsed one.
+func mustParseTimestamp(t *testing.T, value string) time.Time {
+	t.Helper()
+	ts, err := time.Parse(time.RFC3339, value)
+	require.NoError(t, err)
+	return ts
+}
+
+func TestParseTimestamp(t *testing.T) {
+	testCases := []struct {
+		name   string
+		value  string
+		expect time.Time
+	}{
+		{"RFC 3339 with offset", "2023-11-06T12:04:16+00:00", time.Date(2023, 11, 6, 12, 4, 16, 0, time.UTC)},
+		{"RFC 3339 with non-zero offset", "2023-11-06T14:04:16+02:00", time.Date(2023, 11, 6, 12, 4, 16, 0, time.UTC)},
+		{"RFC 3339 Zulu", "2024-06-01T02:00:00Z", time.Date(2024, 6, 1, 2, 0, 0, 0, time.UTC)},
+		{"fractional second", "2024-06-01T02:00:00.5Z", time.Date(2024, 6, 1, 2, 0, 0, 500000000, time.UTC)},
+		{"iDRAC without offset", "2021-02-15T19:24:17", time.Date(2021, 2, 15, 19, 24, 17, 0, time.UTC)},
+		{"empty", "", time.Time{}},
+		{"iDRAC TIME_NOW placeholder", "TIME_NOW", time.Time{}},
+		{"iDRAC TIME_NA placeholder", "TIME_NA", time.Time{}},
+		{"garbage", "yesterday", time.Time{}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := parseTimestamp(tc.value)
+			assert.True(t, got.Equal(tc.expect), "got %s, want %s", got, tc.expect)
+			assert.Equal(t, tc.expect.IsZero(), got.IsZero())
+		})
+	}
 }

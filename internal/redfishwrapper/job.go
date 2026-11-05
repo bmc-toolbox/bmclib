@@ -35,8 +35,8 @@ func (c *Client) GetJobs(ctx context.Context) ([]bmc.Job, error) {
 			JobState:        string(job.JobState),
 			JobStatus:       string(job.JobStatus),
 			PercentComplete: percentComplete(job.PercentComplete),
-			StartTime:       job.StartTime,
-			EndTime:         job.EndTime,
+			StartTime:       parseTimestamp(job.StartTime),
+			EndTime:         parseTimestamp(job.EndTime),
 			Messages:        messageTexts(job.Messages),
 		})
 	}

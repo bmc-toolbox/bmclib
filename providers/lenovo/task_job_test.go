@@ -3,6 +3,7 @@ package lenovo
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 )
@@ -41,7 +42,8 @@ func TestGetJobs(t *testing.T) {
 	}
 	job := jobs[0]
 	if job.ID != "Restart" || job.Name != "Scheduled Restart" || job.JobState != "Scheduled" ||
-		job.PercentComplete == nil || *job.PercentComplete != 0 || job.StartTime != "2024-06-01T02:00:00Z" {
+		job.PercentComplete == nil || *job.PercentComplete != 0 ||
+		!job.StartTime.Equal(time.Date(2024, 6, 1, 2, 0, 0, 0, time.UTC)) {
 		t.Errorf("unexpected job: %+v", job)
 	}
 }

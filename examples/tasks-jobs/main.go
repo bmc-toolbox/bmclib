@@ -65,7 +65,7 @@ func main() {
 			progress = fmt.Sprintf("%d%%", *t.PercentComplete)
 		}
 		fmt.Printf("  %-20s %-32s %-12s %-10s %-5s start=%s %s\n",
-			t.ID, t.Name, t.TaskState, t.TaskStatus, progress, t.StartTime, strings.Join(t.Messages, "; "))
+			t.ID, t.Name, t.TaskState, t.TaskStatus, progress, formatTime(t.StartTime), strings.Join(t.Messages, "; "))
 	}
 
 	jobs, err := client.GetJobs(ctx)
@@ -85,6 +85,15 @@ func main() {
 			progress = fmt.Sprintf("%d%%", *j.PercentComplete)
 		}
 		fmt.Printf("  %-20s %-32s %-12s %-10s %-5s start=%s %s\n",
-			j.ID, j.Name, j.JobState, j.JobStatus, progress, j.StartTime, strings.Join(j.Messages, "; "))
+			j.ID, j.Name, j.JobState, j.JobStatus, progress, formatTime(j.StartTime), strings.Join(j.Messages, "; "))
 	}
+}
+
+// formatTime renders a BMC timestamp, "n/a" when the BMC did not report one.
+func formatTime(ts time.Time) string {
+	if ts.IsZero() {
+		return "n/a"
+	}
+
+	return ts.Format(time.RFC3339)
 }

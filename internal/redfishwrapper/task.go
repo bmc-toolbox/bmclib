@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish/schemas"
@@ -134,8 +135,8 @@ func (c *Client) GetTasks(ctx context.Context) ([]bmc.Task, error) {
 			TaskStatus:      string(task.TaskStatus),
 			State:           c.ConvertTaskState(string(task.TaskState)),
 			PercentComplete: percentComplete(task.PercentComplete),
-			StartTime:       task.StartTime,
-			EndTime:         task.EndTime,
+			StartTime:       parseTimestamp(task.StartTime),
+			EndTime:         parseTimestamp(task.EndTime),
 			Messages:        messageTexts(task.Messages),
 		})
 	}
@@ -150,6 +151,24 @@ func percentComplete(v *uint) *int {
 	}
 	p := int(*v)
 	return &p
+}
+
+// timestampLayouts are the forms a Redfish date-time property comes in: RFC 3339 as the
+// specification requires, and the same without the UTC offset as iDRAC reports it (then taken
+// as UTC). A fractional second is accepted after either.
+var timestampLayouts = []string{time.RFC3339, "2006-01-02T15:04:05"}
+
+// parseTimestamp converts a Redfish date-time string to time.Time. It returns the zero time
+// when the value is empty or is not a timestamp (iDRAC fills StartTime/EndTime with "TIME_NOW"
+// and "TIME_NA" placeholders), so a vendor placeholder does not fail the whole collection.
+func parseTimestamp(value string) time.Time {
+	for _, layout := range timestampLayouts {
+		if t, err := time.Parse(layout, value); err == nil {
+			return t
+		}
+	}
+
+	return time.Time{}
 }
 
 // messageTexts returns the non-empty message texts of a Redfish message array, nil when none.

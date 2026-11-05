@@ -53,9 +53,8 @@ func TestGetJobs(t *testing.T) {
 		JobState:        "Pending",
 		JobStatus:       "OK",
 		PercentComplete: &percent,
-		StartTime:       "TIME_NOW",
 		Messages:        []string{"Task successfully scheduled."},
-	}, jobs[0])
+	}, jobs[0], "the iDRAC TIME_NOW placeholder is not a timestamp: StartTime must be zero")
 }
 
 func TestGetJobsNoJobService(t *testing.T) {

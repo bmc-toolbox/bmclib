@@ -3,6 +3,7 @@ package bmc
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
@@ -23,9 +24,11 @@ type Job struct {
 	JobStatus string
 	// PercentComplete is the job progress in percent; nil when the BMC does not report it.
 	PercentComplete *int
-	// StartTime and EndTime are the job timestamps as reported by the BMC; empty when not reported.
-	StartTime string
-	EndTime   string
+	// StartTime and EndTime are the job timestamps as reported by the BMC, keeping the UTC offset
+	// the BMC sent; zero when the BMC does not report them or reports a placeholder that is not a
+	// timestamp (iDRAC: "TIME_NOW", "TIME_NA").
+	StartTime time.Time
+	EndTime   time.Time
 	// Messages are the non-empty message texts attached to the job.
 	Messages []string
 }
