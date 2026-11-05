@@ -54,9 +54,11 @@ var Features = registrar.Features{
 	providers.FeatureGetManagerHTTPSCertificates,
 	providers.FeatureGenerateManagerHTTPSCSR,
 	providers.FeatureReplaceManagerHTTPSCertificate,
+	providers.FeatureGetTasks,
+	providers.FeatureGetJobs,
 }
 
-// compile-time assertions that the provider implements the BIOS configuration, power cap, thermal and certificate interfaces.
+// compile-time assertions that the provider implements the BIOS configuration, power cap, thermal, certificate, task and job interfaces.
 var (
 	_ bmc.BiosConfigurationGetter         = (*Conn)(nil)
 	_ bmc.BiosConfigurationSetter         = (*Conn)(nil)
@@ -69,6 +71,8 @@ var (
 	_ bmc.ManagerHTTPSCertificatesGetter  = (*Conn)(nil)
 	_ bmc.ManagerHTTPSCSRGenerator        = (*Conn)(nil)
 	_ bmc.ManagerHTTPSCertificateReplacer = (*Conn)(nil)
+	_ bmc.TasksGetter                     = (*Conn)(nil)
+	_ bmc.JobsGetter                      = (*Conn)(nil)
 )
 
 // Conn details for redfish client
@@ -349,4 +353,14 @@ func (c *Conn) GenerateManagerHTTPSCSR(ctx context.Context, req *bmc.CSRRequest)
 // ReplaceManagerHTTPSCertificate replaces the certificate installed for the manager HTTPS endpoint
 func (c *Conn) ReplaceManagerHTTPSCertificate(ctx context.Context, certificatePEM string) (err error) {
 	return c.redfishwrapper.ReplaceManagerHTTPSCertificate(ctx, certificatePEM)
+}
+
+// GetTasks returns the BMC task collection
+func (c *Conn) GetTasks(ctx context.Context) (tasks []bmc.Task, err error) {
+	return c.redfishwrapper.GetTasks(ctx)
+}
+
+// GetJobs returns the BMC job collection
+func (c *Conn) GetJobs(ctx context.Context) (jobs []bmc.Job, err error) {
+	return c.redfishwrapper.GetJobs(ctx)
 }

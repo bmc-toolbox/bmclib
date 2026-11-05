@@ -65,6 +65,8 @@ var (
 		providers.FeatureGetManagerHTTPSCertificates,
 		providers.FeatureGenerateManagerHTTPSCSR,
 		providers.FeatureReplaceManagerHTTPSCertificate,
+		providers.FeatureGetTasks,
+		providers.FeatureGetJobs,
 	}
 
 	errManufacturerUnknown = errors.New("error identifying device manufacturer")
@@ -394,4 +396,14 @@ func (c *Conn) GenerateManagerHTTPSCSR(ctx context.Context, req *bmc.CSRRequest)
 // ReplaceManagerHTTPSCertificate replaces the certificate installed for the manager HTTPS endpoint
 func (c *Conn) ReplaceManagerHTTPSCertificate(ctx context.Context, certificatePEM string) (err error) {
 	return c.redfishwrapper.ReplaceManagerHTTPSCertificate(ctx, certificatePEM)
+}
+
+// GetTasks returns the BMC task collection
+func (c *Conn) GetTasks(ctx context.Context) (tasks []bmc.Task, err error) {
+	return c.redfishwrapper.GetTasks(ctx)
+}
+
+// GetJobs returns the BMC job collection
+func (c *Conn) GetJobs(ctx context.Context) (jobs []bmc.Job, err error) {
+	return c.redfishwrapper.GetJobs(ctx)
 }

@@ -74,6 +74,8 @@ var Features = registrar.Features{
 	providers.FeatureGetManagerHTTPSCertificates,
 	providers.FeatureGenerateManagerHTTPSCSR,
 	providers.FeatureReplaceManagerHTTPSCertificate,
+	providers.FeatureGetTasks,
+	providers.FeatureGetJobs,
 }
 
 // supports
@@ -840,4 +842,22 @@ func (c *Client) ReplaceManagerHTTPSCertificate(ctx context.Context, certificate
 	}
 
 	return c.serviceClient.redfish.ReplaceManagerHTTPSCertificate(ctx, certificatePEM)
+}
+
+// GetTasks returns the BMC task collection
+func (c *Client) GetTasks(ctx context.Context) (tasks []bmc.Task, err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return nil, errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.GetTasks(ctx)
+}
+
+// GetJobs returns the BMC job collection
+func (c *Client) GetJobs(ctx context.Context) (jobs []bmc.Job, err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return nil, errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.GetJobs(ctx)
 }
