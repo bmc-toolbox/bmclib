@@ -54,9 +54,11 @@ var Features = registrar.Features{
 	providers.FeatureGetManagerHTTPSCertificates,
 	providers.FeatureGenerateManagerHTTPSCSR,
 	providers.FeatureReplaceManagerHTTPSCertificate,
+	providers.FeatureGetManagerEthernetInterfaces,
+	providers.FeatureGetManagerNetworkProtocol,
 }
 
-// compile-time assertions that the provider implements the BIOS configuration, power cap, thermal and certificate interfaces.
+// compile-time assertions that the provider implements the BIOS configuration, power cap, thermal, certificate and manager network interfaces.
 var (
 	_ bmc.BiosConfigurationGetter         = (*Conn)(nil)
 	_ bmc.BiosConfigurationSetter         = (*Conn)(nil)
@@ -69,6 +71,8 @@ var (
 	_ bmc.ManagerHTTPSCertificatesGetter  = (*Conn)(nil)
 	_ bmc.ManagerHTTPSCSRGenerator        = (*Conn)(nil)
 	_ bmc.ManagerHTTPSCertificateReplacer = (*Conn)(nil)
+	_ bmc.ManagerEthernetInterfacesGetter = (*Conn)(nil)
+	_ bmc.ManagerNetworkProtocolGetter    = (*Conn)(nil)
 )
 
 // Conn details for redfish client
@@ -349,4 +353,14 @@ func (c *Conn) GenerateManagerHTTPSCSR(ctx context.Context, req *bmc.CSRRequest)
 // ReplaceManagerHTTPSCertificate replaces the certificate installed for the manager HTTPS endpoint
 func (c *Conn) ReplaceManagerHTTPSCertificate(ctx context.Context, certificatePEM string) (err error) {
 	return c.redfishwrapper.ReplaceManagerHTTPSCertificate(ctx, certificatePEM)
+}
+
+// GetManagerEthernetInterfaces returns the manager (BMC) ethernet interfaces
+func (c *Conn) GetManagerEthernetInterfaces(ctx context.Context) (interfaces []bmc.ManagerEthernetInterface, err error) {
+	return c.redfishwrapper.GetManagerEthernetInterfaces(ctx)
+}
+
+// GetManagerNetworkProtocol returns the manager network protocol resource: the BMC host name and management services
+func (c *Conn) GetManagerNetworkProtocol(ctx context.Context) (protocol *bmc.ManagerNetworkProtocol, err error) {
+	return c.redfishwrapper.GetManagerNetworkProtocol(ctx)
 }
