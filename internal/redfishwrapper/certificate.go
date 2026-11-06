@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"path"
 
 	"github.com/stmcginnis/gofish/schemas"
 
@@ -19,7 +18,7 @@ const (
 	replaceCertificateAction = "CertificateService.ReplaceCertificate"
 )
 
-// odataLink is a Redfish resource reference as sent in action parameters.
+// odataLink is a Redfish resource reference as found in resource documents.
 type odataLink struct {
 	ODataID string `json:"@odata.id"`
 }
@@ -56,47 +55,30 @@ func (c *Client) GenerateManagerHTTPSCSR(ctx context.Context, req *bmc.CSRReques
 		return "", err
 	}
 
-	target, err := c.certificateServiceActionTarget(generateCSRAction)
+	service, err := c.certificateService()
 	if err != nil {
 		return "", err
 	}
 
-	payload := map[string]any{
-		"CertificateCollection": odataLink{ODataID: collection},
-	}
-	for key, value := range map[string]string{
-		"CommonName":         req.CommonName,
-		"Organization":       req.Organization,
-		"OrganizationalUnit": req.OrganizationalUnit,
-		"City":               req.City,
-		"State":              req.State,
-		"Country":            req.Country,
-		"Email":              req.Email,
-	} {
-		if value != "" {
-			payload[key] = value
-		}
-	}
-	if len(req.AlternativeNames) > 0 {
-		payload["AlternativeNames"] = req.AlternativeNames
-	}
-	if req.KeyBitLength > 0 {
-		payload["KeyBitLength"] = req.KeyBitLength
-	}
-
-	// gofish returns an error for any non-2xx response, carrying the BMC's error body.
-	resp, err := c.PostWithHeaders(ctx, target, payload, nil)
+	// gofish sends CertificateCollection as a resource link ({"@odata.id": ...}) and returns an
+	// error for any non-2xx response, carrying the BMC's error body.
+	result, err := service.GenerateCSR(&schemas.CertificateServiceGenerateCSRParameters{
+		CertificateCollection: collection,
+		CommonName:            req.CommonName,
+		Organization:          req.Organization,
+		OrganizationalUnit:    req.OrganizationalUnit,
+		City:                  req.City,
+		State:                 req.State,
+		Country:               req.Country,
+		Email:                 req.Email,
+		AlternativeNames:      req.AlternativeNames,
+		KeyBitLength:          req.KeyBitLength,
+	})
 	if err != nil {
 		return "", fmt.Errorf("%s: %w", generateCSRAction, err)
 	}
-	defer func() { _ = resp.Body.Close() }()
-
-	var result struct {
-		CSRString string `json:"CSRString"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil || result.CSRString == "" {
-		return "", fmt.Errorf("%s: response (status %d) carries no CSRString; task monitor: %q",
-			generateCSRAction, resp.StatusCode, resp.Header.Get("Location"))
+	if result == nil || result.CSRString == "" {
+		return "", fmt.Errorf("%s: response carries no CSRString", generateCSRAction)
 	}
 
 	return result.CSRString, nil
@@ -118,22 +100,19 @@ func (c *Client) ReplaceManagerHTTPSCertificate(ctx context.Context, certificate
 		return fmt.Errorf("%w: the HTTPS certificate collection is empty", bmclibErrs.ErrManagerHTTPSCertificatesNotFound)
 	}
 
-	target, err := c.certificateServiceActionTarget(replaceCertificateAction)
+	service, err := c.certificateService()
 	if err != nil {
 		return err
 	}
 
-	payload := map[string]any{
-		"CertificateString": certificatePEM,
-		"CertificateType":   string(schemas.PEMCertificateType),
-		"CertificateUri":    odataLink{ODataID: certs[0].ODataID},
-	}
-
-	resp, err := c.PostWithHeaders(ctx, target, payload, nil)
-	if err != nil {
+	// A 202 reply yields a task monitor, any other 2xx the bare response; neither is awaited.
+	if _, err := service.ReplaceCertificate(&schemas.CertificateServiceReplaceCertificateParameters{
+		CertificateString: certificatePEM,
+		CertificateType:   schemas.PEMCertificateType,
+		CertificateURI:    certs[0].ODataID,
+	}); err != nil {
 		return fmt.Errorf("%s: %w", replaceCertificateAction, err)
 	}
-	_ = resp.Body.Close()
 
 	return nil
 }
@@ -219,49 +198,23 @@ func (c *Client) httpsCertificatesLink(networkProtocolURI string) (string, error
 	return doc.HTTPS.Certificates.ODataID, nil
 }
 
-// certificateServiceActionTarget returns the target URI of a CertificateService action, read from
-// the service's Actions; when the firmware omits the target it is derived from the resource
-// @odata.id by the Redfish convention.
-//
-// The actions are POSTed explicitly rather than through gofish's typed GenerateCSR and
-// ReplaceCertificate: their CertificateCollection and CertificateUri parameters are plain strings
-// in gofish, while the DMTF CertificateService schema (v1_0 onward) defines them as resource links
-// ({"@odata.id": ...}), which is what BMCs validate (confirmed on AMI MegaRAC, Dell iDRAC and
-// Lenovo XCC).
-func (c *Client) certificateServiceActionTarget(action string) (string, error) {
+// certificateService returns the service root CertificateService, or
+// ErrCertificateServiceNotFound when the service root does not link one.
+func (c *Client) certificateService() (*schemas.CertificateService, error) {
 	service, err := c.ServiceRoot()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	cs, err := service.CertificateService()
 	if err != nil {
-		return "", fmt.Errorf("CertificateService: %w", err)
+		return nil, fmt.Errorf("CertificateService: %w", err)
 	}
 	if cs == nil {
-		return "", bmclibErrs.ErrCertificateServiceNotFound
+		return nil, bmclibErrs.ErrCertificateServiceNotFound
 	}
 
-	resp, err := c.Get(cs.ODataID)
-	if err != nil {
-		return "", fmt.Errorf("CertificateService: %w", err)
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	var doc struct {
-		Actions map[string]struct {
-			Target string `json:"target"`
-		} `json:"Actions"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&doc); err != nil {
-		return "", fmt.Errorf("decoding CertificateService: %w", err)
-	}
-
-	if target := doc.Actions["#"+action].Target; target != "" {
-		return target, nil
-	}
-
-	return path.Join(cs.ODataID, "Actions", action), nil
+	return cs, nil
 }
 
 // toCertificate maps a Redfish Certificate to the bmclib representation.

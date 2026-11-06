@@ -165,6 +165,27 @@ func TestGetChassisFanSpeedsLegacyPercent(t *testing.T) {
 	assert.Equal(t, float64(40), *fans[0].SpeedPercent)
 }
 
+// A ThermalSubsystem without a Fans link falls back to the legacy Thermal fans.
+func TestGetChassisFanSpeedsSubsystemWithoutFans(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc(dellThermalSubsystemPath, func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{
+			"@odata.id": "/redfish/v1/Chassis/System.Embedded.1/ThermalSubsystem",
+			"Id": "ThermalSubsystem",
+			"ThermalMetrics": {"@odata.id": "/redfish/v1/Chassis/System.Embedded.1/ThermalSubsystem/ThermalMetrics"}
+		}`))
+	})
+	mux.HandleFunc(dellThermalPath, endpointFunc(t, "dell/thermal.json"))
+	client := newDellPowerClient(t, mux)
+
+	fans, err := client.GetChassisFanSpeeds(context.Background())
+	require.NoError(t, err)
+	require.Len(t, fans, 2)
+	assert.Equal(t, "System Board Fan1A", fans[0].Name)
+	require.NotNil(t, fans[0].SpeedRPM)
+	assert.Equal(t, float64(5880), *fans[0].SpeedRPM)
+}
+
 // A failure other than 404 while collecting is returned, not skipped.
 func TestGetChassisThermalErrorSurfaced(t *testing.T) {
 	mux := http.NewServeMux()

@@ -146,6 +146,12 @@ var (
 	// ErrCertificateServiceNotFound is returned when the BMC service root has no CertificateService
 	ErrCertificateServiceNotFound = errors.New("BMC has no CertificateService")
 
+	// ErrManagerEthernetInterfacesNotFound is returned when no manager exposes an EthernetInterfaces collection
+	ErrManagerEthernetInterfacesNotFound = errors.New("no manager exposes an EthernetInterfaces collection")
+
+	// ErrManagerNetworkProtocolNotFound is returned when no manager exposes a NetworkProtocol resource
+	ErrManagerNetworkProtocolNotFound = errors.New("no manager exposes a NetworkProtocol resource")
+
 	// ErrSecureBootDatabaseNotFound is returned when the requested UEFI Secure Boot key database
 	// (db, KEK, PK, dbx, ...) is not present in the SecureBootDatabases collection reported by the BMC.
 	ErrSecureBootDatabaseNotFound = errors.New("secure boot key database not found")

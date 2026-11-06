@@ -174,15 +174,15 @@ func TestGenerateManagerHTTPSCSRNoCSRString(t *testing.T) {
 	var posted map[string]any
 
 	mux := http.NewServeMux()
+	// A BMC that defers the CSR to a task answers without a CSRString.
 	mux.HandleFunc(dellGenerateCSRPath, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Location", "/redfish/v1/TaskService/Tasks/JID_1")
-		actionRecorder(t, http.StatusAccepted, ``, &posted)(w, r)
+		actionRecorder(t, http.StatusAccepted, `{"@odata.id": "/redfish/v1/TaskService/Tasks/JID_1", "Id": "JID_1"}`, &posted)(w, r)
 	})
 	client := newDellManagerClient(t, mux, endpointFunc(t, "dell/networkprotocol.json"))
 
 	_, err := client.GenerateManagerHTTPSCSR(context.Background(), &bmc.CSRRequest{CommonName: "idrac-7XK9Q33.example.com"})
 	assert.ErrorContains(t, err, "no CSRString")
-	assert.ErrorContains(t, err, "JID_1")
 }
 
 func TestReplaceManagerHTTPSCertificate(t *testing.T) {
