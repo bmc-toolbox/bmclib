@@ -2,7 +2,6 @@ package redfishwrapper
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -16,8 +15,9 @@ import (
 // GetChassisFanSpeeds returns the fan readings of the first chassis exposing fans.
 //
 // Fans are read from the chassis ThermalSubsystem Fans collection; chassis whose
-// firmware still serves only the deprecated Thermal resource are read from
-// Thermal.Fans. Errors raised while collecting are returned to the caller.
+// firmware still serves only the deprecated Thermal resource, or whose ThermalSubsystem
+// lists no fans, are read from Thermal.Fans. Errors raised while collecting are returned
+// to the caller.
 func (c *Client) GetChassisFanSpeeds(ctx context.Context) ([]bmc.ChassisFan, error) {
 	chassis, err := c.Chassis(ctx)
 	if err != nil {
@@ -35,11 +35,11 @@ func (c *Client) GetChassisFanSpeeds(ctx context.Context) ([]bmc.ChassisFan, err
 		}
 
 		if subsystem != nil {
-			fans, found, err := c.thermalSubsystemFans(ch, subsystem)
+			fans, err := thermalSubsystemFans(ch, subsystem)
 			if err != nil {
 				return nil, err
 			}
-			if found {
+			if len(fans) > 0 {
 				return fans, nil
 			}
 		}
@@ -126,25 +126,12 @@ func legacyThermal(ch *schemas.Chassis) (*schemas.Thermal, error) {
 	return thermal, nil
 }
 
-// thermalSubsystemFans reads the Fans collection of a ThermalSubsystem. found is false
-// when the subsystem carries no Fans link.
-//
-// The link is taken from the raw resource because gofish's ThermalSubsystem.Fans()
-// decodes the members as the deprecated Thermal fan and drops SpeedPercent.
-func (c *Client) thermalSubsystemFans(ch *schemas.Chassis, subsystem *schemas.ThermalSubsystem) ([]bmc.ChassisFan, bool, error) {
-	var links struct {
-		Fans schemas.Link `json:"Fans"`
-	}
-	if err := json.Unmarshal(subsystem.RawData, &links); err != nil {
-		return nil, false, fmt.Errorf("chassis %s ThermalSubsystem: %w", ch.ID, err)
-	}
-	if links.Fans == "" {
-		return nil, false, nil
-	}
-
-	members, err := schemas.ListReferencedFans(c.client, string(links.Fans))
+// thermalSubsystemFans reads the Fans collection of a ThermalSubsystem. The result is
+// empty when the subsystem carries no Fans link or the collection has no members.
+func thermalSubsystemFans(ch *schemas.Chassis, subsystem *schemas.ThermalSubsystem) ([]bmc.ChassisFan, error) {
+	members, err := subsystem.Fans()
 	if err != nil {
-		return nil, false, fmt.Errorf("chassis %s ThermalSubsystem Fans: %w", ch.ID, err)
+		return nil, fmt.Errorf("chassis %s ThermalSubsystem Fans: %w", ch.ID, err)
 	}
 
 	fans := make([]bmc.ChassisFan, 0, len(members))
@@ -162,7 +149,7 @@ func (c *Client) thermalSubsystemFans(ch *schemas.Chassis, subsystem *schemas.Th
 		})
 	}
 
-	return fans, true, nil
+	return fans, nil
 }
 
 // metricsTemperatures converts ThermalMetrics temperature excerpts. Excerpts carry
