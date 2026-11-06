@@ -124,4 +124,10 @@ const (
 
 	// FeatureReplaceManagerHTTPSCertificate means an implementation that can replace the certificate installed for the manager HTTPS endpoint
 	FeatureReplaceManagerHTTPSCertificate registrar.Feature = "replacemanagerhttpscertificate"
+
+	// FeatureGetManagerEthernetInterfaces means an implementation that can read the manager (BMC) ethernet interfaces
+	FeatureGetManagerEthernetInterfaces registrar.Feature = "getmanagerethernetinterfaces"
+
+	// FeatureGetManagerNetworkProtocol means an implementation that can read the manager network protocol (management services and ports)
+	FeatureGetManagerNetworkProtocol registrar.Feature = "getmanagernetworkprotocol"
 )

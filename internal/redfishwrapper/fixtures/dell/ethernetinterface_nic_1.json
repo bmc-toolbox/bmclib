@@ -1,0 +1,84 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#EthernetInterface.EthernetInterface",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/EthernetInterfaces/NIC.1",
+    "@odata.type": "#EthernetInterface.v1_6_0.EthernetInterface",
+    "AutoNeg": true,
+    "DHCPv4": {
+        "DHCPEnabled": false,
+        "UseDNSServers": false,
+        "UseDomainName": false,
+        "UseGateway": false,
+        "UseNTPServers": false,
+        "UseStaticRoutes": false
+    },
+    "DHCPv6": {
+        "OperatingMode": "Disabled",
+        "UseDNSServers": false,
+        "UseDomainName": false,
+        "UseNTPServers": false
+    },
+    "Description": "Management Network Interface",
+    "FQDN": "idrac-7XK9Q33.example.com",
+    "FullDuplex": true,
+    "HostName": "idrac-7XK9Q33",
+    "IPv4Addresses": [
+        {
+            "Address": "10.0.0.5",
+            "AddressOrigin": "Static",
+            "Gateway": "10.0.0.1",
+            "SubnetMask": "255.255.255.0"
+        }
+    ],
+    "IPv4Addresses@odata.count": 1,
+    "IPv4StaticAddresses": [
+        {
+            "Address": "10.0.0.5",
+            "Gateway": "10.0.0.1",
+            "SubnetMask": "255.255.255.0"
+        }
+    ],
+    "IPv4StaticAddresses@odata.count": 1,
+    "IPv6AddressPolicyTable": [],
+    "IPv6AddressPolicyTable@odata.count": 0,
+    "IPv6Addresses": [
+        {
+            "Address": "fe80::d28e:79ff:feb3:701a",
+            "AddressOrigin": "LinkLocal",
+            "AddressState": "Preferred",
+            "PrefixLength": 64
+        }
+    ],
+    "IPv6Addresses@odata.count": 1,
+    "IPv6DefaultGateway": "::",
+    "IPv6StaticAddresses": [],
+    "IPv6StaticAddresses@odata.count": 0,
+    "IPv6StaticDefaultGateways": [],
+    "IPv6StaticDefaultGateways@odata.count": 0,
+    "Id": "NIC.1",
+    "InterfaceEnabled": true,
+    "LinkStatus": "LinkUp",
+    "MACAddress": "D0:8E:79:B3:70:1A",
+    "MTUSize": 1500,
+    "MaxIPv6StaticAddresses": 16,
+    "Name": "Manager Ethernet Interface",
+    "NameServers": [
+        "10.0.0.2",
+        "10.0.0.3"
+    ],
+    "NameServers@odata.count": 2,
+    "PermanentMACAddress": "D0:8E:79:B3:70:1A",
+    "SpeedMbps": 1000,
+    "StaticNameServers": [
+        "10.0.0.2",
+        "10.0.0.3"
+    ],
+    "StaticNameServers@odata.count": 2,
+    "Status": {
+        "Health": "OK",
+        "State": "Enabled"
+    },
+    "VLAN": {
+        "VLANEnable": false,
+        "VLANId": 1
+    }
+}
