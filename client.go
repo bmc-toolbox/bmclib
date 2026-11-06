@@ -893,6 +893,32 @@ func (c *Client) GetJobs(ctx context.Context) (jobs []bmc.Job, err error) {
 	return jobs, err
 }
 
+// GetManagerEthernetInterfaces returns the manager (BMC) ethernet interfaces: MAC, addresses,
+// VLAN and link state.
+func (c *Client) GetManagerEthernetInterfaces(ctx context.Context) (interfaces []bmc.ManagerEthernetInterface, err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "GetManagerEthernetInterfaces")
+	defer span.End()
+
+	interfaces, metadata, err := bmc.GetManagerEthernetInterfacesFromInterfaces(ctx, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return interfaces, err
+}
+
+// GetManagerNetworkProtocol returns the manager network protocol resource: the BMC host name and
+// the management services it reports, with their enabled state and port.
+func (c *Client) GetManagerNetworkProtocol(ctx context.Context) (protocol *bmc.ManagerNetworkProtocol, err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "GetManagerNetworkProtocol")
+	defer span.End()
+
+	protocol, metadata, err := bmc.GetManagerNetworkProtocolFromInterfaces(ctx, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return protocol, err
+}
+
 // FirmwareInstall pass through library function to upload firmware and install firmware
 func (c *Client) FirmwareInstall(ctx context.Context, component, operationApplyTime string, forceInstall bool, reader io.Reader) (taskID string, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "FirmwareInstall")

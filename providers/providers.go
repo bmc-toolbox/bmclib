@@ -129,4 +129,10 @@ const (
 
 	// FeatureGetJobs means an implementation that can list the BMC job collection (JobService/Jobs)
 	FeatureGetJobs registrar.Feature = "getjobs"
+
+	// FeatureGetManagerEthernetInterfaces means an implementation that can read the manager (BMC) ethernet interfaces
+	FeatureGetManagerEthernetInterfaces registrar.Feature = "getmanagerethernetinterfaces"
+
+	// FeatureGetManagerNetworkProtocol means an implementation that can read the manager network protocol (management services and ports)
+	FeatureGetManagerNetworkProtocol registrar.Feature = "getmanagernetworkprotocol"
 )
