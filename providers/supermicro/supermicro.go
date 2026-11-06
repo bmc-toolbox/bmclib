@@ -74,6 +74,8 @@ var Features = registrar.Features{
 	providers.FeatureGetManagerHTTPSCertificates,
 	providers.FeatureGenerateManagerHTTPSCSR,
 	providers.FeatureReplaceManagerHTTPSCertificate,
+	providers.FeatureGetManagerEthernetInterfaces,
+	providers.FeatureGetManagerNetworkProtocol,
 }
 
 // supports
@@ -840,4 +842,22 @@ func (c *Client) ReplaceManagerHTTPSCertificate(ctx context.Context, certificate
 	}
 
 	return c.serviceClient.redfish.ReplaceManagerHTTPSCertificate(ctx, certificatePEM)
+}
+
+// GetManagerEthernetInterfaces returns the manager (BMC) ethernet interfaces
+func (c *Client) GetManagerEthernetInterfaces(ctx context.Context) (interfaces []bmc.ManagerEthernetInterface, err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return nil, errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.GetManagerEthernetInterfaces(ctx)
+}
+
+// GetManagerNetworkProtocol returns the manager network protocol resource: the BMC host name and management services
+func (c *Client) GetManagerNetworkProtocol(ctx context.Context) (protocol *bmc.ManagerNetworkProtocol, err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return nil, errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.GetManagerNetworkProtocol(ctx)
 }
