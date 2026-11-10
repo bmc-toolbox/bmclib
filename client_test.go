@@ -2,6 +2,7 @@ package bmclib
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/jacobweinstock/registrar"
 	"gopkg.in/go-playground/assert.v1"
 
+	"github.com/bmc-toolbox/bmclib/v2/bmc"
 	"github.com/bmc-toolbox/bmclib/v2/logging"
 )
 
@@ -234,5 +236,61 @@ func TestOpenFiltered(t *testing.T) {
 	want = []string{"tester1", "tester2", "tester3"}
 	if diff := cmp.Diff(registryNames(cl.Registry.Drivers), want); diff != "" {
 		t.Errorf("diff: %s", diff)
+	}
+}
+
+func TestGetNormalizedPowerState(t *testing.T) {
+	testCases := map[string]struct {
+		providers      []*testProvider
+		want           bmc.PowerState
+		wantSuccessful string
+		wantErr        bool
+	}{
+		"redfish powering off": {
+			providers:      []*testProvider{{PName: "redfish", Powerstate: "PoweringOff"}},
+			want:           bmc.PowerStatePoweringOff,
+			wantSuccessful: "redfish",
+		},
+		"ipmitool with warning": {
+			providers:      []*testProvider{{PName: "ipmitool", Powerstate: "Unable to Get Channel Cipher Suites\nChassis Power is on\n"}},
+			want:           bmc.PowerStateOn,
+			wantSuccessful: "ipmitool",
+		},
+		"unknown falls back to next provider": {
+			providers:      []*testProvider{{PName: "redfish", Powerstate: ""}, {PName: "ipmitool", Powerstate: "Chassis Power is off"}},
+			want:           bmc.PowerStateOff,
+			wantSuccessful: "ipmitool",
+		},
+		"unrecognized": {
+			providers: []*testProvider{{PName: "homeassistant", Powerstate: "unavailable"}},
+			want:      bmc.PowerStateUnknown,
+			wantErr:   true,
+		},
+		"provider error": {
+			providers: []*testProvider{{PName: "redfish", Err: errors.New("boom")}},
+			want:      bmc.PowerStateUnknown,
+			wantErr:   true,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			registry := registrar.NewRegistry()
+			for _, p := range tc.providers {
+				registry.Register(p.PName, p.PName, nil, nil, p)
+			}
+			cl := NewClient("", "", "", WithRegistry(registry))
+
+			got, err := cl.GetNormalizedPowerState(context.Background())
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Fatal(diff)
+			}
+			if diff := cmp.Diff(tc.wantSuccessful, cl.GetMetadata().SuccessfulProvider); diff != "" {
+				t.Fatal(diff)
+			}
+		})
 	}
 }

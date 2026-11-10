@@ -494,6 +494,21 @@ func (c *Client) GetPowerState(ctx context.Context) (state string, err error) {
 	return state, err
 }
 
+// GetNormalizedPowerState returns the power state of the machine normalized
+// with bmc.ParsePowerState. Providers whose raw state is not recognized count
+// as failed, so the next provider is tried; the raw values are recorded in the
+// metadata FailedProviderDetail. Use GetPowerState to get the raw value.
+func (c *Client) GetNormalizedPowerState(ctx context.Context) (state bmc.PowerState, err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "GetNormalizedPowerState")
+	defer span.End()
+
+	state, metadata, err := bmc.GetNormalizedPowerStateFromInterfaces(ctx, c.perProviderTimeout(ctx), c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return state, err
+}
+
 // SetPowerState pass through to library function
 func (c *Client) SetPowerState(ctx context.Context, state string) (ok bool, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetPowerState")
