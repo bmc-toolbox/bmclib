@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/stmcginnis/gofish/schemas"
 
+	"github.com/bmc-toolbox/bmclib/v2/bmc"
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
@@ -103,4 +105,80 @@ func (c *Client) TaskStateActive(state constants.TaskState) (bool, error) {
 	default:
 		return false, errors.Wrap(errUnexpectedTaskState, string(state))
 	}
+}
+
+// GetTasks returns the members of the BMC task collection (TaskService/Tasks). It returns
+// ErrTaskServiceNotFound when the service root has no TaskService.
+func (c *Client) GetTasks(ctx context.Context) ([]bmc.Task, error) {
+	service, err := c.client.Service.Tasks()
+	if err != nil {
+		return nil, fmt.Errorf("TaskService: %w", err)
+	}
+	if service == nil {
+		return nil, bmclibErrs.ErrTaskServiceNotFound
+	}
+
+	tasks, err := service.Tasks()
+	if err != nil {
+		return nil, fmt.Errorf("TaskService tasks: %w", err)
+	}
+
+	out := make([]bmc.Task, 0, len(tasks))
+	for _, task := range tasks {
+		if task == nil {
+			continue
+		}
+		out = append(out, bmc.Task{
+			ID:              task.ID,
+			Name:            task.Name,
+			TaskState:       string(task.TaskState),
+			TaskStatus:      string(task.TaskStatus),
+			State:           c.ConvertTaskState(string(task.TaskState)),
+			PercentComplete: percentComplete(task.PercentComplete),
+			StartTime:       parseTimestamp(task.StartTime),
+			EndTime:         parseTimestamp(task.EndTime),
+			Messages:        messageTexts(task.Messages),
+		})
+	}
+
+	return out, nil
+}
+
+// percentComplete converts a Redfish PercentComplete value, nil when not reported.
+func percentComplete(v *uint) *int {
+	if v == nil {
+		return nil
+	}
+	p := int(*v)
+	return &p
+}
+
+// timestampLayouts are the forms a Redfish date-time property comes in: RFC 3339 as the
+// specification requires, and the same without the UTC offset as iDRAC reports it (then taken
+// as UTC). A fractional second is accepted after either.
+var timestampLayouts = []string{time.RFC3339, "2006-01-02T15:04:05"}
+
+// parseTimestamp converts a Redfish date-time string to time.Time. It returns the zero time
+// when the value is empty or is not a timestamp (iDRAC fills StartTime/EndTime with "TIME_NOW"
+// and "TIME_NA" placeholders), so a vendor placeholder does not fail the whole collection.
+func parseTimestamp(value string) time.Time {
+	for _, layout := range timestampLayouts {
+		if t, err := time.Parse(layout, value); err == nil {
+			return t
+		}
+	}
+
+	return time.Time{}
+}
+
+// messageTexts returns the non-empty message texts of a Redfish message array, nil when none.
+func messageTexts(messages []schemas.Message) []string {
+	var out []string
+	for i := range messages {
+		if messages[i].Message == "" {
+			continue
+		}
+		out = append(out, messages[i].Message)
+	}
+	return out
 }

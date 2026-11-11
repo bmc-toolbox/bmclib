@@ -1,0 +1,13 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#JobCollection.JobCollection",
+    "@odata.id": "/redfish/v1/JobService/Jobs",
+    "@odata.type": "#JobCollection.JobCollection",
+    "Description": "Collection of Jobs",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/JobService/Jobs/JID_123456789012"
+        }
+    ],
+    "Members@odata.count": 1,
+    "Name": "Job Collection"
+}

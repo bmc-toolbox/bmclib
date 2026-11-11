@@ -145,6 +145,11 @@ var (
 
 	// ErrCertificateServiceNotFound is returned when the BMC service root has no CertificateService
 	ErrCertificateServiceNotFound = errors.New("BMC has no CertificateService")
+	// ErrTaskServiceNotFound is returned when the BMC service root has no TaskService
+	ErrTaskServiceNotFound = errors.New("BMC has no TaskService")
+
+	// ErrJobServiceNotFound is returned when the BMC service root has no JobService
+	ErrJobServiceNotFound = errors.New("BMC has no JobService")
 
 	// ErrSecureBootDatabaseNotFound is returned when the requested UEFI Secure Boot key database
 	// (db, KEK, PK, dbx, ...) is not present in the SecureBootDatabases collection reported by the BMC.
