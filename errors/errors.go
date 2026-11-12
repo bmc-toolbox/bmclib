@@ -157,6 +157,12 @@ var (
 	// ErrManagerNetworkProtocolNotFound is returned when no manager exposes a NetworkProtocol resource
 	ErrManagerNetworkProtocolNotFound = errors.New("no manager exposes a NetworkProtocol resource")
 
+	// ErrManagerNetworkServiceNotFound is returned when the manager NetworkProtocol resource does not report the requested service
+	ErrManagerNetworkServiceNotFound = errors.New("manager NetworkProtocol resource does not report the service")
+
+	// ErrManagerNetworkProtocolSet is returned when the BMC rejects an update of the manager NetworkProtocol resource
+	ErrManagerNetworkProtocolSet = errors.New("failed to update manager NetworkProtocol")
+
 	// ErrSecureBootDatabaseNotFound is returned when the requested UEFI Secure Boot key database
 	// (db, KEK, PK, dbx, ...) is not present in the SecureBootDatabases collection reported by the BMC.
 	ErrSecureBootDatabaseNotFound = errors.New("secure boot key database not found")

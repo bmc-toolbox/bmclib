@@ -919,6 +919,33 @@ func (c *Client) GetManagerNetworkProtocol(ctx context.Context) (protocol *bmc.M
 	return protocol, err
 }
 
+// SetManagerNetworkService enables or disables a management service of the BMC (a name as reported
+// by GetManagerNetworkProtocol, e.g. "IPMI" or "SSH"). A non-nil port also changes the service
+// port.
+func (c *Client) SetManagerNetworkService(ctx context.Context, service string, enabled bool, port *int) (err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetManagerNetworkService")
+	defer span.End()
+
+	metadata, err := bmc.SetManagerNetworkServiceFromInterfaces(ctx, c.registry().GetDriverInterfaces(), service, enabled, port)
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return err
+}
+
+// SetManagerNTPServers replaces the NTP server list of the BMC; an empty list clears it. It does
+// not enable the NTP service, see SetManagerNetworkService.
+func (c *Client) SetManagerNTPServers(ctx context.Context, servers []string) (err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetManagerNTPServers")
+	defer span.End()
+
+	metadata, err := bmc.SetManagerNTPServersFromInterfaces(ctx, c.registry().GetDriverInterfaces(), servers)
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return err
+}
+
 // FirmwareInstall pass through library function to upload firmware and install firmware
 func (c *Client) FirmwareInstall(ctx context.Context, component, operationApplyTime string, forceInstall bool, reader io.Reader) (taskID string, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "FirmwareInstall")

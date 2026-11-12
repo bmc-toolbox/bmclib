@@ -2,7 +2,10 @@ package lenovo
 
 import (
 	"context"
+	"errors"
 	"testing"
+
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 // Requirement: Read ethernet interfaces — the XCC manager NIC is readable.
@@ -55,5 +58,55 @@ func TestGetManagerNetworkProtocol(t *testing.T) {
 		if s.Name == "HTTPS" && (!s.Enabled || s.Port == nil || *s.Port != 443) {
 			t.Errorf("unexpected HTTPS service: %+v", s)
 		}
+	}
+}
+
+// Requirement: Manager network protocols — a service is switched with a PATCH of that service only.
+func TestSetManagerNetworkService(t *testing.T) {
+	ts := newTestServer(t, testServerOpts{})
+	c := ts.openedClient(t)
+
+	if err := c.SetManagerNetworkService(context.Background(), "SSDP", false, nil); err != nil {
+		t.Fatalf("SetManagerNetworkService: %v", err)
+	}
+
+	patched, body := ts.networkProtocolPatch()
+	if !patched {
+		t.Fatal("expected the NetworkProtocol resource to be PATCHed")
+	}
+	if want := `{"SSDP":{"ProtocolEnabled":false}}`; body != want {
+		t.Errorf("PATCH body = %s, want %s", body, want)
+	}
+}
+
+// Requirement: Manager network protocols — a service the XCC does not expose is not written.
+func TestSetManagerNetworkServiceNotExposed(t *testing.T) {
+	ts := newTestServer(t, testServerOpts{})
+	c := ts.openedClient(t)
+
+	err := c.SetManagerNetworkService(context.Background(), "Telnet", true, nil)
+	if !errors.Is(err, bmclibErrs.ErrManagerNetworkServiceNotFound) {
+		t.Fatalf("err = %v, want ErrManagerNetworkServiceNotFound", err)
+	}
+	if patched, _ := ts.networkProtocolPatch(); patched {
+		t.Fatal("a service the XCC does not expose must not be PATCHed")
+	}
+}
+
+// Requirement: Manager network protocols — the NTP server list is replaced as a whole.
+func TestSetManagerNTPServers(t *testing.T) {
+	ts := newTestServer(t, testServerOpts{})
+	c := ts.openedClient(t)
+
+	if err := c.SetManagerNTPServers(context.Background(), []string{"10.0.0.1", "10.0.0.2"}); err != nil {
+		t.Fatalf("SetManagerNTPServers: %v", err)
+	}
+
+	patched, body := ts.networkProtocolPatch()
+	if !patched {
+		t.Fatal("expected the NetworkProtocol resource to be PATCHed")
+	}
+	if want := `{"NTP":{"NTPServers":["10.0.0.1","10.0.0.2"]}}`; body != want {
+		t.Errorf("PATCH body = %s, want %s", body, want)
 	}
 }
