@@ -2,6 +2,7 @@ package redfishwrapper
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -191,4 +192,157 @@ func TestGetManagerNetworkProtocolServiceWithoutPort(t *testing.T) {
 			{Name: "NTP", Enabled: true},
 		},
 	}, protocol, "a present service without Port has a nil Port; a null service is absent")
+}
+
+// networkProtocolPatch is a PATCH request received by the NetworkProtocol handler.
+type networkProtocolPatch struct {
+	body    string
+	ifMatch string
+}
+
+// dellNetworkProtocolHandler serves the Dell NetworkProtocol fixture and records PATCH requests.
+func dellNetworkProtocolHandler(t *testing.T, patches *[]networkProtocolPatch) http.HandlerFunc {
+	t.Helper()
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			_, _ = w.Write(mustReadFile(t, "dell/networkprotocol.json"))
+		case http.MethodPatch:
+			body, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			*patches = append(*patches, networkProtocolPatch{body: string(body), ifMatch: r.Header.Get("If-Match")})
+			w.WriteHeader(http.StatusOK)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	}
+}
+
+func TestSetManagerNetworkService(t *testing.T) {
+	port := 2222
+	testCases := []struct {
+		name    string
+		service string
+		enabled bool
+		port    *int
+		want    string
+	}{
+		{name: "disable", service: "IPMI", want: `{"IPMI":{"ProtocolEnabled":false}}`},
+		{name: "enable a disabled service", service: "NTP", enabled: true, want: `{"NTP":{"ProtocolEnabled":true}}`},
+		{name: "change the port", service: "SSH", enabled: true, port: &port, want: `{"SSH":{"Port":2222,"ProtocolEnabled":true}}`},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			var patches []networkProtocolPatch
+
+			mux := http.NewServeMux()
+			mux.HandleFunc(dellNetworkProtocolPath, dellNetworkProtocolHandler(t, &patches))
+			client := newDellManagerNetworkClient(t, mux, endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+
+			require.NoError(t, client.SetManagerNetworkService(context.Background(), tt.service, tt.enabled, tt.port))
+
+			require.Len(t, patches, 1, "expected one PATCH of the NetworkProtocol resource")
+			assert.JSONEq(t, tt.want, patches[0].body, "only the named service must be sent")
+			assert.Empty(t, patches[0].ifMatch, "the fixture carries no ETag")
+		})
+	}
+}
+
+func TestSetManagerNetworkServiceRefused(t *testing.T) {
+	zero, tooHigh := 0, 65536
+	testCases := []struct {
+		name    string
+		service string
+		port    *int
+		errIs   error
+		errMsg  string
+	}{
+		{name: "service absent from the resource", service: "SNMP", errIs: bmclibErrs.ErrManagerNetworkServiceNotFound},
+		{name: "unknown service", service: "Status", errIs: bmclibErrs.ErrManagerNetworkServiceNotFound},
+		{name: "service name is case sensitive", service: "ipmi", errIs: bmclibErrs.ErrManagerNetworkServiceNotFound},
+		{name: "port zero", service: "SSH", port: &zero, errMsg: "port 0 is out of range"},
+		{name: "port above 65535", service: "SSH", port: &tooHigh, errMsg: "port 65536 is out of range"},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			var patches []networkProtocolPatch
+
+			mux := http.NewServeMux()
+			mux.HandleFunc(dellNetworkProtocolPath, dellNetworkProtocolHandler(t, &patches))
+			client := newDellManagerNetworkClient(t, mux, endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+
+			err := client.SetManagerNetworkService(context.Background(), tt.service, true, tt.port)
+			require.Error(t, err)
+			if tt.errIs != nil {
+				assert.ErrorIs(t, err, tt.errIs)
+			}
+			if tt.errMsg != "" {
+				assert.ErrorContains(t, err, tt.errMsg)
+			}
+			assert.Empty(t, patches, "a refused change must not reach the BMC")
+		})
+	}
+}
+
+func TestSetManagerNetworkServiceIfMatch(t *testing.T) {
+	newMux := func(patches *[]networkProtocolPatch) *http.ServeMux {
+		handler := dellNetworkProtocolHandler(t, patches)
+		mux := http.NewServeMux()
+		mux.HandleFunc(dellNetworkProtocolPath, func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("ETag", `W/"7d1a"`)
+			handler(w, r)
+		})
+
+		return mux
+	}
+
+	t.Run("resource ETag is sent", func(t *testing.T) {
+		var patches []networkProtocolPatch
+		client := newDellManagerNetworkClient(t, newMux(&patches), endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+
+		require.NoError(t, client.SetManagerNetworkService(context.Background(), "IPMI", false, nil))
+		require.Len(t, patches, 1)
+		assert.Equal(t, `W/"7d1a"`, patches[0].ifMatch)
+	})
+
+	t.Run("ETag matching disabled", func(t *testing.T) {
+		var patches []networkProtocolPatch
+		client := newDellManagerNetworkClient(t, newMux(&patches), endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+		client.disableEtagMatch = true
+
+		require.NoError(t, client.SetManagerNetworkService(context.Background(), "IPMI", false, nil))
+		require.Len(t, patches, 1)
+		assert.Empty(t, patches[0].ifMatch)
+	})
+}
+
+func TestSetManagerNetworkServiceRejected(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc(dellNetworkProtocolPath, func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			_, _ = w.Write(mustReadFile(t, "dell/networkprotocol.json"))
+		default:
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(`{"error":{"message":"Port is in use"}}`))
+		}
+	})
+	client := newDellManagerNetworkClient(t, mux, endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+
+	port := 443
+	err := client.SetManagerNetworkService(context.Background(), "SSH", true, &port)
+	assert.ErrorIs(t, err, bmclibErrs.ErrManagerNetworkProtocolSet)
+	assert.ErrorContains(t, err, "Port is in use")
+}
+
+func TestSetManagerNetworkServiceNoResource(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc(dellNetworkProtocolPath, notFound)
+	client := newDellManagerNetworkClient(t, mux, endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+
+	err := client.SetManagerNetworkService(context.Background(), "IPMI", false, nil)
+	assert.ErrorIs(t, err, bmclibErrs.ErrManagerNetworkProtocolNotFound)
 }
