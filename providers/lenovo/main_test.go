@@ -98,6 +98,8 @@ type testServer struct {
 	hostIfacePatched bool
 	// netProtoPatched records a PATCH of ManagerNetworkProtocol.
 	netProtoPatched bool
+	// netProtoPatchBody holds the body of the last PATCH of ManagerNetworkProtocol.
+	netProtoPatchBody string
 	// serialPatched records a PATCH of a serial interface.
 	serialPatched bool
 	// subscriptionCreated/Deleted record event subscription create/delete.
@@ -599,6 +601,9 @@ func newTestServer(t *testing.T, opts testServerOpts) *testServer {
 				ts.hostIfacePatched = true
 			case "/redfish/v1/Managers/1/NetworkProtocol":
 				ts.netProtoPatched = true
+				if b, err := io.ReadAll(r.Body); err == nil {
+					ts.netProtoPatchBody = string(b)
+				}
 			case "/redfish/v1/Managers/1/SerialInterfaces/1":
 				ts.serialPatched = true
 			case "/redfish/v1/EventService/Subscriptions/1":
@@ -692,6 +697,13 @@ func (ts *testServer) didPatchSecureBoot() bool {
 	ts.mu.Lock()
 	defer ts.mu.Unlock()
 	return ts.secureBootPatched
+}
+
+// networkProtocolPatch reports whether ManagerNetworkProtocol was PATCHed and the last body sent.
+func (ts *testServer) networkProtocolPatch() (patched bool, body string) {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.netProtoPatched, ts.netProtoPatchBody
 }
 
 func (ts *testServer) didPatchPower() bool {
