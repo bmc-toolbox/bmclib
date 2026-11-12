@@ -135,4 +135,7 @@ const (
 
 	// FeatureGetManagerNetworkProtocol means an implementation that can read the manager network protocol (management services and ports)
 	FeatureGetManagerNetworkProtocol registrar.Feature = "getmanagernetworkprotocol"
+
+	// FeatureSetManagerNetworkService means an implementation that can enable or disable a manager network service and set its port
+	FeatureSetManagerNetworkService registrar.Feature = "setmanagernetworkservice"
 )

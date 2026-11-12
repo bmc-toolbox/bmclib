@@ -64,6 +64,43 @@ func (c *Client) GetManagerNetworkProtocol(ctx context.Context) (*bmc.ManagerNet
 	return protocol, nil
 }
 
+// SetManagerNetworkService enables or disables a service of the manager network protocol resource
+// and, with a non-nil port, sets its port. Only the named service is sent. A service the resource
+// does not report is refused rather than written blindly.
+func (c *Client) SetManagerNetworkService(ctx context.Context, service string, enabled bool, port *int) error {
+	if port != nil && (*port < 1 || *port > 65535) {
+		return fmt.Errorf("service %s: port %d is out of range", service, *port)
+	}
+
+	np, managerID, err := c.managerNetworkProtocol(ctx)
+	if err != nil {
+		return err
+	}
+
+	present, err := managerNetworkProtocolProperties(np)
+	if err != nil {
+		return fmt.Errorf("manager %s NetworkProtocol: %w", managerID, err)
+	}
+
+	known := false
+	for _, s := range managerNetworkServices(np) {
+		if s.name == service {
+			known = true
+			break
+		}
+	}
+	if !known || !present[service] {
+		return fmt.Errorf("%w: %s", bmclibErrs.ErrManagerNetworkServiceNotFound, service)
+	}
+
+	settings := map[string]any{"ProtocolEnabled": enabled}
+	if port != nil {
+		settings["Port"] = *port
+	}
+
+	return c.patchManagerNetworkProtocol(ctx, np, map[string]any{service: settings})
+}
+
 // managerNetworkProtocol returns the NetworkProtocol resource of the first manager that links one,
 // with the ID of that manager. A manager without the link, or whose link answers 404, is skipped.
 func (c *Client) managerNetworkProtocol(ctx context.Context) (*schemas.ManagerNetworkProtocol, string, error) {
@@ -92,6 +129,27 @@ func (c *Client) managerNetworkProtocol(ctx context.Context) (*schemas.ManagerNe
 	}
 
 	return nil, "", bmclibErrs.ErrManagerNetworkProtocolNotFound
+}
+
+// patchManagerNetworkProtocol PATCHes the given properties of the NetworkProtocol resource.
+//
+// gofish's ManagerNetworkProtocol.Update() writes IPv6AddressGenerationMode only, so the service
+// properties are sent with an explicit PATCH. As Update() does, it sends the resource ETag in
+// If-Match unless ETag matching is disabled for the client.
+func (c *Client) patchManagerNetworkProtocol(ctx context.Context, np *schemas.ManagerNetworkProtocol, payload map[string]any) error {
+	var headers map[string]string
+	if np.ODataEtag != "" && !c.disableEtagMatch {
+		headers = map[string]string{"If-Match": np.ODataEtag}
+	}
+
+	// gofish returns an error for any non-2xx response, carrying the BMC's error body.
+	resp, err := c.PatchWithHeaders(ctx, np.ODataID, payload, headers)
+	if err != nil {
+		return fmt.Errorf("%w: %s", bmclibErrs.ErrManagerNetworkProtocolSet, err.Error())
+	}
+	_ = resp.Body.Close()
+
+	return nil
 }
 
 // toManagerEthernetInterface maps a Redfish EthernetInterface to the bmclib representation.
