@@ -346,3 +346,57 @@ func TestSetManagerNetworkServiceNoResource(t *testing.T) {
 	err := client.SetManagerNetworkService(context.Background(), "IPMI", false, nil)
 	assert.ErrorIs(t, err, bmclibErrs.ErrManagerNetworkProtocolNotFound)
 }
+
+func TestSetManagerNTPServers(t *testing.T) {
+	testCases := []struct {
+		name    string
+		servers []string
+		want    string
+	}{
+		{name: "set", servers: []string{"10.0.0.1", "ntp.example.org"}, want: `{"NTP":{"NTPServers":["10.0.0.1","ntp.example.org"]}}`},
+		{name: "clear with nil", want: `{"NTP":{"NTPServers":[]}}`},
+		{name: "clear with an empty list", servers: []string{}, want: `{"NTP":{"NTPServers":[]}}`},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			var patches []networkProtocolPatch
+
+			mux := http.NewServeMux()
+			mux.HandleFunc(dellNetworkProtocolPath, dellNetworkProtocolHandler(t, &patches))
+			client := newDellManagerNetworkClient(t, mux, endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+
+			require.NoError(t, client.SetManagerNTPServers(context.Background(), tt.servers))
+
+			require.Len(t, patches, 1, "expected one PATCH of the NetworkProtocol resource")
+			assert.JSONEq(t, tt.want, patches[0].body, "only NTP.NTPServers must be sent")
+		})
+	}
+}
+
+func TestSetManagerNTPServersRejected(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc(dellNetworkProtocolPath, func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			_, _ = w.Write(mustReadFile(t, "dell/networkprotocol.json"))
+		default:
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(`{"error":{"message":"too many NTP servers"}}`))
+		}
+	})
+	client := newDellManagerNetworkClient(t, mux, endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+
+	err := client.SetManagerNTPServers(context.Background(), []string{"a", "b", "c", "d"})
+	assert.ErrorIs(t, err, bmclibErrs.ErrManagerNetworkProtocolSet)
+	assert.ErrorContains(t, err, "too many NTP servers")
+}
+
+func TestSetManagerNTPServersNoResource(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc(dellNetworkProtocolPath, notFound)
+	client := newDellManagerNetworkClient(t, mux, endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+
+	err := client.SetManagerNTPServers(context.Background(), []string{"10.0.0.1"})
+	assert.ErrorIs(t, err, bmclibErrs.ErrManagerNetworkProtocolNotFound)
+}

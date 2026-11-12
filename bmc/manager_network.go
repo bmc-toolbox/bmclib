@@ -280,3 +280,69 @@ func SetManagerNetworkServiceFromInterfaces(ctx context.Context, generic []inter
 
 	return setManagerNetworkService(ctx, implementations, service, enabled, port)
 }
+
+// ManagerNTPServersSetter sets the NTP servers of the manager.
+type ManagerNTPServersSetter interface {
+	// SetManagerNTPServers replaces the NTP server list of the manager; an empty list clears it.
+	// It does not enable or disable the NTP service, see ManagerNetworkServiceSetter.
+	SetManagerNTPServers(ctx context.Context, servers []string) (err error)
+}
+
+type managerNTPServersSetterProvider struct {
+	name string
+	ManagerNTPServersSetter
+}
+
+func setManagerNTPServers(ctx context.Context, generic []managerNTPServersSetterProvider, servers []string) (metadata Metadata, err error) {
+	metadata = newMetadata()
+Loop:
+	for _, elem := range generic {
+		if elem.ManagerNTPServersSetter == nil {
+			continue
+		}
+		select {
+		case <-ctx.Done():
+			err = multierror.Append(err, ctx.Err())
+			break Loop
+		default:
+			metadata.ProvidersAttempted = append(metadata.ProvidersAttempted, elem.name)
+			vErr := elem.SetManagerNTPServers(ctx, servers)
+			if vErr != nil {
+				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
+				continue
+			}
+			metadata.SuccessfulProvider = elem.name
+			return metadata, nil
+		}
+	}
+
+	return metadata, multierror.Append(err, errors.New("failure to set manager NTP servers"))
+}
+
+// SetManagerNTPServersFromInterfaces identifies implementations of the ManagerNTPServersSetter
+// interface and passes them to the setManagerNTPServers() wrapper.
+func SetManagerNTPServersFromInterfaces(ctx context.Context, generic []interface{}, servers []string) (metadata Metadata, err error) {
+	implementations := make([]managerNTPServersSetterProvider, 0)
+	for _, elem := range generic {
+		temp := managerNTPServersSetterProvider{name: getProviderName(elem)}
+		switch p := elem.(type) {
+		case ManagerNTPServersSetter:
+			temp.ManagerNTPServersSetter = p
+			implementations = append(implementations, temp)
+		default:
+			e := fmt.Sprintf("not a ManagerNTPServersSetter implementation: %T", p)
+			err = multierror.Append(err, errors.New(e))
+		}
+	}
+	if len(implementations) == 0 {
+		return metadata, multierror.Append(
+			err,
+			errors.Wrap(
+				bmclibErrs.ErrProviderImplementation,
+				"no ManagerNTPServersSetter implementations found",
+			),
+		)
+	}
+
+	return setManagerNTPServers(ctx, implementations, servers)
+}
