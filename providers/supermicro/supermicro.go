@@ -78,6 +78,8 @@ var Features = registrar.Features{
 	providers.FeatureGetJobs,
 	providers.FeatureGetManagerEthernetInterfaces,
 	providers.FeatureGetManagerNetworkProtocol,
+	providers.FeatureSetManagerNetworkService,
+	providers.FeatureSetManagerNTPServers,
 }
 
 // supports
@@ -880,4 +882,22 @@ func (c *Client) GetManagerNetworkProtocol(ctx context.Context) (protocol *bmc.M
 	}
 
 	return c.serviceClient.redfish.GetManagerNetworkProtocol(ctx)
+}
+
+// SetManagerNetworkService enables or disables a manager network service; a non-nil port also sets its port
+func (c *Client) SetManagerNetworkService(ctx context.Context, service string, enabled bool, port *int) (err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.SetManagerNetworkService(ctx, service, enabled, port)
+}
+
+// SetManagerNTPServers replaces the NTP server list of the manager; an empty list clears it
+func (c *Client) SetManagerNTPServers(ctx context.Context, servers []string) (err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.SetManagerNTPServers(ctx, servers)
 }
