@@ -69,6 +69,8 @@ var (
 		providers.FeatureGetJobs,
 		providers.FeatureGetManagerEthernetInterfaces,
 		providers.FeatureGetManagerNetworkProtocol,
+		providers.FeatureSetManagerNetworkService,
+		providers.FeatureSetManagerNTPServers,
 	}
 
 	errManufacturerUnknown = errors.New("error identifying device manufacturer")
@@ -418,4 +420,14 @@ func (c *Conn) GetManagerEthernetInterfaces(ctx context.Context) (interfaces []b
 // GetManagerNetworkProtocol returns the manager network protocol resource: the BMC host name and management services
 func (c *Conn) GetManagerNetworkProtocol(ctx context.Context) (protocol *bmc.ManagerNetworkProtocol, err error) {
 	return c.redfishwrapper.GetManagerNetworkProtocol(ctx)
+}
+
+// SetManagerNetworkService enables or disables a manager network service; a non-nil port also sets its port
+func (c *Conn) SetManagerNetworkService(ctx context.Context, service string, enabled bool, port *int) (err error) {
+	return c.redfishwrapper.SetManagerNetworkService(ctx, service, enabled, port)
+}
+
+// SetManagerNTPServers replaces the NTP server list of the manager; an empty list clears it
+func (c *Conn) SetManagerNTPServers(ctx context.Context, servers []string) (err error) {
+	return c.redfishwrapper.SetManagerNTPServers(ctx, servers)
 }
