@@ -1,5 +1,13 @@
 // Package main demonstrates reading the BMC network configuration with bmclib: the manager
 // ethernet interfaces and the management services (protocols) the BMC reports.
+//
+// With -set-service or -ntp-servers it first changes the manager network protocol resource:
+//
+//	manager-network -host ... -set-service IPMI -enabled=false
+//	manager-network -host ... -set-service SSH -enabled=true -port 2222
+//	manager-network -host ... -ntp-servers 10.0.0.1,10.0.0.2
+//
+// Disabling the service this example connects through (HTTPS) cuts it off from the BMC.
 package main
 
 import (
@@ -10,6 +18,7 @@ import (
 	"time"
 
 	logrusr "github.com/bombsimon/logrusr/v2"
+	"github.com/jacobweinstock/registrar"
 	"github.com/sirupsen/logrus"
 
 	bmclib "github.com/bmc-toolbox/bmclib/v2"
@@ -25,6 +34,10 @@ func main() {
 	user := flag.String("user", "", "Username to login with")
 	pass := flag.String("password", "", "Password to login with")
 	host := flag.String("host", "", "BMC hostname to connect to")
+	setService := flag.String("set-service", "", "Service to enable or disable (HTTP, HTTPS, SSH, Telnet, IPMI, SNMP, NTP, KVMIP, VirtualMedia, SSDP)")
+	enabled := flag.Bool("enabled", true, "With -set-service: the enabled state to set")
+	port := flag.Int("port", 0, "With -set-service: the port to set; 0 leaves the port as is")
+	ntpServers := flag.String("ntp-servers", "", "Comma separated NTP servers to set; an empty value clears the list")
 
 	flag.Parse()
 
@@ -42,11 +55,26 @@ func main() {
 	clientOpts := []bmclib.Option{bmclib.WithLogger(logger)}
 	client := bmclib.NewClient(*host, *user, *pass, clientOpts...)
 
-	// Filter to providers that can read the manager network configuration
-	client.Registry.Drivers = client.Registry.Supports(
+	// -ntp-servers "" clears the list, so the flag being given matters, not its value
+	setNTPServers := false
+	flag.Visit(func(f *flag.Flag) {
+		if f.Name == "ntp-servers" {
+			setNTPServers = true
+		}
+	})
+
+	// Filter to providers that can read, and when asked change, the manager network configuration
+	features := []registrar.Feature{
 		providers.FeatureGetManagerEthernetInterfaces,
 		providers.FeatureGetManagerNetworkProtocol,
-	)
+	}
+	if *setService != "" {
+		features = append(features, providers.FeatureSetManagerNetworkService)
+	}
+	if setNTPServers {
+		features = append(features, providers.FeatureSetManagerNTPServers)
+	}
+	client.Registry.Drivers = client.Registry.Supports(features...)
 
 	err := client.Open(ctx)
 	if err != nil {
@@ -55,6 +83,30 @@ func main() {
 
 	defer func() { _ = client.Close(ctx) }()
 
+	if *setService != "" {
+		var servicePort *int
+		if *port != 0 {
+			servicePort = port
+		}
+		if err := client.SetManagerNetworkService(ctx, *setService, *enabled, servicePort); err != nil {
+			l.Fatal(err)
+		}
+		fmt.Printf("Service %s: enabled=%t port=%s requested\n", *setService, *enabled, intOrDash(servicePort))
+	}
+
+	if setNTPServers {
+		var servers []string
+		if *ntpServers != "" {
+			servers = strings.Split(*ntpServers, ",")
+		}
+		if err := client.SetManagerNTPServers(ctx, servers); err != nil {
+			l.Fatal(err)
+		}
+		fmt.Printf("NTP servers: %s requested\n", strings.Join(servers, ", "))
+	}
+
+	// A BMC may apply the change after answering the request, so what is read back below can
+	// still show the previous state.
 	interfaces, err := client.GetManagerEthernetInterfaces(ctx)
 	if err != nil {
 		l.Fatal(err)
