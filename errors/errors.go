@@ -91,6 +91,9 @@ var (
 	// ErrPowerStatusRead is returned when a power status read query fails
 	ErrPowerStatusRead = errors.New("error returning power status")
 
+	// ErrPowerStatusUnknown is returned when a provider's raw power state is not recognized
+	ErrPowerStatusUnknown = errors.New("unrecognized power status")
+
 	// ErrPowerStatusSet is returned when a power status set query fails
 	ErrPowerStatusSet = errors.New("error setting power status")
 
