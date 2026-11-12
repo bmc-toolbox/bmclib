@@ -93,6 +93,9 @@ var Features = registrar.Features{
 	// tasks-jobs
 	providers.FeatureGetTasks,
 	providers.FeatureGetJobs,
+	// manager network
+	providers.FeatureGetManagerEthernetInterfaces,
+	providers.FeatureGetManagerNetworkProtocol,
 	// inventory-storage
 	providers.FeatureInventoryRead,
 	// firmware-tasks

@@ -56,9 +56,11 @@ var Features = registrar.Features{
 	providers.FeatureReplaceManagerHTTPSCertificate,
 	providers.FeatureGetTasks,
 	providers.FeatureGetJobs,
+	providers.FeatureGetManagerEthernetInterfaces,
+	providers.FeatureGetManagerNetworkProtocol,
 }
 
-// compile-time assertions that the provider implements the BIOS configuration, power cap, thermal, certificate, task and job interfaces.
+// compile-time assertions that the provider implements the BIOS configuration, power cap, thermal, certificate, task, job and manager network interfaces.
 var (
 	_ bmc.BiosConfigurationGetter         = (*Conn)(nil)
 	_ bmc.BiosConfigurationSetter         = (*Conn)(nil)
@@ -73,6 +75,8 @@ var (
 	_ bmc.ManagerHTTPSCertificateReplacer = (*Conn)(nil)
 	_ bmc.TasksGetter                     = (*Conn)(nil)
 	_ bmc.JobsGetter                      = (*Conn)(nil)
+	_ bmc.ManagerEthernetInterfacesGetter = (*Conn)(nil)
+	_ bmc.ManagerNetworkProtocolGetter    = (*Conn)(nil)
 )
 
 // Conn details for redfish client
@@ -363,4 +367,14 @@ func (c *Conn) GetTasks(ctx context.Context) (tasks []bmc.Task, err error) {
 // GetJobs returns the BMC job collection
 func (c *Conn) GetJobs(ctx context.Context) (jobs []bmc.Job, err error) {
 	return c.redfishwrapper.GetJobs(ctx)
+}
+
+// GetManagerEthernetInterfaces returns the manager (BMC) ethernet interfaces
+func (c *Conn) GetManagerEthernetInterfaces(ctx context.Context) (interfaces []bmc.ManagerEthernetInterface, err error) {
+	return c.redfishwrapper.GetManagerEthernetInterfaces(ctx)
+}
+
+// GetManagerNetworkProtocol returns the manager network protocol resource: the BMC host name and management services
+func (c *Conn) GetManagerNetworkProtocol(ctx context.Context) (protocol *bmc.ManagerNetworkProtocol, err error) {
+	return c.redfishwrapper.GetManagerNetworkProtocol(ctx)
 }
