@@ -51,9 +51,25 @@ func (c *Client) GetManagerEthernetInterfaces(ctx context.Context) ([]bmc.Manage
 // one: the BMC host name and the management services it reports. Errors raised while collecting
 // are returned to the caller.
 func (c *Client) GetManagerNetworkProtocol(ctx context.Context) (*bmc.ManagerNetworkProtocol, error) {
-	managers, err := c.Managers(ctx)
+	np, managerID, err := c.managerNetworkProtocol(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	protocol, err := toManagerNetworkProtocol(np)
+	if err != nil {
+		return nil, fmt.Errorf("manager %s NetworkProtocol: %w", managerID, err)
+	}
+
+	return protocol, nil
+}
+
+// managerNetworkProtocol returns the NetworkProtocol resource of the first manager that links one,
+// with the ID of that manager. A manager without the link, or whose link answers 404, is skipped.
+func (c *Client) managerNetworkProtocol(ctx context.Context) (*schemas.ManagerNetworkProtocol, string, error) {
+	managers, err := c.Managers(ctx)
+	if err != nil {
+		return nil, "", err
 	}
 
 	for _, m := range managers {
@@ -66,21 +82,16 @@ func (c *Client) GetManagerNetworkProtocol(ctx context.Context) (*bmc.ManagerNet
 			if isNotFound(err) {
 				continue
 			}
-			return nil, fmt.Errorf("manager %s NetworkProtocol: %w", m.ID, err)
+			return nil, "", fmt.Errorf("manager %s NetworkProtocol: %w", m.ID, err)
 		}
 		if np == nil {
 			continue
 		}
 
-		protocol, err := toManagerNetworkProtocol(np)
-		if err != nil {
-			return nil, fmt.Errorf("manager %s NetworkProtocol: %w", m.ID, err)
-		}
-
-		return protocol, nil
+		return np, m.ID, nil
 	}
 
-	return nil, bmclibErrs.ErrManagerNetworkProtocolNotFound
+	return nil, "", bmclibErrs.ErrManagerNetworkProtocolNotFound
 }
 
 // toManagerEthernetInterface maps a Redfish EthernetInterface to the bmclib representation.
@@ -136,26 +147,9 @@ func toManagerEthernetInterface(eth *schemas.EthernetInterface) bmc.ManagerEther
 // disabled one look alike; the property names present in the resource document decide which
 // services are listed, the values come from gofish.
 func toManagerNetworkProtocol(np *schemas.ManagerNetworkProtocol) (*bmc.ManagerNetworkProtocol, error) {
-	var present map[string]json.RawMessage
-	if err := json.Unmarshal(np.RawData, &present); err != nil {
-		return nil, fmt.Errorf("decoding resource: %w", err)
-	}
-
-	services := []struct {
-		name    string
-		enabled bool
-		port    *uint
-	}{
-		{"HTTP", np.HTTP.ProtocolEnabled, np.HTTP.Port},
-		{"HTTPS", np.HTTPS.ProtocolEnabled, np.HTTPS.Port},
-		{"SSH", np.SSH.ProtocolEnabled, np.SSH.Port},
-		{"Telnet", np.Telnet.ProtocolEnabled, np.Telnet.Port},
-		{"IPMI", np.IPMI.ProtocolEnabled, np.IPMI.Port},
-		{"SNMP", np.SNMP.ProtocolEnabled, np.SNMP.Port},
-		{"NTP", np.NTP.ProtocolEnabled, np.NTP.Port},
-		{"KVMIP", np.KVMIP.ProtocolEnabled, np.KVMIP.Port},
-		{"VirtualMedia", np.VirtualMedia.ProtocolEnabled, np.VirtualMedia.Port},
-		{"SSDP", np.SSDP.ProtocolEnabled, np.SSDP.Port},
+	present, err := managerNetworkProtocolProperties(np)
+	if err != nil {
+		return nil, err
 	}
 
 	out := &bmc.ManagerNetworkProtocol{
@@ -165,9 +159,8 @@ func toManagerNetworkProtocol(np *schemas.ManagerNetworkProtocol) (*bmc.ManagerN
 	if len(np.NTP.NTPServers) > 0 {
 		out.NTPServers = append([]string(nil), np.NTP.NTPServers...)
 	}
-	for _, s := range services {
-		raw, ok := present[s.name]
-		if !ok || string(raw) == "null" {
+	for _, s := range managerNetworkServices(np) {
+		if !present[s.name] {
 			continue
 		}
 		service := bmc.ManagerNetworkService{Name: s.name, Enabled: s.enabled}
@@ -179,4 +172,43 @@ func toManagerNetworkProtocol(np *schemas.ManagerNetworkProtocol) (*bmc.ManagerN
 	}
 
 	return out, nil
+}
+
+// managerNetworkService is a service of the NetworkProtocol resource as gofish decodes it.
+type managerNetworkService struct {
+	name    string
+	enabled bool
+	port    *uint
+}
+
+// managerNetworkServices lists the services bmclib handles, in the order they are reported.
+func managerNetworkServices(np *schemas.ManagerNetworkProtocol) []managerNetworkService {
+	return []managerNetworkService{
+		{"HTTP", np.HTTP.ProtocolEnabled, np.HTTP.Port},
+		{"HTTPS", np.HTTPS.ProtocolEnabled, np.HTTPS.Port},
+		{"SSH", np.SSH.ProtocolEnabled, np.SSH.Port},
+		{"Telnet", np.Telnet.ProtocolEnabled, np.Telnet.Port},
+		{"IPMI", np.IPMI.ProtocolEnabled, np.IPMI.Port},
+		{"SNMP", np.SNMP.ProtocolEnabled, np.SNMP.Port},
+		{"NTP", np.NTP.ProtocolEnabled, np.NTP.Port},
+		{"KVMIP", np.KVMIP.ProtocolEnabled, np.KVMIP.Port},
+		{"VirtualMedia", np.VirtualMedia.ProtocolEnabled, np.VirtualMedia.Port},
+		{"SSDP", np.SSDP.ProtocolEnabled, np.SSDP.Port},
+	}
+}
+
+// managerNetworkProtocolProperties reports which properties the resource document carries with a
+// non-null value.
+func managerNetworkProtocolProperties(np *schemas.ManagerNetworkProtocol) (map[string]bool, error) {
+	var document map[string]json.RawMessage
+	if err := json.Unmarshal(np.RawData, &document); err != nil {
+		return nil, fmt.Errorf("decoding resource: %w", err)
+	}
+
+	present := make(map[string]bool, len(document))
+	for name, raw := range document {
+		present[name] = string(raw) != "null"
+	}
+
+	return present, nil
 }
