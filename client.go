@@ -933,6 +933,19 @@ func (c *Client) SetManagerNetworkService(ctx context.Context, service string, e
 	return err
 }
 
+// SetManagerNTPServers replaces the NTP server list of the BMC; an empty list clears it. It does
+// not enable the NTP service, see SetManagerNetworkService.
+func (c *Client) SetManagerNTPServers(ctx context.Context, servers []string) (err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetManagerNTPServers")
+	defer span.End()
+
+	metadata, err := bmc.SetManagerNTPServersFromInterfaces(ctx, c.registry().GetDriverInterfaces(), servers)
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return err
+}
+
 // FirmwareInstall pass through library function to upload firmware and install firmware
 func (c *Client) FirmwareInstall(ctx context.Context, component, operationApplyTime string, forceInstall bool, reader io.Reader) (taskID string, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "FirmwareInstall")

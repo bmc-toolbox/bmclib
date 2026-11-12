@@ -101,6 +101,24 @@ func (c *Client) SetManagerNetworkService(ctx context.Context, service string, e
 	return c.patchManagerNetworkProtocol(ctx, np, map[string]any{service: settings})
 }
 
+// SetManagerNTPServers replaces the NTP server list of the manager network protocol resource. An
+// empty list clears it. The enabled state of the NTP service is left as is.
+func (c *Client) SetManagerNTPServers(ctx context.Context, servers []string) error {
+	np, _, err := c.managerNetworkProtocol(ctx)
+	if err != nil {
+		return err
+	}
+
+	// A nil slice would be sent as null, which a BMC may read as "leave unchanged".
+	if servers == nil {
+		servers = []string{}
+	}
+
+	return c.patchManagerNetworkProtocol(ctx, np, map[string]any{
+		"NTP": map[string]any{"NTPServers": servers},
+	})
+}
+
 // managerNetworkProtocol returns the NetworkProtocol resource of the first manager that links one,
 // with the ID of that manager. A manager without the link, or whose link answers 404, is skipped.
 func (c *Client) managerNetworkProtocol(ctx context.Context) (*schemas.ManagerNetworkProtocol, string, error) {
