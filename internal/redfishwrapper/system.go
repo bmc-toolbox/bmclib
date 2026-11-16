@@ -55,6 +55,10 @@ func (c *Client) System() (*schemas.ComputerSystem, error) {
 		return nil, err
 	}
 
+	if c.systemSelector != nil {
+		return c.systemSelector(systems)
+	}
+
 	// If no system name is set and there is only one system, return it.
 	// This is to handle backwards compatibility where we didn't require passing
 	// a system name to the client.

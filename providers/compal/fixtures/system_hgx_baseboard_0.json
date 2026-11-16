@@ -1,0 +1,26 @@
+{
+  "@odata.id": "/redfish/v1/Systems/HGX_Baseboard_0",
+  "@odata.type": "#ComputerSystem.v1_22_0.ComputerSystem",
+  "Id": "HGX_Baseboard_0",
+  "Links": {
+    "Chassis": [
+      {
+        "@odata.id": "/redfish/v1/Chassis/HGX_BMC_0"
+      }
+    ],
+    "ManagedBy": [
+      {
+        "@odata.id": "/redfish/v1/Managers/HGX_BMC_0"
+      }
+    ]
+  },
+  "Manufacturer": "NVIDIA",
+  "Model": "NA",
+  "Name": "HGX_Baseboard_0",
+  "PowerState": "On",
+  "Status": {
+    "Health": "OK",
+    "HealthRollup": "OK",
+    "State": "Enabled"
+  }
+}

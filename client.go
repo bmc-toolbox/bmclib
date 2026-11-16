@@ -24,6 +24,7 @@ import (
 	"github.com/bmc-toolbox/bmclib/v2/constants"
 	"github.com/bmc-toolbox/bmclib/v2/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/v2/providers/asrockrack"
+	"github.com/bmc-toolbox/bmclib/v2/providers/compal"
 	"github.com/bmc-toolbox/bmclib/v2/providers/dell"
 	"github.com/bmc-toolbox/bmclib/v2/providers/homeassistant"
 	"github.com/bmc-toolbox/bmclib/v2/providers/intelamt"
@@ -75,6 +76,7 @@ type providerConfig struct {
 	intelamt      intelamt.Config
 	dell          dell.Config
 	lenovo        lenovo.Config
+	compal        compal.Config
 	supermicro    supermicro.Config
 	rpc           rpc.Provider
 	openbmc       openbmc.Config
@@ -113,6 +115,10 @@ func NewClient(host, user, pass string, opts ...Option) *Client {
 				VersionsNotCompatible: []string{},
 			},
 			lenovo: lenovo.Config{
+				Port:                  "443",
+				VersionsNotCompatible: []string{},
+			},
+			compal: compal.Config{
 				Port:                  "443",
 				VersionsNotCompatible: []string{},
 			},
@@ -294,6 +300,20 @@ func (c *Client) registerLenovoProvider() {
 	c.Registry.Register(lenovo.ProviderName, lenovo.ProviderProtocol, lenovo.Features, nil, driverLenovo)
 }
 
+// register Compal gofish provider
+func (c *Client) registerCompalProvider() {
+	compalHTTPClient := *c.httpClient
+	compalHTTPClient.Transport = c.httpClient.Transport.(*http.Transport).Clone()
+	compalOpts := []compal.Option{
+		compal.WithHTTPClient(&compalHTTPClient),
+		compal.WithVersionsNotCompatible(c.providerConfig.compal.VersionsNotCompatible),
+		compal.WithUseBasicAuth(c.providerConfig.compal.UseBasicAuth),
+		compal.WithPort(c.providerConfig.compal.Port),
+	}
+	driverCompal := compal.New(c.Auth.Host, c.Auth.User, c.Auth.Pass, c.Logger, compalOpts...)
+	c.Registry.Register(compal.ProviderName, compal.ProviderProtocol, compal.Features, nil, driverCompal)
+}
+
 // register supermicro vendorapi provider
 func (c *Client) registerSupermicroProvider() {
 	smcHTTPClient := *c.httpClient
@@ -362,6 +382,7 @@ func (c *Client) registerProviders() {
 	c.registerIntelAMTProvider()
 	c.registerDellProvider()
 	c.registerLenovoProvider()
+	c.registerCompalProvider()
 	c.registerSupermicroProvider()
 	c.registerOpenBMCProvider()
 }
