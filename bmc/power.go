@@ -25,18 +25,6 @@ type PowerSetter interface {
 	PowerSet(ctx context.Context, state string) (ok bool, err error)
 }
 
-// PowerStateGetter gets the power state of a BMC
-type PowerStateGetter interface {
-	PowerStateGet(ctx context.Context) (state string, err error)
-}
-
-// powerProviders is an internal struct to correlate an implementation/provider and its name
-type powerProviders struct {
-	name             string
-	powerStateGetter PowerStateGetter
-	powerSetter      PowerSetter
-}
-
 // setPowerState sets the power state for a BMC, trying all interface implementations passed in
 func setPowerState(ctx context.Context, timeout time.Duration, state string, p []powerProviders) (ok bool, m Metadata, err error) {
 	metadataLocal := Metadata{
@@ -98,56 +86,19 @@ func SetPowerStateFromInterfaces(ctx context.Context, timeout time.Duration, sta
 	return setPowerState(ctx, timeout, state, powerSetter)
 }
 
-// getPowerState gets the power state for a BMC, trying all interface implementations passed in
+// getPowerState gets the raw power state for a BMC, trying all interface
+// implementations passed in.
 func getPowerState(ctx context.Context, timeout time.Duration, p []powerProviders) (state string, m Metadata, err error) {
-	metadataLocal := Metadata{
-		FailedProviderDetail: make(map[string]string),
-	}
-	for _, elem := range p {
-		if elem.powerStateGetter == nil {
-			continue
-		}
-		select {
-		case <-ctx.Done():
-			err = multierror.Append(err, ctx.Err())
-
-			return state, metadataLocal, err
-		default:
-			metadataLocal.ProvidersAttempted = append(metadataLocal.ProvidersAttempted, elem.name)
-			ctx, cancel := context.WithTimeout(ctx, timeout)
-			state, stateErr := elem.powerStateGetter.PowerStateGet(ctx)
-			cancel()
-			if stateErr != nil {
-				err = multierror.Append(err, errors.WithMessagef(stateErr, "provider: %v", elem.name))
-				metadataLocal.FailedProviderDetail[elem.name] = stateErr.Error()
-				continue
-			}
-			metadataLocal.SuccessfulProvider = elem.name
-			return state, metadataLocal, nil
-		}
-	}
-	return state, metadataLocal, multierror.Append(err, errors.New("failed to get power state"))
+	return getPowerStateWith(ctx, timeout, p, func(raw string) (string, error) {
+		return raw, nil
+	})
 }
 
 // GetPowerStateFromInterfaces identifies implementations of the PostStateGetter interface and passes the found implementations to the getPowerState() wrapper.
 func GetPowerStateFromInterfaces(ctx context.Context, timeout time.Duration, generic []interface{}) (state string, metadata Metadata, err error) {
 	metadata = newMetadata()
 
-	powerStateGetter := make([]powerProviders, 0)
-	for _, elem := range generic {
-		if elem == nil {
-			continue
-		}
-		temp := powerProviders{name: getProviderName(elem)}
-		switch p := elem.(type) {
-		case PowerStateGetter:
-			temp.powerStateGetter = p
-			powerStateGetter = append(powerStateGetter, temp)
-		default:
-			e := fmt.Sprintf("not a PowerStateGetter implementation: %T", p)
-			err = multierror.Append(err, errors.New(e))
-		}
-	}
+	powerStateGetter, err := powerStateGetters(generic)
 	if len(powerStateGetter) == 0 {
 		return state, metadata, multierror.Append(err, errors.New("no PowerStateGetter implementations found"))
 	}
