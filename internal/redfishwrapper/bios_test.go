@@ -117,42 +117,62 @@ const biosWithoutSettingsApplyTimes = `{
 // a Bios resource that doesn't support it.
 const propertyUnknownSettingsApplyTime = `{"error":{"code":"Base.v1_10_3.GeneralError","message":"A general error has occurred. See ExtendedInfo for more information.","@Message.ExtendedInfo":[{"MessageId":"Base.1.10.PropertyUnknown","Severity":"Warning","Resolution":"Remove the unknown property from the request body and resubmit the request if the operation failed.","Message":"The property @Redfish.SettingsApplyTime is not in the list of valid properties for the resource.","MessageArgs":["@Redfish.SettingsApplyTime"],"RelatedProperties":["@Redfish.SettingsApplyTime"]}]}}`
 
+// propertyUnknownSettingsApplyTimeMessageArgsOnly is the exact error shape
+// returned live by a Supermicro AS-1116CS-TN (OpenBMC firmware 01.06.00.04),
+// which names the rejected property only in MessageArgs, not in
+// RelatedProperties.
+const propertyUnknownSettingsApplyTimeMessageArgsOnly = `{"error":{"@Message.ExtendedInfo":[{"@odata.type":"#Message.v1_1_1.Message","Message":"The property @Redfish.SettingsApplyTime is not in the list of valid properties for the resource.","MessageArgs":["@Redfish.SettingsApplyTime"],"MessageId":"Base.1.10.PropertyUnknown","MessageSeverity":"Warning","Resolution":"Remove the unknown property from the request body and resubmit the request if the operation failed."}],"code":"Base.1.10.PropertyUnknown","message":"The property @Redfish.SettingsApplyTime is not in the list of valid properties for the resource."}}`
+
 func TestSetBiosConfiguration_ApplyTimeUnsupportedFallback(t *testing.T) {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/redfish/v1/", endpointFunc(t, "/dell/serviceroot.json"))
-	mux.HandleFunc("/redfish/v1/Systems", endpointFunc(t, "/dell/systems.json"))
-	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1", endpointFunc(t, "/dell/system.embedded.1.json"))
-	mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/Bios", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			_, _ = w.Write([]byte(biosWithoutSettingsApplyTimes))
-		case http.MethodPatch:
-			body, err := io.ReadAll(r.Body)
+	tests := map[string]string{
+		"property in RelatedProperties": propertyUnknownSettingsApplyTime,
+		"property in MessageArgs only":  propertyUnknownSettingsApplyTimeMessageArgsOnly,
+	}
+
+	for name, rejection := range tests {
+		t.Run(name, func(t *testing.T) {
+			var patches []string
+			mux := http.NewServeMux()
+			mux.HandleFunc("/redfish/v1/", endpointFunc(t, "/dell/serviceroot.json"))
+			mux.HandleFunc("/redfish/v1/Systems", endpointFunc(t, "/dell/systems.json"))
+			mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1", endpointFunc(t, "/dell/system.embedded.1.json"))
+			mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/Bios", func(w http.ResponseWriter, r *http.Request) {
+				switch r.Method {
+				case http.MethodGet:
+					_, _ = w.Write([]byte(biosWithoutSettingsApplyTimes))
+				case http.MethodPatch:
+					body, err := io.ReadAll(r.Body)
+					require.NoError(t, err)
+					patches = append(patches, string(body))
+					if strings.Contains(string(body), "SettingsApplyTime") {
+						w.WriteHeader(http.StatusBadRequest)
+						_, _ = w.Write([]byte(rejection))
+						return
+					}
+					w.WriteHeader(http.StatusNoContent)
+				default:
+					w.WriteHeader(http.StatusMethodNotAllowed)
+				}
+			})
+
+			server := httptest.NewTLSServer(mux)
+			defer server.Close()
+
+			parsedURL, err := url.Parse(server.URL)
 			require.NoError(t, err)
-			if strings.Contains(string(body), "SettingsApplyTime") {
-				w.WriteHeader(http.StatusBadRequest)
-				_, _ = w.Write([]byte(propertyUnknownSettingsApplyTime))
-				return
-			}
-			w.WriteHeader(http.StatusNoContent)
-		default:
-			w.WriteHeader(http.StatusMethodNotAllowed)
-		}
-	})
 
-	server := httptest.NewTLSServer(mux)
-	defer server.Close()
+			ctx := context.Background()
+			client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "", WithBasicAuthEnabled(true))
+			require.NoError(t, client.Open(ctx))
+			defer client.Close(ctx)
 
-	parsedURL, err := url.Parse(server.URL)
-	require.NoError(t, err)
-
-	ctx := context.Background()
-	client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "", WithBasicAuthEnabled(true))
-	require.NoError(t, client.Open(ctx))
-	defer client.Close(ctx)
-
-	err = client.SetBiosConfiguration(ctx, map[string]string{"BootModeSelect": "Legacy"})
-	assert.NoError(t, err, "expected fallback retry without the apply-time hint to succeed")
+			err = client.SetBiosConfiguration(ctx, map[string]string{"BootModeSelect": "Legacy"})
+			assert.NoError(t, err, "expected fallback retry without the apply-time hint to succeed")
+			require.Len(t, patches, 2, "expected the rejected PATCH to be retried once")
+			assert.NotContains(t, patches[1], "SettingsApplyTime")
+			assert.Contains(t, patches[1], `"BootModeSelect":"Legacy"`)
+		})
+	}
 }
 
 func TestSetBiosConfiguration_ApplyTimeRejectedWithoutFallbackTrigger(t *testing.T) {
