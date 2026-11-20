@@ -139,11 +139,14 @@ func (c *Client) Open(ctx context.Context) error {
 		endpoint = c.host + ":" + c.port
 	}
 
+	// Leave gofish's Insecure unset so the HTTP client's own TLS config decides whether
+	// certificates are verified. With Insecure set, gofish turns on InsecureSkipVerify in
+	// the transport it is given, which undoes WithSecureTLS. httpclient.Build already
+	// skips verification by default, so callers using bmclib's default HTTP client see no change.
 	config := gofish.ClientConfig{
 		Endpoint:   endpoint,
 		Username:   c.user,
 		Password:   c.pass,
-		Insecure:   true,
 		HTTPClient: c.httpClient,
 		BasicAuth:  c.basicAuth,
 	}
