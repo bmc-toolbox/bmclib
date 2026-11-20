@@ -43,7 +43,10 @@ func TestGetManagerNetworkProtocol(t *testing.T) {
 		t.Fatalf("GetManagerNetworkProtocol: %v", err)
 	}
 
-	want := []string{"HTTP", "HTTPS", "SSH", "IPMI", "SNMP", "NTP", "KVMIP", "VirtualMedia", "SSDP"}
+	want := []bmc.ManagerNetworkServiceName{
+		bmc.ServiceHTTP, bmc.ServiceHTTPS, bmc.ServiceSSH, bmc.ServiceIPMI, bmc.ServiceSNMP,
+		bmc.ServiceNTP, bmc.ServiceKVMIP, bmc.ServiceVirtualMedia, bmc.ServiceSSDP,
+	}
 	if len(protocol.Services) != len(want) {
 		t.Fatalf("got %d services %+v, want %d", len(protocol.Services), protocol.Services, len(want))
 	}
@@ -51,12 +54,12 @@ func TestGetManagerNetworkProtocol(t *testing.T) {
 		if protocol.Services[i].Name != name {
 			t.Errorf("service %d = %q, want %q", i, protocol.Services[i].Name, name)
 		}
-		if name == "Telnet" {
+		if name == bmc.ServiceTelnet {
 			t.Errorf("Telnet must not be reported: the XCC mock does not expose it")
 		}
 	}
 	for _, s := range protocol.Services {
-		if s.Name == "HTTPS" && (!s.Enabled || s.Port == nil || *s.Port != 443) {
+		if s.Name == bmc.ServiceHTTPS && (!s.Enabled || s.Port == nil || *s.Port != 443) {
 			t.Errorf("unexpected HTTPS service: %+v", s)
 		}
 	}

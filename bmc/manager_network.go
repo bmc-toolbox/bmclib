@@ -80,9 +80,8 @@ const (
 // ManagerNetworkService is one management service (protocol) of the manager network protocol
 // resource.
 type ManagerNetworkService struct {
-	// Name is the Redfish property name of the service: "HTTP", "HTTPS", "SSH", "Telnet", "IPMI",
-	// "SNMP", "NTP", "KVMIP", "VirtualMedia" or "SSDP".
-	Name string
+	// Name is one of the Service* constants, e.g. ServiceHTTPS.
+	Name ManagerNetworkServiceName
 	// Enabled is the Redfish ProtocolEnabled flag.
 	Enabled bool
 	// Port is the service port; nil when the BMC does not report one.

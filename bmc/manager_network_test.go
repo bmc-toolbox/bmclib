@@ -85,7 +85,7 @@ func TestGetManagerNetworkProtocolFromInterfaces(t *testing.T) {
 	port := 443
 	protocol := &ManagerNetworkProtocol{
 		HostName: "bmc",
-		Services: []ManagerNetworkService{{Name: "HTTPS", Enabled: true, Port: &port}},
+		Services: []ManagerNetworkService{{Name: ServiceHTTPS, Enabled: true, Port: &port}},
 	}
 
 	testCases := []struct {

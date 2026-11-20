@@ -158,10 +158,10 @@ func TestGetManagerNetworkProtocol(t *testing.T) {
 	assert.Equal(t, &bmc.ManagerNetworkProtocol{
 		HostName: "idrac-7XK9Q33",
 		Services: []bmc.ManagerNetworkService{
-			{Name: "HTTPS", Enabled: true, Port: &https},
-			{Name: "SSH", Enabled: true, Port: &ssh},
-			{Name: "IPMI", Enabled: true, Port: &ipmi},
-			{Name: "NTP", Enabled: false, Port: &ntp},
+			{Name: bmc.ServiceHTTPS, Enabled: true, Port: &https},
+			{Name: bmc.ServiceSSH, Enabled: true, Port: &ssh},
+			{Name: bmc.ServiceIPMI, Enabled: true, Port: &ipmi},
+			{Name: bmc.ServiceNTP, Enabled: false, Port: &ntp},
 		},
 	}, protocol, "services absent from the resource (HTTP, SNMP, Telnet, ...) must be omitted")
 }
@@ -188,8 +188,8 @@ func TestGetManagerNetworkProtocolServiceWithoutPort(t *testing.T) {
 		FQDN:       "bmc.example.com",
 		NTPServers: []string{"10.0.0.9"},
 		Services: []bmc.ManagerNetworkService{
-			{Name: "Telnet", Enabled: false},
-			{Name: "NTP", Enabled: true},
+			{Name: bmc.ServiceTelnet, Enabled: false},
+			{Name: bmc.ServiceNTP, Enabled: true},
 		},
 	}, protocol, "a present service without Port has a nil Port; a null service is absent")
 }

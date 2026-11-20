@@ -239,7 +239,7 @@ func toManagerNetworkProtocol(np *schemas.ManagerNetworkProtocol) (*bmc.ManagerN
 		if !present[string(s.name)] {
 			continue
 		}
-		service := bmc.ManagerNetworkService{Name: string(s.name), Enabled: s.enabled}
+		service := bmc.ManagerNetworkService{Name: s.name, Enabled: s.enabled}
 		if s.port != nil {
 			port := int(*s.port)
 			service.Port = &port
