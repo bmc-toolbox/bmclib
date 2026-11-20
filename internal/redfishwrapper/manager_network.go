@@ -67,7 +67,7 @@ func (c *Client) GetManagerNetworkProtocol(ctx context.Context) (*bmc.ManagerNet
 // SetManagerNetworkService enables or disables a service of the manager network protocol resource
 // and, with a non-nil port, sets its port. Only the named service is sent. A service the resource
 // does not report is refused rather than written blindly.
-func (c *Client) SetManagerNetworkService(ctx context.Context, service string, enabled bool, port *int) error {
+func (c *Client) SetManagerNetworkService(ctx context.Context, service bmc.ManagerNetworkServiceName, enabled bool, port *int) error {
 	if port != nil && (*port < 1 || *port > 65535) {
 		return fmt.Errorf("service %s: port %d is out of range", service, *port)
 	}
@@ -89,7 +89,7 @@ func (c *Client) SetManagerNetworkService(ctx context.Context, service string, e
 			break
 		}
 	}
-	if !known || !present[service] {
+	if !known || !present[string(service)] {
 		return fmt.Errorf("%w: %s", bmclibErrs.ErrManagerNetworkServiceNotFound, service)
 	}
 
@@ -98,7 +98,7 @@ func (c *Client) SetManagerNetworkService(ctx context.Context, service string, e
 		settings["Port"] = *port
 	}
 
-	return c.patchManagerNetworkProtocol(ctx, np, map[string]any{service: settings})
+	return c.patchManagerNetworkProtocol(ctx, np, map[string]any{string(service): settings})
 }
 
 // SetManagerNTPServers replaces the NTP server list of the manager network protocol resource. An
@@ -236,10 +236,10 @@ func toManagerNetworkProtocol(np *schemas.ManagerNetworkProtocol) (*bmc.ManagerN
 		out.NTPServers = append([]string(nil), np.NTP.NTPServers...)
 	}
 	for _, s := range managerNetworkServices(np) {
-		if !present[s.name] {
+		if !present[string(s.name)] {
 			continue
 		}
-		service := bmc.ManagerNetworkService{Name: s.name, Enabled: s.enabled}
+		service := bmc.ManagerNetworkService{Name: string(s.name), Enabled: s.enabled}
 		if s.port != nil {
 			port := int(*s.port)
 			service.Port = &port
@@ -252,7 +252,7 @@ func toManagerNetworkProtocol(np *schemas.ManagerNetworkProtocol) (*bmc.ManagerN
 
 // managerNetworkService is a service of the NetworkProtocol resource as gofish decodes it.
 type managerNetworkService struct {
-	name    string
+	name    bmc.ManagerNetworkServiceName
 	enabled bool
 	port    *uint
 }
@@ -260,16 +260,16 @@ type managerNetworkService struct {
 // managerNetworkServices lists the services bmclib handles, in the order they are reported.
 func managerNetworkServices(np *schemas.ManagerNetworkProtocol) []managerNetworkService {
 	return []managerNetworkService{
-		{"HTTP", np.HTTP.ProtocolEnabled, np.HTTP.Port},
-		{"HTTPS", np.HTTPS.ProtocolEnabled, np.HTTPS.Port},
-		{"SSH", np.SSH.ProtocolEnabled, np.SSH.Port},
-		{"Telnet", np.Telnet.ProtocolEnabled, np.Telnet.Port},
-		{"IPMI", np.IPMI.ProtocolEnabled, np.IPMI.Port},
-		{"SNMP", np.SNMP.ProtocolEnabled, np.SNMP.Port},
-		{"NTP", np.NTP.ProtocolEnabled, np.NTP.Port},
-		{"KVMIP", np.KVMIP.ProtocolEnabled, np.KVMIP.Port},
-		{"VirtualMedia", np.VirtualMedia.ProtocolEnabled, np.VirtualMedia.Port},
-		{"SSDP", np.SSDP.ProtocolEnabled, np.SSDP.Port},
+		{bmc.ServiceHTTP, np.HTTP.ProtocolEnabled, np.HTTP.Port},
+		{bmc.ServiceHTTPS, np.HTTPS.ProtocolEnabled, np.HTTPS.Port},
+		{bmc.ServiceSSH, np.SSH.ProtocolEnabled, np.SSH.Port},
+		{bmc.ServiceTelnet, np.Telnet.ProtocolEnabled, np.Telnet.Port},
+		{bmc.ServiceIPMI, np.IPMI.ProtocolEnabled, np.IPMI.Port},
+		{bmc.ServiceSNMP, np.SNMP.ProtocolEnabled, np.SNMP.Port},
+		{bmc.ServiceNTP, np.NTP.ProtocolEnabled, np.NTP.Port},
+		{bmc.ServiceKVMIP, np.KVMIP.ProtocolEnabled, np.KVMIP.Port},
+		{bmc.ServiceVirtualMedia, np.VirtualMedia.ProtocolEnabled, np.VirtualMedia.Port},
+		{bmc.ServiceSSDP, np.SSDP.ProtocolEnabled, np.SSDP.Port},
 	}
 }
 

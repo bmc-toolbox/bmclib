@@ -885,7 +885,7 @@ func (c *Client) GetManagerNetworkProtocol(ctx context.Context) (protocol *bmc.M
 }
 
 // SetManagerNetworkService enables or disables a manager network service; a non-nil port also sets its port
-func (c *Client) SetManagerNetworkService(ctx context.Context, service string, enabled bool, port *int) (err error) {
+func (c *Client) SetManagerNetworkService(ctx context.Context, service bmc.ManagerNetworkServiceName, enabled bool, port *int) (err error) {
 	if c.serviceClient == nil || c.serviceClient.redfish == nil {
 		return errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
 	}

@@ -955,10 +955,9 @@ func (c *Client) GetManagerNetworkProtocol(ctx context.Context) (protocol *bmc.M
 	return protocol, err
 }
 
-// SetManagerNetworkService enables or disables a management service of the BMC (a name as reported
-// by GetManagerNetworkProtocol, e.g. "IPMI" or "SSH"). A non-nil port also changes the service
-// port.
-func (c *Client) SetManagerNetworkService(ctx context.Context, service string, enabled bool, port *int) (err error) {
+// SetManagerNetworkService enables or disables a management service of the BMC, e.g.
+// bmc.ServiceIPMI or bmc.ServiceSSH. A non-nil port also changes the service port.
+func (c *Client) SetManagerNetworkService(ctx context.Context, service bmc.ManagerNetworkServiceName, enabled bool, port *int) (err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetManagerNetworkService")
 	defer span.End()
 

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/bmc-toolbox/bmclib/v2/bmc"
 	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
@@ -66,7 +67,7 @@ func TestSetManagerNetworkService(t *testing.T) {
 	ts := newTestServer(t, testServerOpts{})
 	c := ts.openedClient(t)
 
-	if err := c.SetManagerNetworkService(context.Background(), "SSDP", false, nil); err != nil {
+	if err := c.SetManagerNetworkService(context.Background(), bmc.ServiceSSDP, false, nil); err != nil {
 		t.Fatalf("SetManagerNetworkService: %v", err)
 	}
 
@@ -84,7 +85,7 @@ func TestSetManagerNetworkServiceNotExposed(t *testing.T) {
 	ts := newTestServer(t, testServerOpts{})
 	c := ts.openedClient(t)
 
-	err := c.SetManagerNetworkService(context.Background(), "Telnet", true, nil)
+	err := c.SetManagerNetworkService(context.Background(), bmc.ServiceTelnet, true, nil)
 	if !errors.Is(err, bmclibErrs.ErrManagerNetworkServiceNotFound) {
 		t.Fatalf("err = %v, want ErrManagerNetworkServiceNotFound", err)
 	}

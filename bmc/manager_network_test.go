@@ -136,7 +136,7 @@ type mockManagerNetworkServiceSetter struct {
 	err error
 }
 
-func (m *mockManagerNetworkServiceSetter) SetManagerNetworkService(ctx context.Context, _ string, _ bool, _ *int) error {
+func (m *mockManagerNetworkServiceSetter) SetManagerNetworkService(ctx context.Context, _ ManagerNetworkServiceName, _ bool, _ *int) error {
 	return m.err
 }
 
@@ -180,7 +180,7 @@ func TestSetManagerNetworkServiceFromInterfaces(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			metadata, err := SetManagerNetworkServiceFromInterfaces(context.Background(), tt.generic, "SSH", true, tt.port)
+			metadata, err := SetManagerNetworkServiceFromInterfaces(context.Background(), tt.generic, ServiceSSH, true, tt.port)
 
 			if tt.errMsg == "" {
 				assert.NoError(t, err)

@@ -59,6 +59,24 @@ type ManagerEthernetInterface struct {
 	State  string
 }
 
+// ManagerNetworkServiceName names a management service (protocol) of the manager network protocol
+// resource. The value is the Redfish property name of the service.
+type ManagerNetworkServiceName string
+
+// The management services of the manager network protocol resource bmclib handles.
+const (
+	ServiceHTTP         ManagerNetworkServiceName = "HTTP"
+	ServiceHTTPS        ManagerNetworkServiceName = "HTTPS"
+	ServiceSSH          ManagerNetworkServiceName = "SSH"
+	ServiceTelnet       ManagerNetworkServiceName = "Telnet"
+	ServiceIPMI         ManagerNetworkServiceName = "IPMI"
+	ServiceSNMP         ManagerNetworkServiceName = "SNMP"
+	ServiceNTP          ManagerNetworkServiceName = "NTP"
+	ServiceKVMIP        ManagerNetworkServiceName = "KVMIP"
+	ServiceVirtualMedia ManagerNetworkServiceName = "VirtualMedia"
+	ServiceSSDP         ManagerNetworkServiceName = "SSDP"
+)
+
 // ManagerNetworkService is one management service (protocol) of the manager network protocol
 // resource.
 type ManagerNetworkService struct {
@@ -214,12 +232,11 @@ func GetManagerNetworkProtocolFromInterfaces(ctx context.Context, generic []inte
 // ManagerNetworkServiceSetter enables or disables a management service of the manager and
 // optionally changes its port.
 type ManagerNetworkServiceSetter interface {
-	// SetManagerNetworkService sets the enabled state of the named service; service is a name as
-	// reported in ManagerNetworkService.Name. A non-nil port also changes the service port, a nil
-	// port leaves it as is.
+	// SetManagerNetworkService sets the enabled state of the named service, e.g. ServiceIPMI. A
+	// non-nil port also changes the service port, a nil port leaves it as is.
 	//
 	// Disabling the service the caller is connected through (e.g. HTTPS) cuts the caller off.
-	SetManagerNetworkService(ctx context.Context, service string, enabled bool, port *int) (err error)
+	SetManagerNetworkService(ctx context.Context, service ManagerNetworkServiceName, enabled bool, port *int) (err error)
 }
 
 type managerNetworkServiceSetterProvider struct {
@@ -227,7 +244,7 @@ type managerNetworkServiceSetterProvider struct {
 	ManagerNetworkServiceSetter
 }
 
-func setManagerNetworkService(ctx context.Context, generic []managerNetworkServiceSetterProvider, service string, enabled bool, port *int) (metadata Metadata, err error) {
+func setManagerNetworkService(ctx context.Context, generic []managerNetworkServiceSetterProvider, service ManagerNetworkServiceName, enabled bool, port *int) (metadata Metadata, err error) {
 	metadata = newMetadata()
 Loop:
 	for _, elem := range generic {
@@ -255,7 +272,7 @@ Loop:
 
 // SetManagerNetworkServiceFromInterfaces identifies implementations of the
 // ManagerNetworkServiceSetter interface and passes them to the setManagerNetworkService() wrapper.
-func SetManagerNetworkServiceFromInterfaces(ctx context.Context, generic []interface{}, service string, enabled bool, port *int) (metadata Metadata, err error) {
+func SetManagerNetworkServiceFromInterfaces(ctx context.Context, generic []interface{}, service ManagerNetworkServiceName, enabled bool, port *int) (metadata Metadata, err error) {
 	implementations := make([]managerNetworkServiceSetterProvider, 0)
 	for _, elem := range generic {
 		temp := managerNetworkServiceSetterProvider{name: getProviderName(elem)}

@@ -223,14 +223,14 @@ func TestSetManagerNetworkService(t *testing.T) {
 	port := 2222
 	testCases := []struct {
 		name    string
-		service string
+		service bmc.ManagerNetworkServiceName
 		enabled bool
 		port    *int
 		want    string
 	}{
-		{name: "disable", service: "IPMI", want: `{"IPMI":{"ProtocolEnabled":false}}`},
-		{name: "enable a disabled service", service: "NTP", enabled: true, want: `{"NTP":{"ProtocolEnabled":true}}`},
-		{name: "change the port", service: "SSH", enabled: true, port: &port, want: `{"SSH":{"Port":2222,"ProtocolEnabled":true}}`},
+		{name: "disable", service: bmc.ServiceIPMI, want: `{"IPMI":{"ProtocolEnabled":false}}`},
+		{name: "enable a disabled service", service: bmc.ServiceNTP, enabled: true, want: `{"NTP":{"ProtocolEnabled":true}}`},
+		{name: "change the port", service: bmc.ServiceSSH, enabled: true, port: &port, want: `{"SSH":{"Port":2222,"ProtocolEnabled":true}}`},
 	}
 
 	for _, tt := range testCases {
@@ -254,16 +254,16 @@ func TestSetManagerNetworkServiceRefused(t *testing.T) {
 	zero, tooHigh := 0, 65536
 	testCases := []struct {
 		name    string
-		service string
+		service bmc.ManagerNetworkServiceName
 		port    *int
 		errIs   error
 		errMsg  string
 	}{
-		{name: "service absent from the resource", service: "SNMP", errIs: bmclibErrs.ErrManagerNetworkServiceNotFound},
+		{name: "service absent from the resource", service: bmc.ServiceSNMP, errIs: bmclibErrs.ErrManagerNetworkServiceNotFound},
 		{name: "unknown service", service: "Status", errIs: bmclibErrs.ErrManagerNetworkServiceNotFound},
 		{name: "service name is case sensitive", service: "ipmi", errIs: bmclibErrs.ErrManagerNetworkServiceNotFound},
-		{name: "port zero", service: "SSH", port: &zero, errMsg: "port 0 is out of range"},
-		{name: "port above 65535", service: "SSH", port: &tooHigh, errMsg: "port 65536 is out of range"},
+		{name: "port zero", service: bmc.ServiceSSH, port: &zero, errMsg: "port 0 is out of range"},
+		{name: "port above 65535", service: bmc.ServiceSSH, port: &tooHigh, errMsg: "port 65536 is out of range"},
 	}
 
 	for _, tt := range testCases {
@@ -303,7 +303,7 @@ func TestSetManagerNetworkServiceIfMatch(t *testing.T) {
 		var patches []networkProtocolPatch
 		client := newDellManagerNetworkClient(t, newMux(&patches), endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
 
-		require.NoError(t, client.SetManagerNetworkService(context.Background(), "IPMI", false, nil))
+		require.NoError(t, client.SetManagerNetworkService(context.Background(), bmc.ServiceIPMI, false, nil))
 		require.Len(t, patches, 1)
 		assert.Equal(t, `W/"7d1a"`, patches[0].ifMatch)
 	})
@@ -313,7 +313,7 @@ func TestSetManagerNetworkServiceIfMatch(t *testing.T) {
 		client := newDellManagerNetworkClient(t, newMux(&patches), endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
 		client.disableEtagMatch = true
 
-		require.NoError(t, client.SetManagerNetworkService(context.Background(), "IPMI", false, nil))
+		require.NoError(t, client.SetManagerNetworkService(context.Background(), bmc.ServiceIPMI, false, nil))
 		require.Len(t, patches, 1)
 		assert.Empty(t, patches[0].ifMatch)
 	})
@@ -333,7 +333,7 @@ func TestSetManagerNetworkServiceRejected(t *testing.T) {
 	client := newDellManagerNetworkClient(t, mux, endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
 
 	port := 443
-	err := client.SetManagerNetworkService(context.Background(), "SSH", true, &port)
+	err := client.SetManagerNetworkService(context.Background(), bmc.ServiceSSH, true, &port)
 	assert.ErrorIs(t, err, bmclibErrs.ErrManagerNetworkProtocolSet)
 	assert.ErrorContains(t, err, "Port is in use")
 }
@@ -343,7 +343,7 @@ func TestSetManagerNetworkServiceNoResource(t *testing.T) {
 	mux.HandleFunc(dellNetworkProtocolPath, notFound)
 	client := newDellManagerNetworkClient(t, mux, endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
 
-	err := client.SetManagerNetworkService(context.Background(), "IPMI", false, nil)
+	err := client.SetManagerNetworkService(context.Background(), bmc.ServiceIPMI, false, nil)
 	assert.ErrorIs(t, err, bmclibErrs.ErrManagerNetworkProtocolNotFound)
 }
 

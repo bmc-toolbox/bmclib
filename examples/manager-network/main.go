@@ -88,7 +88,7 @@ func main() {
 		if *port != 0 {
 			servicePort = port
 		}
-		if err := client.SetManagerNetworkService(ctx, *setService, *enabled, servicePort); err != nil {
+		if err := client.SetManagerNetworkService(ctx, bmc.ManagerNetworkServiceName(*setService), *enabled, servicePort); err != nil {
 			l.Fatal(err)
 		}
 		fmt.Printf("Service %s: enabled=%t port=%s requested\n", *setService, *enabled, intOrDash(servicePort))

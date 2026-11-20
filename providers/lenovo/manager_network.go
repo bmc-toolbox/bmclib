@@ -33,7 +33,7 @@ func (c *Conn) GetManagerNetworkProtocol(ctx context.Context) (protocol *bmc.Man
 // also sets its port.
 //
 // Implements bmc.ManagerNetworkServiceSetter.
-func (c *Conn) SetManagerNetworkService(ctx context.Context, service string, enabled bool, port *int) (err error) {
+func (c *Conn) SetManagerNetworkService(ctx context.Context, service bmc.ManagerNetworkServiceName, enabled bool, port *int) (err error) {
 	return c.redfishwrapper.SetManagerNetworkService(ctx, service, enabled, port)
 }
 
