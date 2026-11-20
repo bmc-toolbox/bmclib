@@ -2,6 +2,7 @@ package redfishwrapper
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -157,10 +158,10 @@ func TestGetManagerNetworkProtocol(t *testing.T) {
 	assert.Equal(t, &bmc.ManagerNetworkProtocol{
 		HostName: "idrac-7XK9Q33",
 		Services: []bmc.ManagerNetworkService{
-			{Name: "HTTPS", Enabled: true, Port: &https},
-			{Name: "SSH", Enabled: true, Port: &ssh},
-			{Name: "IPMI", Enabled: true, Port: &ipmi},
-			{Name: "NTP", Enabled: false, Port: &ntp},
+			{Name: bmc.ServiceHTTPS, Enabled: true, Port: &https},
+			{Name: bmc.ServiceSSH, Enabled: true, Port: &ssh},
+			{Name: bmc.ServiceIPMI, Enabled: true, Port: &ipmi},
+			{Name: bmc.ServiceNTP, Enabled: false, Port: &ntp},
 		},
 	}, protocol, "services absent from the resource (HTTP, SNMP, Telnet, ...) must be omitted")
 }
@@ -187,8 +188,215 @@ func TestGetManagerNetworkProtocolServiceWithoutPort(t *testing.T) {
 		FQDN:       "bmc.example.com",
 		NTPServers: []string{"10.0.0.9"},
 		Services: []bmc.ManagerNetworkService{
-			{Name: "Telnet", Enabled: false},
-			{Name: "NTP", Enabled: true},
+			{Name: bmc.ServiceTelnet, Enabled: false},
+			{Name: bmc.ServiceNTP, Enabled: true},
 		},
 	}, protocol, "a present service without Port has a nil Port; a null service is absent")
+}
+
+// networkProtocolPatch is a PATCH request received by the NetworkProtocol handler.
+type networkProtocolPatch struct {
+	body    string
+	ifMatch string
+}
+
+// dellNetworkProtocolHandler serves the Dell NetworkProtocol fixture and records PATCH requests.
+func dellNetworkProtocolHandler(t *testing.T, patches *[]networkProtocolPatch) http.HandlerFunc {
+	t.Helper()
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			_, _ = w.Write(mustReadFile(t, "dell/networkprotocol.json"))
+		case http.MethodPatch:
+			body, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			*patches = append(*patches, networkProtocolPatch{body: string(body), ifMatch: r.Header.Get("If-Match")})
+			w.WriteHeader(http.StatusOK)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	}
+}
+
+func TestSetManagerNetworkService(t *testing.T) {
+	port := 2222
+	testCases := []struct {
+		name    string
+		service bmc.ManagerNetworkServiceName
+		enabled bool
+		port    *int
+		want    string
+	}{
+		{name: "disable", service: bmc.ServiceIPMI, want: `{"IPMI":{"ProtocolEnabled":false}}`},
+		{name: "enable a disabled service", service: bmc.ServiceNTP, enabled: true, want: `{"NTP":{"ProtocolEnabled":true}}`},
+		{name: "change the port", service: bmc.ServiceSSH, enabled: true, port: &port, want: `{"SSH":{"Port":2222,"ProtocolEnabled":true}}`},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			var patches []networkProtocolPatch
+
+			mux := http.NewServeMux()
+			mux.HandleFunc(dellNetworkProtocolPath, dellNetworkProtocolHandler(t, &patches))
+			client := newDellManagerNetworkClient(t, mux, endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+
+			require.NoError(t, client.SetManagerNetworkService(context.Background(), tt.service, tt.enabled, tt.port))
+
+			require.Len(t, patches, 1, "expected one PATCH of the NetworkProtocol resource")
+			assert.JSONEq(t, tt.want, patches[0].body, "only the named service must be sent")
+			assert.Empty(t, patches[0].ifMatch, "the fixture carries no ETag")
+		})
+	}
+}
+
+func TestSetManagerNetworkServiceRefused(t *testing.T) {
+	zero, tooHigh := 0, 65536
+	testCases := []struct {
+		name    string
+		service bmc.ManagerNetworkServiceName
+		port    *int
+		errIs   error
+		errMsg  string
+	}{
+		{name: "service absent from the resource", service: bmc.ServiceSNMP, errIs: bmclibErrs.ErrManagerNetworkServiceNotFound},
+		{name: "unknown service", service: "Status", errIs: bmclibErrs.ErrManagerNetworkServiceNotFound},
+		{name: "service name is case sensitive", service: "ipmi", errIs: bmclibErrs.ErrManagerNetworkServiceNotFound},
+		{name: "port zero", service: bmc.ServiceSSH, port: &zero, errMsg: "port 0 is out of range"},
+		{name: "port above 65535", service: bmc.ServiceSSH, port: &tooHigh, errMsg: "port 65536 is out of range"},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			var patches []networkProtocolPatch
+
+			mux := http.NewServeMux()
+			mux.HandleFunc(dellNetworkProtocolPath, dellNetworkProtocolHandler(t, &patches))
+			client := newDellManagerNetworkClient(t, mux, endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+
+			err := client.SetManagerNetworkService(context.Background(), tt.service, true, tt.port)
+			require.Error(t, err)
+			if tt.errIs != nil {
+				assert.ErrorIs(t, err, tt.errIs)
+			}
+			if tt.errMsg != "" {
+				assert.ErrorContains(t, err, tt.errMsg)
+			}
+			assert.Empty(t, patches, "a refused change must not reach the BMC")
+		})
+	}
+}
+
+func TestSetManagerNetworkServiceIfMatch(t *testing.T) {
+	newMux := func(patches *[]networkProtocolPatch) *http.ServeMux {
+		handler := dellNetworkProtocolHandler(t, patches)
+		mux := http.NewServeMux()
+		mux.HandleFunc(dellNetworkProtocolPath, func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("ETag", `W/"7d1a"`)
+			handler(w, r)
+		})
+
+		return mux
+	}
+
+	t.Run("resource ETag is sent", func(t *testing.T) {
+		var patches []networkProtocolPatch
+		client := newDellManagerNetworkClient(t, newMux(&patches), endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+
+		require.NoError(t, client.SetManagerNetworkService(context.Background(), bmc.ServiceIPMI, false, nil))
+		require.Len(t, patches, 1)
+		assert.Equal(t, `W/"7d1a"`, patches[0].ifMatch)
+	})
+
+	t.Run("ETag matching disabled", func(t *testing.T) {
+		var patches []networkProtocolPatch
+		client := newDellManagerNetworkClient(t, newMux(&patches), endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+		client.disableEtagMatch = true
+
+		require.NoError(t, client.SetManagerNetworkService(context.Background(), bmc.ServiceIPMI, false, nil))
+		require.Len(t, patches, 1)
+		assert.Empty(t, patches[0].ifMatch)
+	})
+}
+
+func TestSetManagerNetworkServiceRejected(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc(dellNetworkProtocolPath, func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			_, _ = w.Write(mustReadFile(t, "dell/networkprotocol.json"))
+		default:
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(`{"error":{"message":"Port is in use"}}`))
+		}
+	})
+	client := newDellManagerNetworkClient(t, mux, endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+
+	port := 443
+	err := client.SetManagerNetworkService(context.Background(), bmc.ServiceSSH, true, &port)
+	assert.ErrorIs(t, err, bmclibErrs.ErrManagerNetworkProtocolSet)
+	assert.ErrorContains(t, err, "Port is in use")
+}
+
+func TestSetManagerNetworkServiceNoResource(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc(dellNetworkProtocolPath, notFound)
+	client := newDellManagerNetworkClient(t, mux, endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+
+	err := client.SetManagerNetworkService(context.Background(), bmc.ServiceIPMI, false, nil)
+	assert.ErrorIs(t, err, bmclibErrs.ErrManagerNetworkProtocolNotFound)
+}
+
+func TestSetManagerNTPServers(t *testing.T) {
+	testCases := []struct {
+		name    string
+		servers []string
+		want    string
+	}{
+		{name: "set", servers: []string{"10.0.0.1", "ntp.example.org"}, want: `{"NTP":{"NTPServers":["10.0.0.1","ntp.example.org"]}}`},
+		{name: "clear with nil", want: `{"NTP":{"NTPServers":[]}}`},
+		{name: "clear with an empty list", servers: []string{}, want: `{"NTP":{"NTPServers":[]}}`},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			var patches []networkProtocolPatch
+
+			mux := http.NewServeMux()
+			mux.HandleFunc(dellNetworkProtocolPath, dellNetworkProtocolHandler(t, &patches))
+			client := newDellManagerNetworkClient(t, mux, endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+
+			require.NoError(t, client.SetManagerNTPServers(context.Background(), tt.servers))
+
+			require.Len(t, patches, 1, "expected one PATCH of the NetworkProtocol resource")
+			assert.JSONEq(t, tt.want, patches[0].body, "only NTP.NTPServers must be sent")
+		})
+	}
+}
+
+func TestSetManagerNTPServersRejected(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc(dellNetworkProtocolPath, func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			_, _ = w.Write(mustReadFile(t, "dell/networkprotocol.json"))
+		default:
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(`{"error":{"message":"too many NTP servers"}}`))
+		}
+	})
+	client := newDellManagerNetworkClient(t, mux, endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+
+	err := client.SetManagerNTPServers(context.Background(), []string{"a", "b", "c", "d"})
+	assert.ErrorIs(t, err, bmclibErrs.ErrManagerNetworkProtocolSet)
+	assert.ErrorContains(t, err, "too many NTP servers")
+}
+
+func TestSetManagerNTPServersNoResource(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc(dellNetworkProtocolPath, notFound)
+	client := newDellManagerNetworkClient(t, mux, endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+
+	err := client.SetManagerNTPServers(context.Background(), []string{"10.0.0.1"})
+	assert.ErrorIs(t, err, bmclibErrs.ErrManagerNetworkProtocolNotFound)
 }

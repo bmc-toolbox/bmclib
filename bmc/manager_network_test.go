@@ -85,7 +85,7 @@ func TestGetManagerNetworkProtocolFromInterfaces(t *testing.T) {
 	port := 443
 	protocol := &ManagerNetworkProtocol{
 		HostName: "bmc",
-		Services: []ManagerNetworkService{{Name: "HTTPS", Enabled: true, Port: &port}},
+		Services: []ManagerNetworkService{{Name: ServiceHTTPS, Enabled: true, Port: &port}},
 	}
 
 	testCases := []struct {
@@ -128,6 +128,125 @@ func TestGetManagerNetworkProtocolFromInterfaces(t *testing.T) {
 			}
 
 			assert.Equal(t, tt.expectedProtocol, got)
+		})
+	}
+}
+
+type mockManagerNetworkServiceSetter struct {
+	err error
+}
+
+func (m *mockManagerNetworkServiceSetter) SetManagerNetworkService(ctx context.Context, _ ManagerNetworkServiceName, _ bool, _ *int) error {
+	return m.err
+}
+
+func (m *mockManagerNetworkServiceSetter) Name() string {
+	return "mock"
+}
+
+func TestSetManagerNetworkServiceFromInterfaces(t *testing.T) {
+	port := 2222
+	testCases := []struct {
+		name    string
+		generic []interface{}
+		port    *int
+		errMsg  string
+	}{
+		{
+			name:    "success",
+			generic: []interface{}{&mockManagerNetworkServiceSetter{}},
+		},
+		{
+			name:    "success, with port",
+			generic: []interface{}{&mockManagerNetworkServiceSetter{}},
+			port:    &port,
+		},
+		{
+			name:    "not an implementation",
+			generic: []interface{}{"foo"},
+			errMsg:  "no ManagerNetworkServiceSetter implementations found",
+		},
+		{
+			name:    "no implementations",
+			generic: []interface{}{},
+			errMsg:  "no ManagerNetworkServiceSetter implementations found",
+		},
+		{
+			name:    "error from setter",
+			generic: []interface{}{&mockManagerNetworkServiceSetter{err: errors.New("foobar")}},
+			errMsg:  "foobar",
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			metadata, err := SetManagerNetworkServiceFromInterfaces(context.Background(), tt.generic, ServiceSSH, true, tt.port)
+
+			if tt.errMsg == "" {
+				assert.NoError(t, err)
+				assert.Equal(t, "mock", metadata.SuccessfulProvider)
+			} else {
+				assert.ErrorContains(t, err, tt.errMsg)
+			}
+		})
+	}
+}
+
+type mockManagerNTPServersSetter struct {
+	err error
+}
+
+func (m *mockManagerNTPServersSetter) SetManagerNTPServers(ctx context.Context, _ []string) error {
+	return m.err
+}
+
+func (m *mockManagerNTPServersSetter) Name() string {
+	return "mock"
+}
+
+func TestSetManagerNTPServersFromInterfaces(t *testing.T) {
+	testCases := []struct {
+		name    string
+		generic []interface{}
+		servers []string
+		errMsg  string
+	}{
+		{
+			name:    "success, set",
+			generic: []interface{}{&mockManagerNTPServersSetter{}},
+			servers: []string{"10.0.0.1"},
+		},
+		{
+			name:    "success, clear",
+			generic: []interface{}{&mockManagerNTPServersSetter{}},
+		},
+		{
+			name:    "not an implementation",
+			generic: []interface{}{"foo"},
+			errMsg:  "no ManagerNTPServersSetter implementations found",
+		},
+		{
+			name:    "no implementations",
+			generic: []interface{}{},
+			errMsg:  "no ManagerNTPServersSetter implementations found",
+		},
+		{
+			name:    "error from setter",
+			generic: []interface{}{&mockManagerNTPServersSetter{err: errors.New("foobar")}},
+			errMsg:  "foobar",
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			metadata, err := SetManagerNTPServersFromInterfaces(context.Background(), tt.generic, tt.servers)
+
+			if tt.errMsg == "" {
+				assert.NoError(t, err)
+				assert.Equal(t, "mock", metadata.SuccessfulProvider)
+			} else {
+				assert.ErrorContains(t, err, tt.errMsg)
+			}
 		})
 	}
 }
