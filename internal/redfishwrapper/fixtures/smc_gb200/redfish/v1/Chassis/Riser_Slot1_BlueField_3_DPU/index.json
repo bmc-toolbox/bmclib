@@ -1,0 +1,79 @@
+{
+    "@odata.id": "/redfish/v1/Chassis/Riser_Slot1_BlueField_3_DPU",
+    "@odata.type": "#Chassis.v1_22_0.Chassis",
+    "Actions": {
+        "#Chassis.Reset": {
+            "@Redfish.ActionInfo": "/redfish/v1/Chassis/Riser_Slot1_BlueField_3_DPU/ResetActionInfo",
+            "target": "/redfish/v1/Chassis/Riser_Slot1_BlueField_3_DPU/Actions/Chassis.Reset"
+        }
+    },
+    "Assembly": {
+        "@odata.id": "/redfish/v1/Chassis/Riser_Slot1_BlueField_3_DPU/Assembly"
+    },
+    "ChassisType": "Component",
+    "Controls": {
+        "@odata.id": "/redfish/v1/Chassis/Riser_Slot1_BlueField_3_DPU/Controls"
+    },
+    "EnvironmentMetrics": {
+        "@odata.id": "/redfish/v1/Chassis/Riser_Slot1_BlueField_3_DPU/EnvironmentMetrics"
+    },
+    "Id": "Riser_Slot1_BlueField_3_DPU",
+    "Links": {
+        "ComputerSystems": [
+            {
+                "@odata.id": "/redfish/v1/Systems/System_0"
+            }
+        ],
+        "ContainedBy": {
+            "@odata.id": "/redfish/v1/Chassis/Chassis_0"
+        },
+        "ManagedBy": [
+            {
+                "@odata.id": "/redfish/v1/Managers/BMC_0"
+            }
+        ]
+    },
+    "Location": {
+        "PartLocation": {
+            "LocationType": "Embedded"
+        }
+    },
+    "Manufacturer": "Nvidia",
+    "Model": "BlueField-3 DPU",
+    "Name": "Riser_Slot1_BlueField_3_DPU",
+    "NetworkAdapters": {
+        "@odata.id": "/redfish/v1/Chassis/Riser_Slot1_BlueField_3_DPU/NetworkAdapters"
+    },
+    "Oem": {
+        "Nvidia": {
+            "@odata.type": "#NvidiaChassis.v1_6_0.NvidiaChassis"
+        }
+    },
+    "PCIeDevices": {
+        "@odata.id": "/redfish/v1/Chassis/Riser_Slot1_BlueField_3_DPU/PCIeDevices"
+    },
+    "PCIeSlots": {
+        "@odata.id": "/redfish/v1/Chassis/Riser_Slot1_BlueField_3_DPU/PCIeSlots"
+    },
+    "PartNumber": "900-9D3B6-00CN-PA0",
+    "PowerState": "On",
+    "PowerSubsystem": {
+        "@odata.id": "/redfish/v1/Chassis/Riser_Slot1_BlueField_3_DPU/PowerSubsystem"
+    },
+    "Sensors": {
+        "@odata.id": "/redfish/v1/Chassis/Riser_Slot1_BlueField_3_DPU/Sensors"
+    },
+    "SerialNumber": "FAKE00000033",
+    "Status": {
+        "Conditions": [],
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    },
+    "ThermalSubsystem": {
+        "@odata.id": "/redfish/v1/Chassis/Riser_Slot1_BlueField_3_DPU/ThermalSubsystem"
+    },
+    "TrustedComponents": {
+        "@odata.id": "/redfish/v1/Chassis/Riser_Slot1_BlueField_3_DPU/TrustedComponents"
+    }
+}

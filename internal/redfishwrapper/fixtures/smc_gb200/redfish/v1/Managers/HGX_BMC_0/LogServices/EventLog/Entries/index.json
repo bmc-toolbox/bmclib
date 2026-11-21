@@ -1,0 +1,8 @@
+{
+    "@odata.id": "/redfish/v1/Managers/HGX_BMC_0/LogServices/EventLog/Entries",
+    "@odata.type": "#LogEntryCollection.LogEntryCollection",
+    "Description": "Collection of System Event Log Entries",
+    "Members": [],
+    "Members@odata.count": 0,
+    "Name": "Manager Event Log Entries"
+}

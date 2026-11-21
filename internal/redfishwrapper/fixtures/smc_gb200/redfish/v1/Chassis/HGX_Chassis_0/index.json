@@ -1,0 +1,104 @@
+{
+    "@odata.id": "/redfish/v1/Chassis/HGX_Chassis_0",
+    "@odata.type": "#Chassis.v1_22_0.Chassis",
+    "Assembly": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_Chassis_0/Assembly"
+    },
+    "ChassisType": "Zone",
+    "Controls": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_Chassis_0/Controls"
+    },
+    "EnvironmentMetrics": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_Chassis_0/EnvironmentMetrics"
+    },
+    "Id": "HGX_Chassis_0",
+    "Links": {
+        "ComputerSystems": [
+            {
+                "@odata.id": "/redfish/v1/Systems/HGX_Baseboard_0"
+            }
+        ],
+        "Contains": [
+            {
+                "@odata.id": "/redfish/v1/Chassis/HGX_ProcessorModule_0"
+            },
+            {
+                "@odata.id": "/redfish/v1/Chassis/HGX_ProcessorModule_1"
+            }
+        ],
+        "ManagedBy": [
+            {
+                "@odata.id": "/redfish/v1/Managers/HGX_BMC_0"
+            }
+        ]
+    },
+    "Location": {
+        "PartLocation": {
+            "LocationType": "Backplane",
+            "ServiceLabel": "HGX_Chassis_0"
+        },
+        "PartLocationContext": ""
+    },
+    "LogServices": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_Chassis_0/LogServices"
+    },
+    "Manufacturer": "NVIDIA",
+    "Model": "GB200 NVL",
+    "Name": "HGX_Chassis_0",
+    "Oem": {
+        "Nvidia": {
+            "@odata.type": "#NvidiaChassis.v1_6_0.NvidiaChassis",
+            "StaticPowerHint": {
+                "CpuClockFrequencyHz": {
+                    "AllowableMax": 3000000000.0,
+                    "AllowableMin": 1000000000.0,
+                    "SetPoint": 0.0
+                },
+                "PowerEstimationWatts": {
+                    "Reading": 0.0,
+                    "State": "Invalid"
+                },
+                "TemperatureCelsius": {
+                    "AllowableMax": 85.0,
+                    "AllowableMin": 0.0,
+                    "SetPoint": 0.0
+                },
+                "WorkloadFactor": {
+                    "AllowableMax": 1.0,
+                    "AllowableMin": 0.0,
+                    "SetPoint": 0.0
+                }
+            }
+        }
+    },
+    "PCIeDevices": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_Chassis_0/PCIeDevices"
+    },
+    "PCIeSlots": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_Chassis_0/PCIeSlots"
+    },
+    "PartNumber": "N/A",
+    "PowerState": "On",
+    "PowerSubsystem": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_Chassis_0/PowerSubsystem"
+    },
+    "Replaceable": false,
+    "SKU": "N/A",
+    "Sensors": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_Chassis_0/Sensors"
+    },
+    "SerialNumber": "N/A",
+    "Status": {
+        "Conditions": [],
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    },
+    "ThermalSubsystem": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_Chassis_0/ThermalSubsystem"
+    },
+    "TrustedComponents": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_Chassis_0/TrustedComponents"
+    },
+    "UUID": "00000000-0000-4000-8000-000000000002"
+}

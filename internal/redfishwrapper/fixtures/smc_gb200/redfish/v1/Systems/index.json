@@ -1,0 +1,14 @@
+{
+    "@odata.id": "/redfish/v1/Systems",
+    "@odata.type": "#ComputerSystemCollection.ComputerSystemCollection",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Systems/System_0"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/HGX_Baseboard_0"
+        }
+    ],
+    "Members@odata.count": 2,
+    "Name": "Computer System Collection"
+}

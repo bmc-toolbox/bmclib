@@ -1,0 +1,109 @@
+{
+    "@odata.id": "/redfish/v1/Chassis/HGX_ProcessorModule_1",
+    "@odata.type": "#Chassis.v1_22_0.Chassis",
+    "Actions": {
+        "Oem": {
+            "#NvidiaProcessor.VariableSpiErase": {
+                "target": "/redfish/v1/Chassis/HGX_ProcessorModule_1/Actions/Oem/NvidiaProcessor.VariableSpiErase"
+            },
+            "#NvidiaProcessor.VariableSpiRead": {
+                "target": "/redfish/v1/Chassis/HGX_ProcessorModule_1/Actions/Oem/NvidiaProcessor.VariableSpiRead"
+            }
+        }
+    },
+    "Assembly": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_ProcessorModule_1/Assembly"
+    },
+    "ChassisType": "Module",
+    "Controls": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_ProcessorModule_1/Controls"
+    },
+    "EnvironmentMetrics": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_ProcessorModule_1/EnvironmentMetrics"
+    },
+    "Id": "HGX_ProcessorModule_1",
+    "Links": {
+        "ComputerSystems": [
+            {
+                "@odata.id": "/redfish/v1/Systems/HGX_Baseboard_0"
+            }
+        ],
+        "ContainedBy": {
+            "@odata.id": "/redfish/v1/Chassis/HGX_Chassis_0"
+        },
+        "Contains": [
+            {
+                "@odata.id": "/redfish/v1/Chassis/HGX_CPU_1"
+            },
+            {
+                "@odata.id": "/redfish/v1/Chassis/HGX_ERoT_CPU_1"
+            },
+            {
+                "@odata.id": "/redfish/v1/Chassis/HGX_ERoT_FPGA_1"
+            },
+            {
+                "@odata.id": "/redfish/v1/Chassis/HGX_FPGA_1"
+            },
+            {
+                "@odata.id": "/redfish/v1/Chassis/HGX_GPU_2"
+            },
+            {
+                "@odata.id": "/redfish/v1/Chassis/HGX_GPU_3"
+            }
+        ],
+        "ManagedBy": [
+            {
+                "@odata.id": "/redfish/v1/Managers/HGX_BMC_0"
+            }
+        ]
+    },
+    "Location": {
+        "PartLocation": {
+            "LocationType": "Backplane",
+            "ServiceLabel": "ProcessorModule_1"
+        },
+        "PartLocationContext": "HGX_Chassis_0"
+    },
+    "LogServices": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_ProcessorModule_1/LogServices"
+    },
+    "Manufacturer": "NVIDIA",
+    "Model": "PG548",
+    "Name": "HGX_ProcessorModule_1",
+    "Oem": {
+        "Nvidia": {
+            "@odata.type": "#NvidiaChassis.v1_6_0.NvidiaChassis",
+            "HardwareWriteProtected": false,
+            "HardwareWriteProtectedControl": false
+        }
+    },
+    "PCIeDevices": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_ProcessorModule_1/PCIeDevices"
+    },
+    "PCIeSlots": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_ProcessorModule_1/PCIeSlots"
+    },
+    "PartNumber": "699-2G548-1201-A00",
+    "PowerState": "On",
+    "PowerSubsystem": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_ProcessorModule_1/PowerSubsystem"
+    },
+    "Replaceable": true,
+    "Sensors": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_ProcessorModule_1/Sensors"
+    },
+    "SerialNumber": "FAKE000000024",
+    "Status": {
+        "Conditions": [],
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    },
+    "ThermalSubsystem": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_ProcessorModule_1/ThermalSubsystem"
+    },
+    "TrustedComponents": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_ProcessorModule_1/TrustedComponents"
+    },
+    "UUID": "00000000-0000-4000-8000-000000000008"
+}

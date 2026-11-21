@@ -1,0 +1,76 @@
+{
+    "@odata.id": "/redfish/v1/Chassis/HGX_CPLD_0",
+    "@odata.type": "#Chassis.v1_22_0.Chassis",
+    "Assembly": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_CPLD_0/Assembly"
+    },
+    "ChassisType": "Component",
+    "Controls": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_CPLD_0/Controls"
+    },
+    "EnvironmentMetrics": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_CPLD_0/EnvironmentMetrics"
+    },
+    "Id": "HGX_CPLD_0",
+    "Links": {
+        "ComputerSystems": [
+            {
+                "@odata.id": "/redfish/v1/Systems/HGX_Baseboard_0"
+            }
+        ],
+        "ContainedBy": {
+            "@odata.id": "/redfish/v1/Chassis/HGX_BMC_0"
+        },
+        "ManagedBy": [
+            {
+                "@odata.id": "/redfish/v1/Managers/HGX_BMC_0"
+            }
+        ]
+    },
+    "Location": {
+        "PartLocation": {
+            "LocationType": "Embedded",
+            "ServiceLabel": "U5"
+        },
+        "PartLocationContext": "HGX_Chassis_0/ProcessorModule_0/J58"
+    },
+    "LogServices": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_CPLD_0/LogServices"
+    },
+    "Manufacturer": "Intel",
+    "Model": "MAX10 10M08",
+    "Name": "HGX_CPLD_0",
+    "Oem": {
+        "Nvidia": {
+            "@odata.type": "#NvidiaChassis.v1_6_0.NvidiaChassis"
+        }
+    },
+    "PCIeDevices": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_CPLD_0/PCIeDevices"
+    },
+    "PCIeSlots": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_CPLD_0/PCIeSlots"
+    },
+    "PartNumber": "115-3953-000",
+    "PowerState": "On",
+    "PowerSubsystem": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_CPLD_0/PowerSubsystem"
+    },
+    "Replaceable": false,
+    "Sensors": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_CPLD_0/Sensors"
+    },
+    "SerialNumber": "NA",
+    "Status": {
+        "Conditions": [],
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    },
+    "ThermalSubsystem": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_CPLD_0/ThermalSubsystem"
+    },
+    "TrustedComponents": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_CPLD_0/TrustedComponents"
+    }
+}

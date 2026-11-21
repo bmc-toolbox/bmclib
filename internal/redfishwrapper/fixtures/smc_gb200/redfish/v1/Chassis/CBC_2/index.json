@@ -1,0 +1,75 @@
+{
+    "@odata.id": "/redfish/v1/Chassis/CBC_2",
+    "@odata.type": "#Chassis.v1_22_0.Chassis",
+    "Actions": {
+        "#Chassis.Reset": {
+            "@Redfish.ActionInfo": "/redfish/v1/Chassis/CBC_2/ResetActionInfo",
+            "target": "/redfish/v1/Chassis/CBC_2/Actions/Chassis.Reset"
+        }
+    },
+    "Assembly": {
+        "@odata.id": "/redfish/v1/Chassis/CBC_2/Assembly"
+    },
+    "ChassisType": "Component",
+    "Controls": {
+        "@odata.id": "/redfish/v1/Chassis/CBC_2/Controls"
+    },
+    "EnvironmentMetrics": {
+        "@odata.id": "/redfish/v1/Chassis/CBC_2/EnvironmentMetrics"
+    },
+    "Id": "CBC_2",
+    "Links": {
+        "ComputerSystems": [
+            {
+                "@odata.id": "/redfish/v1/Systems/System_0"
+            }
+        ],
+        "ContainedBy": {
+            "@odata.id": "/redfish/v1/Chassis/Chassis_0"
+        },
+        "ManagedBy": [
+            {
+                "@odata.id": "/redfish/v1/Managers/BMC_0"
+            }
+        ]
+    },
+    "Manufacturer": "Nvidia",
+    "Model": "18x1RU CBL Cartridge",
+    "Name": "CBC_2",
+    "Oem": {
+        "Nvidia": {
+            "@odata.type": "#NvidiaChassis.v1_4_0.NvidiaCBCChassis",
+            "ChassisPhysicalSlotNumber": 5,
+            "ComputeTrayIndex": 4,
+            "RevisionId": 2,
+            "TopologyId": 128
+        }
+    },
+    "PCIeDevices": {
+        "@odata.id": "/redfish/v1/Chassis/CBC_2/PCIeDevices"
+    },
+    "PCIeSlots": {
+        "@odata.id": "/redfish/v1/Chassis/CBC_2/PCIeSlots"
+    },
+    "PartNumber": "750-0567-002",
+    "PowerState": "On",
+    "PowerSubsystem": {
+        "@odata.id": "/redfish/v1/Chassis/CBC_2/PowerSubsystem"
+    },
+    "Sensors": {
+        "@odata.id": "/redfish/v1/Chassis/CBC_2/Sensors"
+    },
+    "SerialNumber": "FAKE000000007",
+    "Status": {
+        "Conditions": [],
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    },
+    "ThermalSubsystem": {
+        "@odata.id": "/redfish/v1/Chassis/CBC_2/ThermalSubsystem"
+    },
+    "TrustedComponents": {
+        "@odata.id": "/redfish/v1/Chassis/CBC_2/TrustedComponents"
+    }
+}

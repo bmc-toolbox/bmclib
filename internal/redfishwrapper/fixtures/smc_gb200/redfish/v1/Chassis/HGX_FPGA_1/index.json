@@ -1,0 +1,78 @@
+{
+    "@odata.id": "/redfish/v1/Chassis/HGX_FPGA_1",
+    "@odata.type": "#Chassis.v1_22_0.Chassis",
+    "Assembly": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_FPGA_1/Assembly"
+    },
+    "ChassisType": "Component",
+    "Controls": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_FPGA_1/Controls"
+    },
+    "EnvironmentMetrics": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_FPGA_1/EnvironmentMetrics"
+    },
+    "Id": "HGX_FPGA_1",
+    "Links": {
+        "ComputerSystems": [
+            {
+                "@odata.id": "/redfish/v1/Systems/HGX_Baseboard_0"
+            }
+        ],
+        "ContainedBy": {
+            "@odata.id": "/redfish/v1/Chassis/HGX_ProcessorModule_1"
+        },
+        "ManagedBy": [
+            {
+                "@odata.id": "/redfish/v1/Managers/HGX_BMC_0"
+            }
+        ]
+    },
+    "Location": {
+        "PartLocation": {
+            "LocationType": "Embedded",
+            "ServiceLabel": "FPGA_0"
+        },
+        "PartLocationContext": "HGX_Chassis_0/ProcessorModule_1"
+    },
+    "LogServices": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_FPGA_1/LogServices"
+    },
+    "Manufacturer": "NVIDIA",
+    "Model": "NA",
+    "Name": "HGX_FPGA_1",
+    "Oem": {
+        "Nvidia": {
+            "@odata.type": "#NvidiaChassis.v1_6_0.NvidiaChassis"
+        }
+    },
+    "PCIeDevices": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_FPGA_1/PCIeDevices"
+    },
+    "PCIeSlots": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_FPGA_1/PCIeSlots"
+    },
+    "PartNumber": "115-3916-000",
+    "PowerState": "On",
+    "PowerSubsystem": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_FPGA_1/PowerSubsystem"
+    },
+    "Replaceable": false,
+    "SKU": "0x03040250",
+    "Sensors": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_FPGA_1/Sensors"
+    },
+    "SerialNumber": "NA",
+    "Status": {
+        "Conditions": [],
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    },
+    "ThermalSubsystem": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_FPGA_1/ThermalSubsystem"
+    },
+    "TrustedComponents": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_FPGA_1/TrustedComponents"
+    },
+    "UUID": "00000000-0000-4000-8000-000000000008"
+}

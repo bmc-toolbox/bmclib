@@ -1,0 +1,111 @@
+{
+    "@odata.id": "/redfish/v1/Systems/System_0/LogServices/SEL/Entries",
+    "@odata.type": "#LogEntryCollection.LogEntryCollection",
+    "Description": "Collection of System Event Log Entries",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Systems/System_0/LogServices/SEL/Entries/100",
+            "@odata.type": "#LogEntry.v1_15_0.LogEntry",
+            "Created": "2026-05-17T22:13:22.234+00:00",
+            "EntryCode": "Deassert",
+            "EntryType": "SEL",
+            "Id": "100",
+            "Message": "HGX_GPU_3_Temp_1 sensor crossed a warning low threshold going high. Reading=62.125000 Threshold=0.000000.",
+            "MessageArgs": [
+                "HGX_GPU_3_Temp_1",
+                "62.125000",
+                "0.000000"
+            ],
+            "MessageId": "OpenBMC.0.1.SensorThresholdWarningLowGoingHigh",
+            "Name": "System Event Log Entry",
+            "Resolution": "None.",
+            "Resolved": false,
+            "SensorNumber": 71,
+            "SensorType": "Temperature",
+            "Severity": "OK"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/System_0/LogServices/SEL/Entries/102",
+            "@odata.type": "#LogEntry.v1_15_0.LogEntry",
+            "Created": "2026-05-17T22:13:23.199+00:00",
+            "EntryCode": "Deassert",
+            "EntryType": "SEL",
+            "Id": "102",
+            "Message": "HGX_GPU_2_Temp_1 sensor crossed a warning low threshold going high. Reading=61.968750 Threshold=0.000000.",
+            "MessageArgs": [
+                "HGX_GPU_2_Temp_1",
+                "61.968750",
+                "0.000000"
+            ],
+            "MessageId": "OpenBMC.0.1.SensorThresholdWarningLowGoingHigh",
+            "Name": "System Event Log Entry",
+            "Resolution": "None.",
+            "Resolved": false,
+            "SensorNumber": 68,
+            "SensorType": "Temperature",
+            "Severity": "OK"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/System_0/LogServices/SEL/Entries/1064",
+            "@odata.type": "#LogEntry.v1_15_0.LogEntry",
+            "Created": "2026-11-19T10:22:13.599+00:00",
+            "EntryCode": "Assert",
+            "EntryType": "SEL",
+            "Id": "1064",
+            "Message": "Chassis_0_FAN_8_REAR sensor crossed a critical low threshold going low. Reading=0.000000 Threshold=2204.000000.",
+            "MessageArgs": [
+                "Chassis_0_FAN_8_REAR",
+                "0.000000",
+                "2204.000000"
+            ],
+            "MessageId": "OpenBMC.0.1.SensorThresholdCriticalLowGoingLow",
+            "Name": "System Event Log Entry",
+            "Resolution": "Check the sensor or subsystem for errors.",
+            "Resolved": false,
+            "SensorType": "Fan",
+            "Severity": "Critical"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/System_0/LogServices/SEL/Entries/1066",
+            "@odata.type": "#LogEntry.v1_15_0.LogEntry",
+            "Created": "2026-11-19T10:22:13.691+00:00",
+            "EntryCode": "Assert",
+            "EntryType": "SEL",
+            "Id": "1066",
+            "Message": "Chassis_0_FAN_7_FRONT sensor crossed a critical low threshold going low. Reading=0.000000 Threshold=2204.000000.",
+            "MessageArgs": [
+                "Chassis_0_FAN_7_FRONT",
+                "0.000000",
+                "2204.000000"
+            ],
+            "MessageId": "OpenBMC.0.1.SensorThresholdCriticalLowGoingLow",
+            "Name": "System Event Log Entry",
+            "Resolution": "Check the sensor or subsystem for errors.",
+            "Resolved": false,
+            "SensorType": "Fan",
+            "Severity": "Critical"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/System_0/LogServices/SEL/Entries/1068",
+            "@odata.type": "#LogEntry.v1_15_0.LogEntry",
+            "Created": "2026-11-19T10:22:13.753+00:00",
+            "EntryCode": "Assert",
+            "EntryType": "SEL",
+            "Id": "1068",
+            "Message": "Chassis_0_FAN_7_REAR sensor crossed a critical low threshold going low. Reading=0.000000 Threshold=2204.000000.",
+            "MessageArgs": [
+                "Chassis_0_FAN_7_REAR",
+                "0.000000",
+                "2204.000000"
+            ],
+            "MessageId": "OpenBMC.0.1.SensorThresholdCriticalLowGoingLow",
+            "Name": "System Event Log Entry",
+            "Resolution": "Check the sensor or subsystem for errors.",
+            "Resolved": false,
+            "SensorType": "Fan",
+            "Severity": "Critical"
+        }
+    ],
+    "Members@odata.count": 5,
+    "Name": "System Event Log Entries"
+}

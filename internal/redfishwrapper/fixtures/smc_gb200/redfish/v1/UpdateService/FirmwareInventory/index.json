@@ -1,0 +1,104 @@
+{
+    "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory",
+    "@odata.type": "#SoftwareInventoryCollection.SoftwareInventoryCollection",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/AB86B73D_8D56_41E4_971E_B11DB71F2E33"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/CX7_0"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/CX7_1"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/CX7_2"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/CX7_3"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_BMC_0"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_CPLD_0"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_CPLD_1"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_CPLD_2"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_CPLD_3"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/NIC_0"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/NIC_1"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/HGX_FW_BMC_0"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/HGX_FW_CPLD_0"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/HGX_FW_CPU_0"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/HGX_FW_CPU_1"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/HGX_FW_ERoT_BMC_0"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/HGX_FW_ERoT_CPU_0"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/HGX_FW_ERoT_CPU_1"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/HGX_FW_ERoT_FPGA_0"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/HGX_FW_ERoT_FPGA_1"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/HGX_FW_FPGA_0"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/HGX_FW_FPGA_1"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/HGX_FW_GPU_0"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/HGX_FW_GPU_1"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/HGX_FW_GPU_2"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/HGX_FW_GPU_3"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/HGX_InfoROM_GPU_0"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/HGX_InfoROM_GPU_1"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/HGX_InfoROM_GPU_2"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/HGX_InfoROM_GPU_3"
+        },
+        {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/HGX_PCIeSwitchConfig_0"
+        }
+    ],
+    "Members@odata.count": 32,
+    "Name": "Software Inventory Collection"
+}

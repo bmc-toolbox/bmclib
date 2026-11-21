@@ -1,0 +1,23 @@
+{
+    "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_CPLD_1",
+    "@odata.type": "#SoftwareInventory.v1_4_0.SoftwareInventory",
+    "Description": "Other image",
+    "Id": "FW_CPLD_1",
+    "Name": "Software Inventory",
+    "Oem": {
+        "Nvidia": {
+            "@odata.type": "#NvidiaSoftwareInventory.v1_2_0.NvidiaSoftwareInventory",
+            "StageOnlyUpdateOptionSupported": false
+        }
+    },
+    "RelatedItem": [],
+    "RelatedItem@odata.count": 0,
+    "Status": {
+        "Conditions": [],
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    },
+    "Updateable": true,
+    "Version": "0.0.0"
+}

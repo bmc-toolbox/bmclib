@@ -1,0 +1,72 @@
+{
+    "@odata.id": "/redfish/v1/Chassis/HGX_ERoT_FPGA_0",
+    "@odata.type": "#Chassis.v1_22_0.Chassis",
+    "Actions": {
+        "Oem": {
+            "#NvidiaRoTChassis.SetIrreversibleConfig": {
+                "@Redfish.ActionInfo": "/redfish/v1/Chassis/HGX_ERoT_FPGA_0/Oem/NvidiaRoT/SetIrreversibleConfigActionInfo",
+                "target": "/redfish/v1/Chassis/HGX_ERoT_FPGA_0/Actions/Oem/NvidiaRoTChassis.SetIrreversibleConfig"
+            }
+        }
+    },
+    "Certificates": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_ERoT_FPGA_0/Certificates"
+    },
+    "ChassisType": "Component",
+    "Id": "HGX_ERoT_FPGA_0",
+    "Links": {
+        "ComputerSystems": [
+            {
+                "@odata.id": "/redfish/v1/Systems/HGX_Baseboard_0"
+            }
+        ],
+        "ContainedBy": {
+            "@odata.id": "/redfish/v1/Chassis/HGX_ProcessorModule_0"
+        },
+        "ManagedBy": [
+            {
+                "@odata.id": "/redfish/v1/Managers/HGX_BMC_0"
+            }
+        ],
+        "Oem": {
+            "Nvidia": {
+                "@odata.type": "#NvidiaChassis.v1_3_0.NvidiaChassis",
+                "ComponentsProtected": [
+                    {
+                        "@odata.id": "/redfish/v1/Chassis/HGX_FPGA_0"
+                    }
+                ]
+            }
+        }
+    },
+    "Location": {
+        "PartLocation": {
+            "LocationType": "Embedded",
+            "ServiceLabel": "ERoT_FPGA_0"
+        },
+        "PartLocationContext": "HGX_Chassis_0/ProcessorModule_0"
+    },
+    "Manufacturer": "NVIDIA",
+    "Name": "HGX_ERoT_FPGA_0",
+    "Oem": {
+        "Nvidia": {
+            "@odata.type": "#NvidiaChassis.v1_3_0.NvidiaRoTChassis",
+            "AutomaticBackgroundCopyEnabled": true,
+            "BackgroundCopyStatus": "Completed",
+            "IrreversibleConfigEnabled": false,
+            "RoTProtectedComponents": {
+                "@odata.id": "/redfish/v1/Chassis/HGX_ERoT_FPGA_0/Oem/NvidiaRoT/RoTProtectedComponents"
+            }
+        }
+    },
+    "Replaceable": false,
+    "SKU": "0x4D35368B",
+    "SerialNumber": "FAKE00000000000021",
+    "Status": {
+        "Conditions": [],
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    },
+    "UUID": "00000000-0000-4000-8000-000000000006"
+}

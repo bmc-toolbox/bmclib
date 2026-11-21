@@ -1,0 +1,116 @@
+{
+    "@odata.id": "/redfish/v1/Managers/HGX_BMC_0",
+    "@odata.type": "#Manager.v1_15_0.Manager",
+    "Actions": {
+        "#Manager.Reset": {
+            "@Redfish.ActionInfo": "/redfish/v1/Managers/HGX_BMC_0/ResetActionInfo",
+            "target": "/redfish/v1/Managers/HGX_BMC_0/Actions/Manager.Reset"
+        },
+        "#Manager.ResetToDefaults": {
+            "ResetType@Redfish.AllowableValues": [
+                "ResetAll"
+            ],
+            "target": "/redfish/v1/Managers/HGX_BMC_0/Actions/Manager.ResetToDefaults"
+        },
+        "Oem": {
+            "#NvidiaManager.NSMRawCommand": {
+                "@Redfish.ActionInfo": "/redfish/v1/Managers/HGX_BMC_0/Oem/Nvidia/NSMRawCommandActionInfo",
+                "target": "/redfish/v1/Managers/HGX_BMC_0/Actions/Oem/NvidiaManager.NSMRawCommand"
+            },
+            "#NvidiaManager.ResetToDefaults": {
+                "target": "/redfish/v1/Managers/HGX_BMC_0/Actions/Oem/NvidiaManager.ResetToDefaults"
+            },
+            "#NvidiaManager.SWErrorInjection": {
+                "@Redfish.ActionInfo": "/redfish/v1/Managers/HGX_BMC_0/Oem/Nvidia/SWErrorInjectionActionInfo",
+                "target": "/redfish/v1/Managers/HGX_BMC_0/Actions/Oem/NvidiaManager.SWErrorInjection"
+            },
+            "#eMMC.SecureErase": {
+                "@Redfish.ActionInfo": "/redfish/v1/Managers/HGX_BMC_0/Oem/EmmcSecureEraseActionInfo",
+                "target": "/redfish/v1/Managers/HGX_BMC_0/Actions/Oem/eMMC.SecureErase"
+            }
+        }
+    },
+    "DateTime": "2026-11-21T00:40:30+00:00",
+    "DateTimeLocalOffset": "+00:00",
+    "Description": "Baseboard Management Controller",
+    "EthernetInterfaces": {
+        "@odata.id": "/redfish/v1/Managers/HGX_BMC_0/EthernetInterfaces"
+    },
+    "FirmwareVersion": "GB200Nvl-25.06-A",
+    "Id": "HGX_BMC_0",
+    "LastResetTime": "2024-02-27T17:25:49+00:00",
+    "Links": {
+        "ActiveSoftwareImage": {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/HGX_FW_BMC_0"
+        },
+        "ManagerForChassis": [
+            {
+                "@odata.id": "/redfish/v1/Chassis/HGX_Chassis_0"
+            }
+        ],
+        "ManagerForChassis@odata.count": 1,
+        "ManagerForServers": [
+            {
+                "@odata.id": "/redfish/v1/Systems/HGX_Baseboard_0"
+            }
+        ],
+        "ManagerForServers@odata.count": 1,
+        "ManagerInChassis": {
+            "@odata.id": "/redfish/v1/Chassis/HGX_Chassis_0"
+        },
+        "ManagerInChassis@odata.count": 1,
+        "SoftwareImages": [
+            {
+                "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/HGX_FW_BMC_0"
+            }
+        ],
+        "SoftwareImages@odata.count": 1
+    },
+    "LogServices": {
+        "@odata.id": "/redfish/v1/Managers/HGX_BMC_0/LogServices"
+    },
+    "ManagerDiagnosticData": {
+        "@odata.id": "/redfish/v1/Managers/HGX_BMC_0/ManagerDiagnosticData"
+    },
+    "ManagerType": "BMC",
+    "Model": "OpenBmc",
+    "Name": "OpenBmc Manager",
+    "NetworkProtocol": {
+        "@odata.id": "/redfish/v1/Managers/HGX_BMC_0/NetworkProtocol"
+    },
+    "Oem": {
+        "Nvidia": {
+            "@odata.type": "#NvidiaManager.v1_6_0.NvidiaManager",
+            "AuthenticationTLSRequired": false,
+            "DebugTokenManagement": {
+                "@odata.id": "/redfish/v1/Managers/HGX_BMC_0/Oem/Nvidia/DebugTokenManagement"
+            },
+            "FirmwareBuildType": "PlatformProduction",
+            "OTPProvisioned": true,
+            "PersistentStorageSettings": {
+                "Status": {
+                    "State": "Enabled"
+                }
+            },
+            "UptimeSeconds": 3577372.23
+        }
+    },
+    "PowerState": "On",
+    "SerialConsole": {
+        "ConnectTypesSupported": [
+            "IPMI",
+            "SSH"
+        ],
+        "MaxConcurrentSessions": 15,
+        "ServiceEnabled": true
+    },
+    "ServiceEntryPointUUID": "00000000-0000-4000-8000-000000000018",
+    "ServiceIdentification": "",
+    "Status": {
+        "Conditions": [],
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    },
+    "UUID": "00000000-0000-4000-8000-000000000019"
+}

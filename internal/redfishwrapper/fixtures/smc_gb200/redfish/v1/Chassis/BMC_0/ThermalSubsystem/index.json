@@ -1,0 +1,17 @@
+{
+    "@odata.id": "/redfish/v1/Chassis/BMC_0/ThermalSubsystem",
+    "@odata.type": "#ThermalSubsystem.v1_3_0.ThermalSubsystem",
+    "Fans": {
+        "@odata.id": "/redfish/v1/Chassis/BMC_0/ThermalSubsystem/Fans"
+    },
+    "Id": "ThermalSubsystem",
+    "Name": "Thermal Subsystem",
+    "Status": {
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    },
+    "ThermalMetrics": {
+        "@odata.id": "/redfish/v1/Chassis/BMC_0/ThermalSubsystem/ThermalMetrics"
+    }
+}

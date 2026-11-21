@@ -1,0 +1,27 @@
+{
+    "@odata.id": "/redfish/v1/Systems/System_0/LogServices",
+    "@odata.type": "#LogServiceCollection.LogServiceCollection",
+    "Description": "Collection of LogServices for this Computer System",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Systems/System_0/LogServices/SEL"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/System_0/LogServices/FaultLog"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/System_0/LogServices/EventLog"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/System_0/LogServices/Dump"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/System_0/LogServices/DebugTokenService"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/System_0/LogServices/PostCodes"
+        }
+    ],
+    "Members@odata.count": 6,
+    "Name": "System Log Services Collection"
+}

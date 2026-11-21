@@ -1,0 +1,117 @@
+{
+    "@odata.id": "/redfish/v1/Chassis/Chassis_0",
+    "@odata.type": "#Chassis.v1_22_0.Chassis",
+    "Actions": {
+        "#Chassis.Reset": {
+            "@Redfish.ActionInfo": "/redfish/v1/Chassis/Chassis_0/ResetActionInfo",
+            "target": "/redfish/v1/Chassis/Chassis_0/Actions/Chassis.Reset"
+        }
+    },
+    "Assembly": {
+        "@odata.id": "/redfish/v1/Chassis/Chassis_0/Assembly"
+    },
+    "AssetTag": "FAKE00000000000010",
+    "ChassisType": "Shelf",
+    "Controls": {
+        "@odata.id": "/redfish/v1/Chassis/Chassis_0/Controls"
+    },
+    "EnvironmentMetrics": {
+        "@odata.id": "/redfish/v1/Chassis/Chassis_0/EnvironmentMetrics"
+    },
+    "Id": "Chassis_0",
+    "IndicatorLED": "Off",
+    "Links": {
+        "ComputerSystems": [
+            {
+                "@odata.id": "/redfish/v1/Systems/System_0"
+            }
+        ],
+        "Contains": [
+            {
+                "@odata.id": "/redfish/v1/Chassis/BMC_0"
+            },
+            {
+                "@odata.id": "/redfish/v1/Chassis/CBC_0"
+            },
+            {
+                "@odata.id": "/redfish/v1/Chassis/CBC_1"
+            },
+            {
+                "@odata.id": "/redfish/v1/Chassis/CBC_2"
+            },
+            {
+                "@odata.id": "/redfish/v1/Chassis/CBC_3"
+            },
+            {
+                "@odata.id": "/redfish/v1/Chassis/IO_Board_0"
+            },
+            {
+                "@odata.id": "/redfish/v1/Chassis/IO_Board_1"
+            },
+            {
+                "@odata.id": "/redfish/v1/Chassis/Riser_Slot1_BlueField_3_DPU"
+            },
+            {
+                "@odata.id": "/redfish/v1/Chassis/Riser_Slot2_BlueField_3_DPU"
+            },
+            {
+                "@odata.id": "/redfish/v1/Chassis/StorageBackplane_0"
+            },
+            {
+                "@odata.id": "/redfish/v1/Chassis/StorageBackplane_1"
+            }
+        ],
+        "ManagedBy": [
+            {
+                "@odata.id": "/redfish/v1/Managers/BMC_0"
+            }
+        ]
+    },
+    "Location": {
+        "PartLocation": {
+            "LocationType": "Backplane",
+            "ServiceLabel": "Chassis_0"
+        },
+        "PartLocationContext": ""
+    },
+    "LocationIndicatorActive": false,
+    "Manufacturer": "Supermicro",
+    "Model": "GB200 NVL",
+    "Name": "Chassis_0",
+    "Oem": {
+        "Nvidia": {
+            "@odata.type": "#NvidiaChassis.v1_6_0.NvidiaChassis",
+            "HardwareWriteProtectEnable": false,
+            "Policies": {
+                "@odata.id": "/redfish/v1/Chassis/Chassis_0/Oem/Nvidia/Policies"
+            }
+        }
+    },
+    "PCIeDevices": {
+        "@odata.id": "/redfish/v1/Chassis/Chassis_0/PCIeDevices"
+    },
+    "PCIeSlots": {
+        "@odata.id": "/redfish/v1/Chassis/Chassis_0/PCIeSlots"
+    },
+    "PartNumber": "AOM-PDB-GB",
+    "PowerState": "On",
+    "PowerSubsystem": {
+        "@odata.id": "/redfish/v1/Chassis/Chassis_0/PowerSubsystem"
+    },
+    "Sensors": {
+        "@odata.id": "/redfish/v1/Chassis/Chassis_0/Sensors"
+    },
+    "SerialNumber": "FAKE00000011",
+    "Status": {
+        "Conditions": [],
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    },
+    "ThermalSubsystem": {
+        "@odata.id": "/redfish/v1/Chassis/Chassis_0/ThermalSubsystem"
+    },
+    "TrustedComponents": {
+        "@odata.id": "/redfish/v1/Chassis/Chassis_0/TrustedComponents"
+    }
+}
