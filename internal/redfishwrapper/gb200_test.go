@@ -2,14 +2,8 @@ package redfishwrapper
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
-	"net/http/httptest"
-	"net/url"
-	"os"
-	"path"
-	"path/filepath"
-	"strings"
-	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -30,100 +24,11 @@ var gb200FixtureRoot = "fixtures/smc_gb200"
 
 const gb200SELPath = "/redfish/v1/Systems/System_0/LogServices/SEL"
 
-type mockupRequest struct {
-	Method string
-	Path   string
-}
-
-// mockupServer serves a Redfish-Mockup-Creator tree, where the resource at
-// /redfish/v1/X lives in <root>/redfish/v1/X/index.json, and records every request.
-// Requests other than GET succeed with 204 so tests can assert on what was sent.
-type mockupServer struct {
-	root     string
-	mu       sync.Mutex
-	requests []mockupRequest
-}
-
-func (m *mockupServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	p := path.Clean(r.URL.Path)
-
-	m.mu.Lock()
-	m.requests = append(m.requests, mockupRequest{Method: r.Method, Path: p})
-	m.mu.Unlock()
-
-	if r.Method != http.MethodGet {
-		w.WriteHeader(http.StatusNoContent)
-		return
-	}
-
-	body, err := os.ReadFile(filepath.Join(m.root, filepath.FromSlash(p), "index.json"))
-	if err != nil {
-		notFound(w, r)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	_, _ = w.Write(body)
-}
-
-func (m *mockupServer) Requests() []mockupRequest {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	return append([]mockupRequest(nil), m.requests...)
-}
-
-// requested reports whether any request was made for p or a resource under it.
-func (m *mockupServer) requested(p string) bool {
-	for _, r := range m.Requests() {
-		if r.Path == p || strings.HasPrefix(r.Path, p+"/") {
-			return true
-		}
-	}
-
-	return false
-}
-
-// writes returns the requests that were not GETs.
-func (m *mockupServer) writes() []mockupRequest {
-	var out []mockupRequest
-	for _, r := range m.Requests() {
-		if r.Method != http.MethodGet {
-			out = append(out, r)
-		}
-	}
-
-	return out
-}
-
 // newGB200Client opens a client against the GB200 mockup.
 func newGB200Client(t *testing.T, opts ...Option) (*Client, *mockupServer) {
 	t.Helper()
 
-	mockup := &mockupServer{root: gb200FixtureRoot}
-	server := httptest.NewTLSServer(mockup)
-	t.Cleanup(server.Close)
-
-	parsedURL, err := url.Parse(server.URL)
-	require.NoError(t, err)
-
-	opts = append([]Option{WithBasicAuthEnabled(true)}, opts...)
-	client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "", opts...)
-
-	ctx := context.Background()
-	require.NoError(t, client.Open(ctx))
-	t.Cleanup(func() { _ = client.Close(ctx) })
-
-	t.Cleanup(func() {
-		if !t.Failed() {
-			return
-		}
-		for _, r := range mockup.Requests() {
-			t.Logf("mockup request: %s %s", r.Method, r.Path)
-		}
-	})
-
-	return client, mockup
+	return newMockupClient(t, gb200FixtureRoot, opts...)
 }
 
 // With two systems and two managers, the client needs a system name to pick one.
@@ -182,10 +87,12 @@ func TestGB200GetSystemEventLog(t *testing.T) {
 	assert.False(t, mockup.requested(gb200SELPath))
 }
 
-// Bug: Inventory accepts only chassis, system and manager IDs from a hardcoded
-// allowlist, and none of the tray's IDs are on it. Without failOnError, it returns
-// a device with no vendor, CPUs, GPUs or BMC, and no error. The tray's CPUs and
-// GPUs live under HGX_Baseboard_0, which inventory would not read either.
+// Inventory reads the selected system and its manager.
+//
+// Bug: chassis are still filtered by a hardcoded allowlist that none of the tray's
+// chassis are on, so the device has no enclosures, mainboard or PSUs. The tray's
+// CPUs and GPUs live under HGX_Baseboard_0, which inventory does not read, so
+// both lists are empty.
 func TestGB200Inventory(t *testing.T) {
 	ctx := context.Background()
 
@@ -195,12 +102,20 @@ func TestGB200Inventory(t *testing.T) {
 		device, err := client.Inventory(ctx, false)
 		require.NoError(t, err)
 
-		assert.Empty(t, device.Vendor)
-		assert.Empty(t, device.Model)
+		assert.Equal(t, "Supermicro", device.Vendor)
+		assert.Equal(t, "GB200 NVL", device.Model)
+		assert.Len(t, device.Drives, 9)
+
+		require.NotNil(t, device.BMC)
+		assert.Equal(t, "BMC_0", device.BMC.ID)
+		require.NotNil(t, device.BMC.Firmware)
+		assert.Equal(t, "70.00.03.19", device.BMC.Firmware.Installed)
+
+		assert.Empty(t, device.Enclosures)
+		assert.Empty(t, device.Mainboard.Model)
+		assert.Empty(t, device.PSUs)
 		assert.Empty(t, device.CPUs)
 		assert.Empty(t, device.GPUs)
-		require.NotNil(t, device.BMC)
-		assert.Empty(t, device.BMC.ID)
 	})
 
 	t.Run("failOnError true", func(t *testing.T) {
@@ -208,6 +123,20 @@ func TestGB200Inventory(t *testing.T) {
 
 		_, err := client.Inventory(ctx, true)
 		require.ErrorIs(t, err, bmclibErrs.ErrRedfishChassisOdataID)
+	})
+
+	// With two systems and two managers and no system name, neither the system
+	// nor the BMC can be picked, so both sections stay empty.
+	t.Run("without a system name", func(t *testing.T) {
+		client, _ := newGB200Client(t)
+
+		device, err := client.Inventory(ctx, false)
+		require.NoError(t, err)
+
+		assert.Empty(t, device.Vendor)
+		assert.Empty(t, device.Drives)
+		require.NotNil(t, device.BMC)
+		assert.Empty(t, device.BMC.ID)
 	})
 }
 
@@ -224,4 +153,75 @@ func TestGB200ChassisTemperatures(t *testing.T) {
 	assert.Equal(t, "BMC_0_DCSCM_Temp_0", temps[0].Name)
 	require.NotNil(t, temps[0].ReadingCelsius)
 	assert.InDelta(t, 23.5, *temps[0].ReadingCelsius, 0.001)
+}
+
+// BIOS reads and writes go to System_0, whose ID is not on any vendor list.
+func TestGB200BiosConfiguration(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("get", func(t *testing.T) {
+		client, _ := newGB200Client(t, WithSystemName("System_0"))
+
+		config, err := client.GetBiosConfiguration(ctx)
+		require.NoError(t, err)
+		assert.Equal(t, map[string]string{
+			"Above4GDecoding": "Enabled",
+			"BusMasterEnable": "Disabled",
+		}, config)
+	})
+
+	t.Run("set", func(t *testing.T) {
+		client, mockup := newGB200Client(t, WithSystemName("System_0"))
+
+		err := client.SetBiosConfiguration(ctx, map[string]string{"Above4GDecoding": "Disabled"})
+		require.NoError(t, err)
+
+		writes := mockup.writes()
+		require.Len(t, writes, 1)
+		assert.Equal(t, http.MethodPatch, writes[0].Method)
+		assert.Equal(t, "/redfish/v1/Systems/System_0/Bios/Settings", writes[0].Path)
+
+		var body struct {
+			Attributes map[string]any `json:"Attributes"`
+		}
+		require.NoError(t, json.Unmarshal([]byte(writes[0].Body), &body))
+		assert.Equal(t, map[string]any{"Above4GDecoding": "Disabled"}, body.Attributes)
+	})
+
+	t.Run("reset", func(t *testing.T) {
+		client, mockup := newGB200Client(t, WithSystemName("System_0"))
+
+		require.NoError(t, client.ResetBiosConfiguration(ctx))
+
+		writes := mockup.writes()
+		require.Len(t, writes, 1)
+		assert.Equal(t, http.MethodPost, writes[0].Method)
+		assert.Equal(t, "/redfish/v1/Systems/System_0/Bios/Actions/Bios.ResetBios", writes[0].Path)
+	})
+
+	// HGX_Baseboard_0 has no Bios resource.
+	t.Run("system without a Bios resource", func(t *testing.T) {
+		client, mockup := newGB200Client(t, WithSystemName("HGX_Baseboard_0"))
+
+		_, err := client.GetBiosConfiguration(ctx)
+		require.ErrorIs(t, err, bmclibErrs.ErrNoBiosAttributes)
+
+		err = client.SetBiosConfiguration(ctx, map[string]string{"Above4GDecoding": "Disabled"})
+		require.ErrorIs(t, err, bmclibErrs.ErrNoBiosAttributes)
+
+		require.ErrorIs(t, client.ResetBiosConfiguration(ctx), bmclibErrs.ErrNoBiosAttributes)
+
+		assert.Empty(t, mockup.writes())
+	})
+}
+
+// The mockup has no SecureBoot resource, so this only shows that the request
+// reaches the BMC instead of stopping at the system ID check.
+func TestGB200SecureBoot(t *testing.T) {
+	client, mockup := newGB200Client(t, WithSystemName("System_0"))
+
+	_, err := client.GetSecureBoot(context.Background())
+	require.Error(t, err)
+	assert.NotErrorIs(t, err, bmclibErrs.ErrRedfishSystemOdataID)
+	assert.True(t, mockup.requested("/redfish/v1/Systems/System_0/SecureBoot"))
 }

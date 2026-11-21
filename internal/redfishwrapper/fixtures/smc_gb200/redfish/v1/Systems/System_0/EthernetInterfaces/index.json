@@ -1,0 +1,12 @@
+{
+    "@odata.id": "/redfish/v1/Systems/System_0/EthernetInterfaces",
+    "@odata.type": "#EthernetInterfaceCollection.EthernetInterfaceCollection",
+    "Description": "Collection of EthernetInterfaces of the host",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Systems/System_0/EthernetInterfaces/I210"
+        }
+    ],
+    "Members@odata.count": 1,
+    "Name": "Ethernet Network Interface Collection"
+}

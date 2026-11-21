@@ -1,0 +1,31 @@
+{
+    "@odata.id": "redfish/v1/Systems/System_0/EthernetInterfaces/I210",
+    "@odata.type": "#EthernetInterface.v1_9_0.EthernetInterface",
+    "DHCPv4": {
+        "DHCPEnabled": null,
+        "UseDNSServers": null,
+        "UseDomainName": null,
+        "UseNTPServers": null
+    },
+    "DHCPv6": {
+        "OperatingMode": null,
+        "UseDNSServers": null,
+        "UseDomainName": null,
+        "UseNTPServers": null
+    },
+    "Description": "System Network Interface",
+    "HostName": null,
+    "Id": "I210",
+    "InterfaceEnabled": true,
+    "LinkStatus": null,
+    "MACAddress": "02:00:00:00:00:08",
+    "MTUSize": null,
+    "Name": "System Ethernet Interface",
+    "SpeedMbps": null,
+    "StatelessAddressAutoConfig": {
+        "IPv6AutoConfigEnabled": null
+    },
+    "Status": {
+        "State": "Enabled"
+    }
+}

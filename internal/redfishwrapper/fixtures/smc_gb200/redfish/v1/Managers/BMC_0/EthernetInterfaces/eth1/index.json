@@ -1,0 +1,42 @@
+{
+    "@odata.id": "/redfish/v1/Managers/BMC_0/EthernetInterfaces/eth1",
+    "@odata.type": "#EthernetInterface.v1_9_0.EthernetInterface",
+    "DHCPv4": {
+        "DHCPEnabled": true,
+        "UseDNSServers": true,
+        "UseDomainName": true,
+        "UseNTPServers": true
+    },
+    "DHCPv6": {
+        "OperatingMode": "Enabled",
+        "UseDNSServers": true,
+        "UseDomainName": true,
+        "UseNTPServers": true
+    },
+    "Description": "Management Network Interface",
+    "EthernetInterfaceType": "Physical",
+    "FQDN": "host-1",
+    "HostName": "host-1",
+    "IPv4Addresses": [],
+    "IPv4StaticAddresses": [],
+    "IPv6AddressPolicyTable": [],
+    "IPv6Addresses": [],
+    "IPv6DefaultGateway": "0:0:0:0:0:0:0:0",
+    "IPv6StaticAddresses": [],
+    "IPv6StaticDefaultGateways": [],
+    "Id": "eth1",
+    "InterfaceEnabled": true,
+    "LinkStatus": "LinkDown",
+    "MACAddress": "02:00:00:00:00:02",
+    "MTUSize": 1500,
+    "Name": "Manager Ethernet Interface",
+    "NameServers": [],
+    "SpeedMbps": 0,
+    "StatelessAddressAutoConfig": {
+        "IPv6AutoConfigEnabled": true
+    },
+    "StaticNameServers": [],
+    "Status": {
+        "State": "Enabled"
+    }
+}

@@ -46,9 +46,6 @@ func (c *Client) GetBiosConfiguration(ctx context.Context) (biosConfig map[strin
 	}
 
 	biosConfig = make(map[string]string)
-	if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
-		return biosConfig, nil
-	}
 
 	bios, err := sys.Bios()
 	if err != nil {
@@ -86,13 +83,13 @@ func (c *Client) ApplyBiosAttributes(ctx context.Context, attrs schemas.Settings
 		return err
 	}
 
-	if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
-		return nil
-	}
-
 	bios, err := sys.Bios()
 	if err != nil {
 		return err
+	}
+
+	if bios == nil {
+		return bmclibErrs.ErrNoBiosAttributes
 	}
 
 	// TODO(jwb) We should handle passing different apply times here
@@ -115,13 +112,13 @@ func (c *Client) ResetBiosConfiguration(ctx context.Context) (err error) {
 		return err
 	}
 
-	if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
-		return nil
-	}
-
 	bios, err := sys.Bios()
 	if err != nil {
 		return err
+	}
+
+	if bios == nil {
+		return bmclibErrs.ErrNoBiosAttributes
 	}
 
 	_, err = bios.ResetBios()

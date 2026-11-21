@@ -1,0 +1,21 @@
+{
+    "@odata.id": "/redfish/v1/Managers/BMC_0/EthernetInterfaces",
+    "@odata.type": "#EthernetInterfaceCollection.EthernetInterfaceCollection",
+    "Description": "Collection of EthernetInterfaces for this Manager",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Managers/BMC_0/EthernetInterfaces/eth0"
+        },
+        {
+            "@odata.id": "/redfish/v1/Managers/BMC_0/EthernetInterfaces/eth1"
+        },
+        {
+            "@odata.id": "/redfish/v1/Managers/BMC_0/EthernetInterfaces/hmcusb0"
+        },
+        {
+            "@odata.id": "/redfish/v1/Managers/BMC_0/EthernetInterfaces/hostusb0"
+        }
+    ],
+    "Members@odata.count": 4,
+    "Name": "Ethernet Network Interface Collection"
+}

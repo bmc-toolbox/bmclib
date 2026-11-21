@@ -1,0 +1,44 @@
+{
+    "@odata.id": "/redfish/v1/Systems/System_0/Storage/1",
+    "@odata.type": "#Storage.v1_13_0.Storage",
+    "Controllers": {
+        "@odata.id": "/redfish/v1/Systems/System_0/Storage/1/Controllers"
+    },
+    "Drives": [
+        {
+            "@odata.id": "/redfish/v1/Systems/System_0/Storage/1/Drives/NVMe_SSD_200"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/System_0/Storage/1/Drives/NVMe_SSD_201"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/System_0/Storage/1/Drives/NVMe_SSD_202"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/System_0/Storage/1/Drives/NVMe_SSD_203"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/System_0/Storage/1/Drives/NVMe_SSD_204"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/System_0/Storage/1/Drives/NVMe_SSD_205"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/System_0/Storage/1/Drives/NVMe_SSD_206"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/System_0/Storage/1/Drives/NVMe_SSD_207"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/System_0/Storage/1/Drives/NVMe_SSD_210"
+        }
+    ],
+    "Drives@odata.count": 9,
+    "Id": "1",
+    "Name": "Storage",
+    "Status": {
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    }
+}
