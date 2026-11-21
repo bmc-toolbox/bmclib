@@ -2,7 +2,11 @@ package lenovo
 
 import (
 	"context"
+	"errors"
 	"testing"
+
+	"github.com/bmc-toolbox/bmclib/v2/bmc"
+	bmclibErrs "github.com/bmc-toolbox/bmclib/v2/errors"
 )
 
 // Requirement: Read ethernet interfaces — the XCC manager NIC is readable.
@@ -39,7 +43,10 @@ func TestGetManagerNetworkProtocol(t *testing.T) {
 		t.Fatalf("GetManagerNetworkProtocol: %v", err)
 	}
 
-	want := []string{"HTTP", "HTTPS", "SSH", "IPMI", "SNMP", "NTP", "KVMIP", "VirtualMedia", "SSDP"}
+	want := []bmc.ManagerNetworkServiceName{
+		bmc.ServiceHTTP, bmc.ServiceHTTPS, bmc.ServiceSSH, bmc.ServiceIPMI, bmc.ServiceSNMP,
+		bmc.ServiceNTP, bmc.ServiceKVMIP, bmc.ServiceVirtualMedia, bmc.ServiceSSDP,
+	}
 	if len(protocol.Services) != len(want) {
 		t.Fatalf("got %d services %+v, want %d", len(protocol.Services), protocol.Services, len(want))
 	}
@@ -47,13 +54,63 @@ func TestGetManagerNetworkProtocol(t *testing.T) {
 		if protocol.Services[i].Name != name {
 			t.Errorf("service %d = %q, want %q", i, protocol.Services[i].Name, name)
 		}
-		if name == "Telnet" {
+		if name == bmc.ServiceTelnet {
 			t.Errorf("Telnet must not be reported: the XCC mock does not expose it")
 		}
 	}
 	for _, s := range protocol.Services {
-		if s.Name == "HTTPS" && (!s.Enabled || s.Port == nil || *s.Port != 443) {
+		if s.Name == bmc.ServiceHTTPS && (!s.Enabled || s.Port == nil || *s.Port != 443) {
 			t.Errorf("unexpected HTTPS service: %+v", s)
 		}
+	}
+}
+
+// Requirement: Manager network protocols — a service is switched with a PATCH of that service only.
+func TestSetManagerNetworkService(t *testing.T) {
+	ts := newTestServer(t, testServerOpts{})
+	c := ts.openedClient(t)
+
+	if err := c.SetManagerNetworkService(context.Background(), bmc.ServiceSSDP, false, nil); err != nil {
+		t.Fatalf("SetManagerNetworkService: %v", err)
+	}
+
+	patched, body := ts.networkProtocolPatch()
+	if !patched {
+		t.Fatal("expected the NetworkProtocol resource to be PATCHed")
+	}
+	if want := `{"SSDP":{"ProtocolEnabled":false}}`; body != want {
+		t.Errorf("PATCH body = %s, want %s", body, want)
+	}
+}
+
+// Requirement: Manager network protocols — a service the XCC does not expose is not written.
+func TestSetManagerNetworkServiceNotExposed(t *testing.T) {
+	ts := newTestServer(t, testServerOpts{})
+	c := ts.openedClient(t)
+
+	err := c.SetManagerNetworkService(context.Background(), bmc.ServiceTelnet, true, nil)
+	if !errors.Is(err, bmclibErrs.ErrManagerNetworkServiceNotFound) {
+		t.Fatalf("err = %v, want ErrManagerNetworkServiceNotFound", err)
+	}
+	if patched, _ := ts.networkProtocolPatch(); patched {
+		t.Fatal("a service the XCC does not expose must not be PATCHed")
+	}
+}
+
+// Requirement: Manager network protocols — the NTP server list is replaced as a whole.
+func TestSetManagerNTPServers(t *testing.T) {
+	ts := newTestServer(t, testServerOpts{})
+	c := ts.openedClient(t)
+
+	if err := c.SetManagerNTPServers(context.Background(), []string{"10.0.0.1", "10.0.0.2"}); err != nil {
+		t.Fatalf("SetManagerNTPServers: %v", err)
+	}
+
+	patched, body := ts.networkProtocolPatch()
+	if !patched {
+		t.Fatal("expected the NetworkProtocol resource to be PATCHed")
+	}
+	if want := `{"NTP":{"NTPServers":["10.0.0.1","10.0.0.2"]}}`; body != want {
+		t.Errorf("PATCH body = %s, want %s", body, want)
 	}
 }
