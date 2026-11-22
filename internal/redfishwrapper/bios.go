@@ -3,6 +3,7 @@ package redfishwrapper
 import (
 	"context"
 	"errors"
+	"slices"
 	"strings"
 
 	"github.com/stmcginnis/gofish/schemas"
@@ -25,7 +26,9 @@ func rejectsSettingsApplyTime(err error) bool {
 		if info.MessageID != "Base.1.10.PropertyUnknown" {
 			continue
 		}
-		for _, prop := range info.RelatedProperties {
+		// Some BMCs name the property in RelatedProperties, others only in
+		// MessageArgs (Supermicro OpenBMC firmware).
+		for _, prop := range slices.Concat(info.RelatedProperties, info.MessageArgs) {
 			if strings.Contains(prop, "SettingsApplyTime") {
 				return true
 			}
