@@ -3,6 +3,12 @@ package bmclib
 import (
 	"context"
 	"errors"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -236,6 +242,56 @@ func TestOpenFiltered(t *testing.T) {
 	want = []string{"tester1", "tester2", "tester3"}
 	if diff := cmp.Diff(registryNames(cl.Registry.Drivers), want); diff != "" {
 		t.Errorf("diff: %s", diff)
+	}
+}
+
+func TestWithSecureTLSRedfishProviders(t *testing.T) {
+	// A request reaches the server only after a completed TLS handshake. httptest's
+	// certificate is not in the system roots, so with WithSecureTLS no request may arrive.
+	tests := map[string]func(port string) Option{
+		"gofish": WithRedfishPort,
+		"lenovo": WithLenovoPort,
+	}
+	for provider, withPort := range tests {
+		for _, secure := range []bool{false, true} {
+			t.Run(fmt.Sprintf("%s/secure=%t", provider, secure), func(t *testing.T) {
+				var requests atomic.Int32
+				server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+					requests.Add(1)
+					w.WriteHeader(http.StatusNotFound)
+				}))
+				defer server.Close()
+
+				u, err := url.Parse(server.URL)
+				if err != nil {
+					t.Fatal(err)
+				}
+				opts := []Option{withPort(u.Port())}
+				if secure {
+					opts = append(opts, WithSecureTLS(nil))
+				}
+				cl := NewClient(u.Hostname(), "", "", opts...)
+				cl.Registry.Drivers = cl.Registry.For(provider)
+
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+				err = cl.Open(ctx)
+
+				if !secure {
+					// Open fails on the 404s, but only after the handshake.
+					if requests.Load() == 0 {
+						t.Fatalf("expected the handshake to complete without WithSecureTLS, Open error: %v", err)
+					}
+					return
+				}
+				if requests.Load() != 0 {
+					t.Fatalf("%d request(s) completed against an untrusted certificate with WithSecureTLS", requests.Load())
+				}
+				if err == nil || !strings.Contains(err.Error(), "certificate") {
+					t.Fatalf("want a certificate error, got %v", err)
+				}
+			})
+		}
 	}
 }
 
