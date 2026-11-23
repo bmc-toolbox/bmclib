@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httputil"
+	"net/netip"
 	"net/url"
 	"os"
 	"regexp"
@@ -80,6 +81,8 @@ var Features = registrar.Features{
 	providers.FeatureGetManagerNetworkProtocol,
 	providers.FeatureSetManagerNetworkService,
 	providers.FeatureSetManagerNTPServers,
+	providers.FeatureSetManagerEthernetInterfaceHostName,
+	providers.FeatureSetManagerEthernetInterfaceNameServers,
 }
 
 // supports
@@ -900,4 +903,22 @@ func (c *Client) SetManagerNTPServers(ctx context.Context, servers []string) (er
 	}
 
 	return c.serviceClient.redfish.SetManagerNTPServers(ctx, servers)
+}
+
+// SetManagerEthernetInterfaceHostName sets the host name of the manager ethernet interface with the given ID
+func (c *Client) SetManagerEthernetInterfaceHostName(ctx context.Context, id, hostName string) (err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.SetManagerEthernetInterfaceHostName(ctx, id, hostName)
+}
+
+// SetManagerEthernetInterfaceNameServers replaces the static name server list of the manager ethernet interface with the given ID; an empty list clears it
+func (c *Client) SetManagerEthernetInterfaceNameServers(ctx context.Context, id string, servers []netip.Addr) (err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.SetManagerEthernetInterfaceNameServers(ctx, id, servers)
 }
