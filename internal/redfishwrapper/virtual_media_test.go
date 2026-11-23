@@ -498,3 +498,105 @@ func TestSetVirtualMedia_InvalidMediaType(t *testing.T) {
 	assert.False(t, ok)
 	assert.Contains(t, err.Error(), "invalid media type")
 }
+
+func TestSetVirtualMedia_EjectEverySlot(t *testing.T) {
+	const collection = `{
+		"@odata.id": "/redfish/v1/Systems/System.Embedded.1/VirtualMedia",
+		"Members": [
+			{"@odata.id": "/redfish/v1/Systems/System.Embedded.1/VirtualMedia/1"},
+			{"@odata.id": "/redfish/v1/Systems/System.Embedded.1/VirtualMedia/2"},
+			{"@odata.id": "/redfish/v1/Systems/System.Embedded.1/VirtualMedia/3"}
+		],
+		"Members@odata.count": 3
+	}`
+	slot := func(id string, inserted bool, mediaTypes string) string {
+		return `{
+			"@odata.id": "/redfish/v1/Systems/System.Embedded.1/VirtualMedia/` + id + `",
+			"Id": "` + id + `",
+			"Inserted": ` + map[bool]string{true: "true", false: "false"}[inserted] + `,
+			"MediaTypes": ` + mediaTypes + `,
+			"Actions": {
+				"#VirtualMedia.EjectMedia": {
+					"target": "/redfish/v1/Systems/System.Embedded.1/VirtualMedia/` + id + `/Actions/VirtualMedia.EjectMedia"
+				}
+			}
+		}`
+	}
+
+	tests := map[string]struct {
+		inserted    map[string]bool // slots 1 and 2 are CD slots, slot 3 is a USBStick slot
+		failEject   map[string]bool
+		wantEjected []string
+		wantErr     string
+	}{
+		"every inserted CD slot is ejected": {
+			inserted:    map[string]bool{"1": true, "2": true, "3": true},
+			wantEjected: []string{"1", "2"},
+		},
+		"only inserted slots are ejected": {
+			inserted:    map[string]bool{"2": true},
+			wantEjected: []string{"2"},
+		},
+		"nothing inserted": {
+			wantEjected: nil,
+		},
+		"a failed eject fails the call after trying the other slots": {
+			inserted:    map[string]bool{"1": true, "2": true},
+			failEject:   map[string]bool{"1": true},
+			wantEjected: []string{"1", "2"},
+			wantErr:     "failed to eject virtual media",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			var ejected []string
+
+			mux := http.NewServeMux()
+			mux.HandleFunc("/redfish/v1/", endpointFunc(t, "dell/serviceroot.json"))
+			mux.HandleFunc("/redfish/v1/Managers", endpointFunc(t, "dell/managers.json"))
+			mux.HandleFunc("/redfish/v1/Managers/iDRAC.Embedded.1", endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+			mux.HandleFunc("/redfish/v1/Systems", endpointFunc(t, "dell/systems.json"))
+			mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1", endpointFunc(t, "dell/system.embedded.1.virtualmedia.json"))
+			mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/VirtualMedia", func(w http.ResponseWriter, _ *http.Request) {
+				_, _ = w.Write([]byte(collection))
+			})
+			for id, mediaTypes := range map[string]string{"1": `["CD", "DVD"]`, "2": `["CD", "DVD"]`, "3": `["USBStick"]`} {
+				body := slot(id, tc.inserted[id], mediaTypes)
+				mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/VirtualMedia/"+id, func(w http.ResponseWriter, _ *http.Request) {
+					_, _ = w.Write([]byte(body))
+				})
+				mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/VirtualMedia/"+id+"/Actions/VirtualMedia.EjectMedia", func(w http.ResponseWriter, _ *http.Request) {
+					ejected = append(ejected, id)
+					if tc.failEject[id] {
+						w.WriteHeader(http.StatusInternalServerError)
+						return
+					}
+					w.WriteHeader(http.StatusNoContent)
+				})
+			}
+
+			server := httptest.NewTLSServer(mux)
+			defer server.Close()
+
+			parsedURL, err := url.Parse(server.URL)
+			require.NoError(t, err)
+
+			ctx := context.Background()
+			client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "", WithBasicAuthEnabled(true))
+			require.NoError(t, client.Open(ctx))
+			defer client.Close(ctx)
+
+			ok, err := client.SetVirtualMedia(ctx, "CD", "")
+			if tc.wantErr != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tc.wantErr)
+				assert.False(t, ok)
+			} else {
+				require.NoError(t, err)
+				assert.True(t, ok)
+			}
+			assert.ElementsMatch(t, tc.wantEjected, ejected)
+		})
+	}
+}
