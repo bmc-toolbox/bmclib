@@ -1,0 +1,49 @@
+{
+    "@odata.id": "/redfish/v1/Chassis/IRoT_CX7_1",
+    "@odata.type": "#Chassis.v1_22_0.Chassis",
+    "Certificates": {
+        "@odata.id": "/redfish/v1/Chassis/IRoT_CX7_1/Certificates"
+    },
+    "ChassisType": "Component",
+    "Id": "IRoT_CX7_1",
+    "Links": {
+        "ComputerSystems": [
+            {
+                "@odata.id": "/redfish/v1/Systems/System_0"
+            }
+        ],
+        "ContainedBy": {
+            "@odata.id": "/redfish/v1/Chassis/IO_Board_0"
+        },
+        "ManagedBy": [
+            {
+                "@odata.id": "/redfish/v1/Managers/BMC_0"
+            }
+        ],
+        "Oem": {
+            "Nvidia": {
+                "@odata.type": "#NvidiaChassis.v1_3_0.NvidiaChassis",
+                "ComponentsProtected": [
+                    {
+                        "@odata.id": "/redfish/v1/Chassis/IO_Board_0"
+                    }
+                ]
+            }
+        }
+    },
+    "Location": {
+        "PartLocation": {
+            "LocationType": "Embedded"
+        }
+    },
+    "Manufacturer": "NVIDIA",
+    "Name": "IRoT_CX7_1",
+    "SerialNumber": "",
+    "Status": {
+        "Conditions": [],
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    },
+    "UUID": "00000000-0000-4000-8000-000000000014"
+}

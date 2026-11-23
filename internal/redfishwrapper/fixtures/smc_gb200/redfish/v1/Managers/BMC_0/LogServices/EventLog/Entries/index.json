@@ -1,0 +1,97 @@
+{
+    "@odata.id": "/redfish/v1/Managers/BMC_0/LogServices/EventLog/Entries",
+    "@odata.type": "#LogEntryCollection.LogEntryCollection",
+    "Description": "Collection of System Event Log Entries",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Managers/BMC_0/LogServices/EventLog/Entries/1000",
+            "@odata.type": "#LogEntry.v1_15_0.LogEntry",
+            "Created": "9999-12-31T23:59:59+00:00",
+            "EntryType": "Event",
+            "Id": "1000",
+            "Message": "CPU sensor crossed a warning high threshold going high. Reading=80.426836 Threshold=80.000000.",
+            "MessageArgs": [
+                "CPU",
+                "80.426836",
+                "80.000000"
+            ],
+            "MessageId": "OpenBMC.0.4.SensorThresholdWarningHighGoingHigh",
+            "Name": "Manager Event Log Entry",
+            "Resolution": "None",
+            "Resolved": false,
+            "Severity": "Warning"
+        },
+        {
+            "@odata.id": "/redfish/v1/Managers/BMC_0/LogServices/EventLog/Entries/1001",
+            "@odata.type": "#LogEntry.v1_15_0.LogEntry",
+            "Created": "9999-12-31T23:59:59+00:00",
+            "EntryType": "Event",
+            "Id": "1001",
+            "Message": "Processes consuming HIGH Resource CPU are /usr/libexec/entity-manager/entity-manager (40%) ipmid (36%)",
+            "MessageArgs": [
+                "CPU",
+                "/usr/libexec/entity-manager/entity-manager (40%) ipmid (36%)"
+            ],
+            "MessageId": "OpenBMC.0.4.BMCSystemResourceInfo",
+            "Name": "Manager Event Log Entry",
+            "Resolution": "None",
+            "Resolved": false,
+            "Severity": "Warning"
+        },
+        {
+            "@odata.id": "/redfish/v1/Managers/BMC_0/LogServices/EventLog/Entries/1002",
+            "@odata.type": "#LogEntry.v1_15_0.LogEntry",
+            "Created": "9999-12-31T23:59:59+00:00",
+            "EntryType": "Event",
+            "Id": "1002",
+            "Message": "CPU sensor crossed a warning high threshold going high. Reading=80.145507 Threshold=80.000000.",
+            "MessageArgs": [
+                "CPU",
+                "80.145507",
+                "80.000000"
+            ],
+            "MessageId": "OpenBMC.0.4.SensorThresholdWarningHighGoingHigh",
+            "Name": "Manager Event Log Entry",
+            "Resolution": "None",
+            "Resolved": false,
+            "Severity": "Warning"
+        },
+        {
+            "@odata.id": "/redfish/v1/Managers/BMC_0/LogServices/EventLog/Entries/1003",
+            "@odata.type": "#LogEntry.v1_15_0.LogEntry",
+            "Created": "9999-12-31T23:59:59+00:00",
+            "EntryType": "Event",
+            "Id": "1003",
+            "Message": "Processes consuming HIGH Resource CPU are /usr/libexec/entity-manager/entity-manager (23%) top (17%) /usr/bin/phosphor-network-manager (14%) ipmid (11%)",
+            "MessageArgs": [
+                "CPU",
+                "/usr/libexec/entity-manager/entity-manager (23%) top (17%) /usr/bin/phosphor-network-manager (14%) ipmid (11%)"
+            ],
+            "MessageId": "OpenBMC.0.4.BMCSystemResourceInfo",
+            "Name": "Manager Event Log Entry",
+            "Resolution": "None",
+            "Resolved": false,
+            "Severity": "Warning"
+        },
+        {
+            "@odata.id": "/redfish/v1/Managers/BMC_0/LogServices/EventLog/Entries/1004",
+            "@odata.type": "#LogEntry.v1_15_0.LogEntry",
+            "Created": "9999-12-31T23:59:59+00:00",
+            "EntryType": "Event",
+            "Id": "1004",
+            "Message": "CPU sensor crossed a warning high threshold going high. Reading=80.901374 Threshold=80.000000.",
+            "MessageArgs": [
+                "CPU",
+                "80.901374",
+                "80.000000"
+            ],
+            "MessageId": "OpenBMC.0.4.SensorThresholdWarningHighGoingHigh",
+            "Name": "Manager Event Log Entry",
+            "Resolution": "None",
+            "Resolved": false,
+            "Severity": "Warning"
+        }
+    ],
+    "Members@odata.count": 5,
+    "Name": "Manager Event Log Entries"
+}

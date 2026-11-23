@@ -1,0 +1,42 @@
+{
+    "@odata.id": "/redfish/v1/Managers/HGX_BMC_0/LogServices/Dump/Entries",
+    "@odata.type": "#LogEntryCollection.LogEntryCollection",
+    "Description": "Collection of BMC Dump Entries",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Managers/HGX_BMC_0/LogServices/Dump/Entries/95",
+            "@odata.type": "#LogEntry.v1_15_0.LogEntry",
+            "AdditionalDataSizeBytes": 101036,
+            "AdditionalDataURI": "/redfish/v1/Managers/HGX_BMC_0/LogServices/Dump/Entries/95/attachment",
+            "Created": "2026-01-24T04:11:45.000000+00:00",
+            "DiagnosticDataType": "Manager",
+            "EntryType": "Event",
+            "Id": "95",
+            "Name": "BMC Dump Entry"
+        },
+        {
+            "@odata.id": "/redfish/v1/Managers/HGX_BMC_0/LogServices/Dump/Entries/96",
+            "@odata.type": "#LogEntry.v1_15_0.LogEntry",
+            "AdditionalDataSizeBytes": 36197,
+            "AdditionalDataURI": "/redfish/v1/Managers/HGX_BMC_0/LogServices/Dump/Entries/96/attachment",
+            "Created": "2026-03-08T13:58:53.000000+00:00",
+            "DiagnosticDataType": "Manager",
+            "EntryType": "Event",
+            "Id": "96",
+            "Name": "BMC Dump Entry"
+        },
+        {
+            "@odata.id": "/redfish/v1/Managers/HGX_BMC_0/LogServices/Dump/Entries/97",
+            "@odata.type": "#LogEntry.v1_15_0.LogEntry",
+            "AdditionalDataSizeBytes": 146436,
+            "AdditionalDataURI": "/redfish/v1/Managers/HGX_BMC_0/LogServices/Dump/Entries/97/attachment",
+            "Created": "2026-09-19T01:35:17.000000+00:00",
+            "DiagnosticDataType": "Manager",
+            "EntryType": "Event",
+            "Id": "97",
+            "Name": "BMC Dump Entry"
+        }
+    ],
+    "Members@odata.count": 3,
+    "Name": "BMC Dump Entries"
+}

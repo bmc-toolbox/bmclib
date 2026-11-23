@@ -1,0 +1,72 @@
+{
+    "@odata.id": "/redfish/v1/Chassis/StorageBackplane_0",
+    "@odata.type": "#Chassis.v1_22_0.Chassis",
+    "Actions": {
+        "#Chassis.Reset": {
+            "@Redfish.ActionInfo": "/redfish/v1/Chassis/StorageBackplane_0/ResetActionInfo",
+            "target": "/redfish/v1/Chassis/StorageBackplane_0/Actions/Chassis.Reset"
+        }
+    },
+    "Assembly": {
+        "@odata.id": "/redfish/v1/Chassis/StorageBackplane_0/Assembly"
+    },
+    "ChassisType": "Component",
+    "Controls": {
+        "@odata.id": "/redfish/v1/Chassis/StorageBackplane_0/Controls"
+    },
+    "Drives": {
+        "@odata.id": "/redfish/v1/Chassis/StorageBackplane_0/Drives"
+    },
+    "EnvironmentMetrics": {
+        "@odata.id": "/redfish/v1/Chassis/StorageBackplane_0/EnvironmentMetrics"
+    },
+    "Id": "StorageBackplane_0",
+    "Links": {
+        "ComputerSystems": [
+            {
+                "@odata.id": "/redfish/v1/Systems/System_0"
+            }
+        ],
+        "ContainedBy": {
+            "@odata.id": "/redfish/v1/Chassis/Chassis_0"
+        },
+        "ManagedBy": [
+            {
+                "@odata.id": "/redfish/v1/Managers/BMC_0"
+            }
+        ]
+    },
+    "Manufacturer": "Supermicro",
+    "Model": "Supermicro NVMe E1.S Backplane",
+    "Name": "StorageBackplane_0",
+    "Oem": {
+        "Nvidia": {
+            "@odata.type": "#NvidiaChassis.v1_6_0.NvidiaChassis"
+        }
+    },
+    "PCIeDevices": {
+        "@odata.id": "/redfish/v1/Chassis/StorageBackplane_0/PCIeDevices"
+    },
+    "PCIeSlots": {
+        "@odata.id": "/redfish/v1/Chassis/StorageBackplane_0/PCIeSlots"
+    },
+    "PowerState": "On",
+    "PowerSubsystem": {
+        "@odata.id": "/redfish/v1/Chassis/StorageBackplane_0/PowerSubsystem"
+    },
+    "Sensors": {
+        "@odata.id": "/redfish/v1/Chassis/StorageBackplane_0/Sensors"
+    },
+    "Status": {
+        "Conditions": [],
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    },
+    "ThermalSubsystem": {
+        "@odata.id": "/redfish/v1/Chassis/StorageBackplane_0/ThermalSubsystem"
+    },
+    "TrustedComponents": {
+        "@odata.id": "/redfish/v1/Chassis/StorageBackplane_0/TrustedComponents"
+    }
+}

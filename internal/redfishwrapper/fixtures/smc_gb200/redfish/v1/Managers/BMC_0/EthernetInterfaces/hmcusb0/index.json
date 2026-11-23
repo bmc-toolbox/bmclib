@@ -1,0 +1,56 @@
+{
+    "@odata.id": "/redfish/v1/Managers/BMC_0/EthernetInterfaces/hmcusb0",
+    "@odata.type": "#EthernetInterface.v1_9_0.EthernetInterface",
+    "DHCPv4": {
+        "DHCPEnabled": false,
+        "UseDNSServers": true,
+        "UseDomainName": true,
+        "UseNTPServers": true
+    },
+    "DHCPv6": {
+        "OperatingMode": "Disabled",
+        "UseDNSServers": true,
+        "UseDomainName": true,
+        "UseNTPServers": true
+    },
+    "Description": "Management Network Interface",
+    "EthernetInterfaceType": "Physical",
+    "FQDN": "host-1",
+    "HostName": "host-1",
+    "IPv4Addresses": [
+        {
+            "Address": "192.0.2.4",
+            "AddressOrigin": "Static",
+            "Gateway": "0.0.0.0",
+            "SubnetMask": "255.255.255.0"
+        }
+    ],
+    "IPv4StaticAddresses": [
+        {
+            "Address": "192.0.2.4",
+            "AddressOrigin": "Static",
+            "Gateway": "0.0.0.0",
+            "SubnetMask": "255.255.255.0"
+        }
+    ],
+    "IPv6AddressPolicyTable": [],
+    "IPv6Addresses": [],
+    "IPv6DefaultGateway": "0:0:0:0:0:0:0:0",
+    "IPv6StaticAddresses": [],
+    "IPv6StaticDefaultGateways": [],
+    "Id": "hmcusb0",
+    "InterfaceEnabled": true,
+    "LinkStatus": "LinkUp",
+    "MACAddress": "02:00:00:00:00:03",
+    "MTUSize": 1500,
+    "Name": "Manager Ethernet Interface",
+    "NameServers": [],
+    "SpeedMbps": 65535,
+    "StatelessAddressAutoConfig": {
+        "IPv6AutoConfigEnabled": false
+    },
+    "StaticNameServers": [],
+    "Status": {
+        "State": "Enabled"
+    }
+}

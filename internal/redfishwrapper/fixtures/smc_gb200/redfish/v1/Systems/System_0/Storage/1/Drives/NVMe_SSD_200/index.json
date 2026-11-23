@@ -1,0 +1,47 @@
+{
+    "@odata.id": "/redfish/v1/Systems/System_0/Storage/1/Drives/NVMe_SSD_200",
+    "@odata.type": "#Drive.v1_18_0.Drive",
+    "Actions": {
+        "#Drive.SecureErase": {
+            "@Redfish.ActionInfo": "/redfish/v1/Chassis/StorageBackplane_0/Drives/NVMe_SSD_200/SanitizeActionInfo",
+            "target": "/redfish/v1/Chassis/StorageBackplane_0/Drives/NVMe_SSD_200/Actions/Drive.SecureErase"
+        }
+    },
+    "CapableSpeedGbs": 64.0,
+    "CapacityBytes": 3840755982336,
+    "DriveFormFactor": "EDSFF_1U_Short",
+    "FailurePredicted": false,
+    "FirmwareVersion": "0.0.0",
+    "Id": "NVMe_SSD_200",
+    "Links": {
+        "Chassis": {
+            "@odata.id": "/redfish/v1/Chassis/StorageBackplane_0"
+        }
+    },
+    "Manufacturer": "Samsung",
+    "MediaType": "SSD",
+    "Model": "SAMSUNG MZTL23T8HCLS-00A07",
+    "Name": "NVMe_SSD_200",
+    "NegotiatedSpeedGbs": 64.0,
+    "Operations": [
+        {
+            "OperationName": "",
+            "PercentageComplete": 0
+        }
+    ],
+    "PartNumber": "",
+    "PhysicalLocation": {
+        "PartLocation": {
+            "LocationType": "Slot",
+            "ServiceLabel": "NVMe E1.S Slot 0"
+        },
+        "PartLocationContext": "Chassis_0/StorageBackplane_0"
+    },
+    "PredictedMediaLifeLeftPercent": 100,
+    "Protocol": "NVMe",
+    "SerialNumber": "FAKE0000000035",
+    "Status": {
+        "State": "Enabled"
+    },
+    "StatusIndicator": "OK"
+}

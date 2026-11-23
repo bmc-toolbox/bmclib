@@ -1,0 +1,72 @@
+{
+    "@odata.id": "/redfish/v1/Chassis/HGX_IRoT_GPU_3",
+    "@odata.type": "#Chassis.v1_22_0.Chassis",
+    "Actions": {
+        "Oem": {
+            "#NvidiaRoTChassis.SetIrreversibleConfig": {
+                "@Redfish.ActionInfo": "/redfish/v1/Chassis/HGX_IRoT_GPU_3/Oem/NvidiaRoT/SetIrreversibleConfigActionInfo",
+                "target": "/redfish/v1/Chassis/HGX_IRoT_GPU_3/Actions/Oem/NvidiaRoTChassis.SetIrreversibleConfig"
+            }
+        }
+    },
+    "Certificates": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_IRoT_GPU_3/Certificates"
+    },
+    "ChassisType": "Component",
+    "Id": "HGX_IRoT_GPU_3",
+    "Links": {
+        "ComputerSystems": [
+            {
+                "@odata.id": "/redfish/v1/Systems/HGX_Baseboard_0"
+            }
+        ],
+        "ContainedBy": {
+            "@odata.id": "/redfish/v1/Chassis/HGX_GPU_3"
+        },
+        "ManagedBy": [
+            {
+                "@odata.id": "/redfish/v1/Managers/HGX_BMC_0"
+            }
+        ],
+        "Oem": {
+            "Nvidia": {
+                "@odata.type": "#NvidiaChassis.v1_3_0.NvidiaChassis",
+                "ComponentsProtected": [
+                    {
+                        "@odata.id": "/redfish/v1/Systems/HGX_Baseboard_0/Processors/GPU_3"
+                    }
+                ]
+            }
+        }
+    },
+    "Location": {
+        "PartLocation": {
+            "LocationType": "Embedded",
+            "ServiceLabel": "IRoT_GPU_1"
+        },
+        "PartLocationContext": "HGX_Chassis_0/ProcessorModule_1"
+    },
+    "Manufacturer": "NVIDIA",
+    "Name": "HGX_IRoT_GPU_3",
+    "Oem": {
+        "Nvidia": {
+            "@odata.type": "#NvidiaChassis.v1_3_0.NvidiaRoTChassis",
+            "AutomaticBackgroundCopyEnabled": true,
+            "BackgroundCopyStatus": "Completed",
+            "InbandUpdatePolicyEnabled": true,
+            "IrreversibleConfigEnabled": false,
+            "RoTProtectedComponents": {
+                "@odata.id": "/redfish/v1/Chassis/HGX_IRoT_GPU_3/Oem/NvidiaRoT/RoTProtectedComponents"
+            }
+        }
+    },
+    "Replaceable": false,
+    "SerialNumber": "FAKE00000000000028",
+    "Status": {
+        "Conditions": [],
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    },
+    "UUID": "00000000-0000-4000-8000-00000000000d"
+}

@@ -1,0 +1,8 @@
+{
+    "@odata.id": "/redfish/v1/Chassis/HGX_BMC_0/LogServices",
+    "@odata.type": "#LogServiceCollection.LogServiceCollection",
+    "Description": "Collection of LogServices for this Computer System",
+    "Members": [],
+    "Members@odata.count": 0,
+    "Name": "System Log Services Collection"
+}

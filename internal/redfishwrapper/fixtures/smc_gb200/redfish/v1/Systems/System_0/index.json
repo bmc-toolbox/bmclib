@@ -1,0 +1,164 @@
+{
+    "@Redfish.Settings": {
+        "@odata.type": "#Settings.v1_3_5.Settings",
+        "SettingsObject": {
+            "@odata.id": "/redfish/v1/Systems/System_0/Settings"
+        }
+    },
+    "@odata.id": "/redfish/v1/Systems/System_0",
+    "@odata.type": "#ComputerSystem.v1_22_0.ComputerSystem",
+    "Actions": {
+        "#ComputerSystem.Reset": {
+            "@Redfish.ActionInfo": "/redfish/v1/Systems/System_0/ResetActionInfo",
+            "target": "/redfish/v1/Systems/System_0/Actions/ComputerSystem.Reset"
+        }
+    },
+    "AssetTag": "",
+    "Bios": {
+        "@odata.id": "/redfish/v1/Systems/System_0/Bios"
+    },
+    "BiosVersion": "0.0.0",
+    "Boot": {
+        "AutomaticRetryAttempts": 3,
+        "AutomaticRetryConfig": "RetryAttempts",
+        "AutomaticRetryConfig@Redfish.AllowableValues": [
+            "Disabled",
+            "RetryAttempts"
+        ],
+        "BootOptions": {
+            "@odata.id": "/redfish/v1/Systems/System_0/BootOptions"
+        },
+        "BootOrder": [
+            "Boot0002",
+            "Boot0003",
+            "Boot0004",
+            "Boot0005",
+            "Boot0006",
+            "Boot0007",
+            "Boot0008",
+            "Boot0009",
+            "Boot000A",
+            "Boot000B",
+            "Boot0001",
+            "Boot0000",
+            "Boot000C",
+            "Boot000D",
+            "Boot000E",
+            "Boot000F",
+            "Boot0010",
+            "Boot0011",
+            "Boot0012",
+            "Boot0013",
+            "Boot0014",
+            "Boot0015",
+            "Boot0016",
+            "Boot0017",
+            "Boot0018",
+            "Boot0019",
+            "Boot001A",
+            "Boot001B",
+            "Boot001C",
+            "Boot001D",
+            "Boot001E"
+        ],
+        "BootOrderPropertySelection": "BootOrder",
+        "BootSourceOverrideEnabled": "Disabled",
+        "BootSourceOverrideEnabled@Redfish.AllowableValues": [
+            "Once",
+            "Continuous",
+            "Disabled"
+        ],
+        "BootSourceOverrideTarget": "Usb",
+        "BootSourceOverrideTarget@Redfish.AllowableValues": [
+            "None",
+            "Pxe",
+            "Hdd",
+            "Cd",
+            "Diags",
+            "BiosSetup",
+            "Usb"
+        ],
+        "RemainingAutomaticRetryAttempts": 3,
+        "StopBootOnFault": "Never",
+        "TrustedModuleRequiredToBoot": "Disabled"
+    },
+    "BootProgress": {
+        "LastState": "OSRunning",
+        "LastStateTime": "2026-11-20T22:15:49.810328+00:00"
+    },
+    "Description": "Computer System",
+    "EthernetInterfaces": {
+        "@odata.id": "/redfish/v1/Systems/System_0/EthernetInterfaces"
+    },
+    "GraphicalConsole": {
+        "ConnectTypesSupported": [
+            "KVMIP"
+        ],
+        "MaxConcurrentSessions": 4,
+        "ServiceEnabled": true
+    },
+    "HostWatchdogTimer": {
+        "FunctionEnabled": false,
+        "Status": {
+            "State": "Enabled"
+        },
+        "TimeoutAction": "ResetSystem"
+    },
+    "Id": "System_0",
+    "IndicatorLED": "Off",
+    "LastResetTime": "2026-11-20T22:11:44+00:00",
+    "Links": {
+        "Chassis": [
+            {
+                "@odata.id": "/redfish/v1/Chassis/BMC_0"
+            }
+        ],
+        "ManagedBy": [
+            {
+                "@odata.id": "/redfish/v1/Managers/BMC_0"
+            }
+        ]
+    },
+    "LocationIndicatorActive": false,
+    "LogServices": {
+        "@odata.id": "/redfish/v1/Systems/System_0/LogServices"
+    },
+    "Manufacturer": "Supermicro",
+    "Memory": {
+        "@odata.id": "/redfish/v1/Systems/System_0/Memory"
+    },
+    "Model": "GB200 NVL",
+    "Name": "System_0",
+    "PartNumber": "ARS-121GL-NBO-LCC-R1",
+    "PowerOnDelaySeconds": 0,
+    "PowerRestorePolicy": "LastState",
+    "PowerState": "On",
+    "Processors": {
+        "@odata.id": "/redfish/v1/Systems/System_0/Processors"
+    },
+    "SecureBoot": {
+        "@odata.id": "/redfish/v1/Systems/System_0/SecureBoot"
+    },
+    "SerialConsole": {
+        "IPMI": {
+            "ServiceEnabled": true
+        },
+        "MaxConcurrentSessions": 15,
+        "SSH": {
+            "HotKeySequenceDisplay": "Press ~. to exit console",
+            "Port": 2200,
+            "ServiceEnabled": true
+        }
+    },
+    "SerialNumber": "FAKE00000000003",
+    "Status": {
+        "Conditions": [],
+        "Health": "OK",
+        "State": "Enabled"
+    },
+    "Storage": {
+        "@odata.id": "/redfish/v1/Systems/System_0/Storage"
+    },
+    "SystemType": "Physical",
+    "UUID": "00000000-0000-4000-8000-00000000001a"
+}

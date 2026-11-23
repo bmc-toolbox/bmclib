@@ -1,0 +1,29 @@
+{
+    "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/HGX_InfoROM_GPU_2",
+    "@odata.type": "#SoftwareInventory.v1_4_0.SoftwareInventory",
+    "Description": "Other image",
+    "Id": "HGX_InfoROM_GPU_2",
+    "Manufacturer": "NVIDIA",
+    "Name": "Software Inventory",
+    "Oem": {
+        "Nvidia": {
+            "@odata.type": "#NvidiaSoftwareInventory.v1_2_0.NvidiaSoftwareInventory",
+            "StageOnlyUpdateOptionSupported": false
+        }
+    },
+    "RelatedItem": [
+        {
+            "@odata.id": "/redfish/v1/Chassis/HGX_GPU_2"
+        }
+    ],
+    "RelatedItem@odata.count": 1,
+    "SoftwareId": "0xC010",
+    "Status": {
+        "Conditions": [],
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    },
+    "Updateable": true,
+    "Version": "0.0.0"
+}

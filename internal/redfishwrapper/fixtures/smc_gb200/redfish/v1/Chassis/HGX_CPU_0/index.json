@@ -1,0 +1,83 @@
+{
+    "@odata.id": "/redfish/v1/Chassis/HGX_CPU_0",
+    "@odata.type": "#Chassis.v1_22_0.Chassis",
+    "Assembly": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_CPU_0/Assembly"
+    },
+    "AssetTag": "FAKE00000000000015",
+    "ChassisType": "Component",
+    "Controls": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_CPU_0/Controls"
+    },
+    "EnvironmentMetrics": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_CPU_0/EnvironmentMetrics"
+    },
+    "Id": "HGX_CPU_0",
+    "Links": {
+        "ComputerSystems": [
+            {
+                "@odata.id": "/redfish/v1/Systems/HGX_Baseboard_0"
+            }
+        ],
+        "ContainedBy": {
+            "@odata.id": "/redfish/v1/Chassis/HGX_ProcessorModule_0"
+        },
+        "ManagedBy": [
+            {
+                "@odata.id": "/redfish/v1/Managers/HGX_BMC_0"
+            }
+        ],
+        "Processors": [
+            {
+                "@odata.id": "/redfish/v1/Systems/HGX_Baseboard_0/Processors/CPU_0"
+            }
+        ]
+    },
+    "Location": {
+        "PartLocation": {
+            "LocationType": "Embedded",
+            "ServiceLabel": "G1:0.0"
+        },
+        "PartLocationContext": "HGX_Chassis_0/ProcessorModule_0"
+    },
+    "LogServices": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_CPU_0/LogServices"
+    },
+    "Manufacturer": "NVIDIA",
+    "Model": "Grace A02P",
+    "Name": "HGX_CPU_0",
+    "Oem": {
+        "Nvidia": {
+            "@odata.type": "#NvidiaChassis.v1_6_0.NvidiaChassis"
+        }
+    },
+    "PCIeDevices": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_CPU_0/PCIeDevices"
+    },
+    "PCIeSlots": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_CPU_0/PCIeSlots"
+    },
+    "PartNumber": "Dfutsrn",
+    "PowerState": "On",
+    "PowerSubsystem": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_CPU_0/PowerSubsystem"
+    },
+    "Replaceable": false,
+    "SKU": "0x23000038",
+    "Sensors": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_CPU_0/Sensors"
+    },
+    "SerialNumber": "FAKE000000000000000000000000000016",
+    "Status": {
+        "Conditions": [],
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    },
+    "ThermalSubsystem": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_CPU_0/ThermalSubsystem"
+    },
+    "TrustedComponents": {
+        "@odata.id": "/redfish/v1/Chassis/HGX_CPU_0/TrustedComponents"
+    }
+}

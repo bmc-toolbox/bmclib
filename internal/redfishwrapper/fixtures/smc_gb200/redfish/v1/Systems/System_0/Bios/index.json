@@ -1,0 +1,26 @@
+{
+    "@Redfish.Settings": {
+        "@odata.type": "#Settings.v1_3_5.Settings",
+        "SettingsObject": {
+            "@odata.id": "/redfish/v1/Systems/System_0/Bios/Settings"
+        }
+    },
+    "@odata.id": "/redfish/v1/Systems/System_0/Bios",
+    "@odata.type": "#Bios.v1_2_0.Bios",
+    "Actions": {
+        "#Bios.ChangePassword": {
+            "target": "/redfish/v1/Systems/System_0/Bios/Actions/Bios.ChangePassword"
+        },
+        "#Bios.ResetBios": {
+            "target": "/redfish/v1/Systems/System_0/Bios/Actions/Bios.ResetBios"
+        }
+    },
+    "Attributes": {
+        "Above4GDecoding": "Enabled",
+        "BusMasterEnable": "Disabled"
+    },
+    "Description": "BIOS Configuration Service",
+    "Id": "BIOS",
+    "Name": "BIOS Configuration",
+    "ResetBiosToDefaultsPending": false
+}

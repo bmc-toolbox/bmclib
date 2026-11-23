@@ -1,0 +1,46 @@
+{
+    "@odata.id": "/redfish/v1/Chassis/IRoT_BF3_0",
+    "@odata.type": "#Chassis.v1_22_0.Chassis",
+    "Certificates": {
+        "@odata.id": "/redfish/v1/Chassis/IRoT_BF3_0/Certificates"
+    },
+    "ChassisType": "Component",
+    "Id": "IRoT_BF3_0",
+    "Links": {
+        "ComputerSystems": [
+            {
+                "@odata.id": "/redfish/v1/Systems/System_0"
+            }
+        ],
+        "ManagedBy": [
+            {
+                "@odata.id": "/redfish/v1/Managers/BMC_0"
+            }
+        ],
+        "Oem": {
+            "Nvidia": {
+                "@odata.type": "#NvidiaChassis.v1_3_0.NvidiaChassis",
+                "ComponentsProtected": [
+                    {
+                        "@odata.id": "/redfish/v1/Chassis/IRoT_BF3_0"
+                    }
+                ]
+            }
+        }
+    },
+    "Location": {
+        "PartLocation": {
+            "LocationType": "Embedded"
+        }
+    },
+    "Manufacturer": "NVIDIA",
+    "Name": "IRoT_BF3_0",
+    "SerialNumber": "",
+    "Status": {
+        "Conditions": [],
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    },
+    "UUID": "00000000-0000-4000-8000-000000000011"
+}

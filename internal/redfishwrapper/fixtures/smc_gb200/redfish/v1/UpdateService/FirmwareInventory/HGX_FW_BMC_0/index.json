@@ -1,0 +1,43 @@
+{
+    "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/HGX_FW_BMC_0",
+    "@odata.type": "#SoftwareInventory.v1_4_0.SoftwareInventory",
+    "Description": "BMC image",
+    "Id": "HGX_FW_BMC_0",
+    "Manufacturer": "NVIDIA",
+    "Name": "Software Inventory",
+    "Oem": {
+        "Nvidia": {
+            "@odata.type": "#NvidiaSoftwareInventory.v1_2_0.NvidiaSoftwareInventory",
+            "ActiveFirmwareSlot": {
+                "BuildType": "Release",
+                "FirmwareComparisonNumber": 2426378,
+                "FirmwareState": "Activated",
+                "SlotId": 1,
+                "Version": "0.0.0"
+            },
+            "InactiveFirmwareSlot": {
+                "BuildType": "Release",
+                "FirmwareComparisonNumber": 2426378,
+                "FirmwareState": "Inactive",
+                "SlotId": 0,
+                "Version": "0.0.0"
+            },
+            "StageOnlyUpdateOptionSupported": true
+        }
+    },
+    "RelatedItem": [
+        {
+            "@odata.id": "/redfish/v1/Chassis/HGX_BMC_0"
+        }
+    ],
+    "RelatedItem@odata.count": 1,
+    "SoftwareId": "0x0010",
+    "Status": {
+        "Conditions": [],
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    },
+    "Updateable": true,
+    "Version": "0.0.0"
+}

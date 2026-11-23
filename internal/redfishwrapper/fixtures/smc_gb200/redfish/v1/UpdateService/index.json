@@ -1,0 +1,60 @@
+{
+    "@odata.id": "/redfish/v1/UpdateService",
+    "@odata.type": "#UpdateService.v1_11_0.UpdateService",
+    "Actions": {
+        "Oem": {
+            "#NvidiaUpdateService.CommitImage": {
+                "@Redfish.ActionInfo": "/redfish/v1/UpdateService/Oem/Nvidia/CommitImageActionInfo",
+                "target": "/redfish/v1/UpdateService/Actions/Oem/NvidiaUpdateService.CommitImage"
+            },
+            "Nvidia": {
+                "#NvidiaUpdateService.PublicKeyExchange": {
+                    "target": "/redfish/v1/UpdateService/Actions/Oem/NvidiaUpdateService.PublicKeyExchange"
+                },
+                "#NvidiaUpdateService.RevokeAllRemoteServerPublicKeys": {
+                    "target": "/redfish/v1/UpdateService/Actions/Oem/NvidiaUpdateService.RevokeAllRemoteServerPublicKeys"
+                }
+            }
+        }
+    },
+    "Description": "Service for Software Update",
+    "FirmwareInventory": {
+        "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory"
+    },
+    "HttpPushUri": "/redfish/v1/UpdateService/update",
+    "HttpPushUriOptions": {
+        "HttpPushUriApplyTime": {
+            "ApplyTime": "Immediate"
+        }
+    },
+    "Id": "UpdateService",
+    "MaxImageSizeBytes": 209715200,
+    "MultipartHttpPushUri": "/redfish/v1/UpdateService/update-multipart",
+    "MultipartHttpPushUri@Redfish.OperationApplyTimeSupport": {
+        "@odata.type": "#Settings.v1_3_3.OperationApplyTimeSupport",
+        "SupportedValues": [
+            "Immediate"
+        ]
+    },
+    "Name": "Update Service",
+    "Oem": {
+        "Nvidia": {
+            "@odata.type": "#NvidiaUpdateService.v1_3_0.NvidiaUpdateService",
+            "AutomaticDebugTokenErased": true,
+            "MultipartHttpPushUriOptions": {
+                "UpdateOptionSupport": [
+                    "StageAndActivate",
+                    "StageOnly"
+                ]
+            }
+        }
+    },
+    "ServiceEnabled": true,
+    "SoftwareInventory": {
+        "@odata.id": "/redfish/v1/UpdateService/SoftwareInventory"
+    },
+    "Status": {
+        "Conditions": [],
+        "State": "UnavailableOffline"
+    }
+}

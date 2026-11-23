@@ -1,0 +1,8 @@
+{
+    "@odata.id": "/redfish/v1/Systems/System_0/Bios/Settings",
+    "@odata.type": "#Bios.v1_2_0.Bios",
+    "Attributes": {},
+    "Description": "BIOS Settings",
+    "Id": "BIOS_Settings",
+    "Name": "BIOS Configuration"
+}

@@ -16,10 +16,6 @@ func (c *Client) GetSecureBoot(ctx context.Context) (enabled bool, err error) {
 		return false, err
 	}
 
-	if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
-		return false, bmclibErrs.ErrRedfishSystemOdataID
-	}
-
 	secureBoot, err := sys.SecureBoot()
 	if err != nil {
 		return false, err
@@ -37,10 +33,6 @@ func (c *Client) SetSecureBoot(ctx context.Context, enable bool) (err error) {
 	sys, err := c.System()
 	if err != nil {
 		return err
-	}
-
-	if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
-		return bmclibErrs.ErrRedfishSystemOdataID
 	}
 
 	secureBoot, err := sys.SecureBoot()
@@ -63,10 +55,6 @@ func (c *Client) ResetSecureBootKeys(ctx context.Context, resetType bmc.ResetSec
 		return err
 	}
 
-	if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
-		return bmclibErrs.ErrRedfishSystemOdataID
-	}
-
 	secureBoot, err := sys.SecureBoot()
 	if err != nil {
 		return err
@@ -86,10 +74,6 @@ func (c *Client) secureBootDatabase(database bmc.SecureBootDatabase) (*schemas.S
 	sys, err := c.System()
 	if err != nil {
 		return nil, err
-	}
-
-	if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
-		return nil, bmclibErrs.ErrRedfishSystemOdataID
 	}
 
 	secureBoot, err := sys.SecureBoot()

@@ -26,31 +26,6 @@ var (
 		// OpenBMC on ASRock
 		"/redfish/v1/Chassis/ASRock_ROMED8HM3",
 	}
-
-	// Supported System Odata IDs
-	knownSystemsOdataIDs = []string{
-		// Dells
-		"/redfish/v1/Systems/System.Embedded.1",
-		"/redfish/v1/Systems/System.Embedded.1/Bios",
-		// Supermicros
-		"/redfish/v1/Systems/1",
-		// MegaRAC/ARockRack
-		"/redfish/v1/Systems/Self",
-		// OpenBMC on ASRock
-		"/redfish/v1/Systems/system",
-	}
-
-	// Supported Manager Odata IDs (BMCs)
-	managerOdataIDs = []string{
-		// Dells
-		"/redfish/v1/Managers/iDRAC.Embedded.1",
-		// Supermicros
-		"/redfish/v1/Managers/1",
-		// MegaRAC/ARockRack
-		"/redfish/v1/Managers/Self",
-		// OpenBMC on ASRock
-		"/redfish/v1/Managers/bmc",
-	}
 )
 
 // TODO: consider removing this
@@ -108,56 +83,98 @@ func (c *Client) Inventory(ctx context.Context, failOnError bool) (device *commo
 
 // DeviceVendorModel returns the device vendor and model attributes
 
-// bmcAttributes collects BMC component attributes
-func (c *Client) bmcAttributes(ctx context.Context, device *common.Device, softwareInventory []*schemas.SoftwareInventory) (err error) {
+// bmcManager returns the BMC that manages the selected system, or nil when no
+// manager of type BMC manages it.
+//
+// A service with a single manager needs no system selection. Otherwise the BMC
+// is looked up in the system's ManagedBy links first, then in each manager's
+// ManagerForServers links, since some firmware fills only one side. A service
+// with several systems needs a system name to select one.
+func (c *Client) bmcManager(ctx context.Context) (*schemas.Manager, error) {
 	managers, err := c.Managers(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	isBMC := func(m *schemas.Manager) bool { return m != nil && m.ManagerType == "BMC" }
+
+	if len(managers) == 1 {
+		if isBMC(managers[0]) {
+			return managers[0], nil
+		}
+		return nil, nil
+	}
+
+	sys, err := c.System()
+	if err != nil {
+		return nil, err
+	}
+
+	managedBy, err := sys.ManagedBy()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, m := range managedBy {
+		if isBMC(m) {
+			return m, nil
+		}
+	}
+
+	for _, m := range managers {
+		if !isBMC(m) {
+			continue
+		}
+
+		servers, err := m.ManagerForServers()
+		if err != nil {
+			return nil, err
+		}
+
+		for _, s := range servers {
+			if s != nil && s.ODataID == sys.ODataID {
+				return m, nil
+			}
+		}
+	}
+
+	return nil, nil
+}
+
+// bmcAttributes collects the attributes of the BMC that manages the selected system.
+func (c *Client) bmcAttributes(ctx context.Context, device *common.Device, softwareInventory []*schemas.SoftwareInventory) (err error) {
+	manager, err := c.bmcManager(ctx)
 	if err != nil {
 		return err
 	}
 
-	var compatible int
-	for _, manager := range managers {
-		if managers == nil {
-			continue
-		}
-		if !c.compatibleOdataID(manager.ODataID, managerOdataIDs) {
-			continue
-		}
+	if manager == nil {
+		return nil
+	}
 
-		compatible++
-
-		if manager.ManagerType != "BMC" {
-			continue
-		}
-
-		device.BMC = &common.BMC{
-			Common: common.Common{
-				Description: manager.Description,
-				Vendor:      device.Vendor,
-				Model:       device.Model,
-				Status: &common.Status{
-					Health: string(manager.Status.Health),
-					State:  string(manager.Status.State),
-				},
-				Firmware: &common.Firmware{
-					Installed: manager.FirmwareVersion,
-				},
+	device.BMC = &common.BMC{
+		Common: common.Common{
+			Description: manager.Description,
+			Vendor:      device.Vendor,
+			Model:       device.Model,
+			Status: &common.Status{
+				Health: string(manager.Status.Health),
+				State:  string(manager.Status.State),
 			},
+			Firmware: &common.Firmware{
+				Installed: manager.FirmwareVersion,
+			},
+		},
 
-			ID: manager.ID,
-		}
-
-		// include additional firmware attributes from redfish firmware inventory
-		c.firmwareAttributes("", device.BMC.ID, device.BMC.Firmware, softwareInventory)
-
-		// collect the BMC's own management network interface(s), distinct from
-		// the host NICs collected via ComputerSystem in collectNICs.
-		c.collectBMCNIC(manager, device.BMC)
+		ID: manager.ID,
 	}
 
-	if compatible == 0 {
-		return bmclibErrs.ErrRedfishManagerOdataID
-	}
+	// include additional firmware attributes from redfish firmware inventory
+	c.firmwareAttributes("", device.BMC.ID, device.BMC.Firmware, softwareInventory)
+
+	// collect the BMC's own management network interface(s), distinct from
+	// the host NICs collected via ComputerSystem in collectNICs.
+	c.collectBMCNIC(manager, device.BMC)
 
 	return nil
 }
@@ -209,10 +226,6 @@ func (c *Client) systemAttributes(device *common.Device, failOnError bool, softw
 	sys, err := c.System()
 	if err != nil {
 		return err
-	}
-
-	if !c.compatibleOdataID(sys.ODataID, knownSystemsOdataIDs) {
-		return bmclibErrs.ErrRedfishSystemOdataID
 	}
 
 	if sys.Manufacturer != "" && sys.Model != "" && sys.SerialNumber != "" {

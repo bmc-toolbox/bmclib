@@ -1,0 +1,46 @@
+{
+    "@odata.id": "/redfish/v1/Systems/System_0/Storage/1/Drives/NVMe_SSD_210",
+    "@odata.type": "#Drive.v1_18_0.Drive",
+    "Actions": {
+        "#Drive.SecureErase": {
+            "@Redfish.ActionInfo": "/redfish/v1/Chassis/NVME_M2_0/Drives/NVMe_SSD_210/SanitizeActionInfo",
+            "target": "/redfish/v1/Chassis/NVME_M2_0/Drives/NVMe_SSD_210/Actions/Drive.SecureErase"
+        }
+    },
+    "CapableSpeedGbs": 0.0,
+    "CapacityBytes": 1920383410176,
+    "DriveFormFactor": "M2_2280",
+    "FailurePredicted": true,
+    "FirmwareVersion": "0.0.0",
+    "Id": "NVMe_SSD_210",
+    "Links": {
+        "Chassis": {
+            "@odata.id": "/redfish/v1/Chassis/NVME_M2_0"
+        }
+    },
+    "Manufacturer": "Samsung",
+    "MediaType": "SSD",
+    "Model": "SAMSUNG MZ1L21T9HCLS-00A07",
+    "Name": "NVMe_SSD_210",
+    "NegotiatedSpeedGbs": 0.0,
+    "Operations": [
+        {
+            "OperationName": "",
+            "PercentageComplete": 0
+        }
+    ],
+    "PartNumber": "",
+    "PhysicalLocation": {
+        "PartLocation": {
+            "LocationType": "Slot",
+            "ServiceLabel": "NVMe M.2 Slot 0"
+        },
+        "PartLocationContext": "Chassis_0/NVME_M2_0"
+    },
+    "Protocol": "NVMe",
+    "SerialNumber": "FAKE0000000032",
+    "Status": {
+        "State": "Enabled"
+    },
+    "StatusIndicator": "PredictiveFailureAnalysis"
+}

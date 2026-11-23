@@ -1,0 +1,13 @@
+{
+    "@odata.id": "/redfish/v1/Managers/HGX_BMC_0/LogServices/EventLog",
+    "@odata.type": "#LogService.v1_2_0.LogService",
+    "DateTime": "2026-11-21T00:40:38+00:00",
+    "DateTimeLocalOffset": "+00:00",
+    "Description": "Managers EventLog Log Service",
+    "Entries": {
+        "@odata.id": "/redfish/v1/Managers/HGX_BMC_0/LogServices/EventLog/Entries"
+    },
+    "Id": "EventLog",
+    "Name": "Open BMC EventLog Log Service",
+    "OverWritePolicy": "WrapsWhenFull"
+}

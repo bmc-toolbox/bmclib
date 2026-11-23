@@ -1,0 +1,25 @@
+{
+    "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/AB86B73D_8D56_41E4_971E_B11DB71F2E33",
+    "@odata.type": "#SoftwareInventory.v1_4_0.SoftwareInventory",
+    "Description": "Other image",
+    "Id": "AB86B73D_8D56_41E4_971E_B11DB71F2E33",
+    "Manufacturer": "Supermicro",
+    "Name": "BIOS Firmware",
+    "Oem": {
+        "Nvidia": {
+            "@odata.type": "#NvidiaSoftwareInventory.v1_2_0.NvidiaSoftwareInventory",
+            "StageOnlyUpdateOptionSupported": false
+        }
+    },
+    "RelatedItem": [],
+    "RelatedItem@odata.count": 0,
+    "SoftwareId": "AB86B73D-8D56-41E4-971E-B11DB71F2E33",
+    "Status": {
+        "Conditions": [],
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    },
+    "Updateable": false,
+    "Version": "0.0.0"
+}

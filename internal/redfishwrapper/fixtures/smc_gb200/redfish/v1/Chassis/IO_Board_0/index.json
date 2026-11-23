@@ -1,0 +1,87 @@
+{
+    "@odata.id": "/redfish/v1/Chassis/IO_Board_0",
+    "@odata.type": "#Chassis.v1_22_0.Chassis",
+    "Actions": {
+        "#Chassis.Reset": {
+            "@Redfish.ActionInfo": "/redfish/v1/Chassis/IO_Board_0/ResetActionInfo",
+            "target": "/redfish/v1/Chassis/IO_Board_0/Actions/Chassis.Reset"
+        }
+    },
+    "Assembly": {
+        "@odata.id": "/redfish/v1/Chassis/IO_Board_0/Assembly"
+    },
+    "ChassisType": "Component",
+    "Controls": {
+        "@odata.id": "/redfish/v1/Chassis/IO_Board_0/Controls"
+    },
+    "EnvironmentMetrics": {
+        "@odata.id": "/redfish/v1/Chassis/IO_Board_0/EnvironmentMetrics"
+    },
+    "Id": "IO_Board_0",
+    "Links": {
+        "ComputerSystems": [
+            {
+                "@odata.id": "/redfish/v1/Systems/System_0"
+            }
+        ],
+        "ContainedBy": {
+            "@odata.id": "/redfish/v1/Chassis/Chassis_0"
+        },
+        "Contains": [
+            {
+                "@odata.id": "/redfish/v1/Chassis/IRoT_CX7_0"
+            },
+            {
+                "@odata.id": "/redfish/v1/Chassis/IRoT_CX7_1"
+            }
+        ],
+        "ManagedBy": [
+            {
+                "@odata.id": "/redfish/v1/Managers/BMC_0"
+            }
+        ]
+    },
+    "Location": {
+        "PartLocation": {
+            "LocationType": "Embedded"
+        }
+    },
+    "Manufacturer": "$BOARD_MANUFACTURER",
+    "Model": "$BOARD_PRODUCT_NAME",
+    "Name": "IO_Board_0",
+    "NetworkAdapters": {
+        "@odata.id": "/redfish/v1/Chassis/IO_Board_0/NetworkAdapters"
+    },
+    "Oem": {
+        "Nvidia": {
+            "@odata.type": "#NvidiaChassis.v1_6_0.NvidiaChassis"
+        }
+    },
+    "PCIeDevices": {
+        "@odata.id": "/redfish/v1/Chassis/IO_Board_0/PCIeDevices"
+    },
+    "PCIeSlots": {
+        "@odata.id": "/redfish/v1/Chassis/IO_Board_0/PCIeSlots"
+    },
+    "PartNumber": "$BOARD_PART_NUMBER",
+    "PowerState": "On",
+    "PowerSubsystem": {
+        "@odata.id": "/redfish/v1/Chassis/IO_Board_0/PowerSubsystem"
+    },
+    "Sensors": {
+        "@odata.id": "/redfish/v1/Chassis/IO_Board_0/Sensors"
+    },
+    "SerialNumber": "FAKE0000000000000029",
+    "Status": {
+        "Conditions": [],
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    },
+    "ThermalSubsystem": {
+        "@odata.id": "/redfish/v1/Chassis/IO_Board_0/ThermalSubsystem"
+    },
+    "TrustedComponents": {
+        "@odata.id": "/redfish/v1/Chassis/IO_Board_0/TrustedComponents"
+    }
+}

@@ -1,0 +1,69 @@
+{
+    "@odata.id": "/redfish/v1/Managers/BMC_0/EthernetInterfaces/eth0",
+    "@odata.type": "#EthernetInterface.v1_9_0.EthernetInterface",
+    "DHCPv4": {
+        "DHCPEnabled": false,
+        "UseDNSServers": true,
+        "UseDomainName": true,
+        "UseNTPServers": true
+    },
+    "DHCPv6": {
+        "OperatingMode": "Enabled",
+        "UseDNSServers": true,
+        "UseDomainName": true,
+        "UseNTPServers": true
+    },
+    "Description": "Management Network Interface",
+    "EthernetInterfaceType": "Physical",
+    "FQDN": "host-1",
+    "HostName": "host-1",
+    "IPv4Addresses": [
+        {
+            "Address": "192.0.2.1",
+            "AddressOrigin": "Static",
+            "Gateway": "192.0.2.2",
+            "SubnetMask": "255.255.254.0"
+        },
+        {
+            "Address": "192.0.2.3",
+            "AddressOrigin": "IPv4LinkLocal",
+            "Gateway": "0.0.0.0",
+            "SubnetMask": "255.255.0.0"
+        }
+    ],
+    "IPv4StaticAddresses": [
+        {
+            "Address": "192.0.2.1",
+            "AddressOrigin": "Static",
+            "Gateway": "192.0.2.2",
+            "SubnetMask": "255.255.254.0"
+        }
+    ],
+    "IPv6AddressPolicyTable": [],
+    "IPv6Addresses": [
+        {
+            "Address": "2001:db8::1",
+            "AddressOrigin": "LinkLocal",
+            "AddressState": "Preferred",
+            "PrefixLength": 64
+        }
+    ],
+    "IPv6DefaultGateway": "0:0:0:0:0:0:0:0",
+    "IPv6StaticAddresses": [],
+    "IPv6StaticDefaultGateways": [],
+    "Id": "eth0",
+    "InterfaceEnabled": true,
+    "LinkStatus": "LinkUp",
+    "MACAddress": "02:00:00:00:00:01",
+    "MTUSize": 1500,
+    "Name": "Manager Ethernet Interface",
+    "NameServers": [],
+    "SpeedMbps": 1000,
+    "StatelessAddressAutoConfig": {
+        "IPv6AutoConfigEnabled": true
+    },
+    "StaticNameServers": [],
+    "Status": {
+        "State": "Enabled"
+    }
+}

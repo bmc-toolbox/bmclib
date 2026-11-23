@@ -1,0 +1,40 @@
+{
+    "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/HGX_FW_CPU_0",
+    "@odata.type": "#SoftwareInventory.v1_4_0.SoftwareInventory",
+    "Description": "Other image",
+    "Id": "HGX_FW_CPU_0",
+    "Manufacturer": "NVIDIA",
+    "Name": "Software Inventory",
+    "Oem": {
+        "Nvidia": {
+            "@odata.type": "#NvidiaSoftwareInventory.v1_2_0.NvidiaSoftwareInventory",
+            "ActiveFirmwareSlot": {
+                "BuildType": "Release",
+                "FirmwareComparisonNumber": 65,
+                "FirmwareState": "Activated",
+                "SlotId": 0,
+                "Version": "0.0.0"
+            },
+            "InactiveFirmwareSlot": {
+                "BuildType": "Release",
+                "FirmwareComparisonNumber": 65,
+                "FirmwareState": "Inactive",
+                "SlotId": 1,
+                "Version": "0.0.0"
+            },
+            "StageOnlyUpdateOptionSupported": true
+        }
+    },
+    "RelatedItem": [],
+    "RelatedItem@odata.count": 0,
+    "SoftwareId": "0x0038",
+    "Status": {
+        "Conditions": [],
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    },
+    "Updateable": true,
+    "Version": "0.0.0",
+    "WriteProtected": false
+}

@@ -1,0 +1,22 @@
+{
+    "@odata.id": "/redfish/v1/Managers/HGX_BMC_0/LogServices/Dump",
+    "@odata.type": "#LogService.v1_2_0.LogService",
+    "Actions": {
+        "#LogService.ClearLog": {
+            "target": "/redfish/v1/Managers/HGX_BMC_0/LogServices/Dump/Actions/LogService.ClearLog"
+        },
+        "#LogService.CollectDiagnosticData": {
+            "@Redfish.ActionInfo": "/redfish/v1/Managers/HGX_BMC_0/LogServices/Dump/CollectDiagnosticDataActionInfo",
+            "target": "/redfish/v1/Managers/HGX_BMC_0/LogServices/Dump/Actions/LogService.CollectDiagnosticData"
+        }
+    },
+    "DateTime": "2026-11-21T00:40:39+00:00",
+    "DateTimeLocalOffset": "+00:00",
+    "Description": "BMC Dump LogService",
+    "Entries": {
+        "@odata.id": "/redfish/v1/Managers/HGX_BMC_0/LogServices/Dump/Entries"
+    },
+    "Id": "Dump",
+    "Name": "Dump LogService",
+    "OverWritePolicy": "WrapsWhenFull"
+}

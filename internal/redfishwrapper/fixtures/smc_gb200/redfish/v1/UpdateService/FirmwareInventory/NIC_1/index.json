@@ -1,0 +1,25 @@
+{
+    "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/NIC_1",
+    "@odata.type": "#SoftwareInventory.v1_4_0.SoftwareInventory",
+    "Description": "Other image",
+    "Id": "NIC_1",
+    "Manufacturer": "NVIDIA",
+    "Name": "Software Inventory",
+    "Oem": {
+        "Nvidia": {
+            "@odata.type": "#NvidiaSoftwareInventory.v1_2_0.NvidiaSoftwareInventory",
+            "StageOnlyUpdateOptionSupported": false
+        }
+    },
+    "RelatedItem": [],
+    "RelatedItem@odata.count": 0,
+    "SoftwareId": "0x0001",
+    "Status": {
+        "Conditions": [],
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    },
+    "Updateable": true,
+    "Version": "0.0.0"
+}
