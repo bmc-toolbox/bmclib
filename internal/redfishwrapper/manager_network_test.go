@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/netip"
 	"net/url"
 	"testing"
 
@@ -532,5 +533,102 @@ func TestSetManagerEthernetInterfaceHostNameNoCollection(t *testing.T) {
 	})
 
 	err := client.SetManagerEthernetInterfaceHostName(context.Background(), "NIC.1", "bmc-r12-u07")
+	assert.ErrorIs(t, err, bmclibErrs.ErrManagerEthernetInterfacesNotFound)
+}
+
+func TestSetManagerEthernetInterfaceNameServers(t *testing.T) {
+	testCases := []struct {
+		name    string
+		servers []netip.Addr
+		want    string
+	}{
+		{
+			name:    "IPv4 and IPv6",
+			servers: []netip.Addr{netip.MustParseAddr("10.0.0.9"), netip.MustParseAddr("2001:db8::53")},
+			want:    `{"StaticNameServers":["10.0.0.9","2001:db8::53"]}`,
+		},
+		{
+			name:    "order is kept",
+			servers: []netip.Addr{netip.MustParseAddr("10.0.0.3"), netip.MustParseAddr("10.0.0.2")},
+			want:    `{"StaticNameServers":["10.0.0.3","10.0.0.2"]}`,
+		},
+		{name: "nil clears the list", servers: nil, want: `{"StaticNameServers":[]}`},
+		{name: "empty clears the list", servers: []netip.Addr{}, want: `{"StaticNameServers":[]}`},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			var patches []ethernetInterfacePatch
+			mux := newDellEthernetInterfaceMux(t, &patches, http.StatusOK, "")
+			client := newDellManagerNetworkClient(t, mux, endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+
+			require.NoError(t, client.SetManagerEthernetInterfaceNameServers(context.Background(), "NIC.1", tt.servers))
+
+			require.Len(t, patches, 1, "expected one PATCH of the EthernetInterface resource")
+			assert.JSONEq(t, tt.want, patches[0].body, "only StaticNameServers must be sent")
+		})
+	}
+}
+
+func TestSetManagerEthernetInterfaceNameServersUnchanged(t *testing.T) {
+	var patches []ethernetInterfacePatch
+	mux := newDellEthernetInterfaceMux(t, &patches, http.StatusOK, "")
+	client := newDellManagerNetworkClient(t, mux, endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+
+	servers := []netip.Addr{netip.MustParseAddr("10.0.0.2"), netip.MustParseAddr("10.0.0.3")}
+	require.NoError(t, client.SetManagerEthernetInterfaceNameServers(context.Background(), "NIC.1", servers))
+	assert.Empty(t, patches, "a list the interface already has must not be written")
+}
+
+func TestSetManagerEthernetInterfaceNameServersRefused(t *testing.T) {
+	valid := netip.MustParseAddr("10.0.0.9")
+	testCases := []struct {
+		name    string
+		id      string
+		servers []netip.Addr
+		errIs   error
+		errMsg  string
+	}{
+		{name: "unknown interface", id: "eth9", servers: []netip.Addr{valid}, errIs: bmclibErrs.ErrManagerEthernetInterfaceNotFound},
+		{name: "empty interface ID", id: "", servers: []netip.Addr{valid}, errIs: bmclibErrs.ErrManagerEthernetInterfaceNotFound},
+		{name: "zero address", id: "NIC.1", servers: []netip.Addr{valid, {}}, errMsg: "name server 1 is not a valid address"},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			var patches []ethernetInterfacePatch
+			mux := newDellEthernetInterfaceMux(t, &patches, http.StatusOK, "")
+			client := newDellManagerNetworkClient(t, mux, endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+
+			err := client.SetManagerEthernetInterfaceNameServers(context.Background(), tt.id, tt.servers)
+			require.Error(t, err)
+			if tt.errIs != nil {
+				assert.ErrorIs(t, err, tt.errIs)
+			}
+			if tt.errMsg != "" {
+				assert.ErrorContains(t, err, tt.errMsg)
+			}
+			assert.Empty(t, patches, "a refused change must not reach the BMC")
+		})
+	}
+}
+
+func TestSetManagerEthernetInterfaceNameServersRejected(t *testing.T) {
+	var patches []ethernetInterfacePatch
+	mux := newDellEthernetInterfaceMux(t, &patches, http.StatusBadRequest, "")
+	client := newDellManagerNetworkClient(t, mux, endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+
+	err := client.SetManagerEthernetInterfaceNameServers(context.Background(), "NIC.1", []netip.Addr{netip.MustParseAddr("10.0.0.9")})
+	assert.ErrorIs(t, err, bmclibErrs.ErrManagerEthernetInterfaceSet)
+	assert.ErrorContains(t, err, "The value is not valid for the property")
+}
+
+func TestSetManagerEthernetInterfaceNameServersNoCollection(t *testing.T) {
+	// A manager without an EthernetInterfaces link.
+	client := newDellManagerNetworkClient(t, http.NewServeMux(), func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"@odata.id": "` + dellManagerPath + `", "Id": "iDRAC.Embedded.1", "Name": "Manager"}`))
+	})
+
+	err := client.SetManagerEthernetInterfaceNameServers(context.Background(), "NIC.1", nil)
 	assert.ErrorIs(t, err, bmclibErrs.ErrManagerEthernetInterfacesNotFound)
 }

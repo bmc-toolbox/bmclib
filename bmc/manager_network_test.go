@@ -2,6 +2,7 @@ package bmc
 
 import (
 	"context"
+	"net/netip"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -293,6 +294,59 @@ func TestSetManagerEthernetInterfaceHostNameFromInterfaces(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			metadata, err := SetManagerEthernetInterfaceHostNameFromInterfaces(context.Background(), tt.generic, "NIC.1", "bmc-r12-u07")
+
+			if tt.errMsg == "" {
+				assert.NoError(t, err)
+				assert.Equal(t, "mock", metadata.SuccessfulProvider)
+			} else {
+				assert.ErrorContains(t, err, tt.errMsg)
+			}
+		})
+	}
+}
+
+type mockManagerEthernetInterfaceNameServersSetter struct {
+	err error
+}
+
+func (m *mockManagerEthernetInterfaceNameServersSetter) SetManagerEthernetInterfaceNameServers(ctx context.Context, _ string, _ []netip.Addr) error {
+	return m.err
+}
+
+func (m *mockManagerEthernetInterfaceNameServersSetter) Name() string {
+	return "mock"
+}
+
+func TestSetManagerEthernetInterfaceNameServersFromInterfaces(t *testing.T) {
+	testCases := []struct {
+		name    string
+		generic []interface{}
+		errMsg  string
+	}{
+		{
+			name:    "success",
+			generic: []interface{}{&mockManagerEthernetInterfaceNameServersSetter{}},
+		},
+		{
+			name:    "not an implementation",
+			generic: []interface{}{"foo"},
+			errMsg:  "no ManagerEthernetInterfaceNameServersSetter implementations found",
+		},
+		{
+			name:    "no implementations",
+			generic: []interface{}{},
+			errMsg:  "no ManagerEthernetInterfaceNameServersSetter implementations found",
+		},
+		{
+			name:    "error from setter",
+			generic: []interface{}{&mockManagerEthernetInterfaceNameServersSetter{err: errors.New("foobar")}},
+			errMsg:  "foobar",
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			metadata, err := SetManagerEthernetInterfaceNameServersFromInterfaces(context.Background(), tt.generic, "NIC.1", []netip.Addr{netip.MustParseAddr("10.0.0.2")})
 
 			if tt.errMsg == "" {
 				assert.NoError(t, err)

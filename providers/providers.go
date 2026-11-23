@@ -144,4 +144,7 @@ const (
 
 	// FeatureSetManagerEthernetInterfaceHostName means an implementation that can set the host name of a manager ethernet interface
 	FeatureSetManagerEthernetInterfaceHostName registrar.Feature = "setmanagerethernetinterfacehostname"
+
+	// FeatureSetManagerEthernetInterfaceNameServers means an implementation that can set the static name servers of a manager ethernet interface
+	FeatureSetManagerEthernetInterfaceNameServers registrar.Feature = "setmanagerethernetinterfacenameservers"
 )

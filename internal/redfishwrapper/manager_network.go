@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/netip"
 
 	"github.com/stmcginnis/gofish/schemas"
 
@@ -113,6 +114,29 @@ func (c *Client) SetManagerEthernetInterfaceHostName(ctx context.Context, id, ho
 	}
 
 	eth.HostName = hostName
+
+	return c.updateManagerEthernetInterface(eth)
+}
+
+// SetManagerEthernetInterfaceNameServers replaces the static name server list of the manager
+// ethernet interface with the given resource ID. Only StaticNameServers is sent, in the given
+// order; an empty list clears it, and a list the interface already has sends nothing.
+func (c *Client) SetManagerEthernetInterfaceNameServers(ctx context.Context, id string, servers []netip.Addr) error {
+	// Never nil: a nil slice would be sent as null, which a BMC may read as "leave unchanged".
+	nameServers := make([]string, 0, len(servers))
+	for i, server := range servers {
+		if !server.IsValid() {
+			return fmt.Errorf("interface %s: name server %d is not a valid address", id, i)
+		}
+		nameServers = append(nameServers, server.String())
+	}
+
+	eth, err := c.managerEthernetInterface(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	eth.StaticNameServers = nameServers
 
 	return c.updateManagerEthernetInterface(eth)
 }
