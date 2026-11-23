@@ -15,36 +15,17 @@ import (
 // EthernetInterfaces collection. Errors raised while collecting, including a collection or member
 // the BMC advertises but does not serve, are returned to the caller.
 func (c *Client) GetManagerEthernetInterfaces(ctx context.Context) ([]bmc.ManagerEthernetInterface, error) {
-	managers, err := c.Managers(ctx)
+	members, _, err := c.managerEthernetInterfaces(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, m := range managers {
-		if m == nil {
-			continue
-		}
-
-		members, err := m.EthernetInterfaces()
-		if err != nil {
-			return nil, fmt.Errorf("manager %s EthernetInterfaces: %w", m.ID, err)
-		}
-		if members == nil {
-			continue
-		}
-
-		interfaces := make([]bmc.ManagerEthernetInterface, 0, len(members))
-		for _, member := range members {
-			if member == nil {
-				continue
-			}
-			interfaces = append(interfaces, toManagerEthernetInterface(member))
-		}
-
-		return interfaces, nil
+	interfaces := make([]bmc.ManagerEthernetInterface, 0, len(members))
+	for _, member := range members {
+		interfaces = append(interfaces, toManagerEthernetInterface(member))
 	}
 
-	return nil, bmclibErrs.ErrManagerEthernetInterfacesNotFound
+	return interfaces, nil
 }
 
 // GetManagerNetworkProtocol returns the network protocol resource of the first manager that links
@@ -117,6 +98,42 @@ func (c *Client) SetManagerNTPServers(ctx context.Context, servers []string) err
 	return c.patchManagerNetworkProtocol(ctx, np, map[string]any{
 		"NTP": map[string]any{"NTPServers": servers},
 	})
+}
+
+// managerEthernetInterfaces returns the EthernetInterface resources of the first manager that links
+// an EthernetInterfaces collection, with the ID of that manager. A manager without the link is
+// skipped; an error raised while collecting is returned.
+func (c *Client) managerEthernetInterfaces(ctx context.Context) ([]*schemas.EthernetInterface, string, error) {
+	managers, err := c.Managers(ctx)
+	if err != nil {
+		return nil, "", err
+	}
+
+	for _, m := range managers {
+		if m == nil {
+			continue
+		}
+
+		members, err := m.EthernetInterfaces()
+		if err != nil {
+			return nil, "", fmt.Errorf("manager %s EthernetInterfaces: %w", m.ID, err)
+		}
+		if members == nil {
+			continue
+		}
+
+		interfaces := make([]*schemas.EthernetInterface, 0, len(members))
+		for _, member := range members {
+			if member == nil {
+				continue
+			}
+			interfaces = append(interfaces, member)
+		}
+
+		return interfaces, m.ID, nil
+	}
+
+	return nil, "", bmclibErrs.ErrManagerEthernetInterfacesNotFound
 }
 
 // managerNetworkProtocol returns the NetworkProtocol resource of the first manager that links one,
