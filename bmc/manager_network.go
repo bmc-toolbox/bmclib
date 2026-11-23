@@ -362,3 +362,73 @@ func SetManagerNTPServersFromInterfaces(ctx context.Context, generic []interface
 
 	return setManagerNTPServers(ctx, implementations, servers)
 }
+
+// ManagerEthernetInterfaceHostNameSetter sets the host name of an ethernet interface of the manager.
+type ManagerEthernetInterfaceHostNameSetter interface {
+	// SetManagerEthernetInterfaceHostName sets the host name of the manager ethernet interface with
+	// the given resource ID, as reported in ManagerEthernetInterface.ID.
+	//
+	// The BMC may announce the new name through DHCP and DNS; a certificate issued for the old
+	// name stops matching.
+	SetManagerEthernetInterfaceHostName(ctx context.Context, id, hostName string) (err error)
+}
+
+type managerEthernetInterfaceHostNameSetterProvider struct {
+	name string
+	ManagerEthernetInterfaceHostNameSetter
+}
+
+func setManagerEthernetInterfaceHostName(ctx context.Context, generic []managerEthernetInterfaceHostNameSetterProvider, id, hostName string) (metadata Metadata, err error) {
+	metadata = newMetadata()
+Loop:
+	for _, elem := range generic {
+		if elem.ManagerEthernetInterfaceHostNameSetter == nil {
+			continue
+		}
+		select {
+		case <-ctx.Done():
+			err = multierror.Append(err, ctx.Err())
+			break Loop
+		default:
+			metadata.ProvidersAttempted = append(metadata.ProvidersAttempted, elem.name)
+			vErr := elem.SetManagerEthernetInterfaceHostName(ctx, id, hostName)
+			if vErr != nil {
+				err = multierror.Append(err, errors.WithMessagef(vErr, "provider: %v", elem.name))
+				continue
+			}
+			metadata.SuccessfulProvider = elem.name
+			return metadata, nil
+		}
+	}
+
+	return metadata, multierror.Append(err, errors.New("failure to set manager ethernet interface host name"))
+}
+
+// SetManagerEthernetInterfaceHostNameFromInterfaces identifies implementations of the
+// ManagerEthernetInterfaceHostNameSetter interface and passes them to the
+// setManagerEthernetInterfaceHostName() wrapper.
+func SetManagerEthernetInterfaceHostNameFromInterfaces(ctx context.Context, generic []interface{}, id, hostName string) (metadata Metadata, err error) {
+	implementations := make([]managerEthernetInterfaceHostNameSetterProvider, 0)
+	for _, elem := range generic {
+		temp := managerEthernetInterfaceHostNameSetterProvider{name: getProviderName(elem)}
+		switch p := elem.(type) {
+		case ManagerEthernetInterfaceHostNameSetter:
+			temp.ManagerEthernetInterfaceHostNameSetter = p
+			implementations = append(implementations, temp)
+		default:
+			e := fmt.Sprintf("not a ManagerEthernetInterfaceHostNameSetter implementation: %T", p)
+			err = multierror.Append(err, errors.New(e))
+		}
+	}
+	if len(implementations) == 0 {
+		return metadata, multierror.Append(
+			err,
+			errors.Wrap(
+				bmclibErrs.ErrProviderImplementation,
+				"no ManagerEthernetInterfaceHostNameSetter implementations found",
+			),
+		)
+	}
+
+	return setManagerEthernetInterfaceHostName(ctx, implementations, id, hostName)
+}

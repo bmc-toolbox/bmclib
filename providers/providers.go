@@ -141,4 +141,7 @@ const (
 
 	// FeatureSetManagerNTPServers means an implementation that can set the NTP servers of the manager
 	FeatureSetManagerNTPServers registrar.Feature = "setmanagerntpservers"
+
+	// FeatureSetManagerEthernetInterfaceHostName means an implementation that can set the host name of a manager ethernet interface
+	FeatureSetManagerEthernetInterfaceHostName registrar.Feature = "setmanagerethernetinterfacehostname"
 )

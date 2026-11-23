@@ -981,6 +981,19 @@ func (c *Client) SetManagerNTPServers(ctx context.Context, servers []string) (er
 	return err
 }
 
+// SetManagerEthernetInterfaceHostName sets the host name of the BMC ethernet interface with the
+// given ID (as reported by GetManagerEthernetInterfaces, e.g. "NIC.1" or "eth0").
+func (c *Client) SetManagerEthernetInterfaceHostName(ctx context.Context, id, hostName string) (err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetManagerEthernetInterfaceHostName")
+	defer span.End()
+
+	metadata, err := bmc.SetManagerEthernetInterfaceHostNameFromInterfaces(ctx, c.registry().GetDriverInterfaces(), id, hostName)
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return err
+}
+
 // FirmwareInstall pass through library function to upload firmware and install firmware
 func (c *Client) FirmwareInstall(ctx context.Context, component, operationApplyTime string, forceInstall bool, reader io.Reader) (taskID string, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "FirmwareInstall")

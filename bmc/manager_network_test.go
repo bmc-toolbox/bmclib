@@ -250,3 +250,56 @@ func TestSetManagerNTPServersFromInterfaces(t *testing.T) {
 		})
 	}
 }
+
+type mockManagerEthernetInterfaceHostNameSetter struct {
+	err error
+}
+
+func (m *mockManagerEthernetInterfaceHostNameSetter) SetManagerEthernetInterfaceHostName(ctx context.Context, _, _ string) error {
+	return m.err
+}
+
+func (m *mockManagerEthernetInterfaceHostNameSetter) Name() string {
+	return "mock"
+}
+
+func TestSetManagerEthernetInterfaceHostNameFromInterfaces(t *testing.T) {
+	testCases := []struct {
+		name    string
+		generic []interface{}
+		errMsg  string
+	}{
+		{
+			name:    "success",
+			generic: []interface{}{&mockManagerEthernetInterfaceHostNameSetter{}},
+		},
+		{
+			name:    "not an implementation",
+			generic: []interface{}{"foo"},
+			errMsg:  "no ManagerEthernetInterfaceHostNameSetter implementations found",
+		},
+		{
+			name:    "no implementations",
+			generic: []interface{}{},
+			errMsg:  "no ManagerEthernetInterfaceHostNameSetter implementations found",
+		},
+		{
+			name:    "error from setter",
+			generic: []interface{}{&mockManagerEthernetInterfaceHostNameSetter{err: errors.New("foobar")}},
+			errMsg:  "foobar",
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			metadata, err := SetManagerEthernetInterfaceHostNameFromInterfaces(context.Background(), tt.generic, "NIC.1", "bmc-r12-u07")
+
+			if tt.errMsg == "" {
+				assert.NoError(t, err)
+				assert.Equal(t, "mock", metadata.SuccessfulProvider)
+			} else {
+				assert.ErrorContains(t, err, tt.errMsg)
+			}
+		})
+	}
+}
