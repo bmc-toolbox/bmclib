@@ -3,6 +3,7 @@ package lenovo
 import (
 	"context"
 	"errors"
+	"net/netip"
 	"testing"
 
 	"github.com/bmc-toolbox/bmclib/v2/bmc"
@@ -112,5 +113,62 @@ func TestSetManagerNTPServers(t *testing.T) {
 	}
 	if want := `{"NTP":{"NTPServers":["10.0.0.1","10.0.0.2"]}}`; body != want {
 		t.Errorf("PATCH body = %s, want %s", body, want)
+	}
+}
+
+// Requirement: Configure BMC ethernet — the host name is set with a PATCH of HostName only.
+func TestSetManagerEthernetInterfaceHostName(t *testing.T) {
+	ts := newTestServer(t, testServerOpts{})
+	c := ts.openedClient(t)
+
+	if err := c.SetManagerEthernetInterfaceHostName(context.Background(), "eth0", "xcc-r12-u07"); err != nil {
+		t.Fatalf("SetManagerEthernetInterfaceHostName: %v", err)
+	}
+
+	patched, body := ts.ethernetInterfacePatch()
+	if !patched {
+		t.Fatal("expected the EthernetInterface resource to be PATCHed")
+	}
+	if want := `{"HostName":"xcc-r12-u07"}`; body != want {
+		t.Errorf("PATCH body = %s, want %s", body, want)
+	}
+}
+
+// Requirement: Configure BMC ethernet — the static name servers are replaced as a whole.
+func TestSetManagerEthernetInterfaceNameServers(t *testing.T) {
+	ts := newTestServer(t, testServerOpts{})
+	c := ts.openedClient(t)
+
+	servers := []netip.Addr{netip.MustParseAddr("10.0.0.2")}
+	if err := c.SetManagerEthernetInterfaceNameServers(context.Background(), "eth0", servers); err != nil {
+		t.Fatalf("SetManagerEthernetInterfaceNameServers: %v", err)
+	}
+
+	patched, body := ts.ethernetInterfacePatch()
+	if !patched {
+		t.Fatal("expected the EthernetInterface resource to be PATCHed")
+	}
+	if want := `{"StaticNameServers":["10.0.0.2"]}`; body != want {
+		t.Errorf("PATCH body = %s, want %s", body, want)
+	}
+}
+
+// Requirement: Configure BMC ethernet — an interface the XCC does not have is not written.
+func TestSetManagerEthernetInterfaceNotFound(t *testing.T) {
+	ts := newTestServer(t, testServerOpts{})
+	c := ts.openedClient(t)
+
+	err := c.SetManagerEthernetInterfaceHostName(context.Background(), "eth7", "xcc-r12-u07")
+	if !errors.Is(err, bmclibErrs.ErrManagerEthernetInterfaceNotFound) {
+		t.Fatalf("host name: err = %v, want ErrManagerEthernetInterfaceNotFound", err)
+	}
+
+	err = c.SetManagerEthernetInterfaceNameServers(context.Background(), "eth7", []netip.Addr{netip.MustParseAddr("10.0.0.2")})
+	if !errors.Is(err, bmclibErrs.ErrManagerEthernetInterfaceNotFound) {
+		t.Fatalf("name servers: err = %v, want ErrManagerEthernetInterfaceNotFound", err)
+	}
+
+	if patched, _ := ts.ethernetInterfacePatch(); patched {
+		t.Fatal("an interface the XCC does not have must not be PATCHed")
 	}
 }

@@ -94,6 +94,8 @@ type testServer struct {
 	sklmPatched bool
 	// bmcEthPatched records a PATCH of a BMC ethernet interface.
 	bmcEthPatched bool
+	// bmcEthPatchBody holds the body of the last PATCH of a BMC ethernet interface.
+	bmcEthPatchBody string
 	// hostIfacePatched records a PATCH of a host interface.
 	hostIfacePatched bool
 	// netProtoPatched records a PATCH of ManagerNetworkProtocol.
@@ -597,6 +599,9 @@ func newTestServer(t *testing.T, opts testServerOpts) *testServer {
 				ts.sklmPatched = true
 			case "/redfish/v1/Managers/1/EthernetInterfaces/eth0":
 				ts.bmcEthPatched = true
+				if b, err := io.ReadAll(r.Body); err == nil {
+					ts.bmcEthPatchBody = string(b)
+				}
 			case "/redfish/v1/Managers/1/HostInterfaces/1":
 				ts.hostIfacePatched = true
 			case "/redfish/v1/Managers/1/NetworkProtocol":
@@ -704,6 +709,13 @@ func (ts *testServer) networkProtocolPatch() (patched bool, body string) {
 	ts.mu.Lock()
 	defer ts.mu.Unlock()
 	return ts.netProtoPatched, ts.netProtoPatchBody
+}
+
+// ethernetInterfacePatch reports whether the BMC ethernet interface was PATCHed and the last body sent.
+func (ts *testServer) ethernetInterfacePatch() (patched bool, body string) {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.bmcEthPatched, ts.bmcEthPatchBody
 }
 
 func (ts *testServer) didPatchPower() bool {

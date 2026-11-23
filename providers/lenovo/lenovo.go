@@ -98,6 +98,8 @@ var Features = registrar.Features{
 	providers.FeatureGetManagerNetworkProtocol,
 	providers.FeatureSetManagerNetworkService,
 	providers.FeatureSetManagerNTPServers,
+	providers.FeatureSetManagerEthernetInterfaceHostName,
+	providers.FeatureSetManagerEthernetInterfaceNameServers,
 	// inventory-storage
 	providers.FeatureInventoryRead,
 	// firmware-tasks
