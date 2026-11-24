@@ -7,6 +7,11 @@
 //	manager-network -host ... -set-service SSH -enabled=true -port 2222
 //	manager-network -host ... -ntp-servers 10.0.0.1,10.0.0.2
 //
+// With -interface and -set-hostname or -set-name-servers it changes that manager ethernet interface:
+//
+//	manager-network -host ... -interface NIC.1 -set-hostname bmc-r12-u07
+//	manager-network -host ... -interface NIC.1 -set-name-servers 10.0.0.2,2001:db8::53
+//
 // Disabling the service this example connects through (HTTPS) cuts it off from the BMC.
 package main
 
@@ -14,6 +19,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"net/netip"
 	"strings"
 	"time"
 
@@ -38,6 +44,9 @@ func main() {
 	enabled := flag.Bool("enabled", true, "With -set-service: the enabled state to set")
 	port := flag.Int("port", 0, "With -set-service: the port to set; 0 leaves the port as is")
 	ntpServers := flag.String("ntp-servers", "", "Comma separated NTP servers to set; an empty value clears the list")
+	iface := flag.String("interface", "", "With -set-hostname or -set-name-servers: ID of the manager ethernet interface to change, e.g. NIC.1 or eth0")
+	setHostName := flag.String("set-hostname", "", "Host name to set on the manager ethernet interface given with -interface")
+	nameServers := flag.String("set-name-servers", "", "Comma separated static DNS server addresses to set on the interface given with -interface; an empty value clears the list")
 
 	flag.Parse()
 
@@ -55,13 +64,33 @@ func main() {
 	clientOpts := []bmclib.Option{bmclib.WithLogger(logger)}
 	client := bmclib.NewClient(*host, *user, *pass, clientOpts...)
 
-	// -ntp-servers "" clears the list, so the flag being given matters, not its value
-	setNTPServers := false
+	// -ntp-servers "" and -set-name-servers "" clear the list, so the flag being given matters,
+	// not its value
+	setNTPServers, setNameServers := false, false
 	flag.Visit(func(f *flag.Flag) {
-		if f.Name == "ntp-servers" {
+		switch f.Name {
+		case "ntp-servers":
 			setNTPServers = true
+		case "set-name-servers":
+			setNameServers = true
 		}
 	})
+
+	if (*setHostName != "" || setNameServers) && *iface == "" {
+		l.Fatal("-set-hostname and -set-name-servers require -interface")
+	}
+
+	// The name servers are typed addresses, so a host name is refused here, before the BMC is contacted
+	var staticNameServers []netip.Addr
+	if *nameServers != "" {
+		for _, server := range strings.Split(*nameServers, ",") {
+			addr, err := netip.ParseAddr(strings.TrimSpace(server))
+			if err != nil {
+				l.Fatal(err)
+			}
+			staticNameServers = append(staticNameServers, addr)
+		}
+	}
 
 	// Filter to providers that can read, and when asked change, the manager network configuration
 	features := []registrar.Feature{
@@ -73,6 +102,12 @@ func main() {
 	}
 	if setNTPServers {
 		features = append(features, providers.FeatureSetManagerNTPServers)
+	}
+	if *setHostName != "" {
+		features = append(features, providers.FeatureSetManagerEthernetInterfaceHostName)
+	}
+	if setNameServers {
+		features = append(features, providers.FeatureSetManagerEthernetInterfaceNameServers)
 	}
 	client.Registry.Drivers = client.Registry.Supports(features...)
 
@@ -105,6 +140,20 @@ func main() {
 		fmt.Printf("NTP servers: %s requested\n", strings.Join(servers, ", "))
 	}
 
+	if *setHostName != "" {
+		if err := client.SetManagerEthernetInterfaceHostName(ctx, *iface, *setHostName); err != nil {
+			l.Fatal(err)
+		}
+		fmt.Printf("Interface %s: host name %s requested\n", *iface, *setHostName)
+	}
+
+	if setNameServers {
+		if err := client.SetManagerEthernetInterfaceNameServers(ctx, *iface, staticNameServers); err != nil {
+			l.Fatal(err)
+		}
+		fmt.Printf("Interface %s: name servers %v requested\n", *iface, staticNameServers)
+	}
+
 	// A BMC may apply the change after answering the request, so what is read back below can
 	// still show the previous state.
 	interfaces, err := client.GetManagerEthernetInterfaces(ctx)
@@ -115,8 +164,8 @@ func main() {
 	fmt.Println("Manager ethernet interfaces:")
 	for i := range interfaces {
 		eth := &interfaces[i]
-		fmt.Printf("  %-8s mac=%s enabled=%t link=%s speed=%s mtu=%s vlan=%s\n",
-			eth.ID, eth.MACAddress, eth.Enabled, eth.LinkStatus, intOrDash(eth.SpeedMbps), intOrDash(eth.MTUSize), vlan(eth))
+		fmt.Printf("  %-8s hostname=%s mac=%s enabled=%t link=%s speed=%s mtu=%s vlan=%s\n",
+			eth.ID, eth.HostName, eth.MACAddress, eth.Enabled, eth.LinkStatus, intOrDash(eth.SpeedMbps), intOrDash(eth.MTUSize), vlan(eth))
 		for _, a := range eth.IPv4Addresses {
 			fmt.Printf("           ipv4 %s/%s gw=%s (%s)\n", a.Address, a.SubnetMask, a.Gateway, a.Origin)
 		}

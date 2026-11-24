@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/netip"
 
 	"github.com/stmcginnis/gofish/schemas"
 
@@ -15,36 +16,17 @@ import (
 // EthernetInterfaces collection. Errors raised while collecting, including a collection or member
 // the BMC advertises but does not serve, are returned to the caller.
 func (c *Client) GetManagerEthernetInterfaces(ctx context.Context) ([]bmc.ManagerEthernetInterface, error) {
-	managers, err := c.Managers(ctx)
+	members, _, err := c.managerEthernetInterfaces(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, m := range managers {
-		if m == nil {
-			continue
-		}
-
-		members, err := m.EthernetInterfaces()
-		if err != nil {
-			return nil, fmt.Errorf("manager %s EthernetInterfaces: %w", m.ID, err)
-		}
-		if members == nil {
-			continue
-		}
-
-		interfaces := make([]bmc.ManagerEthernetInterface, 0, len(members))
-		for _, member := range members {
-			if member == nil {
-				continue
-			}
-			interfaces = append(interfaces, toManagerEthernetInterface(member))
-		}
-
-		return interfaces, nil
+	interfaces := make([]bmc.ManagerEthernetInterface, 0, len(members))
+	for _, member := range members {
+		interfaces = append(interfaces, toManagerEthernetInterface(member))
 	}
 
-	return nil, bmclibErrs.ErrManagerEthernetInterfacesNotFound
+	return interfaces, nil
 }
 
 // GetManagerNetworkProtocol returns the network protocol resource of the first manager that links
@@ -117,6 +99,111 @@ func (c *Client) SetManagerNTPServers(ctx context.Context, servers []string) err
 	return c.patchManagerNetworkProtocol(ctx, np, map[string]any{
 		"NTP": map[string]any{"NTPServers": servers},
 	})
+}
+
+// SetManagerEthernetInterfaceHostName sets the host name of the manager ethernet interface with the
+// given resource ID. Only HostName is sent; a host name the interface already has sends nothing.
+func (c *Client) SetManagerEthernetInterfaceHostName(ctx context.Context, id, hostName string) error {
+	if hostName == "" {
+		return fmt.Errorf("interface %s: host name is empty", id)
+	}
+
+	eth, err := c.managerEthernetInterface(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	eth.HostName = hostName
+
+	return c.updateManagerEthernetInterface(eth)
+}
+
+// SetManagerEthernetInterfaceNameServers replaces the static name server list of the manager
+// ethernet interface with the given resource ID. Only StaticNameServers is sent, in the given
+// order; an empty list clears it, and a list the interface already has sends nothing.
+func (c *Client) SetManagerEthernetInterfaceNameServers(ctx context.Context, id string, servers []netip.Addr) error {
+	// Never nil: a nil slice would be sent as null, which a BMC may read as "leave unchanged".
+	nameServers := make([]string, 0, len(servers))
+	for i, server := range servers {
+		if !server.IsValid() {
+			return fmt.Errorf("interface %s: name server %d is not a valid address", id, i)
+		}
+		nameServers = append(nameServers, server.String())
+	}
+
+	eth, err := c.managerEthernetInterface(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	eth.StaticNameServers = nameServers
+
+	return c.updateManagerEthernetInterface(eth)
+}
+
+// managerEthernetInterfaces returns the EthernetInterface resources of the first manager that links
+// an EthernetInterfaces collection, with the ID of that manager. A manager without the link is
+// skipped; an error raised while collecting is returned.
+func (c *Client) managerEthernetInterfaces(ctx context.Context) ([]*schemas.EthernetInterface, string, error) {
+	managers, err := c.Managers(ctx)
+	if err != nil {
+		return nil, "", err
+	}
+
+	for _, m := range managers {
+		if m == nil {
+			continue
+		}
+
+		members, err := m.EthernetInterfaces()
+		if err != nil {
+			return nil, "", fmt.Errorf("manager %s EthernetInterfaces: %w", m.ID, err)
+		}
+		if members == nil {
+			continue
+		}
+
+		interfaces := make([]*schemas.EthernetInterface, 0, len(members))
+		for _, member := range members {
+			if member == nil {
+				continue
+			}
+			interfaces = append(interfaces, member)
+		}
+
+		return interfaces, m.ID, nil
+	}
+
+	return nil, "", bmclibErrs.ErrManagerEthernetInterfacesNotFound
+}
+
+// managerEthernetInterface returns the manager EthernetInterface resource with the given ID.
+func (c *Client) managerEthernetInterface(ctx context.Context, id string) (*schemas.EthernetInterface, error) {
+	interfaces, managerID, err := c.managerEthernetInterfaces(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, eth := range interfaces {
+		if id != "" && eth.ID == id {
+			return eth, nil
+		}
+	}
+
+	return nil, fmt.Errorf("%w: manager %s, ID %q", bmclibErrs.ErrManagerEthernetInterfaceNotFound, managerID, id)
+}
+
+// updateManagerEthernetInterface writes the properties changed on eth since it was read. gofish
+// PATCHes only those and sends the resource ETag in If-Match unless ETag matching is disabled for
+// the client; it returns an error for any non-2xx response, carrying the BMC's error body.
+func (c *Client) updateManagerEthernetInterface(eth *schemas.EthernetInterface) error {
+	eth.DisableEtagMatch(c.disableEtagMatch)
+
+	if err := eth.Update(); err != nil {
+		return fmt.Errorf("%w: interface %s: %s", bmclibErrs.ErrManagerEthernetInterfaceSet, eth.ID, err.Error())
+	}
+
+	return nil
 }
 
 // managerNetworkProtocol returns the NetworkProtocol resource of the first manager that links one,

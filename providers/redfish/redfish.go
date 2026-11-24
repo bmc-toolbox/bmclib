@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/x509"
 	"net/http"
+	"net/netip"
 
 	"github.com/bmc-toolbox/common"
 	"github.com/go-logr/logr"
@@ -60,27 +61,31 @@ var Features = registrar.Features{
 	providers.FeatureGetManagerNetworkProtocol,
 	providers.FeatureSetManagerNetworkService,
 	providers.FeatureSetManagerNTPServers,
+	providers.FeatureSetManagerEthernetInterfaceHostName,
+	providers.FeatureSetManagerEthernetInterfaceNameServers,
 }
 
 // compile-time assertions that the provider implements the BIOS configuration, power cap, thermal, certificate, task, job and manager network interfaces.
 var (
-	_ bmc.BiosConfigurationGetter         = (*Conn)(nil)
-	_ bmc.BiosConfigurationSetter         = (*Conn)(nil)
-	_ bmc.HTTPBootURISetter               = (*Conn)(nil)
-	_ bmc.NetworkBootEnabledSetter        = (*Conn)(nil)
-	_ bmc.ChassisPowerMetricsGetter       = (*Conn)(nil)
-	_ bmc.ChassisPowerCapSetter           = (*Conn)(nil)
-	_ bmc.ChassisFanSpeedsGetter          = (*Conn)(nil)
-	_ bmc.ChassisTemperaturesGetter       = (*Conn)(nil)
-	_ bmc.ManagerHTTPSCertificatesGetter  = (*Conn)(nil)
-	_ bmc.ManagerHTTPSCSRGenerator        = (*Conn)(nil)
-	_ bmc.ManagerHTTPSCertificateReplacer = (*Conn)(nil)
-	_ bmc.TasksGetter                     = (*Conn)(nil)
-	_ bmc.JobsGetter                      = (*Conn)(nil)
-	_ bmc.ManagerEthernetInterfacesGetter = (*Conn)(nil)
-	_ bmc.ManagerNetworkProtocolGetter    = (*Conn)(nil)
-	_ bmc.ManagerNetworkServiceSetter     = (*Conn)(nil)
-	_ bmc.ManagerNTPServersSetter         = (*Conn)(nil)
+	_ bmc.BiosConfigurationGetter                   = (*Conn)(nil)
+	_ bmc.BiosConfigurationSetter                   = (*Conn)(nil)
+	_ bmc.HTTPBootURISetter                         = (*Conn)(nil)
+	_ bmc.NetworkBootEnabledSetter                  = (*Conn)(nil)
+	_ bmc.ChassisPowerMetricsGetter                 = (*Conn)(nil)
+	_ bmc.ChassisPowerCapSetter                     = (*Conn)(nil)
+	_ bmc.ChassisFanSpeedsGetter                    = (*Conn)(nil)
+	_ bmc.ChassisTemperaturesGetter                 = (*Conn)(nil)
+	_ bmc.ManagerHTTPSCertificatesGetter            = (*Conn)(nil)
+	_ bmc.ManagerHTTPSCSRGenerator                  = (*Conn)(nil)
+	_ bmc.ManagerHTTPSCertificateReplacer           = (*Conn)(nil)
+	_ bmc.TasksGetter                               = (*Conn)(nil)
+	_ bmc.JobsGetter                                = (*Conn)(nil)
+	_ bmc.ManagerEthernetInterfacesGetter           = (*Conn)(nil)
+	_ bmc.ManagerNetworkProtocolGetter              = (*Conn)(nil)
+	_ bmc.ManagerNetworkServiceSetter               = (*Conn)(nil)
+	_ bmc.ManagerNTPServersSetter                   = (*Conn)(nil)
+	_ bmc.ManagerEthernetInterfaceHostNameSetter    = (*Conn)(nil)
+	_ bmc.ManagerEthernetInterfaceNameServersSetter = (*Conn)(nil)
 )
 
 // Conn details for redfish client
@@ -391,4 +396,14 @@ func (c *Conn) SetManagerNetworkService(ctx context.Context, service bmc.Manager
 // SetManagerNTPServers replaces the NTP server list of the manager; an empty list clears it
 func (c *Conn) SetManagerNTPServers(ctx context.Context, servers []string) (err error) {
 	return c.redfishwrapper.SetManagerNTPServers(ctx, servers)
+}
+
+// SetManagerEthernetInterfaceHostName sets the host name of the manager ethernet interface with the given ID
+func (c *Conn) SetManagerEthernetInterfaceHostName(ctx context.Context, id, hostName string) (err error) {
+	return c.redfishwrapper.SetManagerEthernetInterfaceHostName(ctx, id, hostName)
+}
+
+// SetManagerEthernetInterfaceNameServers replaces the static name server list of the manager ethernet interface with the given ID; an empty list clears it
+func (c *Conn) SetManagerEthernetInterfaceNameServers(ctx context.Context, id string, servers []netip.Addr) (err error) {
+	return c.redfishwrapper.SetManagerEthernetInterfaceNameServers(ctx, id, servers)
 }

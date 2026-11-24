@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/netip"
 	"os"
 	"strings"
 	"sync"
@@ -972,6 +973,32 @@ func (c *Client) SetManagerNTPServers(ctx context.Context, servers []string) (er
 	defer span.End()
 
 	metadata, err := bmc.SetManagerNTPServersFromInterfaces(ctx, c.registry().GetDriverInterfaces(), servers)
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return err
+}
+
+// SetManagerEthernetInterfaceHostName sets the host name of the BMC ethernet interface with the
+// given ID (as reported by GetManagerEthernetInterfaces, e.g. "NIC.1" or "eth0").
+func (c *Client) SetManagerEthernetInterfaceHostName(ctx context.Context, id, hostName string) (err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetManagerEthernetInterfaceHostName")
+	defer span.End()
+
+	metadata, err := bmc.SetManagerEthernetInterfaceHostNameFromInterfaces(ctx, c.registry().GetDriverInterfaces(), id, hostName)
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return err
+}
+
+// SetManagerEthernetInterfaceNameServers replaces the static DNS server list of the BMC ethernet
+// interface with the given ID (as reported by GetManagerEthernetInterfaces); an empty list clears it.
+func (c *Client) SetManagerEthernetInterfaceNameServers(ctx context.Context, id string, servers []netip.Addr) (err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetManagerEthernetInterfaceNameServers")
+	defer span.End()
+
+	metadata, err := bmc.SetManagerEthernetInterfaceNameServersFromInterfaces(ctx, c.registry().GetDriverInterfaces(), id, servers)
 	c.setMetadata(metadata)
 	metadata.RegisterSpanAttributes(c.Auth.Host, span)
 

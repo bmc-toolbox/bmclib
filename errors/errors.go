@@ -166,6 +166,12 @@ var (
 	// ErrManagerNetworkProtocolSet is returned when the BMC rejects an update of the manager NetworkProtocol resource
 	ErrManagerNetworkProtocolSet = errors.New("failed to update manager NetworkProtocol")
 
+	// ErrManagerEthernetInterfaceNotFound is returned when the manager EthernetInterfaces collection has no member with the requested ID
+	ErrManagerEthernetInterfaceNotFound = errors.New("manager has no EthernetInterface with the ID")
+
+	// ErrManagerEthernetInterfaceSet is returned when the BMC rejects an update of a manager EthernetInterface resource
+	ErrManagerEthernetInterfaceSet = errors.New("failed to update manager EthernetInterface")
+
 	// ErrSecureBootDatabaseNotFound is returned when the requested UEFI Secure Boot key database
 	// (db, KEK, PK, dbx, ...) is not present in the SecureBootDatabases collection reported by the BMC.
 	ErrSecureBootDatabaseNotFound = errors.New("secure boot key database not found")

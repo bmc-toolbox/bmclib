@@ -2,16 +2,19 @@ package lenovo
 
 import (
 	"context"
+	"net/netip"
 
 	"github.com/bmc-toolbox/bmclib/v2/bmc"
 )
 
 // compile-time assertions that the provider implements the interfaces.
 var (
-	_ bmc.ManagerEthernetInterfacesGetter = (*Conn)(nil)
-	_ bmc.ManagerNetworkProtocolGetter    = (*Conn)(nil)
-	_ bmc.ManagerNetworkServiceSetter     = (*Conn)(nil)
-	_ bmc.ManagerNTPServersSetter         = (*Conn)(nil)
+	_ bmc.ManagerEthernetInterfacesGetter           = (*Conn)(nil)
+	_ bmc.ManagerNetworkProtocolGetter              = (*Conn)(nil)
+	_ bmc.ManagerNetworkServiceSetter               = (*Conn)(nil)
+	_ bmc.ManagerNTPServersSetter                   = (*Conn)(nil)
+	_ bmc.ManagerEthernetInterfaceHostNameSetter    = (*Conn)(nil)
+	_ bmc.ManagerEthernetInterfaceNameServersSetter = (*Conn)(nil)
 )
 
 // GetManagerEthernetInterfaces returns the XCC ethernet interfaces.
@@ -42,4 +45,18 @@ func (c *Conn) SetManagerNetworkService(ctx context.Context, service bmc.Manager
 // Implements bmc.ManagerNTPServersSetter.
 func (c *Conn) SetManagerNTPServers(ctx context.Context, servers []string) (err error) {
 	return c.redfishwrapper.SetManagerNTPServers(ctx, servers)
+}
+
+// SetManagerEthernetInterfaceHostName sets the host name of the manager ethernet interface with the given ID.
+//
+// Implements bmc.ManagerEthernetInterfaceHostNameSetter.
+func (c *Conn) SetManagerEthernetInterfaceHostName(ctx context.Context, id, hostName string) (err error) {
+	return c.redfishwrapper.SetManagerEthernetInterfaceHostName(ctx, id, hostName)
+}
+
+// SetManagerEthernetInterfaceNameServers replaces the static name server list of the manager ethernet interface with the given ID; an empty list clears it.
+//
+// Implements bmc.ManagerEthernetInterfaceNameServersSetter.
+func (c *Conn) SetManagerEthernetInterfaceNameServers(ctx context.Context, id string, servers []netip.Addr) (err error) {
+	return c.redfishwrapper.SetManagerEthernetInterfaceNameServers(ctx, id, servers)
 }
