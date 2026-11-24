@@ -518,6 +518,9 @@ func TestSetVirtualMedia_EjectEverySlot(t *testing.T) {
 			"Actions": {
 				"#VirtualMedia.EjectMedia": {
 					"target": "/redfish/v1/Systems/System.Embedded.1/VirtualMedia/` + id + `/Actions/VirtualMedia.EjectMedia"
+				},
+				"#VirtualMedia.InsertMedia": {
+					"target": "/redfish/v1/Systems/System.Embedded.1/VirtualMedia/` + id + `/Actions/VirtualMedia.InsertMedia"
 				}
 			}
 		}`
@@ -526,6 +529,8 @@ func TestSetVirtualMedia_EjectEverySlot(t *testing.T) {
 	tests := map[string]struct {
 		inserted    map[string]bool // slots 1 and 2 are CD slots, slot 3 is a USBStick slot
 		failEject   map[string]bool
+		mediaURL    string // inserted by SetVirtualMedia after the eject
+		failInsert  bool
 		wantEjected []string
 		wantErr     string
 	}{
@@ -546,57 +551,98 @@ func TestSetVirtualMedia_EjectEverySlot(t *testing.T) {
 			wantEjected: []string{"1", "2"},
 			wantErr:     "failed to eject virtual media",
 		},
+		"insert ejects every inserted CD slot first": {
+			inserted:    map[string]bool{"1": true, "2": true, "3": true},
+			mediaURL:    "http://example.com/boot.iso",
+			wantEjected: []string{"1", "2"},
+		},
+		"insert goes ahead after a failed eject": {
+			inserted:    map[string]bool{"1": true, "2": true},
+			failEject:   map[string]bool{"2": true},
+			mediaURL:    "http://example.com/boot.iso",
+			wantEjected: []string{"1", "2"},
+		},
+		"a failed insert reports the failed eject": {
+			inserted:    map[string]bool{"2": true},
+			failEject:   map[string]bool{"2": true},
+			mediaURL:    "http://example.com/boot.iso",
+			failInsert:  true,
+			wantEjected: []string{"2"},
+			wantErr:     "failed to eject virtual media",
+		},
 	}
 
 	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			var ejected []string
+		calls := []string{"SetVirtualMedia"}
+		if tc.mediaURL == "" {
+			calls = append(calls, "EjectVirtualMedia")
+		}
+		for _, call := range calls {
+			t.Run(name+"/"+call, func(t *testing.T) {
+				var ejected, inserted []string
 
-			mux := http.NewServeMux()
-			mux.HandleFunc("/redfish/v1/", endpointFunc(t, "dell/serviceroot.json"))
-			mux.HandleFunc("/redfish/v1/Managers", endpointFunc(t, "dell/managers.json"))
-			mux.HandleFunc("/redfish/v1/Managers/iDRAC.Embedded.1", endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
-			mux.HandleFunc("/redfish/v1/Systems", endpointFunc(t, "dell/systems.json"))
-			mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1", endpointFunc(t, "dell/system.embedded.1.virtualmedia.json"))
-			mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/VirtualMedia", func(w http.ResponseWriter, _ *http.Request) {
-				_, _ = w.Write([]byte(collection))
-			})
-			for id, mediaTypes := range map[string]string{"1": `["CD", "DVD"]`, "2": `["CD", "DVD"]`, "3": `["USBStick"]`} {
-				body := slot(id, tc.inserted[id], mediaTypes)
-				mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/VirtualMedia/"+id, func(w http.ResponseWriter, _ *http.Request) {
-					_, _ = w.Write([]byte(body))
+				mux := http.NewServeMux()
+				mux.HandleFunc("/redfish/v1/", endpointFunc(t, "dell/serviceroot.json"))
+				mux.HandleFunc("/redfish/v1/Managers", endpointFunc(t, "dell/managers.json"))
+				mux.HandleFunc("/redfish/v1/Managers/iDRAC.Embedded.1", endpointFunc(t, "dell/manager.idrac.embedded.1.json"))
+				mux.HandleFunc("/redfish/v1/Systems", endpointFunc(t, "dell/systems.json"))
+				mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1", endpointFunc(t, "dell/system.embedded.1.virtualmedia.json"))
+				mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/VirtualMedia", func(w http.ResponseWriter, _ *http.Request) {
+					_, _ = w.Write([]byte(collection))
 				})
-				mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/VirtualMedia/"+id+"/Actions/VirtualMedia.EjectMedia", func(w http.ResponseWriter, _ *http.Request) {
-					ejected = append(ejected, id)
-					if tc.failEject[id] {
-						w.WriteHeader(http.StatusInternalServerError)
-						return
-					}
-					w.WriteHeader(http.StatusNoContent)
-				})
-			}
+				for id, mediaTypes := range map[string]string{"1": `["CD", "DVD"]`, "2": `["CD", "DVD"]`, "3": `["USBStick"]`} {
+					body := slot(id, tc.inserted[id], mediaTypes)
+					mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/VirtualMedia/"+id, func(w http.ResponseWriter, _ *http.Request) {
+						_, _ = w.Write([]byte(body))
+					})
+					mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/VirtualMedia/"+id+"/Actions/VirtualMedia.EjectMedia", func(w http.ResponseWriter, _ *http.Request) {
+						ejected = append(ejected, id)
+						if tc.failEject[id] {
+							w.WriteHeader(http.StatusInternalServerError)
+							return
+						}
+						w.WriteHeader(http.StatusNoContent)
+					})
+					mux.HandleFunc("/redfish/v1/Systems/System.Embedded.1/VirtualMedia/"+id+"/Actions/VirtualMedia.InsertMedia", func(w http.ResponseWriter, _ *http.Request) {
+						inserted = append(inserted, id)
+						if tc.failInsert {
+							w.WriteHeader(http.StatusInternalServerError)
+							return
+						}
+						w.WriteHeader(http.StatusNoContent)
+					})
+				}
 
-			server := httptest.NewTLSServer(mux)
-			defer server.Close()
+				server := httptest.NewTLSServer(mux)
+				defer server.Close()
 
-			parsedURL, err := url.Parse(server.URL)
-			require.NoError(t, err)
-
-			ctx := context.Background()
-			client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "", WithBasicAuthEnabled(true))
-			require.NoError(t, client.Open(ctx))
-			defer client.Close(ctx)
-
-			ok, err := client.SetVirtualMedia(ctx, "CD", "")
-			if tc.wantErr != "" {
-				require.Error(t, err)
-				assert.Contains(t, err.Error(), tc.wantErr)
-				assert.False(t, ok)
-			} else {
+				parsedURL, err := url.Parse(server.URL)
 				require.NoError(t, err)
-				assert.True(t, ok)
-			}
-			assert.ElementsMatch(t, tc.wantEjected, ejected)
-		})
+
+				ctx := context.Background()
+				client := NewClient(parsedURL.Hostname(), parsedURL.Port(), "", "", WithBasicAuthEnabled(true))
+				require.NoError(t, client.Open(ctx))
+				defer client.Close(ctx)
+
+				var ok bool
+				if call == "EjectVirtualMedia" {
+					ok, err = client.EjectVirtualMedia(ctx, "CD")
+				} else {
+					ok, err = client.SetVirtualMedia(ctx, "CD", tc.mediaURL)
+				}
+				if tc.wantErr != "" {
+					require.Error(t, err)
+					assert.Contains(t, err.Error(), tc.wantErr)
+					assert.False(t, ok)
+				} else {
+					require.NoError(t, err)
+					assert.True(t, ok)
+				}
+				assert.ElementsMatch(t, tc.wantEjected, ejected)
+				if tc.mediaURL != "" && !tc.failInsert {
+					assert.Equal(t, []string{"1"}, inserted, "the first CD slot takes the media")
+				}
+			})
+		}
 	}
 }

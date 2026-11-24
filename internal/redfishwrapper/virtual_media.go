@@ -52,7 +52,9 @@ func ejectVirtualMedia(virtualMedia []*schemas.VirtualMedia, mediaKind schemas.V
 	for _, vm := range virtualMedia {
 		if !slices.Contains(vm.MediaTypes, mediaKind) {
 			for _, mt := range vm.MediaTypes {
-				supportedMediaTypes = append(supportedMediaTypes, string(mt))
+				if !slices.Contains(supportedMediaTypes, string(mt)) {
+					supportedMediaTypes = append(supportedMediaTypes, string(mt))
+				}
 			}
 
 			continue
@@ -80,24 +82,27 @@ func ejectVirtualMedia(virtualMedia []*schemas.VirtualMedia, mediaKind schemas.V
 	return true, nil
 }
 
-// SetVirtualMedia sets virtual media on the system. If mediaURL is empty,
-// the media is ejected from every slot of the kind. Otherwise, when multiple
-// matching virtual media slots exist, each slot is tried in order until one
-// accepts the media.
-func (c *Client) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (bool, error) {
-	var mediaKind schemas.VirtualMediaType
-
+// virtualMediaKind returns the Redfish media type for kind.
+func virtualMediaKind(kind string) (schemas.VirtualMediaType, error) {
 	switch kind {
 	case "CD":
-		mediaKind = schemas.CDVirtualMediaType
+		return schemas.CDVirtualMediaType, nil
 	case "Floppy":
-		mediaKind = schemas.FloppyVirtualMediaType
+		return schemas.FloppyVirtualMediaType, nil
 	case "USBStick":
-		mediaKind = schemas.USBStickVirtualMediaType
+		return schemas.USBStickVirtualMediaType, nil
 	case "DVD":
-		mediaKind = schemas.DVDVirtualMediaType
+		return schemas.DVDVirtualMediaType, nil
 	default:
-		return false, errors.New("invalid media type")
+		return "", errors.New("invalid media type")
+	}
+}
+
+// EjectVirtualMedia ejects the media from every slot of the kind.
+func (c *Client) EjectVirtualMedia(ctx context.Context, kind string) (bool, error) {
+	mediaKind, err := virtualMediaKind(kind)
+	if err != nil {
+		return false, err
 	}
 
 	virtualMedia, err := c.getVirtualMedia(ctx)
@@ -105,8 +110,35 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (bo
 		return false, err
 	}
 
+	return ejectVirtualMedia(virtualMedia, mediaKind, kind)
+}
+
+// SetVirtualMedia sets virtual media on the system. It first ejects the media
+// from every slot of the kind, and returns there if mediaURL is empty.
+// Otherwise, when multiple matching virtual media slots exist, each slot is
+// tried in order until one accepts the media.
+func (c *Client) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (bool, error) {
+	mediaKind, err := virtualMediaKind(kind)
+	if err != nil {
+		return false, err
+	}
+
+	virtualMedia, err := c.getVirtualMedia(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	// To guarantee reliable boot behavior across all BMCs, ensure no other
+	// media of this kind is mounted in secondary slots. Ejecting the media
+	// before inserting new media also makes inserting it more likely to succeed.
+	_, ejectErr := ejectVirtualMedia(virtualMedia, mediaKind, kind)
+
 	if mediaURL == "" {
-		return ejectVirtualMedia(virtualMedia, mediaKind, kind)
+		if ejectErr != nil {
+			return false, ejectErr
+		}
+
+		return true, nil
 	}
 
 	supportedMediaTypes := []string{}
@@ -115,19 +147,12 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (bo
 	for _, vm := range virtualMedia {
 		if !slices.Contains(vm.MediaTypes, mediaKind) {
 			for _, mt := range vm.MediaTypes {
-				supportedMediaTypes = append(supportedMediaTypes, string(mt))
+				if !slices.Contains(supportedMediaTypes, string(mt)) {
+					supportedMediaTypes = append(supportedMediaTypes, string(mt))
+				}
 			}
 
 			continue
-		}
-
-		// Ejecting the media before inserting new media makes the success rate of inserting the new media higher.
-		if gofish.Deref(vm.Inserted) {
-			// Attempt to eject media. If it fails, record the error but continue to attempt insertion,
-			// as some BMCs might allow insert even if eject fails or auto-replace media.
-			if _, err := vm.EjectMedia(); err != nil {
-				slotErrors = append(slotErrors, fmt.Errorf("%s: eject before insert failed: %w; attempting insert anyway", vm.ODataID, err))
-			}
 		}
 
 		insertMediaAttempts := []schemas.VirtualMediaInsertMediaParameters{
@@ -167,6 +192,10 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (bo
 	}
 
 	if len(slotErrors) > 0 {
+		if ejectErr != nil {
+			slotErrors = append([]error{ejectErr}, slotErrors...)
+		}
+
 		return false, fmt.Errorf("all matching virtual media slots failed: %w", errors.Join(slotErrors...))
 	}
 
