@@ -57,6 +57,7 @@ type Client struct {
 	oneTimeRegistry        *registrar.Registry
 	oneTimeRegistryEnabled bool
 	providerConfig         providerConfig
+	providers              []string
 	traceprovider          oteltrace.TracerProvider
 }
 
@@ -369,22 +370,18 @@ func (c *Client) registerProviders() {
 		c.Logger.Info("failed to register rpc provider, falling back to registering all other providers", "error", err.Error())
 	}
 
-	if err := c.registerIPMIProvider(); err != nil {
-		c.Logger.Info("ipmi provider not available", "error", err.Error())
+	if unknown := c.unknownProviders(); len(unknown) > 0 {
+		c.Logger.Info("One or more providers requested via WithProviders are not recognized and will be ignored", "unsupported", unknown, "valid", ProviderNames())
 	}
 
-	if err := c.registerIpmitoolProvider(); err != nil {
-		c.Logger.Info("ipmitool provider not available", "error", err.Error())
+	for _, p := range defaultProviderList {
+		if !c.providerAllowed(p.name) {
+			continue
+		}
+		if err := p.register(c); err != nil {
+			c.Logger.Info(p.name+" provider not available", "error", err.Error())
+		}
 	}
-
-	c.registerASRRProvider()
-	c.registerGofishProvider()
-	c.registerIntelAMTProvider()
-	c.registerDellProvider()
-	c.registerLenovoProvider()
-	c.registerCompalProvider()
-	c.registerSupermicroProvider()
-	c.registerOpenBMCProvider()
 }
 
 // GetMetadata returns the metadata that is populated after each BMC function/method call

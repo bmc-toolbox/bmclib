@@ -23,6 +23,15 @@ func WithLogger(logger logr.Logger) Option {
 	return func(args *Client) { args.Logger = logger }
 }
 
+// WithProviders limits the providers NewClient registers to the named ones, from ProviderNames,
+// compared without regard to case. Providers not named are not registered, so Open neither connects
+// to them nor sends them the credentials, and no call falls back to them. With no names, every
+// provider is registered. It doesn't apply to a Registry passed with WithRegistry, nor to the rpc
+// and homeassistant providers, which are registered only when configured.
+func WithProviders(names ...string) Option {
+	return func(args *Client) { args.providers = names }
+}
+
 // WithRegistry sets the Registry
 func WithRegistry(registry *registrar.Registry) Option {
 	return func(args *Client) { args.Registry = registry }
