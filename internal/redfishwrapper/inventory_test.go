@@ -467,3 +467,28 @@ func TestInventoryCollectBMCNIC(t *testing.T) {
 		}
 	}
 }
+
+func TestCompatibleOdataID(t *testing.T) {
+	tests := map[string]struct {
+		odataID string
+		known   []string
+		want    bool
+	}{
+		"exact match":                       {odataID: "/redfish/v1/Systems/1", known: knownSystemsOdataIDs, want: true},
+		"trailing slash on odata id":        {odataID: "/redfish/v1/Systems/1/", known: knownSystemsOdataIDs, want: true},
+		"trailing slash on chassis":         {odataID: "/redfish/v1/Chassis/1/", known: KnownChassisOdataIDs, want: true},
+		"trailing slash on manager":         {odataID: "/redfish/v1/Managers/1/", known: managerOdataIDs, want: true},
+		"trailing slash on known id":        {odataID: "/redfish/v1/Systems/1", known: []string{"/redfish/v1/Systems/1/"}, want: true},
+		"unknown id":                        {odataID: "/redfish/v1/Systems/2", known: knownSystemsOdataIDs, want: false},
+		"unknown id with trailing slash":    {odataID: "/redfish/v1/Systems/2/", known: knownSystemsOdataIDs, want: false},
+		"prefix of known id is not a match": {odataID: "/redfish/v1/Systems/", known: knownSystemsOdataIDs, want: false},
+		"empty odata id":                    {odataID: "", known: knownSystemsOdataIDs, want: false},
+	}
+
+	c := &Client{}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, tc.want, c.compatibleOdataID(tc.odataID, tc.known))
+		})
+	}
+}
