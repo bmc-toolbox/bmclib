@@ -25,6 +25,16 @@ func (r *virtualMediaTester) SetVirtualMedia(ctx context.Context, kind, mediaURL
 	return true, nil
 }
 
+func (r *virtualMediaTester) EjectVirtualMedia(ctx context.Context, kind string) (ok bool, err error) {
+	if r.MakeErrorOut {
+		return ok, errors.New("ejecting virtual media failed")
+	}
+	if r.MakeNotOK {
+		return false, nil
+	}
+	return true, nil
+}
+
 func (r *virtualMediaTester) Name() string {
 	return "test provider"
 }
@@ -115,6 +125,90 @@ func TestSetVirtualMediaFromInterfaces(t *testing.T) {
 				if diff := cmp.Diff(metadata.SuccessfulProvider, "test provider"); diff != "" {
 					t.Fatal(diff)
 				}
+			}
+		})
+	}
+}
+
+func TestEjectVirtualMedia(t *testing.T) {
+	testCases := map[string]struct {
+		makeErrorOut bool
+		makeNotOk    bool
+		want         bool
+		err          error
+		ctxTimeout   time.Duration
+	}{
+		"success":               {want: true},
+		"not ok return":         {makeNotOk: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider, failed to eject virtual media"), errors.New("failed to eject virtual media")}}},
+		"error":                 {makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("provider: test provider: ejecting virtual media failed"), errors.New("failed to eject virtual media")}}},
+		"error context timeout": {makeErrorOut: true, err: &multierror.Error{Errors: []error{errors.New("context deadline exceeded")}}, ctxTimeout: time.Nanosecond * 1},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			testImplementation := virtualMediaTester{MakeErrorOut: tc.makeErrorOut, MakeNotOK: tc.makeNotOk}
+			if tc.ctxTimeout == 0 {
+				tc.ctxTimeout = time.Second * 3
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), tc.ctxTimeout)
+			defer cancel()
+			result, _, err := ejectVirtualMedia(ctx, "CD", []virtualMediaEjecterProvider{{"test provider", &testImplementation}})
+			if tc.err != nil {
+				if err == nil {
+					t.Fatal("expected an error")
+				}
+				if diff := cmp.Diff(err.Error(), tc.err.Error()); diff != "" {
+					t.Fatal(diff)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff := cmp.Diff(result, tc.want); diff != "" {
+				t.Fatal(diff)
+			}
+		})
+	}
+}
+
+func TestEjectVirtualMediaFromInterfaces(t *testing.T) {
+	testCases := map[string]struct {
+		err               error
+		badImplementation bool
+		want              bool
+	}{
+		"success":                  {want: true},
+		"no implementations found": {badImplementation: true, err: &multierror.Error{Errors: []error{errors.New("not a VirtualMediaEjecter implementation: *struct {}"), errors.New("no VirtualMediaEjecter implementations found")}}},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			var generic []interface{}
+			if tc.badImplementation {
+				badImplementation := struct{}{}
+				generic = []interface{}{&badImplementation}
+			} else {
+				generic = []interface{}{&virtualMediaTester{}}
+			}
+			result, metadata, err := EjectVirtualMediaFromInterfaces(context.Background(), "CD", generic)
+			if tc.err != nil {
+				if err == nil {
+					t.Fatal("expected an error")
+				}
+				if diff := cmp.Diff(err.Error(), tc.err.Error()); diff != "" {
+					t.Fatal(diff)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff := cmp.Diff(result, tc.want); diff != "" {
+				t.Fatal(diff)
+			}
+			if diff := cmp.Diff(metadata.SuccessfulProvider, "test provider"); diff != "" {
+				t.Fatal(diff)
 			}
 		})
 	}

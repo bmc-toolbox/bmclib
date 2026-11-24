@@ -625,6 +625,18 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (ok
 	return ok, err
 }
 
+// EjectVirtualMedia ejects the virtual media of type kind from every slot that has it attached.
+func (c *Client) EjectVirtualMedia(ctx context.Context, kind string) (ok bool, err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "EjectVirtualMedia")
+	defer span.End()
+
+	ok, metadata, err := bmc.EjectVirtualMediaFromInterfaces(ctx, kind, c.registry().GetDriverInterfaces())
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return ok, err
+}
+
 // SetHTTPBootURI sets the URI UEFI HTTP Boot fetches its boot image from.
 func (c *Client) SetHTTPBootURI(ctx context.Context, uri string) (ok bool, err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "SetHTTPBootURI")

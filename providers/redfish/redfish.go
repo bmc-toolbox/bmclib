@@ -268,6 +268,11 @@ func (c *Conn) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (ok b
 	return c.redfishwrapper.SetVirtualMedia(ctx, kind, mediaURL)
 }
 
+// EjectVirtualMedia ejects the virtual media
+func (c *Conn) EjectVirtualMedia(ctx context.Context, kind string) (ok bool, err error) {
+	return c.redfishwrapper.EjectVirtualMedia(ctx, kind)
+}
+
 // SetHTTPBootURI sets the URI UEFI HTTP Boot fetches its boot image from
 func (c *Conn) SetHTTPBootURI(ctx context.Context, uri string) (ok bool, err error) {
 	return c.redfishwrapper.SetHTTPBootURI(ctx, uri)

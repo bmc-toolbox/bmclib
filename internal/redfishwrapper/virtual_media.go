@@ -40,28 +40,105 @@ func (c *Client) getVirtualMedia(ctx context.Context) ([]*schemas.VirtualMedia, 
 	return nil, errors.New("no virtual media found at Manager or System resource paths")
 }
 
-// SetVirtualMedia sets virtual media on the system. If mediaURL is empty,
-// matching media may be ejected. When multiple matching virtual media slots
-// exist, each slot is tried in order until one succeeds.
-func (c *Client) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (bool, error) {
-	var mediaKind schemas.VirtualMediaType
+// ejectVirtualMedia ejects the media from every slot of mediaKind that has media inserted. Each
+// inserted image is a boot option, so one left in another slot can be booted instead of the next
+// image inserted. It succeeds when every inserted slot of the kind was ejected, including when none
+// had media, and fails when any eject fails or no slot supports the kind.
+func ejectVirtualMedia(virtualMedia []*schemas.VirtualMedia, mediaKind schemas.VirtualMediaType, kind string) (bool, error) {
+	supportedMediaTypes := []string{}
+	matched := false
+	var slotErrors []error
 
+	for _, vm := range virtualMedia {
+		if !slices.Contains(vm.MediaTypes, mediaKind) {
+			for _, mt := range vm.MediaTypes {
+				if !slices.Contains(supportedMediaTypes, string(mt)) {
+					supportedMediaTypes = append(supportedMediaTypes, string(mt))
+				}
+			}
+
+			continue
+		}
+
+		matched = true
+		if !gofish.Deref(vm.Inserted) {
+			continue
+		}
+
+		// The gofish library v0.22.0+ falls back to PATCH when the EjectMedia action isn't available,
+		// as on some Lenovo XCC implementations.
+		if _, err := vm.EjectMedia(); err != nil {
+			slotErrors = append(slotErrors, fmt.Errorf("%s: eject: %w", vm.ODataID, err))
+		}
+	}
+
+	if len(slotErrors) > 0 {
+		return false, fmt.Errorf("failed to eject virtual media: %w", errors.Join(slotErrors...))
+	}
+	if !matched {
+		return false, fmt.Errorf("not a supported media type: %s. supported media types: %v", kind, supportedMediaTypes)
+	}
+
+	return true, nil
+}
+
+// virtualMediaKind returns the Redfish media type for kind.
+func virtualMediaKind(kind string) (schemas.VirtualMediaType, error) {
 	switch kind {
 	case "CD":
-		mediaKind = schemas.CDVirtualMediaType
+		return schemas.CDVirtualMediaType, nil
 	case "Floppy":
-		mediaKind = schemas.FloppyVirtualMediaType
+		return schemas.FloppyVirtualMediaType, nil
 	case "USBStick":
-		mediaKind = schemas.USBStickVirtualMediaType
+		return schemas.USBStickVirtualMediaType, nil
 	case "DVD":
-		mediaKind = schemas.DVDVirtualMediaType
+		return schemas.DVDVirtualMediaType, nil
 	default:
-		return false, errors.New("invalid media type")
+		return "", errors.New("invalid media type")
+	}
+}
+
+// EjectVirtualMedia ejects the media from every slot of the kind.
+func (c *Client) EjectVirtualMedia(ctx context.Context, kind string) (bool, error) {
+	mediaKind, err := virtualMediaKind(kind)
+	if err != nil {
+		return false, err
 	}
 
 	virtualMedia, err := c.getVirtualMedia(ctx)
 	if err != nil {
 		return false, err
+	}
+
+	return ejectVirtualMedia(virtualMedia, mediaKind, kind)
+}
+
+// SetVirtualMedia sets virtual media on the system. It first ejects the media
+// from every slot of the kind, and returns there if mediaURL is empty.
+// Otherwise, when multiple matching virtual media slots exist, each slot is
+// tried in order until one accepts the media.
+func (c *Client) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (bool, error) {
+	mediaKind, err := virtualMediaKind(kind)
+	if err != nil {
+		return false, err
+	}
+
+	virtualMedia, err := c.getVirtualMedia(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	// To guarantee reliable boot behavior across all BMCs, ensure no other
+	// media of this kind is mounted in secondary slots. Ejecting the media
+	// before inserting new media also makes inserting it more likely to succeed.
+	_, ejectErr := ejectVirtualMedia(virtualMedia, mediaKind, kind)
+
+	if mediaURL == "" {
+		if ejectErr != nil {
+			return false, ejectErr
+		}
+
+		return true, nil
 	}
 
 	supportedMediaTypes := []string{}
@@ -70,35 +147,12 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (bo
 	for _, vm := range virtualMedia {
 		if !slices.Contains(vm.MediaTypes, mediaKind) {
 			for _, mt := range vm.MediaTypes {
-				supportedMediaTypes = append(supportedMediaTypes, string(mt))
-			}
-
-			continue
-		}
-
-		if mediaURL == "" {
-			// Only ejecting the media was requested.
-			// Attempt to eject media.
-			// The gofish library v0.22.0+ supports fallback to PATCH if standard Actions are not available.
-			// This logic first checks if media is inserted, then attempts eject via Action or PATCH.
-			// This is relevant for BMCs like Lenovo XCC that may not expose standard EjectMedia actions.
-			if gofish.Deref(vm.Inserted) {
-				if _, err := vm.EjectMedia(); err != nil {
-					slotErrors = append(slotErrors, fmt.Errorf("%s: eject: %w", vm.ODataID, err))
-					continue
+				if !slices.Contains(supportedMediaTypes, string(mt)) {
+					supportedMediaTypes = append(supportedMediaTypes, string(mt))
 				}
 			}
 
-			return true, nil
-		}
-
-		// Ejecting the media before inserting new media makes the success rate of inserting the new media higher.
-		if gofish.Deref(vm.Inserted) {
-			// Attempt to eject media. If it fails, record the error but continue to attempt insertion,
-			// as some BMCs might allow insert even if eject fails or auto-replace media.
-			if _, err := vm.EjectMedia(); err != nil {
-				slotErrors = append(slotErrors, fmt.Errorf("%s: eject before insert failed: %w; attempting insert anyway", vm.ODataID, err))
-			}
+			continue
 		}
 
 		insertMediaAttempts := []schemas.VirtualMediaInsertMediaParameters{
@@ -138,6 +192,10 @@ func (c *Client) SetVirtualMedia(ctx context.Context, kind, mediaURL string) (bo
 	}
 
 	if len(slotErrors) > 0 {
+		if ejectErr != nil {
+			slotErrors = append([]error{ejectErr}, slotErrors...)
+		}
+
 		return false, fmt.Errorf("all matching virtual media slots failed: %w", errors.Join(slotErrors...))
 	}
 
